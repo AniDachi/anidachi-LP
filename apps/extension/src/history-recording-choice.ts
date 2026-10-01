@@ -46,9 +46,18 @@ export async function readHistoryRecordingChoice(ownerUserId: string): Promise<H
   return parseHistoryRecordingChoice(stored[key], ownerUserId);
 }
 
-export async function hasHistoryRecordingConsent(ownerUserId: string): Promise<boolean> {
+// Absence means the default-on preference, not an implied consent record.
+// Keep malformed/unknown versions off so an existing opt-out is never lost.
+export async function readHistoryRecordingEnabled(ownerUserId: string): Promise<boolean> {
+  if (!ownerUserId.trim()) return false;
+  const key = historyRecordingChoiceKey(ownerUserId);
+  const stored = await chrome.storage.local.get(key);
+  return stored[key] === undefined || parseHistoryRecordingChoice(stored[key], ownerUserId)?.enabled === true;
+}
+
+export async function isHistoryRecordingEnabled(ownerUserId: string): Promise<boolean> {
   try {
-    return (await readHistoryRecordingChoice(ownerUserId))?.enabled === true;
+    return await readHistoryRecordingEnabled(ownerUserId);
   } catch {
     return false;
   }

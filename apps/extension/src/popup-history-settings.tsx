@@ -1,3 +1,4 @@
+import { PopupSettingRow } from "./popup-setting-row";
 import { WatchHistoryPreferencesResponseSchema } from "@anidachi/protocol";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -13,20 +14,7 @@ export function PopupHistorySettings({
 	ownerUserId: string | null;
 	client?: PopupWatchHistoryClient;
 }) {
-	return (
-		<section className="popup-history-settings" aria-label="History settings">
-			<h3>History</h3>
-			{ownerUserId ? (
-				<HistoryConsent
-					key={ownerUserId}
-					ownerUserId={ownerUserId}
-					client={client}
-				/>
-			) : (
-				<p>Sign in to manage history preferences.</p>
-			)}
-		</section>
-	);
+	return ownerUserId ? <HistoryConsent key={ownerUserId} ownerUserId={ownerUserId} client={client} /> : null;
 }
 
 function HistoryConsent({
@@ -116,28 +104,8 @@ function HistoryConsent({
 	};
 	return (
 		<>
-			<button
-				type="button"
-				role="switch"
-				aria-label="Track YouTube history"
-				aria-checked={enabled}
-				disabled={busy}
-				className="popup-notification-setting"
-				data-enabled={enabled}
-				onClick={() => void update()}
-			>
-				<span className="popup-notification-setting-copy">
-					<strong>Track YouTube history</strong>
-					<span>{enabled ? "On" : "Off"}</span>
-				</span>
-				<span className="popup-notification-switch" aria-hidden="true">
-					<span />
-				</span>
-			</button>
-			<p>
-				Your explicit choice applies in this browser and is synced to your
-				account when online. Invitation notifications are separate.
-			</p>
+			<PopupSettingRow label="Include YouTube" description="Also save the videos you watch on YouTube."
+                checked={enabled} busy={busy} onChange={() => void update()} />
 			{error ? (
 				<p className="popup-local-settings-error" role="alert">
 					{error}

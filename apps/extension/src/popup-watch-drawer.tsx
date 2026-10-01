@@ -1,12 +1,11 @@
-import { readPopupView, readPopupHistoryView, writePopupHistoryChoice, writePopupQuery, writePopupTitlePages } from "./popup-view-state";
+import { usePopupProviderBrowse } from "./use-popup-provider-browse";
+import { readPopupView, readPopupHistoryView, writePopupHistoryChoice, writePopupQuery } from "./popup-view-state";
 import { parseWatchHistoryBootstrapData, type WatchHistoryMessageResponse } from "./watch-history-client";
 import { canReadWatchHistory } from "./watch-history-access";
 import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
 import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
 	type WatchHistoryBrowseQuery,
-	type WatchHistoryBrowseResponse,
-	WatchHistoryBrowseResponseSchema,
 	type WatchHistoryBrowseTitleEpisodesResponse,
 	WatchHistoryBrowseTitleEpisodesResponseSchema,
 	type WatchHistoryItem,
@@ -68,9 +67,6 @@ import { useWatchProgressPreview } from "./use-watch-progress-preview";
 import { createWatchHistoryDateRange } from "./watch-history-browse";
 import { PopupWatchCapacityNotice } from "./popup-watch-capacity-notice";
 
-const titleMeta = (page: WatchHistoryBrowseResponse) => page.history.meta;
-const titleCursor = (page: WatchHistoryBrowseResponse) =>
-	page.history.nextCursor;
 const detailMeta = (page: WatchHistoryBrowseTitleEpisodesResponse) =>
 	page.detail.meta;
 const detailCursor = (page: WatchHistoryBrowseTitleEpisodesResponse) =>
@@ -447,35 +443,19 @@ function WatchDrawer({
 	};
 	const generation = snapshot?.accountGeneration ?? accessState.generation;
 	const savedView = useMemo(() => readPopupHistoryView(ownerUserId, generation), [ownerUserId, generation]);
-	const titleQuery = JSON.stringify(input);
 	const queryKey = JSON.stringify([
 		input,
 		dates.ok,
 		generation,
 		search.trim() ? searchEpoch.current : 0,
 	]);
-	const browsing = usePopupWatchBrowse({
-		client,
-		message: {
-			type: "ANIDACHI_WATCH_HISTORY_V3",
-			command: "browse",
-			expectedOwnerUserId: ownerUserId,
-			input,
-		},
-		parser: WatchHistoryBrowseResponseSchema,
-		initialPageCount: savedView.titleQuery === titleQuery ? savedView.titlePages : 1,
-		meta: titleMeta,
-		cursor: titleCursor,
+	const browsing = usePopupProviderBrowse({
+		client, ownerUserId, input, generation,
 		refresh: refreshVersion + invalidation,
 		forceRefresh: refreshVersion,
 		enabled: accessAllowed && dates.ok && cacheReady && !recovering,
 		discard: !accessAllowed,
-		generation,
 	});
-	useEffect(() => {
-		if (accessAllowed && !browsing.loading && browsing.pages.length)
-			writePopupTitlePages(ownerUserId, generation, titleQuery, browsing.pages.length);
-	}, [accessAllowed, browsing.loading, browsing.pages.length, ownerUserId, generation, titleQuery]);
 	useWatchLoadingHeight(
 		watchRootRef,
 		browsing.loading && !browsing.pages.length,
@@ -513,7 +493,7 @@ function WatchDrawer({
 		}
 	}, [browsing.errorStatus, denyAccess]);
 	const titleItems =
-		accessAllowed && dates.ok
+		accessAllowed && dates.ok && !browsing.authorityInvalid
 			? mergeBy(
 					browsing.pages.flatMap((page) => page.history.items),
 					(item) => pendingTitleKey(item.provider, item.titleKey),
@@ -549,7 +529,7 @@ function WatchDrawer({
 		return result;
 	}, [snapshot, accessStatus, queued]);
 	const allowPending =
-		accessStatus === "allowed" && snapshot?.captureAllowed !== false && !search.trim() && conditions.period === "all-time";
+		accessStatus === "allowed" && !browsing.authorityInvalid && snapshot?.captureAllowed !== false && !search.trim() && conditions.period === "all-time";
 	const canonical = new Map(
 		snapshot?.history.items.map((item) => [
 			pendingTitleKey(item.provider, item.titleKey),
@@ -604,7 +584,15 @@ function WatchDrawer({
 		: known;
 	// Projection supplies pending identity/artwork only; existing aggregate/counts
 	// and eligibility stay server-owned under every condition.
-	const items = projected.map((item) => {
+	// Local playback can update loaded rows immediately, but cannot expand a
+	// provider past the depth the user requested or displace its server rows.
+	const knownKeys = new Set(known.map(item => pendingTitleKey(item.provider, item.titleKey)));
+	const remaining = {
+		youtube: 20 * Math.max(1, browsing.providers.youtube.pages.length) - known.filter(item => item.provider === "youtube").length,
+		crunchyroll: 20 * Math.max(1, browsing.providers.crunchyroll.pages.length) - known.filter(item => item.provider === "crunchyroll").length,
+	};
+	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll")
+		&& (knownKeys.has(pendingTitleKey(item.provider, item.titleKey)) || remaining[item.provider]-- > 0)).map((item) => {
 		const durable = known.find(
 			(value) =>
 				value.provider === item.provider && value.titleKey === item.titleKey,
@@ -640,7 +628,7 @@ function WatchDrawer({
 		},
 	};
 	const total = accessAllowed
-		? (browsing.pages[0]?.history.totalTitleCount ?? 0)
+		? browsing.total
 		: 0;
 	useEffect(() => {
 		onTitleCountChange?.(total);
@@ -904,6 +892,9 @@ function WatchDrawer({
 			{items.length ? (
 				<div className="popup-resource-list">
 					{groupWatchHistoryItems(items).map((group) => {
+						if (group.provider !== "youtube" && group.provider !== "crunchyroll") return null;
+						const stream = browsing.providers[group.provider];
+						const count = stream.pages[0]?.history.totalTitleCount;
 						const branch = JSON.stringify([group.provider]);
 						const open = disclosure.isOpen(branch, true);
 						return (
@@ -915,7 +906,7 @@ function WatchDrawer({
 								<button
 									aria-expanded={open}
 									aria-label={`Toggle ${group.label} history`}
-									aria-description={`${group.items.length} ${group.items.length === 1 ? "title" : "titles"} shown`}
+									aria-description={count === undefined ? `${group.items.length} titles shown` : `${count} ${count === 1 ? "title" : "titles"}, ${group.items.length} shown`}
 									className="popup-provider-row"
 									type="button"
 									onClick={() => disclosure.toggle(branch, true)}
@@ -926,7 +917,7 @@ function WatchDrawer({
 											{group.label}
 										</strong>
 										<span className="popup-provider-count" aria-hidden="true">
-											{group.items.length}
+											{count ?? group.items.length}
 										</span>
 									</span>
 									<span
@@ -970,6 +961,13 @@ function WatchDrawer({
 												onOpen={openUrl}
 											/>
 										))}
+										{stream.nextCursor && dates.ok ? (
+											<button type="button" className="popup-watch-load-more"
+												aria-label={`Load more ${group.label} titles`} aria-busy={stream.loading}
+												disabled={stream.loading} onClick={stream.loadMore}>
+												{stream.loading ? "Loading…" : "Load more titles"}
+											</button>
+										) : null}
 									</div>
 								}
 							</section>
@@ -985,16 +983,6 @@ function WatchDrawer({
 						? "No history matches these conditions."
 						: "Episodes you watch on supported sites will appear here."}
 				</div>
-			) : null}
-			{browsing.nextCursor && dates.ok ? (
-				<button
-					type="button"
-					className="popup-watch-load-more"
-					disabled={browsing.loading}
-					onClick={browsing.loadMore}
-				>
-					Load more titles
-				</button>
 			) : null}
 			<footer className="popup-watch-footer">
 				<button

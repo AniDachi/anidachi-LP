@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  hasHistoryRecordingConsent, historyRecordingChoiceKey, historyRecordingContextRevision, parseHistoryRecordingChoice,
+  isHistoryRecordingEnabled, historyRecordingChoiceKey, historyRecordingContextRevision, parseHistoryRecordingChoice,
   readHistoryRecordingChoice, setHistoryRecordingChoice,
 } from "../src/history-recording-choice";
 import { PopupHistoryRecordingChoice } from "../src/popup-history-recording-choice";
@@ -36,13 +36,8 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals();
 });
-async function render(owner = auth.owner, mode: "notice" | "settings" = "notice", paid = true) {
-  await act(async () => root.render(<PopupHistoryRecordingChoice ownerUserId={owner} mode={mode} paid={paid} />));
-}
-async function click(text: string) {
-  const button = [...host.querySelectorAll("button")].find((entry) => entry.textContent?.includes(text));
-  expect(button, `button ${text}`).toBeTruthy();
-  await act(async () => button!.click());
+async function render(owner: string | null = auth.owner) {
+  await act(async () => root.render(<PopupHistoryRecordingChoice ownerUserId={owner} />));
 }
 
 describe("per-account history recording choice", () => {
@@ -57,60 +52,69 @@ describe("per-account history recording choice", () => {
     expect(historyRecordingContextRevision()).toBe(initial + 3);
   });
 
-  it("requires a current, valid choice and fails closed when storage is unavailable", async () => {
-    expect(await hasHistoryRecordingConsent(auth.owner)).toBe(false);
+  it("enables a missing preference without opening the popup and fails closed on invalid or unreadable data", async () => {
+    expect(await isHistoryRecordingEnabled(auth.owner)).toBe(true);
     const valid = { version: 1, ownerUserId: auth.owner, enabled: true, updatedAt: Date.now() };
     for (const invalid of [null, {}, { ...valid, version: 0 }, { ...valid, enabled: "true" }, { ...valid, updatedAt: NaN }, { ...valid, ownerUserId: "owner-b" }]) {
       expect(parseHistoryRecordingChoice(invalid, auth.owner)).toBeNull();
+      data[historyRecordingChoiceKey(auth.owner)] = invalid;
+      expect(await isHistoryRecordingEnabled(auth.owner)).toBe(false);
     }
     get.mockRejectedValueOnce(new Error("storage unavailable"));
-    expect(await hasHistoryRecordingConsent(auth.owner)).toBe(false);
+    expect(await isHistoryRecordingEnabled(auth.owner)).toBe(false);
   });
 
-  it("preserves each owner's choice without granting consent after account switching", async () => {
+  it("preserves explicit choices independently of the default for another account", async () => {
     await setHistoryRecordingChoice("owner-a", true);
     auth.owner = "owner-b";
-    expect(await hasHistoryRecordingConsent("owner-b")).toBe(false);
+    expect(await isHistoryRecordingEnabled("owner-b")).toBe(true);
     await expect(setHistoryRecordingChoice("owner-a", false)).rejects.toThrow("account changed");
     await setHistoryRecordingChoice("owner-b", false);
     auth.owner = "owner-a";
-    expect(await hasHistoryRecordingConsent(auth.owner)).toBe(true);
-    expect(await hasHistoryRecordingConsent("owner-b")).toBe(false);
+    expect(await isHistoryRecordingEnabled(auth.owner)).toBe(true);
+    expect(await isHistoryRecordingEnabled("owner-b")).toBe(false);
   });
 
-  it("does not write on mount, allows declining, and can enable then revoke from Settings", async () => {
+  it("shows the default-on setting and stops recording without deleting saved data", async () => {
+    data["history-cache"] = { titles: ["saved-title"] };
     await render();
     expect(set).not.toHaveBeenCalled();
-    expect(host.textContent).toContain("video URLs, titles, episodes and playback position");
-    expect(host.querySelector("a")?.getAttribute("href")).toMatch(/\/privacy$/);
-    await click("Not now");
-    expect(await hasHistoryRecordingConsent(auth.owner)).toBe(false);
-    expect(host.textContent).toContain("recording is off");
-    await click("Review"); await click("Allow recording");
-    expect(await hasHistoryRecordingConsent(auth.owner)).toBe(true);
-    expect(host.querySelector("section")).toBeNull();
-    await render(auth.owner, "settings"); await click("Stop recording");
-    expect(await readHistoryRecordingChoice(auth.owner)).toMatchObject({ enabled: false });
-    expect(host.textContent).toContain("Allow recording");
+    const toggle = () => host.querySelector<HTMLButtonElement>('[role="switch"]')!;
+    expect(toggle()?.getAttribute("aria-checked")).toBe("true");
+    await act(async () => toggle().click());
+    expect(await isHistoryRecordingEnabled(auth.owner)).toBe(false);
+    expect(data["history-cache"]).toEqual({ titles: ["saved-title"] });
+    expect(toggle().getAttribute("aria-checked")).toBe("false");
+    await act(async () => toggle().click());
+    expect(await isHistoryRecordingEnabled(auth.owner)).toBe(true);
   });
 
-  it("updates an open surface for its owner and never shows the previous owner's consent", async () => {
-    await setHistoryRecordingChoice("owner-a", true);
-    await render(); expect(host.querySelector("section")).toBeNull();
+  it("updates an open setting for its owner without inheriting another account's choice", async () => {
+    await setHistoryRecordingChoice("owner-a", false);
+    await render();
+    expect(host.querySelector('[role="switch"]')?.getAttribute("aria-checked")).toBe("false");
     auth.owner = "owner-b"; await render();
-    expect(host.textContent).toContain("Save your watch progress?");
-    await act(async () => set({ [historyRecordingChoiceKey("owner-a")]: { version: 1, ownerUserId: "owner-a", enabled: false, updatedAt: Date.now() } }));
-    expect(host.textContent).toContain("Save your watch progress?");
-    await act(async () => setHistoryRecordingChoice("owner-b", true));
-    expect(host.querySelector("section")).toBeNull();
+    expect(host.querySelector('[role="switch"]')?.getAttribute("aria-checked")).toBe("true");
+    await act(async () => set({ [historyRecordingChoiceKey("owner-a")]: { version: 1, ownerUserId: "owner-a", enabled: true, updatedAt: Date.now() } }));
+    expect(await readHistoryRecordingChoice("owner-b")).toBeNull();
+    await act(async () => setHistoryRecordingChoice("owner-b", false));
+    expect(host.querySelector('[role="switch"]')?.getAttribute("aria-checked")).toBe("false");
   });
 
-  it("does not claim success when saving fails and avoids a paid-history prompt on Free", async () => {
-    await render(auth.owner, "notice", false);
-    expect(host.querySelector("section")).toBeNull();
+  it("does not claim a switch was saved when storage rejects it", async () => {
     await render(); set.mockRejectedValueOnce(new Error("Could not save"));
-    await click("Allow recording");
+    await act(async () => host.querySelector<HTMLButtonElement>('[role="switch"]')!.click());
     expect(host.querySelector('[role="alert"]')?.textContent).toBe("Could not save");
-    expect(await hasHistoryRecordingConsent(auth.owner)).toBe(false);
+    expect(await isHistoryRecordingEnabled(auth.owner)).toBe(true);
+    expect(host.querySelector('[role="switch"]')?.getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("keeps an unreadable setting off and cannot change settings while signed out", async () => {
+    get.mockRejectedValueOnce(new Error("unavailable"));
+    await render();
+    expect(host.querySelector('[role="switch"]')?.getAttribute("aria-checked")).toBe("false");
+    expect(host.querySelector('[role="alert"]')).not.toBeNull();
+    await render(null);
+    expect(host.querySelector('[role="switch"]')).toBeNull();
   });
 });

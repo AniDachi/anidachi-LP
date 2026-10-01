@@ -1,7 +1,7 @@
 import { act, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { forgetPopupView, readPopupHistoryView, readPopupView, writePopupHistoryChoice, writePopupNavigation, writePopupQuery } from "../src/popup-view-state";
+import { forgetPopupView, readPopupHistoryView, readPopupView, writePopupHistoryChoice, writePopupNavigation, writePopupQuery, writePopupTitlePages } from "../src/popup-view-state";
 import { PopupRetainedPanel, usePopupNavigation } from "../src/use-popup-navigation";
 
 const OWNER = "account-a";
@@ -10,9 +10,9 @@ let container: HTMLDivElement;
 beforeEach(() => { localStorage.clear(); });
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; container?.remove(); vi.restoreAllMocks(); });
 
-function Harness({ owner = OWNER }: { owner?: string }) {
+function Harness({ owner = OWNER, suspended = false }: { owner?: string; suspended?: boolean }) {
   const shell = useRef<HTMLElement>(null);
-  const [tab, select] = usePopupNavigation(owner, shell);
+  const [tab, select] = usePopupNavigation(owner, shell, suspended);
   return <main ref={shell}>
     <button onClick={() => select("resources")}>Watch</button>
     <button onClick={() => select("friends")}>People</button>
@@ -97,4 +97,29 @@ it("bounds saved choices and tolerates malformed or unavailable storage", () => 
   expect(readPopupView(OWNER).tab).toBe("resources");
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("quota"); });
   expect(() => writePopupNavigation(OWNER, "friends", 120)).not.toThrow();
+});
+
+it("does not save Settings scrolling over the last content position, including closing the popup", async () => {
+  await mount(); scroll(260);
+  await act(async () => root!.render(<Harness suspended />));
+  scroll(0); scroll(90);
+  expect(readPopupView(OWNER).scroll.resources).toBe(260);
+  await act(async () => root!.unmount()); container.remove(); root = undefined;
+  await mount();
+  expect(container.querySelector("main")!.scrollTop).toBe(260);
+});
+
+
+it("keeps independent bounded title depths per provider/query and clears them across owners or generations", () => {
+  const youtube = JSON.stringify({ provider: "youtube", limit: 20 });
+  const crunchyroll = JSON.stringify({ provider: "crunchyroll", limit: 20 });
+  writePopupTitlePages(OWNER, 1, youtube, 3);
+  writePopupTitlePages(OWNER, 1, crunchyroll, 1);
+  expect(readPopupHistoryView(OWNER, 1).titleStreams).toEqual({ [youtube]: 3, [crunchyroll]: 1 });
+  expect(readPopupHistoryView("another", 1).titleStreams).toBeUndefined();
+  expect(readPopupHistoryView(OWNER, 2).titleStreams).toBeUndefined();
+  for (let i = 0; i < 25; i++) writePopupTitlePages(OWNER, 1, `search-${i}`, 100);
+  const saved = readPopupHistoryView(OWNER, 1).titleStreams!;
+  expect(Object.keys(saved)).toHaveLength(16);
+  expect(saved["search-24"]).toBe(20);
 });

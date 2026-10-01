@@ -1,5 +1,5 @@
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
-import { hasHistoryRecordingConsent } from "./history-recording-choice";
+import { isHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
 import type {
 	ClientEvent,
@@ -25,6 +25,7 @@ import {
 	Settings2,
 	SmilePlus,
 	UserPlus,
+	X,
 } from "lucide-react";
 import type {
 	CSSProperties,
@@ -84,8 +85,10 @@ import type {
 	RoomSendDisposition,
 	SignalingTransportReady,
 } from "./media-types";
+import { installComposerQuietRelease } from "./message-composer-quiet-release";
 import {
 	ANIDACHI_COMPOSER_OPEN_ATTR,
+	ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT,
 	ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
 	ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
 	isMessageComposerShortcutEvent,
@@ -398,13 +401,6 @@ function appendVisibleReaction(
 	return participantBounded.slice(-MAX_VISIBLE_REACTIONS_TOTAL);
 }
 
-interface PointerWakePoint {
-	clientX: number;
-	clientY: number;
-	screenX: number;
-	screenY: number;
-}
-
 interface OverlayViewportSize {
 	width: number;
 	height: number;
@@ -424,7 +420,6 @@ const LIVE_CHAT_MAX_MESSAGES = OVERLAY_LAYOUT_MAX_MESSAGES;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
-const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
 const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
 const SIGN_OUT_CONFIRMATION_DURATION_MS = ROOM_END_CONFIRMATION_DURATION_MS;
 export const TRANSIENT_PANEL_NOTICE_DURATION_MS = 3000;
@@ -544,7 +539,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const roomReconnectTimerRef = useRef<number | null>(null);
 	const messageComposerFormRef = useRef<HTMLFormElement | null>(null);
 	const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
-	const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
 	const miniPanelRef = useRef<HTMLElement | null>(null);
 	const overlayRootRef = useRef<HTMLDivElement | null>(null);
 	const cameraStackRef = useRef<HTMLDivElement | null>(null);
@@ -554,9 +548,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const inviteNoticeTimerRef = useRef<number | null>(null);
 	const roomEndConfirmationTimerRef = useRef<number | null>(null);
 	const signOutConfirmationTimerRef = useRef<number | null>(null);
-	const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
-	const messageComposerShieldReleasePointerRef =
-		useRef<PointerWakePoint | null>(null);
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
 	const authGenerationRef = useRef(0);
@@ -677,10 +668,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		ready: false,
 	});
 	const [messageComposerGuardActive, setMessageComposerGuardActive] =
-		useState(false);
-	const [messageComposerShieldActive, setMessageComposerShieldActive] =
-		useState(false);
-	const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] =
 		useState(false);
 	const [messageComposerEmojiOpen, setMessageComposerEmojiOpen] =
 		useState(false);
@@ -1775,47 +1762,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const setMessageComposerDomGuard = useCallback(
-		(active: boolean) => {
-			if (active) {
-				document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "true";
-				adapter.container.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "true";
-				return;
+		(mode: "true" | "quiet" | null) => {
+			for (const target of [document.documentElement, adapter.container]) {
+				if (mode) target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = mode;
+				else delete target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
 			}
-
-			delete document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
-			delete adapter.container.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
 		},
 		[adapter.container],
 	);
 
-	const clearMessageComposerShieldReleaseTimer = useCallback(() => {
-		if (messageComposerShieldReleaseTimerRef.current === null) {
-			return;
-		}
-
-		window.clearTimeout(messageComposerShieldReleaseTimerRef.current);
-		messageComposerShieldReleaseTimerRef.current = null;
-	}, []);
-
 	const deactivateMessageComposerGuard = useCallback(() => {
-		clearMessageComposerShieldReleaseTimer();
-		resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-		messageComposerShieldReleasePointerRef.current = null;
-		setMessageComposerShieldActive(false);
-		setMessageComposerShieldReleasing(false);
 		setMessageComposerGuardActive(false);
-		setMessageComposerDomGuard(false);
-	}, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
+		setMessageComposerDomGuard(null);
+	}, [setMessageComposerDomGuard]);
 
 	const activateMessageComposerGuard = useCallback(() => {
-		clearMessageComposerShieldReleaseTimer();
-		resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-		messageComposerShieldReleasePointerRef.current = null;
-		setMessageComposerShieldActive(true);
-		setMessageComposerShieldReleasing(false);
 		setMessageComposerGuardActive(true);
-		setMessageComposerDomGuard(true);
-	}, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
+		setMessageComposerDomGuard("true");
+	}, [setMessageComposerDomGuard]);
+
+	const keepPlayerQuietAfterComposer = useCallback(() => {
+		setMessageComposerGuardActive(true);
+		setMessageComposerDomGuard("quiet");
+	}, [setMessageComposerDomGuard]);
 
 	useEffect(() => {
 		return () => {
@@ -1837,11 +1806,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 			}
 			liveChatTimersRef.current = {};
-			clearMessageComposerShieldReleaseTimer();
-			resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-			setMessageComposerDomGuard(false);
+			setMessageComposerDomGuard(null);
 		};
-	}, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
+	}, [setMessageComposerDomGuard]);
 
 	const currentParticipant = useMemo(
 		() =>
@@ -2282,17 +2249,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		mediaSeatAuthoritative,
 		roomId,
 	]);
-	const messageComposerShieldVisible =
-		messageComposerOpen || messageComposerShieldActive;
-	const messageComposerShieldLatched =
-		messageComposerShieldActive && !messageComposerOpen;
-	const messageComposerShieldClassName = [
-		"message-composer-shield",
-		messageComposerShieldLatched ? "latched" : "",
-		messageComposerShieldReleasing ? "releasing" : "",
-	]
-		.filter(Boolean)
-		.join(" ");
 	// Worker snapshots own accumulated room usage. The local interval only keeps
 	// the display moving between snapshots while host and guest are both live.
 	const quotaMeteringActive =
@@ -2576,12 +2532,62 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	useEffect(() => {
 		setMessageComposerDomGuard(
-			messageComposerOpen || messageComposerGuardActive,
+			messageComposerOpen ? "true" : messageComposerGuardActive ? "quiet" : null,
 		);
 	}, [
 		messageComposerGuardActive,
 		messageComposerOpen,
 		setMessageComposerDomGuard,
+	]);
+
+	useEffect(() => {
+		if (
+			messageComposerOpen ||
+			!messageComposerGuardActive ||
+			!overlayRootRef.current
+		)
+			return;
+		return installComposerQuietRelease(
+			adapter.container,
+			overlayRootRef.current,
+			deactivateMessageComposerGuard,
+			(event) => {
+				const state = {
+					experimentalSuperReactionsEnabled,
+					messageComposerOpen,
+					panelOpen,
+					reactionsEnabled,
+					reactionShortcuts: reactionShortcuts.assignments,
+					roomActive: Boolean(roomId),
+					voiceMode: voiceSession.mode,
+				};
+				// Held PTT is still an overlay gesture, even when no new action starts.
+				const heldVoiceShortcut =
+					state.roomActive &&
+					state.voiceMode === "push-to-talk" &&
+					!event.altKey &&
+					!event.ctrlKey &&
+					!event.metaKey &&
+					!event.shiftKey &&
+					(event.code === "KeyV" || event.key.toLowerCase() === "v");
+				return (
+					heldVoiceShortcut ||
+					getHotkeyAction(event, state) !== null ||
+					shouldCaptureReactionShortcutEvent(event, state)
+				);
+			},
+		);
+	}, [
+		adapter.container,
+		deactivateMessageComposerGuard,
+		experimentalSuperReactionsEnabled,
+		messageComposerGuardActive,
+		messageComposerOpen,
+		panelOpen,
+		reactionsEnabled,
+		reactionShortcuts.assignments,
+		roomId,
+		voiceSession.mode,
 	]);
 
 	useEffect(() => {
@@ -2748,7 +2754,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
 					: null;
 			},
 			loadPreferences: async () => {
@@ -2760,7 +2766,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
 					: null;
 			},
 			recoverCapture: async () => {
@@ -2777,7 +2783,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!bootstrapped.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
 					: null;
 			},
 			observeLocally: async (
@@ -5763,18 +5769,18 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	const blurMessageComposerInput = useCallback(() => {
 		const input = messageComposerInputRef.current;
-		if (input && document.activeElement === input) {
+		if (input && (input.getRootNode() as Document | ShadowRoot).activeElement === input) {
 			input.blur();
 		}
 	}, []);
 
 	const closeMessageComposer = useCallback(() => {
+		keepPlayerQuietAfterComposer();
 		blurMessageComposerInput();
 		setMessageComposerOpen(false);
 		setMessageComposerEmojiOpen(false);
 		setMessageComposerText("");
-		deactivateMessageComposerGuard();
-	}, [blurMessageComposerInput, deactivateMessageComposerGuard]);
+	}, [blurMessageComposerInput, keepPlayerQuietAfterComposer]);
 
 	const insertComposerEmoji = useCallback(
 		(emoji: string) => {
@@ -5811,20 +5817,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				event.nativeEvent.stopImmediatePropagation();
 			}
 			const text = messageComposerText.trim();
-			if (!text || !roomId) {
+			if (!text) {
+				closeMessageComposer();
 				return;
 			}
+			if (!roomId) return;
 
 			sendReaction("", text);
+			keepPlayerQuietAfterComposer();
 			blurMessageComposerInput();
 			setMessageComposerText("");
 			setMessageComposerOpen(false);
 			setMessageComposerEmojiOpen(false);
-			deactivateMessageComposerGuard();
 		},
 		[
 			blurMessageComposerInput,
-			deactivateMessageComposerGuard,
+			closeMessageComposer,
+			keepPlayerQuietAfterComposer,
 			messageComposerText,
 			roomId,
 			sendReaction,
@@ -5836,59 +5845,24 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			event.stopPropagation();
 			event.nativeEvent.stopImmediatePropagation();
 
-			if (event.key === "Escape" && !isFullscreenActive()) {
+			if (
+				event.key === "Escape" && !isFullscreenActive() &&
+				!event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229
+			) {
 				event.preventDefault();
 				closeMessageComposer();
 				return;
 			}
 
 			if (event.key === "Enter" && !event.shiftKey) {
+				if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
+					return;
+				}
 				event.preventDefault();
-				submitMessageComposer();
+				if (!event.repeat) submitMessageComposer();
 			}
 		},
 		[closeMessageComposer, submitMessageComposer],
-	);
-
-	const handleMessageComposerShieldReleaseIntent = useCallback(
-		(event: PointerEvent<HTMLElement>) => {
-			stopNativeEvent(event);
-
-			if (messageComposerOpen) {
-				return;
-			}
-
-			const shield = event.currentTarget;
-			shield.style.cursor = "default";
-			messageComposerShieldReleasePointerRef.current = {
-				clientX: event.clientX,
-				clientY: event.clientY,
-				screenX: event.screenX,
-				screenY: event.screenY,
-			};
-
-			if (messageComposerShieldReleaseTimerRef.current !== null) {
-				return;
-			}
-
-			setMessageComposerShieldReleasing(true);
-			setMessageComposerGuardActive(false);
-			setMessageComposerDomGuard(false);
-			messageComposerShieldReleaseTimerRef.current = window.setTimeout(() => {
-				messageComposerShieldReleaseTimerRef.current = null;
-				const wakePoint = messageComposerShieldReleasePointerRef.current;
-				const activeShield = messageComposerShieldRef.current;
-				if (wakePoint) {
-					wakePlayerAfterComposerShieldRelease(wakePoint, activeShield);
-				}
-				deactivateMessageComposerGuard();
-			}, MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS);
-		},
-		[
-			deactivateMessageComposerGuard,
-			messageComposerOpen,
-			setMessageComposerDomGuard,
-		],
 	);
 
 	useEffect(() => {
@@ -5919,7 +5893,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 
-		const handleSubmit = () => submitMessageComposer();
+		const handleSubmit = () => {
+			// The early guard also receives Enter from controls in our closed shadow.
+			// Activate the focused control, rather than submitting a draft from Close.
+			const form = messageComposerFormRef.current;
+			const focused = (form?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement;
+			if (
+				focused instanceof HTMLButtonElement &&
+				Array.from(form?.querySelectorAll("button") ?? []).includes(focused)
+			) {
+				focused.click();
+				return;
+			}
+			submitMessageComposer();
+		};
+
+		window.addEventListener(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT, closeMessageComposer);
 
 		window.addEventListener(
 			ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
@@ -5927,12 +5916,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		);
 
 		return () => {
+			window.removeEventListener(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT, closeMessageComposer);
 			window.removeEventListener(
 				ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
 				handleSubmit,
 			);
 		};
-	}, [messageComposerOpen, submitMessageComposer]);
+	}, [closeMessageComposer, messageComposerOpen, submitMessageComposer]);
 
 	useEffect(() => {
 		const state = () => ({
@@ -5950,7 +5940,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
+			if (
+				messageComposerOpen && isEscapeKey(event) && !isFullscreenActive() &&
+				!event.isComposing && event.keyCode !== 229
+			) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				closeMessageComposer();
@@ -6031,7 +6024,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
+			if (
+				messageComposerOpen && isEscapeKey(event) && !isFullscreenActive() &&
+				!event.isComposing && event.keyCode !== 229
+			) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				return;
@@ -6885,33 +6881,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				/>
 			) : null}
 
-			{messageComposerShieldVisible && roomId ? (
+			{messageComposerOpen && roomId ? (
 				<div
-					ref={messageComposerShieldRef}
 					aria-hidden="true"
-					className={messageComposerShieldClassName}
-					onClick={stopNativeEvent}
-					onMouseDown={stopNativeEvent}
-					onMouseUp={stopNativeEvent}
-					onPointerDown={handleMessageComposerShieldReleaseIntent}
-					onPointerMove={handleMessageComposerShieldReleaseIntent}
-					onPointerOver={stopNativeEvent}
-					onPointerUp={stopNativeEvent}
+					className="message-composer-shield"
+					{...overlayInteractionBoundaryProps}
 				/>
 			) : null}
 
 			{messageComposerOpen && roomId ? (
 				<form
 					className="message-composer"
-					onClick={stopNativeEvent}
-					onKeyDown={stopNativeEvent}
-					onMouseDown={stopNativeEvent}
-					onMouseMove={stopNativeEvent}
-					onMouseUp={stopNativeEvent}
-					onPointerDown={stopNativeEvent}
-					onPointerMove={stopNativeEvent}
-					onPointerOver={stopNativeEvent}
-					onPointerUp={stopNativeEvent}
+					{...overlayInteractionBoundaryProps}
+					onFocus={stopNativeEvent}
+					onBlur={stopNativeEvent}
+					onKeyPress={stopNativeEvent}
 					onSubmit={submitMessageComposer}
 					ref={messageComposerFormRef}
 				>
@@ -6959,6 +6943,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						type="submit"
 					>
 						<SendHorizontal size={15} />
+					</button>
+					<button
+						aria-label="Close message"
+						className="message-composer-close"
+						onClick={closeMessageComposer}
+						title={
+							navigator.platform.startsWith("Mac")
+								? "Close without sending (⌥ Option + C)"
+								: "Close without sending (Alt + C)"
+						}
+						type="button"
+					>
+						<X size={16} />
 					</button>
 				</form>
 			) : null}
@@ -7540,58 +7537,6 @@ function initials(name: string): string {
 		.slice(0, 2)
 		.map((part) => part[0]?.toUpperCase() ?? "")
 		.join("");
-}
-
-function resetComposerShieldInlineStyles(shield: HTMLDivElement | null) {
-	if (!shield) {
-		return;
-	}
-
-	shield.style.cursor = "";
-	shield.style.pointerEvents = "";
-}
-
-function wakePlayerAfterComposerShieldRelease(
-	point: PointerWakePoint,
-	shield: HTMLElement | null,
-) {
-	const previousPointerEvents = shield?.style.pointerEvents ?? "";
-	if (shield) {
-		shield.style.pointerEvents = "none";
-	}
-
-	const target = document.elementFromPoint(point.clientX, point.clientY);
-	if (shield) {
-		shield.style.pointerEvents = previousPointerEvents;
-	}
-
-	if (!target) {
-		return;
-	}
-
-	const eventInit: MouseEventInit = {
-		bubbles: true,
-		cancelable: true,
-		clientX: point.clientX,
-		clientY: point.clientY,
-		composed: true,
-		screenX: point.screenX,
-		screenY: point.screenY,
-		view: window,
-	};
-
-	if (typeof globalThis.PointerEvent === "function") {
-		target.dispatchEvent(
-			new globalThis.PointerEvent("pointermove", {
-				...eventInit,
-				isPrimary: true,
-				pointerId: 1,
-				pointerType: "mouse",
-			}),
-		);
-	}
-
-	target.dispatchEvent(new MouseEvent("mousemove", eventInit));
 }
 
 function stopNativeEvent(event: SyntheticEvent<HTMLElement>) {

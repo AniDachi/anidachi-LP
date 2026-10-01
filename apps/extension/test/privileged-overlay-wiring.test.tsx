@@ -4,7 +4,7 @@ import { RoomMediaSnapshotSchema } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
+import { mountOverlay, startContentLifecycle, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
@@ -809,6 +809,217 @@ describe("privileged overlay wiring", () => {
 			"room-exit",
 		);
 		await unmount(view.root);
+	});
+
+	it.each([
+		"Enter",
+		"button",
+		"Escape",
+		"empty Enter",
+		"whitespace Enter",
+		"close button",
+		"close button keyboard",
+		"Alt+C",
+	])("keeps the player quiet after closing the composer with %s, then releases on real player intent", async (method) => {
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: confirmedRoomSession(),
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [hostParticipant()],
+			});
+		});
+		const keyboardRuntime = startContentLifecycle({
+			detect: () => ({ status: "none" }),
+			ensureStyles: () => {},
+			startProviderStudy: () => null,
+		});
+		const view = await renderOverlayInClosedShadow();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			await flushMountedWork();
+			await act(async () => {
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						bubbles: true,
+						cancelable: true,
+						code: "Enter",
+						composed: true,
+						key: "Enter",
+					}),
+				);
+				await Promise.resolve();
+			});
+
+			const send = vi
+				.spyOn(RoomClient.prototype, "send")
+				.mockReturnValue("sent");
+			await click(button(view.container, "Choose emoji"));
+			const emoji = [
+				...view.container.querySelectorAll<HTMLButtonElement>(
+					".message-composer-emoji-popover button",
+				),
+			].find((el) => el.textContent === "🎬")!;
+			if (!method.includes("Enter") || method === "Enter") await click(emoji);
+			const input = view.container.querySelector<HTMLInputElement>(
+				'input[aria-label="Anidachi message"]',
+			)!;
+			if (method === "whitespace Enter") {
+				await act(async () => {
+					Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "   ");
+					input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+				});
+			}
+			if (method !== "Escape") {
+				Object.defineProperty(document, "fullscreenElement", { configurable: true, value: document.body });
+			}
+			await act(async () => {
+				input.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "Enter",
+						code: "Enter",
+						isComposing: true,
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				);
+				input.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "Enter",
+						code: "Enter",
+						repeat: true,
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				);
+			});
+			expect(send).not.toHaveBeenCalled();
+			expect(view.container.querySelector(".message-composer")).not.toBeNull();
+			await act(async () => {
+				input.focus();
+				if (method === "button") button(view.container, "Send message").click();
+				else if (method === "close button") button(view.container, "Close message").click();
+				else {
+					const target = method === "close button keyboard" ? button(view.container, "Close message") : input;
+					target.focus();
+					expect((target.getRootNode() as ShadowRoot).activeElement).toBe(target);
+					target.dispatchEvent(
+						new KeyboardEvent("keydown", {
+							key: method === "Alt+C" ? "c" : method === "Escape" ? "Escape" : "Enter",
+							code: method === "Alt+C" ? "KeyC" : method === "Escape" ? "Escape" : "Enter",
+							altKey: method === "Alt+C",
+							bubbles: true,
+							composed: true,
+							cancelable: true,
+						}),
+					);
+				}
+			});
+			await act(async () => {
+				window.dispatchEvent(new KeyboardEvent("keyup", {
+					key: method === "Alt+C" ? "c" : method === "Escape" ? "Escape" : "Enter",
+					code: method === "Alt+C" ? "KeyC" : method === "Escape" ? "Escape" : "Enter",
+					bubbles: true, cancelable: true,
+				}));
+			});
+			expect(view.container.querySelector(".message-composer")).toBeNull();
+			expect(
+				view.container.querySelector(".message-composer-shield"),
+			).toBeNull();
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			if (method === "Enter" || method === "button") expect(send).toHaveBeenCalledOnce();
+			else expect(send).not.toHaveBeenCalled();
+			await act(async () => {
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "v",
+						code: "KeyV",
+						repeat: true,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "1",
+						code: "Digit1",
+						repeat: true,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+			});
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			const host = (view.container.getRootNode() as ShadowRoot).host;
+			const player = host.parentElement!;
+			// Focus loss and hover retargeting after removal are not a new user gesture.
+			await act(async () => {
+				player.dispatchEvent(new Event("focusin", { bubbles: true }));
+				player.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+			});
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			const native = vi.fn();
+			player.addEventListener("pointerdown", native);
+			await act(async () =>
+				player.dispatchEvent(
+					new PointerEvent("pointerdown", {
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				),
+			);
+			expect(
+				document.documentElement.dataset.anidachiComposerOpen,
+			).toBeUndefined();
+			expect(native).toHaveBeenCalledOnce();
+		} finally {
+			Reflect.deleteProperty(document, "fullscreenElement");
+			keyboardRuntime.dispose();
+			await unmount(view.root);
+		}
 	});
 
 	it("opens the emoji picker and inserts an emoji inside a closed overlay", async () => {

@@ -11,6 +11,7 @@ vi.mock("wxt/utils/storage", () => ({ storage: {
 } }));
 // History has independent read/capture leases, tested with its real background elsewhere.
 vi.mock("../src/popup-watch-history", () => ({ PopupWatchHistoryPanel: () => null }));
+vi.mock("../src/popup-history-settings", () => ({ PopupHistorySettings: () => null }));
 import { PopupApp } from "../src/popup-app";
 import { AUTH_TOKENS_KEY, AUTH_TOKENS_STORAGE_KEY, type ExtensionAuthTokens } from "../src/auth-tokens";
 import type { HostingAccountAccess } from "../src/hosting-access-client";
@@ -43,13 +44,14 @@ beforeEach(() => {
   container = document.createElement("div"); document.body.append(container); root = createRoot(container);
   read = vi.fn(async owner => access("free", owner));
   vi.stubGlobal("chrome", {
-    storage: { local: { get: async () => ({}) }, onChanged: { addListener: (fn: any) => listeners.add(fn), removeListener: (fn: any) => listeners.delete(fn) } },
+    storage: { local: { get: async () => ({ "anidachi.welcomeSeen.v1": true }), set: async () => {} }, onChanged: { addListener: (fn: any) => listeners.add(fn), removeListener: (fn: any) => listeners.delete(fn) } },
     action: { setBadgeBackgroundColor: async () => {}, setBadgeText: async () => {} },
     runtime: { sendMessage: vi.fn(async (message: any) => {
       if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: store.get(AUTH_TOKENS_KEY) };
       if (message.type === "ANIDACHI_HOSTING_ACCESS") return { ok: true, access: await read(message.ownerUserId) };
       if (message.command === "list-social-directory") return { ok: true, directory: { friends: [], incomingRequests: [], outgoingRequests: [], groups: [], recentPeople: [] } };
       if (message.command === "list-invites") return { ok: true, invites: { meta: { serverTime: access("free").serverTime, schemaVersion: 1 }, inbox: [], sent: [] } };
+      if (message.command === "status") return { ok: true, status: { supported: true, configured: true, enabled: false, permissionGranted: false, subscribed: false } };
       return { ok: false };
     }) },
   });
@@ -57,11 +59,36 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("Popup current account plan", () => {
+  it("loads notification settings when opened from the welcome", async () => {
+    vi.spyOn(chrome.storage.local, "get").mockImplementation(async () => ({}));
+    vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });
+    await mount();
+    const link = container.querySelector<HTMLButtonElement>(".popup-welcome-settings")!;
+    expect(link).not.toBeNull();
+    const shell = container.querySelector<HTMLElement>(".popup-shell")!;
+    shell.scrollTop = 180;
+    await act(async () => link.click());
+    expect(shell.scrollTop).toBe(0);
+    expect(container.querySelector<HTMLButtonElement>('[role="switch"][aria-label="Invitation notifications"]')?.disabled).toBe(false);
+    expect(container.querySelector('[role="tablist"]')?.parentElement?.hidden).toBe(true);
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close settings"]')!.click());
+    expect(container.querySelector('[role="tablist"]')?.parentElement?.hidden).toBe(false);
+    expect(shell.scrollTop).toBe(180);
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("Open settings");
+  });
+  it("does not restore another account's scroll position after Settings", async () => {
+    await mount();
+    const shell = container.querySelector<HTMLElement>(".popup-shell")!;
+    shell.scrollTop = 240;
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Open settings"]')!.click());
+    await changeSession(tokens(B));
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close settings"]')!.click());
+    expect(shell.scrollTop).toBe(0);
+  });
   it("does not retain a cached paid badge after server access becomes Free or unavailable", async () => {
     const cached = tokens(); cached.user.plan = "pro"; store.set(AUTH_TOKENS_KEY, cached);
     await mount();
     expect(container.querySelector(".plan-badge")?.textContent).toBe("Free");
-    expect(container.textContent).not.toContain("Save your watch progress?");
     read.mockRejectedValueOnce(new Error("offline"));
     await act(async () => window.dispatchEvent(new Event("focus")));
     expect(container.querySelector(".plan-badge")).toBeNull();
@@ -72,24 +99,20 @@ describe("Popup current account plan", () => {
     expect(container.querySelector(".plan-badge")?.textContent).toBe("Plus");
     expect(container.textContent).not.toContain("3-day free trial");
   });
-  it("updates the badge and recording invitation from effective access instead of the cached login plan", async () => {
+  it("updates the badge from effective access instead of the cached login plan", async () => {
     read.mockResolvedValue(access("plus"));
     await mount();
     expect(container.querySelector(".plan-badge")?.textContent).toBe("Plus");
-    expect(container.textContent).toContain("Save your watch progress?");
     for (const plan of ["pro", "free", "plus"] as const) {
       const pending = deferred<HostingAccountAccess>(); read.mockReturnValueOnce(pending.promise);
       await act(async () => window.dispatchEvent(new Event("focus")));
       expect(container.querySelector(".plan-badge")).toBeNull();
-      expect(container.textContent).not.toContain("Save your watch progress?");
       await act(async () => pending.resolve(access(plan)));
       expect(container.querySelector(".plan-badge")?.textContent?.toLowerCase()).toBe(plan);
-      expect(container.textContent?.includes("Save your watch progress?")).toBe(plan !== "free");
     }
     read.mockRejectedValueOnce(new Error("offline"));
     await act(async () => window.dispatchEvent(new Event("focus")));
     expect(container.querySelector(".plan-badge")).toBeNull();
-    expect(container.textContent).not.toContain("Save your watch progress?");
     expect(vi.mocked(chrome.runtime.sendMessage).mock.calls.some(([m]: any) => m.command === "create-room")).toBe(false);
   });
   it.each(["account", "same-owner-login", "logout"] as const)("retires a pending plan read after %s", async change => {
@@ -100,7 +123,6 @@ describe("Popup current account plan", () => {
     await changeSession(change === "logout" ? null : change === "account" ? tokens(B) : { ...tokens(), refreshToken: "new-login" });
     await act(async () => old.resolve(access("pro")));
     expect(container.querySelector(".plan-badge")).toBeNull();
-    expect(container.textContent).not.toContain("Save your watch progress?");
     if (change !== "logout") {
       await act(async () => fresh.resolve(access("plus", change === "account" ? B : A)));
       expect(container.querySelector(".plan-badge")?.textContent).toBe("Plus");

@@ -1,6 +1,6 @@
 import { parseWatchHistoryLease, type WatchHistoryLease } from "./watch-history-access";
 import type { WatchHistoryController } from "./watch-history-controller";
-import { hasHistoryRecordingConsent, historyRecordingChoiceKey } from "./history-recording-choice";
+import { isHistoryRecordingEnabled, historyRecordingChoiceKey } from "./history-recording-choice";
 import { WATCH_HISTORY_STORAGE_KEY, watchHistoryPartitionKey } from "./watch-history-storage";
 
 type StorageChange = { oldValue?: unknown; newValue?: unknown };
@@ -21,7 +21,7 @@ export function bindWatchHistoryPreferenceListener(options: {
   onChanged?: StorageChangedEventLike;
 }): () => void {
   const onChanged = options.onChanged ?? chrome.storage.onChanged;
-  const consent = options.hasRecordingConsent ?? hasHistoryRecordingConsent;
+  const consent = options.hasRecordingConsent ?? isHistoryRecordingEnabled;
   let revision = 0;
   let disposed = false;
   const listener: StorageChangeListener = (changes, areaName) => {

@@ -226,6 +226,7 @@ export function subscribeYouTubePlayerOverlayGeometry(
 			"hidden",
 			"role",
 			"type",
+			"data-anidachi-composer-open",
 		],
 		childList: true,
 		subtree: true,

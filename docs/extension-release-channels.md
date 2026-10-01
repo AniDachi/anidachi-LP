@@ -114,13 +114,25 @@ schemas. It sets Zod's `jitless` option to avoid dynamic compilation and even th
 Function capability probe under MV3 CSP. Validation schemas and Worker/web Zod
 configuration are unchanged; no `unsafe-eval` permission is added.
 
-Automatic personal-history recording now also requires an explicit choice for
-the signed-in account in this browser. A fresh or upgraded installation without
-that choice does not capture, discover catalog metadata, or flush progress.
-Existing saved history, Resume, and rooms remain available. Declining can be
-reversed in Settings; stopping recording preserves saved history and pauses
-pending work. Already dispatched requests can finish. Plus/Pro entitlement and
-the separate YouTube preference still apply. Website manual edits are unchanged.
+### Local default-on history candidate, October 1, 2026
+
+The local `codex/extension-welcome-history` candidate replaces the earlier
+explicit-choice prompt with a once-per-installation welcome in Watch and a
+Settings switch. The welcome is marked seen only while visible in the popup;
+Got it only dismisses it. Recording does not depend on opening or dismissing it.
+
+A missing account/browser recording preference now defaults to enabled. Existing
+explicit off choices are preserved; malformed or unreadable preferences remain
+off. Signed-in ownership, current Plus/Pro (including trial) access, lease and
+session fences, and the separate YouTube opt-in still apply before capture,
+catalog discovery, and progress dispatch. Disabling recording stops new work
+without deleting saved history; previously dispatched requests can finish.
+Website manual edits, history reading and Resume are unchanged.
+
+This is a local candidate, not a deployed or Store-published change. The local
+privacy page describes it, but the public privacy policy and Chrome Web Store
+listing must match the data practices before public release. The older compliance
+release record remains historical. No permissions or API contracts change.
 
 ## Build Commands
 
