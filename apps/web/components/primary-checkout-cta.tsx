@@ -16,22 +16,22 @@ const COPY = {
     body: "Install the Chrome extension in about 2 minutes — Crunchyroll and YouTube watchrooms.",
   },
   guide: {
-    body: "Download AniDachi for Chrome, then host on the same Crunchyroll or YouTube account you already use.",
+    body: "Install AniDachi in Chrome. Join friends for free, or host with Plus or Pro on Crunchyroll and YouTube.",
   },
   compare: {
     body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll and YouTube watchrooms.",
   },
   anime: {
-    body: "Install AniDachi, open the title on Crunchyroll or YouTube, and start a watchroom.",
+    body: "Install AniDachi and open the video. Host with Plus or Pro, including during a trial; friends join free.",
   },
   listicle: {
-    body: "Get the Chrome extension first — Plus and Pro are optional upgrades after you host.",
+    body: "Get the Chrome extension. Only the host needs Plus or Pro, including during a trial; friends join free.",
   },
   glossary: {
-    body: "Install on desktop Chrome, then upgrade for longer sessions, more participants, and watch history.",
+    body: "Install on desktop Chrome. Join for free; choose Plus or Pro to host and record your own watch history.",
   },
   pillar: {
-    body: "Add AniDachi from the Chrome Web Store, then create a watchroom.",
+    body: "Add AniDachi from the Chrome Web Store. Create a room with Plus or Pro, or join a friend for free.",
   },
 } as const;
 

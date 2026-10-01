@@ -2,7 +2,6 @@ import { getPlanPolicy } from "@anidachi/protocol";
 import {
   PRICING_PLUS_SHORT,
   PRICING_PRO_SHORT,
-  PRICING_STARTING_AT,
 } from "@/lib/pricing-tiers";
 
 export {
@@ -11,97 +10,95 @@ export {
   PRICING_STARTING_AT,
 } from "@/lib/pricing-tiers";
 
-const freePolicy = getPlanPolicy("free");
 const plusPolicy = getPlanPolicy("plus");
 const proPolicy = getPlanPolicy("pro");
 
 /** Honest room-size range for SEO / FAQ copy (matches getPlanPolicy). */
-export const PRICING_ROOM_SIZE_RANGE = `2–${proPolicy.maxParticipants} people depending on plan (Free up to ${freePolicy.maxParticipants}, Plus up to ${plusPolicy.maxParticipants}, Pro up to ${proPolicy.maxParticipants})`;
+export const PRICING_ROOM_SIZE_RANGE = `up to ${plusPolicy.maxParticipants} people with a Plus host or ${proPolicy.maxParticipants} with a Pro host (including the host; friends join free)`;
 
 /** Async is planned — never sell it as a current paid differentiator. */
 export const ASYNC_COMING_SOON =
   "Async catch-up is coming soon in a later batch";
 
-/** Paid plans upgrade the host's room limits; guests can stay on Free. */
+/** Public copy for the paid-hosting model; legacy quota policy is not a Free offer. */
 export const PRICING_HOST_MODEL =
-  "Free hosts can start limited rooms; Plus and Pro upgrade the host's room limits while friends can join on Free accounts. Recording and editing personal progress require each viewer’s own Plus or Pro plan. Saved history and Resume remain available on Free. Crunchyroll and YouTube are available on every plan.";
+  "Only the host needs Plus or Pro, including during a trial. Friends join on Free accounts, and the host's plan sets the room limits. Recording and editing personal watch progress require each viewer’s own Plus or Pro access. Saved history and Resume remain available on Free. Both Crunchyroll and YouTube are supported.";
+
+export const PRICING_TRIAL_NOTE =
+  "New and existing Free accounts that have not used a trial can try Plus or Pro once for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel renewal before the trial ends.";
 
 export const PRICING_CANCELLATION_NOTE =
-  "Cancel renewal from Account → Subscription. Paid access continues until the end of your billing period.";
+  "Cancel renewal from Account → Subscription. Access continues until your current trial or paid period ends.";
 
 export const PRICING_IS_ANIDACHI_FREE_ANSWER =
-  `Yes — friends can join watchrooms on a Free account. When you want to host your own rooms without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")}. Cancel renewal from your account. ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
+  `Yes — you can join a Plus, Pro or trial host's room for free. Creating your own rooms and recording personal watch progress require your own Plus or Pro access. ${PRICING_TRIAL_NOTE} See the pricing page for monthly and yearly prices. ${PRICING_CANCELLATION_NOTE}`;
 
 export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
-  `No. ${PRICING_HOST_MODEL} Each person still needs their own Crunchyroll account to stream the video.`;
+  `No. ${PRICING_HOST_MODEL} Each person still needs their own access to the video on Crunchyroll.`;
 
 export const PRICING_PLUS_VS_PRO_ANSWER =
-  `Plus (${PRICING_PLUS_SHORT}) removes the Free daily host limit, raises the room to ${plusPolicy.maxParticipants} people and ${plusPolicy.maxMicrophones} mics, and lets you record and edit personal progress on Crunchyroll and YouTube. Saved history and Resume remain available on Free. Pro (${PRICING_PRO_SHORT}) is the same features with up to ${proPolicy.maxParticipants} people and ${proPolicy.maxMicrophones} mics, plus priority support. Friends can join any host on Free. ${ASYNC_COMING_SOON} — it is not part of Plus or Pro today.`;
+  `Plus supports one host and up to ${plusPolicy.maxParticipants - 1} friends, with ${plusPolicy.maxCameras} cameras and ${plusPolicy.maxMicrophones} microphones. Pro supports one host and up to ${proPolicy.maxParticipants - 1} friends, with ${proPolicy.maxCameras} cameras, ${proPolicy.maxMicrophones} microphones and priority support. Friends join for free. Both plans include hosting without a daily time limit and personal watch history on Crunchyroll and YouTube. Monthly and yearly billing are available. ${PRICING_TRIAL_NOTE}`;
 
 export function pricingWatchPageFaqAnswer(animeTitle: string): string {
-  return `AniDachi has a Free tier for joining friends' rooms and hosting limited rooms. When you want to host without limits, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} — see homepage pricing and checkout. You still need individual Crunchyroll access for ${animeTitle}; AniDachi provides the watchroom, sync, and chat layer on top of each person's stream.`;
+  return `You can join a Plus, Pro or trial host's room for free. To create your own room, choose Plus or Pro. ${PRICING_TRIAL_NOTE} Each person still needs their own Crunchyroll access to ${animeTitle}; AniDachi adds sync and chat to each person's stream.`;
 }
 
 export const PRICING_COMPARE_OVERVIEW =
-  `AniDachi has a Free tier for joining and hosting limited rooms. Hosts who need unlimited hosting and viewers who want personal history can upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}). ${ASYNC_COMING_SOON}.`;
+  `Friends join for free. Hosting your own room and recording personal watch history require Plus or Pro, including during a trial. Both plans support Crunchyroll and YouTube, with monthly and yearly billing. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_ASYNC_HOST_SNIPPET =
-  `${ASYNC_COMING_SOON}. Today: live watchrooms and progress tracking on paid plans — Free includes limited hosting; Plus starts at ${PRICING_STARTING_AT} — manage your subscription from your account.`;
+  `${ASYNC_COMING_SOON}. Today, host a live watchroom with Plus or Pro and invite friends for free. Each viewer needs their own Plus or Pro access to record personal watch progress.`;
 
 export const PRICING_TELEPARTY_COMPARE_FAQ =
-  `Teleparty has a free tier for basic live sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro tiers for higher host limits and personal progress on Crunchyroll and YouTube. ${ASYNC_COMING_SOON}.`;
+  `Teleparty has a free tier for basic live sync, plus a premium tier. With AniDachi, friends join for free and the host needs Plus or Pro, including during a trial. Both plans support Crunchyroll and YouTube. Personal history recording requires each viewer's own Plus or Pro access. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_RAVE_COMPARE_FAQ =
-  `Rave offers a free tier with basic sync and chat. AniDachi has a Free tier for joining and limited hosting; Plus starts at ${PRICING_PLUS_SHORT} and Pro at ${PRICING_PRO_SHORT} for hosts who need unlimited hosting and personal history. ${ASYNC_COMING_SOON}.`;
+  `Rave offers a free tier with basic sync and chat. AniDachi lets friends join a Plus, Pro or trial host for free. Plus and Pro include hosting and personal history recording, with monthly and yearly billing. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_DISCORD_COMPARE_FAQ =
-  `Discord offers screen sharing, but protected players may restrict capture. With AniDachi, each viewer needs their own access to the title on Crunchyroll. AniDachi adds watchrooms, anime detection, and live sync on top of personal Crunchyroll streams — Free for limited rooms; Plus and Pro for higher host limits. ${ASYNC_COMING_SOON}.`;
+  `Discord offers screen sharing, but protected players may restrict capture. With AniDachi, each viewer uses their own access to the title on Crunchyroll. The host needs Plus or Pro, including during a trial; friends join for free. AniDachi syncs the separate players and adds chat and live reactions.`;
 
 /** YouTube cluster — do not reuse Crunchyroll-only pricing FAQs on YT pages. */
 export const PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER =
-  `Yes — friends can join YouTube watchrooms on a Free account. When you want to host without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")}. Cancel renewal from your account. ${PRICING_HOST_MODEL} ${PRICING_CANCELLATION_NOTE}`;
+  `Yes — you can join a Plus, Pro or trial host's YouTube room for free. Creating your own rooms and recording personal watch progress require your own Plus or Pro access. ${PRICING_TRIAL_NOTE} ${PRICING_CANCELLATION_NOTE}`;
 
 export const PRICING_FRIENDS_NEED_YOUTUBE_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person opens the same full YouTube watch page in their own browser — AniDachi syncs the room; it does not re-stream the video.`;
 
 export const PRICING_DISCORD_COMPARE_YOUTUBE_FAQ =
-  `Discord Go Live can share a YouTube tab, but guests watch a compressed stream and only the host controls the player. AniDachi syncs full youtube.com/watch playback per person while Discord stays for voice — Free for limited rooms; Plus and Pro for higher host limits.`;
+  `Discord Go Live shares the host's video. AniDachi syncs each person's own full youtube.com/watch player, so everyone uses their own access to the video. The host needs Plus or Pro, including during a trial; friends join for free. You can keep Discord open for voice.`;
 
 export const PRICING_TELEPARTY_COMPARE_YOUTUBE_FAQ =
-  `Teleparty has a free tier for basic live YouTube sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro for higher host limits and personal progress on full watch pages. ${ASYNC_COMING_SOON} — pick Teleparty for free live-only multi-platform nights; pick AniDachi for Crunchyroll + YouTube live rooms today.`;
+  `Teleparty has a free tier for basic live YouTube sync, plus a premium tier. With AniDachi, the host needs Plus or Pro, including during a trial, and friends join for free. AniDachi supports live rooms on full YouTube watch pages and Crunchyroll, with personal history recording for each viewer with Plus or Pro. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_RAVE_COMPARE_YOUTUBE_FAQ =
-  `Rave offers a free tier with basic sync and chat. AniDachi has a Free tier for joining and limited hosting; Plus starts at ${PRICING_PLUS_SHORT} and Pro at ${PRICING_PRO_SHORT} for hosts who need unlimited YouTube watchrooms and per-person progress on full watch pages. ${ASYNC_COMING_SOON}.`;
+  `Rave offers a free tier with basic sync and chat. AniDachi lets friends join a Plus, Pro or trial host's YouTube room for free. Plus and Pro include hosting and personal history recording on full watch pages. Monthly and yearly billing are available. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_COMPARE_OVERVIEW_YOUTUBE =
-  `AniDachi has a Free tier for joining and hosting limited YouTube watchrooms. Hosts who need unlimited rooms and progress tracking can upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}). ${ASYNC_COMING_SOON}.`;
+  `Friends join YouTube rooms for free. Hosting your own room and recording personal watch history require Plus or Pro, including during a trial. Monthly and yearly billing are available. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_YT_PRICING_SNIPPET =
-  `Free to join; Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT} for unlimited hosting — see /pricing.`;
+  `Free to join a Plus, Pro or trial host. Creating your own room requires Plus or Pro — see /pricing for monthly, yearly and trial options.`;
 
 /** Crunchyroll cluster — short pricing line for non-canonical free FAQs. */
 export const PRICING_CR_PRICING_SNIPPET =
-  `Free to join; Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT} for unlimited hosting — see /pricing.`;
+  PRICING_YT_PRICING_SNIPPET;
 
-export const PRICING_FREE_TIER_TABLE = "Yes (limited hosting)";
-export const PRICING_HOST_PRICING_TABLE = `Free ${freeHostMinsForCopy()} min/day; Plus/Pro unlimited`;
-export const PRICING_PRICE_TABLE = `Free; Plus ${PRICING_PLUS_SHORT}; Pro ${PRICING_PRO_SHORT}`;
+export const PRICING_FREE_TIER_TABLE = "Free to join; Plus / Pro to host";
+export const PRICING_HOST_PRICING_TABLE = "Plus / Pro (including trial); friends join free";
+export const PRICING_PRICE_TABLE = `Free to join; host with Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT}. Yearly options available`;
 /** Compare-table Pricing cell — Free + Plus + Pro. */
 export const PRICING_PLUS_PRICE_LINE = PRICING_PRICE_TABLE;
 export const PRICING_AMAZON_SUBSCRIPTION_ROW = PRICING_PRICE_TABLE;
 
-function freeHostMinsForCopy(): number {
-  return getPlanPolicy("free").dailyHostSeconds! / 60;
-}
-
 export const PRICING_FIRST_CHECKLIST_FAQ =
-  `AniDachi has a Free tier for joining friends' rooms and hosting limited rooms. Hosts upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}) for unlimited hosting — see homepage pricing. You still need your own Crunchyroll subscription to stream episodes; AniDachi provides watchrooms, sync, and chat on top.`;
+  `Friends join for free. The person creating the room needs Plus or Pro, including during a trial. ${PRICING_TRIAL_NOTE} Everyone still needs their own access to the episode on Crunchyroll.`;
 
 export const PRICING_GROUP_ONBOARDING =
-  "Each viewer still pays their own streaming provider. With AniDachi, Plus or Pro upgrades the host's full room limits while guests can join on Free accounts. Everyone keeps their own Crunchyroll login private.";
+  "Each viewer needs their own access to the episode on Crunchyroll. Only the host needs AniDachi Plus or Pro, including during a trial; friends join on Free accounts. Everyone keeps their streaming login private.";
 
 export const PRICING_LONG_DISTANCE_SNIPPET =
-  `AniDachi has a Free tier for joining and limited hosting; Plus (${PRICING_PLUS_SHORT}) unlocks personal progress tracking for paid viewers — useful when schedules are hard to align. ${ASYNC_COMING_SOON}.`;
+  `Host a live room with Plus or Pro and invite friends for free. Each viewer's own Plus or Pro access enables personal progress recording, including when watching alone. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION =
-  `AniDachi (live sync + chat; Free limited hosting, Plus/Pro for higher host limits; ${ASYNC_COMING_SOON.toLowerCase()})`;
+  "AniDachi (live sync and chat; friends join free, Plus or Pro required to host, including during a trial)";

@@ -67,11 +67,11 @@ const faq = [
   {
     question: "What if friends fall out of sync during a YouTube session?",
     answer:
-      "Pause and use AniDachi’s catch-up / resync controls to realign. For members who miss entire sessions, async mode lets them catch up later without spoilers in chat.",
+      "Pause and use AniDachi’s catch-up controls to realign live playback. If someone misses the session, let them watch independently before the next meeting. Async catch-up with replayed reactions is coming soon.",
   },
   {
     question: "Is AniDachi free for YouTube sync?",
-    answer: `Free to join with limited hosting. ${PRICING_YT_PRICING_SNIPPET}`,
+    answer: `Free accounts can join an active Plus or Pro host, including a trial host. ${PRICING_YT_PRICING_SNIPPET}`,
   },
 ];
 
@@ -110,7 +110,7 @@ export default function HowToSyncYoutubeWithFriendsPage() {
         description="Keep YouTube videos aligned across your group with AniDachi watchrooms."
         url="/guides/how-to-sync-youtube-with-friends"
         datePublished="2026-07-26"
-        dateModified="2026-07-26"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -140,8 +140,7 @@ export default function HowToSyncYoutubeWithFriendsPage() {
         </h2>
         <ul className="space-y-3 text-foreground/80 mb-8">
           <li>
-            <strong>AniDachi:</strong> Live sync + async catch-up on YouTube (and
-            Crunchyroll).
+            <strong>AniDachi:</strong> Live sync, chat, cameras, and microphones on YouTube and Crunchyroll.
           </li>
           <li>
             <strong>Teleparty:</strong> Live-only YouTube sync — see{" "}

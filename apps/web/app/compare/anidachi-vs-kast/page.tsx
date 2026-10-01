@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Kast — Best Kast Alternative for Crunchyroll Anime (2026)",
   description:
-    "AniDachi is the best Kast alternative for anime on Crunchyroll — per-user playback, async watchrooms, and auto anime detection. Kast vs AniDachi compared.",
+    "Compare AniDachi and Kast for anime on Crunchyroll — per-user playback, live watchrooms, chat, and anime detection.",
   alternates: { canonical: "/compare/anidachi-vs-kast" },
   openGraph: {
     title: "AniDachi vs Kast — Kast Alternative for Anime Groups",
@@ -31,12 +31,12 @@ const faq = [
   {
     question: "What’s the biggest difference for Crunchyroll groups?",
     answer:
-      "AniDachi is built around per-user Crunchyroll tabs with a watchroom layer on top (sync, chat, progress). General co-watching setups often try to make one stream work for everyone, which can turn one person’s device and connection into the bottleneck.",
+      "AniDachi is built around per-user Crunchyroll tabs with live sync, chat, reactions, and voice/video. Personal history is available with your own Plus or Pro access and recording permission. General co-watching setups often try to make one stream work for everyone, which can turn one person’s device and connection into the bottleneck.",
   },
   {
     question: "Can AniDachi work alongside Discord?",
     answer:
-      "Yes. Many groups keep Discord for voice and use AniDachi for synced Crunchyroll playback and episode-scoped watchroom context.",
+      "Yes. Many groups keep Discord for voice and use AniDachi for synced Crunchyroll playback, live chat, and reactions. AniDachi also has built-in voice/video; choose one voice channel to avoid duplicate audio.",
   },
 ];
 
@@ -61,7 +61,7 @@ export default function AniDachiVsKastPage() {
       description="Compare Crunchyroll-first watchrooms with general-purpose co-watching."
       url="/compare/anidachi-vs-kast"
       datePublished="2026-05-11"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -87,8 +87,8 @@ export default function AniDachiVsKastPage() {
         At a glance
       </h2>
       <p className="text-foreground/80 mb-8">
-        <strong>AniDachi:</strong> Crunchyroll-first watchrooms, sync, chat, and optional async
-        catch-up. <strong>Kast-style workflows:</strong> generic co-watching setups that can work
+        <strong>AniDachi:</strong> Crunchyroll-first live watchrooms, sync, chat, and
+        reactions. <strong>Kast-style workflows:</strong> generic co-watching setups that can work
         well for casual hangs, but may add complexity for per-user streaming subscriptions.
       </p>
 
@@ -98,7 +98,7 @@ export default function AniDachiVsKastPage() {
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Per-user playback keeps bitrate high for everyone.</li>
         <li>Sync tools work best when each viewer’s stream is independent.</li>
-        <li>Watchrooms add structure (episode context, spoiler hygiene) that chat apps alone lack.</li>
+        <li>Live watchrooms keep playback, chat, reactions, and voice/video beside the episode.</li>
       </ul>
 
       <h2 id="workflow" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
@@ -109,7 +109,7 @@ export default function AniDachiVsKastPage() {
         <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
           the Crunchyroll watch-together guide
         </Link>
-        . If you want async catch-up and progress tracking for long-running shows, review{" "}
+        . For hosting and personal-history access on long-running shows, review{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           pricing on /pricing
         </Link>
@@ -142,4 +142,3 @@ export default function AniDachiVsKastPage() {
     </SeoPageLayout>
   );
 }
-

@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Supernatural Anime With Friends (2026) | AniDachi",
   description:
-    "Supernatural anime power reveals hit harder together — AniDachi syncs Crunchyroll watchrooms for your group live or async. Fullmetal Alchemist, Jujutsu Kaisen, Noragami, and more.",
+    "Supernatural anime power reveals hit harder together — AniDachi syncs live Crunchyroll rooms for your group. Fullmetal Alchemist, Jujutsu Kaisen, Noragami, and more.",
   alternates: { canonical: "/watch-supernatural-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Supernatural Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for the best supernatural anime on Crunchyroll — synced playback, power-system debates, and async catch-up.",
+      "Group watchroom guides for supernatural anime on Crunchyroll — synced playback, live reactions, and power-system debates.",
     url: "/watch-supernatural-anime-with-friends",
   },
 };
@@ -77,7 +77,7 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
       description="Group watchroom guides for supernatural anime on Crunchyroll."
       url="/watch-supernatural-anime-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -97,8 +97,8 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
           Supernatural anime thrives on shared reactions — power reveals,
           world-building drops, and unexpected twists hit harder with an
           audience. Install AniDachi, open any Crunchyroll series below, and
-          create a watchroom to sync every moment live or catch up
-          spoiler-free at your own pace.
+          let a Plus, Pro, or trial host create a room. Free friends can
+          join to share every moment live.
         </strong>
       </p>
 
@@ -120,10 +120,9 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms let your group react in real time during live sessions
-        and maintain a thread of async reactions between sessions. Spoiler
-        boundaries are enforced at the episode level — the friend who already
-        knows how the power system works doesn&apos;t spoil the reveal for someone
-        experiencing it for the first time.
+        with chat, reactions, and voice/video. Agree on an episode boundary
+        before discussing power-system reveals, and keep later details in a
+        separate chat. Built-in async catch-up is coming soon.
       </p>
 
       <h2
@@ -166,7 +165,7 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">Establish power-system rules.</span>{" "}
@@ -174,7 +173,7 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
           between sessions — let the group discover the system together.
         </li>
         <li>
-          <span className="font-medium text-foreground">Pin your spoiler boundary.</span>{" "}
+          <span className="font-medium text-foreground">Agree on a spoiler boundary.</span>{" "}
           Set the safe episode number so nobody accidentally reveals the next
           power-up or death before the group gets there.
         </li>
@@ -192,9 +191,9 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
       </p>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>After each major battle, have everyone rate the power-system reveal on a 1–10 scale before discussing. Disagreements are more interesting than consensus.</li>
-        <li>Maintain a shared &quot;threat tier list&quot; in the watchroom chat — update it after each new villain introduction. Tier shifts after reveals are a source of entertainment on their own.</li>
+        <li>Maintain a shared &quot;threat tier list&quot; in your own notes or separate group chat and update it after each new villain introduction.</li>
         <li>For series where character deaths are possible (JJK, Demon Slayer, AoT edges), run a survival prediction before major arcs. Wrong predictions are tracked.</li>
-        <li>Use AniDachi&apos;s async catch-up mode when someone falls behind — it lets latecomers post episode-tagged reactions without spoiling the group on who wins the next fight.</li>
+        <li>When someone falls behind, agree on independent catch-up and wait until they finish before discussing the next fight.</li>
       </ul>
 
       <p className="text-foreground/80 mb-4">

@@ -48,12 +48,12 @@ const faq = [
   {
     question: "Does Teleparty work with Crunchyroll?",
     answer:
-      "Yes — Teleparty supports Crunchyroll for live synchronized watch parties. Compatibility can vary after player updates. Teleparty is live-only; it does not offer AniDachi-style async catch-up or per-episode progress. For Crunchyroll-first anime groups, AniDachi is usually the better fit.",
+      "Yes — Teleparty supports Crunchyroll for live synchronized watch parties. Compatibility can vary after player updates. AniDachi also supports live Crunchyroll rooms, with chat, reactions, voice/video, and personal history through each viewer's own Plus/Pro access and recording permission.",
   },
   {
     question: "Is there a Teleparty for Crunchyroll — can you Teleparty Crunchyroll?",
     answer:
-      "Yes. Teleparty (formerly Netflix Party) lists Crunchyroll among supported platforms for live rooms. If you want Crunchyroll plus async watching and anime-focused progress, switch to AniDachi; keep Teleparty when you also need Netflix/Disney+ in one live tool.",
+      "Yes. Teleparty (formerly Netflix Party) lists Crunchyroll among supported platforms for live rooms. Consider AniDachi for Crunchyroll and YouTube live rooms with personal history; keep Teleparty when you also need Netflix/Disney+ in one live tool. AniDachi's async catch-up is coming soon.",
   },
   {
     question: "Can I switch from Teleparty to AniDachi?",
@@ -105,7 +105,7 @@ export default function AniDachiVsTelepartyPage() {
       description="Side-by-side comparison for anime watch parties."
       url="/compare/anidachi-vs-teleparty"
       datePublished="2026-04-23"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
       faq={faq}
       headings={headings}
     >
@@ -165,12 +165,12 @@ export default function AniDachiVsTelepartyPage() {
           },
           {
             feature: "Per-user progress tracking",
-            values: { anidachi: "yes", teleparty: "no" },
+            values: { anidachi: "Own Plus/Pro + recording permission", teleparty: "no" },
           },
           { feature: "Real-time chat", values: { anidachi: "yes", teleparty: "yes" } },
           {
             feature: "Video/audio chat",
-            values: { anidachi: "no", teleparty: "Premium only" },
+            values: { anidachi: "yes", teleparty: "Premium only" },
           },
           {
             feature: "Free tier",
@@ -188,7 +188,7 @@ export default function AniDachiVsTelepartyPage() {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your friend group watches primarily on Crunchyroll.</li>
         <li>You want individual episode progress tracking (Plus/Pro history).</li>
-        <li>You want individual episode progress tracking.</li>
+        <li>You want live reactions and voice/video beside each person’s player.</li>
         <li>You value auto anime detection over manual room setup.</li>
       </ul>
 
@@ -209,18 +209,18 @@ export default function AniDachiVsTelepartyPage() {
         id="deep-dive"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        Deeper look: async and Crunchyroll
+        Deeper look: live rooms and personal history
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-6">
-        The biggest product difference is <strong>async co-watching</strong>: AniDachi
-        is built for groups who cannot align on a single start time, but still
-        want one shared watchroom, reactions, and progress. Teleparty&apos;s
+        AniDachi combines <strong>live Crunchyroll and YouTube rooms</strong> with
+        chat, reactions, and voice/video beside each person’s player.
+        Personal history helps subscribed viewers resume their own playback. Teleparty&apos;s
         strength is a wide net of services for people who are online together.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        For marathon shows or seasonal simulcasts, that async layer usually matters
-        more than having ten streaming logos in the same extension—especially if
-        everyone already subscribes to Crunchyroll.
+        For marathon shows or seasonal simulcasts, agree on an episode and a
+        shared start time. Async catch-up, shared group progress, and replayed
+        timestamped reactions are coming soon and are not included today.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Still asking whether Teleparty even supports Crunchyroll? Start with{" "}

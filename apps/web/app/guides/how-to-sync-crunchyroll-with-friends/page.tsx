@@ -41,12 +41,12 @@ const faq = [
   {
     question: "Does Crunchyroll have built-in sync with friends?",
     answer:
-      "Crunchyroll Party is a separate Chrome extension for live sync. AniDachi adds sync plus async catch-up, episode-scoped chat, and per-person progress tracking for anime-focused groups.",
+      "Crunchyroll Party is a separate extension for live sync. AniDachi provides live rooms, chat, cameras, and microphones. Viewers with their own Plus or Pro access can enable personal history; saved history and Resume remain available on Free.",
   },
   {
     question: "What if friends fall out of sync during a Crunchyroll session?",
     answer:
-      "Pause and use AniDachi's resync controls to realign timestamps. If someone rewinds for a missed line, the room catches up before resuming. For members who miss entire sessions, async mode lets them catch up later.",
+      "Pause and use AniDachi’s catch-up controls to realign playback. If someone misses an entire session, let them watch independently before the next meeting. Async catch-up with replayed reactions is coming soon.",
   },
 ];
 
@@ -70,7 +70,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "Use AniDachi to detect the anime and create a shared watchroom from the extension.",
+    text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room from the overlay. Friends can join on Free accounts.",
   },
   {
     name: "Share the invite link",
@@ -82,7 +82,7 @@ const howToSteps = [
   },
   {
     name: "Use chat for reactions",
-    text: "Keep reactions in the watchroom thread so sync and discussion stay in one place.",
+    text: "Use the room's live chat to react together during the session.",
   },
 ];
 
@@ -107,7 +107,7 @@ export default function HowToSyncCrunchyrollWithFriendsPage() {
         description="Sync Crunchyroll playback across your group with AniDachi watchrooms."
         url="/guides/how-to-sync-crunchyroll-with-friends"
         datePublished="2026-07-02"
-        dateModified="2026-07-02"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >
@@ -118,9 +118,7 @@ export default function HowToSyncCrunchyrollWithFriendsPage() {
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Syncing Crunchyroll with friends means keeping everyone on the same
-            episode timestamp while each person streams independently. The
-            easiest way is AniDachi because it aligns playback, adds chat, and
-            supports async catch-up when live sync is not possible.
+            episode timestamp while each person streams independently. AniDachi aligns playback and adds live chat, cameras, and microphones.
           </strong>
         </p>
 
@@ -130,8 +128,7 @@ export default function HowToSyncCrunchyrollWithFriendsPage() {
         <p className="text-foreground/80 leading-relaxed mb-4">
           AniDachi&apos;s Chrome extension syncs Crunchyroll playback across
           watchroom members. Everyone watches in full quality on their own
-          account — no screen sharing required. Async mode lets members who miss
-          a session catch up without breaking spoiler boundaries.
+          account — no screen sharing required. Anyone who misses a session can watch independently before the next live meeting.
         </p>
 
         <h2 id="method-party" className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24">
@@ -139,8 +136,7 @@ export default function HowToSyncCrunchyrollWithFriendsPage() {
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
           Crunchyroll Party is a free Chrome extension for live sync on
-          Crunchyroll. It works for same-time viewing but lacks async progress
-          tracking and episode-scoped chat. See our{" "}
+          Crunchyroll. It works for same-time viewing. Compare current features, hosting requirements, and personal history options. See our{" "}
           <Link href="/compare/anidachi-vs-crunchyroll-party" className="text-brand-orange hover:underline">
             AniDachi vs Crunchyroll Party comparison
           </Link>.

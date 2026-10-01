@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title:
     "AniDachi vs Anime Watch Parties Extension — Crunchyroll Co-Watching Compared",
   description:
-    "Compare AniDachi with an “anime watch parties” style extension: Crunchyroll-first watchrooms, async catch-up, progress tracking, and setup friction.",
+    "Compare AniDachi with an “anime watch parties” style extension: Crunchyroll-first live rooms, chat, personal history, and setup friction.",
   alternates: { canonical: "/compare/anidachi-vs-anime-watch-parties-extension" },
   openGraph: {
     title: "AniDachi vs Anime Watch Parties Extension (2026)",
@@ -32,12 +32,12 @@ const faq = [
   {
     question: "What makes AniDachi different from generic watch party extensions?",
     answer:
-      "AniDachi is built around Crunchyroll anime nights: watchrooms that persist for a series, anime detection, optional async catch-up, and per-person progress tracking. Generic extensions often focus on live sync only.",
+      "AniDachi combines live Crunchyroll and YouTube rooms with anime detection, chat, reactions, and voice/video. Your own Plus/Pro access and recording permission enable personal history. Async catch-up, persistent room chat, and shared group progress are coming soon.",
   },
   {
     question: "Can AniDachi replace Discord voice chat?",
     answer:
-      "No—you can keep Discord for voice. AniDachi focuses on synced playback, watchrooms, and episode context on top of Crunchyroll tabs.",
+      "AniDachi has built-in voice and video during live rooms. You can also keep Discord for voice if your group prefers it; choose one voice channel to avoid duplicate audio.",
   },
 ];
 
@@ -65,7 +65,7 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       description="Compare Crunchyroll-first watchrooms with generic watch-party extension workflows."
       url="/compare/anidachi-vs-anime-watch-parties-extension"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -81,9 +81,9 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
-          Many extensions help you press play together. AniDachi is designed for what
-          happens after episode one: long shows, friends falling behind, and spoiler-safe
-          weekly group watching on Crunchyroll.
+          AniDachi brings live sync, chat, reactions, and voice/video into your
+          Crunchyroll or YouTube viewing session, with personal history available
+          through each viewer’s own Plus or Pro access.
         </strong>
       </p>
 
@@ -92,8 +92,8 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       </h2>
       <p className="text-foreground/80 mb-8">
         <strong>TL;DR:</strong> If you only need basic live sync, a simple extension can be
-        enough. If your group needs a persistent watchroom, anime detection, and optional
-        async catch-up, choose AniDachi.
+        enough. Choose AniDachi when you want anime detection, in-room social features,
+        and personal history alongside your live viewing.
       </p>
 
       <h2
@@ -104,16 +104,16 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
-          <strong>Async support:</strong> can friends watch later without losing the room?
+          <strong>Live setup:</strong> can everyone open the same episode and join at the agreed time?
         </li>
         <li>
-          <strong>Progress:</strong> does the room track where each person is?
+          <strong>Personal history:</strong> what subscription and recording permission does each viewer need?
         </li>
         <li>
           <strong>Anime detection:</strong> does setup stay consistent across episodes?
         </li>
         <li>
-          <strong>Spoiler hygiene:</strong> is chat episode-scoped or a single scroll?
+          <strong>Social features:</strong> are chat, reactions, and voice/video available beside the player?
         </li>
       </ul>
 
@@ -124,9 +124,9 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
         Which to choose
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        If your group watches occasionally and always live, start simple. If you host weekly
-        anime nights, want async catch-up, and don’t want to manage spoilers manually, AniDachi
-        is built for that workflow. Pricing and checkout live on{" "}
+        If your group watches occasionally and always live, start simple. For weekly
+        anime nights, AniDachi offers hosting with Plus or Pro, including a trial,
+        while Free friends can join. Pricing and checkout live on{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           the homepage
         </Link>
@@ -151,4 +151,3 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
     </SeoPageLayout>
   );
 }
-

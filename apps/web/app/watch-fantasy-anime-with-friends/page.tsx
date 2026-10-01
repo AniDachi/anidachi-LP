@@ -35,7 +35,7 @@ const faq = [
   {
     question: "How do I watch fantasy anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen fantasy series on Crunchyroll, and create a watchroom. Share the invite link for live synced playback. Fantasy series often have dense lore: agree on a safe episode boundary before discussing theories. Async catch-up is planned.",
+      "Install AniDachi on desktop Chrome and open your chosen fantasy series on Crunchyroll. A Plus, Pro, or trial host creates a live room and invites Free friends. Agree on a safe episode boundary before discussing the lore. Async catch-up is coming soon.",
   },
   {
     question: "What makes fantasy anime good for watch parties?",
@@ -88,7 +88,7 @@ export default function WatchFantasyAnimeWithFriendsPage() {
       description="Group watchroom guides for fantasy anime on Crunchyroll."
       url="/watch-fantasy-anime-with-friends"
       datePublished="2026-06-08"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -178,7 +178,7 @@ export default function WatchFantasyAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
-          Send the invite via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">

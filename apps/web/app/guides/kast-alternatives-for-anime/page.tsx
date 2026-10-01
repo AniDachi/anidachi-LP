@@ -37,7 +37,7 @@ const faq = [
   {
     question: "What is the best Kast alternative for anime?",
     answer:
-      "AniDachi ranks first for Crunchyroll-first anime groups — per-user playback, async watchrooms, and auto anime detection without turning one friend into the group's video server.",
+      "AniDachi ranks first for Crunchyroll-first anime groups — per-user playback, live rooms, and anime detection without turning one friend into the group's video server.",
   },
   {
     question: "Is Kast good for Crunchyroll anime nights?",
@@ -85,7 +85,7 @@ export default function KastAlternativesForAnimePage() {
       description="Ranked Kast alternatives for Crunchyroll anime groups."
       url="/guides/kast-alternatives-for-anime"
       datePublished="2026-07-22"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -105,7 +105,7 @@ export default function KastAlternativesForAnimePage() {
         <strong>
           Kast-style co-watching works for casual live hangs — not the best fit
           for weekly Crunchyroll anime clubs that need per-user quality and
-          async catch-up.
+          live chat and calling.
         </strong>{" "}
         The top Kast alternative for anime is AniDachi. For a 1:1 matrix, read{" "}
         <Link
@@ -146,8 +146,8 @@ export default function KastAlternativesForAnimePage() {
       </h2>
       <ol className="list-decimal pl-6 space-y-4 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi (#1 for anime / Crunchyroll / async)</strong> —
-          Per-user Crunchyroll tabs, watchrooms, live sync, async progress.
+          <strong>AniDachi (Crunchyroll live rooms)</strong> —
+          Per-user Crunchyroll tabs, live sync, chat, cameras, and microphones.
           See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
@@ -198,7 +198,7 @@ export default function KastAlternativesForAnimePage() {
           {
             feature: "Async catch-up",
             values: {
-              anidachi: "yes",
+              anidachi: "Coming soon",
               kast: "no",
               crparty: "no",
               discord: "yes (AniDachi)",

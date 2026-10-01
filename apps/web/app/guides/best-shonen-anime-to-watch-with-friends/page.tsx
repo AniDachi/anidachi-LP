@@ -44,7 +44,7 @@ const faq = [
   {
     question: "How do we watch long shonen series like One Piece without it taking forever?",
     answer:
-      "For One Piece or Naruto, set a fixed episode count per session (3–4 episodes), skip confirmed filler arcs using a filler guide, and use AniDachi's async mode so members who miss a session can catch up without spoiling the group. The key is consistency — weekly sessions of 3–4 episodes means you complete a 100-episode arc in roughly 8 months, which is a perfectly reasonable anime club pace.",
+      "For One Piece or Naruto, set a fixed episode count per session (3–4 episodes), skip confirmed filler arcs using a filler guide, and let members who miss a session catch up independently before the next live room. Keep spoilers in a separate labeled chat. Weekly sessions of 3–4 episodes complete a 100-episode arc in roughly 8 months.",
   },
   {
     question: "What shonen anime can we finish in one or two weekends?",
@@ -106,7 +106,7 @@ export default function BestShonenAnimeWithFriendsPage() {
       description="Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter & more — top shonen picks for a group watch party synced on AniDachi."
       url="/guides/best-shonen-anime-to-watch-with-friends"
       datePublished="2026-06-04"
-      dateModified="2026-06-04"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -382,9 +382,7 @@ export default function BestShonenAnimeWithFriendsPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         These series require commitment — but groups that reach the end have
-        shared an experience most casual viewers never get. Use AniDachi&apos;s
-        async mode so members who fall behind can catch up without spoiling
-        the group.
+        shared an experience most casual viewers never get. Let members who fall behind catch up independently before the next live AniDachi session, and keep later-episode spoilers in a separate chat.
       </p>
       <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
@@ -437,7 +435,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           (episodes 892+) delivers the production value of prestige television
           if your group has the patience to reach it. Recommended for groups
           that have already committed: run a dedicated session night and use
-          async catch-up for missed episodes. Available on Crunchyroll.
+          independent catch-up for missed episodes. Check Crunchyroll availability in your region.
         </li>
         <li>
           <strong>
@@ -501,10 +499,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           filler is not cheating — the original author did not write it.
         </li>
         <li>
-          <strong>Use AniDachi for async catch-up.</strong> Someone will miss a
-          session. AniDachi&apos;s watchroom tracks individual progress so
-          late members can catch up without asking for spoilers and the group
-          can continue the club without anyone permanently falling behind.{" "}
+          <strong>Plan for missed sessions.</strong> Let members catch up independently before the next live room. Each viewer with Plus or Pro can enable personal history to save their own place. Use a separate chat for between-session discussion.{" "}
           <Link href="/#pricing" className="text-brand-orange hover:underline">
             Start a watchroom here.
           </Link>

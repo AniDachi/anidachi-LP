@@ -78,7 +78,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
       description="Compare Discord Go Live setups with synced Crunchyroll watchrooms."
       url="/compare/anidachi-vs-discord-screen-share"
       datePublished="2026-05-08"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -122,8 +122,8 @@ export default function AnidachiVsDiscordScreenSharePage() {
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Chat wants frame-accurate reactions without shouting “pause.”</li>
-        <li>Half the group watches next-day asynchronously while others stay live.</li>
-        <li>You want episode-scoped chats without pinning endless Discord threads.</li>
+        <li>Your group wants live chat, reactions, and voice/video beside each person’s player.</li>
+        <li>You want personal history with your own Plus/Pro access and recording permission.</li>
       </ul>
 
       <h2 id="migration" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">

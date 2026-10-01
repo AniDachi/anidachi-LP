@@ -18,7 +18,7 @@ const faq = [
   {
     question: "Can I watch simulcast episodes with friends using AniDachi?",
     answer:
-      "Yes! Create an AniDachi watchroom for a simulcast anime. When a new episode drops, watch it together in real-time with synced playback, or let friends catch up asynchronously.",
+      "Yes. A Plus, Pro or trial host can create an AniDachi room when the episode is available on Crunchyroll. Friends join for free with their own access to it. Watch together live; anyone who misses the session can catch up independently. Built-in async catch-up is coming soon.",
   },
 ];
 
@@ -42,7 +42,7 @@ export default function AnimeSimulcastGlossaryPage() {
       description="Definition of anime simulcasts and how they work."
       url="/glossary/anime-simulcast"
       datePublished="2026-04-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -73,9 +73,9 @@ export default function AnimeSimulcastGlossaryPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-6">
         Simulcasts make group watching exciting because everyone can react to
-        new episodes at the same time — no spoiler risk. Create an AniDachi
-        watchroom for a seasonal simulcast anime, and your group gets the
-        shared premiere experience every week.
+        new episodes at the same time. With Plus or Pro, including during a
+        trial, create an AniDachi room and invite friends for free. Everyone
+        needs their own access to the episode on Crunchyroll.
       </p>
 
       <h2

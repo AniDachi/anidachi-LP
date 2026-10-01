@@ -7,7 +7,7 @@ import { PRICING_LONG_DISTANCE_SNIPPET } from "@/lib/pricing-copy";
 export const metadata: Metadata = {
   title: "Watch Anime With Your Long Distance Partner (2026) | AniDachi",
   description:
-    "The best way to watch anime with a long-distance boyfriend or girlfriend: sync Crunchyroll live or async, set up a weekly anime date night, and never spoil each other.",
+    "Watch anime with a long-distance boyfriend or girlfriend: sync Crunchyroll live, plan a weekly date night, and arrange independent catch-up when schedules differ.",
   alternates: { canonical: "/watch-anime-long-distance-boyfriend-girlfriend" },
   openGraph: {
     images: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
     title: "Watch Anime With Your Long Distance Partner | AniDachi",
     description:
-      "Set up an LDR anime ritual that works — live when schedules align, async when they don't.",
+      "Set up an LDR anime ritual with live Crunchyroll rooms and independent catch-up between sessions.",
     url: "/watch-anime-long-distance-boyfriend-girlfriend",
   },
 };
@@ -30,12 +30,12 @@ const faq = [
   {
     question: "How do I watch anime with my long-distance boyfriend or girlfriend?",
     answer:
-      "Install AniDachi on both Chrome browsers, open the same Crunchyroll episode, create a watchroom, and share the invite link. For live watching, playback syncs automatically. For different schedules, async mode lets each person watch when available while reactions stay shared episode by episode.",
+      "Install AniDachi on both desktop Chrome browsers and open the same Crunchyroll episode. A Plus, Pro, or trial host creates a live room and shares the invite; a Free partner can join. If schedules differ, catch up independently and discuss afterward in a separate chat.",
   },
   {
     question: "Can my long-distance girlfriend and I watch anime together even in different time zones?",
     answer:
-      "Yes. With AniDachi's async mode, you can watch at completely different times and still share the experience. Each person marks episodes as watched and leaves timestamped reactions. The other person sees those reactions when they finish the same episode. No real-time coordination needed.",
+      "Yes, if you agree on a shared time for live sync. If no time overlaps, watch independently toward an agreed episode target and discuss afterward. AniDachi's async catch-up and replayed timestamped reactions are coming soon.",
   },
   {
     question: "Is there a way to watch anime together long distance for free?",
@@ -50,7 +50,7 @@ const faq = [
   {
     question: "How do we avoid spoiling each other when one of us watches ahead?",
     answer:
-      "AniDachi's watchroom attaches reactions to specific episodes, so a reaction on episode 8 is only visible once both people have watched episode 8. This means even if one person watches three episodes ahead in a single session, the other person won't see anything about those episodes until they catch up.",
+      "Agree on the last episode you have both finished, keep later details in clearly labeled threads in a separate chat, and wait before sending memes or screenshots. AniDachi's current live room does not automatically hide reactions based on each person's episode progress.",
   },
 ];
 
@@ -69,7 +69,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Install AniDachi on both devices",
-    text: "Each person adds the AniDachi Chrome extension. Works with any Chrome-based browser.",
+    text: "Each person adds the AniDachi extension from the Chrome Web Store on desktop Chrome.",
   },
   {
     name: "Pick a series to start together",
@@ -77,15 +77,15 @@ const howToSteps = [
   },
   {
     name: "Create a shared watchroom",
-    text: "Open episode 1, click the AniDachi icon, and create a room. Copy the invite link.",
+    text: "With active Plus, Pro, or trial access, open episode 1, create a room, and copy its invite link.",
   },
   {
     name: "Send the link to your partner",
     text: "Share via WhatsApp, iMessage, Discord, or email. They click the link and join the room.",
   },
   {
-    name: "Choose your watching mode",
-    text: "If you can watch live together, press play in sync. If schedules never align, use async mode — watch independently and leave reactions for each other.",
+    name: "Choose a live start time",
+    text: "Join together for synchronized playback, chat, reactions, and voice/video. If no time overlaps, watch independently and discuss later in a separate chat.",
   },
   {
     name: "Set a weekly episode target",
@@ -98,7 +98,7 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
     <>
       <HowToJsonLd
         name="How to watch anime with your long-distance partner"
-        description="Set up an AniDachi watchroom for LDR couples — live or async across different time zones."
+        description="Set up a live AniDachi room for LDR couples and plan independent catch-up across different time zones."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -107,10 +107,10 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
           { name: "Watch Anime With Long Distance Partner", url: "/watch-anime-long-distance-boyfriend-girlfriend" },
         ]}
         title="How to Watch Anime With Your Long Distance Boyfriend or Girlfriend"
-        description="The LDR anime watching guide — live sync, async mode, weekly date night ritual."
+        description="The LDR anime watching guide — live sync, independent catch-up, and a weekly date night ritual."
         url="/watch-anime-long-distance-boyfriend-girlfriend"
         datePublished="2026-06-23"
-        dateModified="2026-06-23"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
@@ -129,11 +129,11 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
           <strong>
             The best way to watch anime with a long-distance partner is
             AniDachi — install it on both Chrome browsers, open the same
-            Crunchyroll series, and create a shared watchroom. Watch live
-            when schedules align; use async mode when they don&apos;t.
+            Crunchyroll series, and let a Plus, Pro, or trial host create a
+            room. Join together for a live session; a Free partner can join.
           </strong>{" "}
-          Reactions are attached to specific episodes so neither person
-          gets spoiled, even if one of you watches ahead.
+          If schedules do not overlap, watch independently and discuss later.
+          Built-in async catch-up and replayed reactions are coming soon.
         </p>
 
         <h2
@@ -163,7 +163,7 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
           <li>
             <strong>It is timezone-flexible.</strong> Unlike a movie night that
             needs a 2-hour overlap, two episodes can be watched on completely
-            separate schedules and still feel connected through async reactions.
+            separate schedules and discussed afterward in your own chat.
           </li>
           <li>
             <strong>Shared taste becomes identity.</strong> Having &quot;our
@@ -199,18 +199,18 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
           If you are 8 hours apart, there may be no time where you are both
-          awake and free to watch together. This is where async mode becomes
-          essential — and it is the feature that separates AniDachi from
-          every other watch party tool.
+          awake and free to watch together. AniDachi live rooms need both
+          of you online, so independent catch-up can keep your routine going
+          between the sessions you can share.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          Here is what async watching actually looks like in practice:
+          Here is a routine you can use today:
         </p>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>You watch episode 6 on Saturday afternoon.</li>
-          <li>You leave reactions at the moments that hit hardest — the plot twist, the scene that made you laugh, the line that hit different.</li>
-          <li>Your partner watches episode 6 on Sunday morning and sees your reactions at the exact moments you left them.</li>
-          <li>They reply. You read their replies the next time you open the watchroom.</li>
+          <li>You write down moments to discuss, keeping episode 6 notes in a labeled thread in your separate chat.</li>
+          <li>Your partner watches episode 6 on Sunday morning, then opens that discussion thread.</li>
+          <li>You exchange replies or arrange a short call after both of you finish.</li>
           <li>Neither of you knows what happens in episode 7 yet, so there is nothing to spoil.</li>
         </ol>
         <p className="text-foreground/80 leading-relaxed mb-8">
@@ -295,9 +295,9 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
         </p>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
-            <strong>Never text about episode content outside the watchroom.</strong>{" "}
-            Keep all reactions inside AniDachi — they are episode-locked and
-            won&apos;t appear until both of you have seen the relevant episode.
+            <strong>Label episode discussions clearly.</strong>{" "}
+            Keep later-episode details in separate chat threads and open them
+            only after both of you have watched. AniDachi live reactions are not episode-locked.
           </li>
           <li>
             <strong>Agree on a maximum episode gap.</strong> If one person

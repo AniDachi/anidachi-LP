@@ -58,7 +58,7 @@ const howToStepsPlain = [
   },
   {
     name: "Create a watchroom",
-    text: "Detect the title and create a Crunchyroll watchroom.",
+    text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room. Friends can join on Free accounts.",
   },
   {
     name: "Share the invite",
@@ -101,7 +101,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: `Free to join with limited hosting. ${PRICING_CR_PRICING_SNIPPET}`,
+    answer: `Free accounts can join an active Plus or Pro host, including a trial host. ${PRICING_CR_PRICING_SNIPPET}`,
   },
 ];
 
@@ -144,7 +144,7 @@ export default function HowToWatchCrunchyrollTogetherWithoutScreenSharePage() {
         description="Synced Crunchyroll watchrooms so everyone streams locally — Discord for voice only."
         url="/guides/how-to-watch-crunchyroll-together-without-screen-share"
         datePublished="2026-08-11"
-        dateModified="2026-08-12"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

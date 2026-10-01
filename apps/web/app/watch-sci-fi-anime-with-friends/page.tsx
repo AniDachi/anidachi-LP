@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Sci-Fi Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for the best sci-fi anime on Crunchyroll — synced playback, theory chat, and async catch-up.",
+      "Group watchroom guides for sci-fi anime on Crunchyroll — synced playback, live reactions, and theory discussions.",
     url: "/watch-sci-fi-anime-with-friends",
   },
 };
@@ -39,7 +39,7 @@ const faq = [
   {
     question: "How do we keep up with complex sci-fi plots like Steins;Gate or Serial Experiments Lain?",
     answer:
-      "Create a shared theory thread in your AniDachi watchroom where group members post predictions and observations after each episode. Many complex sci-fi series reward note-taking — tracking character names, timeline events, or recurring symbols. Pin a spoiler boundary so members who research online don't accidentally share fan-wiki reveals with others watching blind.",
+      "Create a shared theory thread in a separate group chat for predictions and observations between sessions. Track character names, timeline events, or recurring symbols in your own notes. Agree on a spoiler boundary before each AniDachi live room so online research does not spoil first-time viewers.",
   },
   {
     question: "What sci-fi anime can we finish in a weekend?",
@@ -82,7 +82,7 @@ export default function WatchSciFiAnimeWithFriendsPage() {
       description="Group watchroom guides for sci-fi anime on Crunchyroll."
       url="/watch-sci-fi-anime-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -100,9 +100,9 @@ export default function WatchSciFiAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Sci-fi anime is built for group discussion. Install AniDachi, open
-          any Crunchyroll series below, and create a watchroom — sync the
-          mind-bending reveals live, or catch up at your own pace and post
-          episode-tagged reactions in the shared thread.
+          any Crunchyroll series below, and create a live room to share the
+          mind-bending reveals. Keep theory notes between sessions in your
+          separate group chat.
         </strong>
       </p>
 
@@ -123,10 +123,9 @@ export default function WatchSciFiAnimeWithFriendsPage() {
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms let your group react in real time during live
-        sessions and post theory updates between sessions without accidentally
-        spoiling members who are still catching up. Episode-scoped reactions
-        keep each discussion tied to the moment, so the friend who binge-watched
-        three episodes ahead can still engage without ruining anything.
+        sessions. Keep theory updates between meetings in a separate, episode-labeled
+        chat so friends can choose when to read them. Built-in async catch-up
+        and replayed reactions are coming soon.
       </p>
 
       <h2
@@ -169,15 +168,15 @@ export default function WatchSciFiAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">Set a theory thread rule.</span>{" "}
-          Tag every message with the episode number so members who are behind
+          In your separate group chat, label theory posts by episode so members who are behind
           can scroll up safely without hitting a spoiler.
         </li>
         <li>
-          <span className="font-medium text-foreground">Pin your spoiler boundary.</span>{" "}
+          <span className="font-medium text-foreground">Agree on a spoiler boundary.</span>{" "}
           Set the safe episode number so nobody accidentally reveals the twist before everyone reaches it.
         </li>
       </ol>

@@ -30,12 +30,12 @@ const faq = [
   {
     question: "How do I watch movies together long distance?",
     answer:
-      "The best method depends on your streaming platform. For Netflix: Teleparty or Rave. For Disney+: Teleparty or Disney GroupWatch. For Amazon Prime: Prime Party or Teleparty. For Crunchyroll anime: AniDachi (also supports async for different schedules). For any platform: Discord screen share works as a free fallback.",
+      "The best method depends on your streaming platform. For Netflix: Teleparty or Rave. For Disney+: Teleparty or Disney GroupWatch. For Amazon Prime: Prime Party or Teleparty. For Crunchyroll anime: AniDachi live rooms. For any platform: Discord screen share works as a free fallback.",
   },
   {
     question: "What is the best app to watch movies together long distance?",
     answer:
-      "Teleparty is the most widely supported option across Netflix, Disney+, Hulu, and Crunchyroll. Rave is a strong free alternative that adds built-in voice and video calling. For Crunchyroll anime specifically, AniDachi adds async mode — which matters most for long-distance couples who can't always watch simultaneously.",
+      "Teleparty is the most widely supported option across Netflix, Disney+, Hulu, and Crunchyroll. Rave is a strong free alternative that adds built-in voice and video calling. AniDachi supports Crunchyroll and YouTube live rooms with chat, reactions, and voice/video; async catch-up is coming soon.",
   },
   {
     question: "Is there a way to watch movies together long distance for free?",
@@ -77,7 +77,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
       description="All methods compared — Teleparty, Rave, Discord, and AniDachi for anime."
       url="/watch-movies-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-08-11"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -96,11 +96,11 @@ export default function WatchMoviesTogetherLongDistancePage() {
         <strong>
           The best way to watch movies long distance depends on your platform:
           Teleparty for Netflix, Rave for multi-platform with voice chat,
-          AniDachi for Crunchyroll anime (with async mode for different
-          schedules), and Discord screen share as a free fallback for anything.
+          AniDachi for Crunchyroll anime and YouTube live rooms,
+          and Discord screen share as a free fallback for anything.
         </strong>{" "}
-        None of the general movie watch party tools support async watching
-        — that feature is unique to AniDachi for Crunchyroll.
+        AniDachi&apos;s built-in async catch-up is coming soon. Current live
+        rooms need a shared start time.
       </p>
 
       <h2
@@ -131,11 +131,11 @@ export default function WatchMoviesTogetherLongDistancePage() {
           },
           {
             feature: "Async watching",
-            values: { teleparty: "no", rave: "no", anidachi: "yes", discord: "no" },
+            values: { teleparty: "no", rave: "no", anidachi: "Coming soon", discord: "no" },
           },
           {
             feature: "Built-in voice/video",
-            values: { teleparty: "no", rave: "yes", anidachi: "no", discord: "yes" },
+            values: { teleparty: "no", rave: "yes", anidachi: "yes", discord: "yes" },
           },
           {
             feature: "Price",
@@ -204,14 +204,13 @@ export default function WatchMoviesTogetherLongDistancePage() {
         id="anidachi"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        AniDachi — Best for Crunchyroll Anime + Async Watching
+        AniDachi — Live Crunchyroll and YouTube Rooms
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         If your movie nights include anime on Crunchyroll, AniDachi is the
-        most capable tool specifically for that platform. The key feature
-        for long-distance couples is async mode: each person watches on
-        their own schedule, and reactions are attached to specific episodes
-        so no one gets spoiled.
+        option for live sync, chat, reactions, and voice/video beside your
+        own player. A Plus, Pro, or trial host can invite Free friends.
+        Personal history needs each viewer’s own Plus/Pro access and recording permission.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi does not support Netflix, Disney+, or other general

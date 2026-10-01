@@ -35,7 +35,7 @@ const faq = [
   {
     question: "How do I watch slice of life anime with friends online?",
     answer:
-      "Install AniDachi's Chrome extension, open your chosen series on Crunchyroll, and create a watchroom. Share the invite link so your group joins with synced playback. Slice of life episodes also suit independent catch-up between live meetings. AniDachi Async catch-up is planned, not available today.",
+      "Install AniDachi on desktop Chrome and open the same episode on Crunchyroll. A Plus, Pro, or trial host creates a live room and invites Free friends. Slice of life episodes also suit independent catch-up between live meetings. Built-in async catch-up is coming soon.",
   },
   {
     question: "What makes slice of life anime good for watch parties?",
@@ -103,7 +103,7 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
       description="Group watchroom guides for slice of life anime on Crunchyroll."
       url="/watch-slice-of-life-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -193,7 +193,7 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">

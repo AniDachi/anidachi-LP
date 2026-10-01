@@ -1,5 +1,19 @@
 # Current Development State
 
+## Website copy consistency completed locally, October 1, 2026
+
+The owner approved fixing outdated Free-hosting/30-minute promises, current async
+claims, missing annual/trial terms and misleading first-use instructions across
+the website. Work is based on staging `34c4af98`; shared marketing copy,
+account/install instructions, articles, comparisons, FAQ/HowTo and metadata now
+follow the activated paid-hosting model. Web typecheck, 942 passing tests
+(6 existing skips), production build, the targeted scan of all 353 generated
+HTML files and independent review passed. Representative local browser checks
+include desktop and mobile rendering. Public URLs, runtime access rules and
+legacy compatibility code are preserved. Graphify is unchanged under its merge
+integrity exception. This is not a staging or production delivery. See the
+[scope, progress and verification](releases/website-copy-consistency-2026-10-01.md).
+
 ## Watch Library filter fix delivered to staging, October 1, 2026
 
 [PR #389](https://github.com/AniDachi/anidachi-LP/pull/389) merged at 03:10:39 UTC

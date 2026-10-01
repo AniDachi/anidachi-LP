@@ -42,7 +42,7 @@ const faq = [
   {
     question: "What is the best Hyperbeam alternative for anime?",
     answer:
-      "AniDachi is the best Hyperbeam alternative for Crunchyroll anime groups: each person streams locally at full quality while the watchroom syncs playback and tracks episode progress.",
+      "AniDachi is an alternative for Crunchyroll anime groups: each person streams locally while the room syncs playback and adds chat, reactions, and voice/video. Personal history needs your own Plus/Pro access and recording permission.",
   },
   {
     question: "Does Hyperbeam replace individual Crunchyroll subscriptions?",
@@ -82,7 +82,7 @@ export default function AniDachiVsHyperbeamPage() {
       description="Cloud tab streaming vs per-user Crunchyroll watchrooms."
       url="/compare/anidachi-vs-hyperbeam"
       datePublished="2026-07-22"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -136,7 +136,7 @@ export default function AniDachiVsHyperbeamPage() {
           },
           {
             feature: "Async catch-up",
-            values: { anidachi: "yes", hyperbeam: "no" },
+            values: { anidachi: "Coming soon", hyperbeam: "no" },
           },
           {
             feature: "Individual pause/seek controls",
@@ -184,7 +184,7 @@ export default function AniDachiVsHyperbeamPage() {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Everyone has their own Crunchyroll login and wants native quality.</li>
         <li>Your club watches weekly and needs repeatable watchrooms.</li>
-        <li>Schedules drift and async catch-up matters.</li>
+        <li>You want live reactions and voice/video beside your own player.</li>
       </ul>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Migrating off relay-style setups? Follow{" "}

@@ -16,7 +16,16 @@ AniDachi is a Chrome extension + web product for **watchrooms** on:
 - **Crunchyroll** (catalog pages, desktop Chrome)
 - **YouTube** (full `youtube.com/watch` pages, desktop Chrome — not Shorts, embeds, feeds, or native mobile apps)
 
-Differentiators: sync + async catch-up, chat, progress. Each person uses their own streaming account.  
+Current features: live synchronized players, on-player chat and reactions, voice/video calls, and personal watch history. Each person uses their own access to the video.
+
+Free accounts join Plus/Pro/trial hosts; creating rooms requires the host's own Plus or Pro access. Plus supports 6 people including the host, Pro 15; friends join free. Recording and editing personal history require each viewer's own paid/trial access. Automatic recording additionally requires permission in the extension; YouTube has a separate recording switch. Saved history, Resume and deletion remain available on Free.
+
+Plus and Pro offer monthly/yearly billing and one 3-day card-backed trial per account, for either new or existing Free accounts that have not used it. After the trial, the selected plan renews automatically unless renewal is canceled before the trial ends. Do not promise a new trial for switching plans or billing periods.
+
+**Planned only:** async catch-up, shared group progress, persistent room context/chat and replayed reactions. Never sell these as current features or paid-plan benefits. Mark future mentions clearly; do not include them among instructions users can follow today.
+
+Use `lib/pricing-copy.ts` for shared commercial copy. Legacy Free hosting/quota data in the protocol is compatibility data, not a current marketing offer. Update visible text, FAQ/HowTo JSON-LD and search/social metadata together.
+
 **Not supported:** Netflix, Disney+, Hulu, Amazon Prime Video sync.  
 **Not affiliated** with Crunchyroll, Sony, YouTube, or Google.
 
@@ -155,4 +164,4 @@ Impressions before clicks is normal for new URLs. Prefer enriching winners over 
 - [ ] Inbound links planned
 - [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
-*Last updated: 2026-08-11*
+*Last updated: 2026-10-01 (current product and subscription copy)*

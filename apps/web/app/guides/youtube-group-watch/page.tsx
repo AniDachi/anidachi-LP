@@ -69,7 +69,7 @@ const faq = [
   },
   {
     question: "Is YouTube group watch free?",
-    answer: `Free to join with limited hosting. ${PRICING_YT_PRICING_SNIPPET}`,
+    answer: `Free accounts can join an active Plus or Pro host, including a trial host. ${PRICING_YT_PRICING_SNIPPET}`,
   },
   {
     question: "Can we use Discord for a YouTube group watch?",
@@ -120,7 +120,7 @@ export default function YoutubeGroupWatchPage() {
         description="How to run a YouTube group watch with AniDachi watchrooms — live together."
         url="/guides/youtube-group-watch"
         datePublished="2026-07-26"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

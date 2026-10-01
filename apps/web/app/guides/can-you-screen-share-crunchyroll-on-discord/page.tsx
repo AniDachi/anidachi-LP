@@ -143,7 +143,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       description="Often blocked or poor quality — why Discord Go Live struggles with Crunchyroll and what to use instead."
       url="/guides/can-you-screen-share-crunchyroll-on-discord"
       datePublished="2026-07-19"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -255,7 +255,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         .
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Hosts who need unlimited rooms and async catch-up can review{" "}
+        To create your own live rooms with Plus or Pro, including an active trial, review{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>

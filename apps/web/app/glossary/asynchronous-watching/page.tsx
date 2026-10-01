@@ -6,7 +6,7 @@ import { getGuideLinks } from "@/lib/guide-links";
 export const metadata: Metadata = {
   title: "What Is Asynchronous Anime Watching? — Glossary (2026)",
   description:
-    "Asynchronous anime watching means friends watch the same show at their own pace and share reactions later. Learn how it works and which tools support it.",
+    "Asynchronous anime watching means friends watch the same show on their own schedules and discuss it later. Learn the routine and what AniDachi supports today.",
   alternates: { canonical: "/glossary/asynchronous-watching" },
 };
 
@@ -14,27 +14,27 @@ const faq = [
   {
     question: "What does asynchronous watching mean?",
     answer:
-      "Asynchronous watching means each person in a group watches anime episodes on their own schedule, not at the same time. They share progress, reactions, and comments through a persistent watchroom that everyone can access whenever they watch.",
+      "Asynchronous watching means each person watches episodes on their own schedule, then discusses them with the group. You can organize it with an agreed episode target and a separate chat; it does not require a live watchroom.",
   },
   {
     question: "Which apps support asynchronous anime watching?",
     answer:
-      "AniDachi is currently the only anime watch-party tool that fully supports asynchronous watching with per-user progress tracking and persistent chat. Other tools like Teleparty and Crunchyroll Party only support live synchronized watching.",
+      "You can arrange asynchronous watching with a group chat and an agreed episode target. AniDachi currently supports live rooms and personal history for viewers with their own Plus or Pro access and recording permission. Built-in async catch-up, shared group progress, and replayed reactions are coming soon.",
   },
   {
     question: "Is async watching better than live watching?",
     answer:
-      "Neither is universally better. Async works well for groups with different schedules or time zones. Live watching is better for premieres and finales where simultaneous reactions are the point. AniDachi supports both in the same watchroom.",
+      "Neither is universally better. Async works well for different schedules or time zones. Live watching suits premieres and finales where simultaneous reactions are the point. AniDachi rooms currently support live watching; built-in async catch-up is planned.",
   },
   {
     question: "Can long-distance couples use asynchronous watching?",
     answer:
-      "Yes — async watching is ideal for long-distance couples who can't watch at the same time due to different schedules or time zones. Each person watches when free, marks episodes done, and leaves timestamped reactions. The other person reads those reactions after finishing the same episode, creating a shared experience without scheduling pressure.",
+      "Yes. Agree on an episode, watch when each person is free, then discuss it in a separate chat after both have finished. AniDachi does not yet replay a partner's reactions during later viewing.",
   },
   {
     question: "Does asynchronous watching spoil plot twists for slower watchers?",
     answer:
-      "No — AniDachi's async mode uses episode-scoped reactions. Reactions are only visible after a user marks that episode as watched. Faster watchers can't accidentally spoil a twist because their comments are hidden from viewers who haven't reached that episode yet.",
+      "It can if people discuss episodes before others finish. Agree on a spoiler boundary and label episode discussions clearly in your separate chat. AniDachi live chat does not automatically hide comments based on each person's progress.",
   },
 ];
 
@@ -63,7 +63,7 @@ export default function AsyncWatchingGlossaryPage() {
       description="How async anime watching works and why it's growing."
       url="/glossary/asynchronous-watching"
       datePublished="2026-04-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -80,10 +80,11 @@ export default function AsyncWatchingGlossaryPage() {
         <strong>
           Asynchronous anime watching means friends watch the same anime at
           their own pace — not at the same time — and share reactions, comments,
-          and progress through a shared watchroom.
+          and progress afterward in a group conversation.
         </strong>{" "}
         It&apos;s like a book club for anime: everyone reads at their own speed,
-        then discusses.
+        then discusses. AniDachi supports live rooms today; built-in async
+        catch-up is coming soon.
       </p>
 
       <h2
@@ -93,11 +94,11 @@ export default function AsyncWatchingGlossaryPage() {
         How Async Watching Works
       </h2>
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-6">
-        <li>Someone creates a watchroom for a specific anime.</li>
-        <li>Everyone joins via invite link.</li>
+        <li>Choose an anime and agree on an episode target.</li>
+        <li>Pick a separate group chat for discussion.</li>
         <li>Each person watches episodes whenever they have time.</li>
-        <li>After watching, they mark the episode and leave reactions or comments.</li>
-        <li>Friends see those reactions when they watch the same episode later.</li>
+        <li>Tell the group when you have finished the agreed episodes.</li>
+        <li>Discuss them after everyone has caught up, keeping later spoilers out.</li>
       </ol>
 
       <h2

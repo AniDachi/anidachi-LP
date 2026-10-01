@@ -37,7 +37,7 @@ const faq = [
   {
     question: "Should new groups start with Discord or per-user streams?",
     answer:
-      "Discord screen sharing is fastest for demos but strains upload bandwidth. Move to synchronized per-user playback when people want Blu-ray-tier clarity.",
+      "With AniDachi, everyone plays the video in their own browser instead of watching a shared screen. Each person needs the extension and access to the episode; only the host needs Plus or Pro, including during a trial.",
   },
 ];
 
@@ -61,7 +61,7 @@ export default function GroupWatchOnboardingPage() {
       description="Operational playbook for onboarding friends to anime watch parties."
       url="/resources/group-watch-onboarding"
       datePublished="2026-05-08"
-      dateModified="2026-05-08"
+      dateModified="2026-10-01"
       faq={faq}
       articleImage={articleImageAbsolute}
     >
@@ -70,23 +70,21 @@ export default function GroupWatchOnboardingPage() {
       </h1>
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
-          This resource page lives outside `/guides/` on purpose—it is for club
-          admins and Discord mods who already picked a stack but still need crisp
-          talking points before night one.
+          Bring your group together: choose a host, check that everyone can play
+          the episode, and share the room invite.
         </strong>
       </p>
       <p className="text-foreground/80 leading-relaxed mb-6">
-        Route uses the{" "}
-        <code className="text-sm bg-brand-surface px-1 rounded">default</code> funnel
-        template automatically. Tie follow-up CTAs back to pricing after you clarify
-        roles so nobody feels pressured before accounts are squared away.
+        {PRICING_GROUP_ONBOARDING} Everyone installs AniDachi in desktop Chrome
+        and signs in. The host opens the episode, creates the room, and sends
+        its invite link. Choose a time when everyone can join for live playback.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-10">
-        After the social contract is clear,{" "}
+        Before your first session,{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           review AniDachi pricing
         </Link>{" "}
-        and route power users through the{" "}
+        and use the{" "}
         <Link href="/anime-watch-party-toolkit" className="text-brand-orange hover:underline">
           anime watch party toolkit
         </Link>

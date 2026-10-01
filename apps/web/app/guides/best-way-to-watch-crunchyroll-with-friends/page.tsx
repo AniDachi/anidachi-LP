@@ -16,14 +16,14 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Way to Watch Crunchyroll With Friends (2026 Verdict) | AniDachi",
   description:
-    "Verdict: sync, async, or screen share? For most anime groups the best way to watch Crunchyroll with friends is AniDachi watchrooms — not Discord Go Live.",
+    "Compare live sync, independent viewing, and screen share for Crunchyroll. AniDachi watchrooms sync each person’s own stream and add live conversation.",
   alternates: {
     canonical: "/guides/best-way-to-watch-crunchyroll-with-friends",
   },
   openGraph: {
     title: "Best Way to Watch Crunchyroll With Friends",
     description:
-      "Method decision page: live sync vs async vs screen share — and why AniDachi wins for most crews.",
+      "Compare live sync, independent viewing, and screen share for your Crunchyroll group.",
     url: "/guides/best-way-to-watch-crunchyroll-with-friends",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -39,12 +39,12 @@ const faq = [
   {
     question: "What is the best way to watch Crunchyroll with friends?",
     answer:
-      "For most anime groups in 2026, the best way is a synced watchroom where everyone streams Crunchyroll locally — AniDachi for live sync plus async catch-up. Screen share is a last resort; pure honor-system countdowns break on mid-credit scenes.",
+      "For most anime groups in 2026, the best way is a synced watchroom where everyone streams Crunchyroll locally — AniDachi for live sync, chat, cameras, and microphones. Screen share is a last resort; pure honor-system countdowns break on mid-credit scenes.",
   },
   {
     question: "Is live sync or async better for Crunchyroll?",
     answer:
-      "Live sync wins for premiere drops and finale nights. Async wins when time zones or work schedules never overlap. AniDachi supports both in one watchroom so you do not pick a permanent camp.",
+      "Live sync wins for premiere drops and finale nights. Async wins when time zones or work schedules never overlap. AniDachi supports live rooms today; Async catch-up with replayed reactions is coming soon. For now, watch independently and discuss later when schedules differ.",
   },
   {
     question: "Is this the same as how to watch Crunchyroll with friends?",
@@ -87,7 +87,7 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
       description="Method verdict: sync vs async vs screen share for Crunchyroll anime nights."
       url="/guides/best-way-to-watch-crunchyroll-with-friends"
       datePublished="2026-07-19"
-      dateModified="2026-07-19"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -106,11 +106,11 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           The best way for most anime groups is AniDachi: everyone streams
-          Crunchyroll in their own browser while a watchroom handles sync, chat,
-          and optional async catch-up.
+          Crunchyroll in their own browser while a watchroom handles live sync,
+          chat, cameras, and microphones.
         </strong>{" "}
-        Screen share loses on quality and legality-of-access hygiene. Live-only
-        free extensions are fine for same-time nights — until schedules diverge.
+        Screen share can reduce quality or show a black screen for protected
+        video. All these live methods need a shared viewing time.
         This is a decision page, not a clone of the{" "}
         <Link
           href="/guides/how-to-watch-crunchyroll-with-friends"
@@ -151,15 +151,14 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
           },
           {
             feature: "Async catch-up",
-            values: { anidachi: "yes", livefree: "no", screenshare: "no" },
+            values: { anidachi: "Coming soon", livefree: "no", screenshare: "no" },
           },
           {
             feature: "Everyone has own controls",
             values: { anidachi: "yes", livefree: "yes", screenshare: "no" },
           },
           {
-            feature: "Best for time zones",
-            values: { anidachi: "yes", livefree: "no", screenshare: "no" },
+            feature: "Requires a shared viewing time", values: { anidachi: "yes", livefree: "yes", screenshare: "yes" },
           },
         ]}
       />
@@ -176,8 +175,7 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
           (AniDachi or a free live-only tool) is enough.
         </li>
         <li>
-          <strong>Someone always watches tomorrow?</strong> Pick AniDachi async —
-          do not rely on Discord Go Live recordings.
+          <strong>Someone always watches tomorrow?</strong> Watch independently and arrange a later conversation. AniDachi Async catch-up is coming soon.
         </li>
         <li>
           <strong>Only one person has Crunchyroll?</strong> Fix accounts first;

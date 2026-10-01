@@ -48,7 +48,7 @@ export default function AnimeWatchPartyIdeasPage() {
       description="Creative ways to host the perfect anime watch party."
       url="/guides/anime-watch-party-ideas"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -94,8 +94,7 @@ export default function AnimeWatchPartyIdeasPage() {
         </li>
         <li>
           <strong>Async Book Club Style:</strong> Pick 3-4 episodes per week.
-          Everyone watches on their own schedule using AniDachi&apos;s async
-          watchrooms and discusses in the chat.
+          Everyone watches independently and discusses the episodes later in a separate group chat. Use AniDachi when the group can meet for a live session.
         </li>
       </ul>
 

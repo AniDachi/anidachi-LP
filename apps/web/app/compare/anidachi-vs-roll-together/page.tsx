@@ -10,12 +10,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Roll Together — Crunchyroll Watch Party Extensions Compared (2026)",
   description:
-    "AniDachi vs Roll Together for Crunchyroll watch parties: async vs live-only, anime detection, and which workflow fits a friend group.",
+    "AniDachi vs Roll Together for Crunchyroll watch parties: live sync, anime detection, personal history, and which workflow fits a friend group.",
   alternates: { canonical: "/compare/anidachi-vs-roll-together" },
   openGraph: {
     title: "AniDachi vs Roll Together",
     description:
-      "Compare Crunchyroll watch party extension workflows: live-only sync vs async watchrooms.",
+      "Compare Crunchyroll watch party extensions for live sync, group setup, and personal history.",
     url: "/compare/anidachi-vs-roll-together",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -31,12 +31,12 @@ const faq = [
   {
     question: "Which is better for groups that can’t always watch live?",
     answer:
-      "If your group regularly watches on different schedules, AniDachi is designed for async catch-up in one shared watchroom while still keeping episode context and spoiler boundaries.",
+      "AniDachi currently supports live rooms, so a synchronized party needs a shared start time. Your own Plus/Pro access and recording permission let you save personal progress for later viewing. Async catch-up and shared group progress are coming soon.",
   },
   {
     question: "Do all viewers still need Crunchyroll?",
     answer:
-      "Yes. Everyone still streams from their own Crunchyroll account. AniDachi adds watchrooms, sync, chat, and progress on top of personal streams.",
+      "Yes. Everyone still streams from their own Crunchyroll account. AniDachi adds live watchrooms, sync, chat, reactions, and voice/video on top of personal streams.",
   },
 ];
 
@@ -64,7 +64,7 @@ export default function AniDachiVsRollTogetherPage() {
       description="Compare Crunchyroll watch-party extension workflows for real friend groups."
       url="/compare/anidachi-vs-roll-together"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -80,9 +80,9 @@ export default function AniDachiVsRollTogetherPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
-          Most Crunchyroll watch party extensions solve one problem: live sync. AniDachi
-          focuses on the next problem: what happens when one friend is late, in another
-          time zone, or bingeing on a different day.
+          AniDachi combines live Crunchyroll sync with chat, reactions, and voice/video
+          beside the player. Plus and Pro also let each subscribed viewer save personal
+          history after allowing recording.
         </strong>
       </p>
 
@@ -90,9 +90,9 @@ export default function AniDachiVsRollTogetherPage() {
         At a glance
       </h2>
       <p className="text-foreground/80 mb-8">
-        <strong>TL;DR:</strong> If you always watch live, a live-sync extension can be
-        enough. If you want one shared room for a series with async catch-up, spoiler-aware
-        episode context, and progress tracking, choose AniDachi.
+        <strong>TL;DR:</strong> Compare the live features your group uses each week.
+        AniDachi offers Crunchyroll and YouTube rooms, social features beside the
+        player, and personal history for subscribed viewers.
       </p>
 
       <h2 id="choose" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
@@ -100,13 +100,13 @@ export default function AniDachiVsRollTogetherPage() {
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
-          <strong>Do schedules align?</strong> If not, async watchrooms beat live-only sync.
+          <strong>Do schedules align?</strong> AniDachi live sync needs everyone online together.
         </li>
         <li>
-          <strong>Do you watch long shows?</strong> Progress tracking matters more over weeks.
+          <strong>Do you watch long shows?</strong> Personal history helps subscribed viewers resume their own playback.
         </li>
         <li>
-          <strong>Do you care about spoiler hygiene?</strong> Episode-scoped chat keeps rooms safe.
+          <strong>Do you care about spoilers?</strong> Agree on an episode boundary before the live chat.
         </li>
       </ul>
 
@@ -114,9 +114,9 @@ export default function AniDachiVsRollTogetherPage() {
         Why people pick AniDachi
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
-        <li>Async catch-up in the same room as live viewers.</li>
+        <li>Live chat, reactions, and voice/video alongside synchronized playback.</li>
         <li>Auto anime detection for repeatable weekly sessions.</li>
-        <li>Per-person progress for long-running groups.</li>
+        <li>Personal progress with your own Plus/Pro access and recording permission.</li>
       </ul>
 
       <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
@@ -142,4 +142,3 @@ export default function AniDachiVsRollTogetherPage() {
     </SeoPageLayout>
   );
 }
-

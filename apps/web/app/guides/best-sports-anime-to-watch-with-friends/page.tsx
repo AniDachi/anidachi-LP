@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Sports Anime to Watch With Friends (2026) — 9 Group Picks",
   description:
-    "The best sports anime for group watches on Crunchyroll — Haikyuu!!, Blue Lock, Slam Dunk & more. Hype matchups, synced reactions, and async catch-up with AniDachi.",
+    "The best sports anime for group watches on Crunchyroll — Haikyuu!!, Blue Lock, Slam Dunk & more. Hype matchups, synced playback, and live reactions with AniDachi.",
   alternates: { canonical: "/guides/best-sports-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Sports Anime to Watch With Friends — 2026",
@@ -42,12 +42,12 @@ const faq = [
   {
     question: "Should we watch sports anime live or async?",
     answer:
-      "Watch key matches live when possible — clutch points and final-set comebacks land hardest with synchronized reactions. Use async mode between tournament arcs so members who miss a week can catch up without spoiling the bracket for everyone else.",
+      "Watch key matches live when possible — clutch points and final-set comebacks land hardest with synchronized reactions. Let members who miss a week catch up independently before the next arc, and keep results out of the group chat until everyone finishes.",
   },
   {
     question: "Do all my friends need Crunchyroll for sports anime watch parties?",
     answer:
-      "Yes — each person streams from their own Crunchyroll account. AniDachi adds the watchroom, sync, and episode-scoped chat on top. Most major sports anime on this list are widely available on Crunchyroll, but check regional availability before starting a long series.",
+      "Yes — each person streams from their own Crunchyroll account. AniDachi adds live playback sync and chat. Check regional availability before starting a long series, and agree on which match results are safe to discuss.",
   },
 ];
 
@@ -80,7 +80,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
       description="9 sports anime picks for group watchrooms — team hype, rivalry arcs, and match-day sync sessions."
       url="/guides/best-sports-anime-to-watch-with-friends"
       datePublished="2026-06-08"
-      dateModified="2026-06-08"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -184,8 +184,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
             </Link>
           </strong>{" "}
           — Figure skating with emotional stakes that go beyond the rink. Competition
-          arcs deliver clutch performance moments; character drama keeps async
-          watchrooms active between episodes.
+          arcs deliver clutch performance moments; character drama gives the group plenty to discuss between live sessions.
         </li>
         <li>
           <strong>
@@ -225,7 +224,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
           active even during training-arc episodes.
         </li>
         <li>
-          Use AniDachi&apos;s async mode between arcs so nobody falls behind before
+          Allow independent catch-up between live sessions so nobody falls behind before
           the bracket resets.
         </li>
         <li>

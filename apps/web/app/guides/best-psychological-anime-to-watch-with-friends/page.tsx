@@ -44,7 +44,7 @@ const faq = [
   {
     question: "How do we avoid spoilers watching psychological anime together?",
     answer:
-      "Use AniDachi's async mode to let faster members catch up at their own pace while keeping episode-scoped chat separate. Set a strict spoiler rule: no discussion of upcoming episodes in the group chat, only currently-finished episodes. For shows like Death Note and Steins;Gate where theories are half the fun, create a running prediction thread that updates after each session.",
+      "Agree on a shared episode target and let members catch up independently before the next live room. Keep later-episode theories in a separate labeled chat; AniDachi live chat does not automatically hide spoilers. For shows like Death Note and Steins;Gate, keep personal predictions to compare after everyone finishes.",
   },
   {
     question: "How many episodes per session works best for psychological anime?",
@@ -106,7 +106,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       description="Death Note, Steins;Gate, Monster & more — psychological anime picks that generate the best group theory threads and post-episode debates."
       url="/guides/best-psychological-anime-to-watch-with-friends"
       datePublished="2026-06-01"
-      dateModified="2026-06-01"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}

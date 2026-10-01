@@ -88,7 +88,7 @@ export default function BestRomanceAnimeWithFriendsPage() {
       description="Toradora, Your Name, Fruits Basket, Kaguya-sama & 20+ more romance picks — grouped by tone and pacing for couples and friend groups."
       url="/guides/best-romance-anime-to-watch-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -239,7 +239,7 @@ export default function BestRomanceAnimeWithFriendsPage() {
           <strong>Ban spoiler confirmations, not spoiler reactions.</strong> Members who have already seen the series can react with &quot;just wait&quot; energy — but not confirm or deny whether a ship becomes canon before the group reaches the episode.
         </li>
         <li>
-          <strong>Use AniDachi async catch-up for emotional series.</strong> For Clannad After Story or Your Lie in April, let members who fall behind catch up on their own rather than watching emotional climaxes with a time delay — the shared reaction thread means they&apos;re still in the conversation.{" "}
+          <strong>Leave room for independent catch-up.</strong> For Clannad After Story or Your Lie in April, let members who fall behind watch on their own before the next meeting, then discuss the emotional climax together. Save your notes in a separate chat; AniDachi rooms run live.{" "}
           <Link href="/#pricing" className="text-brand-orange hover:underline">Start a watchroom here.</Link>
         </li>
         <li>

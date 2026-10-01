@@ -29,7 +29,7 @@ export default function AboutPage() {
     <main id="main-content" className="min-h-screen bg-background">
       <article className="container mx-auto max-w-3xl px-4 py-16">
         <h1 className="text-4xl font-bold text-foreground mb-2">About AniDachi</h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: July 28, 2026</p>
+        <p className="text-sm text-foreground/50 mb-10">Last updated: October 1, 2026</p>
 
         <div className="space-y-8 text-foreground/80 leading-relaxed">
           <section>
@@ -40,12 +40,14 @@ export default function AboutPage() {
               AniDachi (アニ友) is a Chrome extension and web product for watching
               together with friends. You create a watchroom, sync playback on{" "}
               <strong>Crunchyroll</strong> or <strong>YouTube</strong>, chat in
-              real time, and catch up asynchronously when schedules do not match.
+              real time, and share live reactions, voice, and video.
             </p>
             <p className="mt-4">
               Each person streams with their own account on the supported
-              platform. AniDachi provides the watchroom layer — sync, chat, and
-              progress — not the video catalog itself.
+              platform. Plus, Pro, and trial users can host; Free friends can
+              join an active host. Recording personal history requires your own
+              Plus/Pro access and permission, with YouTube recording enabled
+              separately. Async catch-up and shared group progress are coming soon.
             </p>
           </section>
 

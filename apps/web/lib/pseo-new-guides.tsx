@@ -235,11 +235,11 @@ export const listiclePages: Record<string, ListiclePage> = {
 		title: "Best Anime to Watch Long Distance — AniDachi",
 		h1: "8 Best Anime to Watch Long Distance in 2026",
 		description:
-			"Best anime to watch long distance with friends or a partner. Pick shows that work live or async, then host an AniDachi watchroom.",
+			"Best anime to watch long distance with friends or a partner. Pick shows for live AniDachi watchrooms or independent viewing followed by a conversation.",
 		ogDescription:
-			"Long-distance anime picks for couples, friend groups, and async Crunchyroll watchrooms.",
+			"Long-distance anime picks for couples, friend groups, and live Crunchyroll watchrooms.",
 		intro:
-			"The best anime to watch long distance gives your group clear episode checkpoints, strong reactions, and enough flexibility for missed nights. AniDachi watchrooms help because one host can start the room, friends can join free, and async catch-up keeps the shared ritual alive.",
+			"The best anime to watch long distance gives your group clear episode checkpoints, strong reactions, and enough flexibility for missed nights. AniDachi keeps live playback in sync. A host with Plus or Pro, including an active trial, can invite friends who join on Free accounts.",
 		sectionIntro:
 			"These picks favor emotional payoffs, clean stopping points, and Crunchyroll-friendly group watching.",
 		picks: sharedPicks.longDistance,
@@ -254,13 +254,13 @@ export const listiclePages: Record<string, ListiclePage> = {
 				question:
 					"Can we watch anime long distance without being online at the same time?",
 				answer:
-					"Yes. AniDachi supports async watchrooms, so one person can watch on Crunchyroll first and the other can catch up later without losing the shared room context.",
+					"You can watch independently and discuss the episode later in a separate chat. AniDachi rooms currently sync live playback; Async catch-up with replayed reactions is coming soon.",
 			},
 			{
 				question:
 					"Do friends need to pay to join a long-distance AniDachi room?",
 				answer:
-					"Friends can join with Free accounts. The host upgrades to Plus or Pro when they want longer rooms, bigger groups, and more room-hosting flexibility.",
+					"Friends can join on Free accounts. Creating a room requires the host's own Plus or Pro access, including an active trial. See pricing for the three-day card trial and subscription terms.",
 			},
 		],
 	},
@@ -269,7 +269,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 		title: "Best Anime to Watch Online Together — AniDachi",
 		h1: "8 Best Anime to Watch Online Together in 2026",
 		description:
-			"Best anime to watch online together with friends. Choose shows built for reactions, synced Crunchyroll rooms, and async catch-up.",
+			"Best anime to watch online together with friends. Choose shows built for live reactions, synced Crunchyroll rooms, and post-episode discussion.",
 		ogDescription:
 			"Anime picks for online watch parties, synced rooms, and friend groups on Crunchyroll.",
 		intro:
@@ -303,7 +303,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 		description:
 			"Best anime to watch with girlfriend for cozy dates, romance, comedy, and long-distance watchrooms on Crunchyroll.",
 		ogDescription:
-			"Anime date-night picks for watching with your girlfriend live or async.",
+			"Anime date-night picks for watching live with your girlfriend or discussing after independent viewing.",
 		intro:
 			"The best anime to watch with girlfriend should feel like a date, not homework. Pick shows with chemistry, humor, and clear stopping points, then use an AniDachi watchroom so either person can host recurring nights without forcing both schedules to match perfectly.",
 		sectionIntro:
@@ -319,12 +319,12 @@ export const listiclePages: Record<string, ListiclePage> = {
 			{
 				question: "What is a good long-distance anime date night setup?",
 				answer:
-					"Create an AniDachi room, open the same Crunchyroll episode, keep a call or chat open, and pick a clear stop point before you start. If one person misses the time, async catch-up keeps the date-night thread intact.",
+					"A host with Plus or Pro, including an active trial, creates an AniDachi room. Open the same Crunchyroll episode and pick a clear stop point. If one person misses the time, watch independently and arrange a later conversation.",
 			},
 			{
 				question: "Do couples both need Crunchyroll?",
 				answer:
-					"Yes, each person needs their own Crunchyroll access for the video. AniDachi provides the room, sync, chat, and async layer.",
+					"Yes, each person needs their own Crunchyroll access for the video. AniDachi provides live playback sync, chat, cameras, and microphones.",
 			},
 		],
 	},
@@ -335,11 +335,11 @@ export const listiclePages: Record<string, ListiclePage> = {
 		description:
 			"Best anime to watch with boyfriend for action, romance, comedy, and long-distance Crunchyroll watchrooms.",
 		ogDescription:
-			"Anime date-night picks for watching with your boyfriend live or async.",
+			"Anime date-night picks for watching live with your boyfriend or discussing after independent viewing.",
 		intro:
 			"The best anime to watch with boyfriend depends on the mood: action for an easy first night, romance for a real date, or comedy when you just want to unwind together. AniDachi keeps the room synced on Crunchyroll and lets one host invite the other for free.",
 		sectionIntro:
-			"These picks are easy to start, fun to react to, and flexible enough for live or async date nights.",
+			"These picks are easy to start, fun to react to live, and worth discussing when you both finish.",
 		picks: sharedPicks.boyfriend,
 		relatedTags: ["long-distance", "listicle", "pillar-watch-anime"],
 		faq: [
@@ -351,12 +351,12 @@ export const listiclePages: Record<string, ListiclePage> = {
 			{
 				question: "Can AniDachi work for long-distance anime dates?",
 				answer:
-					"Yes. AniDachi watchrooms support synced sessions when both people are online and async catch-up when one person has to watch later.",
+					"Yes, when both people are online for a synced AniDachi session. If one person watches later, discuss it separately afterward. Async catch-up is coming soon.",
 			},
 			{
 				question: "Who needs a paid AniDachi plan for couples?",
 				answer:
-					"Only the person who wants to host beyond Free limits needs Plus or Pro. The other person can join that room with a Free account.",
+					"The host needs Plus or Pro access, including an active trial. The other person can join on Free. Recording and editing personal history requires each viewer's own Plus or Pro access.",
 			},
 		],
 	},
@@ -368,11 +368,11 @@ export const guidePages: Record<string, GuidePage> = {
 		title: "Anime Date Night Ideas Long Distance — AniDachi",
 		h1: "Anime Date Night Ideas Long Distance",
 		description:
-			"Anime date night ideas long distance couples can use live or async. Plan Crunchyroll watchrooms, cozy themes, and spoiler-safe catch-up.",
+			"Anime date night ideas for long-distance couples. Plan live Crunchyroll watchrooms, cozy themes, or independent viewing followed by a call.",
 		ogDescription:
-			"Long-distance anime date ideas for synced or async Crunchyroll watchrooms.",
+			"Long-distance anime date ideas for synced Crunchyroll watchrooms and later conversations.",
 		intro:
-			"Anime date night ideas long distance couples can actually keep should be simple, repeatable, and forgiving when time zones get messy. The easiest setup is an AniDachi watchroom: one person hosts, both stream on Crunchyroll, and async catch-up keeps the date from falling apart.",
+			"Anime date night ideas long distance couples can actually keep should be simple, repeatable, and forgiving when time zones get messy. Use an AniDachi watchroom when you can meet live: one person hosts and both stream on Crunchyroll. If schedules do not overlap, watch separately and plan a conversation afterward.",
 		howToName: "How to plan a long-distance anime date night",
 		howToDescription:
 			"Set up a Crunchyroll watchroom, choose a mood, invite your partner, and keep reactions spoiler-safe.",
@@ -383,11 +383,11 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Create the watchroom",
-				text: "Open Crunchyroll, start AniDachi, and create a room for the episode or movie.",
+				text: "Open the Crunchyroll episode or movie; AniDachi detects it automatically. With your own Plus or Pro access, including an active trial, choose Create room.",
 			},
 			{
 				name: "Share the invite",
-				text: "Send the room link to your partner and agree on a start time or async window.",
+				text: "Send the room link to your partner and agree on a shared start time.",
 			},
 			{
 				name: "Choose a stop point",
@@ -404,7 +404,7 @@ export const guidePages: Record<string, GuidePage> = {
 				title: "Cozy one-episode date",
 				body: [
 					"Pick a comforting episode of Spy x Family, Frieren, or Fruits Basket and keep the plan intentionally small. A good long-distance date does not need a four-hour marathon.",
-					"This format works well on weeknights because one partner can host, the other can join free, and either person can catch up later if the time slips.",
+					"This format works well on weeknights: a partner with Plus or Pro, including an active trial, hosts and the other joins free. Keep the live session short enough for both schedules.",
 				],
 			},
 			{
@@ -418,7 +418,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "async",
 				title: "Async catch-up date",
 				body: [
-					"If one person is asleep or working, set a 24-hour watch window. The first person watches and leaves reactions; the second person catches up without losing the shared room context.",
+					"If one person is asleep or working, set a 24-hour watch window and discuss the episode afterward in a separate chat. This is independent viewing; AniDachi Async catch-up with replayed reactions is coming soon.",
 				],
 				bullets: [
 					"Use one episode or one movie per date.",
@@ -437,12 +437,12 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "How do long-distance couples watch anime together?",
 				answer:
-					"They can use AniDachi to create a Crunchyroll watchroom, share an invite link, sync playback, and keep episode reactions in one place.",
+					"They can use AniDachi to create a Crunchyroll watchroom, share an invite link, sync playback, and react together in live chat.",
 			},
 			{
 				question: "Can an anime date night be async?",
 				answer:
-					"Yes. Async works well when time zones are rough: agree on a watch window, leave reactions in the room, and talk after both people finish.",
+					"Yes. Agree on a watch window, keep personal notes, and talk after both people finish. AniDachi rooms currently run live, so use a separate chat for this later discussion.",
 			},
 		],
 	},
@@ -462,7 +462,7 @@ export const guidePages: Record<string, GuidePage> = {
 		steps: [
 			{
 				name: "Choose a tool",
-				text: "Pick AniDachi for anime-first rooms and async, or a simpler tool for live sync only.",
+				text: "Pick AniDachi for Crunchyroll live rooms, chat, cameras, and microphones; compare other tools for your group's platform needs.",
 			},
 			{
 				name: "Install the extension",
@@ -486,11 +486,11 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "options",
 				title: "Best Crunchyroll watch party app options",
 				body: [
-					"AniDachi is the best fit when your group is Crunchyroll-first and wants anime detection, watchrooms, chat, and async catch-up. Friends can join free, while a regular host upgrades when they need longer rooms.",
+					"AniDachi fits Crunchyroll-first groups that want anime detection, live playback sync, chat, cameras, and microphones. The host needs Plus or Pro access, including an active trial; friends can join on Free accounts.",
 					"Teleparty and Crunchyroll Party are useful for simpler live sessions. Discord is best when speed matters more than quality, because screen share can reduce resolution and does not give everyone their own synced stream.",
 				],
 				bullets: [
-					"AniDachi: anime-first, async-friendly, best for recurring groups.",
+					"AniDachi: Crunchyroll and YouTube live rooms with chat and calling.",
 					"Teleparty: general-purpose live watch party extension.",
 					"Crunchyroll Party: simple Crunchyroll live sync.",
 					"Discord: fast screen share, weaker playback quality.",
@@ -500,8 +500,8 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "choose",
 				title: "Which app should your group choose?",
 				body: [
-					"Choose AniDachi if Crunchyroll is your main anime source and your group needs recurring rooms, time-zone flexibility, or a host who can invite friends without making everyone pay.",
-					"Choose a simpler extension for one-off live sessions where async discussion and anime-specific room context do not matter.",
+					"Choose AniDachi if Crunchyroll is your main anime source and your group wants synced playback, live conversation, and a host who can invite friends without making everyone subscribe.",
+					"Choose a simpler extension if basic live sync is all your group needs. Check platform support and current pricing before choosing.",
 				],
 			},
 		],
@@ -510,7 +510,7 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "What is the best watch party app for Crunchyroll?",
 				answer:
-					"AniDachi is best for anime-first Crunchyroll groups that want watchrooms, sync, chat, and async catch-up. Teleparty and Crunchyroll Party are simpler live-sync options.",
+					"AniDachi fits Crunchyroll groups that want live watchrooms, sync, chat, cameras, and microphones. Teleparty and Crunchyroll Party are other live-sync options.",
 			},
 			{
 				question: "Does Crunchyroll have its own watch party app?",
@@ -544,7 +544,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Start AniDachi",
-				text: "Use AniDachi to detect the anime and create a watchroom.",
+				text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room and share the invite.",
 			},
 			{ name: "Invite the group", text: "Share the room link with friends." },
 			{
@@ -552,8 +552,8 @@ export const guidePages: Record<string, GuidePage> = {
 				text: "Each person uses their own Crunchyroll access for the video.",
 			},
 			{
-				name: "Watch live or async",
-				text: "Sync live, or let late friends catch up with room context preserved.",
+				name: "Watch together live",
+				text: "Start together and use live chat while playback stays in sync.",
 			},
 		],
 		sections: [
@@ -561,7 +561,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "native",
 				title: "Does Crunchyroll have group watch?",
 				body: [
-					"Crunchyroll does not provide a native group watch room for friends. That means there is no built-in room link, shared chat, or async room context directly inside Crunchyroll.",
+					"Crunchyroll does not provide a native group watch room for friends. A third-party tool can add room invites, synchronized playback, and live chat.",
 					"AniDachi fills that gap by adding a watchroom layer on top of the Crunchyroll episode your group is already watching.",
 				],
 			},
@@ -583,7 +583,7 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Is Crunchyroll group watch free?",
 				answer:
-					"Friends can join AniDachi rooms with Free accounts. The room host upgrades when they need fewer hosting limits, bigger rooms, or more account features.",
+					"Friends can join AniDachi rooms on Free accounts. Hosting requires Plus or Pro access, including an active trial. Everyone still needs their own access to the Crunchyroll episode.",
 			},
 			{
 				question: "Is group watch better than Discord screen share?",
@@ -601,7 +601,7 @@ export const guidePages: Record<string, GuidePage> = {
 		ogDescription:
 			"Free and paid Crunchyroll watch party options for anime groups.",
 		intro:
-			"A Crunchyroll watch party free setup is possible, but the tradeoffs matter. Discord screen share is free but lower quality. Simple sync extensions are free or freemium. AniDachi lets friends join free, while the host upgrades only when they need longer or larger rooms.",
+			"A Crunchyroll watch party can be free to join, but each tool has different requirements. With AniDachi, friends join on Free accounts and the host needs Plus or Pro access, including an active trial. Compare other sync tools and screen sharing if nobody wants to host with a subscription.",
 		howToName: "How to run a free Crunchyroll watch party",
 		howToDescription:
 			"Compare free watch party options and choose the setup with the right quality and room limits.",
@@ -623,8 +623,8 @@ export const guidePages: Record<string, GuidePage> = {
 				text: "Keep the first session short so you can test sync and chat.",
 			},
 			{
-				name: "Upgrade only if needed",
-				text: "Move the host to Plus when the group needs longer rooms or larger sessions.",
+				name: "Check hosting access",
+				text: "AniDachi hosts need Plus or Pro, including an active trial. Review pricing and trial terms before creating a room.",
 			},
 		],
 		sections: [
@@ -633,7 +633,7 @@ export const guidePages: Record<string, GuidePage> = {
 				title: "Free Crunchyroll watch party options",
 				body: [
 					"Discord screen share is the lowest-friction free option, but it can reduce video quality and does not sync everyone's own Crunchyroll player.",
-					"AniDachi is built around a host model: friends can join free, and the regular host upgrades when the room outgrows Free limits.",
+					"AniDachi is built around a host model: the host needs Plus or Pro access, including an active trial, while friends can join free.",
 				],
 				bullets: [
 					"Best free quick test: Discord screen share.",
@@ -645,7 +645,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "when-upgrade",
 				title: "When free stops being enough",
 				body: [
-					"Free is fine for trying a room or joining a friend's session. A host should consider Plus when anime night becomes recurring, the group needs longer sessions, or friends keep hitting room limits.",
+					"Free lets you join a friend's active room. To create your own, choose Plus or Pro. Eligible accounts can try either plan for three days with a card; see pricing for renewal and cancellation terms.",
 				],
 			},
 		],
@@ -654,12 +654,12 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Can I make a Crunchyroll watch party for free?",
 				answer:
-					"Yes. You can use Discord screen share, a free sync extension, or join an AniDachi room free. For recurring AniDachi hosting, the host may upgrade.",
+					"You can join an AniDachi room free when its host has active Plus or Pro access, including a trial. Creating your own AniDachi room requires that access. Other tools may offer free hosting with different limitations.",
 			},
 			{
 				question: "Do friends pay to join AniDachi?",
 				answer:
-					"Friends can join with Free accounts. The host pays when they want to host beyond Free room limits.",
+					"Friends can join with Free accounts. The host needs active Plus or Pro access, including a trial, to create the room.",
 			},
 			{
 				question: "What is the catch with free screen sharing?",
@@ -677,7 +677,7 @@ export const guidePages: Record<string, GuidePage> = {
 		ogDescription:
 			"Skip low-quality screen share and watch anime together with synced local Crunchyroll playback.",
 		intro:
-			"To watch anime together without screen share, use a synced watchroom instead of broadcasting one person's browser. AniDachi lets everyone stream the Crunchyroll episode locally, while the room handles sync, chat, and async catch-up.",
+			"To watch anime together without screen share, use a synced watchroom instead of broadcasting one person's browser. AniDachi lets everyone stream the Crunchyroll episode locally while the room handles live sync and chat.",
 		howToName: "How to watch anime together without screen share",
 		howToDescription:
 			"Use AniDachi to create a synced anime watchroom where everyone streams locally.",
@@ -692,7 +692,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Create a watchroom",
-				text: "Use AniDachi to detect the anime and create a room.",
+				text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room and share the invite.",
 			},
 			{ name: "Share the invite", text: "Send the room link to friends." },
 			{
@@ -718,7 +718,7 @@ export const guidePages: Record<string, GuidePage> = {
 				bullets: [
 					"Everyone gets their own stream quality.",
 					"Pauses and seeks stay coordinated.",
-					"Async catch-up is possible when someone misses the live time.",
+					"Late friends can watch independently before your next live meeting.",
 				],
 			},
 		],
@@ -746,11 +746,11 @@ export const guidePages: Record<string, GuidePage> = {
 		title: "Anime Watch Party App — AniDachi",
 		h1: "Anime Watch Party App",
 		description:
-			"Looking for an anime watch party app? Compare sync, chat, async rooms, Crunchyroll support, and free joining with AniDachi.",
+			"Looking for an anime watch party app? Compare live sync, chat, calling, Crunchyroll support, and free joining with AniDachi.",
 		ogDescription:
 			"What to look for in an anime watch party app for Crunchyroll groups.",
 		intro:
-			"An anime watch party app should do more than press play at the same time. For anime groups, the best app supports Crunchyroll, room invites, chat, spoiler-safe catch-up, and a host model where friends can join without every person paying.",
+			"An anime watch party app should help friends share a live session. Look for Crunchyroll support, room invites, chat, calling, and a host model where friends can join without every person paying.",
 		howToName: "How to choose an anime watch party app",
 		howToDescription:
 			"Compare watch party app features and choose the best setup for recurring anime nights.",
@@ -765,7 +765,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Check group features",
-				text: "Look for room invites, chat, reactions, and async catch-up.",
+				text: "Look for room invites, live chat, reactions, cameras, and microphones.",
 			},
 			{
 				name: "Check pricing",
@@ -781,14 +781,14 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "features",
 				title: "Anime watch party app feature checklist",
 				body: [
-					"A general watch party app can work for anime, but anime groups often need more: Crunchyroll-first setup, episode context, spoiler-safe discussion, and flexible schedules.",
+					"A general watch party app can work for anime. Check Crunchyroll support, playback controls, live conversation, and the room size your group needs.",
 				],
 				bullets: [
 					"Crunchyroll support",
 					"Local playback sync",
 					"Invite links",
 					"Chat and reactions",
-					"Async catch-up",
+					"Cameras and microphones",
 					"Friends can join free",
 				],
 			},
@@ -796,7 +796,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "why-anidachi",
 				title: "Why AniDachi fits anime groups",
 				body: [
-					"AniDachi is built specifically around anime watchrooms. The host creates the room, friends join from the invite, and the group can watch live or keep reactions organized when schedules do not line up.",
+					"AniDachi adds live watchrooms to Crunchyroll and YouTube. The host creates a room, friends join from the invite, and the group watches and reacts together in real time.",
 					"That makes it a stronger fit for long-running shows, seasonal simulcasts, long-distance couples, and friend groups that use Crunchyroll as their main anime source.",
 				],
 			},
@@ -806,17 +806,17 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "What is an anime watch party app?",
 				answer:
-					"It is a tool that helps friends watch anime together online with synced playback, room invites, chat, and sometimes async catch-up.",
+					"It is a tool that helps friends watch anime together online with synced playback, room invites, and live conversation. Available features vary by tool.",
 			},
 			{
 				question: "What is the best anime watch party app for Crunchyroll?",
 				answer:
-					"AniDachi is built for Crunchyroll-first anime groups that want synced rooms, chat, async discussion, and free joining for friends.",
+					"AniDachi fits Crunchyroll-first anime groups that want synced live rooms, chat, cameras, microphones, and free joining for friends.",
 			},
 			{
 				question: "Can friends join an anime watch party app for free?",
 				answer:
-					"With AniDachi, friends can join rooms on Free accounts. The host upgrades when they need more room capacity or fewer hosting limits.",
+					"With AniDachi, friends can join rooms on Free accounts when the host has active Plus or Pro access, including a trial. Free accounts cannot create their own rooms.",
 			},
 		],
 	},
@@ -893,7 +893,7 @@ export function PseoListiclePage({
 			description={page.description}
 			url={url}
 			datePublished="2026-07-12"
-			dateModified="2026-07-12"
+			dateModified="2026-10-01"
 			faq={page.faq}
 			headings={headings}
 			itemList={itemList}
@@ -942,16 +942,16 @@ export function PseoListiclePage({
 				How to Watch Together
 			</h2>
 			<ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-				<li>Pick one anime and agree on a live time or async watch window.</li>
+					<li>Pick one anime and agree on a shared start time.</li>
 				<li>Open the episode on Crunchyroll.</li>
 				<li>Create an AniDachi watchroom and share the invite link.</li>
 				<li>
-					Let friends join free; upgrade the host when recurring rooms outgrow
-					Free limits.
+						The host needs Plus or Pro access, including an active trial;
+						friends can join on Free accounts.
 				</li>
 				<li>
-					Use the room chat for reactions, stop points, and spoiler-safe
-					catch-up.
+						Use live room chat for reactions and agree on an episode boundary
+						before discussing spoilers.
 				</li>
 			</ol>
 
@@ -1024,7 +1024,7 @@ export function PseoGuidePage({ slug }: { slug: keyof typeof guidePages }) {
 			description={page.description}
 			url={url}
 			datePublished="2026-07-12"
-			dateModified="2026-07-26"
+			dateModified="2026-10-01"
 			faq={page.faq}
 			headings={headings}
 			articleImage={ARTICLE_IMAGE}

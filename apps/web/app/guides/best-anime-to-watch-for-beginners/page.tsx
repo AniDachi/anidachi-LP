@@ -46,7 +46,7 @@ const faq = [
   {
     question: "How do I watch these shows with friends online?",
     answer:
-      "Everyone needs legal access to the catalog you choose (for example Crunchyroll). Then use AniDachi watchrooms to sync playback or watch asynchronously while keeping chat on the same timeline.",
+      "Everyone needs legal access to the catalog you choose, such as Crunchyroll. Use an AniDachi watchroom to sync playback and chat while everyone is online. If schedules differ, watch independently and discuss the episode later in a separate chat.",
   },
 ];
 
@@ -97,7 +97,7 @@ export default function BestAnimeForBeginnersPage() {
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-06-04"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}

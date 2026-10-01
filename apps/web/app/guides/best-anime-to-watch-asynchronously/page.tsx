@@ -10,19 +10,19 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Anime to Watch Asynchronously With Friends (2026) | AniDachi",
   description:
-    "Best anime for async group watching on Crunchyroll — long-run marathons, weekly simulcasts, and movie nights when schedules never align. AniDachi watchrooms with spoiler-safe catch-up.",
+    "Best anime for asynchronous viewing with friends — long-run marathons, weekly simulcasts, and films to watch independently and discuss when everyone finishes.",
   alternates: { canonical: "/guides/best-anime-to-watch-asynchronously" },
   openGraph: {
     title: "Best Anime to Watch Asynchronously — 2026",
     description:
-      "16 picks for async anime watchrooms — marathons, simulcasts, and films that work when your group cannot sync live.",
+      "Anime picks for independent viewing and later discussion when your group cannot watch live together.",
     url: "/guides/best-anime-to-watch-asynchronously",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Best Anime to Watch Asynchronously — 2026",
-    description: "Async-friendly anime picks for Crunchyroll watchrooms.",
+    description: "Anime picks for independent viewing followed by a conversation with friends.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -36,7 +36,7 @@ const faq = [
   {
     question: "How does async anime watching work on AniDachi?",
     answer:
-      "Each person watches at their own pace on Crunchyroll. Episode-scoped chat keeps reactions tied to the correct moment, and progress markers show who has finished which episode — so nobody reads spoilers from friends who are ahead.",
+      "AniDachi rooms currently run live. Async catch-up with replayed reactions is coming soon. For now, watch independently, keep personal notes, and use a separate labeled chat for discussion after everyone finishes. Personal history does not track the group's progress.",
   },
   {
     question: "Is async better than live sync for anime clubs?",
@@ -46,7 +46,7 @@ const faq = [
   {
     question: "Do all friends need Crunchyroll for async anime watching?",
     answer:
-      "Yes — each person streams from their own Crunchyroll account. AniDachi adds the watchroom, progress tracking, and chat layer on top.",
+      "Each person needs their own legal access to the show. For a live AniDachi session, everyone opens the same Crunchyroll episode. If you watch at different times, discuss it later in a separate group chat.",
   },
 ];
 
@@ -73,10 +73,10 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
         { name: "Best anime to watch asynchronously", url: "/guides/best-anime-to-watch-asynchronously" },
       ]}
       title="16 best anime to watch asynchronously with friends in 2026"
-      description="Async-friendly anime picks for Crunchyroll watchrooms when live sync is impossible."
+      description="Anime picks for independent viewing and later discussion when live sync is impossible."
       url="/guides/best-anime-to-watch-asynchronously"
       datePublished="2026-07-02"
-      dateModified="2026-07-02"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -89,10 +89,11 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
       </h1>
       <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
-          Async watching is AniDachi&apos;s core advantage — your group shares
-          reactions and progress without sharing a schedule. These picks match
-          episode cadence to async clubs: weekly drops, arc-based marathons, and
-          self-contained films.
+          These picks work when friends watch independently and discuss the
+          episode afterward: weekly drops, arc-based marathons, and self-contained
+          films. AniDachi currently provides live rooms; Async catch-up with
+          replayed reactions is coming soon. Keep notes and later discussion in a
+          separate chat until then.
         </strong>
       </p>
 
@@ -105,7 +106,7 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
       <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong><Link href="/watch/jujutsu-kaisen-with-friends" className="text-brand-orange hover:underline">Jujutsu Kaisen</Link></strong>{" "}
-          — 24-minute episodes with cliffhanger density that rewards same-week discussion. Async chat stays episode-tagged so Friday watchers do not spoil Sunday catch-up.
+          — 24-minute episodes with cliffhanger density that rewards same-week discussion. Label your separate chat by episode so Friday watchers do not spoil Sunday catch-up.
         </li>
         <li>
           <strong><Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">Demon Slayer</Link></strong>{" "}
@@ -129,12 +130,12 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
         Long-Run Marathons
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        Multi-month clubs where members advance at different speeds — arc markers prevent spoiler collisions.
+        Multi-month clubs where members advance at different speeds — agree on safe arc boundaries and label later discussions separately.
       </p>
       <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-brand-orange hover:underline">Hunter x Hunter (2011)</Link></strong>{" "}
-          — 148 episodes, zero filler, arc endings that demand debrief threads. Async mode lets slow members catch up between Chimera Ant discussions.
+          — 148 episodes, zero filler, arc endings that demand discussion. Leave time for members to catch up independently before discussing Chimera Ant.
         </li>
         <li>
           <strong><Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-brand-orange hover:underline">Fullmetal Alchemist: Brotherhood</Link></strong>{" "}
@@ -146,7 +147,7 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
         </li>
         <li>
           <strong><Link href="/watch/naruto-with-friends" className="text-brand-orange hover:underline">Naruto</Link></strong>{" "}
-          — Use a filler skip list and async catch-up for missed sessions. Arc-based chat threads keep Shippuden spoilers contained.
+          — Use a filler skip list and catch up independently after missed sessions. Discuss each arc in a separate labeled chat to avoid Shippuden spoilers.
         </li>
         <li>
           <strong><Link href="/watch/steins-gate-with-friends" className="text-brand-orange hover:underline">Steins;Gate</Link></strong>{" "}

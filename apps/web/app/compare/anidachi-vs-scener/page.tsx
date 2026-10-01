@@ -10,12 +10,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Scener — Best Scener Alternative for Anime Watch Parties (2026)",
   description:
-    "Looking for a Scener alternative for anime? AniDachi vs Scener compared: Crunchyroll-first watchrooms with async catch-up vs Scener's general co-watching approach. Which is better for anime?",
+    "Looking for a Scener alternative for anime? Compare AniDachi's Crunchyroll-first live watchrooms, chat, and personal history with Scener's co-watching approach.",
   alternates: { canonical: "/compare/anidachi-vs-scener" },
   openGraph: {
     title: "AniDachi vs Scener — Scener Alternative for Anime Groups",
     description:
-      "Best Scener alternative for Crunchyroll anime nights. AniDachi vs Scener: async, sync, and watchroom comparison.",
+      "Compare AniDachi and Scener for Crunchyroll anime nights: live sync, watchrooms, and personal history.",
     url: "/compare/anidachi-vs-scener",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -31,12 +31,12 @@ const faq = [
   {
     question: "What should I compare first when picking a co-watching tool?",
     answer:
-      "Start with your platform and schedules. If you’re Crunchyroll-first and not everyone can watch live, prioritize watchrooms with episode context and async-friendly progress—then look at sync quality and setup friction.",
+      "Start with your platform and schedules. AniDachi supports live Crunchyroll and YouTube rooms, so agree on a shared start time, then compare sync, chat, voice/video, and setup. Async catch-up is coming soon and is not available today.",
   },
   {
     question: "Does AniDachi work without Crunchyroll?",
     answer:
-      "AniDachi is built for Crunchyroll. Each viewer still streams from their own Crunchyroll account; AniDachi adds the room layer on top.",
+      "AniDachi supports Crunchyroll and full YouTube watch pages in desktop Chrome. Each viewer streams on their own provider page and needs their own access to the selected video.",
   },
 ];
 
@@ -61,7 +61,7 @@ export default function AniDachiVsScenerPage() {
       description="Compare Crunchyroll-first watchrooms with general co-watching workflows."
       url="/compare/anidachi-vs-scener"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -79,7 +79,7 @@ export default function AniDachiVsScenerPage() {
         <strong>
           The easiest way to run anime nights on Crunchyroll is per-user playback: everyone
           streams locally and joins the same room. AniDachi is built around that workflow—
-          with watchrooms, sync, and optional async catch-up when life gets busy.
+          with live watchrooms, chat, reactions, and voice/video beside the player.
         </strong>
       </p>
 
@@ -87,7 +87,7 @@ export default function AniDachiVsScenerPage() {
         At a glance
       </h2>
       <p className="text-foreground/80 mb-8">
-        <strong>AniDachi:</strong> Crunchyroll-first watchrooms (sync, chat, progress, async).{" "}
+        <strong>AniDachi:</strong> Crunchyroll-first live watchrooms with sync, chat, and reactions.{" "}
         <strong>General co-watching tools:</strong> useful for quick hangs across many contexts,
         but often lack anime-specific episode context and async pacing.
       </p>
@@ -100,10 +100,10 @@ export default function AniDachiVsScenerPage() {
           <strong>Platform:</strong> If you watch on Crunchyroll, pick a Crunchyroll-first workflow.
         </li>
         <li>
-          <strong>Schedules:</strong> If time zones are real, you want async-friendly rooms.
+          <strong>Schedules:</strong> Pick a shared start time that works across time zones.
         </li>
         <li>
-          <strong>Long shows:</strong> Progress tracking keeps the group from drifting.
+          <strong>Long shows:</strong> Your own Plus/Pro access and recording permission let you save personal progress.
         </li>
       </ul>
 
@@ -115,8 +115,8 @@ export default function AniDachiVsScenerPage() {
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You host weekly anime nights on Crunchyroll.</li>
-        <li>You want one persistent room per series.</li>
-        <li>You need async catch-up without spoilers.</li>
+        <li>You want chat, reactions, and voice/video beside the episode.</li>
+        <li>You want to save your own viewing progress with Plus or Pro.</li>
       </ul>
 
       <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
@@ -142,4 +142,3 @@ export default function AniDachiVsScenerPage() {
     </SeoPageLayout>
   );
 }
-

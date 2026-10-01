@@ -31,7 +31,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-foreground/50 mb-10">
-            Last updated: September 18, 2026
+            Last updated: October 1, 2026
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
@@ -59,13 +59,15 @@ export default function TermsPage() {
                 AniDachi provides watchrooms for synchronized viewing on
                 supported platforms (Crunchyroll and YouTube), with chat,
                 reactions, and related social features through a Chrome
-                extension and website. Free accounts can join friends&apos;
-                rooms and host with daily limits. Plus and Pro remove the Free
-                daily host limit and raise room capacity. Recording and editing
-                personal watch progress require each viewer&apos;s own Plus or
-                Pro subscription. Saved history and Resume remain available on
-                Free. Planned features may be described as coming soon and are
-                not guaranteed until they ship.
+                extension and website. Free accounts can join rooms hosted on
+                Plus or Pro, including rooms hosted during an active trial.
+                Creating your own room and recording or editing personal watch
+                progress require your own Plus or Pro access, including an
+                active trial. Recording also needs your permission in the
+                extension, with a separate setting for YouTube. Saved history
+                remains available to read, resume and delete on Free. Planned
+                features may be described as coming soon and are not guaranteed
+                until they ship.
               </p>
               <p className="mt-4">
                 Install the extension from the official Chrome Web Store listing
@@ -105,14 +107,28 @@ export default function TermsPage() {
                 5. Subscriptions & Payments
               </h2>
               <p>
-                Paid Plus and Pro subscriptions are billed monthly through Stripe.
-                Free accounts are available at no charge. Prices and plan limits
-                are listed on our{" "}
+                Plus and Pro subscriptions are billed through Stripe on the
+                monthly or yearly schedule you select and renew automatically
+                unless you cancel renewal. Free accounts are available at no
+                charge. Prices and plan limits are listed on our{" "}
                 <Link href="/pricing" className="text-brand-orange hover:underline">
                   pricing page
                 </Link>
-                . You can cancel renewal from Account → Subscription; paid
-                access continues until the end of the billing period. For refund
+                .
+              </p>
+              <p className="mt-4">
+                New and existing Free accounts with an unused trial can try
+                Plus or Pro for three days with a card. There is one trial per
+                account across both plans and billing periods. Unless you
+                cancel renewal before the trial ends, Stripe charges your card
+                for the selected monthly or yearly subscription when it ends.
+                Changing plans or billing periods does not restart or extend
+                the trial.
+              </p>
+              <p className="mt-4">
+                You can cancel renewal from Account → Subscription. Trial
+                access continues until the original trial end; paid access
+                continues until the end of the paid billing period. For refund
                 requests, email{" "}
                 <a
                   href="mailto:anidachi.app@gmail.com"

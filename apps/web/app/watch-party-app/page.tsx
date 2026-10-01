@@ -70,7 +70,7 @@ export default function WatchPartyAppPage() {
       description="Crunchyroll and YouTube watch parties in desktop Chrome."
       url="/watch-party-app"
       datePublished="2026-05-08"
-      dateModified="2026-09-26"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -120,7 +120,7 @@ export default function WatchPartyAppPage() {
           },
           {
             title: "Free watch party",
-            body: "Friends can join on Free. Hosting past the daily Free limit, and recording progress, needs Plus or Pro.",
+            body: "Free friends can join an active Plus, Pro, or trial host. Hosting requires your own Plus/Pro access; personal history also needs your recording permission.",
           },
         ]}
       />

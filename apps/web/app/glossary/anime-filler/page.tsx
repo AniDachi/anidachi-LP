@@ -81,7 +81,7 @@ export default function AnimeFillerGlossaryPage() {
       description="Definition and guide to anime filler — what it is, which series have the most, and how to skip it when watching with friends."
       url="/glossary/anime-filler"
       datePublished="2026-06-04"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -226,9 +226,10 @@ export default function AnimeFillerGlossaryPage() {
           more than the choice.
         </li>
         <li>
-          Set AniDachi&apos;s async progress tracking to canonical episode
-          numbers so members who miss a session can find their place in the
-          correct arc, not in a filler arc that others skipped.
+          Keep the agreed episode list in a separate group note so anyone who
+          misses a session can find the right arc. AniDachi&apos;s personal
+          history is not a shared group tracker; built-in async catch-up is
+          coming soon.
         </li>
         <li>
           For very long series like Naruto Shippuden, consider running the

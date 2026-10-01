@@ -33,7 +33,7 @@ const faq = [
   {
     question: "How do long-distance couples watch anime together?",
     answer:
-      "Use AniDachi to create a shared Crunchyroll watchroom. For same-time watching, playback syncs automatically. For different schedules, async mode lets each person watch when available and leave episode-tagged reactions that the other sees when they catch up.",
+      "A Plus, Pro, or trial host can create a live AniDachi room on Crunchyroll and invite a Free partner. Playback syncs while both are online. For different schedules, watch independently and discuss later in a separate chat; built-in async catch-up is coming soon.",
   },
   {
     question: "Can long-distance couples have a real anime date night?",
@@ -43,7 +43,7 @@ const faq = [
   {
     question: "What apps do long-distance couples use for anime nights?",
     answer:
-      "AniDachi is the most purpose-built option for Crunchyroll — it handles live sync and async watching, which matters most for different schedules. Teleparty and Rave work for live sessions. Discord is used for voice/video during the watch.",
+      "AniDachi supports live Crunchyroll and YouTube rooms with chat, reactions, and voice/video. Teleparty and Rave also work for live sessions. Choose a shared start time; AniDachi's async catch-up is coming soon.",
   },
   {
     question: "What is a good first anime to watch with a long-distance partner?",
@@ -86,7 +86,7 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
       description="12 LDR anime date night formats — from weekly rituals to themed watch parties and reunion planning."
       url="/long-distance-anime-date-night-ideas"
       datePublished="2026-06-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -165,7 +165,7 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
       <p className="text-foreground/80 leading-relaxed mb-6">
         Create a shared list of every series you want to watch together —
         ranked by priority, annotated with why you each want to watch it.
-        Use the AniDachi watchroom to log completed series and build momentum.
+        Keep the shared list in your own notes; AniDachi history is personal.
         Having the next 3 shows already queued up means you never lose the
         thread between series.
       </p>
@@ -176,12 +176,12 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
       <p className="text-foreground/80 leading-relaxed mb-6">
         Watch the same episode independently — at whatever time works for
         each of you — and agree to leave unusually detailed reactions in
-        the watchroom. Not just emoji reactions; write a sentence or two for
+        a separate, episode-labeled chat thread. Write a sentence or two for
         the moments that hit hardest. The other person reads them after
         finishing the same episode. When you get on a call, discuss those
         specific moments.{" "}
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
-          Async mode makes this possible without spoilers.
+          Plan independent catch-up with a clear episode boundary.
         </Link>
       </p>
 
@@ -273,7 +273,7 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi</strong> — for the shared Crunchyroll watchroom
-          (live + async mode).{" "}
+          with live sync, chat, reactions, and voice/video.{" "}
           <Link href="/" className="text-brand-orange hover:underline">
             Get started here.
           </Link>

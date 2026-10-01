@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Action Anime With Friends (2026) | AniDachi",
   description:
-    "AniDachi is the best way to watch action anime with friends on Crunchyroll — synced fight scenes, spoiler-safe reactions, and async catch-up. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
+    "Watch action anime with friends on Crunchyroll with AniDachi — synced fight scenes, live chat, and reactions. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
   alternates: { canonical: "/watch-action-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Action Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for the best action anime on Crunchyroll — synced playback, spoiler-safe chat, and async catch-up.",
+      "Group watchroom guides for action anime on Crunchyroll — synced playback, live chat, and reactions.",
     url: "/watch-action-anime-with-friends",
   },
 };
@@ -34,7 +34,7 @@ const faq = [
   {
     question: "How do we watch action anime together without spoiling fight outcomes?",
     answer:
-      "Pin a 'safe episode' marker in your AniDachi watchroom so everyone knows the last fight anyone has seen. React with feelings only ('that was insane') rather than outcomes ('and then he dies') until the whole group crosses the same episode. Episode-scoped chat threads keep reactions tied to the correct moment.",
+      "Agree on the last episode everyone has seen before starting your AniDachi live room. React with feelings rather than outcomes until the whole group finishes. Keep later-episode discussion in a separate, clearly labeled chat thread.",
   },
   {
     question: "Can we sync hype reactions for big battle episodes in action anime?",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "What if some friends are behind on a long action series?",
     answer:
-      "Use AniDachi's async mode: members who are ahead post episode-tagged reactions while those who are behind catch up at their own pace. Rename the chat thread with the safe episode number so nobody accidentally reads ahead. When everyone clears the same arc, re-sync for the next major fight block.",
+      "Let them catch up independently before the next live meeting. Keep later-episode reactions in a separate, labeled chat thread. When everyone clears the same arc, meet in AniDachi for the next major fight. Built-in async catch-up is coming soon.",
   },
   {
     question: "Do we all need Crunchyroll to watch action anime together?",
@@ -82,7 +82,7 @@ export default function WatchActionAnimeWithFriendsPage() {
       description="Group watchroom guides for action anime on Crunchyroll."
       url="/watch-action-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -101,8 +101,8 @@ export default function WatchActionAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Action anime is made for group reactions — install AniDachi, open any
-          Crunchyroll series below, and create a watchroom. Sync fight scenes
-          live or catch up at your own pace without spoilers.
+          Crunchyroll series below, and create a live room. Sync fight scenes
+          and share reactions while everyone watches together.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
       </p>
@@ -168,15 +168,15 @@ export default function WatchActionAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
-          Send the invite link via Discord, group chat, or email.
+          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
         </li>
         <li>
-          <span className="font-medium text-foreground">Agree on a live or async schedule.</span>{" "}
-          Live for finales, async for weekly episodes — AniDachi supports both.
+          <span className="font-medium text-foreground">Agree on a live start time.</span>{" "}
+          Meet for finales and let anyone who misses a session catch up independently.
         </li>
         <li>
-          <span className="font-medium text-foreground">Pin your spoiler boundary.</span>{" "}
-          Set the safe episode number at the top of the room so nobody spoils the next fight.
+          <span className="font-medium text-foreground">Agree on a spoiler boundary.</span>{" "}
+          Tell the group the last episode everyone has seen before discussing the next fight.
         </li>
       </ol>
 
@@ -194,7 +194,7 @@ export default function WatchActionAnimeWithFriendsPage() {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Use &quot;feelings only&quot; reactions until everyone clears the same episode — &quot;that was insane&quot; instead of describing what happened.</li>
         <li>Tag every reaction message with an episode number so late viewers can scan backward safely.</li>
-        <li>Create separate threads for arc-complete discussions so mid-run viewers don&apos;t accidentally read end-arc conclusions.</li>
+        <li>Create separate threads in your own group chat for arc-complete discussions so mid-run viewers don&apos;t read end-arc conclusions.</li>
         <li>For simulcasts, agree whether the group watches day-of or weekend-only so nobody accidentally reads Crunchyroll social posts first.</li>
       </ul>
 

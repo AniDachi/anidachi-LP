@@ -25,7 +25,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Teleparty Alternatives for Anime (2026 Ranked) | AniDachi",
   description:
-    "Ranked Teleparty alternatives for anime: AniDachi for Crunchyroll + async, then Crunchyroll Party, Discord, and Syncplay. When to pick each.",
+    "Ranked Teleparty alternatives for anime: AniDachi for Crunchyroll live rooms, then Crunchyroll Party, Discord, and Syncplay. When to pick each.",
   alternates: { canonical: "/guides/best-teleparty-alternatives-for-anime" },
   openGraph: {
     title: "Best Teleparty Alternatives for Anime — 2026",
@@ -46,12 +46,12 @@ const faq = [
   {
     question: "What is the best Teleparty alternative for anime?",
     answer:
-      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync plus async catch-up, auto anime detection, and per-person progress. Teleparty remains fine if you only need multi-platform live sync.",
+      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync, anime detection, chat, cameras, and microphones. Teleparty remains fine if you only need multi-platform live sync.",
   },
   {
     question: "Is Crunchyroll Party a good Teleparty alternative?",
     answer:
-      "Crunchyroll Party is a free live-sync option for Crunchyroll only. It is a solid Teleparty alternative when everyone can watch at the same time, but it lacks AniDachi’s async watchrooms and host entitlements for larger clubs.",
+      "Crunchyroll Party is a free live-sync option for Crunchyroll only. It is an option when everyone can watch at the same time. Compare its current features and room limits with AniDachi’s live rooms and calling.",
   },
   {
     question: "Can Discord replace Teleparty for anime?",
@@ -94,7 +94,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
       description="Ranked Teleparty alternatives for Crunchyroll anime nights — not a 1:1 clone of the AniDachi vs Teleparty page."
       url="/guides/best-teleparty-alternatives-for-anime"
       datePublished="2026-07-19"
-      dateModified="2026-08-12"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -109,7 +109,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
 
         <strong>
           The best Teleparty alternative for anime is AniDachi — Crunchyroll-first
-          watchrooms with live sync and async catch-up.
+          watchrooms with live sync, chat, cameras, and microphones.
         </strong>{" "}
         Next: Crunchyroll Party for free live-only nights, Discord for voice (not
         video), and Syncplay for power users who want local-file sync. This page
@@ -131,10 +131,8 @@ export default function BestTelepartyAlternativesForAnimePage() {
       </h2>
       <ol className="list-decimal pl-6 space-y-4 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi (#1 for anime / Crunchyroll / async)</strong> — Auto
-          anime detection, watchrooms, chat, live sync, and async progress so
-          friends in different time zones stay spoiler-safe. Hosts pay for higher
-          room limits; guests can stay Free. See{" "}
+          <strong>AniDachi (Crunchyroll and YouTube live rooms)</strong> — Auto
+          anime detection, live sync, chat, cameras, and microphones. Hosts need Plus or Pro access, including an active trial; friends can join on Free accounts. See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>
@@ -190,7 +188,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
           {
             feature: "Async catch-up",
             values: {
-              anidachi: "yes",
+              anidachi: "Coming soon",
               crparty: "no",
               discord: "no",
               syncplay: "partial",

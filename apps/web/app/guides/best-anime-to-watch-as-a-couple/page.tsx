@@ -31,7 +31,7 @@ const faq = [
   {
     question: "Can long-distance couples use the same anime list?",
     answer:
-      "Yes. Pair any pick below with asynchronous watchrooms when time zones collide, or reserve weekend slots for synced viewing when you overlap.",
+      "Yes. Reserve a shared time for a live AniDachi room, or watch independently and discuss the episode later in a separate chat when time zones do not overlap.",
   },
   {
     question: "Does each person need separate Crunchyroll access?",
@@ -69,7 +69,7 @@ export default function BestAnimeToWatchAsACouplePage() {
       description="Date-night anime with approachable arcs for partnered viewing."
       url="/guides/best-anime-to-watch-as-a-couple"
       datePublished="2026-05-08"
-      dateModified="2026-05-24"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
