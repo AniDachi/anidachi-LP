@@ -76,10 +76,15 @@ test("trial success uses the checkout plan and rechecks at its original end", as
 		});
 	await mount("cs_trial");
 	assert.match(container.textContent!, /Your Plus trial/);
+	assert.match(container.textContent!, /cancel your trial/);
 	assert.doesNotMatch(container.textContent!, /Your Pro trial/);
 	await act(async () => t.mock.timers.tick(1000));
 	assert.equal(requests, 2);
 	assert.equal(title(), "Your trial has ended");
+	assert.doesNotMatch(
+		container.textContent!,
+		/Ready to watch|cancel your trial/,
+	);
 });
 
 for (const stage of [
@@ -223,6 +228,12 @@ for (const failure of [
 		await mount("cs_error");
 		assert.equal(title(), "Could not confirm your subscription");
 		assert.ok(container.querySelector('[role="alert"]'));
+		assert.ok(
+			[...container.querySelectorAll("button")].some((b) =>
+				b.textContent?.includes("Try again"),
+			),
+		);
+		assert.doesNotMatch(container.textContent!, /Ready to watch/);
 		assert.doesNotMatch(
 			container.textContent ?? "",
 			/Subscription confirmed|Stripe confirmed the payment/,

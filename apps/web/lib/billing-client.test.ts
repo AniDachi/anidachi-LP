@@ -208,7 +208,7 @@ test("active subscription shows renewal date and explicit cancellation with owne
 	assert.equal(container.querySelector("dt")?.textContent, "Renews");
 	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
 	const button = [...container.querySelectorAll("button")].find((item) =>
-		item.textContent?.includes("Cancel subscription"),
+		item.textContent?.includes("Cancel renewal"),
 	);
 	assert.ok(button);
 	await act(async () => button.click());
@@ -251,7 +251,7 @@ test("return from Stripe refreshes status and shows scheduled end without anothe
 	assert.match(container.textContent ?? "", /Renewal canceled/);
 	assert.equal(container.querySelector("dt")?.textContent, "Subscription ends");
 	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
-	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);
+	assert.doesNotMatch(container.textContent ?? "", /Cancel renewal/);
 });
 
 test("Free account without billing has no cancellation action", async () => {
@@ -274,7 +274,7 @@ test("Free account without billing has no cancellation action", async () => {
 		container.querySelector('a[href="/pricing"]')?.textContent?.trim(),
 		"View plans",
 	);
-	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);
+	assert.doesNotMatch(container.textContent ?? "", /Cancel renewal/);
 });
 
 test("Free account with a canceled subscription still shows host limits", async () => {
@@ -299,7 +299,7 @@ test("Free account with a canceled subscription still shows host limits", async 
 	assert.match(container.textContent ?? "", /30 minutes a day/);
 	assert.match(container.textContent ?? "", /Plus subscription/);
 	assert.doesNotMatch(container.textContent ?? "", /No recurring subscription/);
-	assert.doesNotMatch(container.textContent ?? "", /Cancel subscription/);
+	assert.doesNotMatch(container.textContent ?? "", /Cancel renewal/);
 });
 
 test("response for another owner never displays their billing state", async () => {
@@ -411,8 +411,14 @@ test("return from renewal restoration rereads Stripe and retains the original tr
 	assert.equal(requestedPath, "/api/billing/refresh");
 	assert.equal(method, "POST");
 	assert.match(container.textContent!, /Free trial/);
-	assert.match(container.textContent!, /first monthly payment is scheduled/);
-	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
+	assert.match(container.textContent!, /First monthly payment/);
+	assert.equal(
+		container.querySelector("dd")?.textContent,
+		new Date("2030-02-01T12:00:00Z").toLocaleString("en-US", {
+			dateStyle: "medium",
+			timeStyle: "short",
+		}),
+	);
 	assert.doesNotMatch(
 		container.textContent!,
 		/Restore renewal|Renewal canceled/,
@@ -437,7 +443,7 @@ test("yearly billing shows the full yearly trial charge, never a monthly label",
 			],
 		});
 	await mount();
-	assert.match(container.textContent!, /first yearly payment/);
+	assert.match(container.textContent!, /First yearly payment/);
 	assert.match(container.textContent!, /\$76\.70\/year/);
 	assert.doesNotMatch(
 		container.textContent!,
@@ -500,9 +506,94 @@ test("price lookup failure uses neutral trial payment copy, not an invented mont
 			],
 		});
 	await mount();
-	assert.match(container.textContent!, /first subscription payment/);
+	assert.match(container.textContent!, /First subscription payment/);
 	assert.doesNotMatch(
 		container.textContent!,
 		/first monthly payment|first yearly payment/,
 	);
 });
+
+test("current trial is separate from collapsed canceled subscription history", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					status: "trialing",
+					canChangeTrialPlan: true,
+					price: { unitAmount: 7670, currency: "usd", billingPeriod: "yearly" },
+					trial: {
+						stage: "trial",
+						endsAt: "2030-02-01T12:00:00Z",
+						pendingUntil: "2030-02-01T14:00:00Z",
+					},
+				},
+				{
+					...active.subscriptions[0],
+					id: "old-sub",
+					status: "canceled",
+					canCancel: false,
+					price: { unitAmount: 799, currency: "usd", billingPeriod: "monthly" },
+				},
+			],
+		});
+	await mount();
+	const history = container.querySelector("details");
+	assert.ok(history);
+	assert.equal(history.open, false);
+	assert.match(history.textContent!, /Subscription history/);
+	assert.match(history.textContent!, /7.99/);
+	assert.equal(history.querySelectorAll("button").length, 0);
+	const current = container.querySelector('[aria-label="Plus subscription"]')!;
+	assert.ok(current && !history.contains(current));
+	assert.equal((current.textContent!.match(/76\.70/g) ?? []).length, 1);
+	assert.equal((current.textContent!.match(/Trial ends/g) ?? []).length, 1);
+	assert.match(current.textContent!, /First yearly payment/);
+	assert.match(current.textContent!, /Renews automatically/);
+});
+
+test("canceling renewal keeps the trial visible and does not promise a charge", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					status: "trialing",
+					cancelAtPeriodEnd: true,
+					canCancel: false,
+					canRestoreRenewal: true,
+					price: { unitAmount: 7670, currency: "usd", billingPeriod: "yearly" },
+					trial: {
+						stage: "trial",
+						endsAt: "2030-02-01T12:00:00Z",
+						pendingUntil: "2030-02-01T14:00:00Z",
+					},
+				},
+			],
+		});
+	await mount();
+	assert.equal(container.querySelectorAll("details").length, 0);
+	assert.match(container.textContent!, /No payment scheduled/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/First yearly payment|Renews automatically/,
+	);
+	assert.match(container.textContent!, /Restore renewal/);
+});
+
+for (const status of ["past_due", "unpaid", "incomplete", "paused"]) {
+	test(`unfinished ${status} subscription remains visible outside history`, async () => {
+		globalThis.fetch = async () =>
+			Response.json({
+				...active,
+				subscriptions: [{ ...active.subscriptions[0], status }],
+			});
+		await mount();
+		assert.equal(container.querySelectorAll("details").length, 0);
+		assert.ok(container.querySelector('[aria-label="Plus subscription"]'));
+		if (status !== "paused")
+			assert.match(container.textContent!, /Complete payment in Stripe/);
+	});
+}
