@@ -1,5 +1,21 @@
 # Current Development State
 
+## Website copy consistency delivered to staging, October 1, 2026
+
+[PR #391](https://github.com/AniDachi/anidachi-LP/pull/391) delivered the website
+copy audit corrections at 08:04:23 UTC as `92a409aa` (implementation `2e90cf5c`).
+Vercel `dpl_2CfJHuvV4wAHXPsJgJtY4CqK6HJj` is READY and serves
+**https://staging.anidachi.app**. Post-deploy smoke, CI, P2P and representative
+browser copy checks passed. E2E Rooms passed on its second attempt; the first
+repeated the known terminal-cleanup 409/410 failure without changes to Worker
+or its tests. That instability is recorded, not fixed by this site patch.
+
+Main remains `a5a0134e`; promotion PR #376 has no auto-merge. Worker, extension,
+Stripe configuration, DB schema and environment settings are unchanged. Graphify
+is unchanged under the existing integrity exception. See the
+[delivery evidence and verification limits](releases/website-copy-consistency-2026-10-01.md#staging-delivery--october-1-2026).
+The local preparation checkpoint below is superseded by this staging delivery.
+
 ## Website copy consistency completed locally, October 1, 2026
 
 The owner approved fixing outdated Free-hosting/30-minute promises, current async
