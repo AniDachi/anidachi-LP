@@ -53,6 +53,20 @@ and all 2,150 extension tests pass. Current YouTube DOM was inspected read-only;
 owner acceptance in normal, theater and fullscreen mode is still pending on the
 updated local unpacked staging artifact. See [YouTube composer notes](youtube-adapter-notes.md#message-composer-interaction-local-candidate-october-1-2026).
 
+The local composer-dismiss follow-up adds a visible Close button and closes an
+empty/whitespace-only input on Enter without sending. Close and the existing
+Alt+C toggle discard a draft in normal/fullscreen modes, keeping the native-player
+quiet guard. Enter on a focused composer button activates that button, preventing
+accidental draft submission from Close. Escape outside fullscreen closes without
+sending and its key release is consumed even after the input unmounts. IME
+confirmation and repeated keys retain their protections. Chrome owns fullscreen
+Escape; overriding it requires Keyboard Lock permission, which this task does not
+request. Use Close/Alt+C (or empty Enter) to stay fullscreen. No permissions,
+server/room protocol or player-fullscreen ownership changes are included. Focused
+regression tests cover the real overlay in closed Shadow DOM; loaded-provider
+acceptance still belongs to the owner after Reload. See the
+[Chrome permission boundary](https://developer.chrome.com/blog/keyboard-lock-pointer-lock-permission).
+
 Before publication, deploy matching privacy text and align Store disclosures.
 See [release-channel behavior](extension-release-channels.md#local-default-on-history-candidate-october-1-2026).
 

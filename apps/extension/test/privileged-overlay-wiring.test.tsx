@@ -4,7 +4,7 @@ import { RoomMediaSnapshotSchema } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
+import { mountOverlay, startContentLifecycle, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
@@ -815,7 +815,12 @@ describe("privileged overlay wiring", () => {
 		"Enter",
 		"button",
 		"Escape",
-	])("keeps Crunchyroll quiet after closing the composer with %s, then releases on real player intent", async (method) => {
+		"empty Enter",
+		"whitespace Enter",
+		"close button",
+		"close button keyboard",
+		"Alt+C",
+	])("keeps the player quiet after closing the composer with %s, then releases on real player intent", async (method) => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -856,6 +861,11 @@ describe("privileged overlay wiring", () => {
 				participants: [hostParticipant()],
 			});
 		});
+		const keyboardRuntime = startContentLifecycle({
+			detect: () => ({ status: "none" }),
+			ensureStyles: () => {},
+			startProviderStudy: () => null,
+		});
 		const view = await renderOverlayInClosedShadow();
 		try {
 			await click(button(view.container, "Open Anidachi controls"));
@@ -884,10 +894,19 @@ describe("privileged overlay wiring", () => {
 					".message-composer-emoji-popover button",
 				),
 			].find((el) => el.textContent === "🎬")!;
-			await click(emoji);
+			if (!method.includes("Enter") || method === "Enter") await click(emoji);
 			const input = view.container.querySelector<HTMLInputElement>(
 				'input[aria-label="Anidachi message"]',
 			)!;
+			if (method === "whitespace Enter") {
+				await act(async () => {
+					Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "   ");
+					input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+				});
+			}
+			if (method !== "Escape") {
+				Object.defineProperty(document, "fullscreenElement", { configurable: true, value: document.body });
+			}
 			await act(async () => {
 				input.dispatchEvent(
 					new KeyboardEvent("keydown", {
@@ -915,16 +934,29 @@ describe("privileged overlay wiring", () => {
 			await act(async () => {
 				input.focus();
 				if (method === "button") button(view.container, "Send message").click();
-				else
-					input.dispatchEvent(
+				else if (method === "close button") button(view.container, "Close message").click();
+				else {
+					const target = method === "close button keyboard" ? button(view.container, "Close message") : input;
+					target.focus();
+					expect((target.getRootNode() as ShadowRoot).activeElement).toBe(target);
+					target.dispatchEvent(
 						new KeyboardEvent("keydown", {
-							key: method,
-							code: method,
+							key: method === "Alt+C" ? "c" : method === "Escape" ? "Escape" : "Enter",
+							code: method === "Alt+C" ? "KeyC" : method === "Escape" ? "Escape" : "Enter",
+							altKey: method === "Alt+C",
 							bubbles: true,
 							composed: true,
 							cancelable: true,
 						}),
 					);
+				}
+			});
+			await act(async () => {
+				window.dispatchEvent(new KeyboardEvent("keyup", {
+					key: method === "Alt+C" ? "c" : method === "Escape" ? "Escape" : "Enter",
+					code: method === "Alt+C" ? "KeyC" : method === "Escape" ? "Escape" : "Enter",
+					bubbles: true, cancelable: true,
+				}));
 			});
 			expect(view.container.querySelector(".message-composer")).toBeNull();
 			expect(
@@ -933,7 +965,8 @@ describe("privileged overlay wiring", () => {
 			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
 				"quiet",
 			);
-			if (method !== "Escape") expect(send).toHaveBeenCalledOnce();
+			if (method === "Enter" || method === "button") expect(send).toHaveBeenCalledOnce();
+			else expect(send).not.toHaveBeenCalled();
 			await act(async () => {
 				window.dispatchEvent(
 					new KeyboardEvent("keydown", {
@@ -983,6 +1016,8 @@ describe("privileged overlay wiring", () => {
 			).toBeUndefined();
 			expect(native).toHaveBeenCalledOnce();
 		} finally {
+			Reflect.deleteProperty(document, "fullscreenElement");
+			keyboardRuntime.dispose();
 			await unmount(view.root);
 		}
 	});

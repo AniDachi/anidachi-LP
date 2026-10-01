@@ -83,3 +83,36 @@ describe("composer keyboard gesture", () => {
 		expect(submit).not.toHaveBeenCalled();
 	});
 });
+
+
+describe("composer dismissal keyboard guard", () => {
+	it("consumes Escape and its release after closing without passing them to the player", () => {
+		install();
+		const dismiss = vi.fn(() => { document.documentElement.dataset.anidachiComposerOpen = "quiet"; });
+		window.addEventListener("anidachi:message-composer-dismiss", dismiss);
+		cleanups.push(() => window.removeEventListener("anidachi:message-composer-dismiss", dismiss));
+		const native = vi.fn();
+		for (const type of ["keydown", "keyup"]) {
+			window.addEventListener(type, native, true);
+			cleanups.push(() => window.removeEventListener(type, native, true));
+		}
+		document.documentElement.dataset.anidachiComposerOpen = "true";
+		expect(key("keydown", { key: "Escape", code: "Escape" }).defaultPrevented).toBe(true);
+		key("keydown", { key: "Escape", code: "Escape", repeat: true });
+		expect(key("keyup", { key: "Escape", code: "Escape" }).defaultPrevented).toBe(true);
+		expect(dismiss).toHaveBeenCalledOnce();
+		expect(native).not.toHaveBeenCalled();
+		key("keydown", { key: "Escape", code: "Escape" });
+		expect(native).toHaveBeenCalledOnce();
+	});
+	it.each(["fullscreen", "composition"])("leaves %s Escape to the browser instead of pretending to lock it", (mode) => {
+		install();
+		if (mode === "fullscreen") {
+			Object.defineProperty(document, "fullscreenElement", { configurable: true, value: document.body });
+			cleanups.push(() => { Reflect.deleteProperty(document, "fullscreenElement"); });
+		}
+		document.documentElement.dataset.anidachiComposerOpen = "true";
+		expect(key("keydown", { key: "Escape", code: "Escape", isComposing: mode === "composition" }).defaultPrevented).toBe(false);
+		expect(document.documentElement.dataset.anidachiComposerOpen).toBe("true");
+	});
+});

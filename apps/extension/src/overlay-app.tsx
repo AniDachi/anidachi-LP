@@ -25,6 +25,7 @@ import {
 	Settings2,
 	SmilePlus,
 	UserPlus,
+	X,
 } from "lucide-react";
 import type {
 	CSSProperties,
@@ -87,6 +88,7 @@ import type {
 import { installComposerQuietRelease } from "./message-composer-quiet-release";
 import {
 	ANIDACHI_COMPOSER_OPEN_ATTR,
+	ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT,
 	ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
 	ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
 	isMessageComposerShortcutEvent,
@@ -5815,9 +5817,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				event.nativeEvent.stopImmediatePropagation();
 			}
 			const text = messageComposerText.trim();
-			if (!text || !roomId) {
+			if (!text) {
+				closeMessageComposer();
 				return;
 			}
+			if (!roomId) return;
 
 			sendReaction("", text);
 			keepPlayerQuietAfterComposer();
@@ -5828,6 +5832,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		},
 		[
 			blurMessageComposerInput,
+			closeMessageComposer,
 			keepPlayerQuietAfterComposer,
 			messageComposerText,
 			roomId,
@@ -5840,7 +5845,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			event.stopPropagation();
 			event.nativeEvent.stopImmediatePropagation();
 
-			if (event.key === "Escape" && !isFullscreenActive()) {
+			if (
+				event.key === "Escape" && !isFullscreenActive() &&
+				!event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229
+			) {
 				event.preventDefault();
 				closeMessageComposer();
 				return;
@@ -5885,7 +5893,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 
-		const handleSubmit = () => submitMessageComposer();
+		const handleSubmit = () => {
+			// The early guard also receives Enter from controls in our closed shadow.
+			// Activate the focused control, rather than submitting a draft from Close.
+			const form = messageComposerFormRef.current;
+			const focused = (form?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement;
+			if (
+				focused instanceof HTMLButtonElement &&
+				Array.from(form?.querySelectorAll("button") ?? []).includes(focused)
+			) {
+				focused.click();
+				return;
+			}
+			submitMessageComposer();
+		};
+
+		window.addEventListener(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT, closeMessageComposer);
 
 		window.addEventListener(
 			ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
@@ -5893,12 +5916,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		);
 
 		return () => {
+			window.removeEventListener(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT, closeMessageComposer);
 			window.removeEventListener(
 				ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
 				handleSubmit,
 			);
 		};
-	}, [messageComposerOpen, submitMessageComposer]);
+	}, [closeMessageComposer, messageComposerOpen, submitMessageComposer]);
 
 	useEffect(() => {
 		const state = () => ({
@@ -5916,7 +5940,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
+			if (
+				messageComposerOpen && isEscapeKey(event) && !isFullscreenActive() &&
+				!event.isComposing && event.keyCode !== 229
+			) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				closeMessageComposer();
@@ -5997,7 +6024,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
+			if (
+				messageComposerOpen && isEscapeKey(event) && !isFullscreenActive() &&
+				!event.isComposing && event.keyCode !== 229
+			) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				return;
@@ -6913,6 +6943,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						type="submit"
 					>
 						<SendHorizontal size={15} />
+					</button>
+					<button
+						aria-label="Close message"
+						className="message-composer-close"
+						onClick={closeMessageComposer}
+						title="Close without sending (Alt+C)"
+						type="button"
+					>
+						<X size={16} />
 					</button>
 				</form>
 			) : null}

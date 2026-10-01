@@ -1721,6 +1721,30 @@ ${extensionThemeTokens}
     cursor: pointer;
   }
 
+  .message-composer-close {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ad-muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .message-composer-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ad-text);
+  }
+
+  .message-composer-close:focus-visible {
+    outline: 2px solid var(--ad-accent-strong);
+    outline-offset: 2px;
+  }
+
   .message-composer-send:disabled {
     cursor: not-allowed;
     opacity: 0.42;

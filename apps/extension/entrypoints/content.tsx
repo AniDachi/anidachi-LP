@@ -11,6 +11,7 @@ import {
 import { startDebugProbe } from "../src/debug-probe";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
+  ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT,
   ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
@@ -347,6 +348,21 @@ function installMessageComposerKeyboardGuard(): () => void {
       window.dispatchEvent(
         new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT),
       );
+      return;
+    }
+    // Fullscreen Escape belongs to Chrome unless the page has Keyboard Lock.
+    // Do not request a new permission just to dismiss a message input.
+    if (
+      isComposerOpen() &&
+      (event.key === "Escape" || event.key === "Esc") &&
+      !document.fullscreenElement &&
+      !event.isComposing && event.keyCode !== 229
+    ) {
+      consumedKeys.add(keyId(event));
+      consume(event);
+      if (!event.repeat) {
+        window.dispatchEvent(new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT));
+      }
       return;
     }
     if (isComposerOpen() && event.key === "Enter" && !event.shiftKey) {

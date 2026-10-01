@@ -222,9 +222,9 @@
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/content.tsx": {
-    "mtime": 1790871201.8137205,
-    "seen": 1790871470.045239,
-    "ast_hash": "41b69d66d39582663bb2d7c60c02de27",
+    "mtime": 1790872644.679795,
+    "seen": 1790873144.1170151,
+    "ast_hash": "a5b065bd446c666cf55f87240e8909ee",
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/crunchyroll.content.ts": {
@@ -336,15 +336,15 @@
     "semantic_hash": "8797f515c582748d9e58face85de4fdf"
   },
   "apps/extension/src/message-composer-events.ts": {
-    "mtime": 1789490458.8784657,
-    "seen": 1789807056.436464,
-    "ast_hash": "46aa97bae6145c0f0a59e3c51cbf50c7",
-    "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
+    "mtime": 1790872644.679425,
+    "seen": 1790873144.117017,
+    "ast_hash": "45eac520bf924cfc6343dc44ca93ff92",
+    "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1790866233.8478777,
-    "seen": 1790866335.294699,
-    "ast_hash": "5ed2d1d7469159c267369517ac7bd3e0",
+    "mtime": 1790872902.5288696,
+    "seen": 1790873144.1170182,
+    "ast_hash": "f5f794ee67368038e0dfbea4ab5d5e45",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -456,9 +456,9 @@
     "semantic_hash": "e2ca5a2b0c455ec0aeb9a1acff897bcd"
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1790865941.5035033,
-    "seen": 1790866092.8332238,
-    "ast_hash": "c22e651c776df55eee5d22b59c15f313",
+    "mtime": 1790872749.1887686,
+    "seen": 1790873144.117019,
+    "ast_hash": "39743c82c4e01aa5c04b2e9da3221fbe",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -3504,10 +3504,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790871465.916428,
-    "seen": 1790871783.754348,
+    "mtime": 1790872902.529702,
+    "seen": 1790873144.165189,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "1ae18ea3a2df492aed0d0634ee412a30"
+    "semantic_hash": "e11320cb0f8e0b6cad50203460a9fa3e"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -5724,9 +5724,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1790866233.5629096,
-    "seen": 1790866335.294701,
-    "ast_hash": "cef63bbc826a007d75e7fd678dba383b",
+    "mtime": 1790872692.4416764,
+    "seen": 1790873144.1170208,
+    "ast_hash": "a3fdbd1a70f138bb862b17f153145c13",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -9348,9 +9348,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/message-composer-keyboard-guard.test.ts": {
-    "mtime": 1790865941.8337436,
-    "seen": 1790866092.833225,
-    "ast_hash": "f7e50328e521c77f0b5c2b80d6307590",
+    "mtime": 1790872566.5191612,
+    "seen": 1790873144.11702,
+    "ast_hash": "d02719a82806d45cd0548a066dbc51db",
     "semantic_hash": ""
   },
   "apps/extension/test/message-composer-quiet-release.test.ts": {
