@@ -172,18 +172,27 @@ describe("commercial closure in the Workers runtime", () => {
 				...intent,
 				nextAttemptAt: Date.now() - 1,
 			});
-			await state.storage.setAlarm(Date.now() - 1);
+			// Make the retry due, but leave delivery to runDurableObjectAlarm.
+			// A past alarm can fire automatically before the helper, which then
+			// returns false without waiting for that in-flight cleanup.
+			await state.storage.setAlarm(Date.now() + 60_000);
 		});
-		await runDurableObjectAlarm(f.stub);
+		expect(await runDurableObjectAlarm(f.stub)).toBe(true);
 		const response = await f.connect();
 		expect(response.status).toBe(410);
 		await response.text();
 		expect(callback).toHaveBeenCalledTimes(1);
+		expect(await terminal(f.stub)).toMatchObject({ runtimeFinalized: true });
 		expect(
 			await runInDurableObject(f.stub, async (_instance, state) =>
 				state.storage.getAlarm(),
 			),
 		).toBeNull();
+		await evictDurableObject(f.stub, { webSockets: "hibernate" });
+		const afterWake = await f.connect();
+		expect(afterWake.status).toBe(410);
+		await afterWake.text();
+		expect(callback).toHaveBeenCalledTimes(1);
 	});
 	it("rechecks the local fence after an in-flight admission answer", async () => {
 		const f = await fixture();
@@ -314,8 +323,15 @@ describe("commercial closure in the Workers runtime", () => {
 		await vi.waitFor(() =>
 			expect(events.some((e) => e.type === "ROOM_ENDED")).toBe(true),
 		);
-		expect(events.find(e => e.type === "ROOM_ENDED")).toMatchObject({reason: "capability_expired", hostingCutover: true});
-		expect(events.some(e => e.type === "ERROR" && e.code === "ROOM_CAPABILITY_WARNING")).toBe(false);
+		expect(events.find((e) => e.type === "ROOM_ENDED")).toMatchObject({
+			reason: "capability_expired",
+			hostingCutover: true,
+		});
+		expect(
+			events.some(
+				(e) => e.type === "ERROR" && e.code === "ROOM_CAPABILITY_WARNING",
+			),
+		).toBe(false);
 		const refused = await f.connect();
 		expect([409, 410]).toContain(refused.status);
 		await refused.json(); // Drain response I/O before asking workerd to evict.
@@ -330,9 +346,10 @@ describe("commercial closure in the Workers runtime", () => {
 					...intent,
 					nextAttemptAt: Date.now() - 1,
 				});
-				await state.storage.setAlarm(Date.now() - 1);
+				// Do not race automatic delivery against the manual test helper.
+				await state.storage.setAlarm(Date.now() + 60_000);
 			});
-			await runDurableObjectAlarm(f.stub);
+			expect(await runDurableObjectAlarm(f.stub)).toBe(true);
 		}
 		expect(await terminal(f.stub)).toMatchObject({
 			fencedAt: pending.fencedAt,

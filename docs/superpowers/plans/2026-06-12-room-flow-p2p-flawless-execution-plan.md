@@ -295,6 +295,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- [x] 2026-10-01: Reproduced the commercial terminal-cleanup test race: an
+  overdue runtime alarm was consumed before `runDurableObjectAlarm`, whose
+  `false` return did not await cleanup. Manual retries now use a future alarm
+  with an already-due intent and require helper delivery. Strict 410, durable
+  finalization, single Web callback and eviction/wake checks pass in 50 focused
+  repetitions. Production logic is unchanged; full verification is tracked in
+  [the recovery and graph record](../../releases/room-tests-and-graph-integrity-2026-10-01.md).
+
 - 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: server-only DO
   write optimization retains protocol/event frequency, durable interval accounting,
   atomic snapshot/denial writes and original quota deadlines after wake. Local

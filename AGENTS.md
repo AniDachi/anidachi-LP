@@ -223,6 +223,11 @@ Rules:
   explicitly asks for a headless or CI extraction backend.
 - Record useful Graphify queries in PRs for room/P2P/auth/Worker/CI changes.
 - Treat Graphify as navigation help. Verify important claims against source.
+- Preserve the curated graph through the repository adapter described in
+  `docs/graphify-safe-updates.md`. For Codex semantic updates, keep the skill's
+  subagent extraction but publish its complete, source-hashed fragments with
+  `node scripts/graphify-code-update.mjs --semantic <fragment.json>` instead of
+  rebuilding historical JSON through the lossy standard merge path.
 
 ## Safety Rules
 

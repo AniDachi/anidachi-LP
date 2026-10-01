@@ -1,5 +1,27 @@
 # Current Development State
 
+## Room runtime test and graph integrity corrected locally, October 1, 2026
+
+On `codex/room-terminal-recovery`, the intermittent terminal-cleanup test is
+corrected without changing room production code. The overdue alarm could execute
+automatically before the manual test helper, so the helper did not await that
+cleanup. Both retry sites now reserve delivery for the helper and assert it ran;
+strict 410, durable closure, wake recovery and single Web acknowledgement remain.
+The corrected case passed 50 repetitions; API runtime 96/96, units 252/252 and
+typecheck passed.
+
+The Graphify integrity exception is resolved locally with a source-scoped raw
+merge, complete-document Codex semantic extraction and checked source hashes.
+Historical filename concepts and parallel relationships survive; stale inputs
+fail before publication. Fifteen Python regressions, two disposable integration
+tests and independent review cover the updater. The report uses a documented
+analysis projection, not a fresh global clustering or media-corpus audit.
+
+This is local work from staging `969a7f44`, not a deployment. Worker runtime,
+main/production, site design, Stripe and environment settings are unchanged.
+See [diagnosis, evidence and verification scope](releases/room-tests-and-graph-integrity-2026-10-01.md)
+and [the safe Graphify update workflow](graphify-safe-updates.md).
+
 ## Website copy consistency delivered to staging, October 1, 2026
 
 [PR #391](https://github.com/AniDachi/anidachi-LP/pull/391) delivered the website
