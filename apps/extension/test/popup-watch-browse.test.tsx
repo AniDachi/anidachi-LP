@@ -683,13 +683,13 @@ describe("production watch browsing", () => {
       <PopupHistorySettings client={f.client} ownerUserId={OWNER} />
     </>));
     await settles(() => expect(release).toBeTypeOf("function"));
-    await click("Track YouTube history");
+    await click("Include YouTube");
     await settles(() => expect(enabled).toBe(true));
     await act(async () => release());
     await settles(() => expect(container.textContent).toContain("Updated history"));
     expect(container.textContent).not.toContain("Obsolete response");
     expect(container.querySelector('[role="alert"]')).toBeNull();
-    expect(button("Track YouTube history").getAttribute("aria-checked")).toBe("true");
+    expect(button("Include YouTube").getAttribute("aria-checked")).toBe("true");
     expect(reads).toBe(2);
   });
   it.each([

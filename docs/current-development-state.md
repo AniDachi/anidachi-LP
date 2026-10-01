@@ -13,8 +13,12 @@ off choices remain off, unreadable data stays off, and actual recording retains
 signed-in ownership, paid/trial access, lease/session checks and YouTube's separate
 opt-in. Settings can stop recording without deleting saved history. No server,
 protocol, permissions, billing, staging/main or Store changes are part of this
-local task. Full Settings redesign is deferred. The updated unpacked staging
-folder is for owner review; real browser/user acceptance remains outstanding.
+local task. The subsequent local Settings polish uses one dedicated panel and
+shared switches for recording, YouTube history and invitation notifications.
+It keeps arrivals unread while Inbox is hidden, preserves content scroll when
+Settings closes or the popup reopens, and removes the welcome heading's dot.
+The updated unpacked staging folder is for owner review; real browser/user
+acceptance remains outstanding.
 Before publication, deploy matching privacy text and align Store disclosures.
 See [release-channel behavior](extension-release-channels.md#local-default-on-history-candidate-october-1-2026).
 

@@ -44,7 +44,7 @@ export function PopupWelcome({ active, onOpenSettings, onDismiss }: {
   return (
     <section ref={section} className="popup-welcome" aria-label="Welcome to AniDachi">
       <style>{styles}</style>
-      <h2>Welcome to AniDachi<span aria-hidden="true">.</span></h2>
+      <h2>Welcome to AniDachi</h2>
       <div className="popup-welcome-item">
         <Users size={20} strokeWidth={1.7} aria-hidden="true" />
         <div>
@@ -67,7 +67,6 @@ export function PopupWelcome({ active, onOpenSettings, onDismiss }: {
 const styles = `
 .popup-welcome { margin: 4px 0 18px; padding: 20px 18px 18px; border: 1px solid var(--ad-border, #302a24); border-radius: 8px; background: var(--ad-panel-strong, #15120f); color: var(--ad-text, #efe6db); }
 .popup-welcome h2 { margin: 0 0 23px; font-size: 23px; line-height: 1.2; font-weight: 650; letter-spacing: -.7px; }
-.popup-welcome h2 > span { color: var(--ad-accent-strong, #ff9650); }
 .popup-welcome-item { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px; }
 .popup-welcome-item + .popup-welcome-item { margin-top: 22px; }
 .popup-welcome-item > svg { color: var(--ad-accent-strong, #ff9650); margin-top: 1px; }

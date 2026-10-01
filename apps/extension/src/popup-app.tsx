@@ -7,14 +7,11 @@ import {
   SocialSnapshotSchema,
 } from "@anidachi/protocol";
 import {
-  Bell,
-  BellOff,
   LogIn,
   RefreshCw,
   Settings,
-  X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   accountInboxItemInstanceKey,
   getCachedAccountInboxForUser,
@@ -63,8 +60,7 @@ import { PopupInboxPanel, type InboxInviteAction } from "./popup-inbox-panel";
 export { PopupInboxPanel } from "./popup-inbox-panel";
 import { popupStyles } from "./popup-styles";
 import { PopupWatchHistoryPanel } from "./popup-watch-history";
-import { PopupHistorySettings } from "./popup-history-settings";
-import { PopupHistoryRecordingChoice } from "./popup-history-recording-choice";
+import { PopupSettingsPanel } from "./popup-settings-panel";
 import { PopupWelcome } from "./popup-welcome";
 import {
   consumePopupRouteIntent,
@@ -160,6 +156,7 @@ export function unseenAccountInboxItems(
 export function PopupApp() {
   const shellRef = useRef<HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsReturnPosition = useRef<{ owner: string | null; top: number } | null>(null);
   const [notificationStatus, setNotificationStatus] =
     useState<RoomInviteNotificationStatus | null>(null);
   const [notificationSettingsBusy, setNotificationSettingsBusy] = useState(false);
@@ -231,7 +228,7 @@ export function PopupApp() {
     enabled: Boolean(accountUser),
   });
   const currentPlan = hostingDisplay.state.access?.planCode ?? null;
-  const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef);
+  const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef, settingsOpen);
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
   const peoplePendingActionKey = isPopupPeopleActionKey(busySocialAction) ? busySocialAction : null;
@@ -672,7 +669,7 @@ export function PopupApp() {
 
   useEffect(() => {
     if (
-      activeTab !== "inbox" ||
+      settingsOpen || activeTab !== "inbox" ||
       authSession.status !== "ready" ||
       inboxState.status !== "ready" ||
       inboxState.ownerUserId !== authSession.tokens.user.id
@@ -721,7 +718,7 @@ export function PopupApp() {
         for (const item of unseenInstances) pending.delete(accountInboxItemInstanceKey(item));
       }
     })();
-  }, [activeTab, authSession, inboxState]);
+  }, [settingsOpen, activeTab, authSession, inboxState]);
 
   useEffect(() => {
     const handleAuthStorageChange = (
@@ -770,6 +767,7 @@ export function PopupApp() {
 
   const toggleSettings = async () => {
     const nextOpen = !settingsOpen;
+    if (nextOpen) settingsReturnPosition.current = { owner: accountUser?.id ?? null, top: shellRef.current?.scrollTop ?? 0 };
     setSettingsOpen(nextOpen);
     setNotificationSettingsError(null);
     if (!nextOpen) return;
@@ -809,6 +807,17 @@ export function PopupApp() {
       setNotificationSettingsBusy(false);
     }
   };
+
+  useLayoutEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    if (settingsOpen) { shell.scrollTop = 0; return; }
+    const saved = settingsReturnPosition.current;
+    if (!saved) return;
+    if (saved.owner === (accountUser?.id ?? null)) shell.scrollTop = saved.top;
+    settingsReturnPosition.current = null;
+    shell.querySelector<HTMLButtonElement>('[aria-label="Open settings"]')?.focus({ preventScroll: true });
+  }, [settingsOpen, accountUser?.id]);
 
   return (
     <main className="popup-shell" ref={shellRef} data-starting={authChecking}>
@@ -866,61 +875,13 @@ export function PopupApp() {
         </div>
       </header>
 
-      {settingsOpen ? (
-        <section className="popup-local-settings" aria-label="Extension settings">
-          <div className="popup-local-settings-heading">
-            <div>
-              <strong>Extension settings</strong>
-              <span>History and notifications</span>
-            </div>
-            <button
-              aria-label="Close settings"
-              className="popup-local-settings-close"
-              type="button"
-              onClick={() => setSettingsOpen(false)}
-            >
-              <X size={16} />
-            </button>
-          </div>
-          <PopupHistoryRecordingChoice ownerUserId={accountUser?.id ?? null} />
-          <PopupHistorySettings ownerUserId={accountUser?.id ?? null} />
-          <h3 className="popup-settings-section-title">Notifications · This browser only</h3>
-          <button
-            className="popup-notification-setting"
-            type="button"
-            disabled={
-              notificationSettingsBusy ||
-              !notificationStatus?.supported ||
-              !notificationStatus?.configured
-            }
-            data-enabled={notificationStatus?.enabled ?? false}
-            onClick={() => void toggleRoomInviteNotifications()}
-          >
-            <span className="popup-notification-setting-icon">
-              {notificationStatus?.enabled ? <Bell size={17} /> : <BellOff size={17} />}
-            </span>
-            <span className="popup-notification-setting-copy">
-              <strong>Invitation notifications</strong>
-              <span>
-                {!notificationStatus
-                  ? "Checking this browser..."
-                  : !notificationStatus.configured
-                    ? "Unavailable in this build"
-                    : notificationStatus.enabled
-                      ? "Chrome alerts are on"
-                      : "Get room invites and friend requests"}
-              </span>
-            </span>
-            <span className="popup-notification-switch" aria-hidden="true">
-              <span />
-            </span>
-          </button>
-          {notificationSettingsError ? (
-            <p className="popup-local-settings-error">{notificationSettingsError}</p>
-          ) : null}
-        </section>
-      ) : null}
+      {settingsOpen && <PopupSettingsPanel ownerUserId={accountUser?.id ?? null}
+        notifications={notificationStatus} notificationsBusy={notificationSettingsBusy}
+        notificationsError={notificationSettingsError}
+        onToggleNotifications={() => void toggleRoomInviteNotifications()}
+        onClose={() => setSettingsOpen(false)} />}
 
+      <div hidden={settingsOpen}>
       <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
 
       <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
@@ -965,6 +926,7 @@ export function PopupApp() {
           state={inboxState}
         />
       </PopupRetainedPanel>
+      </div>
     </main>
   );
 }

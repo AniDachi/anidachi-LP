@@ -952,12 +952,10 @@ describe("Popup Watch History v3", () => {
     });
 
     const view = await renderSettings(client);
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
     expect(toggle.disabled).toBe(false);
     expect(toggle.getAttribute("role")).toBe("switch");
     expect(toggle.getAttribute("aria-checked")).toBe("true");
-    expect(toggle.querySelector(".popup-notification-switch")).not.toBeNull();
-    expect(toggle.textContent).toContain("On");
     expect(toggle.textContent).not.toContain("Loading");
     expect(toggle.textContent).not.toContain("Retry");
 
@@ -990,11 +988,10 @@ describe("Popup Watch History v3", () => {
       cached: snapshotFixture(historyFixture()),
       request,
     }));
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
 
     expect(toggle.disabled).toBe(false);
     expect(toggle.getAttribute("aria-checked")).toBe("false");
-    expect(toggle.textContent).toContain("Off");
     expect(toggle.textContent).not.toContain("Loading");
     expect(toggle.textContent).not.toContain("Retry");
     await click(toggle);
@@ -1024,11 +1021,10 @@ describe("Popup Watch History v3", () => {
       cached: snapshotFixture(historyFixture()),
       request,
     }));
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
 
     await waitFor(() => expect(toggle.disabled).toBe(false));
     expect(toggle.getAttribute("aria-checked")).toBe("true");
-    expect(toggle.textContent).toContain("On");
     await unmount(view.root);
   });
 
@@ -1047,7 +1043,7 @@ describe("Popup Watch History v3", () => {
       return { ok: true };
     });
     const view = await renderSettings(clientFixture({ cached: null, request }));
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
     await waitFor(() => expect(toggle.disabled).toBe(false));
 
     await click(toggle);

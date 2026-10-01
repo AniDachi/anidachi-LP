@@ -26,6 +26,7 @@ vi.mock("wxt/utils/storage", () => ({ storage: {
 // History is an independent mounted panel with its own background lifecycle.
 vi.mock("../src/popup-watch-history", () => ({ PopupWatchHistoryPanel: () => null }));
 
+vi.mock("../src/popup-history-settings", () => ({ PopupHistorySettings: () => null }));
 import { PopupApp } from "../src/popup-app";
 import { accountInboxCacheKeyForUser, getCachedAccountInboxForUser, setCachedAccountInboxForUser } from "../src/account-inbox-cache";
 import { AUTH_TOKENS_KEY, AUTH_TOKENS_STORAGE_KEY, type ExtensionAuthTokens } from "../src/auth-tokens";
@@ -123,6 +124,17 @@ afterEach(async () => {
 });
 
 describe("open Popup inbox convergence", () => {
+  it("keeps arrivals unread while Settings covers Inbox, then marks them when it closes", async () => {
+    await mount(); await openInbox();
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Open settings"]')!.click());
+    await publish(inbox(A, T2, [FIRST]));
+    expect(seenCalls).toBe(0);
+    expect(badge).toBe("1");
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close settings"]')!.click());
+    await settle();
+    expect(seenCalls).toBe(1);
+    expect(badge).toBe("");
+  });
   it("renders a background publication without reopening or refetching and disposes its subscription", async () => {
     await mount(); await openInbox();
     await publish(inbox(A, T2, [FIRST], T2));

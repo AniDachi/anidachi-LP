@@ -85,7 +85,7 @@ export const popupWatchHistoryStyles = `
   .popup-watch-title-toggle > .popup-watch-disclosure-icon { justify-self: center; margin-top: 2px; }
   .popup-watch-title-toggle:hover .popup-watch-title { color: var(--ad-text); }
   .popup-watch-title-toggle:hover .popup-watch-disclosure-icon { color: var(--ad-text); }
-  .popup-watch-screen button:focus-visible, .popup-watch-screen a:focus-visible, .popup-watch-screen input:focus-visible, .popup-watch-screen select:focus-visible, .popup-history-settings button:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
+  .popup-watch-screen button:focus-visible, .popup-watch-screen a:focus-visible, .popup-watch-screen input:focus-visible, .popup-watch-screen select:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
   .popup-watch-tree { position: relative; min-width: 0; margin-left: calc(var(--popup-watch-artwork-width) / 2); padding: 0 0 4px; }
   .popup-watch-tree::before { display: none; }
   .popup-watch-screen .popup-season-group { position: relative; min-width: 0; border: 0; padding: 0 0 2px 24px; }
@@ -139,9 +139,6 @@ export const popupWatchHistoryStyles = `
   .popup-watch-load-more { display: block; min-height: 28px; margin: 4px auto; }
   .popup-watch-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 7px; text-align: center; }
   .popup-watch-screen button:disabled { cursor: default; opacity: .5; }
-  .popup-history-settings h3, .popup-settings-section-title { margin: 4px 0 8px; color: var(--ad-text); font-size: 11px; font-weight: 600; }
-  .popup-history-settings p { margin: 8px 0 12px; color: var(--ad-muted); font-size: 10px; line-height: 1.5; }
-  .popup-history-settings .popup-notification-setting { width: 100%; grid-template-columns: minmax(0,1fr) 38px; }
   .popup-watch-summary { display: block; width: fit-content; max-width: 100%; }
   .popup-watch-special-total { color: rgba(255,255,255,.44); font-size: 10px; }
   .popup-watch-grid-view, .popup-watch-video-list { min-width: 0; margin: 0; padding: 12px 10px 10px; border: 0; border-radius: 0 0 13px 13px; background: rgba(238,230,220,.035); }
@@ -212,5 +209,5 @@ export const popupWatchHistoryStyles = `
     .popup-season-header[data-has-progress="true"]:is(:hover, :focus-visible) .popup-watch-progress-preview[data-ready="true"] { opacity: 1; visibility: visible; }
   }
   @media (pointer: coarse) { .popup-watch-screen .popup-episode-header { grid-template-columns: minmax(24px,max-content) minmax(0,1fr) 44px; } .popup-watch-screen .popup-episode-resume { width: 44px; height: 44px; } }
-  @media (prefers-reduced-motion: reduce) { .popup-watch-screen *, .popup-watch-screen *::before, .popup-watch-screen *::after, .popup-history-settings * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+  @media (prefers-reduced-motion: reduce) { .popup-watch-screen *, .popup-watch-screen *::before, .popup-watch-screen *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 `;

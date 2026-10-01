@@ -10,9 +10,9 @@ let container: HTMLDivElement;
 beforeEach(() => { localStorage.clear(); });
 afterEach(async () => { if (root) await act(async () => root!.unmount()); root = undefined; container?.remove(); vi.restoreAllMocks(); });
 
-function Harness({ owner = OWNER }: { owner?: string }) {
+function Harness({ owner = OWNER, suspended = false }: { owner?: string; suspended?: boolean }) {
   const shell = useRef<HTMLElement>(null);
-  const [tab, select] = usePopupNavigation(owner, shell);
+  const [tab, select] = usePopupNavigation(owner, shell, suspended);
   return <main ref={shell}>
     <button onClick={() => select("resources")}>Watch</button>
     <button onClick={() => select("friends")}>People</button>
@@ -97,4 +97,14 @@ it("bounds saved choices and tolerates malformed or unavailable storage", () => 
   expect(readPopupView(OWNER).tab).toBe("resources");
   vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("quota"); });
   expect(() => writePopupNavigation(OWNER, "friends", 120)).not.toThrow();
+});
+
+it("does not save Settings scrolling over the last content position, including closing the popup", async () => {
+  await mount(); scroll(260);
+  await act(async () => root!.render(<Harness suspended />));
+  scroll(0); scroll(90);
+  expect(readPopupView(OWNER).scroll.resources).toBe(260);
+  await act(async () => root!.unmount()); container.remove(); root = undefined;
+  await mount();
+  expect(container.querySelector("main")!.scrollTop).toBe(260);
 });

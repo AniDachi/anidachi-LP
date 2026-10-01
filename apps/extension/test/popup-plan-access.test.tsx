@@ -65,9 +65,25 @@ describe("Popup current account plan", () => {
     await mount();
     const link = container.querySelector<HTMLButtonElement>(".popup-welcome-settings")!;
     expect(link).not.toBeNull();
+    const shell = container.querySelector<HTMLElement>(".popup-shell")!;
+    shell.scrollTop = 180;
     await act(async () => link.click());
-    expect(container.querySelector<HTMLButtonElement>(".popup-notification-setting")?.disabled).toBe(false);
-    expect(container.textContent).not.toContain("Checking this browser...");
+    expect(shell.scrollTop).toBe(0);
+    expect(container.querySelector<HTMLButtonElement>('[role="switch"][aria-label="Invitation notifications"]')?.disabled).toBe(false);
+    expect(container.querySelector('[role="tablist"]')?.parentElement?.hidden).toBe(true);
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close settings"]')!.click());
+    expect(container.querySelector('[role="tablist"]')?.parentElement?.hidden).toBe(false);
+    expect(shell.scrollTop).toBe(180);
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("Open settings");
+  });
+  it("does not restore another account's scroll position after Settings", async () => {
+    await mount();
+    const shell = container.querySelector<HTMLElement>(".popup-shell")!;
+    shell.scrollTop = 240;
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Open settings"]')!.click());
+    await changeSession(tokens(B));
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close settings"]')!.click());
+    expect(shell.scrollTop).toBe(0);
   });
   it("does not retain a cached paid badge after server access becomes Free or unavailable", async () => {
     const cached = tokens(); cached.user.plan = "pro"; store.set(AUTH_TOKENS_KEY, cached);
