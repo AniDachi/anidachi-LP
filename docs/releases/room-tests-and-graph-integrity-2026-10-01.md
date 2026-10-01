@@ -1,5 +1,30 @@
 # Room recovery tests and Graphify integrity — October 1, 2026
 
+## Staging delivery
+
+The owner approved delivery after the local work and PR checks. [PR #393](https://github.com/AniDachi/anidachi-LP/pull/393)
+merged at 09:42:18 UTC on October 1 as `b42ae31bb189f2eb9ac2d1d5962884653f29e471`.
+This section supersedes the local-only delivery status recorded below.
+
+- Vercel `dpl_3CDAmMbiRgjyCR4HWZa7jr118HAv` was verified READY with
+  `staging.anidachi.app` assigned to that merge commit.
+- [Deploy API](https://github.com/AniDachi/anidachi-LP/actions/runs/36844448593)
+  passed and deployed staging version `1f93f027-ebc1-4566-9f1f-07296a99b5f8`.
+  The existing `apps/api/**` trigger includes test changes; no Worker production
+  implementation changed. Direct `pnpm smoke:worker:staging` passed afterward.
+- [Rooms](https://github.com/AniDachi/anidachi-LP/actions/runs/36844458319),
+  [P2P](https://github.com/AniDachi/anidachi-LP/actions/runs/36844458305) and
+  [post-deploy site smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36844584535)
+  passed for the merged revision. The site smoke verifies the staging gate,
+  noindex and sitemap restrictions; this is not new manual media acceptance.
+- Before merge, all PR checks passed on `8dcf6706`. The final graph had 14,684
+  nodes, 33,142 links and 56 hyperedges; 231 AST and 39 complete document sources
+  were verified. No-op refresh left graph/report/manifest byte-identical.
+- Main remains `a5a0134e`; PR #376 has no auto-merge. No Stripe, extension
+  artifact, database schema or environment configuration changes were made.
+
+## Original local checkpoint
+
 Base: staging `969a7f44`. Owner requested room-test diagnosis first, then graph
 repair. Local branch: `codex/room-terminal-recovery`. No production, deployment,
 environment, billing or protocol change is included in this work.

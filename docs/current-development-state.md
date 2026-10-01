@@ -1,5 +1,23 @@
 # Current Development State
 
+## Room runtime test and graph integrity delivered to staging, October 1, 2026
+
+[PR #393](https://github.com/AniDachi/anidachi-LP/pull/393) merged into staging
+at 09:42:18 UTC as `b42ae31b`. This supersedes the local checkpoint below.
+Vercel `dpl_3CDAmMbiRgjyCR4HWZa7jr118HAv` was verified READY on
+**https://staging.anidachi.app** for that exact commit. The automatic Worker
+deployment succeeded as version `1f93f027-ebc1-4566-9f1f-07296a99b5f8`;
+the merge changed tests/tooling/docs, not production room implementation.
+
+Rooms and P2P checks, post-deploy site smoke and direct staging Worker smoke
+passed. The refreshed graph covers 231 code sources and 39 full documents,
+with no dangling endpoints or lost records from untouched sources. A no-op
+refresh preserves all three graph artifacts byte-for-byte.
+
+Main stays at `a5a0134e`; promotion PR #376 has no auto-merge. Stripe, extension
+artifacts, database schema and environment configuration are unchanged. See
+[the staging delivery evidence](releases/room-tests-and-graph-integrity-2026-10-01.md#staging-delivery).
+
 ## Room runtime test and graph integrity corrected locally, October 1, 2026
 
 On `codex/room-terminal-recovery`, the intermittent terminal-cleanup test is

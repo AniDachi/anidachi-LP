@@ -3504,10 +3504,10 @@
     "semantic_hash": "773034b218ba95d0712867ff35698f20"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790846000.9026976,
-    "seen": 1790846904.4710898,
+    "mtime": 1790848039.507134,
+    "seen": 1790848298.004519,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "74d4d2629afdfa86d50a7efe2a98a7fb"
+    "semantic_hash": "8d67c59cc1f3677445a9d94220793787"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -9276,9 +9276,9 @@
     "semantic_hash": "175977a83ba6cdbb18ab4dec4f923a69"
   },
   "docs/releases/room-tests-and-graph-integrity-2026-10-01.md": {
-    "mtime": 1790846000.8848696,
-    "seen": 1790846904.471092,
+    "mtime": 1790848039.5278265,
+    "seen": 1790848298.004521,
     "ast_hash": "",
-    "semantic_hash": "59b27d13fc90b98f1a9cf7a014d92b69"
+    "semantic_hash": "7c15d4424b4e9a87f59d715116e875e7"
   }
 }
