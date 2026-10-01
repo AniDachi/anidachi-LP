@@ -1,18 +1,28 @@
 # Current Development State
 
-## Account loading optimization verified locally, October 1, 2026
+## Account loading optimization delivered to staging, October 1, 2026
 
-The accepted account UI is on staging via PR #386 (`5dc2a4a7`). Account loading
-changes are implemented and verified locally on `codex/account-loading-performance`:
-independent social resources, explicit-navigation reads in parallel with the
-route, direct-document server snapshots with the existing billing authorization,
-quiet subscription refresh, single-flight session refresh, and parallel history
-reads with unchanged authority fences. Web typecheck, 896 passing tests (6 existing
-skips), production build and independent review passed. Graphify refresh was
-attempted but its merge failed the integrity check; tracked graph artifacts remain
-unchanged, with an explicit exception recorded in the plan. No optimization
-deployment or real-user speed acceptance is claimed yet. See the
-[implementation and verification plan](superpowers/plans/2026-10-01-account-loading-performance.md).
+[PR #387](https://github.com/AniDachi/anidachi-LP/pull/387) delivered the account
+loading changes at 02:16:10 UTC as `d395642d` (implementation `30d2d292`). Vercel
+`dpl_EeugDHPoJVzSas3HEZkcbYcPvKEj` is READY and serves **https://staging.anidachi.app**.
+The post-deploy [staging smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36805237951)
+passed; direct checks also confirm the password gate, noindex and empty sitemap.
+Staging push CI and Rooms/P2P E2E passed. A separate main-promotion CI attempt
+failed one unchanged Worker cleanup test (409 instead of 410); the plan records
+this inconsistency rather than claiming every run passed.
+
+Friends/groups and notifications render independently, explicit navigation starts
+reads alongside the route, direct-document snapshots preserve billing authority,
+subscription focus refresh keeps valid display data, session refresh is shared
+while in flight, and history reads retain fresh authority fences. Web typecheck,
+896 passing tests (6 existing skips), production build and independent review
+passed before delivery. Graphify refresh was rejected by its integrity check;
+tracked artifacts remain unchanged under the documented exception.
+
+Authenticated latency comparison and owner acceptance are still pending. Main
+remains `a5a0134e`, promotion PR #376 has no auto-merge, and Worker, extension,
+Stripe configuration and database schema are unchanged by this patch. See the
+[implementation, delivery evidence and remaining checks](superpowers/plans/2026-10-01-account-loading-performance.md).
 
 ## Website and annual billing delivered to staging, September 30, 2026
 
