@@ -65,6 +65,7 @@ import { popupStyles } from "./popup-styles";
 import { PopupWatchHistoryPanel } from "./popup-watch-history";
 import { PopupHistorySettings } from "./popup-history-settings";
 import { PopupHistoryRecordingChoice } from "./popup-history-recording-choice";
+import { PopupWelcome } from "./popup-welcome";
 import {
   consumePopupRouteIntent,
   requestRoomInviteNotificationPermission,
@@ -881,7 +882,7 @@ export function PopupApp() {
               <X size={16} />
             </button>
           </div>
-          <PopupHistoryRecordingChoice ownerUserId={accountUser?.id ?? null} mode="settings" />
+          <PopupHistoryRecordingChoice ownerUserId={accountUser?.id ?? null} />
           <PopupHistorySettings ownerUserId={accountUser?.id ?? null} />
           <h3 className="popup-settings-section-title">Notifications · This browser only</h3>
           <button
@@ -923,7 +924,9 @@ export function PopupApp() {
       <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
 
       <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
-        {!settingsOpen && <PopupHistoryRecordingChoice ownerUserId={accountUser?.id ?? null} paid={currentPlan === "plus" || currentPlan === "pro"} />}
+        <PopupWelcome active={activeTab === "resources" && !settingsOpen && !authChecking}
+          onOpenSettings={() => void toggleSettings()}
+          onDismiss={() => shellRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus()} />
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}

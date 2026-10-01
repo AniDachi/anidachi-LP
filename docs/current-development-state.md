@@ -1,5 +1,23 @@
 # Current Development State
 
+## Extension welcome and history preference prepared locally, October 1, 2026
+
+The local `codex/extension-welcome-history` candidate starts from staging
+`73df5668`. Watch now has a compact introduction shown once per installation.
+It explains hosting with Plus/Pro, free joining, and saved account history;
+Settings opens the existing settings panel and Got it only dismisses the notice.
+A restored scroll position cannot mark an offscreen welcome as seen.
+
+Missing account/browser history preferences default to enabled. Existing explicit
+off choices remain off, unreadable data stays off, and actual recording retains
+signed-in ownership, paid/trial access, lease/session checks and YouTube's separate
+opt-in. Settings can stop recording without deleting saved history. No server,
+protocol, permissions, billing, staging/main or Store changes are part of this
+local task. Full Settings redesign is deferred. The updated unpacked staging
+folder is for owner review; real browser/user acceptance remains outstanding.
+Before publication, deploy matching privacy text and align Store disclosures.
+See [release-channel behavior](extension-release-channels.md#local-default-on-history-candidate-october-1-2026).
+
 ## Guest checkout continuation prepared locally, October 1, 2026
 
 The local `codex/site-next-pass` candidate continues a guest's selected Plus/Pro

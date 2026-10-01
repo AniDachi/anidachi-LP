@@ -37,7 +37,7 @@ import {
   type WatchHistoryBrowseTitleEpisodesQuery,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
-import { hasHistoryRecordingConsent, historyRecordingContextRevision } from "./history-recording-choice";
+import { isHistoryRecordingEnabled, historyRecordingContextRevision } from "./history-recording-choice";
 import { WEB_HTTP_BASE } from "./constants";
 import {
   personalRequest,
@@ -346,7 +346,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
 
 export function createWatchHistoryClient(dependencies: WatchHistoryClientDependencies) {
   const now = dependencies.now ?? Date.now;
-  const consent = dependencies.hasRecordingConsent ?? hasHistoryRecordingConsent;
+  const consent = dependencies.hasRecordingConsent ?? isHistoryRecordingEnabled;
   const recordingRevision = dependencies.recordingContextRevision ?? historyRecordingContextRevision;
   const recordingAllowed = async (owner: string) => {
     try { return await consent(owner); } catch { return false; }
