@@ -9324,15 +9324,15 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-setting-row.tsx": {
-    "mtime": 1790862716.653823,
-    "seen": 1790862758.1655092,
-    "ast_hash": "d5012ffd55ee6aae2fb46634aa443866",
+    "mtime": 1790874332.9216075,
+    "seen": 1790874353.527945,
+    "ast_hash": "15613cb44a16efceb6f053f587ae953c",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-settings-panel.tsx": {
-    "mtime": 1790862716.6536772,
-    "seen": 1790862758.165513,
-    "ast_hash": "2302e485e84b5b4a009250c22fb59f31",
+    "mtime": 1790874332.9213586,
+    "seen": 1790874353.5279481,
+    "ast_hash": "3de2ce62a7cbd11bf503b459d9287b80",
     "semantic_hash": ""
   },
   "apps/extension/src/use-popup-provider-browse.ts": {

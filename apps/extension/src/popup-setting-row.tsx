@@ -46,7 +46,6 @@ export const popupSettingsStyles = `
   .popup-setting-switch[aria-busy="true"] { cursor: wait; }
   .popup-setting-switch:focus-visible, .popup-local-settings-close:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: 4px; }
   .popup-settings-note { margin: 3px 0 0; color: var(--ad-muted); font-size: 10px; line-height: 1.6; }
-  .popup-settings-scope { margin: 20px 0 0; color: var(--ad-muted); font-size: 10px; line-height: 1.6; }
   .popup-local-settings-error { margin: 10px 0 0; font-size: 11px; line-height: 1.5; color: #ff9aa8; }
   @media (prefers-reduced-motion: reduce) { .popup-setting-switch > span { transition: none; } }
 `;

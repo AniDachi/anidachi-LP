@@ -40,7 +40,6 @@ export function PopupSettingsPanel({ ownerUserId, notifications, notificationsBu
           disabled={!notifications?.supported || !notifications.configured} onChange={onToggleNotifications} />
         {notificationsError && <p className="popup-local-settings-error" role="alert">{notificationsError}</p>}
       </section>
-      <p className="popup-settings-scope">These settings apply to this browser.</p>
     </section>
   );
 }

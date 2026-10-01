@@ -3,10 +3,10 @@ Stored graph preserves directed endpoints, parallel facts and existing community
 Stored records: 14911 nodes, 33601 links, 60 hyperedges. Analysis below uses an undirected simple projection; communities are retained, not reclustered.
 AST uses no LLM. Codex semantic token usage is unavailable.
 
-# Graph Report - anidachi-LP-monorepo  (2026-10-01)
+# Graph Report - anidachi-LP-monorepo  (2026-10-02)
 
 ## Corpus Check
-- Large corpus: 1566 files · ~1,546,841 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
+- Large corpus: 1566 files · ~1,546,821 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
 
 ## Summary
 - 14911 nodes · 33086 edges · 906 communities (502 shown, 404 thin omitted)
