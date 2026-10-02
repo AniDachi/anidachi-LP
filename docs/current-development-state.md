@@ -1,5 +1,27 @@
 # Current Development State
 
+## Release safeguards delivered to staging, October 2, 2026
+
+[PR #397](https://github.com/AniDachi/anidachi-LP/pull/397) merged at 12:28:38 UTC
+as `e5cf589a2863f303471266b5062404842f80d77c`. This delivery supersedes the
+local/pending checkpoints below. Staging Web is READY on that exact source;
+Worker delivery and direct health smoke passed. Required CI, extension build,
+room/P2P checks and the protected-site smoke are green. The standing promotion
+PR #376 remains open without auto-merge; main remains `a5a0134e`.
+
+The frozen staging ZIP was downloaded from GitHub run `37006905630` and validated
+locally: build ID `e5cf589a2863f303471266b5062404842f80d77c-staging-196`, staging
+identity/endpoints and narrow permissions. It contains the explicit Got it
+acknowledgement and the previously staged extension changes. Paid subscription
+preservation, confirmed trial offers and explicit production delivery/version gates
+are included in the source. No production/Stripe/Store action or activation was
+performed in this delivery block.
+
+Loaded-extension acknowledgement and the remaining real open-room/payment-loss
+acceptance still belong to the owner. The production Store ZIP is a separate next
+step after compatibility, production public-key and release-version verification.
+See the [delivery receipt and exact artifact hash](releases/paid-hosting-trial/staging-release-2026-10-02.md).
+
 ## Stripe preparation and 3DS verification, October 2, 2026
 
 The separately authorized Stripe block is complete: LIVE Plus $76.70/year and
@@ -29,9 +51,10 @@ and [3DS/webhook receipt](releases/paid-hosting-trial/stripe-3ds-readiness-2026-
 ## October 2 release candidate and Sandbox lifecycle verification
 
 The owner authorized delivery of the remaining local release safeguards and
-welcome acknowledgement to staging. The current candidate is being checked from
-`codex/production-release-guards` against staging `3998250d`; production/main
-remains `a5a0134e` in the fresh fetch. This is not a staging delivery receipt yet.
+welcome acknowledgement to staging. That candidate was reviewed from
+`codex/production-release-guards` against staging `3998250d` and delivered as
+`e5cf589a` in PR #397; see the delivery receipt above. Production/main remains
+`a5a0134e`.
 
 Real AniDachi Sandbox webhooks verified failed first trial payment, automatic
 recovery, exhausted retries, and failed/recovered ordinary monthly renewal against

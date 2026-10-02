@@ -132,11 +132,17 @@ No new public-copy rewrite or production deployment is part of staging delivery.
 - [x] Refresh semantic graph, complete final independent review and dev:check.
   Prior review/checks are recorded in the task ledger; semantic closeout is
   `2d584a92`. Later Stripe-only documentation has its own scoped validation.
-- [ ] Open PR into staging, wait for required CI, merge and verify actual Web/Worker
-  delivery. Keep the standing staging-to-main PR without auto-merge.
-- [ ] Build/validate the exact merged staging artifact, record SHA-256 and hand off
-  the remaining loaded-extension/open-room user acceptance. Task 6 separately
-  closes the Stripe-hosted 3DS scenario, not the entire browser acceptance matrix.
+- [x] Open PR into staging, wait for required CI, merge and verify actual Web/Worker
+  delivery. PR #397 merged as `e5cf589a`; Vercel READY, Worker deployed, post-merge
+  CI/Rooms/P2P and protected-site/Worker smoke passed. PR #376 has no auto-merge.
+- [x] Build/validate the exact merged staging artifact, record SHA-256 and hand off
+  the remaining loaded-extension/open-room user acceptance. GitHub run
+  `37006905630` produced build `e5cf589a2863f303471266b5062404842f80d77c-staging-196`;
+  the downloaded ZIP passed the channel validator. See the
+  [delivery receipt](../../releases/paid-hosting-trial/staging-release-2026-10-02.md).
+- [ ] Receive owner acceptance on the delivered extension and the remaining real
+  open-room/payment-loss scenarios. Task 6 separately closes the Stripe-hosted
+  3DS scenario, not the entire browser acceptance matrix.
 - [ ] Prepare the separately gated production Store artifact after exact dashboard
   version, production public-key and current-server compatibility verification.
 
@@ -186,7 +192,8 @@ No production delivery, main/staging push, Store action or activation is include
 
 ## Current evidence and decisions
 
-- Baseline: staging `3998250d`; two local welcome commits end at `89eb1deb`.
+- Baseline: staging `3998250d`; the reviewed candidate was delivered by PR #397
+  as `e5cf589a`. The exact staging ZIP remains frozen at that source commit.
 - Production Web/main remains `a5a0134e`; no new paid-hosting schema in production.
 - LIVE annual prices and the separate Portal are prepared (Task 5); production
   annual env and the cutover drain secret remain unconfigured.
