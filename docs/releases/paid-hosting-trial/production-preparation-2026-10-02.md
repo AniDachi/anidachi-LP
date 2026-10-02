@@ -1,6 +1,7 @@
 # Production preparation, October 2, 2026
 
-Status: local release safeguards; not a production deployment or Store package.
+Status: staging candidate in verification; no production deployment or Store package.
+The October 2 owner decision below supersedes the earlier pre-Store bridge plan.
 The owner requires existing purchased subscriptions to remain unchanged. This
 record supplements the [transition plan](../../superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md)
 and [cutover runbook](cutover-operations.md). The local implementation is tracked
@@ -85,53 +86,55 @@ an earlier automatic deployment.
 
 ## Ordered production delivery
 
-1. **Finish staging and freeze artifacts.** Include the Got it acknowledgement
-   fix and these safeguards. Record exact commits, checks and owner acceptance.
-   Inventory all main/staging differences, including collaborator changes.
-2. **Land the delivery guard separately.** Use the normal staging-first PR flow
-   and an explicitly approved minimal main promotion. Verify that production
-   Worker no longer deploys on push. Do not perform a large product promotion in
-   the same operation or assume the guard has already reached main.
-3. **Prepare LIVE and dormant schema.** Reconcile purchased subscriptions first.
-   Retain monthly prices, configure the approved annual prices and Portal, verify
-   webhook events including `invoice.payment_action_required`, and inspect open
-   legacy Checkout sessions. Reconcile incompatible open sessions before enabling
-   the new offer; completed purchases remain subscriptions. The webhook setup
-   script returning an existing URL does not prove its event list was updated.
-   Apply the six migrations with T=NULL, trials off and scheduler disabled. Use
-   the unified eligibility migration so unused trials are not split by signup
-   date. Establish the dedicated drain secret on Web and Vault safely.
-4. **Deliver a compatible Web, then Worker.** Web must expose and successfully
-   authorize the admission endpoint before the new Worker is manually deployed;
-   otherwise even legacy joins can receive 503. Keep the public site truthful
-   while T=NULL. The pricing change here is insufficient for all static Free/
-   trial claims in marketing, FAQ and articles: a separately reviewed compatible
-   Web/content delivery is still required. Verify old clients, existing paid
-   customers, room create/join/end and disabled drain health before advancing.
-5. **Prepare and submit the production extension.** Select the next version from
-   the Store dashboard, use the production identity/endpoints/narrow permissions
-   and matching public push key. Build from the approved clean main commit with
-   an explicit version and full-SHA build ID. Validate the exact ZIP and record
-   SHA-256; test login, invitations, history/preferences and room behavior on
-   that artifact. Publish accurate privacy/Store data disclosures. The owner
-   uploads the verified ZIP with deferred publication, retaining control of the
-   launch after review. Store approval is not a production activation signal.
-6. **Publish, then activate deliberately.** After approval, publish the selected
-   Store version and verify the visible version/install/update. Release matching
-   Web messaging and commit production T only after all prerequisites are
-   accepted. Chrome updates clients asynchronously: do not wait for every client
-   or assume everyone already updated. Server enforcement must cover old clients.
-   Keep any pre-T public-copy interval explicit and truthful; do not publish
-   unsupported trial promises while waiting for a flag.
-7. **Reconcile the cutover.** Run the single recorded activation operation and
-   retain its UUID. Reconcile every frozen Free target through fence/finalization;
-   paid/trial rooms stay outside that set. Confirm existing subscription/access
-   invariants again, observe actual closure latency, and verify new trial → first
-   invoice/failure outcomes. No deliberate five-minute Free cutover grace is
-   added; ordinary later entitlement loss has its separate existing grace.
+The owner explicitly keeps the current public website and production behavior
+until Store review is approved, then launches the prepared product manually.
+Do not revive the separate pre-Store marketing rewrite or deploy the new public
+site merely to build an extension ZIP. These instructions supersede the earlier
+compatible-public-copy preparation sequence; compatibility of server consumers
+and preservation of current subscriptions remain mandatory.
 
-Steps above are a plan, not authority to execute production mutations. Production
-promotion, LIVE setup, Store publication and T remain distinct owner decisions.
+1. **Finish staging and freeze the candidate.** Deliver the Got it acknowledgement
+   and safeguards through a staging PR, verify CI/deployments and the exact tester
+   artifact, and record remaining manual acceptance separately. Reconcile the
+   source diff with collaborator changes. Record Sandbox lifecycle evidence in
+   the [October 2 verification receipt](billing-recovery-2026-10-02.md).
+2. **Prepare the Store package without deploying production.** Verify the highest
+   dashboard-uploaded version, production extension ID/endpoints/narrow permissions,
+   and the matching production public push key. Build from the accepted frozen
+   staging SHA with explicit version/build identity; record SHA-256 and validate
+   the exact ZIP. This owner-directed review artifact is an explicit exception
+   to the usual build-after-main order: its creation must not require main or
+   public-site deployment. Verify it against the current server as well as the
+   staged new system. No source migration or publication is implied.
+3. **Prepare LIVE and launch prerequisites.** Take the read-only purchased-
+   subscription inventory; identify the exact annual catalog/Portal/webhook,
+   open-Checkout, additive-schema, secret and recovery requirements. Keep existing
+   monthly prices and subscriptions intact. Apply external production changes
+   only in the separately authorized launch preparation. Prepare matching
+   privacy/Store disclosures and reviewer instructions before package submission;
+   disclose any pending privacy publication as a gate rather than marking it done.
+4. **Owner submits with deferred publication.** Submission, Store approval and
+   publication are separate from activation. Keep current production serving old
+   clients during review. After approval, agree the manual launch window and verify
+   the submitted ZIP is the accepted artifact. Do not enable auto-merge on the
+   standing staging-to-main promotion PR.
+5. **Deliver approved launch prerequisites in dependency order.** Land the
+   production Worker delivery guard separately before broad promotion. Verify the
+   guard on main; apply additive migrations with T=NULL, trials/scheduler off;
+   establish the dedicated drain secret. Deliver compatible Web admission before
+   manually deploying the new Worker, and verify old-client create/join/end and
+   paid access. Keep any interval between new Web delivery and activation inside
+   the explicit launch procedure; do not expose trial checkout before readiness.
+6. **Publish, activate once, and reconcile.** Confirm the Store version is
+   published, then commit the single recorded activation UUID/T after all
+   prerequisites are accepted. Chrome updates asynchronously; server enforcement
+   must handle old clients. Reconcile all frozen Free room targets, preserve paid/
+   trial rooms and purchased subscription invariants, and observe the first real
+   invoices. No deliberate five-minute Free cutover grace is added; later ordinary
+   entitlement loss retains its separate existing grace.
+
+These steps are preparation, not permission for production mutations. Main
+promotion, LIVE setup, Store submission/publication and T remain distinct actions.
 
 ## Recovery and remaining gates
 
@@ -147,11 +150,13 @@ targets; `ROOM_TERMINAL_PROOF_UNAVAILABLE` is pending recovery, not success.
 Disabling new trials does not revoke already issued trials or invalidate existing
 Stripe Checkout URLs by itself. Review those URLs separately when stopping offers.
 
-Still open: final staging delivery; compatible pre-T Web/content package;
-LIVE before/after inventory and annual/Portal/webhook setup; push-key match;
-dashboard version; published privacy/disclosures; exact production ZIP validation;
-compatible recovery proof; first post-trial invoice outcomes; production approval
-and execution. No production readiness claim is made until those gates are closed.
+Still open: final staging delivery/acceptance; LIVE before/after reconciliation
+and approved annual/Portal/webhook setup; push-key match; dashboard version;
+published privacy/disclosures; exact production ZIP and current-server compatibility;
+compatible recovery proof; 3DS and real open-room payment-loss acceptance; production
+approval/execution and first live invoices. Sandbox post-trial failure, automatic
+recovery and retry exhaustion are now verified in the linked October 2 receipt.
+No production readiness claim is made until the remaining gates are closed.
 
 ## Local verification
 

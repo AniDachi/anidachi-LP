@@ -1,5 +1,26 @@
 # Current Development State
 
+## October 2 release candidate and Sandbox lifecycle verification
+
+The owner authorized delivery of the remaining local release safeguards and
+welcome acknowledgement to staging. The current candidate is being checked from
+`codex/production-release-guards` against staging `3998250d`; production/main
+remains `a5a0134e` in the fresh fetch. This is not a staging delivery receipt yet.
+
+Real AniDachi Sandbox webhooks verified failed first trial payment, automatic
+recovery, exhausted retries, and failed/recovered ordinary monthly renewal against
+staging. All five disposable QA subscriptions were stopped. The historical clock
+and database-time limits, room runtime evidence, and remaining 3DS/open-room UI
+acceptance are recorded in [the billing verification receipt](releases/paid-hosting-trial/billing-recovery-2026-10-02.md).
+
+Owner decision: keep the current public website/production serving existing
+clients during Store review; do not implement the abandoned pre-Store public-copy
+rewrite. Prepare the production Store ZIP from an accepted frozen source without
+triggering main/deployment, then perform the separately authorized launch after
+approval/publication. Existing subscriptions retain their identifiers, price,
+interval, renewal and cancellation settings. The revised [release order](releases/paid-hosting-trial/production-preparation-2026-10-02.md#ordered-production-delivery)
+supersedes the earlier bridge-first ordering below.
+
 ## Production release safeguards prepared locally, October 2, 2026
 
 The local `codex/production-release-guards` work continues from welcome commit
@@ -14,9 +35,10 @@ dispatch acknowledging the exact commit after schema/compatible Web verification
 staging remains automatic. Production package builders require an explicit Store
 version instead of falling back to `0.1.0`.
 
-These controls are not deployed. A compatible pre-activation Web/content package,
-LIVE setup/reconciliation, matching push key, Store/privacy preparation and the
-exact production ZIP remain open. Old Worker rollback is not automatically safe
+At this local checkpoint these controls are not deployed. LIVE
+setup/reconciliation, matching push key, Store/privacy preparation and the exact
+production ZIP remain open. The owner has since rejected a separate pre-Store
+public-content rewrite; follow the release order at the top of this document. Old Worker rollback is not automatically safe
 even before T because ordinary terminal intents already require compatible
 recovery. See the [preservation and delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md)
 and [local implementation plan](superpowers/plans/2026-10-02-production-release-guards.md).
@@ -1896,7 +1918,7 @@ pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:staging:local-broad
 WXT_EXTENSION_VERSION="<reviewed-store-version>" \
-WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```

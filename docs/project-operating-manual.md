@@ -372,7 +372,7 @@ pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:staging:local-broad
 WXT_EXTENSION_VERSION="<reviewed-store-version>" \
-WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
@@ -516,6 +516,13 @@ Promotion:
 7. Merge only after checks; request review when the change is risky.
 8. Build/upload production extension only from `main`.
 
+For the owner-approved October 2 paid-hosting transition, the Store review
+ZIP may instead be built from an accepted, frozen staging commit before
+main promotion. This is a packaging exception, not permission to deploy or
+publish production. Follow the exact artifact identity, compatibility,
+deferred-publication and later source-promotion gates in the
+[production preparation procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md).
+
 ## Local Commands
 
 Install dependencies:
@@ -550,7 +557,7 @@ Build extension artifacts:
 pnpm build:extension:staging
 pnpm validate:extension:staging
 WXT_EXTENSION_VERSION="<reviewed-store-version>" \
-WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```

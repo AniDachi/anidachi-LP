@@ -172,7 +172,7 @@ Generate the production extension artifact:
 
 ```bash
 WXT_EXTENSION_VERSION="<reviewed-store-version>" \
-WXT_BUILD_ID="<full-approved-main-sha>-production-<release-id>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
@@ -234,6 +234,14 @@ Do not distribute the broad staging build as a tester or release artifact.
    For the paid-hosting transition follow the
    [production preparation procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md);
    a single staging-to-main merge is not an ordered schema/Web/Worker rollout.
+
+The owner-approved October 2 paid-hosting transition has a limited packaging
+exception: the production Store review ZIP can come from accepted, frozen
+staging source while current production keeps serving old clients. Record
+its exact source/version/hash and verify current-server compatibility;
+Store publication and production promotion remain separate explicit gates.
+Use the preparation procedure above for this transition, rather than
+deploying main solely to create a review ZIP.
 
 ## Important Invariant
 

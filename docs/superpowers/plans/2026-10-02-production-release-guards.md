@@ -117,6 +117,33 @@ Room/media harness and remote deployment runs are intentionally deferred. Guard
 tests, real channel builds and YAML/shell checks cover the changed tooling;
 successful target GitHub workflow execution remains required after staging delivery.
 
+## Task 4: Staging delivery and final release candidate, October 2
+
+The owner authorized this follow-up after the Sandbox lifecycle verification.
+No new public-copy rewrite or production deployment is part of staging delivery.
+
+- [x] Refresh origin refs, confirm clean candidate and no automatic main promotion.
+- [x] Re-run affected checks: extension 2,163/2,163 and web 966 passing/6 existing
+  skips; both typechecks and all 5 Worker deployment gate tests pass.
+- [x] Record Sandbox first-payment failure/recovery, exhaustion and monthly renewal
+  results, with actual webhook/application states and explicit remaining gaps.
+- [x] Reconcile the owner's Store-first review decision with the release order;
+  existing subscribers and current production remain preserved.
+- [ ] Refresh semantic graph, complete final independent review and dev:check.
+- [ ] Open PR into staging, wait for required CI, merge and verify actual Web/Worker
+  delivery. Keep the standing staging-to-main PR without auto-merge.
+- [ ] Build/validate the exact merged staging artifact, record SHA-256 and hand off
+  the remaining loaded-extension/3DS/open-room user acceptance.
+- [ ] Prepare the separately gated production Store artifact after exact dashboard
+  version, production public-key and current-server compatibility verification.
+
+Ruling: the existing implementation Tasks 1–3 are already committed and verified;
+do not reimplement them. The rejected pre-Store marketing rewrite is not revived.
+The usual main-first packaging order must not trigger premature public deployment:
+the Store review ZIP can be built from accepted frozen staging source, with exact
+identity, checks and a later recorded source promotion. Production mutations and
+publication still require the owner's separate release decision.
+
 ## Current evidence and decisions
 
 - Baseline: staging `3998250d`; two local welcome commits end at `89eb1deb`.
@@ -124,7 +151,7 @@ successful target GitHub workflow execution remains required after staging deliv
 - Production annual env/Portal and cutover drain secret remain unconfigured.
 - Public Store shows 0.1.1; dashboard highest-uploaded version must be checked
   before selecting the next version. CI production version variable is absent.
-- The entire new marketing site is not yet a truthful pre-T bridge. Fixing the
-  pricing CTA alone does not resolve every static FAQ/article claim. Prepare a
-  separately reviewed compatible Web delivery before promoting the full site.
+- The owner rejected a separate pre-Store marketing bridge. Preserve current
+  production during review and follow the coordinated launch order in the
+  preparation record. Prepare compatibility proof without changing public copy.
 - Native execution; keep checks proportional, preserve all existing user changes.
