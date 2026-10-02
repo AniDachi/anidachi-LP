@@ -7,6 +7,16 @@ record supplements the [transition plan](../../superpowers/plans/2026-09-27-paid
 and [cutover runbook](cutover-operations.md). The local implementation is tracked
 in [production release safeguards](../../superpowers/plans/2026-10-02-production-release-guards.md).
 
+## LIVE catalog follow-up
+
+The owner subsequently authorized preparing the annual LIVE catalog. The two
+annual prices and a separate confirmation Portal are now created and verified;
+all existing subscriptions, prior prices/products, default Portal and webhook
+remain unchanged. The production environment is not connected to the new IDs.
+This advances catalog preparation only. See the
+[LIVE annual receipt](live-annual-setup-2026-10-02.md), including the unresolved
+voluntary conversion path for the older Crunchyroll Fan product.
+
 ## Purchased subscriptions are preserved
 
 The release must preserve existing Stripe customer, subscription, item and price

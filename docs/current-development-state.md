@@ -1,5 +1,16 @@
 # Current Development State
 
+## LIVE annual catalog prepared, October 2, 2026
+
+The owner approved the separate LIVE Stripe preparation step. Plus $76.70/year
+and Pro $143.90/year prices and a non-default yearly confirmation Portal now
+exist in LIVE. API readbacks preserved all five active subscriptions, all prior
+prices/products, the ordinary Portal and webhook. Production env, site/server
+deployment, Store release and trial activation were not performed. The old
+Crunchyroll Fan product needs a separately agreed voluntary annual path; no
+legacy subscription was migrated. Public IDs, evidence and remaining gates are
+in the [LIVE catalog receipt](releases/paid-hosting-trial/live-annual-setup-2026-10-02.md).
+
 ## October 2 release candidate and Sandbox lifecycle verification
 
 The owner authorized delivery of the remaining local release safeguards and

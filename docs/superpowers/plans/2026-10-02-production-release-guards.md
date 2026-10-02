@@ -144,11 +144,31 @@ the Store review ZIP can be built from accepted frozen staging source, with exac
 identity, checks and a later recorded source promotion. Production mutations and
 publication still require the owner's separate release decision.
 
+## Task 5: Separately authorized LIVE annual catalog preparation
+
+The owner approved this explained block after reconnecting AniDachi LIVE with
+write access. It does not broaden Task 4 into production deployment.
+
+- [x] Recheck the LIVE account, catalog and purchased-subscription baseline.
+- [x] Create Plus $76.70/year and Pro $143.90/year on their existing products.
+- [x] Create/read back a non-default yearly confirmation Portal with immediate
+  proration, only the annual targets, fixed quantity and preserved trial end.
+- [x] Compare existing subscriptions, monthly prices/products, default Portal and
+  webhook before/after; no differences.
+- [x] Record public IDs, private evidence location and the legacy-product limit in
+  [the LIVE catalog receipt](../../releases/paid-hosting-trial/live-annual-setup-2026-10-02.md).
+- [ ] Connect production yearly env IDs and verify checkout/Portal after compatible
+  deployment in the separately agreed launch window.
+- [ ] Explain and complete the webhook action-required preparation.
+- [ ] Agree/verify a voluntary annual conversion path for the old Crunchyroll Fan
+  product; retain its existing subscription until explicit customer action.
+
 ## Current evidence and decisions
 
 - Baseline: staging `3998250d`; two local welcome commits end at `89eb1deb`.
 - Production Web/main remains `a5a0134e`; no new paid-hosting schema in production.
-- Production annual env/Portal and cutover drain secret remain unconfigured.
+- LIVE annual prices and the separate Portal are prepared (Task 5); production
+  annual env and the cutover drain secret remain unconfigured.
 - Public Store shows 0.1.1; dashboard highest-uploaded version must be checked
   before selecting the next version. CI production version variable is absent.
 - The owner rejected a separate pre-Store marketing bridge. Preserve current
