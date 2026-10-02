@@ -9,9 +9,11 @@ updated access, the following catalog and separate Portal configuration were
 created and read back successfully.
 
 This is a Stripe catalog/configuration preparation receipt, not a production
-deployment, trial activation, completed LIVE checkout, or Store release. No
-subscription, customer, invoice, payment, webhook, retry or notification setting
-was mutated. Vercel environment variables were not changed.
+deployment, trial activation, completed LIVE checkout, or Store release. During
+this catalog block no subscription, customer, invoice, payment, webhook, retry or
+notification setting was mutated. The later separately authorized
+[3DS/webhook block](stripe-3ds-readiness-2026-10-02.md) added only the LIVE
+action-required event subscription. Vercel environment variables remain unchanged.
 
 ## Prepared LIVE objects
 
@@ -82,20 +84,19 @@ identifiers are intentionally absent from this committed document.
   `STRIPE_PRICE_ID_PLUS_YEARLY_LIVE`,
   `STRIPE_PRICE_ID_PRO_YEARLY_LIVE`, and
   `STRIPE_YEARLY_PORTAL_CONFIGURATION_ID_LIVE`.
-- Review/add `invoice.payment_action_required` on the existing LIVE webhook in
-  its own explained step, aligned with the compatible handler. The existing
-  six event subscriptions, endpoint URL and API version remain unchanged.
+- The explained LIVE `invoice.payment_action_required` event addition is complete.
+  Verify compatible handler delivery during launch; the old production handler
+  skips the new event. All prior events, endpoint URL and API version are retained.
 - Reconcile open old Checkout sessions, production application subscription rows
   and effective access before deployment/activation. This catalog receipt does
   not replace that wider release reconciliation.
 - One active subscription uses the older Crunchyroll Fan product at $8/month.
-  Its terms remain untouched. The existing same-product guard blocks a direct
-  conversion to the new Plus yearly product. Agree and verify any voluntary
-  legacy-to-current annual path separately; do not silently migrate the account,
-  create a second subscription, or claim that annual conversion covers it.
+  Its terms remain untouched. The owner explicitly excluded developing a separate
+  conversion path for it. Preserve the existing subscription; do not migrate it,
+  create a second subscription, or claim the new same-product annual flow covers it.
 - Complete production env/compatible delivery, new-checkout and customer-driven
-  conversion verification, 3DS/open-room acceptance, and first LIVE invoice
-  observation through the [ordered release procedure](production-preparation-2026-10-02.md#ordered-production-delivery).
+  conversion verification, real open-room payment-loss acceptance, and first LIVE
+  invoice observation through the [ordered release procedure](production-preparation-2026-10-02.md#ordered-production-delivery).
   Existing Sandbox evidence remains in
   [the billing recovery receipt](billing-recovery-2026-10-02.md).
 

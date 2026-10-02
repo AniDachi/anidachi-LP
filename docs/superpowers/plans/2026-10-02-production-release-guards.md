@@ -129,11 +129,14 @@ No new public-copy rewrite or production deployment is part of staging delivery.
   results, with actual webhook/application states and explicit remaining gaps.
 - [x] Reconcile the owner's Store-first review decision with the release order;
   existing subscribers and current production remain preserved.
-- [ ] Refresh semantic graph, complete final independent review and dev:check.
+- [x] Refresh semantic graph, complete final independent review and dev:check.
+  Prior review/checks are recorded in the task ledger; semantic closeout is
+  `2d584a92`. Later Stripe-only documentation has its own scoped validation.
 - [ ] Open PR into staging, wait for required CI, merge and verify actual Web/Worker
   delivery. Keep the standing staging-to-main PR without auto-merge.
 - [ ] Build/validate the exact merged staging artifact, record SHA-256 and hand off
-  the remaining loaded-extension/3DS/open-room user acceptance.
+  the remaining loaded-extension/open-room user acceptance. Task 6 separately
+  closes the Stripe-hosted 3DS scenario, not the entire browser acceptance matrix.
 - [ ] Prepare the separately gated production Store artifact after exact dashboard
   version, production public-key and current-server compatibility verification.
 
@@ -159,9 +162,27 @@ write access. It does not broaden Task 4 into production deployment.
   [the LIVE catalog receipt](../../releases/paid-hosting-trial/live-annual-setup-2026-10-02.md).
 - [ ] Connect production yearly env IDs and verify checkout/Portal after compatible
   deployment in the separately agreed launch window.
-- [ ] Explain and complete the webhook action-required preparation.
-- [ ] Agree/verify a voluntary annual conversion path for the old Crunchyroll Fan
-  product; retain its existing subscription until explicit customer action.
+- [x] Explain and complete the LIVE webhook action-required subscription; all
+  previous endpoint settings retained. Compatible handler deployment stays open.
+- [x] Record the owner's exclusion of a separate old Crunchyroll Fan conversion
+  path. Preserve that subscription and its existing $8/month terms.
+
+## Task 6: Separately authorized Stripe-only readiness verification
+
+No production delivery, main/staging push, Store action or activation is included.
+
+- [x] Create one isolated Sandbox annual-trial fixture with an authentication-
+  required test card; receive actual webhooks on staging.
+- [x] Confirm action_required -> Free/no hosting; cancel the hosted 3DS challenge
+  and confirm failed/unpaid with no renewed trial.
+- [x] Complete 3DS on the same invoice and verify one $76.70 payment, active Plus,
+  restored hosting/history eligibility and the original consumed trial.
+- [x] Cancel only the new QA subscription; replay four lease-contended events and
+  verify all ten relevant events processed without reviving access.
+- [x] Add only the LIVE action-required event; compare all 17 existing subscription
+  objects before/after with no changes.
+- [x] Record method, environment boundaries, historical-clock and browser limitations
+  in [the Stripe receipt](../../releases/paid-hosting-trial/stripe-3ds-readiness-2026-10-02.md).
 
 ## Current evidence and decisions
 
@@ -169,8 +190,8 @@ write access. It does not broaden Task 4 into production deployment.
 - Production Web/main remains `a5a0134e`; no new paid-hosting schema in production.
 - LIVE annual prices and the separate Portal are prepared (Task 5); production
   annual env and the cutover drain secret remain unconfigured.
-- Public Store shows 0.1.1; dashboard highest-uploaded version must be checked
-  before selecting the next version. CI production version variable is absent.
+- The owner confirmed dashboard highest-uploaded version 0.1.1; refresh if another
+  package is uploaded. CI production version variable is absent.
 - The owner rejected a separate pre-Store marketing bridge. Preserve current
   production during review and follow the coordinated launch order in the
   preparation record. Prepare compatibility proof without changing public copy.

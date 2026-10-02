@@ -1,15 +1,30 @@
 # Current Development State
 
-## LIVE annual catalog prepared, October 2, 2026
+## Stripe preparation and 3DS verification, October 2, 2026
 
-The owner approved the separate LIVE Stripe preparation step. Plus $76.70/year
-and Pro $143.90/year prices and a non-default yearly confirmation Portal now
-exist in LIVE. API readbacks preserved all five active subscriptions, all prior
-prices/products, the ordinary Portal and webhook. Production env, site/server
-deployment, Store release and trial activation were not performed. The old
-Crunchyroll Fan product needs a separately agreed voluntary annual path; no
-legacy subscription was migrated. Public IDs, evidence and remaining gates are
-in the [LIVE catalog receipt](releases/paid-hosting-trial/live-annual-setup-2026-10-02.md).
+The separately authorized Stripe block is complete: LIVE Plus $76.70/year and
+Pro $143.90/year prices and a non-default yearly confirmation Portal are prepared.
+The existing LIVE webhook now also subscribes to
+`invoice.payment_action_required`; its other six events, URL, status and API
+version are unchanged. A fresh before/after comparison preserved all 17 LIVE
+subscription objects, including all five active subscriptions. The current
+production handler skips the added event; the compatible handler still requires
+the separately authorized Web deployment.
+
+A new isolated Sandbox annual trial verified actual 3DS cancellation and success
+in Stripe's hosted invoice UI. Real webhooks produced Free/no hosting before
+payment and Plus/hosting/history access after payment of the same $76.70 invoice.
+All ten relevant events were processed; four lease-contended deliveries were
+successfully resent after QA cancellation without reviving access. The QA
+subscription is canceled. This does not replace Checkout/OAuth UI, real open-room
+payment-loss or LIVE invoice acceptance.
+
+The owner explicitly excluded a separate conversion path for the old $8/month
+Crunchyroll Fan subscription. Preserve it; no migration or automatic annual
+conversion is planned. Production env, site/server deployment, main/Store release
+and trial activation were not performed. See the
+[LIVE catalog receipt](releases/paid-hosting-trial/live-annual-setup-2026-10-02.md)
+and [3DS/webhook receipt](releases/paid-hosting-trial/stripe-3ds-readiness-2026-10-02.md).
 
 ## October 2 release candidate and Sandbox lifecycle verification
 
@@ -21,8 +36,9 @@ remains `a5a0134e` in the fresh fetch. This is not a staging delivery receipt ye
 Real AniDachi Sandbox webhooks verified failed first trial payment, automatic
 recovery, exhausted retries, and failed/recovered ordinary monthly renewal against
 staging. All five disposable QA subscriptions were stopped. The historical clock
-and database-time limits, room runtime evidence, and remaining 3DS/open-room UI
-acceptance are recorded in [the billing verification receipt](releases/paid-hosting-trial/billing-recovery-2026-10-02.md).
+and database-time limits and room runtime evidence are recorded in
+[the billing verification receipt](releases/paid-hosting-trial/billing-recovery-2026-10-02.md).
+The later 3DS result is above; real open-room UI acceptance remains separate.
 
 Owner decision: keep the current public website/production serving existing
 clients during Store review; do not implement the abandoned pre-Store public-copy

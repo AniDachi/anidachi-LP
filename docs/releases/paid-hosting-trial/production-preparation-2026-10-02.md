@@ -11,11 +11,16 @@ in [production release safeguards](../../superpowers/plans/2026-10-02-production
 
 The owner subsequently authorized preparing the annual LIVE catalog. The two
 annual prices and a separate confirmation Portal are now created and verified;
-all existing subscriptions, prior prices/products, default Portal and webhook
-remain unchanged. The production environment is not connected to the new IDs.
-This advances catalog preparation only. See the
-[LIVE annual receipt](live-annual-setup-2026-10-02.md), including the unresolved
-voluntary conversion path for the older Crunchyroll Fan product.
+existing subscriptions, prior prices/products and default Portal were preserved.
+The subsequent Stripe-only block added `invoice.payment_action_required` to the
+existing LIVE webhook while retaining its previous six events, URL and API version.
+All 17 LIVE subscription objects remained unchanged in a fresh comparison.
+The production environment is not connected to the new annual IDs, and the
+current handler does not yet process the added event. See the
+[LIVE annual receipt](live-annual-setup-2026-10-02.md) and
+[3DS/webhook verification](stripe-3ds-readiness-2026-10-02.md).
+The owner excluded a separate conversion path for the old Crunchyroll Fan product;
+preserve that subscription without adding migration work.
 
 ## Purchased subscriptions are preserved
 
@@ -160,13 +165,17 @@ targets; `ROOM_TERMINAL_PROOF_UNAVAILABLE` is pending recovery, not success.
 Disabling new trials does not revoke already issued trials or invalidate existing
 Stripe Checkout URLs by itself. Review those URLs separately when stopping offers.
 
-Still open: final staging delivery/acceptance; LIVE before/after reconciliation
-and approved annual/Portal/webhook setup; push-key match; dashboard version;
+Still open: final staging delivery/acceptance; launch-time LIVE/application
+reconciliation and annual env/compatible handler hookup; push-key match;
 published privacy/disclosures; exact production ZIP and current-server compatibility;
-compatible recovery proof; 3DS and real open-room payment-loss acceptance; production
-approval/execution and first live invoices. Sandbox post-trial failure, automatic
-recovery and retry exhaustion are now verified in the linked October 2 receipt.
-No production readiness claim is made until the remaining gates are closed.
+compatible recovery proof; real open-room payment-loss acceptance; production
+approval/execution and first LIVE invoices. The owner confirmed 0.1.1 as the
+highest uploaded Store version; refresh that fact if another upload occurs.
+LIVE catalog/Portal/event subscription preparation is complete. Sandbox post-trial
+failure, automatic recovery, retry exhaustion and hosted-invoice 3DS recovery are
+verified in the linked receipts. Checkout/OAuth-to-recovery-link navigation was
+not part of the 3DS fixture. No production readiness claim is made until the
+remaining gates are closed.
 
 ## Local verification
 

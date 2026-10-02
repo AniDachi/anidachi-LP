@@ -51,8 +51,11 @@ It records exact Sandbox object IDs, application states and the paid invoice
 screenshot. The checked source was `d34764bed8c1e0654a785c7048d459f1753ab67a`;
 the staging deployment was not changed for these tests.
 
-Still open in the broader acceptance matrix: action_required/3DS and its browser
-recovery, real open-room behavior on paid-access loss, remaining P11/mixed-client
-and recovery cases, plus LIVE before/after reconciliation and first live invoices.
+The subsequent [3DS/webhook receipt](stripe-3ds-readiness-2026-10-02.md) closes
+action_required and Stripe-hosted browser recovery for an isolated annual trial.
+Still open in the broader acceptance matrix: Checkout/OAuth-to-recovery-link
+navigation for that fixture, real open-room behavior on paid-access loss, remaining
+P11/mixed-client and recovery cases, plus launch-time LIVE/application reconciliation
+and first LIVE invoices.
 Prior owner-accepted trial signup/basic room behavior remains valid; these new
 results do not claim the entire release is ready.
