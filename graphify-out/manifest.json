@@ -3504,10 +3504,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790941526.811346,
-    "seen": 1790942261.341193,
+    "mtime": 1790944717.1567822,
+    "seen": 1790945138.343658,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "62d3eb3228fbffc6656d3300eef8a17d"
+    "semantic_hash": "ae220bb3133e19ae77d66688d12822da"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -9390,10 +9390,10 @@
     "semantic_hash": "222d65b023b7387f98643fafabef149a"
   },
   "docs/superpowers/plans/2026-10-02-production-release-guards.md": {
-    "mtime": 1790941526.8149166,
-    "seen": 1790942261.3411992,
+    "mtime": 1790944593.1299884,
+    "seen": 1790945138.343661,
     "ast_hash": "",
-    "semantic_hash": "8898300f60ed78c93ce054805a44f911"
+    "semantic_hash": "e26ab6ce2575faf2c225799b94ba65b3"
   },
   "docs/releases/paid-hosting-trial/billing-recovery-2026-10-02.md": {
     "mtime": 1790941526.8141296,
@@ -9412,5 +9412,11 @@
     "seen": 1790942261.3411992,
     "ast_hash": "",
     "semantic_hash": "3f3b9cf89cd15f19fbe877d12a362f0e"
+  },
+  "docs/releases/paid-hosting-trial/staging-release-2026-10-02.md": {
+    "mtime": 1790944593.1302483,
+    "seen": 1790945138.34366,
+    "ast_hash": "",
+    "semantic_hash": "9d2145ed11cdc04002619af1494c5024"
   }
 }
