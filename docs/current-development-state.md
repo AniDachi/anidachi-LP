@@ -1,9 +1,92 @@
 # Current Development State
 
+## Stripe preparation and 3DS verification, October 2, 2026
+
+The separately authorized Stripe block is complete: LIVE Plus $76.70/year and
+Pro $143.90/year prices and a non-default yearly confirmation Portal are prepared.
+The existing LIVE webhook now also subscribes to
+`invoice.payment_action_required`; its other six events, URL, status and API
+version are unchanged. A fresh before/after comparison preserved all 17 LIVE
+subscription objects, including all five active subscriptions. The current
+production handler skips the added event; the compatible handler still requires
+the separately authorized Web deployment.
+
+A new isolated Sandbox annual trial verified actual 3DS cancellation and success
+in Stripe's hosted invoice UI. Real webhooks produced Free/no hosting before
+payment and Plus/hosting/history access after payment of the same $76.70 invoice.
+All ten relevant events were processed; four lease-contended deliveries were
+successfully resent after QA cancellation without reviving access. The QA
+subscription is canceled. This does not replace Checkout/OAuth UI, real open-room
+payment-loss or LIVE invoice acceptance.
+
+The owner explicitly excluded a separate conversion path for the old $8/month
+Crunchyroll Fan subscription. Preserve it; no migration or automatic annual
+conversion is planned. Production env, site/server deployment, main/Store release
+and trial activation were not performed. See the
+[LIVE catalog receipt](releases/paid-hosting-trial/live-annual-setup-2026-10-02.md)
+and [3DS/webhook receipt](releases/paid-hosting-trial/stripe-3ds-readiness-2026-10-02.md).
+
+## October 2 release candidate and Sandbox lifecycle verification
+
+The owner authorized delivery of the remaining local release safeguards and
+welcome acknowledgement to staging. The current candidate is being checked from
+`codex/production-release-guards` against staging `3998250d`; production/main
+remains `a5a0134e` in the fresh fetch. This is not a staging delivery receipt yet.
+
+Real AniDachi Sandbox webhooks verified failed first trial payment, automatic
+recovery, exhausted retries, and failed/recovered ordinary monthly renewal against
+staging. All five disposable QA subscriptions were stopped. The historical clock
+and database-time limits and room runtime evidence are recorded in
+[the billing verification receipt](releases/paid-hosting-trial/billing-recovery-2026-10-02.md).
+The later 3DS result is above; real open-room UI acceptance remains separate.
+
+Owner decision: keep the current public website/production serving existing
+clients during Store review; do not implement the abandoned pre-Store public-copy
+rewrite. Prepare the production Store ZIP from an accepted frozen source without
+triggering main/deployment, then perform the separately authorized launch after
+approval/publication. Existing subscriptions retain their identifiers, price,
+interval, renewal and cancellation settings. The revised [release order](releases/paid-hosting-trial/production-preparation-2026-10-02.md#ordered-production-delivery)
+supersedes the earlier bridge-first ordering below.
+
+## Production release safeguards prepared locally, October 2, 2026
+
+The local `codex/production-release-guards` work continues from welcome commit
+`89eb1deb`. The owner requires existing purchased subscriptions to retain their
+price, plan, interval and renewal/cancellation settings. No production, LIVE
+Stripe, main promotion, Store publication or activation is part of this block.
+
+Pricing retains static prices and usable buttons, with a neutral plan choice
+until the server confirms trial availability. Existing subscribers reach
+management. Production Worker delivery is changed locally to an explicit manual
+dispatch acknowledging the exact commit after schema/compatible Web verification;
+staging remains automatic. Production package builders require an explicit Store
+version instead of falling back to `0.1.0`.
+
+At this local checkpoint these controls are not deployed. LIVE
+setup/reconciliation, matching push key, Store/privacy preparation and the exact
+production ZIP remain open. The owner has since rejected a separate pre-Store
+public-content rewrite; follow the release order at the top of this document. Old Worker rollback is not automatically safe
+even before T because ordinary terminal intents already require compatible
+recovery. See the [preservation and delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md)
+and [local implementation plan](superpowers/plans/2026-10-02-production-release-guards.md).
+
+## Welcome acknowledgement follow-up, October 2, 2026
+
+The local follow-up to staging PR #396 keeps the Watch welcome visible until
+Got it is clicked. Popup reopening, Watch/People/Inbox navigation, scrolling and
+Settings do not acknowledge it. A separate installation-local acknowledgement
+key replaces the automatic seen flag; existing installations see the notice again
+because the old flag cannot distinguish viewing from clicking Got it. Recording
+preferences and paid/trial eligibility are unchanged. Read failures still show the
+informational notice; a failed acknowledgement save does not block the popup and
+allows it to reappear on the next opening. This follow-up is local pending staging
+and owner acceptance on the rebuilt unpacked artifact.
+
 ## Extension welcome and history preference prepared locally, October 1, 2026
 
 The local `codex/extension-welcome-history` candidate starts from staging
-`73df5668`. Watch now has a compact introduction shown once per installation.
+`73df5668`. Watch initially had a compact introduction shown once per installation.
+The October 2 follow-up above supersedes this automatic seen behavior.
 It explains hosting with Plus/Pro, free joining, and saved account history;
 Settings opens the existing settings panel and Got it only dismisses the notice.
 A restored scroll position cannot mark an offscreen welcome as seen.
@@ -1820,9 +1903,12 @@ Worker release guardrails:
 - Staging Worker smoke can be run with `pnpm smoke:worker:staging`.
 - Staging and production Worker names must stay distinct.
 
-Normal deploy path is PR merge. Manual workflow dispatch is for retries or
-emergencies only; release workflows must not be manually dispatched from feature
-branches.
+Code promotion follows PR merge. In the October 2 local release candidate,
+staging Worker delivery remains automatic; production Worker delivery requires
+manual dispatch from main with the exact verified `production_ready_sha` after
+schema and compatible Web are ready. This guard is not yet deployed. Other
+release workflows retain their documented triggers; never dispatch a release
+from a feature branch. See the production preparation section above.
 
 ## Extension Channels
 
@@ -1858,6 +1944,8 @@ Build commands:
 pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:staging:local-broad
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```

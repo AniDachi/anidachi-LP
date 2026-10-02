@@ -371,6 +371,8 @@ Build commands:
 pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:staging:local-broad
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
@@ -430,8 +432,15 @@ Site-only auto-promotion:
 - Workflow changes under `.github/**` are intentionally never auto-promoted; the
   auto-promotion workflow itself must be installed in `main` manually once.
 
-Normal deploy path is PR merge. Manual release workflow dispatch is only for
-retries or emergencies, and release workflows must run from `staging` or `main`.
+Code promotion follows PR merge. The October 2 local release guard keeps staging
+Worker delivery automatic and requires manual production Worker dispatch from
+main after schema and compatible Web have been verified. Set
+`production_ready_sha` to the exact full main commit being deployed; this is an
+operator acknowledgement, not an automated remote-readiness check. The guard
+must be promoted separately before the full product release. Other workflows
+retain their documented triggers. See the
+[production delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md).
+Release workflows must run from `staging` or `main`.
 Do not use manual dispatch from a feature branch as an alternate release path.
 
 Never push risky changes directly to `main`. Never mix unrelated P2P, billing,
@@ -507,6 +516,13 @@ Promotion:
 7. Merge only after checks; request review when the change is risky.
 8. Build/upload production extension only from `main`.
 
+For the owner-approved October 2 paid-hosting transition, the Store review
+ZIP may instead be built from an accepted, frozen staging commit before
+main promotion. This is a packaging exception, not permission to deploy or
+publish production. Follow the exact artifact identity, compatibility,
+deferred-publication and later source-promotion gates in the
+[production preparation procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md).
+
 ## Local Commands
 
 Install dependencies:
@@ -540,7 +556,9 @@ Build extension artifacts:
 ```bash
 pnpm build:extension:staging
 pnpm validate:extension:staging
-pnpm build:extension:public
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
 

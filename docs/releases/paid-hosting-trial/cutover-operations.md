@@ -94,8 +94,13 @@ Keep all measurements and private diagnostics out of public logs; diagnostics
 contain counts/fixed categories, never credentials or raw provider bodies.
 After activation, recovery must keep compatible hosting/trial/terminal consumers.
 Do not clear T, resurrect closed Free rooms, erase consumed trials or drop
-pending closure work as rollback. Before activation, consumers may be reverted
-while retaining the dormant additive schema.
+pending closure work as rollback. Before activation, retain the dormant additive
+schema and use a verified compatible consumer rollback. The new Worker also
+writes terminal intent for ordinary room endings with T=NULL; an older Worker
+that ignores that intent can lose recovery/fencing even before activation.
+Keep exact compatible Web/Worker recovery artifacts and reconcile pending work
+before considering any legacy rollback. See the
+[production preservation and delivery procedure](production-preparation-2026-10-02.md).
 
 ## Unproven legacy terminal records
 

@@ -90,7 +90,8 @@ test("authority outage does not invent trial eligibility", async () => {
 	globalThis.fetch = async () =>
 		Response.json({ error: "unavailable" }, { status: 503 });
 	const el = await mount();
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial|30 min/);
+	assert.doesNotMatch(el.textContent!, /Start 3-day free trial|Try 3 days free|30 min/);
+	assert.match(plusButton(el).textContent!, /Choose Plus/);
 	assert.equal(plusButton(el).disabled, false);
 	assert.equal(el.querySelector('[role="alert"]'), null);
 });
@@ -115,10 +116,9 @@ test("public monthly and annual plans render without any server catalog", async 
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
 	assert.match(html, /Yearly/);
-	assert.match(html, /Try 3 days free/);
-	assert.match(html, /One trial per account/);
-	assert.match(html, /Card required/);
-	assert.match(html, /\$76\.70\/year automatically/);
+	assert.match(html, /Choose Plus/);
+	assert.doesNotMatch(html, /Try 3 days free|One trial per account|Card required/);
+	assert.match(html, /Renews at \$76\.70\/year/);
 	globalThis.fetch = async () => Response.json({}, { status: 503 });
 	const el = await mount();
 	assert.equal(el.querySelector('[role="alert"]'), null);
@@ -126,8 +126,30 @@ test("public monthly and annual plans render without any server catalog", async 
 	await act(async () => periodButton(el, "Monthly").click());
 	assert.match(el.textContent!, /\$7\.99/);
 	assert.match(el.textContent!, /\$14\.99/);
-	assert.match(el.textContent!, /Try 3 days free/);
-	assert.match(el.textContent!, /\$7\.99\/month automatically/);
+	assert.match(el.textContent!, /Choose Plus/);
+	assert.match(el.textContent!, /Renews at \$7\.99\/month/);
+});
+
+test("guest pricing advertises a trial only while the server offers it", async () => {
+	for (const [paidHostingActive, trialAvailable, available] of [
+		[false, false, false], [false, true, false], [true, false, false],
+		[true, undefined, false], [true, true, true],
+	] as const) {
+		globalThis.fetch = async () => Response.json({
+			...offer, ownerUserId: null, action: "sign_in", paidHostingActive, trialAvailable,
+		});
+		const el = await mount();
+		assert.match(plusButton(el).textContent!, available ? /Try 3 days free/ : /Choose Plus/);
+		assert.equal(!!el.querySelector("#pricing-trial-terms"), available);
+		for (const id of plusButton(el).getAttribute("aria-describedby")!.split(" ")) {
+			assert.ok(el.querySelector(`#${id}`), `Missing terms element: ${id}`);
+		}
+		assert.match(el.textContent!, /\$76\.70/);
+		assert.equal(plusButton(el).disabled, false);
+		await act(async () => root?.unmount());
+		root = null;
+		el.remove();
+	}
 });
 
 test("a public trial click cannot silently start a paid subscription for an ineligible account", async () => {
@@ -143,7 +165,7 @@ test("a public trial click cannot silently start a paid subscription for an inel
 		});
 	};
 	const el = await mount();
-	assert.match(plusButton(el).textContent!, /Try 3 days free/);
+	assert.match(plusButton(el).textContent!, /Choose Plus/);
 	await act(async () => plusButton(el).click());
 	lookup.resolve(
 		Response.json({ ...offer, action: "subscribe", trialAvailable: false }),
@@ -273,8 +295,8 @@ test("server-rendered pricing shows published prices before the account request"
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Try 3 days free/);
-	assert.doesNotMatch(html, /Start 3-day free trial/);
+	assert.match(html, /Choose Plus/);
+	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
 	assert.match(html, /Yearly|Save 20%/);
 });
 
@@ -287,8 +309,8 @@ test("published yearly pricing is present in server HTML before account availabi
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Try 3 days free/);
-	assert.doesNotMatch(html, /Start 3-day free trial/);
+	assert.match(html, /Choose Plus/);
+	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
 });
 
 test("returning to the tab keeps prices visible while account availability is rechecked", async () => {

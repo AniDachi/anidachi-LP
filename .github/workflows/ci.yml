@@ -47,6 +47,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Test production Worker deployment gate
+        run: node --test scripts/worker-deploy-gate.test.mjs
+
       - name: Test API Workers runtime
         run: pnpm --filter @anidachi/api test:runtime
 

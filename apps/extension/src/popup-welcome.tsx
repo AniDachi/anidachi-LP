@@ -1,48 +1,44 @@
 import { Bookmark, Users } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-const WELCOME_SEEN_KEY = "anidachi.welcomeSeen.v1";
+// The previous seen flag was set on display, so it cannot prove acknowledgement.
+const WELCOME_ACKNOWLEDGED_KEY = "anidachi.welcomeAcknowledged.v1";
 
-// Informational, once per installation. This state never authorizes recording.
+// Informational until acknowledged on this installation; never authorizes recording.
 export function PopupWelcome({ active, onOpenSettings, onDismiss }: {
   active: boolean;
   onOpenSettings: () => void;
   onDismiss?: () => void;
 }) {
-  const section = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
-    if (!active) return;
     let current = true;
     void (async () => {
       try {
-        const stored = await chrome.storage.local.get(WELCOME_SEEN_KEY);
-        if (!current || stored[WELCOME_SEEN_KEY] === true) return;
-        setVisible(true);
+        const stored = await chrome.storage.local.get(WELCOME_ACKNOWLEDGED_KEY);
+        if (current) setVisible(stored[WELCOME_ACKNOWLEDGED_KEY] !== true);
       } catch {
-        // A failed welcome preference must never block the main interface.
+        // A read failure is not an acknowledgement; the notice remains dismissible.
+        if (current) setVisible(true);
       }
     })();
     return () => { current = false; };
-  }, [active]);
+  }, []);
 
-  // A restored Watch scroll position can put the welcome above the viewport.
-  // Persist only after it is actually visible, independently of Got it.
-  useEffect(() => {
-    const element = section.current;
-    if (!active || !visible || !element) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.5)) return;
-      observer.disconnect();
-      void chrome.storage.local.set({ [WELCOME_SEEN_KEY]: true }).catch(() => undefined);
-    }, { threshold: 0.5 });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [active, visible]);
+  const acknowledge = () => {
+    setVisible(false);
+    onDismiss?.();
+    // A failed save must not block the popup; the next opening can show it again.
+    void (async () => {
+      try {
+        await chrome.storage.local.set({ [WELCOME_ACKNOWLEDGED_KEY]: true });
+      } catch { /* No recording preferences are changed by this notice. */ }
+    })();
+  };
 
   if (!active || !visible) return null;
   return (
-    <section ref={section} className="popup-welcome" aria-label="Welcome to AniDachi">
+    <section className="popup-welcome" aria-label="Welcome to AniDachi">
       <style>{styles}</style>
       <h2>Welcome to AniDachi</h2>
       <div className="popup-welcome-item">
@@ -59,7 +55,7 @@ export function PopupWelcome({ active, onOpenSettings, onDismiss }: {
           <p>With Plus or Pro, video titles, links and playback progress are saved to your AniDachi account and appear here. You can turn this off in <button type="button" className="popup-welcome-settings" onClick={onOpenSettings}>Settings</button>.</p>
         </div>
       </div>
-      <button type="button" className="popup-welcome-done" onClick={() => { setVisible(false); onDismiss?.(); }}>Got it</button>
+      <button type="button" className="popup-welcome-done" onClick={acknowledge}>Got it</button>
     </section>
   );
 }
