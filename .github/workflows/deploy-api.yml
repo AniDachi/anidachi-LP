@@ -2,14 +2,19 @@ name: Deploy API
 
 on:
   workflow_dispatch:
+    inputs:
+      production_ready_sha:
+        description: "Full main commit SHA whose production schema and compatible Web were verified (production only)"
+        type: string
+        required: false
   push:
     branches:
       - staging
-      - main
     paths:
       - "apps/api/**"
       - "packages/protocol/**"
       - "pnpm-lock.yaml"
+      - "scripts/worker-deploy-gate*"
       - ".github/workflows/deploy-api.yml"
 
 permissions:
@@ -17,31 +22,31 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   deploy:
-    if: github.ref_name == 'staging' || github.ref_name == 'main'
+    if: github.ref == 'refs/heads/staging' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     env:
       DEPLOY_ENV: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
     steps:
-      - name: Validate release ref
-        run: |
-          if [[ "$GITHUB_REF_NAME" != "staging" && "$GITHUB_REF_NAME" != "main" ]]; then
-            echo "This workflow may only run from staging or main. Current ref: $GITHUB_REF_NAME"
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
+
+      - name: Validate deployment authorization
+        env:
+          CONFIRMED_PRODUCTION_SHA: ${{ inputs.production_ready_sha }}
+        run: node scripts/worker-deploy-gate.mjs
 
       - name: Enable pnpm
         run: |
