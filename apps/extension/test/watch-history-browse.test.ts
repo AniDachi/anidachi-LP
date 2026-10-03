@@ -1043,5 +1043,5 @@ describe("optional catalog browse command", () => {
 // Consent transitions and fail-closed behavior have separate integration tests.
 vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
-  hasHistoryRecordingConsent: async () => true,
+  isHistoryRecordingEnabled: async () => true,
 }));

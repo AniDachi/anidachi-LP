@@ -6,7 +6,7 @@ import catalog from "./fixtures/crunchyroll/catalog-complete-multiseason.json";
 import { createWatchHistoryCatalogCoordinator, createWatchHistoryPageResolver } from "../src/watch-history-catalog";
 import { createWatchHistoryClient } from "../src/watch-history-client";
 import { createWatchHistoryStorage, watchHistoryPartitionKey, type WatchHistoryStorageRoot } from "../src/watch-history-storage";
-import { hasHistoryRecordingConsent } from "../src/history-recording-choice";
+import { isHistoryRecordingEnabled } from "../src/history-recording-choice";
 
 const context = { region: "VN", requestedLocale: "fr-FR", audioLocale: "ja-JP", subtitleLocales: ["en-US"], observedAt: "2026-09-05T00:00:00.000Z" };
 const owner = "00000000-0000-4000-8000-000000000001";
@@ -20,7 +20,7 @@ function ack(revision: number) {
 describe("catalog background begin/commit ownership", () => {
   it("does not request provider metadata when the page closes during its consent lookup", async () => {
     let release!: (allowed: boolean) => void;
-    vi.mocked(hasHistoryRecordingConsent).mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
+    vi.mocked(isHistoryRecordingEnabled).mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
     const command = vi.fn();
     const resolver = createWatchHistoryPageResolver({ pageId: "closing-page", command,
       send: async () => ({ ok: true, data: { accessLease: paidHistoryLease(owner) } }) });
@@ -337,5 +337,5 @@ describe("Crunchyroll bounded history traversal", () => {
 // Consent transitions and fail-closed behavior have separate integration tests.
 vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
-  hasHistoryRecordingConsent: vi.fn(async () => true),
+  isHistoryRecordingEnabled: vi.fn(async () => true),
 }));

@@ -1,12 +1,14 @@
 import { readFileSync } from "node:fs";
 import type { FriendListItem, RoomInvite } from "@anidachi/protocol";
+import { RoomMediaSnapshotSchema } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mountOverlay, type OverlayRenderer } from "../entrypoints/content";
+import { mountOverlay, startContentLifecycle, type OverlayRenderer } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
+import * as hostingAccessClient from "../src/hosting-access-client";
 import { P2PMediaController } from "../src/p2p-media";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
 import {
@@ -807,6 +809,217 @@ describe("privileged overlay wiring", () => {
 			"room-exit",
 		);
 		await unmount(view.root);
+	});
+
+	it.each([
+		"Enter",
+		"button",
+		"Escape",
+		"empty Enter",
+		"whitespace Enter",
+		"close button",
+		"close button keyboard",
+		"Alt+C",
+	])("keeps the player quiet after closing the composer with %s, then releases on real player intent", async (method) => {
+		const sendMessage = vi.fn(
+			async (message: { type?: string; command?: string }) => {
+				if (message.type === "ANIDACHI_AUTH")
+					return { ok: true, tokens: sessionFor("user-a") };
+				if (
+					message.type === "ANIDACHI_ROOM_HTTP" &&
+					message.command === "create-room"
+				) {
+					return {
+						ok: true,
+						room: {
+							roomId: "room-a",
+							roomToken: "room-token-a",
+							shareableLink: "http://localhost:3003/room/room-a",
+							privilegedRoomAuthority: roomAuthority(),
+							roomSession: confirmedRoomSession(),
+						},
+					};
+				}
+				if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+					const response = roomSessionStorageResponse(message.command);
+					if (response) return response;
+				}
+				throw new Error(
+					`Unexpected runtime message ${message.type}:${message.command}`,
+				);
+			},
+		);
+		installOverlayRuntime(sendMessage);
+		vi.spyOn(RoomClient.prototype, "connect").mockImplementation((options) => {
+			options.onStatus("connected");
+			options.onEvent({
+				type: "ROOM_SNAPSHOT",
+				roomId: "room-a",
+				roomGeneration: 1,
+				sourceGeneration: 1,
+				serverSeq: 1,
+				participants: [hostParticipant()],
+			});
+		});
+		const keyboardRuntime = startContentLifecycle({
+			detect: () => ({ status: "none" }),
+			ensureStyles: () => {},
+			startProviderStudy: () => null,
+		});
+		const view = await renderOverlayInClosedShadow();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			await flushMountedWork();
+			await act(async () => {
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						bubbles: true,
+						cancelable: true,
+						code: "Enter",
+						composed: true,
+						key: "Enter",
+					}),
+				);
+				await Promise.resolve();
+			});
+
+			const send = vi
+				.spyOn(RoomClient.prototype, "send")
+				.mockReturnValue("sent");
+			await click(button(view.container, "Choose emoji"));
+			const emoji = [
+				...view.container.querySelectorAll<HTMLButtonElement>(
+					".message-composer-emoji-popover button",
+				),
+			].find((el) => el.textContent === "🎬")!;
+			if (!method.includes("Enter") || method === "Enter") await click(emoji);
+			const input = view.container.querySelector<HTMLInputElement>(
+				'input[aria-label="Anidachi message"]',
+			)!;
+			if (method === "whitespace Enter") {
+				await act(async () => {
+					Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "   ");
+					input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+				});
+			}
+			if (method !== "Escape") {
+				Object.defineProperty(document, "fullscreenElement", { configurable: true, value: document.body });
+			}
+			await act(async () => {
+				input.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "Enter",
+						code: "Enter",
+						isComposing: true,
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				);
+				input.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "Enter",
+						code: "Enter",
+						repeat: true,
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				);
+			});
+			expect(send).not.toHaveBeenCalled();
+			expect(view.container.querySelector(".message-composer")).not.toBeNull();
+			await act(async () => {
+				input.focus();
+				if (method === "button") button(view.container, "Send message").click();
+				else if (method === "close button") button(view.container, "Close message").click();
+				else {
+					const target = method === "close button keyboard" ? button(view.container, "Close message") : input;
+					target.focus();
+					expect((target.getRootNode() as ShadowRoot).activeElement).toBe(target);
+					target.dispatchEvent(
+						new KeyboardEvent("keydown", {
+							key: method === "Alt+C" ? "c" : method === "Escape" ? "Escape" : "Enter",
+							code: method === "Alt+C" ? "KeyC" : method === "Escape" ? "Escape" : "Enter",
+							altKey: method === "Alt+C",
+							bubbles: true,
+							composed: true,
+							cancelable: true,
+						}),
+					);
+				}
+			});
+			await act(async () => {
+				window.dispatchEvent(new KeyboardEvent("keyup", {
+					key: method === "Alt+C" ? "c" : method === "Escape" ? "Escape" : "Enter",
+					code: method === "Alt+C" ? "KeyC" : method === "Escape" ? "Escape" : "Enter",
+					bubbles: true, cancelable: true,
+				}));
+			});
+			expect(view.container.querySelector(".message-composer")).toBeNull();
+			expect(
+				view.container.querySelector(".message-composer-shield"),
+			).toBeNull();
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			if (method === "Enter" || method === "button") expect(send).toHaveBeenCalledOnce();
+			else expect(send).not.toHaveBeenCalled();
+			await act(async () => {
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "v",
+						code: "KeyV",
+						repeat: true,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+				window.dispatchEvent(
+					new KeyboardEvent("keydown", {
+						key: "1",
+						code: "Digit1",
+						repeat: true,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+			});
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			const host = (view.container.getRootNode() as ShadowRoot).host;
+			const player = host.parentElement!;
+			// Focus loss and hover retargeting after removal are not a new user gesture.
+			await act(async () => {
+				player.dispatchEvent(new Event("focusin", { bubbles: true }));
+				player.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+			});
+			expect(document.documentElement.dataset.anidachiComposerOpen).toBe(
+				"quiet",
+			);
+			const native = vi.fn();
+			player.addEventListener("pointerdown", native);
+			await act(async () =>
+				player.dispatchEvent(
+					new PointerEvent("pointerdown", {
+						bubbles: true,
+						composed: true,
+						cancelable: true,
+					}),
+				),
+			);
+			expect(
+				document.documentElement.dataset.anidachiComposerOpen,
+			).toBeUndefined();
+			expect(native).toHaveBeenCalledOnce();
+		} finally {
+			Reflect.deleteProperty(document, "fullscreenElement");
+			keyboardRuntime.dispose();
+			await unmount(view.root);
+		}
 	});
 
 	it("opens the emoji picker and inserts an emoji inside a closed overlay", async () => {
@@ -1897,6 +2110,399 @@ describe("privileged overlay wiring", () => {
       expect(view.container.querySelector(".free-quota-notice")).toBeNull();
     } finally { await unmount(view.root); }
   });
+  it.each(["host", "viewer"] as const)("retires stale Free room quota for a post-T %s through 31 minutes and UTC renewal", async role => {
+    installActiveHostRoomRuntime();
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockResolvedValue({
+      entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T23:59:50Z",
+      hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+    });
+    const original = chrome.runtime.sendMessage;
+    const send = vi.fn(async (message: any) => {
+      const result = await original(message);
+      if (message.command === "create-room") return { ...result, room: { ...result.room, quota: { remainingSeconds: 1800, resetAt: "2026-09-29T00:00:00Z" } } };
+      return result;
+    });
+    chrome.runtime.sendMessage = send as typeof chrome.runtime.sendMessage;
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => {
+      connection = next; next.onStatus("connected");
+      next.onEvent({ type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:1,
+        participants:[{...hostParticipant(),role},{...guestParticipant(),role:role === "host" ? "viewer" : "host",connected:true}] });
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      // The accepted room is a stale pre-cutover fixture, not permission to host after T.
+      vi.useFakeTimers({toFake:["setInterval","clearInterval","Date"]});
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      expect(view.container.querySelector(".quota-note")).toBeNull();
+      const close = vi.spyOn(RoomClient.prototype,"close"); close.mockClear();
+      await act(async () => vi.advanceTimersByTimeAsync(31 * 60_000));
+      await act(async () => connection.onEvent({ type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:2,
+        participants:[{...hostParticipant(),role,participantSessionId:connection.participantSessionId},{...guestParticipant(),role:role === "host" ? "viewer" : "host"}],
+        roomUsage:{day:"2026-09-29",seconds:0}, quota:{day:"2026-09-29",remainingSeconds:1800,metering:true,measuredAt:Date.parse("2026-09-29T00:00:01Z")} }));
+      expect(view.container.querySelector(".quota-note")).toBeNull();
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      expect(send.mock.calls.some(([message]) => message.type === "ANIDACHI_ROOM_QUOTA_STATUS" || message.action === "quota-end-room")).toBe(false);
+      expect(close).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); await unmount(view.root); }
+  });
+  it("restores a Free guest in a paid host's room, stays beyond 30 minutes/UTC, and reconnects through admission", async () => {
+    installActiveHostRoomRuntime();
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockResolvedValue({
+      entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T23:45:00Z",
+      hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+    });
+    const send = vi.mocked(chrome.runtime.sendMessage);
+    const original = send.getMockImplementation()!;
+    const record = confirmedRoomSession();
+    const capabilities = {
+      mediaProtocolVersion: 3 as const, hostPlanCode: "pro" as const, maxParticipants: 15 as const,
+      maxCameras: 4 as const, maxMediaSeats: 8 as const, capabilityRevision: 1,
+      capabilitiesValidUntil: "2026-09-30T00:00:00Z",
+    };
+    send.mockImplementation(async (...args: any[]) => {
+      const message = args[0];
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        if (message.command === "legacy-prefix") return { ok: true, record: null, legacyPrefix: null };
+        if (message.command === "recovery-scope") return { ok: true, record: null, recoveryScope: null };
+        if (message.command === "migrate" || message.command === "load") return { ok: true, record };
+      }
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "connect-room") return {
+        ok: true, connection: { roomToken: "paid-host-room-token", roomSession: record, capabilities, quota: null,
+          privilegedRoomAuthority: { ...roomAuthority(), role: "viewer" } },
+      };
+      return (original as any)(...args);
+    });
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => {
+      connection = next;
+      next.onStatus("connected");
+      next.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+        participants: [
+          { ...hostParticipant(), role: "viewer", participantSessionId: next.participantSessionId, connected: true },
+          { ...guestParticipant(), role: "host", participantSessionId: "paid-host-session", connected: true },
+        ],
+      });
+    });
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    vi.setSystemTime(new Date("2026-09-28T23:45:00Z"));
+    const view = await renderOverlay();
+    try {
+      await flushMountedWork();
+      await act(async () => { await vi.waitFor(() => expect(connection).toBeDefined()); });
+      const close = vi.spyOn(RoomClient.prototype, "close");
+      await act(async () => vi.advanceTimersByTimeAsync(31 * 60_000));
+      expect(new Date().toISOString().startsWith("2026-09-29T00:16:")).toBe(true);
+      expect(close).not.toHaveBeenCalled();
+      expect(view.container.querySelector(".quota-note")).toBeNull();
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      const first = connection;
+      await act(async () => first.onStatus("closed"));
+      await act(async () => { await vi.waitFor(() => expect(connection).not.toBe(first), { timeout: 5000 }); });
+      expect(connection.reconnect).toBe(true);
+      expect(connection.participantSessionId).toBe(first.participantSessionId);
+      const messages = send.mock.calls.map(([message]: any) => message);
+      expect(messages.filter(message => message.type === "ANIDACHI_ROOM_HTTP" && message.command === "connect-room")).toHaveLength(2);
+      expect(messages.some(message => message.command === "create-room" || message.type === "ANIDACHI_ROOM_QUOTA_STATUS" || message.action === "quota-end-room")).toBe(false);
+      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+    } finally { vi.useRealTimers(); await unmount(view.root); }
+  });
+
+  it.each([
+    { status: 403, code: "HOST_SUBSCRIPTION_REQUIRED", text: "This room needs a host with Plus or Pro." },
+    { status: 404, code: "ROOM_ENDED", text: "This watch room is no longer available." },
+    { status: 426, code: "ROOM_UPDATE_REQUIRED", text: "Update Anidachi to join this room." },
+  ])("retires a restored room after $code without reconnecting or offering the guest a subscription", async denial => {
+    installActiveHostRoomRuntime();
+    let record: RoomSessionRecord | null = confirmedRoomSession();
+    const send = vi.mocked(chrome.runtime.sendMessage);
+    const original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      const message = args[0];
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        if (message.command === "legacy-prefix") return { ok: true, record: null, legacyPrefix: null };
+        if (message.command === "recovery-scope") return { ok: true, record: null, recoveryScope: null };
+        if (message.command === "migrate" || message.command === "load") return { ok: true, record };
+        if (message.command === "clear") { record = null; return { ok: true, record }; }
+      }
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "connect-room") return {
+        ok: false, ...denial, error: "Server admission refused",
+      };
+      return (original as any)(...args);
+    });
+    const view = await renderOverlay();
+    try {
+      await act(async () => { await vi.waitFor(() => expect(record).toBeNull()); });
+      expect(view.container.textContent?.includes(denial.text)).toBe(true);
+      expect(location.hash.includes("anidachiRoom")).toBe(false);
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] });
+      await act(async () => vi.advanceTimersByTimeAsync(120_000));
+      const messages = send.mock.calls.map(([message]: any) => message);
+      expect(messages.filter(message => message.command === "connect-room")).toHaveLength(1);
+      expect(messages.some(message => message.command === "discard-prepared")).toBe(true);
+      expect(messages.some(message => message.command === "create-room")).toBe(false);
+    } finally { vi.useRealTimers(); await unmount(view.root); }
+  });
+
+  it.each([
+    { cutover: true, text: "This Free room closed because creating rooms now requires Plus or Pro." },
+    { cutover: false, text: "This room closed because the host's room access could not be renewed." },
+  ])("explains server terminal expiry without quota, automatic actions or retries (cutover=$cutover)", async ({cutover,text}) => {
+    installActiveHostRoomRuntime();
+    // The personal plan does not identify the frozen room's closure cause.
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockResolvedValue({
+      entitlementsVersion: 1, ownerUserId: "user-a", planCode: "pro", serverTime: "2026-09-28T01:00:00Z",
+      hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: true, trialEligibility: "used", trialEndsAt: null },
+    });
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    const connect = vi.mocked(RoomClient.prototype.connect), original = connect.getMockImplementation()!;
+    connect.mockImplementation(function(this: RoomClient, options) { connection = options; original.call(this,options); });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      await click(button(view.container,"Create room")); await flushRoomActionWork();
+      const close = vi.spyOn(RoomClient.prototype,"close");
+      await act(async () => connection.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"capability_expired",...(cutover?{hostingCutover:true as const}:{})}));
+      expect(view.container.textContent).toContain(text);
+      expect(view.container.textContent).toContain("You can still join rooms for free.");
+      expect(close).toHaveBeenCalled();
+      expect(location.hash.includes("anidachiRoom")).toBe(false);
+      expect(view.container.querySelector('.hosting-paywall,.quota-note,.free-quota-notice')).toBeNull();
+      await act(async () => window.dispatchEvent(new Event("focus")));
+      expect(view.container.textContent).toContain(text);
+      vi.useFakeTimers({toFake:["setTimeout","clearTimeout","setInterval","clearInterval","Date"]});
+      await act(async () => vi.advanceTimersByTimeAsync(360_000));
+      const messages = vi.mocked(chrome.runtime.sendMessage).mock.calls.map(([message]:any)=>message);
+      expect(messages.filter(message=>message.command==="create-room")).toHaveLength(1);
+      expect(messages.filter(message=>message.command==="connect-room")).toHaveLength(0);
+      expect(messages.some(message=>message.command==="clear")).toBe(true);
+      expect(connect).toHaveBeenCalledOnce();
+    } finally {vi.useRealTimers(); await unmount(view.root);}
+  });
+
+  it.each([2,3] as const)("surfaces the original closing deadline once on v%s without locally closing the room", async version => {
+    const runtime = installRoomDefaultsRuntime(version);
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      await click(button(view.container,"Create room"));
+      await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+      await click(button(view.container,"Close Anidachi controls"));
+      const close = vi.spyOn(RoomClient.prototype,"close");
+      const closingAt = new Date(Date.now()+300_000).toISOString();
+      await runtime.mediaSnapshot({closingAt});
+      expect(view.container.querySelector('[aria-label="Anidachi controls"]')).not.toBeNull();
+      expect(view.container.textContent).toContain("Room access could not be renewed.");
+      expect(view.container.querySelector('time')?.getAttribute('dateTime')).toBe(new Date(closingAt).toISOString());
+      expect(close).not.toHaveBeenCalled();
+      await click(button(view.container,"Close Anidachi controls"));
+      await runtime.mediaSnapshot({closingAt});
+      expect(view.container.querySelector('[aria-label="Anidachi controls"]')).toBeNull();
+      vi.useFakeTimers({toFake:["setTimeout","clearTimeout","setInterval","clearInterval","Date"]});
+      await act(async () => vi.advanceTimersByTimeAsync(360_000));
+      expect(close).not.toHaveBeenCalled();
+      await click(button(view.container,"Open Anidachi controls"));
+      expect(view.container.querySelector('time')?.getAttribute('dateTime')).toBe(new Date(closingAt).toISOString());
+      expect(view.container.querySelector('.hosting-paywall,.free-quota-notice')).toBeNull();
+    } finally {vi.useRealTimers(); await unmount(view.root);}
+  });
+
+  it("opens the plan offer from the ordinary create button without creating or connecting a room", async () => {
+    installActiveHostRoomRuntime();
+    vi.spyOn(hostingAccessClient, "requestHostingAccess").mockResolvedValue({
+      entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T01:00:00Z",
+      hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+    });
+    const original = chrome.runtime.sendMessage;
+    const create = vi.fn();
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") {
+        create(); return { ok: false, code: "HOST_SUBSCRIPTION_REQUIRED", error: "Choose Plus or Pro to host", status: 403 };
+      }
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      expect(button(view.container, "Create room").disabled).toBe(false);
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      expect(view.container.querySelector('[role="dialog"]')?.textContent).toContain("Join friends’ rooms for free");
+      expect(view.container.textContent).toContain("3-day free trial");
+      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-paywall a')?.href).toBe("http://localhost:3003/pricing");
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+      await click(button(view.container, "Close plan offer"));
+      expect(view.container.querySelector('.hosting-paywall')).toBeNull();
+      expect(create).toHaveBeenCalledTimes(1);
+    } finally { await unmount(view.root); }
+  });
+  it("keeps the account badge and offer on the server's effective plan across subscription changes", async () => {
+    installActiveHostRoomRuntime(); // The auth profile deliberately remains Free.
+    const request = vi.mocked(hostingAccessClient.requestHostingAccess);
+    const base: hostingAccessClient.HostingAccountAccess = {
+      entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T01:00:00Z",
+      hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+    };
+    request.mockResolvedValue(base);
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => args[0].command === "create-room"
+      ? { ok: false, status: 403, code: "HOST_SUBSCRIPTION_REQUIRED", error: "Choose a plan" }
+      : (original as any)(...args));
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      // These are the effective server outputs, not client-side billing decisions.
+      for (const state of [
+        { plan: "plus", time: "2026-09-28T02:00:00Z" }, // trial starts
+        { plan: "pro", time: "2026-09-29T00:00:00Z" }, // plan change, same trial end
+        { plan: "pro", time: "2026-09-30T00:00:00Z" }, // cancellation preserves access
+        { plan: "free", time: "2026-10-01T02:00:00Z" }, // canceled trial expires
+        { plan: "pro", time: "2026-10-01T02:30:00Z" }, // server-approved payment pending
+        { plan: "free", time: "2026-10-01T03:00:00Z" }, // failure/action required
+        { plan: "pro", time: "2026-10-01T05:00:00Z" }, // confirmed late payment
+      ] as const) {
+        const pending = deferred<hostingAccessClient.HostingAccountAccess>();
+        request.mockReturnValueOnce(pending.promise);
+        await act(async () => window.dispatchEvent(new Event("focus")));
+        expect(view.container.querySelector(".plan-badge")).toBeNull();
+        expect(view.container.textContent).not.toContain("Your account can create rooms");
+        await act(async () => pending.resolve({ ...base, planCode: state.plan, serverTime: state.time,
+          hosting: { ...base.hosting!, canHost: state.plan !== "free", trialEligibility: "used", trialEndsAt: "2026-10-01T02:00:00Z" } }));
+        expect(view.container.querySelector(".plan-badge")?.textContent?.toLowerCase()).toBe(state.plan);
+        expect(view.container.textContent?.includes("Your account can create rooms")).toBe(state.plan !== "free");
+        expect(view.container.textContent).not.toContain("3-day free trial");
+      }
+      request.mockRejectedValueOnce(new Error("offline"));
+      await act(async () => window.dispatchEvent(new Event("focus")));
+      expect(view.container.querySelector(".plan-badge")).toBeNull();
+      expect(view.container.textContent).toContain("Could not check your current plan");
+      expect(send.mock.calls.filter(([message]: any) => message.command === "create-room")).toHaveLength(1);
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+  });
+
+  it("clears the hosting offer when the active account changes", async () => {
+    let currentSession = sessionFor("user-a");
+    installActiveHostRoomRuntime({ getSession: () => currentSession });
+    const lookup = deferred<hostingAccessClient.HostingAccountAccess>();
+    vi.spyOn(hostingAccessClient, "requestHostingAccess").mockReturnValue(lookup.promise);
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return {
+        ok: false, code: "HOST_SUBSCRIPTION_REQUIRED", error: "Choose a plan", status: 403,
+      };
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      expect(view.container.querySelector('.hosting-paywall')).not.toBeNull();
+      currentSession = sessionFor("user-b");
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession));
+      await flushMountedWork();
+      await act(async () => lookup.resolve({
+        entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T01:00:00Z",
+        hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+      }));
+      expect(view.container.querySelector('.hosting-paywall')).toBeNull();
+      expect(view.container.textContent).not.toContain("3-day free trial");
+    } finally { await unmount(view.root); }
+  });
+  it("does not turn an unavailable room service into a subscription offer", async () => {
+    installActiveHostRoomRuntime();
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message: any) => {
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room") return {
+        ok: false, code: "ROOM_AUTHORITY_UNAVAILABLE", error: "Room service is temporarily unavailable", status: 503,
+      };
+      return original(message);
+    }) as typeof chrome.runtime.sendMessage;
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await flushRoomActionWork();
+      expect(view.container.querySelector('.hosting-paywall')).toBeNull();
+      expect(view.container.textContent).toContain("temporarily unavailable");
+    } finally { await unmount(view.root); }
+  });
+  it("retires the old hosting offer read after same-owner login with an unchanged access token", async () => {
+    let currentSession = sessionFor("user-a");
+    installActiveHostRoomRuntime({ getSession: () => currentSession });
+    const old = deferred<hostingAccessClient.HostingAccountAccess>();
+    const request = vi.mocked(hostingAccessClient.requestHostingAccess);
+    request.mockImplementationOnce(async ownerUserId => ({ entitlementsVersion:1, ownerUserId, planCode:"free",serverTime:"2026-09-28T00:00:00Z" }))
+      .mockReturnValueOnce(old.promise).mockRejectedValue(new Error("Fresh session unavailable"));
+    const original = chrome.runtime.sendMessage;
+    chrome.runtime.sendMessage = vi.fn(async (message:any) => message.type === "ANIDACHI_ROOM_HTTP" && message.command === "create-room"
+      ? { ok:false,status:403,code:"HOST_SUBSCRIPTION_REQUIRED",error:"Choose a plan" } : original(message)) as typeof chrome.runtime.sendMessage;
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      await click(button(view.container,"Create room")); await flushRoomActionWork();
+      currentSession={...currentSession,refreshToken:"same-owner-new-login"};
+      await act(async()=>extensionStorage.storage.setItem(AUTH_TOKENS_KEY,currentSession)); await flushMountedWork();
+      await act(async()=>old.resolve({entitlementsVersion:1,ownerUserId:"user-a",planCode:"free",serverTime:"2026-09-28T01:00:00Z",
+        hosting:{hostingPolicyVersion:2,hostingActivationAt:"2026-09-28T00:00:00Z",canHost:false,trialEligibility:"eligible",trialEndsAt:null}}));
+      expect(view.container.querySelector('.hosting-paywall')?.textContent).not.toContain("3-day free trial");
+      expect(view.container.querySelector('.hosting-paywall')?.textContent).toContain("Could not check your current plan");
+    } finally {await unmount(view.root);}
+  });
+  it.each(["HOST_SUBSCRIPTION_REQUIRED", "QUOTA_EXHAUSTED", "ROOM_AUTHORITY_UNAVAILABLE"])(
+    "ignores a pending %s create rejection from the previous login and permits an explicit retry",
+    async code => {
+      let currentSession = sessionFor("user-a");
+      installActiveHostRoomRuntime({ getSession: () => currentSession });
+      const pending = deferred<unknown>();
+      const send = vi.mocked(chrome.runtime.sendMessage);
+      const original = send.getMockImplementation()!;
+      let creates = 0;
+      send.mockImplementation(async (...args: any[]) => {
+        if (args[0]?.command === "create-room" && ++creates === 1) return pending.promise;
+        return (original as any)(...args);
+      });
+      const view = await renderOverlay();
+      const released = vi.fn();
+      const lockRequest = vi.fn(async (_name, _options, hold) => {
+        await hold({});
+        released();
+      });
+      Object.defineProperty(navigator, "locks", { configurable: true, value: { request: lockRequest } });
+      try {
+        await click(button(view.container, "Open Anidachi controls"));
+        await click(button(view.container, "Create room"));
+        await flushRoomActionWork();
+        expect(creates).toBe(1);
+        // An access token can be identical across two logins; it is not a login identity.
+        currentSession = { ...currentSession, refreshToken: "new-login-same-owner" };
+        await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession));
+        await flushMountedWork();
+        await act(async () => pending.resolve({
+          ok: false, code, status: code === "ROOM_AUTHORITY_UNAVAILABLE" ? 503 : 403,
+          error: "Previous login refusal", resetAt: "2026-09-29T00:00:00Z",
+        }));
+        await flushMountedWork();
+        expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+        expect(view.container.querySelector(".free-quota-notice")).toBeNull();
+        expect(view.container.textContent).not.toContain("Previous login refusal");
+        expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+        expect(send.mock.calls.some(([message]: any) => message.command === "discard-prepared")).toBe(true);
+        expect(released).toHaveBeenCalledOnce();
+        await click(button(view.container, "Create room"));
+        await flushRoomActionWork();
+        expect(creates).toBe(2);
+        expect(lockRequest).toHaveBeenCalledTimes(2);
+        expect(RoomClient.prototype.connect).toHaveBeenCalledOnce();
+      } finally { await unmount(view.root); }
+    },
+  );
+
   it("shows the quota recovery card when creating a room is denied by the server", async () => {
     installActiveHostRoomRuntime();
     const original = chrome.runtime.sendMessage;
@@ -2019,7 +2625,11 @@ describe("privileged overlay wiring", () => {
     } finally {await unmount(view.root);}
   });
 
-  it("wires v2 explicit mic intent, revocation and terminal teardown through the actual overlay", async () => {
+  it.each([
+    { reason: "host_ended" },
+    { reason: "capability_expired" },
+    { reason: "capability_expired", hostingCutover: true },
+  ] as const)("wires v2 explicit mic intent, revocation and terminal teardown through the actual overlay (%j)", async terminal => {
     installActiveHostRoomRuntime();
     const publication = vi.spyOn(P2PMediaController.prototype, "setMicrophonePublishing").mockResolvedValue();
     const authority = vi.spyOn(P2PMediaController.prototype, "setCaptureAuthority");
@@ -2070,7 +2680,7 @@ describe("privileged overlay wiring", () => {
         expect(client.media!.wants(kind)).toBe(false);
       }
       disconnect.mockClear();
-      await act(async()=>{options.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"host_ended"});});
+      await act(async()=>{options.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),...terminal});});
       expect(disconnect).toHaveBeenCalled();
     } finally { await unmount(view.root); }
   });
@@ -3469,6 +4079,10 @@ function installActiveHostRoomRuntime(
 		getSession?: () => ReturnType<typeof sessionFor> | null;
 	} = {},
 ): void {
+  vi.spyOn(hostingAccessClient, "requestHostingAccess").mockImplementation(async ownerUserId => ({
+    entitlementsVersion: 1, ownerUserId, planCode: "free", serverTime: "2026-09-15T12:00:00Z",
+    hosting: { hostingPolicyVersion: 1, hostingActivationAt: null, canHost: true, trialEligibility: "unavailable", trialEndsAt: null },
+  }));
 	const sendMessage = vi.fn(
 		async (message: {
 			type?: string;
@@ -3604,15 +4218,15 @@ function installRoomDefaultsRuntime(version: 2 | 3, defaults: Partial<RoomSessio
 			await emit({type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
 				participants: [{...hostParticipant(), participantSessionId: options.participantSessionId, connected: true}]});
 		},
-		async mediaSnapshot({seat = true, seatRevision = 0, remoteCameras = 0, epoch = 0} = {}) {
+		async mediaSnapshot({seat = true, seatRevision = 0, remoteCameras = 0, epoch = 0, closingAt = null as string | null} = {}) {
 			const previous = snapshot?.participants[0];
 			const local = {participantSessionId: options.participantSessionId!, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0,
 				...previous,
 				...(!seat || (previous && previous.cameraRevocationEpoch !== epoch) ? {cameraGranted: false, microphoneGranted: false} : {}),
 				cameraRevocationEpoch: epoch, microphoneRevocationEpoch: epoch,
 				...(version === 3 ? {mediaSeatGranted: seat, seatRevision} : {})};
-			snapshot = {type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: ++sequence, closingAt: null, capabilities,
-				participants: [local, ...Array.from({length: remoteCameras}, (_, index) => ({...local, participantSessionId: `remote-${index}`, cameraGranted: true}))]} as import("@anidachi/protocol").RoomMediaSnapshot;
+			snapshot = RoomMediaSnapshotSchema.parse({type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: ++sequence, closingAt, capabilities,
+				participants: [local, ...Array.from({length: remoteCameras}, (_, index) => ({...local, participantSessionId: `remote-${index}`, cameraGranted: true}))]});
 			await emit(snapshot);
 		},
 		async reject(kind: "camera" | "microphone") {

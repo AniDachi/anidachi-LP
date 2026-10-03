@@ -71,6 +71,7 @@ export function createAccountAccessHandlers(
 						planCode: result.policy.planCode,
 						entitlements: getPlanEntitlements(result.policy.planCode),
 						policy: result.policy,
+						...(result.hosting ? { hosting: result.hosting } : {}),
 					}
 				: result.history;
 			return NextResponse.json(body, { headers: HISTORY_PRIVATE_HEADERS });

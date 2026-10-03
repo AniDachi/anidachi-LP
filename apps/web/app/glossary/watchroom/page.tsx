@@ -5,7 +5,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 export const metadata: Metadata = {
   title: "What Is a Watchroom? — Anime Watch Party Glossary (2026)",
   description:
-    "A watchroom is a shared virtual space where friends watch the same anime together, either in real-time or asynchronously. Learn how watchrooms work in AniDachi.",
+    "A watchroom is a shared virtual space for watching together. Learn how AniDachi live rooms combine synchronized playback, chat, reactions, and calls.",
   alternates: { canonical: "/glossary/watchroom" },
 };
 
@@ -13,17 +13,17 @@ const faq = [
   {
     question: "What is a watchroom?",
     answer:
-      "A watchroom is a shared virtual room where a group of friends watches the same anime together. It tracks which episodes each person has watched, syncs playback for live viewing, and provides a chat space for reactions and discussions.",
+      "A watchroom is a shared virtual room for watching together. In AniDachi, it synchronizes each person's video and provides live chat, reactions, and voice or video calls.",
   },
   {
     question: "How do I create a watchroom?",
     answer:
-      "In AniDachi, navigate to any anime on Crunchyroll, click 'Detect Anime' in the extension, then click 'Create Watchroom.' Share the generated invite link with friends.",
+      "Install AniDachi in desktop Chrome and sign in. With Plus or Pro, including during a trial, open a Crunchyroll episode or full YouTube watch page and click 'Create room' in the extension. Share the invite with friends, who join for free with their own access to the video.",
   },
   {
     question: "Can a watchroom work asynchronously?",
     answer:
-      "Yes. AniDachi watchrooms support both live sync and async watching. Each person watches at their own pace, marks episodes, and sees friends' reactions when they catch up.",
+      "AniDachi watchrooms currently work live. Built-in async catch-up, shared group progress, and replayed reactions are coming soon. For now, friends who miss a session can watch independently and discuss it with the group afterward.",
   },
 ];
 
@@ -47,7 +47,7 @@ export default function WatchroomGlossaryPage() {
       description="Definition and explanation of anime watchrooms."
       url="/glossary/watchroom"
       datePublished="2026-04-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -63,11 +63,10 @@ export default function WatchroomGlossaryPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           A watchroom is a shared virtual space where friends watch the same
-          anime together — either at the same time with synced playback, or
-          asynchronously at their own pace.
+          video together with synced playback and live conversation.
         </strong>{" "}
-        Think of it as a group chat that also tracks what everyone has watched
-        and lets you leave reactions on specific episodes.
+        Everyone opens the video on their own account; AniDachi keeps the
+        players in sync and adds chat, reactions, and calls.
       </p>
 
       <h2
@@ -77,11 +76,12 @@ export default function WatchroomGlossaryPage() {
         How Watchrooms Work in AniDachi
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        When you create a watchroom in AniDachi, it&apos;s linked to a specific
-        anime series. The watchroom tracks each member&apos;s progress,
-        provides episode-level chat and reactions, and optionally syncs
-        playback for live viewing sessions. Everyone sees the same episode list
-        and can mark episodes as watched independently.
+        A Plus, Pro or trial host creates the room from a Crunchyroll episode
+        or full YouTube watch page. Friends join for free using the extension
+        and their own access to the video. Personal history is separate:
+        recording it requires each viewer&apos;s own Plus or Pro access and
+        permission in the extension. Shared group progress and async catch-up
+        are coming soon.
       </p>
 
       <h2
@@ -92,9 +92,9 @@ export default function WatchroomGlossaryPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         A &quot;watch party&quot; typically implies everyone watching at the
-        same time. A watchroom is more flexible — it persists over days or weeks
-        and supports both synchronous and asynchronous watching. It&apos;s
-        designed for ongoing series, not just one-off sessions.
+        same time. A watchroom is the online space used for that session.
+        AniDachi rooms are live; a persistent room with async discussion is
+        not available today.
       </p>
 
       <h2

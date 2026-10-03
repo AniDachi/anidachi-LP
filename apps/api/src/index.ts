@@ -7,7 +7,7 @@ import {
 	nextRoomPolicyAlarm,
 	type RoomPolicyState,
 } from "./room-capability";
-import { notifyWebRoomPolicy } from "./internal-web-client";
+import { checkWebRoomAdmission, notifyWebRoomPolicy } from "./internal-web-client";
 import {
 	roomUsageBuckets,
 	acknowledgeRoomUsageDay,
@@ -48,6 +48,7 @@ import {
 } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
+import { ROOM_TERMINAL_STORAGE_KEY, ROOM_TERMINAL_RETRY_MS, parseRoomTerminalIntent, type RoomTerminalIntent } from "./room-terminal";
 import {
   notifyWebParticipantDeparted,
   notifyWebRoomEnded,
@@ -518,6 +519,8 @@ function roomEndedEvent(
     roomId,
     endedAt: tombstone.endedAt,
     reason: tombstone.reason,
+    ...(tombstone.reason === "capability_expired" && tombstone.cutover && tombstone.endedAt >= tombstone.cutover.closingAt
+      ? { hostingCutover: true as const } : {}),
   };
 }
 
@@ -568,6 +571,8 @@ export class RoomDurableObject {
 	private roomPolicy: RoomPolicyState | null = null;
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
+  private terminalIntent: RoomTerminalIntent | null = null;
+  private terminalIntentDurable = false;
   private roomSourceDeliveryQueue: Promise<void> = Promise.resolve();
   private roomSourceRepairNeeded = false;
   private presenceDelivery: Promise<void> | null = null;
@@ -611,35 +616,49 @@ export class RoomDurableObject {
     // any client behind it must renegotiate instead of waiting for media
     // signals that cannot be replayed.
     this.p2pSignalBuffer.markReplayGapThrough(this.nextP2PServerSeq - 1);
-    if (!this.endedTombstone) {
-      state.blockConcurrencyWhile(async () => {
+    state.setWebSocketAutoResponse();
+    state.blockConcurrencyWhile(async () => {
+      this.terminalIntent = parseRoomTerminalIntent(await state.storage.get(ROOM_TERMINAL_STORAGE_KEY));
+      this.terminalIntentDurable = this.terminalIntent !== null;
+      if (!this.endedTombstone) {
 				this.roomPolicy =
 					(await state.storage.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY)) ??
 					null;
 				if (!!this.room.mediaSnapshot !== !!this.roomPolicy)
 					throw new Error("Missing durable room policy or media state");
-				if (this.roomPolicy) await this.persistRoomPolicyDeadline(Date.now());
+        if (this.terminalIntent?.finalizedAt !== null && this.terminalIntent) {
+          // Recovery after Web ACK/intent commit but before the SQL tombstone.
+          await this.applyTerminalRoomState(endedRoomTombstone(this.terminalIntent, {
+            ...(this.terminalIntent.usage ? { usage: this.terminalIntent.usage } : {}), usageFinalized: true,
+          }));
+        }
+      }
+      if (this.endedTombstone) {
+        await this.applyTerminalRoomState(this.endedTombstone);
+      } else if (this.terminalIntent) {
+        await state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        this.closeTerminalSockets();
+      } else {
         if (await this.ensureCurrentRoomSourcePending()) {
           state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
         }
-      });
-      state.setWebSocketAutoResponse(
+        state.setWebSocketAutoResponse(
 				new WebSocketRequestResponsePair(
 					HIBERNATION_KEEPALIVE_PING,
 					HIBERNATION_KEEPALIVE_PONG,
 				),
       );
-      this.restoreWebSocketsFromAttachments();
-      this.reconcileRoomUsage(Date.now());
-    } else {
-      state.setWebSocketAutoResponse();
-      state.waitUntil(clearStoredRoomLifecycleAndAlarm(state.storage));
-      this.clearTerminalRuntimeState();
-      sendAndCloseEndedRoomSockets(
-        this.state.getWebSockets(),
-        roomEndedEvent(this.room.roomId, this.endedTombstone),
-      );
-    }
+        this.restoreWebSocketsFromAttachments();
+        if (this.roomPolicy) {
+          // Preserve the durable interval and its original deadline until policy
+          // servicing checks overdue exhaustion before UTC rollover. Recovery
+          // also re-arms a missing alarm from the existing durable obligations.
+          await state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        } else {
+          this.reconcileRoomUsage(Date.now());
+        }
+      }
+    });
   }
 
   private get telemetryContext(): RoomTelemetryContext {
@@ -892,15 +911,20 @@ export class RoomDurableObject {
 	}
 
 	private async persistRoomPolicyDeadline(now: number): Promise<void> {
-		if (!this.roomPolicy || this.endedTombstone || this.roomPolicy.endingReason) return;
+		if (!this.roomPolicy || this.endedTombstone || this.terminalIntent || this.roomPolicy.endingReason) return;
 		this.roomPolicy.alarmAt = nextRoomPolicyAlarm(
 			this.roomPolicy,
 			now,
-			roomUsageSummary(this.roomMeter, now),
+			this.roomMeter,
 			this.shouldMeterRoom(),
 		);
 		await this.state.storage.transaction(async (transaction) => {
-			await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy!);
+			const stored = await transaction.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY);
+			// Policy may change in place while awaiting storage. Never use an
+			// object-identity cache, or let background reconciliation revive terminal work.
+			if (!this.roomPolicy || this.endedTombstone || this.terminalIntent || this.roomPolicy.endingReason) return;
+			if (JSON.stringify(stored) !== JSON.stringify(this.roomPolicy))
+				await transaction.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
 			await reconcileStoredRoomAlarm(transaction);
 		});
 	}
@@ -934,7 +958,7 @@ export class RoomDurableObject {
 	}
 	private async serviceRoomPolicy(now: number): Promise<void> {
 		let policy = this.roomPolicy;
-		if (!policy || this.endedTombstone) return;
+		if (!policy || this.endedTombstone || this.terminalIntent) return;
     if (policy.endingReason && policy.closingAt !== null) {
       if (now >= policy.alarmAt) await this.endRoomExclusive({ reason: policy.endingReason, endedAt: policy.closingAt });
       return;
@@ -966,12 +990,11 @@ export class RoomDurableObject {
 				return;
 			}
 		}
-		this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
-		const usage = roomUsageSummary(this.roomMeter, now);
 		this.updateRoomMeter(
       reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now),
       now,
     );
+		const usage = roomUsageSummary(this.roomMeter, now);
 		const leaseExpiry = Date.parse(
 			policy.lease.capabilities.capabilitiesValidUntil,
 		);
@@ -991,6 +1014,10 @@ export class RoomDurableObject {
 		if (policy.closingAt === null && (now >= policy.refreshAt || needsBudget)) {
 			try {
 				// Cumulative usage is persisted locally before the bounded external call.
+				// Ordinary frames retain their durable activeSince anchor; only this
+				// delivery checkpoint materializes elapsed time into the usage buckets.
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now), now);
 				await this.state.storage.sync();
 				const result = await notifyWebRoomPolicy(
 					this.env,
@@ -1332,7 +1359,7 @@ export class RoomDurableObject {
         { status: 410 },
       );
     }
-    if (this.roomEndInProgress) {
+    if (this.roomEndInProgress || this.terminalIntent) {
       return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
     }
     const upgradeHeader = request.headers.get("Upgrade");
@@ -1354,6 +1381,27 @@ export class RoomDurableObject {
     if (!verified) {
       this.track("ws_token_reject");
       return new Response("Invalid room token", { status: 401 });
+    }
+    let authority;
+    try {
+      authority = await checkWebRoomAdmission(this.env, this.room.roomId, verified.sub);
+    } catch {
+      return Response.json({ error: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
+    }
+    // Network I/O can overlap a terminal command. Never mutate room policy or
+    // accept a socket using an answer obtained before that local fence.
+    if (this.roomEndInProgress || this.terminalIntent || this.endedTombstone) {
+      return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
+    }
+    if (!authority.allowed) {
+      if (authority.cutover) {
+        const ended = await this.endRoom({ endedAt: authority.cutover.closingAt, reason: "capability_expired", cutover: authority.cutover });
+        await ended.body?.cancel();
+      }
+      return Response.json({ error: authority.code }, { status: authority.code === "ROOM_ENDED" ? 410 : 403 });
+    }
+    if (authority.roomGeneration !== this.room.roomGeneration) {
+      return Response.json({ error: "ROOM_PROTOCOL_MISMATCH" }, { status: 426 });
     }
 		if (this.room.mediaSnapshot && !verified.mediaLease)
 			return Response.json({ error: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
@@ -1427,7 +1475,7 @@ export class RoomDurableObject {
         { status: 410 },
       );
     }
-    if (this.roomEndInProgress) {
+    if (this.roomEndInProgress || this.terminalIntent || this.endedTombstone) {
       return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
     }
 
@@ -1497,6 +1545,22 @@ export class RoomDurableObject {
     await this.state.storage.transaction(async transaction=>{await transaction.put(ROOM_POLICY_STORAGE_KEY,this.roomPolicy!);await reconcileStoredRoomAlarm(transaction);});
   }
   private async endRoomExclusive(command: EndRoomCommand): Promise<Response> {
+    if (command.cutover) {
+      const current = this.terminalIntent?.cutover;
+      if (command.cutover.roomId !== this.room.roomId || command.cutover.roomGeneration !== (current?.roomGeneration ?? this.room.roomGeneration)
+        || command.cutover.closingAt > Date.now()
+        || (current && (current.revision !== command.cutover.revision || current.closingAt !== command.cutover.closingAt))
+        || (!this.terminalIntent && !this.endedTombstone && this.room.roomCapabilities.hostPlanCode !== "free")) {
+        return Response.json({ error: "ROOM_CUTOVER_CONFLICT" }, { status: 409 });
+      }
+      if (this.terminalIntent && !current) await this.persistTerminalIntent({ ...this.terminalIntent, cutover: command.cutover });
+      if (this.endedTombstone && !this.terminalIntent) return Response.json({ error: "ROOM_TERMINAL_PROOF_UNAVAILABLE" }, { status: 409 });
+    }
+    if (this.terminalIntent?.finalizedAt != null && !this.endedTombstone) {
+      await this.applyTerminalRoomState(endedRoomTombstone(this.terminalIntent, {
+        ...(this.terminalIntent.usage ? { usage: this.terminalIntent.usage } : {}), usageFinalized: true,
+      }));
+    }
     if (this.endedTombstone) {
       await this.applyTerminalRoomState(this.endedTombstone);
       return Response.json({
@@ -1504,72 +1568,80 @@ export class RoomDurableObject {
         alreadyEnded: true,
         webFinalized: this.endedTombstone.usageFinalized === true,
         ...this.endedTombstone,
+        ...this.terminalReceipt(),
       });
     }
 
     this.roomEndInProgress = true;
-    const meteredAt = Date.now();
-    const usage = this.stopRoomUsage(meteredAt);
-    if (this.roomPolicy) {
-      // Live enforcement precedes network I/O; durable finalization retains the ledger until ACK.
-      await this.retryRoomPolicyEnd(command);
-      await this.state.storage.sync();
-      sendAndCloseEndedRoomSockets(this.state.getWebSockets().filter(socket => socket.readyState === WebSocket.OPEN), roomEndedEvent(this.room.roomId, endedRoomTombstone(command)));
-    }
-		if (this.roomPolicy && !(await this.settleRoomUsage())) {
-      await this.retryRoomPolicyEnd(command);
-			this.roomEndInProgress = false;
-			return Response.json(
-				{ error: "ROOM_ACCOUNTING_UNAVAILABLE" },
-				{ status: 503 },
-			);
-		}
-    const sourceDurable = await this.runRoomSourceDeliveryExclusively(true);
-    if (!sourceDurable) {
-			if(this.roomPolicy)await this.retryRoomPolicyEnd(command);else this.reconcileRoomUsage(Date.now());
-      this.roomEndInProgress = false;
-      return Response.json(
-        {
-          error: "ROOM_END_CALLBACK_FAILED",
-          message: "Room finalization callback failed",
-          retryable: true,
-        },
-        { status: 502 },
-      );
-    }
     try {
+      if (!this.terminalIntent) {
+        const fencedAt = Date.now();
+        const usage = this.stopRoomUsage(fencedAt);
+        if (this.roomPolicy) await this.retryRoomPolicyEnd(command);
+        await this.persistTerminalIntent({ ...command, endedAt: command.cutover ? fencedAt : command.endedAt,
+          schemaVersion: 1, fencedAt, finalizedAt: null, nextAttemptAt: fencedAt + ROOM_TERMINAL_RETRY_MS,
+          ...(usage ? { usage } : {}),
+        });
+      } else {
+        await this.persistTerminalIntent({ ...this.terminalIntent, nextAttemptAt: Date.now() + ROOM_TERMINAL_RETRY_MS });
+      }
+      this.closeTerminalSockets();
+      const intent = this.terminalIntent!;
+      if (this.roomPolicy && !(await this.settleRoomUsage())) {
+        return Response.json({ error: "ROOM_ACCOUNTING_UNAVAILABLE", ...this.terminalReceipt() }, { status: 503 });
+      }
+      if (!(await this.runRoomSourceDeliveryExclusively(true))) {
+        return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
+      }
       await notifyWebRoomEnded(this.env, this.room.roomId, {
-        ...command,
-        ...(usage ? { usage } : {}),
+        endedAt: intent.endedAt, reason: intent.reason,
+        ...(intent.usage ? { usage: intent.usage } : {}),
       });
-    } catch {
-			if(this.roomPolicy)await this.retryRoomPolicyEnd(command);else this.reconcileRoomUsage(Date.now());
-      this.roomEndInProgress = false;
-      return Response.json(
-        {
-          error: "ROOM_END_CALLBACK_FAILED",
-          message: "Room finalization callback failed",
-          retryable: true,
-        },
-        { status: 502 },
-      );
-    }
-
-    const tombstone = endedRoomTombstone(command, {
-      ...(usage ? { usage } : {}),
-      usageFinalized: true,
-    });
-    try {
+      await this.persistTerminalIntent({ ...intent, finalizedAt: Date.now() });
+      const tombstone = endedRoomTombstone(intent, { ...(intent.usage ? { usage: intent.usage } : {}), usageFinalized: true });
       await this.applyTerminalRoomState(tombstone);
       return Response.json({
         ok: true,
         alreadyEnded: false,
         webFinalized: true,
         ...tombstone,
+        ...this.terminalReceipt(),
       });
+    } catch {
+      // Retry deadline was committed before any network I/O. Storage failures
+      // also cannot be converted into success or reopening the live room.
+      this.closeTerminalSockets();
+      return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
     } finally {
       this.roomEndInProgress = false;
     }
+  }
+
+  private async persistTerminalIntent(intent: RoomTerminalIntent): Promise<void> {
+    // Gate concurrent work even if storage returns an unknown outcome. Only a
+    // confirmed flush can be reported as durable fence/finalization evidence.
+    this.terminalIntent = intent;
+    this.terminalIntentDurable = false;
+    await this.state.storage.transaction(async transaction => {
+      await transaction.put(ROOM_TERMINAL_STORAGE_KEY, intent);
+      await reconcileStoredRoomAlarm(transaction);
+    });
+    await this.state.storage.sync();
+    this.terminalIntentDurable = true;
+  }
+
+  private terminalReceipt() {
+    const intent = this.terminalIntent;
+    return intent && this.terminalIntentDurable ? { ...(intent.cutover ? { cutover: intent.cutover } : {}), fencedAt: intent.fencedAt,
+      finalizedAt: intent.finalizedAt, webFinalized: intent.finalizedAt !== null } : {};
+  }
+
+  private closeTerminalSockets(): void {
+    if (!this.terminalIntent) return;
+    this.state.setWebSocketAutoResponse();
+    for (const socket of this.admissionIdBySocket.keys()) this.releaseAdmission(socket);
+    sendAndCloseEndedRoomSockets(this.state.getWebSockets().filter(socket => socket.readyState === WebSocket.OPEN),
+      roomEndedEvent(this.room.roomId, endedRoomTombstone(this.terminalIntent)));
   }
 
   private async applyTerminalRoomState(
@@ -1586,6 +1658,9 @@ export class RoomDurableObject {
     this.clearTerminalRuntimeState();
     sendAndCloseEndedRoomSockets(sockets, event);
     await clearStoredRoomLifecycleAndAlarm(this.state.storage);
+    if (this.terminalIntent?.finalizedAt != null && !this.terminalIntent.runtimeFinalized) {
+      await this.persistTerminalIntent({ ...this.terminalIntent, runtimeFinalized: true });
+    }
   }
 
   private clearTerminalRuntimeState(): void {
@@ -1610,10 +1685,10 @@ export class RoomDurableObject {
 		socket: WebSocket,
 		raw: string | ArrayBuffer,
 	): Promise<void> {
-    if (this.endedTombstone) {
+    if (this.endedTombstone || this.terminalIntent) {
       sendAndCloseEndedRoomSockets(
         [socket],
-        roomEndedEvent(this.room.roomId, this.endedTombstone),
+        roomEndedEvent(this.room.roomId, this.endedTombstone ?? endedRoomTombstone(this.terminalIntent!)),
       );
       return;
     }
@@ -1624,6 +1699,7 @@ export class RoomDurableObject {
 			);
 		if (
 			this.endedTombstone ||
+      this.terminalIntent ||
 			(this.roomPolicy?.closingAt !== null &&
 				this.roomPolicy?.closingAt !== undefined &&
 				this.roomPolicy.closingAt <= Date.now())
@@ -1710,6 +1786,13 @@ export class RoomDurableObject {
   }
 
   private async runAlarmExclusive(): Promise<void> {
+    if (this.terminalIntent && !this.terminalIntent.runtimeFinalized) {
+      // Read the durable record: alarms can be replayed after eviction/restart.
+      const intent = parseRoomTerminalIntent(await this.state.storage.get(ROOM_TERMINAL_STORAGE_KEY));
+      if (intent && intent.nextAttemptAt <= Date.now()) await this.endRoomExclusive(intent);
+      else await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+      return;
+    }
 		if (this.roomPolicy) await this.serviceRoomPolicy(Date.now());
     if (this.endedTombstone) {
       await clearStoredRoomLifecycleAndAlarm(this.state.storage);
@@ -3002,6 +3085,7 @@ export class RoomDurableObject {
   }
 
   private async handleCloseExclusive(socket: WebSocket): Promise<void> {
+    if (this.terminalIntent || this.endedTombstone) return;
     await this.beginParticipantDisconnect(socket, Date.now());
   }
 

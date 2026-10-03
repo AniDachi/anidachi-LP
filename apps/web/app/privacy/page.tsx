@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-foreground/50 mb-10">
-            Last updated: September 19, 2026
+            Last updated: October 1, 2026
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
@@ -44,8 +44,8 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">2. Video information and personal history</h2>
               <p>The extension reads video information and playback state on supported YouTube and Crunchyroll pages to synchronize a room or save your progress. This includes the video URL and provider identifiers, title, cover image, episode and season details, playback position, duration and timestamps. It does not collect your general browsing history.</p>
-              <p><strong>Automatic personal-history recording requires your choice in the extension and a Plus or Pro entitlement.</strong> The choice is saved for the signed-in account in that browser. YouTube recording also requires its separate switch in Settings. When enabled, eligible progress is saved locally and synchronized with your AniDachi account during both solo and room viewing. Pending updates may be retried after a connection failure.</p>
-              <p>You can stop recording in the extension Settings. Disabling recording does not delete history already saved. Previously dispatched updates may finish processing; new capture stops. Losing a paid entitlement also stops new recording while saved history remains available to read and remove. The website lets you edit or remove saved progress. History belongs to your account; it is not a shared group completion record.</p>
+              <p><strong>Automatic personal-history recording is enabled by default for signed-in accounts with Plus or Pro access, including a trial.</strong> You can turn it off in the extension Settings for your account in this browser. An existing disabled setting stays off after an update. The welcome explains this feature; viewing or dismissing it does not control recording. YouTube recording also requires its separate switch in Settings. When enabled, eligible progress is saved locally and synchronized with your AniDachi account during both solo and room viewing. Pending updates may be retried after a connection failure.</p>
+              <p>You can stop recording in the extension Settings. Disabling recording does not delete history already saved. Previously dispatched updates may finish processing; new capture stops. Losing Plus or Pro access also stops new recording and editing. Saved history remains available to read, resume and delete on Free. History belongs to your account; it is not a shared group completion record.</p>
             </section>
 
             <section>
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">6. Cookies and your choices</h2>
-              <p>Essential cookies maintain your login and session. Website analytics may use cookies or browser identifiers. Browser privacy controls can restrict these, although blocking essential storage may prevent sign-in. You can separately control history recording, YouTube history, notifications, camera and microphone access. Declining history recording does not prevent joining or synchronizing a room.</p>
+              <p>Essential cookies maintain your login and session. Website analytics may use cookies or browser identifiers. Browser privacy controls can restrict these, although blocking essential storage may prevent sign-in. You can separately control history recording, YouTube history, notifications, camera and microphone access. Turning off history recording does not prevent joining or synchronizing a room.</p>
               <p>Depending on applicable law, you may be entitled to access, correct, export or delete personal data. For account deletion or assistance with these requests, email <a href="mailto:anidachi.app@gmail.com" className="text-brand-orange hover:underline">anidachi.app@gmail.com</a>.</p>
             </section>
 

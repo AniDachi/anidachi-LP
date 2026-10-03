@@ -106,3 +106,37 @@ Manual, with two independent browser profiles:
 - a final Crunchyroll regression pass.
 
 Automated fixtures do not replace real-ad acceptance.
+
+
+## Message composer interaction: local candidate, October 1, 2026
+
+After confirming the Crunchyroll composer fix, the owner requested the same
+behavior on YouTube. The shared keyboard/quiet-release mechanism is reused.
+`youtube/composer-chrome.ts` owns the CSS selectors; the content entrypoint includes
+them in its existing page stylesheet. No provider-specific branches or selectors
+are added to the shared React overlay.
+
+Opening/typing/sending keeps native controls, top/bottom gradients, progress bar,
+control tooltips and the central control animation hidden. The modern YouTube DOM
+has a separate progress-bar sibling, so hiding only the bottom panel is not enough.
+Descendant visibility and pointer events are suppressed too, because YouTube
+buttons explicitly restore them. The rule requires an AniDachi-owned YouTube
+player and the existing composer marker; removal of either restores native styles.
+
+Video, captions, buffering/error UI, ads and AniDachi UI are not hidden. The rule
+also excludes `ad-showing` players, preserving their native controls. The existing
+geometry observer tracks composer-marker changes to release/restore safe insets.
+No player classes, playback APIs, ad behavior, room events or permissions change.
+
+Evidence: current YouTube player DOM inspected read-only; computed-style tests
+cover guard/open/quiet states, descendant hit targets, protected surfaces, native
+first-event delivery, unmounted players and ad-mode escape. Geometry tests cover
+hide/release notifications. The new cases fail before the changes; afterwards,
+typecheck and all 2,150 extension tests pass. Build and validate the local staging
+artifact before owner Reload. This does not deploy the staging website/Worker.
+
+Owner acceptance is pending: Reload the unpacked extension and refresh YouTube,
+then open and send via Enter/Send, use emoji, reopen/close, and resume native video
+controls. Check normal, theater and fullscreen modes, including Space/K, seek,
+Escape and captions. Existing ad/sync acceptance remains independent: these input
+and CSS fixtures do not establish real-ad or two-client playback evidence.

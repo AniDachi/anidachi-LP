@@ -1,12 +1,697 @@
 # Current Development State
 
-Last updated: 2026-09-21.
+## Release safeguards delivered to staging, October 2, 2026
+
+[PR #397](https://github.com/AniDachi/anidachi-LP/pull/397) merged at 12:28:38 UTC
+as `e5cf589a2863f303471266b5062404842f80d77c`. This delivery supersedes the
+local/pending checkpoints below. Staging Web is READY on that exact source;
+Worker delivery and direct health smoke passed. Required CI, extension build,
+room/P2P checks and the protected-site smoke are green. The standing promotion
+PR #376 remains open without auto-merge; main remains `a5a0134e`.
+
+The frozen staging ZIP was downloaded from GitHub run `37006905630` and validated
+locally: build ID `e5cf589a2863f303471266b5062404842f80d77c-staging-196`, staging
+identity/endpoints and narrow permissions. It contains the explicit Got it
+acknowledgement and the previously staged extension changes. Paid subscription
+preservation, confirmed trial offers and explicit production delivery/version gates
+are included in the source. No production/Stripe/Store action or activation was
+performed in this delivery block.
+
+Loaded-extension acknowledgement and the remaining real open-room/payment-loss
+acceptance still belong to the owner. The production Store ZIP is a separate next
+step after compatibility, production public-key and release-version verification.
+See the [delivery receipt and exact artifact hash](releases/paid-hosting-trial/staging-release-2026-10-02.md).
+
+## Stripe preparation and 3DS verification, October 2, 2026
+
+The separately authorized Stripe block is complete: LIVE Plus $76.70/year and
+Pro $143.90/year prices and a non-default yearly confirmation Portal are prepared.
+The existing LIVE webhook now also subscribes to
+`invoice.payment_action_required`; its other six events, URL, status and API
+version are unchanged. A fresh before/after comparison preserved all 17 LIVE
+subscription objects, including all five active subscriptions. The current
+production handler skips the added event; the compatible handler still requires
+the separately authorized Web deployment.
+
+A new isolated Sandbox annual trial verified actual 3DS cancellation and success
+in Stripe's hosted invoice UI. Real webhooks produced Free/no hosting before
+payment and Plus/hosting/history access after payment of the same $76.70 invoice.
+All ten relevant events were processed; four lease-contended deliveries were
+successfully resent after QA cancellation without reviving access. The QA
+subscription is canceled. This does not replace Checkout/OAuth UI, real open-room
+payment-loss or LIVE invoice acceptance.
+
+The owner explicitly excluded a separate conversion path for the old $8/month
+Crunchyroll Fan subscription. Preserve it; no migration or automatic annual
+conversion is planned. Production env, site/server deployment, main/Store release
+and trial activation were not performed. See the
+[LIVE catalog receipt](releases/paid-hosting-trial/live-annual-setup-2026-10-02.md)
+and [3DS/webhook receipt](releases/paid-hosting-trial/stripe-3ds-readiness-2026-10-02.md).
+
+## October 2 release candidate and Sandbox lifecycle verification
+
+The owner authorized delivery of the remaining local release safeguards and
+welcome acknowledgement to staging. That candidate was reviewed from
+`codex/production-release-guards` against staging `3998250d` and delivered as
+`e5cf589a` in PR #397; see the delivery receipt above. Production/main remains
+`a5a0134e`.
+
+Real AniDachi Sandbox webhooks verified failed first trial payment, automatic
+recovery, exhausted retries, and failed/recovered ordinary monthly renewal against
+staging. All five disposable QA subscriptions were stopped. The historical clock
+and database-time limits and room runtime evidence are recorded in
+[the billing verification receipt](releases/paid-hosting-trial/billing-recovery-2026-10-02.md).
+The later 3DS result is above; real open-room UI acceptance remains separate.
+
+Owner decision: keep the current public website/production serving existing
+clients during Store review; do not implement the abandoned pre-Store public-copy
+rewrite. Prepare the production Store ZIP from an accepted frozen source without
+triggering main/deployment, then perform the separately authorized launch after
+approval/publication. Existing subscriptions retain their identifiers, price,
+interval, renewal and cancellation settings. The revised [release order](releases/paid-hosting-trial/production-preparation-2026-10-02.md#ordered-production-delivery)
+supersedes the earlier bridge-first ordering below.
+
+## Production release safeguards prepared locally, October 2, 2026
+
+The local `codex/production-release-guards` work continues from welcome commit
+`89eb1deb`. The owner requires existing purchased subscriptions to retain their
+price, plan, interval and renewal/cancellation settings. No production, LIVE
+Stripe, main promotion, Store publication or activation is part of this block.
+
+Pricing retains static prices and usable buttons, with a neutral plan choice
+until the server confirms trial availability. Existing subscribers reach
+management. Production Worker delivery is changed locally to an explicit manual
+dispatch acknowledging the exact commit after schema/compatible Web verification;
+staging remains automatic. Production package builders require an explicit Store
+version instead of falling back to `0.1.0`.
+
+At this local checkpoint these controls are not deployed. LIVE
+setup/reconciliation, matching push key, Store/privacy preparation and the exact
+production ZIP remain open. The owner has since rejected a separate pre-Store
+public-content rewrite; follow the release order at the top of this document. Old Worker rollback is not automatically safe
+even before T because ordinary terminal intents already require compatible
+recovery. See the [preservation and delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md)
+and [local implementation plan](superpowers/plans/2026-10-02-production-release-guards.md).
+
+## Welcome acknowledgement follow-up, October 2, 2026
+
+The local follow-up to staging PR #396 keeps the Watch welcome visible until
+Got it is clicked. Popup reopening, Watch/People/Inbox navigation, scrolling and
+Settings do not acknowledge it. A separate installation-local acknowledgement
+key replaces the automatic seen flag; existing installations see the notice again
+because the old flag cannot distinguish viewing from clicking Got it. Recording
+preferences and paid/trial eligibility are unchanged. Read failures still show the
+informational notice; a failed acknowledgement save does not block the popup and
+allows it to reappear on the next opening. This follow-up is local pending staging
+and owner acceptance on the rebuilt unpacked artifact.
+
+## Extension welcome and history preference prepared locally, October 1, 2026
+
+The local `codex/extension-welcome-history` candidate starts from staging
+`73df5668`. Watch initially had a compact introduction shown once per installation.
+The October 2 follow-up above supersedes this automatic seen behavior.
+It explains hosting with Plus/Pro, free joining, and saved account history;
+Settings opens the existing settings panel and Got it only dismisses the notice.
+A restored scroll position cannot mark an offscreen welcome as seen.
+
+Missing account/browser history preferences default to enabled. Existing explicit
+off choices remain off, unreadable data stays off, and actual recording retains
+signed-in ownership, paid/trial access, lease/session checks and YouTube's separate
+opt-in. Settings can stop recording without deleting saved history. No server,
+protocol, permissions, billing, staging/main or Store changes are part of this
+local task. The subsequent local Settings polish uses one dedicated panel and
+shared switches for recording, YouTube history and invitation notifications.
+It keeps arrivals unread while Inbox is hidden, preserves content scroll when
+Settings closes or the popup reopens, and removes the welcome heading's dot.
+The updated unpacked staging folder is for owner review; real browser/user
+acceptance remains outstanding.
+The local Watch history follow-up separates YouTube and Crunchyroll browsing:
+20 titles per platform initially, then 20 more through a button inside that
+platform's expanded list. Server search/date filters cover the entire saved
+history before pagination; provider counts are full filtered totals. Loaded depth
+is retained independently per provider/query, account and generation, including
+popup reopening and retry after partial-cache failures. A shared authority failure
+hides both streams and pending rows until validated network recovery; canceled
+loads cannot block a later Load more action. Recording, quotas and server contracts
+are unchanged. Regression checks and a local component preview cover pagination
+and finding an unloaded title; the owner still needs to Reload the unpacked
+staging extension and accept the behavior against their actual history.
+
+The local Crunchyroll composer follow-up keeps native player controls hidden while
+opening, typing and closing/sending a message. After Send/Enter/Escape, the input
+and hit shield disappear but the visual guard stays until the next player gesture.
+Focus/hover generated by removing the input and AniDachi reaction/PTT shortcuts do
+not release it; the first real player click/key remains untouched. The early
+keyboard guard consumes the release of a submitted Enter, avoids IME/repeat
+submission and cleans up its listeners/timer. No playback, room/P2P, Worker or
+permission contract changes are included. Extension typecheck and all 2,144 tests
+pass. The owner subsequently confirmed the Crunchyroll behavior works as intended;
+normal/fullscreen coverage was not separately enumerated in that confirmation.
+See [composer interaction notes](crunchyroll-adapter-notes.md#message-composer-interaction-local-candidate-october-1-2026).
+
+The subsequent local YouTube follow-up applies the same composer guard to native
+controls, progress, gradients, tooltips and the central control animation. These
+selectors live in the YouTube provider folder and are included by the content
+entrypoint. Video, captions, buffering/errors and ad UI remain outside the rule;
+controls are not suppressed in `ad-showing` mode. Layout measurement follows the
+composer marker so hidden chrome does not leave a stale reserved area. Typecheck
+and all 2,150 extension tests pass. Current YouTube DOM was inspected read-only;
+owner acceptance in normal, theater and fullscreen mode is still pending on the
+updated local unpacked staging artifact. See [YouTube composer notes](youtube-adapter-notes.md#message-composer-interaction-local-candidate-october-1-2026).
+
+The local composer-dismiss follow-up adds a visible Close button and closes an
+empty/whitespace-only input on Enter without sending. Close and the existing
+Alt+C toggle discard a draft in normal/fullscreen modes, keeping the native-player
+quiet guard. Enter on a focused composer button activates that button, preventing
+accidental draft submission from Close. Escape outside fullscreen closes without
+sending and its key release is consumed even after the input unmounts. IME
+confirmation and repeated keys retain their protections. Chrome owns fullscreen
+Escape; overriding it requires Keyboard Lock permission, which this task does not
+request. Use Close/Alt+C (or empty Enter) to stay fullscreen. No permissions,
+server/room protocol or player-fullscreen ownership changes are included. Focused
+regression tests cover the real overlay in closed Shadow DOM; loaded-provider
+acceptance still belongs to the owner after Reload. See the
+[Chrome permission boundary](https://developer.chrome.com/blog/keyboard-lock-pointer-lock-permission).
+
+Before publication, deploy matching privacy text and align Store disclosures.
+See [release-channel behavior](extension-release-channels.md#local-default-on-history-candidate-october-1-2026).
+
+## Guest checkout continuation prepared locally, October 1, 2026
+
+The local `codex/site-next-pass` candidate continues a guest's selected Plus/Pro
+monthly/yearly trial after Google/Discord sign-in. The new noindex `/checkout`
+page checks the current account and price, requires explicit paid confirmation
+when a trial is unavailable, and routes existing subscriptions to management.
+Validated checkout choices survive provider cancellation and recoverable OAuth
+errors. The existing server payment and auth contracts are preserved.
+
+Focused tests, website typecheck, scoped lint and the full website suite
+(963 passing, 6 existing skips) pass; the contextual signed-out login screen was
+checked locally. Real OAuth → Stripe Sandbox acceptance remains for the owner
+on a later authorized staging delivery. No staging/main, secrets, Stripe or
+schema changes were made. See [scope, evidence and acceptance](releases/checkout-sign-in-continuation-2026-10-01.md).
+
+## Room runtime test and graph integrity delivered to staging, October 1, 2026
+
+[PR #393](https://github.com/AniDachi/anidachi-LP/pull/393) merged into staging
+at 09:42:18 UTC as `b42ae31b`. This supersedes the local checkpoint below.
+Vercel `dpl_3CDAmMbiRgjyCR4HWZa7jr118HAv` was verified READY on
+**https://staging.anidachi.app** for that exact commit. The automatic Worker
+deployment succeeded as version `1f93f027-ebc1-4566-9f1f-07296a99b5f8`;
+the merge changed tests/tooling/docs, not production room implementation.
+
+Rooms and P2P checks, post-deploy site smoke and direct staging Worker smoke
+passed. The refreshed graph covers 231 code sources and 39 full documents,
+with no dangling endpoints or lost records from untouched sources. A no-op
+refresh preserves all three graph artifacts byte-for-byte.
+
+Main stays at `a5a0134e`; promotion PR #376 has no auto-merge. Stripe, extension
+artifacts, database schema and environment configuration are unchanged. See
+[the staging delivery evidence](releases/room-tests-and-graph-integrity-2026-10-01.md#staging-delivery).
+
+## Room runtime test and graph integrity corrected locally, October 1, 2026
+
+On `codex/room-terminal-recovery`, the intermittent terminal-cleanup test is
+corrected without changing room production code. The overdue alarm could execute
+automatically before the manual test helper, so the helper did not await that
+cleanup. Both retry sites now reserve delivery for the helper and assert it ran;
+strict 410, durable closure, wake recovery and single Web acknowledgement remain.
+The corrected case passed 50 repetitions; API runtime 96/96, units 252/252 and
+typecheck passed.
+
+The Graphify integrity exception is resolved locally with a source-scoped raw
+merge, complete-document Codex semantic extraction and checked source hashes.
+Historical filename concepts and parallel relationships survive; stale inputs
+fail before publication. Fifteen Python regressions, two disposable integration
+tests and independent review cover the updater. The report uses a documented
+analysis projection, not a fresh global clustering or media-corpus audit.
+
+This is local work from staging `969a7f44`, not a deployment. Worker runtime,
+main/production, site design, Stripe and environment settings are unchanged.
+See [diagnosis, evidence and verification scope](releases/room-tests-and-graph-integrity-2026-10-01.md)
+and [the safe Graphify update workflow](graphify-safe-updates.md).
+
+## Website copy consistency delivered to staging, October 1, 2026
+
+[PR #391](https://github.com/AniDachi/anidachi-LP/pull/391) delivered the website
+copy audit corrections at 08:04:23 UTC as `92a409aa` (implementation `2e90cf5c`).
+Vercel `dpl_2CfJHuvV4wAHXPsJgJtY4CqK6HJj` is READY and serves
+**https://staging.anidachi.app**. Post-deploy smoke, CI, P2P and representative
+browser copy checks passed. E2E Rooms passed on its second attempt; the first
+repeated the known terminal-cleanup 409/410 failure without changes to Worker
+or its tests. That instability is recorded, not fixed by this site patch.
+
+Main remains `a5a0134e`; promotion PR #376 has no auto-merge. Worker, extension,
+Stripe configuration, DB schema and environment settings are unchanged. Graphify
+is unchanged under the existing integrity exception. See the
+[delivery evidence and verification limits](releases/website-copy-consistency-2026-10-01.md#staging-delivery--october-1-2026).
+The local preparation checkpoint below is superseded by this staging delivery.
+
+## Website copy consistency completed locally, October 1, 2026
+
+The owner approved fixing outdated Free-hosting/30-minute promises, current async
+claims, missing annual/trial terms and misleading first-use instructions across
+the website. Work is based on staging `34c4af98`; shared marketing copy,
+account/install instructions, articles, comparisons, FAQ/HowTo and metadata now
+follow the activated paid-hosting model. Web typecheck, 942 passing tests
+(6 existing skips), production build, the targeted scan of all 353 generated
+HTML files and independent review passed. Representative local browser checks
+include desktop and mobile rendering. Public URLs, runtime access rules and
+legacy compatibility code are preserved. Graphify is unchanged under its merge
+integrity exception. This is not a staging or production delivery. See the
+[scope, progress and verification](releases/website-copy-consistency-2026-10-01.md).
+
+## Watch Library filter fix delivered to staging, October 1, 2026
+
+[PR #389](https://github.com/AniDachi/anidachi-LP/pull/389) merged at 03:10:39 UTC
+as `c8f2be59` (implementation `249616d8`). Vercel deployment
+`dpl_4CbwWAFV4S8jugnRKvArxPpbkEWQ` is READY on **https://staging.anidachi.app**.
+The post-deploy [smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36809500751)
+passed after READY. Authenticated browser checks found all expected Crunchyroll
+results and a paginated YouTube list without errors.
+
+Crunchyroll previously drained four pages of the mixed-platform library in about
+9.4 seconds. It now uses one personal browse request: 2.336 seconds on the first
+selection, 2.438 seconds after switching back from YouTube (2.236 seconds).
+Capacity was read once, not again for each platform. These are individual
+Resource Timing measurements, not p95 or full navigation timings. Owner/manual
+acceptance and the remaining account-page latency are still open.
+
+The optional provider query is backward compatible; owner/generation/access
+checks and dirty-editor guards remain. Web tests (942 passed, 6 existing skips),
+protocol tests (204), affected extension tests (153), all consumer typechecks,
+web lint, independent review and PR CI passed. Graphify remains unchanged under
+the documented integrity exception.
+
+Vercel staging is in `sfo1`; its database is in `ap-southeast-1`. Production's
+database is in `us-west-1`, so a staging-specific region strategy and comparison
+are needed before changing placement. Regions, main/production, SQL and Stripe
+configuration are unchanged. See the [findings, rollout evidence and remaining work](superpowers/plans/2026-10-01-account-loading-performance.md).
+
+## Account loading optimization delivered to staging, October 1, 2026
+
+[PR #387](https://github.com/AniDachi/anidachi-LP/pull/387) delivered the account
+loading changes at 02:16:10 UTC as `d395642d` (implementation `30d2d292`). Vercel
+`dpl_EeugDHPoJVzSas3HEZkcbYcPvKEj` is READY and serves **https://staging.anidachi.app**.
+The post-deploy [staging smoke](https://github.com/AniDachi/anidachi-LP/actions/runs/36805237951)
+passed; direct checks also confirm the password gate, noindex and empty sitemap.
+Staging push CI and Rooms/P2P E2E passed. A separate main-promotion CI attempt
+failed one unchanged Worker cleanup test (409 instead of 410); the plan records
+this inconsistency rather than claiming every run passed.
+
+Friends/groups and notifications render independently, explicit navigation starts
+reads alongside the route, direct-document snapshots preserve billing authority,
+subscription focus refresh keeps valid display data, session refresh is shared
+while in flight, and history reads retain fresh authority fences. Web typecheck,
+896 passing tests (6 existing skips), production build and independent review
+passed before delivery. Graphify refresh was rejected by its integrity check;
+tracked artifacts remain unchanged under the documented exception.
+
+Authenticated latency comparison and owner acceptance are still pending. Main
+remains `a5a0134e`, promotion PR #376 has no auto-merge, and Worker, extension,
+Stripe configuration and database schema are unchanged by this patch. See the
+[implementation, delivery evidence and remaining checks](superpowers/plans/2026-10-01-account-loading-performance.md).
+
+## Website and annual billing delivered to staging, September 30, 2026
+
+[PR #383](https://github.com/AniDachi/anidachi-LP/pull/383) delivered the approved
+homepage/pricing design, signup counter and annual billing as `d64f6e8a` at
+12:44:57 UTC. Vercel deployment `dpl_5HfezoKU9Mb2Y79TP2Qq72cLqxnZ` is READY on
+**https://staging.anidachi.app**. Annual Sandbox prices and the dedicated yearly
+conversion Portal are configured for Vercel Preview / exact branch `staging`.
+CI, room/P2P checks, deployed staging smoke, Worker smoke and desktop/mobile UI
+inspection passed. A date-dependent room-test fixture was corrected; Worker
+runtime source, extension and database schema did not change in this release.
+
+The owner still performs annual Checkout, trial, proration and payment-failure
+acceptance. Main remains `a5a0134e`; promotion PR #376 is manual. LIVE Stripe and
+Chrome Store release are not part of this delivery. See the
+[deployment evidence, remaining checks and rollback](releases/website-annual-staging-2026-09-30.md).
+The September 30 local-only statements below are earlier checkpoints superseded
+by this delivery; their detailed test history is retained.
+
+## Local homepage comparison, September 30, 2026
+
+“How AniDachi compares” now uses a flat desktop table and a compact competitor
+selector on phones, with shorter copy and linked primary product information.
+Local checks pass; owner visual acceptance remains open. This is not deployed.
+See the [comparison scope and evidence](releases/website-comparison-2026-09-30.md).
+
+## Annual billing acceptance environment, September 30, 2026
+
+The owner chose staging with AniDachi Sandbox for annual billing configuration
+and manual payment acceptance. Restoring local billing credentials is no longer
+a prerequisite for this work. After staging acceptance, prepare the separate
+LIVE Stripe annual prices/Portal configuration and promote the tested release to
+main. Localhost remains the website development preview. This checkpoint records
+the sequence; staging and production configuration/delivery have not changed.
+See the [annual checklist](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
+## Local public pricing correction, September 30, 2026
+
+The owner requires plan cards and prices to be regular site content. Homepage and
+`/pricing` now render the published monthly/yearly USD catalog directly, with
+Yearly selected by default and no Stripe call during page rendering. Private offer
+prefetch may adjust account actions but cannot replace the amounts, hide the
+period selector, disable browsing, or show a page-load error. An explicit checkout
+attempt reuses or awaits fresh account verification; price mismatch, changed
+eligibility and account changes cannot silently start a different purchase.
+The public Plus/Pro buttons also show the three-day trial immediately, with card,
+one-trial and renewal terms. If an unknown account proves ineligible after that
+click, paid Checkout waits for a new explicit choice after the terms update.
+This supersedes the earlier server-fetched public-price approach below. Real
+Checkout acceptance remains open and will take place on staging as agreed above. See the
+[annual checklist and pricing correction](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
+## Local annual billing checkpoint, September 30, 2026
+
+Annual Plus/Pro checkout and explicit monthly-to-yearly conversion are implemented
+locally. The owner chose $76.70/$143.90 yearly, Yearly selected by default, and
+immediate conversion of a paid monthly subscription with Stripe proration and
+customer confirmation. Trial period changes preserve the original 72-hour end.
+AniDachi Sandbox annual prices and a separate conversion portal configuration
+exist; their public IDs are connected only to the local worktree. Local billing
+still returns 503, so authenticated Checkout/webhook and visual acceptance are
+**not complete**. No staging/main/production/Store delivery occurred. See the
+[annual implementation and acceptance checklist](releases/paid-hosting-trial/annual-billing-2026-09-30.md).
+
+## Local website counter checkpoint, September 30, 2026
+
+The owner chose a historical signup baseline of 1,409 (555 production accounts
+plus 854 waitlist records, without deduplication). The local homepage counter
+adds only accounts created after the fixed measurement timestamp. It reads an
+aggregate from its own environment and exposes no account rows. CRM waitlist
+statistics remain separate. See the [definition and delivery boundary](public-community-count.md).
+This website change has not been deployed to staging or production.
+
+## Latest checkpoint: staging model activated, 2026-09-29 15:48 UTC
+
+The owner explicitly authorized the staged transition rehearsal after the DO
+optimization delivery and a manual baseline room test. Staging activation committed
+at **15:48:48.800820 UTC**, revision 2, trials/scheduler ON. One still-open Free
+room was durably fenced in 1.472s and finalized in 3.702s; all targets completed.
+The Plus room remained live; account plan counts and subscription fingerprints
+were preserved. One other Free room ended before T and is excluded from this
+cutover result. The owner confirmed the old-client cutover, Free-create denial,
+Free-join to Plus, successful Plus trial enrollment and trial-host room creation.
+Stripe/Supabase agree on the 72-hour Plus trial. The owner subsequently confirmed
+the new staging ZIP: Free plan prompt, correct trial plan/creation, guest join and
+synchronization. Full billing lifecycle/P11/history/recovery acceptance remains
+open; these results do not cover every media/quota scenario. See the
+[staging rehearsal receipt](releases/paid-hosting-trial/staging-rehearsal-2026-09-29.md).
+The dormant/OFF states below are earlier dated checkpoints, superseded for staging
+by this rehearsal. Main/production and Store were not changed in this operation.
+
+Last updated: 2026-09-29.
+
+Latest owner decision: complete Durable Object write optimization, deliver it
+to staging and obtain the owner's manual acceptance **before resuming the trial
+transition/activation**. The [optimization design and checkpoint](superpowers/specs/2026-09-29-durable-object-write-optimization-design.md)
+preserve the completed trial work, dated Cloudflare baseline, compatibility,
+validation and rollback gates. Optimization is implemented in `5bed2e55`: real
+steady HOST_STATE profiles reduce SQLite rows by 75–80%, with unchanged policy
+and alarm writes removed. API check, 252 unit tests, 96 Workers runtime tests,
+203 protocol tests and 39 room harness scenarios pass. See the [implementation
+evidence and staging acceptance](releases/durable-object-write-optimization-2026-09-29.md)
+and [execution plan](superpowers/plans/2026-09-29-durable-object-write-optimization.md).
+PR #381 delivered the optimization to staging at `1d50432c` on September 29,
+02:45 UTC. Deploy API succeeded; Worker `f7942d07-cb7a-473e-9484-c26768ea04c2`
+receives 100% of staging traffic and Worker smoke passed. Read-only Supabase
+still has T NULL, revision 1, trials/scheduler OFF and zero operation/target/trial
+rows. The receipt records exact deployment evidence and the rollback version.
+Owner manual acceptance remains open. Staging acceptance does not close the
+remaining Sandbox/P11/old-client trial matrix or authorize main/Store/T.
+
+The earlier pricing PR #380 merged into staging as `1f4ad13f`
+(September 28, 22:43:41 UTC). Promotion PR #376 remains open without
+auto-merge. The earlier local pricing evidence below stays distinct from this
+merge and from owner checkout acceptance. Runtime/policy values in the delivery
+receipt are dated observations and must be rechecked before the next deployment.
+
+Pricing loading correction, prepared from staging `9a8e4824`: homepage and
+/pricing receive public Stripe amounts in server HTML; private eligibility
+refreshes keep those amounts visible. Purchase sends one browser POST, which
+rechecks the displayed price and trial on the server before checkout writes.
+Timer refresh no longer discards a pending checkout redirect; account changes
+still retire it. Web check, 818 tests (six existing skips) and production build
+passed locally. This checkpoint does not establish deployed performance or owner
+checkout acceptance; see the [fix evidence](releases/paid-hosting-trial/pricing-loading-fix-2026-09-29.md).
+
+Previous website billing checkpoint: `e0f8a21e` adds Stripe renewal restoration and
+fixes first-click resubscription after an ended subscription. Web typecheck,
+807 tests plus six prior skips and changed-file lint pass. The old staging ZIP
+from `cb7f7a86` is built and validated for the owner's old-client transition test.
+See [minimum website and owner test sequence](releases/paid-hosting-trial/minimum-website-2026-09-29.md).
+Dormant staging delivery is complete through schema PR #375, Web PR #377 and
+runtime PR #378, merge 50a054b3. All 69 migrations are applied. Runtime delivery
+verification recorded READY Vercel deployment dpl_HPZFYmKPbFZKDHdGdg95V46dCKTk
+with the staging alias and Worker version 78e5de69-f2dc-42f6-b5d7-e44cc4b24f82. CI, signaling/P2P harnesses,
+extension build, deployments and staging/Worker smoke passed. AniDachi Sandbox
+webhook and the separate staging drain secret are configured; authenticated Web
+admission passed using the existing credential inside Vercel, without exporting
+or rotating it. Hosting/trials and the cutover scheduler remain OFF, with no
+activation/outbox/trial rows. See the [current staging delivery receipt](releases/paid-hosting-trial/staging-delivery-2026-09-29.md).
+Owner acceptance, P11, activation and production promotion remain open.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
 contain old paths, old domains, or old decisions. When release channels,
 endpoints, branch protection, or store workflow changes, update this document in
 the same PR.
+
+## Paid hosting and three-day trial planning, 2026-09-27
+
+The [consolidated Russian transition document](releases/paid-hosting-trial/transition-master-plan-ru.md)
+brings together the agreed rules, existing-user scenarios, local evidence, open
+acceptance gates and release/recovery sequence as of source `86896f33`.
+The September 28 minimal-website checkpoint below supersedes its original
+website-pending snapshot; it starts from `9d0ba788`.
+
+The owner requested a staged transition to paid-only room hosting: Free users
+can join Plus/Pro hosts but cannot create rooms or record personal history.
+The September 28 clarification gives every Free account with an unused trial
+the same three-day Plus/Pro card trial, regardless of registration date. It
+supersedes the original new-account-only rule; active paid subscriptions and
+consumed trials remain unchanged. In a
+September 27 clarification, the owner chose immediate closure of existing Free
+rooms at cutover T, without a warning or five-minute transition grace. T is
+coordinated with verified publication of the new Chrome Store version; it does
+not wait for every installation to update.
+
+The owner also confirmed one trial per account across Plus/Pro, cancellation
+with access until the original trial end, and no trial restart on plan changes.
+The first payment may remain pending for at most two hours from trial end;
+confirmed payment failure ends that wait early. Canceled renewal has no such
+waiting period. Buying a plan does not change an old Free room's T deadline;
+a new paid room follows the existing active-session rules. Ordinary loss of paid
+or trial rights still has its separate five-minute room closure grace.
+
+The [design](superpowers/specs/2026-09-27-paid-hosting-and-trial-design.md)
+and [transition plan](superpowers/plans/2026-09-27-paid-hosting-and-trial-transition.md)
+record the confirmed rules separately from unimplemented technical work and define
+staging acceptance, old-client compatibility, deferred Chrome Store publication,
+server activation and recovery. The owner authorized implementation. A local
+additive foundation now provides dormant hosting policy, immutable per-account
+trial identity, bounded first-payment access and optional hosting metadata in
+the existing account resolver. Local checkout preparation now uses a durable
+reservation, card-required trial parameters and reconciliation of uncertain
+Stripe outcomes. Fenced trial webhook ingestion, server-side trial plan changes
+and transactional room gates are also locally implemented. Task 5 now adds a
+local dormant activation/outbox, bounded Web delivery with private SQL recovery,
+fresh old-token admission and a Worker terminal intent independent of media
+policy. Fence, Web finalization and local cleanup survive retries separately.
+Local proof: SQL 394 assertions plus 12 real concurrency assertions, API 244,
+Worker runtime 86, web 741 with six existing skips, protocol 202, all six typecheck
+tasks, room harness 39/39 and current-source WebRTC harness 26/26.
+An unproven legacy terminal tombstone stays closed with an explicit unresolved
+cutover error; safe recovery or target exclusion is an acceptance gate.
+Task 5 local checkpoint is `488f2d64`. On September 28, the extension part of
+Task 6 adds the ordinary create-button plan offer after an authoritative hosting
+denial. The account-bound read offers a trial only for verified eligibility;
+close/Escape do not start checkout or create a room, and returning from checkout
+refreshes display access without automatically creating a room. That initial
+checkpoint's age-based paid-only copy is superseded by the unified rule below;
+unavailable authority never promises a trial. Account changes retire the offer
+and its pending response. Extension
+typecheck, all 2058 tests, narrow staging build/validation and local Chromium
+component checks passed. This is not loaded-artifact/staging acceptance.
+The subsequent September 28 Block B locally retires post-T Free quota reads,
+live/reset counters and renewed-time messages. The quota endpoint returns 403
+without reading usage; successful legacy/paid v1 payloads remain unchanged.
+One owner/session-bound hosting display hook serves the offer and quota UI;
+unknown authority promises neither minutes nor trial, and superseded responses
+cannot revive old state. Pre-T quota accounting remains, including the shared
+1800-second policy. Source tests cover stale room payloads beyond 30 minutes and
+UTC renewal; a loaded narrow staging artifact is checked with synthetic authority
+in isolated Chromium. This is not deployed staging or old Store-client acceptance.
+The first local Block C checkpoint then fixes delayed create failures crossing a
+same-owner login and terminal room explanations being erased by auth refresh.
+Prepared-session cleanup, Web Lock release and explicit retry are verified.
+Component tests restore/reconnect a Free guest through paid-room admission across
+31 minutes and UTC, and prove personal capture stops on lost/expired access
+without backfilling after renewal. Extension 2091 tests and web history UI 37 pass;
+the latter needed only a missing Happy DOM self fixture. Web/extension checks,
+narrow build/validate and synthetic loaded-artifact browser checks pass.
+The next local C checkpoint makes overlay and popup plan badges consume the
+same owner/login-bound server entitlements as the offer, removing stale cached
+login-plan claims on pending/error. The recording invitation uses that display
+plan without changing capture authority or consent. Free history read/Resume
+and the existing Manage history path are verified locally; fallback copy now
+restricts recording rather than all saved history. Extension 2098/137, typecheck,
+narrow build/validate and compiled-artifact synthetic browser checks pass.
+These checks verify effective-plan display, not the Stripe lifecycle itself.
+The local room-end checkpoint now carries an additive cutover explanation while
+retaining the existing terminal reason for legacy parsers. The Worker derives it
+from durable closure metadata; earlier closures retain their original cause.
+The overlay distinguishes Free cutover from ordinary room-authority expiry,
+without calling an authority outage a failed payment. An accepted closingAt
+snapshot surfaces the original deadline once; repeated snapshots do not reopen
+the panel or restart the deadline. Terminal cleanup and close-only 4004 remain
+final, with no automatic checkout/create/reconnect. Root check/test pass
+(protocol203/API248/extension2104), final schema-checked Overlay92, Worker runtime86,
+room39 and WebRTC26 pass. Narrow build/validate and synthetic loaded-artifact
+checks at1100/390 pass; actual staging and published Store compatibility remain open.
+The remaining full entrypoint/subscription matrix, real checkout/server/restart
+and Store-client acceptance stay open in C/F;
+the extension as a whole is not declared complete.
+At that extension checkpoint, web pricing, billing, success and marketing copy
+were still pending. The minimal website implementation is recorded below; staging
+acceptance, published old-Store-client cleanup and actual distributed cutover
+latency. Web admission must be deployed and verified
+before the Worker; see the [cutover operations notes](releases/paid-hosting-trial/cutover-operations.md).
+Deployed Free hosting and ordinary checkout are unchanged.
+Annual billing, people counters, history-consent removal and new platforms are
+outside this transition. Runtime, Stripe LIVE, Store artifact and deployment
+acceptance remain future work; historical prelaunch reset permissions do not apply.
+Task 1 is locally verified, including populated-data preservation and concurrent
+runtime-role trial inserts. Task 2 has local checkout/SQL concurrency evidence and
+an uncompleted TEST Checkout parameter check. The correct AniDachi sandbox also
+verified trial end, successful/declined first payments, Portal cancellation and
+plan changes preserving the original trial end. These Stripe checks do not prove
+the undeployed application flow. Local SQL room admission now uses T for frozen
+Free rooms; 22 room assertions and 312 prior SQL assertions passed, including the
+unchanged separate paid-access-loss grace. Full migration replay preserved
+existing users, rooms and memberships in a disposable rollback transaction.
+No migration or runtime was deployed by this work.
+The plan contains a
+progress log and requires checking actual source/runtime before each work block;
+code, local tests, staging acceptance and production evidence remain distinct.
+
+September 28 unified-trial correction: additive migration
+`20260928083738_unified_free_trial_eligibility.sql` removes the registration-date
+predicate from the shared server resolver. Dormant/future/disabled trial policy,
+used-trial ledger, paid/manual rights and history fences are unchanged. Old and
+new Free checkout reservations offer the same unused trial. Existing checkout
+reconciliation retires outdated open nontrial sessions before offering a trial;
+completion wins over replacement, and uncertain expiration stays blocked.
+The extension no longer denies a trial by account age; legacy `existing_account`
+metadata remains readable but only suggests checking current availability.
+
+Local checks: root check/test six tasks passed; web 748 + six existing skips,
+extension 2105/137, focused checkout 17, new SQL eligibility matrix 27. Full
+additive replay preserves populated users/subscriptions/history/fences and keeps
+policy dormant. Narrow staging artifact build/validation and isolated loaded
+Chromium offer/badge/auth-fence checks passed with synthetic HTTP.
+That checkpoint's expanded SQL run had one failing browse-history assertion.
+The following local checkpoint traced it to a stale fixture: accepted durable
+membership did not establish active occupancy after the September 14 Return
+change. Adding the missing active assignment preserves the original assertion;
+nine regressions also protect departed-recipient re-invites and prevent
+retroactive history attribution. **1360/1360 SQL assertions in 34 files now pass**.
+No database/product runtime change was needed. Extension typecheck, 450 targeted
+extension tests and 43 related web endpoint tests pass; four new bridge cases
+cover retired history-room recreation for Free/Plus and transient outages.
+The [local extension acceptance map](releases/paid-hosting-trial/extension-local-acceptance.md)
+records entrypoints, authority and state coverage separately from real-server,
+browser-restart and published-Store gaps. Website changes now require the owner's
+agreement on the concrete scope; local extension work does not authorize them.
+No remote migration, activation, push, deployment or Store publication occurred.
+Remaining C acceptance, website D, whole-branch review E and staging/Store F
+remain open; this correction does not complete the migration.
+
+The subsequent local browser-restart check used source `6c6d9e9f` and the same
+unchanged artifact in four distinct Chromium processes with one persisted test
+profile. Pre-T room/quota state, post-T old-room denial and explicit offer,
+saved-history Resume, 65 seconds of Free playback without recording, paid-room
+guest re-admission and an authority-outage restart passed against local HTTP/WS
+fixtures. No post-T quota reads or history uploads occurred. This closes the
+local process-restart check, not an installed Store upgrade, actual billing,
+real server/two-profile staging or every browser session-restore policy. See
+the [restart evidence](releases/paid-hosting-trial/extension-local-acceptance.md#full-browser-process-restart-2026-09-28).
+Runtime/website code and external environments are unchanged; no push or staging
+change is authorized by this checkpoint.
+
+### Minimal trial website, local checkpoint, 2026-09-28
+
+The owner approved minimal pricing/checkout-return/account-billing adaptation,
+using the reference's card hierarchy with existing AniDachi styling, before
+further visual polish. From base `9d0ba788`, pricing now reads mode-aware Stripe
+monthly prices and server-owned offer eligibility. The shared homepage pricing
+block and /pricing distinguish sign-in, trial, ordinary purchase and existing
+subscription management. Pre-T hosting copy is retained only with known policy;
+unknown authority disables checkout without promising eligibility or minutes.
+The touched pricing FAQ and structured FAQ match this minimal flow.
+
+Billing exposes the original trial end, bounded first-payment processing,
+payment failure, cancellation and quote/confirm Plus↔Pro change. Recovery opens
+only an owned, open Stripe hosted invoice after customer/subscription/mode/URL
+validation. Success identifies the exact checkout subscription, independently
+of other account grants. UI displays expire at known server deadlines and are
+reread within at most 60 seconds; the client never grants access on a timer.
+Owner fences and fresh checkout-offer checks retire stale account responses.
+
+Local web typecheck and 775 tests pass, with six existing skips. One scoped
+review found stale deadline displays and an aggregate-plan trial label; both
+were corrected with failing-then-passing regressions. Pricing was visually
+inspected at 1440/390 with synthetic local offer responses. Ordinary localhost
+/api/billing/offer returns 503, so real local Checkout and authenticated
+billing/browser acceptance are not claimed. Test interception was removed.
+No new env variables, schema changes, extension rebuild, remote writes or deploy.
+Broader account/help, marketing/SEO, Store copy, real payment-to-extension flow,
+whole-branch review and staging acceptance remain open. See
+[website evidence](releases/paid-hosting-trial/implementation-evidence.md#minimal-trial-website-local-checkpoint-2026-09-28).
+
+Local integration follow-up: the 503 was traced to absent runtime configuration,
+not a localhost restriction: no Stripe secret, Plus/Pro price IDs or Supabase
+URL/service key were loaded. Correct sandbox prices were reverified read-only.
+A separate local PostgreSQL/PostgREST instance now has all 69 current migrations;
+real service-role HTTP reads pass, anonymous policy access is denied, and the
+commercial policy remains dormant. Local credentials and transport are ignored
+development artifacts. At that initial checkpoint, the Stripe TEST key and local
+webhook secret were unset; the offer returned 503 and Checkout remained unverified.
+Temporary source diagnostics were removed. No remote environment changed. See
+the [local setup evidence](releases/paid-hosting-trial/implementation-evidence.md#local-billing-environment-diagnosis-and-preparation-2026-09-28).
+
+### Staging preparation, 2026-09-29
+
+The owner chose staging for manual acceptance and authorized preparation/checks
+before sending. Manual login/Checkout/subscription/room acceptance stays with
+the owner. Further local OAuth/listener setup is no longer the next step.
+No push, PR, remote migration/config write, deploy or activation has occurred.
+
+The [staging preflight receipt](releases/paid-hosting-trial/staging-preflight-2026-09-29.md)
+supersedes earlier delivery-readiness snapshots. Upstream staging `cb7f7a86`
+was fetched and merged locally without a product delta (`432595ac`); it already
+reverts the collaborator's `86912cb0` domain change. Whole-branch review found
+three defects, fixed in `59d6e80e`: a delayed connect reviving an ended durable
+room, an uncreated checkout reservation stranded by Portal management, and a
+post-T Free quota denial masking the hosting denial. Red/green regressions pass.
+Web typecheck, 785 tests plus six existing skips and lint pass. Full SQL replay,
+populated-data preservation, 1360 assertions/34 files, checkout/room concurrency,
+Workers runtime86, room39 and WebRTC26 pass. Web production build and narrow
+staging build/validation pass; the exact ZIP/hash is in the receipt.
+
+Delivery is split into local schema, Web/protocol and Worker/extension branches:
+the current DB, Vercel and Worker workflows otherwise race. The intermediate
+new Web/protocol with old Worker/extension passes check/test, old runtime75 and
+Worker bundle checks. Final product files match the tested feature tree.
+Remote staging remains on its existing 63 migrations and READY Web deployment;
+current CI/smoke are green for that upstream, not for the unpublished candidate.
+Before activation acceptance, provision the absent staging cutover drain/Vault
+secret and add `invoice.payment_action_required` to the existing TEST webhook.
+Remote values/real flows, old Store-client compatibility, closure latency and
+legacy terminal recovery remain explicit acceptance gates. Broader website/Store
+copy and production promotion remain open; this is not launch readiness.
 
 ## Chrome Web Store install CTA, 2026-09-21
 
@@ -1241,9 +1926,12 @@ Worker release guardrails:
 - Staging Worker smoke can be run with `pnpm smoke:worker:staging`.
 - Staging and production Worker names must stay distinct.
 
-Normal deploy path is PR merge. Manual workflow dispatch is for retries or
-emergencies only; release workflows must not be manually dispatched from feature
-branches.
+Code promotion follows PR merge. In the October 2 local release candidate,
+staging Worker delivery remains automatic; production Worker delivery requires
+manual dispatch from main with the exact verified `production_ready_sha` after
+schema and compatible Web are ready. This guard is not yet deployed. Other
+release workflows retain their documented triggers; never dispatch a release
+from a feature branch. See the production preparation section above.
 
 ## Extension Channels
 
@@ -1279,6 +1967,8 @@ Build commands:
 pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:staging:local-broad
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```

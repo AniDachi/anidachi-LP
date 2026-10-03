@@ -49,7 +49,7 @@ const faq = [
   {
     question: "When should I switch from Teleparty to AniDachi?",
     answer:
-      "Switch when sync breaks every session, your group spans time zones and needs async catch-up, or you want per-episode progress and spoiler controls on Crunchyroll. AniDachi is built for anime groups that outgrow live-only sync.",
+      "Consider AniDachi when you want live Crunchyroll and YouTube rooms with cameras and microphones, or personal history with your own Plus or Pro access. Current rooms need everyone online together; Async catch-up is coming soon.",
   },
   {
     question: "Is AniDachi free compared to Teleparty?",
@@ -90,7 +90,7 @@ const howToSteps = [
   },
   {
     name: "Switch to per-user Crunchyroll sync",
-    text: "If Teleparty keeps failing every week, move to AniDachi so each person streams from their own Crunchyroll player with a shared watchroom layer — no single-host bottleneck and optional async catch-up.",
+    text: "If Teleparty keeps failing, try AniDachi for live sync on each person’s Crunchyroll stream, with chat, cameras, and microphones. Hosting requires Plus or Pro access, including an active trial; guests can join on Free.",
   },
 ];
 
@@ -121,7 +121,7 @@ export default function TelepartyNotWorkingCrunchyrollPage() {
         description="Fix Teleparty sync drift, extension updates, and detection failures on Crunchyroll."
         url="/guides/teleparty-not-working-crunchyroll"
         datePublished="2026-07-22"
-        dateModified="2026-07-22"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

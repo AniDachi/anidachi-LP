@@ -15,12 +15,12 @@ const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Anime Tracker — Log Crunchyroll and YouTube Progress",
   description:
-    "AniDachi is an anime tracker for what you actually play. Plus or Pro saves the Crunchyroll episode or YouTube video and lets you resume it.",
+    "Track what you play on Crunchyroll and YouTube with your own Plus or Pro access and recording permission. Resume from your saved personal history.",
   alternates: { canonical: "/anime-tracker" },
   openGraph: {
     title: "Anime Tracker for Crunchyroll and YouTube",
     description:
-      "Record the title and episode you play, then resume from the Chrome extension.",
+      "With Plus or Pro and recording permission, save your personal playback progress and resume from the Chrome extension.",
     url: "/anime-tracker",
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
@@ -36,7 +36,7 @@ const faq = [
   {
     question: "Is AniDachi an anime tracker?",
     answer:
-      "Yes. While you watch on Crunchyroll or a full YouTube video, AniDachi detects the title and saves your place. Plus or Pro records and edits that progress. Saved history and Resume stay available on Free.",
+      "Yes. With your own Plus/Pro access and recording permission, AniDachi saves your place on Crunchyroll or a full YouTube video. YouTube recording has a separate toggle. Saved history, Resume, and deletion stay available on Free.",
   },
   {
     question: "Does AniDachi replace MyAnimeList or AniList?",
@@ -73,7 +73,7 @@ export default function AnimeTrackerPage() {
       description="Personal Crunchyroll and YouTube progress with AniDachi."
       url="/anime-tracker"
       datePublished="2026-09-26"
-      dateModified="2026-09-27"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -120,7 +120,7 @@ export default function AnimeTrackerPage() {
           },
           {
             title: "Your account only",
-            body: "Friends do not share one history. Each viewer’s Plus or Pro plan records their own progress.",
+            body: "Friends do not share one history. Recording needs each viewer’s own Plus/Pro access and permission, with a separate toggle for YouTube.",
           },
         ]}
       />
@@ -129,8 +129,10 @@ export default function AnimeTrackerPage() {
         Free, Plus, and Pro
       </h2>
       <p className="mb-8 leading-relaxed text-ani-muted">
-        Free can open saved history and Resume. Recording and editing progress
-        needs your own Plus or Pro plan. Async catch-up is planned, not
+        Free can open saved history, Resume, and delete it. Recording and editing
+        progress need your own active Plus/Pro access, including a trial.
+        Automatic recording also needs your permission, with YouTube enabled
+        separately. Async catch-up is planned, not
         available today. Details are on{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
           pricing

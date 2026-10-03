@@ -374,6 +374,10 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     type: z.literal("ROOM_ENDED"),
     endedAt: z.number().int().nonnegative(),
     reason: RoomEndReasonSchema,
+    // Additive display context; old clients keep the existing terminal reason.
+    hostingCutover: z.literal(true).optional(),
+  }).refine(event => !event.hostingCutover || event.reason === "capability_expired", {
+    path: ["hostingCutover"], message: "Hosting cutover requires capability expiry",
   }),
   RoomScopedSchema.extend({
     type: z.literal("PONG"),

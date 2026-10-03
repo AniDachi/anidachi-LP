@@ -114,13 +114,28 @@ schemas. It sets Zod's `jitless` option to avoid dynamic compilation and even th
 Function capability probe under MV3 CSP. Validation schemas and Worker/web Zod
 configuration are unchanged; no `unsafe-eval` permission is added.
 
-Automatic personal-history recording now also requires an explicit choice for
-the signed-in account in this browser. A fresh or upgraded installation without
-that choice does not capture, discover catalog metadata, or flush progress.
-Existing saved history, Resume, and rooms remain available. Declining can be
-reversed in Settings; stopping recording preserves saved history and pauses
-pending work. Already dispatched requests can finish. Plus/Pro entitlement and
-the separate YouTube preference still apply. Website manual edits are unchanged.
+### Local default-on history candidate, October 1, 2026
+
+The local `codex/extension-welcome-history` candidate replaces the earlier
+explicit-choice prompt with a welcome in Watch and a Settings switch. The
+October 2 local follow-up shows it on every opening until Got it is clicked.
+Only that button saves an installation-local acknowledgement. Existing automatic
+seen flags are not migrated into acknowledgements, so upgraded installations see
+the notice again. Switching tabs, opening Settings and scrolling never acknowledge
+it. Recording does not depend on opening or dismissing it.
+
+A missing account/browser recording preference now defaults to enabled. Existing
+explicit off choices are preserved; malformed or unreadable preferences remain
+off. Signed-in ownership, current Plus/Pro (including trial) access, lease and
+session fences, and the separate YouTube opt-in still apply before capture,
+catalog discovery, and progress dispatch. Disabling recording stops new work
+without deleting saved history; previously dispatched requests can finish.
+Website manual edits, history reading and Resume are unchanged.
+
+This is a local candidate, not a deployed or Store-published change. The local
+privacy page describes it, but the public privacy policy and Chrome Web Store
+listing must match the data practices before public release. The older compliance
+release record remains historical. No permissions or API contracts change.
 
 ## Build Commands
 
@@ -156,6 +171,8 @@ Local-broad outputs:
 Generate the production extension artifact:
 
 ```bash
+WXT_EXTENSION_VERSION="<reviewed-store-version>" \
+WXT_BUILD_ID="<full-approved-source-sha>-production-<release-id>" \
 WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
@@ -166,6 +183,13 @@ Vercel Production. GitHub Actions reads the public key from the
 `WXT_VAPID_PUBLIC_KEY` variable in the `production` environment and refuses to
 build the `main` artifact when that variable is missing. Staging uses its own
 key and remains isolated from production subscriptions.
+
+The local builder and CI also require an explicit `WXT_EXTENSION_VERSION` for
+production; package/CI fallback `0.1.0` is not a release decision. Check the Store
+dashboard's highest uploaded version before selecting a larger version, and
+verify the final manifest and ZIP hash. Build-test fixtures are never release
+artifacts. Staging retains its existing version default. These October 2 safeguards
+are local until their PR is delivered.
 
 The release manifest includes Chrome's `notifications` permission. This lets
 the default-on invitation preference register a Web Push subscription after
@@ -205,10 +229,19 @@ Do not distribute the broad staging build as a tester or release artifact.
 3. Build and validate `AniDachi Staging` as an unpacked tester artifact.
 4. Test that exact artifact with founders/testers against staging web/API infrastructure.
 5. If staging is accepted, merge/promote the same code path to `main`.
-6. Do not enable production extension auth until a separate production identity
-   and cutover are explicitly approved.
+6. Prepare and validate the exact production artifact with the existing approved
+   Store identity. Upload, publication and server activation are distinct gates.
+   For the paid-hosting transition follow the
+   [production preparation procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md);
+   a single staging-to-main merge is not an ordered schema/Web/Worker rollout.
 
-There is no Chrome Web Store dependency in the current pre-release flow.
+The owner-approved October 2 paid-hosting transition has a limited packaging
+exception: the production Store review ZIP can come from accepted, frozen
+staging source while current production keeps serving old clients. Record
+its exact source/version/hash and verify current-server compatibility;
+Store publication and production promotion remain separate explicit gates.
+Use the preparation procedure above for this transition, rather than
+deploying main solely to create a review ZIP.
 
 ## Important Invariant
 
@@ -216,8 +249,8 @@ Staging and production must not share runtime endpoints accidentally.
 
 Before distributing an artifact, inspect `manifest.json` and the debug panel build id:
 
-- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the release version
-  (currently `0.1.0`). `version_name` is omitted so internal build identifiers
+- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the selected release
+  version. `version_name` is omitted so internal build identifiers
   cannot crowd out the extension name.
 - Diagnostics retain the full `WXT_BUILD_ID`: `*-staging-*` for staging and
   `*-production-*` for production.

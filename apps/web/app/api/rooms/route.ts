@@ -20,6 +20,7 @@ import {
   quotaSummaryForResponse,
 } from "@/lib/anidachi-auth/room-usage";
 import { canStartHostSession, hostRoomTokenTtlSeconds } from "@/lib/room-quota";
+import { hostingDeniedResponse } from "@/lib/anidachi-auth/hosting-denial";
 
 export const dynamic = "force-dynamic";
 
@@ -45,13 +46,18 @@ export async function POST(request: NextRequest) {
   }
 
   const mediaProtocolVersion = clientMediaProtocolVersion(request.headers.get("x-anidachi-media-protocol"));
-  if (mediaProtocolVersion === null)
-    return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
   const user = await getUserById(session.userId);
 	let hostPlan;
 	try {
-		hostPlan = (await resolveAccountEntitlements(session.userId, new Date()))
-			.policy.planCode;
+		const access = await resolveAccountEntitlements(session.userId, new Date());
+		if (access.hosting?.canHost === false)
+			return NextResponse.json(
+				hostingDeniedResponse(new URL("/pricing", request.nextUrl.origin).toString()),
+				{ status: 403 },
+			);
+		hostPlan = access.policy.planCode;
+		if (mediaProtocolVersion === null)
+			return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
 		if (
 			(await getPersonalHistoryPolicyActive()) &&
 			mediaProtocolVersion === 1
@@ -78,6 +84,7 @@ export async function POST(request: NextRequest) {
   }
 
   const creation = await handleRoomCreateRequestBody({
+		pricingUrl: new URL("/pricing", request.nextUrl.origin).toString(),
     readBody: () => request.text(),
     create: async (input) => {
       const { participantSessionId, ...roomInput } = input;

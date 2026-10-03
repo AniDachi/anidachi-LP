@@ -56,7 +56,7 @@ const faq = [
   {
     question: "How do I marathon anime with friends online?",
     answer:
-      "Use AniDachi to synchronize playback across your group. Install the Chrome extension, create a watchroom, and share the invite link. AniDachi keeps everyone's video in sync during live sessions and maintains a shared reaction thread. For a full-day marathon, schedule break points at arc boundaries — AniDachi's progress tracker helps coordinate when everyone is ready to continue.",
+      "Install AniDachi in desktop Chrome. A Plus, Pro or trial host creates the room and shares an invite; friends join for free with their own access to each episode. AniDachi syncs the players and adds live chat, reactions, and calls. Agree on break points and check with the group before continuing.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function AnimeMarathonGlossaryPage() {
       description="Definition and tips for anime marathon watching — what it means, best series for marathoning, and how to run a group anime marathon."
       url="/glossary/anime-marathon"
       datePublished="2026-06-21"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -182,7 +182,7 @@ export default function AnimeMarathonGlossaryPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
-          Every group member adds the Chrome extension. Create a watchroom and share the invite link.
+          Every group member installs the Chrome extension and signs in. A Plus, Pro or trial host creates the room and shares an invite; friends join for free with their own access to the episodes.
         </li>
         <li>
           <span className="font-medium text-foreground">Plan break points at arc boundaries.</span>{" "}
@@ -208,7 +208,7 @@ export default function AnimeMarathonGlossaryPage() {
         <li><strong>Set arc-based break times, not episode-count breaks.</strong> Stopping at the end of an arc feels natural. Stopping mid-arc feels like a cliffhanger without resolution — group energy drops.</li>
         <li><strong>For very long marathons (8+ hours), keep snacks and hydration on hand.</strong> Physical discomfort is the most common reason groups abandon marathons before the finish.</li>
         <li><strong>Agree on minimum episode counts before &quot;just one more&quot; negotiation starts.</strong> If the group agrees &quot;we watch at least 6 episodes&quot; at the start, the decision point for stopping moves to after episode 6 — not after every single episode.</li>
-        <li><strong>Use AniDachi&apos;s async mode if someone falls asleep or steps out.</strong> They can catch up at their own pace and post episode-tagged reactions to the room so the group can pick up the conversation when everyone reconvenes.</li>
+        <li><strong>Agree on a catch-up plan if someone steps out.</strong> They can watch the missed episodes independently, then discuss them in a separate group chat. Built-in async catch-up in AniDachi is coming soon.</li>
       </ul>
 
       <h2

@@ -37,7 +37,7 @@ const faq = [
   {
     question: "Should comedy anime be watched live or async?",
     answer:
-      "Comedy anime almost always works better live. Timing, pauses, and punchlines land hardest when everyone reacts at the same moment. Save async mode for action-comedy hybrids where plot matters more than joke delivery — but for pure comedy like KonoSuba or Nichijou, schedule sync sessions.",
+      "Comedy anime often works better live. Timing, pauses, and punchlines land hardest when everyone reacts at the same moment. Independent viewing can work for action-comedy hybrids where plot matters more than joke delivery, but for pure comedy like KonoSuba or Nichijou, schedule a synced session.",
   },
   {
     question: "Is comedy anime good for anime newcomers?",
@@ -81,7 +81,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
       description="12 comedy picks for group watchrooms — parody, absurdist humor, and reaction-heavy comedy that needs a crowd."
       url="/guides/best-comedy-anime-to-watch-with-friends"
       datePublished="2026-06-08"
-      dateModified="2026-06-08"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -94,7 +94,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Comedy anime is the genre that most needs a crowd — punchlines land
-          harder, absurd moments get timestamped in chat, and running jokes become
+          harder, absurd moments fill live chat with reactions, and running jokes become
           group lore. These 12 picks are sorted by commitment level, from a single
           weekend binge to a months-long Gintama marathon.
         </strong>

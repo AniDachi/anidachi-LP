@@ -12,7 +12,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Amazon Watch Party for Anime (2026) | AniDachi",
   description:
-    "AniDachi vs Amazon Prime Video Watch Together for anime watch parties — Crunchyroll support, async watching, sync reliability, and which is better for anime friend groups.",
+    "AniDachi vs Amazon Prime Video Watch Together for anime watch parties — Crunchyroll support, live sync, personal history, and which fits your group.",
   alternates: { canonical: "/compare/anidachi-vs-amazon-watch-party" },
   openGraph: {
     title: "AniDachi vs Amazon Watch Party for Anime",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AniDachi vs Amazon Watch Party for Anime",
     description:
-      "Crunchyroll vs Prime Video anime, async support, and group-watch features compared.",
+      "Crunchyroll vs Prime Video anime, live sync, and group-watch features compared.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "Which is better for anime watch parties, AniDachi or Amazon?",
     answer:
-      "It depends on where your anime is. For Crunchyroll-exclusive anime (the majority of the popular catalog), AniDachi is the only synchronized co-watching option. For anime on Amazon Prime Video specifically, Amazon Watch Together works well for live sync. AniDachi also supports async catch-up for members with different schedules, which Amazon Watch Together does not.",
+      "It depends on where your anime is. AniDachi supports live Crunchyroll and YouTube rooms with chat, reactions, and voice/video. For anime on Amazon Prime Video specifically, Amazon Watch Together works well for live sync. AniDachi's async catch-up is coming soon; current synchronized rooms need everyone online together.",
   },
   {
     question: "What anime is on Amazon Prime Video vs Crunchyroll?",
@@ -81,7 +81,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       description="Side-by-side comparison for anime watch parties — Crunchyroll vs Prime Video catalog and sync features."
       url="/compare/anidachi-vs-amazon-watch-party"
       datePublished="2026-06-21"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -142,7 +142,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
           },
           {
             feature: "Asynchronous watching",
-            values: { anidachi: "yes", amazon: "no" },
+            values: { anidachi: "Coming soon", amazon: "no" },
           },
           {
             feature: "Live synchronized playback",
@@ -150,11 +150,11 @@ export default function AniDachiVsAmazonWatchPartyPage() {
           },
           {
             feature: "Per-user episode progress tracking",
-            values: { anidachi: "yes", amazon: "no" },
+            values: { anidachi: "Own Plus/Pro + recording permission", amazon: "no" },
           },
           {
             feature: "Spoiler boundary controls",
-            values: { anidachi: "yes", amazon: "no" },
+            values: { anidachi: "No — agree a boundary in chat", amazon: "no" },
           },
           {
             feature: "Auto anime detection",
@@ -225,9 +225,9 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your group watches primarily on Crunchyroll — which covers most popular anime.</li>
-        <li>You need async watching — your group has different schedules or time zones.</li>
-        <li>You want episode-level spoiler controls so members who catch up late aren&apos;t spoiled.</li>
-        <li>You want per-person progress tracking across a long-run series like One Piece or Naruto.</li>
+        <li>You want live chat, reactions, and voice/video on Crunchyroll or YouTube.</li>
+        <li>Everyone can join at the agreed time and open the same episode.</li>
+        <li>You want personal progress with your own Plus/Pro access and recording permission.</li>
       </ul>
 
       <h2

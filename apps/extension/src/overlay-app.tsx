@@ -1,5 +1,5 @@
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
-import { hasHistoryRecordingConsent } from "./history-recording-choice";
+import { isHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
 import type {
 	ClientEvent,
@@ -25,6 +25,7 @@ import {
 	Settings2,
 	SmilePlus,
 	UserPlus,
+	X,
 } from "lucide-react";
 import type {
 	CSSProperties,
@@ -84,8 +85,10 @@ import type {
 	RoomSendDisposition,
 	SignalingTransportReady,
 } from "./media-types";
+import { installComposerQuietRelease } from "./message-composer-quiet-release";
 import {
 	ANIDACHI_COMPOSER_OPEN_ATTR,
+	ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT,
 	ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
 	ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
 	isMessageComposerShortcutEvent,
@@ -182,6 +185,7 @@ import {
 	connectWebsiteRoom,
 	createRoom,
 	isActiveRoomConflictError,
+	isHostingSubscriptionRequiredError,
 	isQuotaExhaustedError,
 	isTerminalRoomJoinError,
 	ROOM_FULL_CLOSE_CODE,
@@ -204,6 +208,8 @@ import {
 	roomInviteTargetStatusLabel,
 } from "./room-invite-target-status";
 import { FreeQuotaNotice } from "./free-quota-notice";
+import { HostingPaywall } from "./hosting-paywall";
+import { useHostingAccess } from "./use-hosting-access";
 import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
@@ -395,13 +401,6 @@ function appendVisibleReaction(
 	return participantBounded.slice(-MAX_VISIBLE_REACTIONS_TOTAL);
 }
 
-interface PointerWakePoint {
-	clientX: number;
-	clientY: number;
-	screenX: number;
-	screenY: number;
-}
-
 interface OverlayViewportSize {
 	width: number;
 	height: number;
@@ -421,7 +420,6 @@ const LIVE_CHAT_MAX_MESSAGES = OVERLAY_LAYOUT_MAX_MESSAGES;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
-const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
 const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
 const SIGN_OUT_CONFIRMATION_DURATION_MS = ROOM_END_CONFIRMATION_DURATION_MS;
 export const TRANSIENT_PANEL_NOTICE_DURATION_MS = 3000;
@@ -541,7 +539,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const roomReconnectTimerRef = useRef<number | null>(null);
 	const messageComposerFormRef = useRef<HTMLFormElement | null>(null);
 	const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
-	const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
 	const miniPanelRef = useRef<HTMLElement | null>(null);
 	const overlayRootRef = useRef<HTMLDivElement | null>(null);
 	const cameraStackRef = useRef<HTMLDivElement | null>(null);
@@ -551,17 +548,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const inviteNoticeTimerRef = useRef<number | null>(null);
 	const roomEndConfirmationTimerRef = useRef<number | null>(null);
 	const signOutConfirmationTimerRef = useRef<number | null>(null);
-	const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
-	const messageComposerShieldReleasePointerRef =
-		useRef<PointerWakePoint | null>(null);
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
 	const authGenerationRef = useRef(0);
+	const authSessionKeyRef = useRef<string | null>(null);
 	const suppressSilentSignInUntilRef = useRef(0);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
 	const [authAuthenticated, setAuthAuthenticated] = useState(false);
 	const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
+	const [authSessionKey, setAuthSessionKey] = useState<string | null>(null);
 	const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(
 		null,
 	);
@@ -581,6 +577,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const voiceAudioPreferencesWriteTimerRef = useRef<number | null>(null);
 	const [authBusy, setAuthBusy] = useState(false);
 	const [authMessage, setAuthMessage] = useState<string | null>(null);
+	const [roomTerminalMessage, setRoomTerminalMessage] = useState<string | null>(null);
+	const roomActionMessage = authMessage ?? roomTerminalMessage;
+	const [hostingRequiredOwner, setHostingRequiredOwner] = useState<string | null>(null);
+	const [hostingPaywallOpen, setHostingPaywallOpen] = useState(false);
 	const [transientPanelNotice, setTransientPanelNotice] = useState<
 		string | null
 	>(null);
@@ -608,6 +608,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [roomCapabilities, setRoomCapabilities] =
 		useState<RoomCapabilities | RoomMediaCapabilities | null>(null);
 	const [roomMediaSnapshot, setRoomMediaSnapshot] = useState<RoomMediaSnapshot | null>(null);
+	const announcedRoomClosingRef = useRef<string | null>(null);
 	const [, setMediaRevision] = useState(0);
 	const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
 	const quotaMeteredMsRef = useRef(0);
@@ -667,10 +668,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		ready: false,
 	});
 	const [messageComposerGuardActive, setMessageComposerGuardActive] =
-		useState(false);
-	const [messageComposerShieldActive, setMessageComposerShieldActive] =
-		useState(false);
-	const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] =
 		useState(false);
 	const [messageComposerEmojiOpen, setMessageComposerEmojiOpen] =
 		useState(false);
@@ -808,11 +805,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
+	const hostingDisplay = useHostingAccess({
+		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
+		sessionKey: authSessionKey,
+		enabled: panelOpen || roomId !== null,
+	});
+	const legacyQuotaEnabled = hostingDisplay.state.mode === "legacy";
+	const hostingPolicyModeRef = useRef(hostingDisplay.state.mode);
+	hostingPolicyModeRef.current = hostingDisplay.state.mode;
 	const freeQuotaNotice = useFreeQuotaNotice({
 		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
 		accessToken: authAccessToken,
+		sessionKey: authSessionKey,
 		visible: panelOpen && !roomId,
-		isFree: accountUser?.plan === "free",
+		isFree: hostingDisplay.state.access?.planCode === "free",
+		policyMode: hostingDisplay.state.mode,
+		onQuotaRetired: hostingDisplay.invalidate,
 		exhaustion: quotaExhaustion,
 	});
 	const showFreeQuotaNotice = useCallback((resetAt?: string) => {
@@ -1678,6 +1686,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			authUserIdRef.current = nextAuthUserId;
+			setRoomTerminalMessage(null);
+			setHostingRequiredOwner(null);
+			setHostingPaywallOpen(false);
 			authGenerationRef.current += 1;
 			inviteStatusRequestEpochRef.current += 1;
 			inviteActionIdsRef.current.clear();
@@ -1703,13 +1714,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
+		setRoomTerminalMessage(null);
 		const result = await createCurrentParticipant();
 		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+		authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 		authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 		participantRef.current = result.participant;
 		setParticipant(result.participant);
 		setAuthAuthenticated(result.authenticated);
 		setAuthAccessToken(result.tokens?.accessToken ?? null);
+		setAuthSessionKey(result.tokens?.refreshToken ?? null);
 		setAccountUser(result.tokens?.user ?? null);
 		setExtensionContextInvalidated(Boolean(result.requiresPageReload));
 		setAuthMessage(result.message ?? null);
@@ -1732,6 +1746,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		return {
 			accessToken: result.tokens?.accessToken ?? null,
+			sessionKey: result.tokens?.refreshToken ?? null,
 			accountGeneration: authGenerationRef.current,
 			ownerUserId: result.tokens?.user.id ?? null,
 			participant: result.participant,
@@ -1747,47 +1762,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const setMessageComposerDomGuard = useCallback(
-		(active: boolean) => {
-			if (active) {
-				document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "true";
-				adapter.container.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = "true";
-				return;
+		(mode: "true" | "quiet" | null) => {
+			for (const target of [document.documentElement, adapter.container]) {
+				if (mode) target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] = mode;
+				else delete target.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
 			}
-
-			delete document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
-			delete adapter.container.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
 		},
 		[adapter.container],
 	);
 
-	const clearMessageComposerShieldReleaseTimer = useCallback(() => {
-		if (messageComposerShieldReleaseTimerRef.current === null) {
-			return;
-		}
-
-		window.clearTimeout(messageComposerShieldReleaseTimerRef.current);
-		messageComposerShieldReleaseTimerRef.current = null;
-	}, []);
-
 	const deactivateMessageComposerGuard = useCallback(() => {
-		clearMessageComposerShieldReleaseTimer();
-		resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-		messageComposerShieldReleasePointerRef.current = null;
-		setMessageComposerShieldActive(false);
-		setMessageComposerShieldReleasing(false);
 		setMessageComposerGuardActive(false);
-		setMessageComposerDomGuard(false);
-	}, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
+		setMessageComposerDomGuard(null);
+	}, [setMessageComposerDomGuard]);
 
 	const activateMessageComposerGuard = useCallback(() => {
-		clearMessageComposerShieldReleaseTimer();
-		resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-		messageComposerShieldReleasePointerRef.current = null;
-		setMessageComposerShieldActive(true);
-		setMessageComposerShieldReleasing(false);
 		setMessageComposerGuardActive(true);
-		setMessageComposerDomGuard(true);
-	}, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
+		setMessageComposerDomGuard("true");
+	}, [setMessageComposerDomGuard]);
+
+	const keepPlayerQuietAfterComposer = useCallback(() => {
+		setMessageComposerGuardActive(true);
+		setMessageComposerDomGuard("quiet");
+	}, [setMessageComposerDomGuard]);
 
 	useEffect(() => {
 		return () => {
@@ -1809,11 +1806,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 			}
 			liveChatTimersRef.current = {};
-			clearMessageComposerShieldReleaseTimer();
-			resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-			setMessageComposerDomGuard(false);
+			setMessageComposerDomGuard(null);
 		};
-	}, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
+	}, [setMessageComposerDomGuard]);
 
 	const currentParticipant = useMemo(
 		() =>
@@ -2254,24 +2249,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		mediaSeatAuthoritative,
 		roomId,
 	]);
-	const messageComposerShieldVisible =
-		messageComposerOpen || messageComposerShieldActive;
-	const messageComposerShieldLatched =
-		messageComposerShieldActive && !messageComposerOpen;
-	const messageComposerShieldClassName = [
-		"message-composer-shield",
-		messageComposerShieldLatched ? "latched" : "",
-		messageComposerShieldReleasing ? "releasing" : "",
-	]
-		.filter(Boolean)
-		.join(" ");
 	// Worker snapshots own accumulated room usage. The local interval only keeps
 	// the display moving between snapshots while host and guest are both live.
 	const quotaMeteringActive =
-		isConnected && isHost && roomQuota !== null &&
+		legacyQuotaEnabled && isConnected && isHost && roomQuota !== null &&
     (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
 	const quotaRemainingSeconds = useMemo(() => {
-		if (!roomQuota) return null;
+		if (!legacyQuotaEnabled || !roomQuota) return null;
     if (versionedMedia && !roomSnapshotReady) return null;
     if (versionedMedia) return authoritativeQuotaRemainingSeconds(authoritativeQuota?.quota ?? null, quotaMeteredMsRef.current);
 		// quotaDisplayTick advances once per second while metering is active so the
@@ -2282,7 +2266,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomUsage,
 			localMeteredMs: quotaMeteredMsRef.current,
 		});
-	}, [roomQuota, roomUsage, quotaDisplayTick, versionedMedia, authoritativeQuota, roomSnapshotReady]);
+	}, [legacyQuotaEnabled, roomQuota, roomUsage, quotaDisplayTick, versionedMedia, authoritativeQuota, roomSnapshotReady]);
 	const cameraStackVisible = shouldShowCameraStack({
 		cameraParticipantCount: displayedCameraParticipants.length,
 		p2pSessionActive,
@@ -2548,12 +2532,62 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	useEffect(() => {
 		setMessageComposerDomGuard(
-			messageComposerOpen || messageComposerGuardActive,
+			messageComposerOpen ? "true" : messageComposerGuardActive ? "quiet" : null,
 		);
 	}, [
 		messageComposerGuardActive,
 		messageComposerOpen,
 		setMessageComposerDomGuard,
+	]);
+
+	useEffect(() => {
+		if (
+			messageComposerOpen ||
+			!messageComposerGuardActive ||
+			!overlayRootRef.current
+		)
+			return;
+		return installComposerQuietRelease(
+			adapter.container,
+			overlayRootRef.current,
+			deactivateMessageComposerGuard,
+			(event) => {
+				const state = {
+					experimentalSuperReactionsEnabled,
+					messageComposerOpen,
+					panelOpen,
+					reactionsEnabled,
+					reactionShortcuts: reactionShortcuts.assignments,
+					roomActive: Boolean(roomId),
+					voiceMode: voiceSession.mode,
+				};
+				// Held PTT is still an overlay gesture, even when no new action starts.
+				const heldVoiceShortcut =
+					state.roomActive &&
+					state.voiceMode === "push-to-talk" &&
+					!event.altKey &&
+					!event.ctrlKey &&
+					!event.metaKey &&
+					!event.shiftKey &&
+					(event.code === "KeyV" || event.key.toLowerCase() === "v");
+				return (
+					heldVoiceShortcut ||
+					getHotkeyAction(event, state) !== null ||
+					shouldCaptureReactionShortcutEvent(event, state)
+				);
+			},
+		);
+	}, [
+		adapter.container,
+		deactivateMessageComposerGuard,
+		experimentalSuperReactionsEnabled,
+		messageComposerGuardActive,
+		messageComposerOpen,
+		panelOpen,
+		reactionsEnabled,
+		reactionShortcuts.assignments,
+		roomId,
+		voiceSession.mode,
 	]);
 
 	useEffect(() => {
@@ -2720,7 +2754,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
 					: null;
 			},
 			loadPreferences: async () => {
@@ -2732,7 +2766,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
 					: null;
 			},
 			recoverCapture: async () => {
@@ -2749,7 +2783,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!bootstrapped.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await hasHistoryRecordingConsent(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
 					: null;
 			},
 			observeLocally: async (
@@ -3421,7 +3455,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setRoomCapabilities(null);
 			clearStoredRoomSession();
 			clearRoomHash();
-			setAuthMessage(message);
+			setAuthMessage(null);
+			setRoomTerminalMessage(message || null);
+			announcedRoomClosingRef.current = null;
 			setPanelOpen(true);
 		},
 		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop],
@@ -3446,6 +3482,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						if (media.error) showTransientPanelNotice(media.error);
 						ghostCamSession.reconcileMediaAuthority(media.canCapture("camera"), media.canCapture("microphone"), media.snapshot);
 						setRoomMediaSnapshot(media.snapshot);
+						if (media.snapshot.closingAt !== null) {
+							const notice = JSON.stringify([authUserIdRef.current, media.snapshot.roomId, media.snapshot.roomGeneration, media.snapshot.closingAt]);
+							if (announcedRoomClosingRef.current !== notice) {
+								announcedRoomClosingRef.current = notice;
+								setPanelOpen(true);
+							}
+						}
 						setRoomCapabilities(media.snapshot.capabilities);
 						setMediaRevision(n => n + 1);
 						if (!media.wants("camera")) {
@@ -3461,7 +3504,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				case "ROOM_ENDED": {
 					if (event.roomId !== roomIdRef.current) return;
-					if (event.reason === "quota_exhausted") {
+					if (event.reason === "quota_exhausted" && hostingPolicyModeRef.current === "legacy") {
 						if (isCurrentHost()) {
 							const ended = new Date(event.endedAt);
 							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
@@ -3470,6 +3513,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						} else {
 							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
 						}
+					} else if (event.reason === "capability_expired") {
+						terminateRoomSession(event.hostingCutover
+							? "This Free room closed because creating rooms now requires Plus or Pro. You can still join rooms for free."
+							: "This room closed because the host's room access could not be renewed. You can still join rooms for free.");
 					} else terminateRoomSession("Watch room ended.");
 					return;
 				}
@@ -4395,11 +4442,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		) => {
 			const activeRoomId = roomIdRef.current;
 			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+			if (authSessionKeyRef.current !== (result.tokens?.refreshToken ?? null)) {
+				setRoomTerminalMessage(null);
+			}
+			authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 			authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 			participantRef.current = result.participant;
 			setParticipant(result.participant);
 			setAuthAuthenticated(result.authenticated);
 			setAuthAccessToken(result.tokens?.accessToken ?? null);
+			setAuthSessionKey(result.tokens?.refreshToken ?? null);
 			setAccountUser(result.tokens?.user ?? null);
 			setExtensionContextInvalidated(Boolean(result.requiresPageReload));
 			setAuthMessage(result.message ?? null);
@@ -4629,6 +4681,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			const activeParticipant = refreshed.participant;
 			const activeAccessToken = refreshed.accessToken;
+			setHostingPaywallOpen(false);
 			if (!activeParticipant || !activeAccessToken) {
 				setPanelOpen(true);
 				setAuthMessage("Sign in to create Anidachi rooms.");
@@ -4681,6 +4734,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				// Account changes and superseding joins retire this operation's errors too.
 				if (!isCurrentCreate()) return null;
 				releaseRoomTabLock();
+				// A delayed failure belongs to the login that made the request.
+				// Keep cleanup above, but do not apply its offer/quota/error to a new login.
+				if (authSessionKeyRef.current !== refreshed.sessionKey) return null;
+				if (isHostingSubscriptionRequiredError(error)) {
+					hostingDisplay.invalidate();
+					setHostingRequiredOwner(activeParticipant.id);
+					setHostingPaywallOpen(true);
+					setPanelOpen(true);
+					setAuthMessage(null);
+					return null;
+				}
 				throw error;
 			}
 			createRequestIdRef.current = null;
@@ -4860,7 +4924,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					clearStoredRoomSession();
 					clearRoomHash();
 					releaseRoomTabLock();
-					setAuthMessage(roomJoinUnavailableMessage(error));
+					setAuthMessage(null);
+					setRoomTerminalMessage(roomJoinUnavailableMessage(error));
 					setPanelOpen(true);
 					return;
 				}
@@ -5704,18 +5769,18 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	const blurMessageComposerInput = useCallback(() => {
 		const input = messageComposerInputRef.current;
-		if (input && document.activeElement === input) {
+		if (input && (input.getRootNode() as Document | ShadowRoot).activeElement === input) {
 			input.blur();
 		}
 	}, []);
 
 	const closeMessageComposer = useCallback(() => {
+		keepPlayerQuietAfterComposer();
 		blurMessageComposerInput();
 		setMessageComposerOpen(false);
 		setMessageComposerEmojiOpen(false);
 		setMessageComposerText("");
-		deactivateMessageComposerGuard();
-	}, [blurMessageComposerInput, deactivateMessageComposerGuard]);
+	}, [blurMessageComposerInput, keepPlayerQuietAfterComposer]);
 
 	const insertComposerEmoji = useCallback(
 		(emoji: string) => {
@@ -5752,20 +5817,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				event.nativeEvent.stopImmediatePropagation();
 			}
 			const text = messageComposerText.trim();
-			if (!text || !roomId) {
+			if (!text) {
+				closeMessageComposer();
 				return;
 			}
+			if (!roomId) return;
 
 			sendReaction("", text);
+			keepPlayerQuietAfterComposer();
 			blurMessageComposerInput();
 			setMessageComposerText("");
 			setMessageComposerOpen(false);
 			setMessageComposerEmojiOpen(false);
-			deactivateMessageComposerGuard();
 		},
 		[
 			blurMessageComposerInput,
-			deactivateMessageComposerGuard,
+			closeMessageComposer,
+			keepPlayerQuietAfterComposer,
 			messageComposerText,
 			roomId,
 			sendReaction,
@@ -5777,59 +5845,24 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			event.stopPropagation();
 			event.nativeEvent.stopImmediatePropagation();
 
-			if (event.key === "Escape" && !isFullscreenActive()) {
+			if (
+				event.key === "Escape" && !isFullscreenActive() &&
+				!event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229
+			) {
 				event.preventDefault();
 				closeMessageComposer();
 				return;
 			}
 
 			if (event.key === "Enter" && !event.shiftKey) {
+				if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
+					return;
+				}
 				event.preventDefault();
-				submitMessageComposer();
+				if (!event.repeat) submitMessageComposer();
 			}
 		},
 		[closeMessageComposer, submitMessageComposer],
-	);
-
-	const handleMessageComposerShieldReleaseIntent = useCallback(
-		(event: PointerEvent<HTMLElement>) => {
-			stopNativeEvent(event);
-
-			if (messageComposerOpen) {
-				return;
-			}
-
-			const shield = event.currentTarget;
-			shield.style.cursor = "default";
-			messageComposerShieldReleasePointerRef.current = {
-				clientX: event.clientX,
-				clientY: event.clientY,
-				screenX: event.screenX,
-				screenY: event.screenY,
-			};
-
-			if (messageComposerShieldReleaseTimerRef.current !== null) {
-				return;
-			}
-
-			setMessageComposerShieldReleasing(true);
-			setMessageComposerGuardActive(false);
-			setMessageComposerDomGuard(false);
-			messageComposerShieldReleaseTimerRef.current = window.setTimeout(() => {
-				messageComposerShieldReleaseTimerRef.current = null;
-				const wakePoint = messageComposerShieldReleasePointerRef.current;
-				const activeShield = messageComposerShieldRef.current;
-				if (wakePoint) {
-					wakePlayerAfterComposerShieldRelease(wakePoint, activeShield);
-				}
-				deactivateMessageComposerGuard();
-			}, MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS);
-		},
-		[
-			deactivateMessageComposerGuard,
-			messageComposerOpen,
-			setMessageComposerDomGuard,
-		],
 	);
 
 	useEffect(() => {
@@ -5860,7 +5893,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 
-		const handleSubmit = () => submitMessageComposer();
+		const handleSubmit = () => {
+			// The early guard also receives Enter from controls in our closed shadow.
+			// Activate the focused control, rather than submitting a draft from Close.
+			const form = messageComposerFormRef.current;
+			const focused = (form?.getRootNode() as Document | ShadowRoot | undefined)?.activeElement;
+			if (
+				focused instanceof HTMLButtonElement &&
+				Array.from(form?.querySelectorAll("button") ?? []).includes(focused)
+			) {
+				focused.click();
+				return;
+			}
+			submitMessageComposer();
+		};
+
+		window.addEventListener(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT, closeMessageComposer);
 
 		window.addEventListener(
 			ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
@@ -5868,12 +5916,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		);
 
 		return () => {
+			window.removeEventListener(ANIDACHI_MESSAGE_COMPOSER_DISMISS_EVENT, closeMessageComposer);
 			window.removeEventListener(
 				ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
 				handleSubmit,
 			);
 		};
-	}, [messageComposerOpen, submitMessageComposer]);
+	}, [closeMessageComposer, messageComposerOpen, submitMessageComposer]);
 
 	useEffect(() => {
 		const state = () => ({
@@ -5891,7 +5940,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
+			if (
+				messageComposerOpen && isEscapeKey(event) && !isFullscreenActive() &&
+				!event.isComposing && event.keyCode !== 229
+			) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				closeMessageComposer();
@@ -5972,7 +6024,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
+			if (
+				messageComposerOpen && isEscapeKey(event) && !isFullscreenActive() &&
+				!event.isComposing && event.keyCode !== 229
+			) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				return;
@@ -6152,7 +6207,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								<PanelAccountTitle
 									displayName={accountDisplayName}
 									plan={
-										authAuthenticated && accountUser ? accountUser.plan : null
+										authAuthenticated ? hostingDisplay.state.access?.planCode ?? null : null
 									}
 								/>
 								{roomId && !mediaV3 ? (
@@ -6300,10 +6355,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							<span>{transientPanelNotice}</span>
 						</div>
 					) : null}
-					{!roomId && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
-					{authMessage ? (
+					{!roomId && panelOpen && hostingPaywallOpen && hostingRequiredOwner === accountUser?.id ? (
+						<HostingPaywall key={`${hostingRequiredOwner}:${authGenerationRef.current}`} state={hostingDisplay.state} onRefresh={hostingDisplay.refresh} onClose={() => setHostingPaywallOpen(false)} />
+					) : null}
+					{!roomId && hostingRequiredOwner !== accountUser?.id && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
+					{roomActionMessage ? (
 						<div className="auth-notice">
-							<span>{authMessage}</span>
+							<span>{roomActionMessage}</span>
 							{extensionContextInvalidated ? (
 								<button
 									className="button compact"
@@ -6315,7 +6373,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							) : null}
 						</div>
 					) : null}
-					{roomQuota ? (
+					{legacyQuotaEnabled && roomQuota ? (
 						<div className="quota-note">
 							<span>Free watch-party time today</span>
 							<strong>
@@ -6823,33 +6881,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				/>
 			) : null}
 
-			{messageComposerShieldVisible && roomId ? (
+			{messageComposerOpen && roomId ? (
 				<div
-					ref={messageComposerShieldRef}
 					aria-hidden="true"
-					className={messageComposerShieldClassName}
-					onClick={stopNativeEvent}
-					onMouseDown={stopNativeEvent}
-					onMouseUp={stopNativeEvent}
-					onPointerDown={handleMessageComposerShieldReleaseIntent}
-					onPointerMove={handleMessageComposerShieldReleaseIntent}
-					onPointerOver={stopNativeEvent}
-					onPointerUp={stopNativeEvent}
+					className="message-composer-shield"
+					{...overlayInteractionBoundaryProps}
 				/>
 			) : null}
 
 			{messageComposerOpen && roomId ? (
 				<form
 					className="message-composer"
-					onClick={stopNativeEvent}
-					onKeyDown={stopNativeEvent}
-					onMouseDown={stopNativeEvent}
-					onMouseMove={stopNativeEvent}
-					onMouseUp={stopNativeEvent}
-					onPointerDown={stopNativeEvent}
-					onPointerMove={stopNativeEvent}
-					onPointerOver={stopNativeEvent}
-					onPointerUp={stopNativeEvent}
+					{...overlayInteractionBoundaryProps}
+					onFocus={stopNativeEvent}
+					onBlur={stopNativeEvent}
+					onKeyPress={stopNativeEvent}
 					onSubmit={submitMessageComposer}
 					ref={messageComposerFormRef}
 				>
@@ -6897,6 +6943,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						type="submit"
 					>
 						<SendHorizontal size={15} />
+					</button>
+					<button
+						aria-label="Close message"
+						className="message-composer-close"
+						onClick={closeMessageComposer}
+						title={
+							navigator.platform.startsWith("Mac")
+								? "Close without sending (⌥ Option + C)"
+								: "Close without sending (Alt + C)"
+						}
+						type="button"
+					>
+						<X size={16} />
 					</button>
 				</form>
 			) : null}
@@ -7369,6 +7428,9 @@ function clearRoomHash(): void {
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {
+  if (isHostingSubscriptionRequiredError(error)) {
+    return "This room needs a host with Plus or Pro. You can join another paid host’s room for free.";
+  }
   if (error.status === 426) return "Update Anidachi to join this room.";
 	if (error.status === 404) {
 		return "This watch room is no longer available.";
@@ -7475,58 +7537,6 @@ function initials(name: string): string {
 		.slice(0, 2)
 		.map((part) => part[0]?.toUpperCase() ?? "")
 		.join("");
-}
-
-function resetComposerShieldInlineStyles(shield: HTMLDivElement | null) {
-	if (!shield) {
-		return;
-	}
-
-	shield.style.cursor = "";
-	shield.style.pointerEvents = "";
-}
-
-function wakePlayerAfterComposerShieldRelease(
-	point: PointerWakePoint,
-	shield: HTMLElement | null,
-) {
-	const previousPointerEvents = shield?.style.pointerEvents ?? "";
-	if (shield) {
-		shield.style.pointerEvents = "none";
-	}
-
-	const target = document.elementFromPoint(point.clientX, point.clientY);
-	if (shield) {
-		shield.style.pointerEvents = previousPointerEvents;
-	}
-
-	if (!target) {
-		return;
-	}
-
-	const eventInit: MouseEventInit = {
-		bubbles: true,
-		cancelable: true,
-		clientX: point.clientX,
-		clientY: point.clientY,
-		composed: true,
-		screenX: point.screenX,
-		screenY: point.screenY,
-		view: window,
-	};
-
-	if (typeof globalThis.PointerEvent === "function") {
-		target.dispatchEvent(
-			new globalThis.PointerEvent("pointermove", {
-				...eventInit,
-				isPrimary: true,
-				pointerId: 1,
-				pointerType: "mouse",
-			}),
-		);
-	}
-
-	target.dispatchEvent(new MouseEvent("mousemove", eventInit));
 }
 
 function stopNativeEvent(event: SyntheticEvent<HTMLElement>) {

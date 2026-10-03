@@ -1,3 +1,4 @@
+import { YOUTUBE_COMPOSER_CHROME_STYLES } from "../../../src/source-adapters/youtube/composer-chrome";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../../src/source-adapters/core/overlay-geometry";
 import {
@@ -117,6 +118,53 @@ describe("YouTube player chrome", () => {
 		expect(listener).toHaveBeenCalledTimes(2);
 
 		dispose();
+	});
+
+	it("remeasures the layout when composer guards hide and release the controls", () => {
+		const { mutationObservers, runAnimationFrames } =
+			installGeometryObserverStubs();
+		document.body.innerHTML =
+			'<div id="movie_player" data-anidachi-adapter="youtube"><div class="ytp-chrome-bottom"></div></div>';
+		const style = document.createElement("style");
+		style.textContent = YOUTUBE_COMPOSER_CHROME_STYLES;
+		document.body.append(style);
+		const container = getPlayer();
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(container.querySelector(".ytp-chrome-bottom"), 0, 450, 960, 90);
+		const listener = vi.fn();
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, listener);
+		try {
+			runAnimationFrames();
+			expect(mutationObservers[0]?.options?.attributeFilter).toContain(
+				"data-anidachi-composer-open",
+			);
+			container.dataset.anidachiComposerOpen = "true";
+			mutationObservers[0]?.trigger([
+				{
+					type: "attributes",
+					target: container,
+					attributeName: "data-anidachi-composer-open",
+				} as unknown as MutationRecord,
+			]);
+			runAnimationFrames();
+			expect(listener).toHaveBeenLastCalledWith(
+				expect.objectContaining({ controlsVisible: false }),
+			);
+			delete container.dataset.anidachiComposerOpen;
+			mutationObservers[0]?.trigger([
+				{
+					type: "attributes",
+					target: container,
+					attributeName: "data-anidachi-composer-open",
+				} as unknown as MutationRecord,
+			]);
+			runAnimationFrames();
+			expect(listener).toHaveBeenLastCalledWith(
+				expect.objectContaining({ controlsVisible: true }),
+			);
+		} finally {
+			dispose();
+		}
 	});
 
 	it.each([
@@ -285,6 +333,7 @@ describe("YouTube player chrome", () => {
 				"hidden",
 				"role",
 				"type",
+				"data-anidachi-composer-open",
 			],
 			attributes: true,
 			childList: true,

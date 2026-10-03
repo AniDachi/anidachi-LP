@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
   ClientEventSchema,
   EMPTY_ROOM_TIMEOUT_MS,
@@ -124,6 +125,19 @@ describe("room protocol schemas", () => {
       endedAt: 1_000,
       reason: "host_ended",
     });
+  });
+  it("preserves a cutover explanation while keeping the legacy terminal reason readable", () => {
+    const event = { type: "ROOM_ENDED", roomId: "room-1", endedAt: 1000,
+      reason: "capability_expired", hostingCutover: true };
+    expect(ServerEventSchema.parse(event)).toEqual(event);
+    // Pre-transition ROOM_ENDED uses a stripping object and the same bounded enum.
+    // This proves source-contract compatibility, not an uninspected Store package.
+    const legacy = z.object({ type: z.literal("ROOM_ENDED"), roomId: z.string(),
+      endedAt: z.number().int().nonnegative(), reason: RoomEndReasonSchema });
+    expect(legacy.parse(event)).toEqual({ type: "ROOM_ENDED", roomId: "room-1",
+      endedAt: 1000, reason: "capability_expired" });
+    for (const invalid of [{ ...event, hostingCutover: false }, { ...event, reason: "host_ended" }])
+      expect(ServerEventSchema.safeParse(invalid).success).toBe(false);
   });
   it("exports the canonical room signaling limits", () => {
     expect(MAX_ROOM_ID_CHARS).toBe(128);

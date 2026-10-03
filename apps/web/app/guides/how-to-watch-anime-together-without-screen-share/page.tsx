@@ -43,7 +43,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "Use AniDachi to detect the anime and create a room.",
+    text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room. Friends can join on Free accounts.",
   },
   { name: "Share the invite", text: "Send the room link to friends." },
   {
@@ -106,7 +106,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
         description="How to watch anime together without screen share: use synced Crunchyroll watchrooms so everyone streams locally in better quality."
         url="/guides/how-to-watch-anime-together-without-screen-share"
         datePublished="2026-07-12"
-        dateModified="2026-07-19"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -120,7 +120,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
             To watch anime together without screen share, use a synced watchroom
             instead of broadcasting one person&apos;s browser. AniDachi lets
             everyone stream the Crunchyroll episode locally, while the room
-            handles sync, chat, and async catch-up.
+            handles live sync, chat, cameras, and microphones.
           </strong>
         </p>
 
@@ -154,7 +154,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Everyone gets their own stream quality.</li>
           <li>Pauses and seeks stay coordinated.</li>
-          <li>Async catch-up is possible when someone misses the live time.</li>
+          <li>Anyone who misses the live time can watch independently before your next meeting.</li>
         </ul>
 
         <h2

@@ -33,17 +33,17 @@ const faq = [
   {
     question: "What is the best anime watch party setup for Crunchyroll?",
     answer:
-      "The best Crunchyroll watch party setup is AniDachi — a Chrome extension that syncs playback, adds real-time chat, and supports async watching. Install it on each participant's device, open any Crunchyroll episode, create a watchroom, and share the invite link.",
+      "AniDachi is a desktop Chrome extension for live Crunchyroll rooms with sync, chat, reactions, and voice/video. Everyone installs it and opens the same episode. A Plus, Pro, or trial host creates the room and sends an invite; Free friends can join.",
   },
   {
     question: "Can you do an anime watch party without everyone being online at the same time?",
     answer:
-      "Yes — AniDachi supports async watching. Each person watches at their own pace, marks episodes as done, and leaves timestamped reactions. Others see those reactions when they finish the same episode. No scheduling required.",
+      "You can watch independently and discuss afterward in a separate chat. AniDachi live rooms currently need everyone online together. Async catch-up, shared group progress, and replayed timestamped reactions are coming soon.",
   },
   {
     question: "Is Teleparty better than AniDachi for anime watch parties?",
     answer:
-      "Teleparty supports more streaming platforms but has no async mode. AniDachi focuses on Crunchyroll anime groups with async watching, auto anime detection, and per-person progress — and also supports YouTube watchrooms. For Crunchyroll-first groups, AniDachi is the better choice.",
+      "Teleparty supports more streaming platforms. AniDachi focuses on Crunchyroll and YouTube live rooms with anime detection, chat, reactions, and voice/video. Your own Plus/Pro access and recording permission enable personal history. Async catch-up is coming soon.",
   },
   {
     question: "When should I open this toolkit instead of the long-form pillars?",
@@ -99,7 +99,7 @@ export default function AnimeWatchPartyToolkitPage() {
       description="Structured starting point for Crunchyroll group watching with AniDachi."
       url="/anime-watch-party-toolkit"
       datePublished="2026-05-08"
-      dateModified="2026-07-25"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={[...toolkitItemList, ...genreHubItemList(toolkitItemList.length + 1)]}

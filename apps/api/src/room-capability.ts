@@ -4,6 +4,7 @@ import {
 	ROOM_MEDIA_CAPABILITY_END_GRACE_MS,
 	ROOM_MEDIA_CAPABILITY_RENEW_BEFORE_MS,
 } from "@anidachi/protocol";
+import type { RoomMeterState } from "./room-metering";
 export const ROOM_POLICY_STORAGE_KEY = "room_policy_v2";
 export type RoomPolicyState = {
 	schemaVersion: 2;
@@ -74,7 +75,7 @@ export function renewRoomPolicy(
 export function nextRoomPolicyAlarm(
 	state: RoomPolicyState,
 	now: number,
-	meter: { day: string; seconds: number },
+	meter: RoomMeterState,
 	active: boolean,
 ): number {
 	const expiry = Date.parse(state.lease.capabilities.capabilitiesValidUntil);
@@ -85,11 +86,13 @@ export function nextRoomPolicyAlarm(
 		const midnight = (Math.floor(now / 86400000) + 1) * 86400000;
 		candidates.push(midnight);
 		if (!state.budget || state.budget.day !== meter.day) candidates.push(now);
-		else if (active) {
-			const remaining = state.budget.allowedSeconds - meter.seconds;
-			candidates.push(now + Math.max(0, remaining) * 1000);
+		else if (active && meter.activeSince !== null) {
+			// Derive absolute deadlines from the durable interval, not rounded
+			// display seconds; ordinary frames must not move the quota alarm.
+			const remainingMs = state.budget.allowedSeconds * 1000 - meter.accumulatedMs;
+			candidates.push(meter.activeSince + Math.max(0, remainingMs));
 			if (state.quotaWarnedDay !== meter.day)
-				candidates.push(now + Math.max(0, remaining - 300) * 1000);
+				candidates.push(meter.activeSince + Math.max(0, remainingMs - 300_000));
 		}
 	}
 	return Math.max(now, Math.min(...candidates));

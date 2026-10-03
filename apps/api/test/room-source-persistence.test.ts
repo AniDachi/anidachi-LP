@@ -1,5 +1,5 @@
 import type { RoomSourcePersistenceCallback } from "@anidachi/protocol";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as roomSourcePersistence from "../src/room-source-persistence";
 import {
   createParticipantDisconnect,
@@ -18,6 +18,29 @@ import {
 } from "../src/room-source-persistence";
 
 describe("room source persistence outbox", () => {
+  it("only changes the real alarm when the earliest durable obligation changes", async () => {
+    const storage = new MemoryStorage();
+    const set = vi.spyOn(storage, "setAlarm");
+    const remove = vi.spyOn(storage, "deleteAlarm");
+    const reconcile = (at: number | null) => storage.transaction(t =>
+      roomSourcePersistence.reconcileStoredRoomAlarm(t, at));
+    await reconcile(null);
+    expect(remove).not.toHaveBeenCalled();
+    await reconcile(500);
+    await reconcile(500);
+    expect(set).toHaveBeenCalledTimes(1);
+    await reconcile(300);
+    expect(storage.alarmAt).toBe(300);
+    await reconcile(900);
+    expect(storage.alarmAt).toBe(900);
+    // During an alarm handler getAlarm is null: re-arm the future obligation.
+    storage.alarmAt = null;
+    await reconcile(900);
+    expect(set).toHaveBeenCalledTimes(4);
+    await reconcile(null);
+    await reconcile(null);
+    expect(remove).toHaveBeenCalledTimes(1);
+  });
   it("validates the exact shared callback before writing one KV record", async () => {
     const storage = new MemoryStorage();
 
@@ -299,6 +322,8 @@ class MemoryStorage {
   async delete(key: string): Promise<boolean> {
     return this.values.delete(key);
   }
+
+  async getAlarm(): Promise<number | null> { return this.alarmAt; }
 
   async setAlarm(scheduledTime: number): Promise<void> {
     this.alarmAt = scheduledTime;

@@ -41,7 +41,7 @@ const faq = [
   {
     question:     "How do I watch YouTube together long distance?",
     answer:
-      "Add AniDachi from the Chrome Web Store via /extension, open a YouTube watch page, create a watchroom, and share the invite. Playback syncs for live nights. Async catch-up is planned. Watch2Gether and Teleparty remain free live-only options.",
+      "Add AniDachi from the Chrome Web Store via /extension and open a full YouTube watch page. A Plus, Pro, or trial host creates the room and invites a Free partner. Playback syncs live; async catch-up is coming soon. Watch2Gether and Teleparty remain free live-only options.",
   },
   {
     question: "Does YouTube have a watch party or co-watching feature?",
@@ -89,7 +89,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "Create a YouTube watchroom in AniDachi and copy the invite link.",
+    text: "With active Plus, Pro, or trial access, choose Create room in AniDachi and copy its invite link. A Free partner can join.",
   },
   {
     name: "Share with your partner",
@@ -122,7 +122,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
         description="Sync YouTube with your long-distance partner — AniDachi watchrooms, other live tools, and scheduling tips."
         url="/watch-youtube-together-long-distance"
         datePublished="2026-06-23"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -155,7 +155,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
           AniDachi’s Chrome extension runs on full YouTube watch pages and creates
-          a shared watchroom with synced playback and chat. Each viewer watches from their own YouTube player. Personal history is available on Plus or Pro. Async catch-up with replayed reactions is planned, not available today.
+          a live room with synced playback and chat. Each viewer watches from their own YouTube player. Personal history needs your own Plus/Pro access, recording permission, and the separate YouTube recording toggle. Async catch-up with replayed reactions is planned, not available today.
         </p>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Works on youtube.com/watch pages (not Shorts, embeds, or feeds).</li>

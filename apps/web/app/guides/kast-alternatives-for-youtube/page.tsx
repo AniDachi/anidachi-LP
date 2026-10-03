@@ -37,7 +37,7 @@ const faq = [
   {
     question: "What is the best Kast alternative for YouTube?",
     answer:
-      "AniDachi ranks first for YouTube groups that want per-user playback, async watchrooms, and a Chrome overlay on the native player — without turning one friend into the group's video server.",
+      "AniDachi ranks first for YouTube groups that want per-user playback, live rooms, and a Chrome overlay on the native player — without turning one friend into the group's video server.",
   },
   {
     question: "Is Kast good for YouTube watch parties?",
@@ -85,7 +85,7 @@ export default function KastAlternativesForYoutubePage() {
       description="Ranked Kast alternatives for YouTube watch parties led by AniDachi."
       url="/guides/kast-alternatives-for-youtube"
       datePublished="2026-07-26"
-      dateModified="2026-07-26"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -168,7 +168,7 @@ export default function KastAlternativesForYoutubePage() {
           {
             feature: "Async catch-up",
             values: {
-              anidachi: "yes",
+              anidachi: "Coming soon",
               teleparty: "no",
               w2g: "no",
               kast: "no",

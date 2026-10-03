@@ -12,7 +12,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Netflix Watch Party for Anime (2026) | AniDachi",
   description:
-    "AniDachi vs Netflix Teleparty watch parties for anime — Crunchyroll catalog, async watching, and which tool fits anime friend groups.",
+    "AniDachi vs Netflix Teleparty watch parties for anime — Crunchyroll catalog, live sync, personal history, and which tool fits anime friend groups.",
   alternates: { canonical: "/compare/anidachi-vs-netflix-watch-party" },
   openGraph: {
     title: "AniDachi vs Netflix Watch Party for Anime",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Which is better for anime watch parties, AniDachi or Netflix Teleparty?",
     answer:
-      "For Crunchyroll anime — which includes most current hits — AniDachi wins on async catch-up, episode progress tracking, and anime-specific detection. Teleparty on Netflix works when your group's show is Netflix-exclusive and everyone can watch live at the same time.",
+      "AniDachi offers live Crunchyroll rooms with anime detection, chat, reactions, and voice/video. Your own Plus/Pro access and recording permission enable personal history. Teleparty on Netflix works when your group's show is Netflix-exclusive and everyone can watch live at the same time. Async catch-up in AniDachi is coming soon.",
   },
   {
     question: "What anime is on Netflix vs Crunchyroll?",
@@ -76,7 +76,7 @@ export default function AniDachiVsNetflixWatchPartyPage() {
       description="Side-by-side comparison for anime watch parties on Crunchyroll vs Netflix."
       url="/compare/anidachi-vs-netflix-watch-party"
       datePublished="2026-07-02"
-      dateModified="2026-07-02"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -118,9 +118,9 @@ export default function AniDachiVsNetflixWatchPartyPage() {
         rows={[
           { feature: "Crunchyroll support", values: { anidachi: "yes", netflix: "No" } },
           { feature: "Netflix support", values: { anidachi: "No — CR & YouTube only", netflix: "yes" } },
-          { feature: "Asynchronous watching", values: { anidachi: "yes", netflix: "no" } },
+          { feature: "Asynchronous watching", values: { anidachi: "Coming soon", netflix: "no" } },
           { feature: "Live synchronized playback", values: { anidachi: "yes", netflix: "yes" } },
-          { feature: "Per-user episode progress", values: { anidachi: "yes", netflix: "no" } },
+          { feature: "Per-user episode progress", values: { anidachi: "Own Plus/Pro + recording permission", netflix: "no" } },
           { feature: "Auto anime detection", values: { anidachi: "yes", netflix: "no" } },
           { feature: "Built-in chat", values: { anidachi: "yes", netflix: "yes" } },
           { feature: "Requires streaming subscription", values: { anidachi: "Crunchyroll", netflix: "Netflix" } },
@@ -151,8 +151,8 @@ export default function AniDachiVsNetflixWatchPartyPage() {
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your group watches on Crunchyroll — the default for most anime clubs.</li>
-        <li>You need async catch-up across time zones or busy schedules.</li>
-        <li>You want episode-level spoiler controls for long-run series.</li>
+        <li>You want live chat, reactions, and voice/video beside the episode.</li>
+        <li>You want to save your own episode progress with Plus or Pro.</li>
         <li>You host recurring watchrooms and want anime-specific tooling.</li>
       </ul>
 

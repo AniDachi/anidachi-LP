@@ -11,12 +11,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "How to Watch Seasonal Anime Together (2026) — Weekly Simulcast Guide",
   description:
-    "Watch seasonal anime with friends every simulcast week: schedule drop nights, sync Crunchyroll playback, and use async catch-up between releases.",
+    "Watch seasonal anime with friends every simulcast week: schedule drop nights, sync Crunchyroll playback, and plan independent catch-up after missed sessions.",
   alternates: { canonical: "/guides/how-to-watch-seasonal-anime-together" },
   openGraph: {
     title: "How to Watch Seasonal Anime Together",
     description:
-      "Weekly anime club workflow for simulcast seasons — live premiere nights, spoiler boundaries, and async catch-up.",
+      "Weekly anime club workflow for simulcast seasons — live premiere nights, spoiler boundaries, and catch-up plans for missed sessions.",
     url: "/guides/how-to-watch-seasonal-anime-together",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -37,12 +37,12 @@ const faq = [
   {
     question: "How do friend groups watch seasonal anime together?",
     answer:
-      "Pick 1–3 seasonal shows at the start of each cour, schedule a weekly sync night around the simulcast drop time, and use AniDachi watchrooms for synced playback and episode-scoped chat. Members who miss the live drop catch up async before the next episode airs.",
+      "Pick 1–3 seasonal shows, schedule a weekly live room around the simulcast drop, and use AniDachi for synced playback and live chat. Members who miss the session can watch independently before the next episode, then discuss it in a separate labeled chat.",
   },
   {
     question: "Can we watch seasonal anime if we're in different time zones?",
     answer:
-      "Yes — schedule the live sync at a time that works for most members, then use AniDachi's async mode so others watch on their own schedule without spoiling the group. Pin the safe episode number so early watchers don't post reactions ahead of the weekly sync.",
+      "Schedule a live room at a time that works for the group and rotate the time fairly. Members who miss it can watch independently. Keep later-episode spoilers in a separate chat; AniDachi Async catch-up is coming soon.",
   },
   {
     question: "How many seasonal anime should a group commit to?",
@@ -66,12 +66,12 @@ const howToSteps = [
     text: "At the start of each cour (Jan/Apr/Jul/Oct), agree on 1–2 shows from the seasonal chart. Check that every member can stream them on Crunchyroll in their region.",
   },
   {
-    name: "Create a persistent watchroom",
-    text: "Install AniDachi, open the first episode on Crunchyroll, and create a watchroom. Keep the same room all season so chat history and progress accumulate.",
+    name: "Create a live watchroom",
+    text: "Install AniDachi from the Chrome Web Store, open the first episode, and create a live room with your own Plus or Pro access, including an active trial. Keep season plans and between-session notes in a separate group chat.",
   },
   {
     name: "Schedule weekly sync nights",
-    text: "Block a recurring time slot after the simulcast drop — usually 30–60 minutes after the episode goes live on Crunchyroll. Live sync for premiere reactions; async for anyone who misses.",
+    text: "Block a recurring time after the simulcast drop. Use live sync for premiere reactions and leave time for anyone who misses the meeting to catch up independently.",
   },
   {
     name: "Pin your spoiler boundary",
@@ -88,7 +88,7 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
     <>
       <HowToJsonLd
         name="How to watch seasonal anime together"
-        description="Set up a weekly simulcast watch party on Crunchyroll with synced playback, spoiler boundaries, and async catch-up."
+        description="Set up a weekly simulcast watch party on Crunchyroll with synced playback, live chat, and clear spoiler rules."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -104,7 +104,7 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
         description="Weekly simulcast watch party guide for friend groups on Crunchyroll."
         url="/guides/how-to-watch-seasonal-anime-together"
         datePublished="2026-06-08"
-        dateModified="2026-06-08"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -115,9 +115,7 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Seasonal anime drops one episode per week — perfect for a recurring
-            watch party if you set a schedule, a persistent watchroom, and clear
-            spoiler rules. AniDachi handles live sync on premiere night and async
-            catch-up for members in different time zones.
+            watch party if you set a schedule and clear spoiler rules. AniDachi handles live sync on premiere night. Keep season plans and discussions between sessions in a separate group chat.
           </strong>
         </p>
 
@@ -128,9 +126,7 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
           Why watch seasonal anime together?
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-8">
-          Seasonal anime creates a shared ritual — every week your group returns
-          to the same watchroom for a fresh episode, fresh theories, and fresh
-          reactions. Unlike bingeing a completed series, simulcasts build
+          Seasonal anime creates a shared ritual — every week your group meets in a live room for a fresh episode, fresh theories, and fresh reactions. Unlike bingeing a completed series, simulcasts build
           anticipation between episodes and give your group something to look
           forward to all quarter. The rhythm also prevents burnout: one episode
           per week is sustainable for busy schedules.
@@ -196,8 +192,7 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
             happens.
           </li>
           <li>
-            Use episode-scoped chat threads so mid-season joiners can participate
-            without reading ahead.
+            Use separate, clearly labeled group chats for later episodes so mid-season joiners can avoid reading ahead.
           </li>
           <li>
             React to feelings (&quot;that ending destroyed me&quot;) not plot

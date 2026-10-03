@@ -63,6 +63,25 @@ export function getPlanPolicy(planCode: PlanCode): PlanPolicy {
 export const WATCH_HISTORY_ACCESS_LEASE_MS = 5 * 60 * 1000;
 const Timestamp = z.iso.datetime({ offset: true });
 const Epoch = z.number().int().nonnegative();
+/** Additive account metadata. Missing metadata means an older authority, not trial eligibility. */
+export const HostingAccessSchema = z.strictObject({
+	hostingPolicyVersion: z.number().int().positive(),
+	hostingActivationAt: Timestamp.nullable(),
+	canHost: z.boolean(),
+	trialEligibility: z.enum([
+		"eligible",
+		// Legacy response only; current authority never denies a trial by account age.
+		"existing_account",
+		"used",
+		"unavailable",
+	]),
+	trialEndsAt: Timestamp.nullable(),
+});
+export type HostingAccess = z.infer<typeof HostingAccessSchema>;
+
+/** HTTP commercial denial; independent of room/media protocol negotiation. */
+export const HOST_SUBSCRIPTION_REQUIRED = "HOST_SUBSCRIPTION_REQUIRED" as const;
+
 export const AccountEntitlementsMetadataSchema = z.strictObject({
 	entitlementsVersion: z.literal(1),
 	ownerUserId: z.uuid(),

@@ -54,7 +54,7 @@ const faq = [
   {
     question: "Can we watch Crunchyroll together for free?",
     answer:
-      "Crunchyroll offers a free ad-supported tier with a limited catalog. If every member has free-tier access to the same series, you can sync with Crunchyroll Party or AniDachi — but ad timing may drift between viewers. See our Crunchyroll watch party free guide for the tradeoffs.",
+      "Every viewer needs their own access to the selected episode. Check playback and regional availability before the session; AniDachi does not unlock paid content or share a Crunchyroll subscription. AniDachi guests can join an active Plus, Pro, or trial host on a Free account.",
   },
 ];
 
@@ -88,7 +88,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
       description="Per-user Crunchyroll access for group watch — Fan, Mega Fan, and Premium explained."
       url="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
       datePublished="2026-07-22"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -186,9 +186,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         For same-day simulcast episodes, confirm every member&apos;s tier
-        includes that series in your region before sending invites. A member on
-        free tier without simulcast access will silently fall behind — sync
-        tools cannot fix missing catalog rights.
+        includes that series in your region before sending invites. A member without access to the episode cannot watch along — sync tools cannot fix missing catalog rights.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Free-tier watch party options exist but trade ad drift for zero

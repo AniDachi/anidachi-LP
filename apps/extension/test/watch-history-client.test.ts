@@ -100,6 +100,46 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it.each([
+    ["free", 426, "HISTORY_CLIENT_UPDATE_REQUIRED", "upgrade-required"],
+    ["plus", 426, "HISTORY_CLIENT_UPDATE_REQUIRED", "upgrade-required"],
+    ["free", 503, "HISTORY_UNAVAILABLE", "retryable"],
+    ["plus", 503, "HISTORY_UNAVAILABLE", "retryable"],
+  ] as const)("keeps legacy history recreation under server authority: %s / %s", async (plan, httpStatus, code, status) => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    const partition = readyPartition(owner, false);
+    if (plan === "free") partition.accessLease.access.state = "plan_required";
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: partition },
+    };
+    const before = structuredClone(stored);
+    const request = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      expect(new URL(String(input)).pathname).toBe("/api/watch-history/v3/rooms");
+      expect(init?.method).toBe("POST");
+      expect(new Headers(init?.headers).get("x-anidachi-history-owner")).toBe(owner);
+      expect(JSON.parse(String(init?.body))).toEqual({ sessionId: "00000000-0000-4000-8000-000000000010" });
+      return Response.json({ code }, { status: httpStatus });
+    });
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => ({ ...session, user: { ...session.user, plan } }),
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = structuredClone(value); } },
+        getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+      }),
+      fetch: request,
+    });
+
+    // Free retains read access. Neither that lease nor a paid login may bypass
+    // the retired server entrypoint; an outage is not a subscription refusal.
+    expect(await client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V3", command: "create-room",
+      sessionId: "00000000-0000-4000-8000-000000000010",
+    })).toEqual({ ok: false, status });
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(stored).toEqual(before);
+  });
+
   it.each(["valid", "owner", "generation", "session"] as const)("fences capacity metadata: %s", async (variant) => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);
@@ -2899,5 +2939,5 @@ describe("watch history v2 client", () => {
 // Consent transitions and fail-closed behavior have separate integration tests.
 vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
-  hasHistoryRecordingConsent: async () => true,
+  isHistoryRecordingEnabled: async () => true,
 }));

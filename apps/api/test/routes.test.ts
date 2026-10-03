@@ -400,6 +400,23 @@ describe("worker routes", () => {
     expect(calls).toEqual(["send:ROOM_ENDED", "close:4004"]);
   });
 
+  it.each([
+    { reason: "capability_expired", cutover: true, endedAt: 1000, marked: true },
+    { reason: "capability_expired", cutover: false, endedAt: 1000, marked: false },
+    { reason: "host_ended", cutover: true, endedAt: 1000, marked: false },
+    { reason: "capability_expired", cutover: true, endedAt: 900, marked: false },
+  ] as const)("keeps the original cause when replaying a terminal room ($reason, cutover=$cutover, endedAt=$endedAt)", ({reason,cutover,endedAt,marked}) => {
+    const frames: unknown[] = [];
+    const socket = { send: (value: string) => frames.push(JSON.parse(value)), close: vi.fn() } as unknown as WebSocket;
+    expect(handleRoomWebSocketMessageBoundary(socket, "room-1", {
+      schemaVersion: 1, endedAt, reason,
+      ...(cutover ? {cutover: {roomId: "room-1", roomGeneration: 1, revision: 2, closingAt: 1000}} : {}),
+    }, () => { throw new Error("Closed room dispatched a message"); })).toBe(false);
+    expect(frames).toEqual([{type: "ROOM_ENDED", roomId: "room-1", endedAt, reason,
+      ...(marked ? {hostingCutover: true} : {})}]);
+    expect(socket.close).toHaveBeenCalledWith(4004, "Room ended");
+  });
+
   it("does not dispatch websocket messages after a room tombstone", () => {
     const calls: string[] = [];
     const socket = {
@@ -663,6 +680,7 @@ describe("worker routes", () => {
     const clearAdmissionTimeout = vi.fn();
     const send = vi.fn();
     const lifecycleTransaction = {
+      getAlarm: async () => null,
       deleteAlarm: async () => undefined,
       get: async () => undefined,
       put: async () => undefined,
@@ -779,6 +797,7 @@ describe("worker routes", () => {
     ]);
     const sendRoomHistoryAuthority = vi.fn(async () => undefined);
     const lifecycleTransaction = {
+      getAlarm: async () => null,
       deleteAlarm: async () => undefined,
       get: async () => undefined,
       put: async () => undefined,
@@ -894,6 +913,7 @@ describe("worker routes", () => {
       [replacementSocket, verified],
     ]);
     const lifecycleTransaction = {
+      getAlarm: async () => null,
       deleteAlarm: async () => undefined,
       get: async () => undefined,
       put: async () => undefined,

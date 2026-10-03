@@ -61,7 +61,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Chrome, Web",
     description:
-      "Watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, chat in real-time, and track progress. Async catch-up is coming soon in a later batch.",
+      "Join friends for free on Crunchyroll and YouTube. Host rooms with Plus or Pro, including during a trial, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Async catch-up is coming soon.",
     url: siteUrl,
     offers: {
       "@type": "AggregateOffer",
@@ -73,6 +73,7 @@ export function SoftwareApplicationJsonLd() {
         {
           "@type": "Offer",
           name: "AniDachi Free",
+          description: "Join a Plus, Pro or trial host for free. Free accounts cannot create rooms or record new personal history.",
           price: "0",
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
@@ -81,6 +82,7 @@ export function SoftwareApplicationJsonLd() {
         {
           "@type": "Offer",
           name: "AniDachi Plus",
+          description: "Monthly Plus subscription. Yearly billing is also available; see pricing for the yearly total and three-day trial terms.",
           price: "7.99",
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",
@@ -90,6 +92,7 @@ export function SoftwareApplicationJsonLd() {
         {
           "@type": "Offer",
           name: "AniDachi Pro",
+          description: "Monthly Pro subscription. Yearly billing is also available; see pricing for the yearly total and three-day trial terms.",
           price: "14.99",
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",

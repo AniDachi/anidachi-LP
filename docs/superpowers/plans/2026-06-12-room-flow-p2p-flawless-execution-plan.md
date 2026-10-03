@@ -295,6 +295,31 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- [x] 2026-10-01: Reproduced the commercial terminal-cleanup test race: an
+  overdue runtime alarm was consumed before `runDurableObjectAlarm`, whose
+  `false` return did not await cleanup. Manual retries now use a future alarm
+  with an already-due intent and require helper delivery. Strict 410, durable
+  finalization, single Web callback and eviction/wake checks pass in 50 focused
+  repetitions. Production logic is unchanged; full verification is tracked in
+  [the recovery and graph record](../../releases/room-tests-and-graph-integrity-2026-10-01.md).
+
+- 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: server-only DO
+  write optimization retains protocol/event frequency, durable interval accounting,
+  atomic snapshot/denial writes and original quota deadlines after wake. Local
+  API252unit/96runtime, protocol203, room39, legacyWebRTC26 and v3four-user checks
+  pass. [Implementation and manual staging scenario](../../releases/durable-object-write-optimization-2026-09-29.md).
+  PR #381 delivered staging `1d50432c`; Worker deployment and smoke pass.
+  Owner acceptance and real daily billing remain unverified; trial/T/main/Store gated.
+
+- 2026-09-28 — `codex/paid-hosting-transition-plan`, local room-end checkpoint
+  from `30b92d3e`: compatible cutover display context and original-deadline warning
+  in the extension, no lifecycle/media-policy change. Root check/test, API248,
+  protocol203, extension2104 (final Overlay92), runtime86, room39/WebRTC26 and
+  narrow build/validate pass. Isolated compiled-artifact checks prove parser,
+  terminal cleanup and warning at1100/390 with synthetic boundaries. Exact Store,
+  live staging/restart and legacy-terminal recovery gates remain; see
+  [the room-end evidence](../../releases/paid-hosting-trial/implementation-evidence.md#block-c-room-end-causes-and-warning-2026-09-28).
+
 - 2026-09-14 — The approved [host-managed-seat plan](2026-09-14-host-managed-media-seats.md)
   adds negotiated v3 rooms without changing frozen plan capacities, room
   lifecycle, quota, invite flow or the existing v2 contract. Seat authority and

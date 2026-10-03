@@ -1,8 +1,4 @@
-import {
-  PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
-  PRICING_IS_ANIDACHI_FREE_ANSWER,
-  PRICING_PLUS_VS_PRO_ANSWER,
-} from "@/lib/pricing-copy";
+import { getPlanPolicy } from "@anidachi/protocol";
 
 export const homeFAQ = [
   {
@@ -18,12 +14,12 @@ export const homeFAQ = [
   {
     question: "How do I watch Crunchyroll with friends using AniDachi?",
     answer:
-      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. AniDachi detects the title automatically. Open the AniDachi panel, click 'Create room,' and share the invite link. Each friend needs the extension and access to the episode on their own Crunchyroll account.",
+      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. With Plus or Pro, including during a trial, open the AniDachi panel, click 'Create room,' and share the invite link. Friends join for free with the extension and their own access to the episode.",
   },
   {
     question: "Can I watch YouTube together with AniDachi?",
     answer:
-      "Yes. Open a full youtube.com/watch page in desktop Chrome, create a YouTube watchroom, and share the invite. Friends join on their own YouTube sessions for live sync today. Async catch-up is coming soon in a later batch. Shorts, embeds, and the mobile apps are not supported.",
+      "Yes. Open a full youtube.com/watch page in desktop Chrome. A Plus, Pro or trial host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
   },
   {
     question: "Can I watch anime with friends asynchronously?",
@@ -37,15 +33,18 @@ export const homeFAQ = [
   },
   {
     question: "Is AniDachi free?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer:
+      "Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. If your Free account has not used a trial before, you can try either plan for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel.",
   },
   {
     question: "Do all my friends need an AniDachi subscription?",
-    answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+    answer:
+      "No. Only the host needs Plus or Pro, including during a trial. Friends join with Free accounts, and the host's plan sets the room size. Everyone needs the AniDachi extension and their own access to the video. Recording personal watch progress requires each viewer's own Plus or Pro plan.",
   },
   {
     question: "What's the difference between Plus and Pro?",
-    answer: PRICING_PLUS_VS_PRO_ANSWER,
+    answer:
+      `Plus lets you invite up to ${getPlanPolicy("plus").maxParticipants - 1} friends for free; Pro supports up to ${getPlanPolicy("pro").maxParticipants - 1}. Both include hosting without a daily time limit, chat, reactions, voice and video calls, and personal watch progress. Pro also includes more microphones and priority support. You can choose monthly or yearly billing for either plan.`,
   },
   {
     question: "How is AniDachi different from Teleparty or Crunchyroll Party?",

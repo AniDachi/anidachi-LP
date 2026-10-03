@@ -40,7 +40,7 @@ const faq = [
   {
     question: "Do watch parties need live sync or can they be async?",
     answer:
-      "Live sync is ideal for premiere nights and reaction-heavy action. Async works for weekly clubs when schedules diverge — AniDachi supports both in the same watchroom.",
+      "Live sync is ideal for premiere nights and reaction-heavy action. For weekly clubs with different schedules, watch independently and discuss later in a separate chat. AniDachi supports live rooms today; Async catch-up is coming soon.",
   },
 ];
 
@@ -70,7 +70,7 @@ export default function BestAnimeToWatchInAWatchPartyPage() {
       description="Watch-party-ready anime for synced Crunchyroll sessions."
       url="/guides/best-anime-to-watch-in-a-watch-party"
       datePublished="2026-07-02"
-      dateModified="2026-07-02"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}

@@ -112,3 +112,12 @@ test("browse bounds validated storage failures and does not leak database messag
 		);
 	}
 });
+
+
+test("title browse validates an optional platform without changing old callers", async () => {
+  const { parseWatchHistoryBrowseQuery } = await import("./watch-history-browse");
+  assert.deepEqual(parseWatchHistoryBrowseQuery({ mode: "personal", provider: "crunchyroll", limit: 24 }, "titles"),
+    { mode: "personal", provider: "crunchyroll", limit: 24 });
+  assert.deepEqual(parseWatchHistoryBrowseQuery({ mode: "personal" }, "titles"), { mode: "personal", limit: 20 });
+  assert.throws(() => parseWatchHistoryBrowseQuery({ mode: "personal", provider: "other" }, "titles"), { code: "INVALID_QUERY" });
+});

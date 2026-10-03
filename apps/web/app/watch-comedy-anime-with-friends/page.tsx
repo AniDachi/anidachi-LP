@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Comedy Anime With Friends (2026) | AniDachi",
   description:
-    "Laugh louder together — AniDachi watchrooms let you sync Crunchyroll comedy anime live or timestamp favorite gags for friends who catch up later. Spy x Family, KonoSuba, Gintama, and more.",
+    "Laugh louder together — AniDachi live rooms sync Crunchyroll comedy anime with chat, reactions, and voice/video. Spy x Family, KonoSuba, Gintama, and more.",
   alternates: { canonical: "/watch-comedy-anime-with-friends" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Comedy Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for comedy anime on Crunchyroll — share gag reactions, async catch-up, and watch at your own pace.",
+      "Group watchroom guides for comedy anime on Crunchyroll — share live reactions, chat, and synchronized episodes.",
     url: "/watch-comedy-anime-with-friends",
   },
 };
@@ -34,7 +34,7 @@ const faq = [
   {
     question: "Does comedy anime work well for asynchronous group watching?",
     answer:
-      "Comedy is actually one of the best genres for async watching — sketch-based and episodic shows mean there is no continuity pressure, and each viewer can drop a reaction immediately after a funny moment without needing to coordinate timing. AniDachi's episode-scoped reactions let you replay the exact gag timestamps your friends flagged.",
+      "Sketch-based and episodic comedy works well for independent catch-up. Keep favorite timestamps in a separate group chat and compare notes after everyone finishes. AniDachi currently supports live reactions; built-in async catch-up and replayed reactions are coming soon.",
   },
   {
     question: "How do we share funny moments without spoiling comedy setups?",
@@ -49,7 +49,7 @@ const faq = [
   {
     question: "Do we all need Crunchyroll to watch comedy anime together?",
     answer:
-      "Yes — each person needs their own active Crunchyroll subscription to stream the video. AniDachi adds the watchroom, gag timestamps, and episode chat on top. It does not replace Crunchyroll's catalog or access controls.",
+      "Yes — each person needs their own Crunchyroll access to the video. AniDachi adds live sync, chat, reactions, and voice/video. It does not replace Crunchyroll's catalog or access controls.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function WatchComedyAnimeWithFriendsPage() {
       description="Group watchroom guides for comedy anime on Crunchyroll."
       url="/watch-comedy-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -102,7 +102,7 @@ export default function WatchComedyAnimeWithFriendsPage() {
         <strong>
           Comedy anime is better with an audience — install AniDachi, pick a
           series below, and create a Crunchyroll watchroom. Laugh together live
-          or timestamp your favorite gags for friends who catch up later.
+          and share your reactions through chat, voice, and video.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
       </p>
@@ -121,10 +121,9 @@ export default function WatchComedyAnimeWithFriendsPage() {
         groups with busy calendars can dip in and out without losing the thread.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi watchrooms let you timestamp specific gag moments so friends
-        who missed a live session can replay the exact scene that broke the chat.
-        Episode-scoped threads mean the funniest moments stay discoverable long
-        after the group moved on.
+        AniDachi live rooms let you share laughter through chat, reactions,
+        and voice/video. For friends who miss a session, keep favorite timestamps
+        in a separate group chat and discuss after they catch up.
       </p>
 
       <h2
@@ -167,14 +166,14 @@ export default function WatchComedyAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the invite.</span>{" "}
-          Pin a &quot;best gag timestamps&quot; thread for ongoing highlights.
+          A Plus, Pro, or trial host creates the room; Free friends can join. Keep favorite timestamps in a separate chat.
         </li>
         <li>
           <span className="font-medium text-foreground">Set a casual cadence.</span>{" "}
           Two or three episodes per session keeps energy high without overstaying the joke.
         </li>
         <li>
-          <span className="font-medium text-foreground">Encourage timestamped reactions.</span>{" "}
+          <span className="font-medium text-foreground">Keep timestamps in your own notes.</span>{" "}
           &quot;Ep 3 at 8:42 — I&apos;m done&quot; is better than explaining it.
         </li>
       </ol>
@@ -188,14 +187,14 @@ export default function WatchComedyAnimeWithFriendsPage() {
       <p className="text-foreground/80 leading-relaxed mb-4">
         Comedy anime is the friendliest genre for asynchronous schedules. Since
         most episodes are self-contained, a group member who misses a session
-        can catch up in twenty minutes and immediately join the gag thread without
-        needing a recap. A few tips:
+        can catch up in twenty minutes and then join a discussion in your
+        separate group chat. A few tips:
       </p>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>Use timestamped reactions instead of episode summaries — the gag is the content.</li>
+        <li>Write favorite timestamps in your own chat rather than describing the punchline.</li>
         <li>For sketch-heavy series (Nichijou, Saiki K.), pin a &quot;top 3 moments&quot; per episode so latecomers know what to rewind.</li>
         <li>For parody series (KonoSuba, Gintama), keep a &quot;explain this reference&quot; thread for viewers who missed the source material.</li>
-        <li>Async mode works especially well for long series like Gintama — no need to coordinate 367 episode watches.</li>
+        <li>Independent catch-up works well for long series like Gintama; reserve live rooms for episodes you want to share together.</li>
       </ul>
 
       <p className="text-foreground/80 mb-4">

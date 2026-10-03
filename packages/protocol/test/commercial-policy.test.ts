@@ -5,6 +5,7 @@ import {
 	WatchHistoryAccessSchema,
 	isWatchHistoryAccessCurrent,
 	AccountEntitlementsMetadataSchema,
+	HostingAccessSchema,
 } from "../src/commercial-policy";
 const owner = "11111111-1111-4111-8111-111111111111";
 const now = "2026-09-08T12:00:00Z";
@@ -20,6 +21,30 @@ const access = {
 	validUntil: "2026-09-08T12:05:00Z",
 	youtubeHistoryEnabled: false,
 };
+it("validates the separate hosting contract without changing old plan/history payloads", () => {
+	const hosting = {
+		hostingPolicyVersion: 1,
+		hostingActivationAt: now,
+		canHost: false,
+		trialEligibility: "existing_account",
+		trialEndsAt: null,
+	};
+	expect(HostingAccessSchema.parse(hosting)).toEqual(hosting);
+	for (const patch of [
+		{ hostingPolicyVersion: 0 },
+		{ hostingPolicyVersion: 1.5 },
+		{ hostingActivationAt: "tomorrow" },
+		{ canHost: "false" },
+		{ trialEligibility: "paid" },
+		{ trialEndsAt: "invalid" },
+	])
+		expect(
+			HostingAccessSchema.safeParse({ ...hosting, ...patch }).success,
+		).toBe(false);
+	expect(PlanPolicySchema.parse(getPlanPolicy("free")).dailyHostSeconds).toBe(
+		1800,
+	);
+});
 it("keeps guest history separate from room capacity", () => {
 	expect(
 		["free", "plus", "pro"].map((p) =>

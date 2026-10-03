@@ -83,7 +83,9 @@ export function OverlayUsingGuide({ compact = false }: { compact?: boolean }) {
         </InstallStep>
         <InstallStep heading={stepHeading} n={2} title="Create a room">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
-            AniDachi detects the title. Click{" "}
+            Hosting requires your own Plus or Pro access, including an active
+            trial. To join for free, open an invite from a Plus, Pro, or trial
+            host. If you are hosting, AniDachi detects the title. Click{" "}
             <span className="text-ani-text">Create room</span> — the orange
             button under your name. After the room starts, click the{" "}
             <span className="text-ani-text">copy</span> icon next to End room

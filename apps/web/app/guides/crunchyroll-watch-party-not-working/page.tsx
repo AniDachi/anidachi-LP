@@ -47,7 +47,7 @@ const faq = [
   {
     question: "When should I switch from a free extension to AniDachi?",
     answer:
-      "Switch when sync keeps breaking across sessions, your group spans time zones and needs async catch-up, or you want per-person progress tracking and episode-scoped spoiler controls. AniDachi is built specifically for Crunchyroll anime groups with mixed schedules.",
+      "Consider AniDachi if you want live rooms on Crunchyroll and YouTube, with chat, cameras, and microphones. Personal history requires each viewer’s own Plus or Pro access. Async catch-up is coming soon, so current rooms still need everyone online together.",
   },
 ];
 
@@ -104,7 +104,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
         description="Fix sync, detection, and region issues with Crunchyroll watch party extensions."
         url="/guides/crunchyroll-watch-party-not-working"
         datePublished="2026-06-08"
-        dateModified="2026-07-22"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -206,8 +206,8 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
         </p>
         <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Sync breaks every session and manual resync becomes routine.</li>
-          <li>Your group spans time zones and needs async catch-up.</li>
-          <li>You want per-person progress tracking on long series.</li>
+          <li>You want live rooms with cameras and microphones.</li>
+          <li>You want personal history with your own Plus or Pro access.</li>
           <li>Spoiler leaks from early watchers ruin the group experience.</li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">

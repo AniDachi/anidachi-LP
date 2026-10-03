@@ -4,11 +4,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUBLIC_DIR="$ROOT_DIR/anidachi-extension-public"
 EXPERIMENT_DIR="$ROOT_DIR/anidachi-extension-experiment"
-PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extension/package.json').version)")"
+
+if [[ -z "${WXT_EXTENSION_VERSION:-}" ]]; then
+  echo "WXT_EXTENSION_VERSION is required for production extension builds" >&2
+  exit 1
+fi
 
 WXT_EXTENSION_CHANNEL=production
 NODE_ENV=production
-: "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
 WXT_WEB_HTTP_BASE=https://www.anidachi.app
 WXT_API_HTTP_BASE=https://anidachi-api-production.vladislav-gul7.workers.dev
 WXT_API_WS_BASE=wss://anidachi-api-production.vladislav-gul7.workers.dev

@@ -9,6 +9,7 @@ import {
   AccountWorkspaceProvider,
   useAccountViewState,
 } from "@/components/account/account-workspace-state";
+import { preloadAccountNavigation, clearAccountPreloads } from "@/lib/account-navigation-preload";
 import { FriendsClient } from "./friends-client";
 
 (globalThis as { React?: typeof React }).React = React;
@@ -76,11 +77,12 @@ const recent = (name: string) => ({
 
 let root: Root | null = null;
 let container: HTMLDivElement;
-async function render(ownerUserId = ownerA) {
+async function render(ownerUserId = ownerA, initial?: { ownerUserId: string; directory: unknown }) {
   const element = React.createElement(
     PathnameContext.Provider,
     { value: "/account/friends" },
     React.createElement(FriendsClient, {
+      initial,
       currentUser: {
         userId: ownerUserId,
         displayName: "Alex",
@@ -818,4 +820,65 @@ test("double submit is fenced while a save is pending, including Escape", async 
       ?.value,
     "Pending",
   );
+});
+
+test("friends render while the independent groups request is still pending", async () => {
+  let finishGroups!: (value: Response) => void;
+  globalThis.fetch = async (path) => String(path) === "/api/groups"
+    ? new Promise<Response>(resolve => { finishGroups = resolve; })
+    : Response.json(directory("Ready friend"));
+  await render();
+  assert.match(container.textContent!, /Ready friend/);
+  await act(async () => finishGroups(Response.json({ groups: [] })));
+});
+
+test("a failed groups request does not hide successfully loaded friends", async () => {
+  globalThis.fetch = async (path) => String(path) === "/api/groups"
+    ? Response.json({ error: "Groups unavailable" }, { status: 503 })
+    : Response.json(directory("Available friend"));
+  await render();
+  assert.match(container.textContent!, /Available friend/);
+  assert.match(container.textContent!, /Groups unavailable/);
+});
+
+test("server friends display without waiting for groups or repeating the directory request", async () => {
+  const paths: string[] = [];
+  globalThis.fetch = async path => { paths.push(String(path)); return new Promise(() => {}); };
+  await render(ownerA, { ownerUserId: ownerA, directory: directory("Server friend") });
+  assert.match(container.textContent!, /Server friend/);
+  assert.deepEqual(paths, ["/api/groups"]);
+});
+test("server friends from another owner are discarded", async () => {
+  globalThis.fetch = async () => new Promise(() => {});
+  await render(ownerB, { ownerUserId: ownerA, directory: directory("Private friend") });
+  assert.doesNotMatch(container.textContent!, /Private friend/);
+});
+
+test("friends consumes click-time requests without starting duplicate reads on mount", async () => {
+  const paths: string[] = [];
+  globalThis.fetch = async input => {
+    const path = String(input); paths.push(path);
+    return Response.json(path === "/api/friends" ? directory("Early") : { meta: { schemaVersion: 1, serverTime: now }, groups: [] });
+  };
+  try {
+    preloadAccountNavigation(ownerA, "/account/friends");
+    await render();
+    assert.match(container.textContent!, /Early/);
+    assert.deepEqual(paths, ["/api/friends", "/api/groups"]);
+  } finally { clearAccountPreloads(); }
+});
+
+test("a social mutation during navigation invalidates the directory before its first mount", async () => {
+  let friendsReads = 0;
+  globalThis.fetch = async input => Response.json(String(input) === "/api/friends"
+    ? directory(++friendsReads === 1 ? "Old" : "New") : { meta: { schemaVersion: 1, serverTime: now }, groups: [] });
+  try {
+    preloadAccountNavigation(ownerA, "/account/friends");
+    await new Promise(resolve => setImmediate(resolve));
+    window.dispatchEvent(new CustomEvent("anidachi:account-social-changed", { detail: { ownerUserId: ownerA, source: "inbox" } }));
+    await render();
+    assert.match(container.textContent!, /New/);
+    assert.doesNotMatch(container.textContent!, /Old/);
+    assert.equal(friendsReads, 2);
+  } finally { clearAccountPreloads(); }
 });

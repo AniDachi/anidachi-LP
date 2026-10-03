@@ -24,7 +24,7 @@ const faq = [
   {
     question: "Can different people in a watchroom watch different audio tracks?",
     answer:
-      "With AniDachi's async watchrooms, yes — each person can watch in their preferred language. For live sync, it's best if everyone picks the same version to stay in sync.",
+      "Each person selects audio and subtitles in their own Crunchyroll player. For live sync, use the same episode and check that the versions have matching runtimes. AniDachi's built-in async catch-up is coming soon.",
   },
 ];
 
@@ -54,7 +54,7 @@ export default function DubVsSubGlossaryPage() {
       description="Choosing dubbed or subbed anime for group watching."
       url="/glossary/dub-vs-sub-watch-party"
       datePublished="2026-04-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
     >
@@ -110,11 +110,11 @@ export default function DubVsSubGlossaryPage() {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Poll the group before starting — majority wins.</li>
         <li>
-          For async watchrooms in AniDachi, each person can watch in their
-          preferred audio track independently.
+          Each person chooses audio and subtitles in their own Crunchyroll player.
         </li>
         <li>
-          For live sync, pick one version to keep playback aligned.
+          For live sync, use the same episode and check that the versions have
+          matching runtimes. Built-in async catch-up is coming soon.
         </li>
       </ul>
 

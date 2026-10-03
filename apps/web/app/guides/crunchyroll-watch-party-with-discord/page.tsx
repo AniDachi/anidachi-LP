@@ -85,7 +85,7 @@ const howToSteps = [
   },
   {
     name: "Press play together on voice",
-    text: "Count down in Discord voice, press play, and react live. For async nights, members watch on their own schedule and leave episode-tagged reactions in the watchroom.",
+    text: "Start together in Discord voice and react live while AniDachi syncs playback. If someone misses the session, let them watch independently before your next live meeting.",
   },
 ];
 
@@ -116,7 +116,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
         description="Discord voice + AniDachi sync — the hybrid setup anime groups prefer over Go Live."
         url="/guides/crunchyroll-watch-party-with-discord"
         datePublished="2026-07-22"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -159,7 +159,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
             <strong>Audio delay</strong> — voice and video drift apart on long episodes.
           </li>
           <li>
-            <strong>No async catch-up</strong> — late members miss the shared room context.
+            <strong>Shared time required</strong> — arrange another session if a friend misses the live viewing.
           </li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">

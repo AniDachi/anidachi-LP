@@ -1,10 +1,25 @@
 import { getPlanPolicy } from "@anidachi/protocol";
 import type { CompareTableRow } from "@/components/responsive-compare-table";
+import type { PricingPrices } from "./pricing-offer";
+import type { BillingPeriod } from "./billing-view";
 
 export type CheckoutTier = "plus" | "pro";
 
-export const PRICING_PLUS_MONTHLY = 7.99;
-export const PRICING_PRO_MONTHLY = 14.99;
+// Published site content, independent of Stripe/account availability. Checkout
+// must verify these displayed amounts against its server-owned Stripe prices.
+export const PUBLISHED_PRICING: Record<BillingPeriod, PricingPrices> = {
+  monthly: {
+    plus: { unitAmount: 799, currency: "usd" },
+    pro: { unitAmount: 1499, currency: "usd" },
+  },
+  yearly: {
+    plus: { unitAmount: 7670, currency: "usd" },
+    pro: { unitAmount: 14390, currency: "usd" },
+  },
+};
+
+export const PRICING_PLUS_MONTHLY = PUBLISHED_PRICING.monthly.plus.unitAmount / 100;
+export const PRICING_PRO_MONTHLY = PUBLISHED_PRICING.monthly.pro.unitAmount / 100;
 
 export const PRICING_PLUS_LABEL = `$${PRICING_PLUS_MONTHLY.toFixed(2)}`;
 export const PRICING_PRO_LABEL = `$${PRICING_PRO_MONTHLY.toFixed(2)}`;
@@ -169,7 +184,7 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     label: "Plus",
     priceDisplay: PRICING_PLUS_LABEL,
     priceSuffix: "/month",
-    audience: "Regular watch nights and your personal watch progress",
+    audience: "Your room. Your favorite people.",
     summary: "No daily host limit — record progress on both platforms",
     features: [
       "Crunchyroll + YouTube",
@@ -188,7 +203,7 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     label: "Pro",
     priceDisplay: PRICING_PRO_LABEL,
     priceSuffix: "/month",
-    audience: "Bigger groups, clubs, and hosts who need priority support",
+    audience: "More room for everyone.",
     summary: `Same as Plus — up to ${proPolicy.maxParticipants} people and ${proPolicy.maxMicrophones} mics, plus priority support`,
     features: [
       "Everything in Plus",

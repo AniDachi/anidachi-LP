@@ -42,7 +42,7 @@ const faq = [
   {
     question: "Is Crunchyroll Party free compared to AniDachi?",
     answer:
-      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi has a Free tier for joining and limited hosting. Plus and Pro raise the host's room limits and let each subscribed viewer record and edit personal watch progress. Saved history and Resume remain available on Free.",
+      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi Free accounts can join an active Plus, Pro, or trial host. Hosting and editing personal progress require your own active Plus/Pro access, including a trial. Automatic recording also needs your permission; saved history, Resume, and deletion remain available on Free.",
   },
   {
     question: "Do we still need Crunchyroll accounts for both tools?",
@@ -82,7 +82,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       description="Side-by-side comparison for Crunchyroll watch parties."
       url="/compare/anidachi-vs-crunchyroll-party"
       datePublished="2026-05-11"
-      dateModified="2026-09-18"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -181,10 +181,10 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         Migration path
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Each person opens Crunchyroll in their own browser. Create a live room,
-        invite your friends, and watch in sync. Progress stays personal: each
+        Each person opens Crunchyroll in their own browser. A Plus, Pro, or trial
+        host creates a live room and invites Free friends. Progress stays personal: each
         viewer needs their own Plus or Pro subscription to record and edit it,
-        including when joining a paid host. Start with{" "}
+        including when joining a paid host. Automatic recording also needs their permission. Start with{" "}
         <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
           Watch Crunchyroll Together
         </Link>{" "}

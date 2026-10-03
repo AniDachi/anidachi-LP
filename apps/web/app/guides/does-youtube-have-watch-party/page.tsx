@@ -55,7 +55,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free for YouTube watch parties?",
-    answer: `Yes for joining and limited hosting. ${PRICING_YT_PRICING_SNIPPET} Full details on the free YouTube watch party guide.`,
+    answer: `Yes for joining an active Plus or Pro host, including a trial host. Free cannot create rooms. ${PRICING_YT_PRICING_SNIPPET} Full details on the free YouTube watch party guide.`,
   },
   {
     question: "What is the best way to watch YouTube with friends?",
@@ -94,7 +94,7 @@ export default function DoesYoutubeHaveWatchPartyPage() {
       description="Compare YouTube SharePlay on iPhone and iPad with desktop watchrooms for watching together."
       url="/guides/does-youtube-have-watch-party"
       datePublished="2026-07-26"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}

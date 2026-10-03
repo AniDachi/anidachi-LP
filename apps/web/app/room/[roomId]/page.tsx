@@ -1,187 +1,130 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getSession, requireAuth } from "@/lib/anidachi-auth/session";
-import {
-  getRoomById,
-  getUserById,
-  getRoomMemberCount,
-  isRoomMember,
-} from "@/lib/anidachi-auth/db";
-import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
-import { AnidachiLogo } from "@/components/anidachi-logo";
+import { getRoomById, getUserById, isRoomMember } from "@/lib/anidachi-auth/db";
+import { RoomInviteShell as Shell, RoomInviteView } from "./room-invite-view";
 import { ExtensionCheck } from "./extension-check";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
 import {
-  buildRoomSourceLaunchUrl,
-  deriveDurableRoomSource,
+	buildRoomSourceLaunchUrl,
+	deriveDurableRoomSource,
 } from "@/lib/anidachi-auth/room-source";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
-  params: Promise<{ roomId: string }>;
-  searchParams: Promise<{ joined?: string }>;
+	params: Promise<{ roomId: string }>;
+	searchParams: Promise<{ joined?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { roomId } = await params;
-  return {
-    title: `Watchroom ${roomId} — AniDachi`,
-    robots: { index: false, follow: false },
-  };
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthPageShell maxWidth="max-w-md">
-      <AuthPageCard>
-        <div className="mb-6 flex justify-center">
-          <AnidachiLogo size={48} />
-        </div>
-        {children}
-      </AuthPageCard>
-    </AuthPageShell>
-  );
+	const { roomId } = await params;
+	return {
+		title: `Watchroom ${roomId} — AniDachi`,
+		robots: { index: false, follow: false },
+	};
 }
 
 export default async function RoomPage({ params, searchParams }: Props) {
-  const { roomId } = await params;
-  const { joined } = await searchParams;
-  const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
+	const { roomId } = await params;
+	const { joined } = await searchParams;
+	const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
-  await requireAuth(`/room/${roomId}`);
-  const session = await getSession();
+	await requireAuth(`/room/${roomId}`);
+	const session = await getSession();
 
-  const room = await getRoomById(roomId);
+	const room = await getRoomById(roomId);
 
-  // Ended (or missing) rooms get a friendly terminal state, not a bare 404.
-  if (!room || room.status === "ended") {
-    return (
-      <Shell>
-        <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-full bg-foreground/30" />
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
-            Ended
-          </span>
-        </div>
-        <h1 className="mt-3 text-2xl font-bold text-foreground">This watchroom has ended</h1>
-        <p className="mt-2 text-sm text-foreground/50">
-          The host closed this room. Ask them for a fresh invite link, or start your own
-          watch party from the AniDachi extension on any supported video page.
-        </p>
-        <a
-          href="https://www.anidachi.app"
-          className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-surface px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20"
-        >
-          Back to AniDachi
-        </a>
-      </Shell>
-    );
-  }
+	// Ended (or missing) rooms get a friendly terminal state, not a bare 404.
+	if (!room || room.status === "ended") {
+		return (
+			<Shell>
+				<div className="mb-1 flex items-center gap-2">
+					<span className="inline-block h-2 w-2 rounded-full bg-foreground/30" />
+					<span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
+						Ended
+					</span>
+				</div>
+				<h1 className="mt-3 text-2xl font-bold text-foreground">
+					This watchroom has ended
+				</h1>
+				<p className="mt-2 text-sm text-foreground/50">
+					The host closed this room. Ask them for a fresh invite link, or start
+					your own watch party from the AniDachi extension on any supported
+					video page.
+				</p>
+				<a
+					href="https://www.anidachi.app"
+					className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-surface px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20"
+				>
+					Back to AniDachi
+				</a>
+			</Shell>
+		);
+	}
 
-  const [host, memberCount, alreadyMember] = await Promise.all([
-    getUserById(room.host_user_id),
-    getRoomMemberCount(roomId),
-    session ? isRoomMember(roomId, session.userId) : Promise.resolve(false),
-  ]);
+	const [host, alreadyMember] = await Promise.all([
+		getUserById(room.host_user_id),
+		session ? isRoomMember(roomId, session.userId) : Promise.resolve(false),
+	]);
 
-  const isHost = session?.userId === room.host_user_id;
-  const isParticipant = isHost || alreadyMember;
-  const source = deriveDurableRoomSource(room);
-  const launchUrl = source
-    ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : null;
-  const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
-  const justJoined = joined === "1";
+	const isHost = session?.userId === room.host_user_id;
+	const isParticipant = isHost || alreadyMember;
+	const source = deriveDurableRoomSource(room);
+	const launchUrl = source
+		? buildRoomSourceLaunchUrl(source.source, roomId)
+		: null;
+	const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
+	const justJoined = joined === "1";
 
-  // Joined, but the host has not opened a video yet: keep the guest informed
-  // and auto-upgrade to "Open watchroom" once a source URL appears.
-  if (isParticipant && !launchUrl) {
-    return (
-      <Shell>
-        <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
-          <span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
-            Waiting for host
-          </span>
-        </div>
-        <h1 className="mt-3 text-2xl font-bold text-foreground">
-          {justJoined ? "You're in!" : roomTitle}
-        </h1>
-        <p className="mt-2 text-sm text-foreground/50">
-          The host hasn&apos;t opened a video yet. Keep this tab open — it updates
-          automatically the moment the watch party starts.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-foreground/50">
-          <span>
-            Host:{" "}
-            <span className="font-medium text-foreground/80">
-              {host?.display_name ?? "Unknown"}
-            </span>
-          </span>
-          <span>
-            Members: <span className="font-medium text-foreground/80">{memberCount}</span>
-          </span>
-        </div>
-        <ExtensionCheck initialMobile={initialMobile} />
-        <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
-        <WaitingRefresh roomId={roomId} />
-      </Shell>
-    );
-  }
+	// Joined, but the host has not opened a video yet: keep the guest informed
+	// and auto-upgrade to "Open watchroom" once a source URL appears.
+	if (isParticipant && !launchUrl) {
+		return (
+			<Shell>
+				<div className="mb-1 flex items-center gap-2">
+					<span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
+					<span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
+						Waiting for host
+					</span>
+				</div>
+				<h1 className="mt-3 text-2xl font-bold text-foreground">
+					{justJoined ? "You're in!" : roomTitle}
+				</h1>
+				<p className="mt-2 text-sm text-foreground/50">
+					The host hasn&apos;t opened a video yet. Keep this tab open — it
+					updates automatically the moment the watch party starts.
+				</p>
+				<div className="mt-4 flex flex-wrap gap-4 text-sm text-foreground/50">
+					<span>
+						Host:{" "}
+						<span className="font-medium text-foreground/80">
+							{host?.display_name ?? "Unknown"}
+						</span>
+					</span>
+				</div>
+				<ExtensionCheck initialMobile={initialMobile} />
+				<RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+				<WaitingRefresh roomId={roomId} />
+			</Shell>
+		);
+	}
 
-  const ctaLabel = launchUrl ? "Open watchroom" : "Join room";
-  const roomSubtitle = room.episode_id ?? (launchUrl ? "Ready to open in your video tab" : null);
+	const roomSubtitle = room.episode_id ?? null;
 
-  return (
-    <Shell>
-      <div className="mb-1 flex items-center gap-2">
-        <span
-          className={`inline-block h-2 w-2 rounded-full ${
-            room.status === "live" ? "bg-brand-orange" : "bg-brand-orange/50"
-          }`}
-        />
-        <span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
-          {room.status === "live" ? "Live" : "Lobby"}
-        </span>
-      </div>
-
-      <h1 className="mt-3 text-2xl font-bold text-foreground">{roomTitle}</h1>
-      {roomSubtitle && <p className="mt-1 text-sm text-foreground/50">{roomSubtitle}</p>}
-
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-foreground/50">
-        <span>
-          Host:{" "}
-          <span className="font-medium text-foreground/80">{host?.display_name ?? "Unknown"}</span>
-        </span>
-        <span>
-          Members: <span className="font-medium text-foreground/80">{memberCount}</span>
-        </span>
-      </div>
-
-      <form action={`/api/rooms/${roomId}/join`} method="POST" className="mt-6">
-        <button
-          type="submit"
-          className="min-h-11 w-full rounded-xl bg-brand-orange px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-brand-orange-deep active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
-        >
-          {ctaLabel}
-        </button>
-      </form>
-
-      <RoomMobileHandoff
-        variant={isParticipant && launchUrl ? "joined" : "ready"}
-        initialMobile={initialMobile}
-      />
-
-      {isParticipant && launchUrl && (
-        <p className="mt-3 text-center text-xs text-foreground/45">
-          You&apos;re already in this room — opening it relaunches your video tab.
-        </p>
-      )}
-
-      <ExtensionCheck initialMobile={initialMobile} />
-    </Shell>
-  );
+	return (
+		<RoomInviteView
+			status={room.status}
+			roomTitle={roomTitle}
+			roomSubtitle={roomSubtitle}
+			hostName={host?.display_name ?? "Unknown"}
+			sourceProvider={source?.source.provider}
+			joinAction={`/api/rooms/${roomId}/join`}
+			isParticipant={isParticipant}
+			hasLaunchUrl={Boolean(launchUrl)}
+			initialMobile={initialMobile}
+		/>
+	);
 }

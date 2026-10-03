@@ -149,6 +149,52 @@ async function main() {
     }
   }
 
+  // A guest must keep the chosen plan/period across the protected page and login.
+  // Read-only: never start OAuth or create a Stripe session in this smoke.
+  for (const [plan, billing] of [["plus", "yearly"], ["pro", "monthly"]]) {
+    const checkoutPath = `/checkout?plan=${plan}&billing=${billing}`;
+    const checkout = await fetchManual(checkoutPath, {
+      headers: { cookie: stagingCookie },
+    });
+    assertStatus(checkout, 307, `GET ${checkoutPath}`);
+    const destination = new URL(checkout.headers.get("location") ?? "", baseUrl);
+    if (destination.origin !== new URL(baseUrl).origin ||
+        destination.pathname !== "/login" ||
+        destination.searchParams.get("next") !== checkoutPath) {
+      throw new Error(`GET ${checkoutPath}: expected login with the exact selection`);
+    }
+    const selectedLogin = await fetchManual(destination.href, {
+      headers: { cookie: stagingCookie },
+    });
+    assertStatus(selectedLogin, 200, `GET login for ${plan} ${billing}`);
+    assertHeaderIncludes(selectedLogin, "x-robots-tag", "noindex", "Checkout login");
+    const selectedText = await selectedLogin.text();
+    const label = plan === "plus" ? "Plus" : "Pro";
+    for (const expected of [
+      `Sign in to continue with ${label}`,
+      `Your ${billing} plan is selected.`,
+      `/api/auth/google?returnTo=${encodeURIComponent(checkoutPath)}`,
+      `/api/auth/discord?returnTo=${encodeURIComponent(checkoutPath)}`,
+    ]) {
+      if (!selectedText.includes(expected)) {
+        throw new Error(`Checkout login: missing ${expected}`);
+      }
+    }
+  }
+  console.log("Guest checkout selection smoke passed: Plus yearly, Pro monthly");
+
+  // Report count availability separately: an existing data outage must not be
+  // mistaken for a checkout regression or replaced with an invented total.
+  const community = await fetchManual("/api/community-stats", {
+    headers: { cookie: stagingCookie },
+  });
+  const communityData = await community.json();
+  if (community.ok && Number.isSafeInteger(communityData.count) && communityData.count > 0) {
+    console.log(`Community count available: ${communityData.count}`);
+  } else {
+    console.warn(`Community count unavailable (HTTP ${community.status}); counter remains hidden`);
+  }
+
   const apiRooms = await fetchManual("/api/rooms", { method: "POST" });
   assertStatus(apiRooms, 401, "POST /api/rooms without access");
   assertHeaderIncludes(apiRooms, "content-type", "application/json", "POST /api/rooms");

@@ -1,5 +1,6 @@
 import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import { RoomSourcePersistenceError } from "./room-source";
+import { hostingDeniedResponse } from "./hosting-denial";
 
 export type RoomCreateRequestInput = {
 	participantSessionId: string;
@@ -14,16 +15,24 @@ export type RoomCreateRequestInput = {
 
 type RoomCreateFailure = {
 	ok: false;
-	status: 400 | 426;
+	status: 400 | 403 | 426 | 503;
 	body: {
 		error: string;
-		code: "INVALID_REQUEST" | "INVALID_ROOM_SOURCE" | "ROOM_UPDATE_REQUIRED";
+		code:
+			| "INVALID_REQUEST"
+			| "INVALID_ROOM_SOURCE"
+			| "ROOM_UPDATE_REQUIRED"
+			| "HOST_SUBSCRIPTION_REQUIRED"
+			| "ROOM_AUTHORITY_UNAVAILABLE";
+		message?: string;
+		pricingUrl?: string;
 	};
 };
 
 export async function handleRoomCreateRequestBody<T>(params: {
 	readBody: () => Promise<string>;
 	create: (input: RoomCreateRequestInput) => Promise<T>;
+	pricingUrl?: string;
 }): Promise<{ ok: true; value: T } | RoomCreateFailure> {
 	let rawBody: string;
 	try {
@@ -37,6 +46,27 @@ export async function handleRoomCreateRequestBody<T>(params: {
 	try {
 		return { ok: true, value: await params.create(parsed.input) };
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message === "HOST_SUBSCRIPTION_REQUIRED"
+		)
+			return {
+				ok: false,
+				status: 403,
+				body: hostingDeniedResponse(params.pricingUrl),
+			};
+		if (
+			error instanceof Error &&
+			error.message === "ROOM_AUTHORITY_UNAVAILABLE"
+		)
+			return {
+				ok: false,
+				status: 503,
+				body: {
+					code: "ROOM_AUTHORITY_UNAVAILABLE",
+					error: "Room access is temporarily unavailable. Please try again.",
+				},
+			};
 		if (error instanceof Error && error.message === "ROOM_UPDATE_REQUIRED")
 			return {
 				ok: false,

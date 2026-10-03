@@ -397,7 +397,7 @@ describe("Popup Watch History v3", () => {
   });
 
   it("paints the confirmed current-owner cache, overlays matching pending progress, then accepts canonical refresh", async () => {
-    let resolveList: ((value: WatchHistoryMessageResponse) => void) | undefined;
+    const resolveLists: Array<(value: WatchHistoryMessageResponse) => void> = [];
     const cached = historyFixture({ title: "Cached Frieren", currentTime: 420, progress: 0.2 });
     const refreshed = historyFixture({ title: "Canonical Frieren", currentTime: 1_260, progress: 0.6 });
     const refreshedEpisode = refreshed.items[0]?.seasons[0]?.episodes[0];
@@ -408,7 +408,7 @@ describe("Popup Watch History v3", () => {
       request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
         if (message.command === "list") {
           return new Promise<WatchHistoryMessageResponse>((resolve) => {
-            resolveList = resolve;
+            resolveLists.push(resolve);
           });
         }
         if (message.command === "get-preferences") {
@@ -434,7 +434,7 @@ describe("Popup Watch History v3", () => {
     expect(view.container.textContent).toContain("14:00");
 
     await act(async () => {
-      resolveList?.({ ok: true, data: refreshed });
+      resolveLists.forEach(resolve => resolve({ ok: true, data: refreshed }));
       await Promise.resolve();
     });
 
@@ -465,7 +465,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
     expect(view.container.textContent).toContain("Pending sync");
     expect(client.loadCached).toHaveBeenCalledTimes(1);
-    expect(listRequests).toBe(1);
+    expect(listRequests).toBe(2);
     await unmount(view.root);
   });
 
@@ -952,12 +952,10 @@ describe("Popup Watch History v3", () => {
     });
 
     const view = await renderSettings(client);
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
     expect(toggle.disabled).toBe(false);
     expect(toggle.getAttribute("role")).toBe("switch");
     expect(toggle.getAttribute("aria-checked")).toBe("true");
-    expect(toggle.querySelector(".popup-notification-switch")).not.toBeNull();
-    expect(toggle.textContent).toContain("On");
     expect(toggle.textContent).not.toContain("Loading");
     expect(toggle.textContent).not.toContain("Retry");
 
@@ -990,11 +988,10 @@ describe("Popup Watch History v3", () => {
       cached: snapshotFixture(historyFixture()),
       request,
     }));
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
 
     expect(toggle.disabled).toBe(false);
     expect(toggle.getAttribute("aria-checked")).toBe("false");
-    expect(toggle.textContent).toContain("Off");
     expect(toggle.textContent).not.toContain("Loading");
     expect(toggle.textContent).not.toContain("Retry");
     await click(toggle);
@@ -1024,11 +1021,10 @@ describe("Popup Watch History v3", () => {
       cached: snapshotFixture(historyFixture()),
       request,
     }));
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
 
     await waitFor(() => expect(toggle.disabled).toBe(false));
     expect(toggle.getAttribute("aria-checked")).toBe("true");
-    expect(toggle.textContent).toContain("On");
     await unmount(view.root);
   });
 
@@ -1047,7 +1043,7 @@ describe("Popup Watch History v3", () => {
       return { ok: true };
     });
     const view = await renderSettings(clientFixture({ cached: null, request }));
-    const toggle = await findButton(view.container, "Track YouTube history");
+    const toggle = await findButton(view.container, "Include YouTube");
     await waitFor(() => expect(toggle.disabled).toBe(false));
 
     await click(toggle);
@@ -1102,7 +1098,7 @@ describe("Popup Watch History v3", () => {
       );
     });
 
-    await waitFor(() => expect(listRequests).toBe(2));
+    await waitFor(() => expect(listRequests).toBe(4));
     expect(view.container.textContent).toContain("Stable Frieren");
     expect(view.container.textContent).not.toContain("Older cached Frieren");
     expect(view.container.textContent).not.toContain("Loading watch history");
@@ -1196,7 +1192,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
     expect(view.container.textContent).toContain("Episode 1");
     expect(view.container.querySelector('[title="Episode 8"]')).not.toBeNull();
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(2);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1344,7 +1340,7 @@ describe("Popup Watch History v3", () => {
     await click(secondTitle);
     expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
     expect(title.getAttribute("aria-expanded")).toBe("true");
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(1);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(2);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1435,7 +1431,7 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(listAttempts).toBe(2);
+    expect(listAttempts).toBe(3);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
@@ -1493,7 +1489,7 @@ describe("Popup Watch History v3", () => {
     );
     expect(recoveryCall).toBeGreaterThan(-1);
     expect(secondListCall).toBeGreaterThan(recoveryCall);
-    expect(listAttempts).toBe(2);
+    expect(listAttempts).toBe(4);
     await unmount(view.root);
   });
 
@@ -1529,7 +1525,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Browser storage is full."));
     expect(view.container.textContent).toContain("Cached Frieren");
     await findButton(view.container, "Retry watch history");
-    expect(listAttempts).toBe(2);
+    expect(listAttempts).toBe(3);
     await unmount(view.root);
   });
 
@@ -1580,6 +1576,10 @@ function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryRespo
       const page = fixtureBrowseDetail(latest, input);
       return page.ok ? Response.json(page.data) : new Response("unavailable", { status: 503 });
     }
+    if (parsedUrl.pathname.endsWith("/browse") && input.provider === "youtube" && !latest.items.some(item => item.provider === "youtube")) {
+      const empty = fixtureBrowseTitles(latest, input);
+      return Response.json(empty.ok ? empty.data : null);
+    }
     const response = await fetch(url, init);
     if (!response.ok) return response;
     let parsed;
@@ -1626,7 +1626,7 @@ function fixtureBrowseEpisodes(history: WatchHistoryResponse, input: Record<stri
   const matches = (title: string, episode: WatchHistoryResponse["items"][number]["seasons"][number]["episodes"][number]) =>
     (input.mode === "personal" ? true : input.mode === "shared" ? episode.sessions.some(session => session.kind === "shared") : episode.sessions.length === 0 || episode.sessions.some(session => session.kind === "solo")) &&
     (!input.search || `${title} ${episode.episodeTitle}`.toLowerCase().includes(String(input.search).toLowerCase()));
-  return history.items.flatMap(item => {
+  return history.items.filter(item => !input.provider || item.provider === input.provider).flatMap(item => {
     const episodes = item.seasons.flatMap(season => season.episodes).filter(episode => matches(item.title, episode)).map(episode => ({ ...episode, sessions: episode.sessions.filter(session => input.mode === "personal" || session.kind === (input.mode === "shared" ? "shared" : "solo")) }));
     if (!item.seasons.length && (!input.search || item.title.toLowerCase().includes(String(input.search).toLowerCase())) && (input.mode !== "shared" || item.sessions.some(session => session.kind === "shared"))) episodes.push({ episodeTitle: item.title, seasonKey: null, seasonTitle: null, seasonNumber: null, episodeNumber: null, sourceUrl: item.sourceUrl, ...item.latestActivity, sessions: item.sessions.filter(session => session.kind === (input.mode === "shared" ? "shared" : "solo")) });
     return [{ item, episodes }];
@@ -2142,5 +2142,5 @@ async function unmount(root: Root): Promise<void> {
 // Consent transitions and fail-closed behavior have separate integration tests.
 vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
-  hasHistoryRecordingConsent: async () => true,
+  isHistoryRecordingEnabled: async () => true,
 }));

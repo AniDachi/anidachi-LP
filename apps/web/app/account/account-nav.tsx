@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { preloadAccountNavigation } from "@/lib/account-navigation-preload";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BookOpen, Bug, CreditCard, CircleHelp, Lightbulb, Menu, Users, X } from "lucide-react";
@@ -16,7 +17,7 @@ const SECONDARY = [
   { href: "/account/feature-requests", label: "Share an idea", icon: Lightbulb },
 ] as const;
 
-export function AccountNav() {
+export function AccountNav({ ownerUserId }: { ownerUserId?: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -55,8 +56,8 @@ export function AccountNav() {
   const links = (items: ReadonlyArray<{ href: string; label: string; icon: typeof BookOpen }>, mobile = false) => items.map(item => {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
     const Icon = item.icon;
-    return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}
-      onNavigate={mobile ? close : undefined}>
+    return <Link key={item.href} href={item.href} prefetch={false} aria-current={active ? "page" : undefined}
+      onNavigate={() => { if (ownerUserId && !active) preloadAccountNavigation(ownerUserId, item.href); if (mobile) close(); }}>
       <Icon size={18} aria-hidden /><span>{item.label}</span>
     </Link>;
   });

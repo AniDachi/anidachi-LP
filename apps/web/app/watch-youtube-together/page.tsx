@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
-      "Synced YouTube watchrooms with AniDachi — live together. Start free.",
+      "Live YouTube rooms with AniDachi — Free friends join a Plus, Pro, or trial host.",
   },
 };
 
@@ -67,7 +67,7 @@ const faq = [
   {
     question: "How do I watch YouTube together with friends?",
     answer:
-      "Install AniDachi, open a full youtube.com/watch page, create a watchroom, and share the invite link. Everyone watches on their own YouTube session while playback and chat stay in the room. Shorts, embeds, and homepage feeds are not supported.",
+      "Install AniDachi and open a full youtube.com/watch page. A Plus, Pro, or trial host chooses Create room and shares its invite; Free friends can join. Everyone watches on their own YouTube player with live sync and chat. Shorts, embeds, and homepage feeds are not supported.",
   },
   {
     question: "Can you watch YouTube together asynchronously?",
@@ -145,7 +145,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "Create a YouTube watchroom in AniDachi linked to the video you are watching.",
+    text: "With active Plus, Pro, or trial access, create an AniDachi room for the video. Free friends can join.",
   },
   {
     name: "Share the invite link",
@@ -236,7 +236,7 @@ export default function WatchYoutubeTogetherPage() {
         description="The complete guide to YouTube watch parties: live sync, chat, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
-        dateModified="2026-09-21"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         itemList={startHereItemList}
@@ -406,7 +406,7 @@ export default function WatchYoutubeTogetherPage() {
           What Makes AniDachi Different for YouTube
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          AniDachi supports live YouTube rooms and personal history on Plus or Pro. <strong>Async catch-up is planned</strong>, not available today. The same extension also covers Crunchyroll, so your group can use one product for both.
+          AniDachi supports live YouTube rooms. Personal history needs your own Plus/Pro access, recording permission, and the separate YouTube recording toggle. <strong>Async catch-up is planned</strong>, not available today. The same extension also covers Crunchyroll, so your group can use one product for both.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-8">
           {PRICING_ASYNC_HOST_SNIPPET} Details on{" "}

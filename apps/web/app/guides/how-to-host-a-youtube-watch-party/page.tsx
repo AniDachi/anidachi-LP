@@ -19,7 +19,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "How to Host a YouTube Watch Party (2026 Host Guide) | AniDachi",
   description:
-    "Host a YouTube watch party: create a watchroom, share invites, and understand who pays (hosts upgrade; guests Free). Step-by-step HowTo.",
+    "Host a YouTube watch party with Plus or Pro access, including an active trial. Share invites so friends can join on Free accounts.",
   alternates: { canonical: "/guides/how-to-host-a-youtube-watch-party" },
   openGraph: {
     title: "How to Host a YouTube Watch Party",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "How to Host a YouTube Watch Party",
-    description: "Hosts pay for room limits; guests join Free. Step-by-step.",
+    description: "Plus, Pro, or active trial access for hosts; Free accounts for guests. Step-by-step.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -43,7 +43,7 @@ const howToSteps = [
   },
   {
     name: "Choose your AniDachi host plan",
-    text: "Free hosts get limited daily hosting; Plus and Pro raise room size for weekly nights.",
+    text: "Hosting requires your own Plus or Pro access, including an active trial. Friends can join your active room on Free accounts.",
   },
   {
     name: "Open the exact YouTube URL",
@@ -51,7 +51,7 @@ const howToSteps = [
   },
   {
     name: "Create the watchroom as host",
-    text: "Generate the room from the overlay, enable chat, and decide live vs async before invites.",
+    text: "Create the room from the overlay and agree on a shared start time before sending invites.",
   },
   {
     name: "Share the invite with host notes",
@@ -59,7 +59,7 @@ const howToSteps = [
   },
   {
     name: "Start playback and moderate",
-    text: "Countdown in chat for live nights, or leave async markers for late joiners.",
+    text: "Start together and use live chat. Ask late joiners to open the same video and join the current playback position.",
   },
 ];
 
@@ -118,7 +118,7 @@ export default function HowToHostAYoutubeWatchPartyPage() {
         description="Host framing for YouTube watchrooms — who pays, plan limits, and steps."
         url="/guides/how-to-host-a-youtube-watch-party"
         datePublished="2026-07-26"
-        dateModified="2026-08-11"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

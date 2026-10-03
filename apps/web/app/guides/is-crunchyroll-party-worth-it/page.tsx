@@ -12,7 +12,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Is Crunchyroll Party Worth It? (2026 Evaluation) | AniDachi",
   description:
-    "When free Crunchyroll Party is enough for live sync — and when anime groups should upgrade to AniDachi for async watchrooms and progress tracking.",
+    "Compare Crunchyroll Party with AniDachi for live anime nights: sync, chat, cameras, microphones, personal history, and hosting requirements.",
   alternates: { canonical: "/guides/is-crunchyroll-party-worth-it" },
   openGraph: {
     title: "Is Crunchyroll Party Worth It?",
@@ -33,7 +33,7 @@ const faq = [
   {
     question: "Is Crunchyroll Party worth using?",
     answer:
-      "Yes for free live-only watch nights when everyone can show up at the same time. It is not worth relying on long-term if your group spans time zones, needs async catch-up, or wants per-episode spoiler controls — upgrade to AniDachi for those workflows.",
+      "It can suit basic live watch nights when everyone is online together. Compare AniDachi if your group also wants live cameras and microphones, YouTube support, or personal history for viewers with Plus or Pro. Async catch-up is coming soon in AniDachi.",
   },
   {
     question: "What does Crunchyroll Party cost?",
@@ -43,7 +43,7 @@ const faq = [
   {
     question: "When should I upgrade from Crunchyroll Party to AniDachi?",
     answer:
-      "Upgrade when late members spoil the group, sync breaks every week after player updates, or you want async watchrooms with per-person progress on seasonal simulcasts.",
+      "Consider AniDachi when you want live rooms on Crunchyroll and YouTube, cameras and microphones, or personal history with your own Plus or Pro access. Choose based on current features and hosting requirements.",
   },
   {
     question: "How does AniDachi pricing compare to free Crunchyroll Party?",
@@ -81,7 +81,7 @@ export default function IsCrunchyrollPartyWorthItPage() {
       description="When free Crunchyroll Party live sync is enough — and when to upgrade."
       url="/guides/is-crunchyroll-party-worth-it"
       datePublished="2026-07-22"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -103,8 +103,7 @@ export default function IsCrunchyrollPartyWorthItPage() {
           nights — not worth it as your only tool when schedules drift or
           spoilers leak from early watchers.
         </strong>{" "}
-        Treat it as a zero-cost live sync starter; upgrade when your club needs
-        async watchrooms.
+        Treat it as a live sync option. Compare AniDachi when your club wants cameras, microphones, YouTube support, or personal history on Plus or Pro.
       </p>
 
       <h2
@@ -163,12 +162,11 @@ export default function IsCrunchyrollPartyWorthItPage() {
         <li>You host long simulcasts and need repeatable watchrooms.</li>
       </ul>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi adds async catch-up, auto anime detection, and spoiler
-        boundaries on top of per-user Crunchyroll streams. See{" "}
+        AniDachi adds live sync, anime detection, chat, cameras, and microphones on top of each person’s Crunchyroll stream. See{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>{" "}
-        — guests can stay Free; hosts upgrade for higher room limits.
+        — hosts need Plus or Pro access, including an active trial; guests can join on Free.
       </p>
 
       <h2

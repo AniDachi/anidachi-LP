@@ -64,24 +64,32 @@ jobs:
           WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
           WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
           CONFIGURED_VAPID_PUBLIC_KEY: ${{ vars.WXT_VAPID_PUBLIC_KEY }}
+          CONFIGURED_EXTENSION_VERSION: ${{ vars.WXT_EXTENSION_VERSION }}
         run: |
           test -n "${WXT_WEB_HTTP_BASE}"
           test -n "${WXT_API_HTTP_BASE}"
           test -n "${WXT_API_WS_BASE}"
           if [[ "$EXTENSION_CHANNEL" == "production" ]]; then
             test -n "${CONFIGURED_VAPID_PUBLIC_KEY}"
+            if [[ -z "${CONFIGURED_EXTENSION_VERSION}" ]]; then
+              echo "WXT_EXTENSION_VERSION is required for production extension builds" >&2
+              exit 1
+            fi
           fi
 
       - name: Build extension
         env:
           WXT_EXTENSION_CHANNEL: ${{ env.EXTENSION_CHANNEL }}
-          WXT_EXTENSION_VERSION: ${{ vars.WXT_EXTENSION_VERSION || '0.1.0' }}
+          WXT_EXTENSION_VERSION: ${{ vars.WXT_EXTENSION_VERSION }}
           WXT_WEB_HTTP_BASE: ${{ vars.WXT_WEB_HTTP_BASE }}
           WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
           WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
           WXT_BUILD_ID: ${{ github.sha }}-${{ env.EXTENSION_CHANNEL }}-${{ github.run_number }}
           CONFIGURED_VAPID_PUBLIC_KEY: ${{ vars.WXT_VAPID_PUBLIC_KEY }}
         run: |
+          if [[ "$EXTENSION_CHANNEL" == "staging" ]]; then
+            export WXT_EXTENSION_VERSION="${WXT_EXTENSION_VERSION:-0.1.0}"
+          fi
           if [[ -n "${CONFIGURED_VAPID_PUBLIC_KEY}" ]]; then
             export WXT_VAPID_PUBLIC_KEY="${CONFIGURED_VAPID_PUBLIC_KEY}"
           fi

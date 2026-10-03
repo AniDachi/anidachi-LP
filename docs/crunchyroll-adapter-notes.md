@@ -455,3 +455,40 @@ The room still assigns the first participant as `host` for display and periodic 
 - Remote playback events are suppressed locally for a short window after applying an incoming command to avoid echo loops.
 
 This gives the expected watch-party behavior: either side can pause, resume, or seek.
+
+
+## Message composer interaction: local candidate, October 1, 2026
+
+The owner reported native player buttons/timeline appearing when opening the
+AniDachi input or sending via Enter/the Send button. This is a chrome-visibility
+issue; the report does not establish unwanted playback changes.
+
+The existing content CSS hides native controls while `data-anidachi-composer-open`
+is present. The local fix distinguishes an open input (`true`) from post-close
+quiet state (`quiet`). Closing or sending removes the input and its hit shield,
+but keeps the visual guard through resulting focus/hover events. The next pointer
+move/down on the player, or a native keyboard command, releases the guard without
+canceling or replaying that event. AniDachi shortcuts are resolved with the same
+hotkey rules as the overlay and keep the quiet state. An explicit outside click
+while the input is open retains the existing dismiss behavior.
+
+The document-start keyboard guard tracks consumed keys through keyup because
+removing the input changes the release target. IME confirmation and held Enter
+cannot submit repeatedly. Focus is checked against the input's actual root,
+including closed Shadow DOM. Reopening, room exit and unmount remove the relevant
+listeners and guards. The obsolete delayed shield/synthetic mouse-wake path was
+removed. Provider selectors remain in content CSS; shared UI does not import the
+Crunchyroll adapter or call provider playback APIs.
+
+Evidence: the new Enter/button/Escape regression cases fail before the fix and
+pass afterwards; focused component/lifecycle checks, extension typecheck and all
+2,144 extension tests pass. No API/protocol/media code changed, so room/WebRTC
+harnesses are not required for this input-only change. A local staging artifact
+must be built/validated for owner Reload; nothing is deployed by this task.
+
+The owner confirmed the fix works as intended after the local delivery. Separate
+normal/fullscreen coverage was not enumerated. The regression checklist remains: open with Enter/Alt+C, type, use emoji, send by Enter/button,
+reopen and close. Native controls should stay hidden through those actions;
+move/click the video and check that normal controls respond on the first gesture.
+Verify native Escape/fullscreen behavior and playback shortcuts as well. Unit
+and component tests do not validate live Crunchyroll selectors or rendering.

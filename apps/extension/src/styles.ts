@@ -1588,14 +1588,6 @@ ${extensionThemeTokens}
     touch-action: none;
   }
 
-  .message-composer-shield.latched {
-    cursor: default;
-  }
-
-  .message-composer-shield.releasing {
-    cursor: default;
-  }
-
   .message-composer {
     position: absolute;
     left: 0;
@@ -1727,6 +1719,30 @@ ${extensionThemeTokens}
     display: grid;
     place-items: center;
     cursor: pointer;
+  }
+
+  .message-composer-close {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ad-muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .message-composer-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ad-text);
+  }
+
+  .message-composer-close:focus-visible {
+    outline: 2px solid var(--ad-accent-strong);
+    outline-offset: 2px;
   }
 
   .message-composer-send:disabled {
@@ -2201,6 +2217,20 @@ ${extensionThemeTokens}
     border: 1px solid rgba(255, 255, 255, 0.065);
     background: rgba(255, 255, 255, 0.018);
   }
+
+  .hosting-paywall {
+    margin-top: 12px; padding: 14px; border: 1px solid rgba(255,255,255,.18);
+    border-radius: 16px; background: #24211f; color: #eee5db; min-width: 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,.22);
+  }
+  .hosting-paywall:focus { outline: none; }
+  .hosting-paywall-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
+  .hosting-paywall-close { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex-shrink: 0; color: #eee5db; background: transparent; border: 0; border-radius: 8px; cursor: pointer; }
+  .hosting-paywall-close:hover { background: rgba(255,255,255,.08); }
+  .hosting-paywall-close:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
+  .hosting-paywall p { margin: 10px 0 0; font-size: 12px; line-height: 1.55; }
+  .hosting-paywall-status { color: #bfb7af; }
+  .hosting-paywall-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
 
   .free-quota-notice {
     margin-top: 12px; padding: 14px; border: 1px solid rgba(255, 155, 91, .2);

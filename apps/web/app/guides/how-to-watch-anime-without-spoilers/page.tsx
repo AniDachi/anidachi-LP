@@ -6,7 +6,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 export const metadata: Metadata = {
   title: "How to Watch Anime Without Spoilers — 2026",
   description:
-    "The easiest way is AniDachi episode-aware chat plus clear ground rules. Add mute habits and synced pacing. Takes under 2 minutes to start.",
+    "Avoid anime spoilers with agreed episode boundaries, live synced viewing, and separate labeled chats for friends who watch ahead.",
   alternates: { canonical: "/guides/how-to-watch-anime-without-spoilers" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "How to Watch Anime Without Spoilers — 2026",
     description:
-      "Protect your group watch with async pacing, labeled chat, and disciplined social feeds.",
+      "Protect your group watch with shared episode boundaries, labeled chat, and disciplined social feeds.",
     url: "/guides/how-to-watch-anime-without-spoilers",
   },
   twitter: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "How to Watch Anime Without Spoilers — 2026",
     description:
-      "Combine AniDachi watchrooms with episode tags so friends never leapfrog your progress.",
+      "Use AniDachi for live viewing and agree on spoiler rules before opening chat.",
   },
 };
 
@@ -70,7 +70,7 @@ const howToSteps = [
   },
   {
     name: "Create a dedicated room",
-    text: "Keep one watchroom per series so history stays searchable by episode.",
+    text: "A host with Plus or Pro access, including an active trial, creates the live room. Friends can join on Free accounts.",
   },
   {
     name: "Agree on chat tags",
@@ -104,10 +104,10 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
           },
         ]}
         title="How to Watch Anime Without Spoilers"
-        description="Avoid spoilers with async watchrooms, threaded chat, or solo-first viewing."
+        description="Avoid spoilers with agreed episode boundaries, separate labeled chats, and careful discussion."
         url="/guides/how-to-watch-anime-without-spoilers"
         datePublished="2026-04-27"
-        dateModified="2026-04-27"
+        dateModified="2026-10-01"
         faq={faq}
         headings={tocHeadings}
       >
@@ -117,10 +117,9 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
 
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
-            Watching anime without spoilers is possible by controlling when chat
-            arrives and labeling every message with episode context. The easiest
-            way is AniDachi because watchrooms keep your group on one timeline
-            while still letting people stream on their own schedule.
+            Avoiding anime spoilers takes clear episode boundaries and careful
+            discussion. AniDachi keeps a live group in sync; agree on the safe
+            episode before chatting and keep later spoilers in a separate chat.
           </strong>
         </p>
 
@@ -137,8 +136,8 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
           and you remove most accidental reveals without killing hype.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          When someone needs to rewatch a scene for clarity, they can scrub on
-          their own Crunchyroll tab without broadcasting frames to others. If
+          When someone needs to rewatch a scene for clarity, agree to pause or
+          rewind together so the live group stays aligned. If
           streams glitch, point them to{" "}
           <a
             href="https://www.crunchyroll.com/help"

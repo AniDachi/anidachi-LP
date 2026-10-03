@@ -1,5 +1,6 @@
 "use client";
 
+import { clearAccountPreloads } from "@/lib/account-navigation-preload";
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -66,6 +67,7 @@ export function UserMenu({ user, compact = false, onOpen }: {
       setSigningOut(true);
       setError(null);
       try {
+        clearAccountPreloads();
         const response = await fetch("/api/auth/logout", { method: "POST" });
         if (!response.ok) throw new Error("Sign out failed");
         window.location.href = "/";

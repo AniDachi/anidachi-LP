@@ -2,6 +2,7 @@ import {
 	ROOM_POLICY_STORAGE_KEY,
 	type RoomPolicyState,
 } from "./room-capability";
+import { ROOM_TERMINAL_STORAGE_KEY, parseRoomTerminalIntent } from "./room-terminal";
 import {
 	ROOM_PRESENCE_STORAGE_KEY,
 	nextPresenceAlarm,
@@ -228,6 +229,16 @@ export async function reconcileStoredRoomAlarm(
   fallbackAt: number | null = null,
   options: { ignoreLifecycle?: boolean } = {},
 ): Promise<number | null> {
+  const terminal = parseRoomTerminalIntent(await transaction.get(ROOM_TERMINAL_STORAGE_KEY));
+  if (terminal) {
+    // Terminal work owns accounting/source retries. Old lifecycle/lease alarms
+    // must not spin or revive the room, but independent presence delivery lives on.
+    const presenceAt = nextPresenceAlarm(await transaction.get(ROOM_PRESENCE_STORAGE_KEY));
+    const next = terminal.runtimeFinalized === true ? null : terminal.nextAttemptAt;
+    const at = next === null ? presenceAt : presenceAt === null ? next : Math.min(next, presenceAt);
+    await writeChangedAlarm(transaction, at);
+    return at;
+  }
 	const [rawLifecycle, rawPendingSource, rawParticipantDisconnects] =
 		await Promise.all([
     transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY),
@@ -276,12 +287,16 @@ export async function reconcileStoredRoomAlarm(
     : fallbackAt === null
       ? logicalAlarmAt
       : Math.min(logicalAlarmAt, fallbackAt);
-  if (alarmAt === null) {
-    await transaction.deleteAlarm();
-  } else {
-    await transaction.setAlarm(alarmAt);
-  }
+  await writeChangedAlarm(transaction, alarmAt);
   return alarmAt;
+}
+
+async function writeChangedAlarm(transaction: DurableObjectTransaction, at: number | null): Promise<void> {
+  // getAlarm() is null inside an executing handler until its next alarm is set.
+  // Comparing the actual alarm also permits recovery to re-arm missing work.
+  if (await transaction.getAlarm() === at) return;
+  if (at === null) await transaction.deleteAlarm();
+  else await transaction.setAlarm(at);
 }
 
 function sameCallback(

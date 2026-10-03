@@ -47,7 +47,7 @@ const faq = [
   {
     question: "Do all my friends need Crunchyroll to watch isekai anime together?",
     answer:
-      "Yes — each person streams from their own Crunchyroll account. AniDachi adds the watchroom, sync, and episode-scoped chat on top. Availability varies by region: a few titles have licensing gaps in certain territories, so check that everyone can stream the same series before starting.",
+      "Yes — each person streams from their own Crunchyroll account. AniDachi adds live playback sync and chat. Availability varies by region, so check that everyone can stream the same series before starting and agree on an episode boundary for spoilers.",
   },
 ];
 
@@ -80,7 +80,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       description="14 isekai picks for group watchrooms — short starters, deep epics, and strategy-heavy series that spark long debates."
       url="/guides/best-isekai-anime-to-watch-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-05-18"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -245,7 +245,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         These reward a long-term watchroom with genuine world-building payoffs.
-        Set a monthly arc cadence, use AniDachi&apos;s async mode for catch-up,
+        Set a monthly arc cadence, let members catch up independently between live sessions,
         and celebrate arc finales as group milestones.
       </p>
       <ul className="space-y-4 text-foreground/80 mb-10">

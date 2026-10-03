@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Watch Romance Anime With Friends (2026) | AniDachi",
     description:
-      "Group watchroom guides for romance anime on Crunchyroll — spoiler-safe shipping debates, emotional sync sessions, and async catch-up.",
+      "Group watchroom guides for romance anime on Crunchyroll — live shipping debates, synchronized episodes, and shared reactions.",
     url: "/watch-romance-anime-with-friends",
   },
 };
@@ -34,7 +34,7 @@ const faq = [
   {
     question: "How do we handle spoilers and ship reveals in romance anime watchrooms?",
     answer:
-      "Episode-tag every message that references a romantic development so late viewers can mute the thread until they reach that scene. Create a dedicated 'ship theories' channel for speculation so the main episode feed stays spoiler-safe. Encourage reactions like 'I had feelings' over describing what happened.",
+      "Use clearly labeled episode threads in a separate group chat for romantic developments and speculation. In your AniDachi live room, agree on the last episode everyone has seen and react with feelings rather than describing later outcomes.",
   },
   {
     question: "Is romance anime good for friends who don't usually watch anime?",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can we watch romance anime asynchronously without missing the emotional moments?",
     answer:
-      "Yes. AniDachi's async mode lets each viewer watch at their own pace and leave episode-scoped reactions. When someone finishes a tearjerker episode, their reaction message stays pinned under that episode so the next viewer reads it immediately after finishing — the emotional payoff is preserved without needing to schedule a synchronized watch.",
+      "Watch independently and save your thoughts in a separate, episode-labeled chat thread, then read each other's notes after you both finish. AniDachi currently supports live rooms; built-in async catch-up and replayed reactions are coming soon.",
   },
   {
     question: "Do we all need Crunchyroll to watch romance anime together?",
@@ -82,7 +82,7 @@ export default function WatchRomanceAnimeWithFriendsPage() {
       description="Group watchroom guides for romance anime on Crunchyroll."
       url="/watch-romance-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -122,11 +122,10 @@ export default function WatchRomanceAnimeWithFriendsPage() {
         one of the most social genres.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi watchrooms keep shipping debates in episode-scoped threads so
-        nobody reads a confession reaction before they&apos;ve reached that scene.
-        The async mode is especially useful for romance: emotional moments don&apos;t
-        need to be synchronized to the minute — each viewer can read their
-        friends&apos; reactions right after finishing the same episode.
+        AniDachi live rooms let you share confession scenes and emotional
+        finales in sync. If someone watches later, save the discussion in a
+        separate, labeled chat thread until they finish. The current room
+        does not store or replay episode-scoped reactions.
       </p>
 
       <h2
@@ -169,7 +168,7 @@ export default function WatchRomanceAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the invite.</span>{" "}
-          Set a &quot;ship theories&quot; pinned thread right away for speculation.
+          A Plus, Pro, or trial host creates the room; Free friends can join. Keep ship theories in a separate group chat.
         </li>
         <li>
           <span className="font-medium text-foreground">Agree on episode-tagging rules.</span>{" "}

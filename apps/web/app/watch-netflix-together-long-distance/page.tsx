@@ -73,7 +73,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
       description="Netflix watch party guide for long-distance couples — Teleparty, Rave, and the no-app fallback."
       url="/watch-netflix-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -95,8 +95,8 @@ export default function WatchNetflixTogetherLongDistancePage() {
           option that includes voice and video calling.
         </strong>{" "}
         Neither supports async watching — both require you online at the
-        same time. For anime on Crunchyroll, use AniDachi, which adds async
-        mode for different schedules.
+        same time. AniDachi offers live rooms for Crunchyroll and YouTube;
+        its async catch-up is coming soon.
       </p>
 
       <h2
@@ -164,12 +164,11 @@ export default function WatchNetflixTogetherLongDistancePage() {
         Also Watching Anime on Crunchyroll?
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        If your LDR watch list includes anime on Crunchyroll, AniDachi is
-        significantly better than Teleparty for that specific context.
-        The key difference is async mode — each person can watch on their
-        own schedule and still share reactions episode by episode, with
-        full spoiler protection. This matters most for long-distance couples
-        with time zone differences or inconsistent schedules.
+        If your LDR watch list includes anime on Crunchyroll, AniDachi offers
+        live sync, chat, reactions, and voice/video beside each person’s player.
+        A Plus, Pro, or trial host creates the room and Free friends can join.
+        Personal history needs your own Plus/Pro access and recording permission.
+        Choose a shared live time; async catch-up is coming soon.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">

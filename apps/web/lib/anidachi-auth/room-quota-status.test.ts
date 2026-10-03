@@ -58,3 +58,45 @@ test("quota status fails closed on unavailable authority or usage", async () => 
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { code: "QUOTA_UNAVAILABLE" });
 });
+test("activated Free accounts receive no quota or midnight renewal and never read usage", async () => {
+  const h = harness();
+  h.deps.resolve = async () => ({ policy: { planCode: "free" }, hosting: {
+    hostingPolicyVersion: 2, hostingActivationAt: "2026-09-15T00:00:00Z",
+    canHost: false, trialEligibility: "eligible", trialEndsAt: null,
+  } } as Awaited<ReturnType<NonNullable<Deps>["resolve"]>>);
+  const get = createRoomQuotaStatusHandler(h.deps);
+  for (const time of ["2026-09-15T23:59:59Z", "2026-09-16T00:00:00Z"]) {
+    h.set(time);
+    const response = await get(h.request());
+    assert.equal(response.status, 403);
+    assert.equal(response.headers.get("cache-control"), "private, no-store");
+    const body = await response.json();
+    assert.equal(body.code, "HOST_SUBSCRIPTION_REQUIRED");
+    assert.equal("quota" in body, false);
+    assert.equal("resetAt" in body, false);
+  }
+  assert.equal(h.readCount(), 0);
+});
+test("hosting authority outages remain unavailable rather than a subscription offer", async () => {
+  const h = harness();
+  h.deps.resolve = async () => { throw new Error("authority offline"); };
+  const response = await createRoomQuotaStatusHandler(h.deps)(h.request());
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { code: "QUOTA_UNAVAILABLE" });
+  assert.equal(h.readCount(), 0);
+});
+test("scheduled activation and active paid accounts preserve the strict v1 success contract", async () => {
+  const h = harness();
+  const get = createRoomQuotaStatusHandler(h.deps);
+  for (const planCode of ["free", "plus", "pro"] as const) {
+    h.deps.resolve = async () => ({ policy: { planCode }, hosting: {
+      hostingPolicyVersion: 2, hostingActivationAt: planCode === "free" ? "2026-09-16T00:00:00Z" : "2026-09-15T00:00:00Z",
+      canHost: true, trialEligibility: "unavailable", trialEndsAt: null,
+    } } as Awaited<ReturnType<NonNullable<Deps>["resolve"]>>);
+    const response = await get(h.request());
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { schemaVersion: 1, ownerUserId: owner,
+      serverTime: "2026-09-15T23:59:59.000Z",
+      quota: planCode === "free" ? { remainingSeconds: 0, resetAt: "2026-09-16T00:00:00.000Z" } : null });
+  }
+});

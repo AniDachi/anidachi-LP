@@ -49,7 +49,7 @@ const faq = [
   {
     question: "Do all friends need their own Crunchyroll subscription?",
     answer:
-      "Each viewer needs access to the series — Fan, Mega Fan, or free tier depending on catalog rights in your region. AniDachi does not grant streaming access; it syncs playback across legal individual streams.",
+      "Each viewer needs their own access to the selected episode. Check playback and regional availability before the session. AniDachi syncs individual streams; it does not grant streaming access or share a Crunchyroll subscription.",
   },
   {
     question: "Do friends need to pay for AniDachi too?",
@@ -58,7 +58,7 @@ const faq = [
   {
     question: "What if someone in the group cannot afford Crunchyroll?",
     answer:
-      "Crunchyroll offers a free ad-supported tier with a limited catalog. If the series is on free tier in your region, that member can join with their own free login — sync may drift slightly around ad breaks. There is no legal workaround that gives full premium access without a subscription.",
+      "Choose an episode everyone can legally play in their region and check access before the session. AniDachi does not unlock paid content or share a Crunchyroll subscription. If someone cannot access the episode, choose another title the whole group can open.",
   },
 ];
 
@@ -93,7 +93,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
       description="Legal per-user Crunchyroll group watch — no password sharing required."
       url="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
       datePublished="2026-07-22"
-      dateModified="2026-07-22"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -174,8 +174,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
           <span className="font-medium text-foreground">
             Each friend creates or uses their own Crunchyroll account.
           </span>{" "}
-          Fan, Mega Fan, or free tier — whatever grants access to your series in
-          your region.
+          Confirm that each account can play the selected episode in its region.
         </li>
         <li>
           <span className="font-medium text-foreground">
@@ -193,7 +192,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
           <span className="font-medium text-foreground">
             Confirm the same episode and press play.
           </span>{" "}
-          AniDachi syncs playback; chat stays in the watchroom thread.
+          AniDachi syncs playback and provides live chat during the session.
         </li>
       </ol>
       <p className="text-foreground/80 leading-relaxed mb-8">
@@ -201,7 +200,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>{" "}
-        — guests join on Free; hosts upgrade when they need higher room limits.
+        — hosts need Plus or Pro access, including an active trial; guests can join on Free.
       </p>
 
       <h2

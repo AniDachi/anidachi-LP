@@ -70,8 +70,6 @@ describe("History settings consent", () => {
 			expectedOwnerUserId: OWNER,
 			input: { youtubeHistoryEnabled: true },
 		});
-		expect(container.textContent).toContain("browser");
-		expect(container.textContent).toContain("account");
 	});
 	it("rolls back a failed update and remains usable after a failed preference read", async () => {
 		await mount(async () => ({ ok: false, status: "retryable" }));

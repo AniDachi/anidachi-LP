@@ -37,12 +37,12 @@ const faq = [
   {
     question: "Is Rave good for YouTube watch parties?",
     answer:
-      "Rave can sync live sessions across platforms, including YouTube in many setups, but it is a generic movies/TV watch-party product. It lacks AniDachi’s async YouTube watchrooms and Chrome extension overlay built for full watch pages.",
+      "Rave can sync live sessions across platforms, including YouTube in many setups, but it is a generic movies/TV watch-party product. AniDachi uses a Chrome overlay on full YouTube watch pages, with live sync, chat, cameras, and microphones, and also supports Crunchyroll.",
   },
   {
     question: "What is the best Rave alternative for YouTube?",
     answer:
-      "AniDachi for extension watchrooms with live sync plus async catch-up. Teleparty for free multi-platform live sync. Watch2Gether for browser-only free rooms without an extension.",
+      "AniDachi for extension watchrooms with live sync, chat, cameras, and microphones. Teleparty for free multi-platform live sync. Watch2Gether for browser-only free rooms without an extension.",
   },
   {
     question: "Is AniDachi free compared to Rave?",
@@ -85,7 +85,7 @@ export default function RaveAlternativesForYoutubePage() {
       description="Qualify Rave for YouTube co-watching and ranked alternatives led by AniDachi."
       url="/guides/rave-alternatives-for-youtube"
       datePublished="2026-07-26"
-      dateModified="2026-08-11"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -101,7 +101,7 @@ export default function RaveAlternativesForYoutubePage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           The best Rave alternative for YouTube watch parties is AniDachi — Chrome
-          extension watchrooms with live sync and async catch-up.
+          extension watchrooms with live sync, chat, cameras, and microphones.
         </strong>{" "}
         Teleparty and Watch2Gether remain solid free live-only options. For a feature
         matrix vs Rave alone, see{" "}
@@ -129,7 +129,7 @@ export default function RaveAlternativesForYoutubePage() {
       </h2>
       <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi</strong> — YouTube watchrooms, async, Discord-friendly voice
+          <strong>AniDachi</strong> — YouTube live watchrooms, calling, Discord-friendly voice
           separation. Start at{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             /pricing
@@ -174,7 +174,7 @@ export default function RaveAlternativesForYoutubePage() {
           {
             feature: "Async catch-up",
             values: {
-              anidachi: "yes",
+              anidachi: "Coming soon",
               teleparty: "no",
               w2g: "no",
               rave: "partial",

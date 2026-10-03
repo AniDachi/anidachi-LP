@@ -60,7 +60,7 @@ export default function CrunchyrollMegaFanGlossaryPage() {
       description="Glossary entry describing Crunchyroll Mega Fan in context of group watching."
       url="/glossary/crunchyroll-mega-fan"
       datePublished="2026-05-08"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -81,7 +81,8 @@ export default function CrunchyrollMegaFanGlossaryPage() {
           Crunchyroll directly for the exact feature list in your region.
         </strong>{" "}
         Watch party hosts care because everyone in the room still needs their own
-        legal playback rights before AniDachi can sync or async those sessions.
+        access to the video before AniDachi can sync their players. The AniDachi
+        host needs Plus or Pro, including during a trial; friends join for free.
       </p>
 
       <h2
@@ -105,9 +106,9 @@ export default function CrunchyrollMegaFanGlossaryPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Watch party tools never replace private Crunchyroll credentials. They add
-        watchrooms, chat, and sync on top of each viewer&apos;s authenticated tab. If
-        someone is still on a limited free plan, backlog availability may differ—align
-        on tiers before announcing premiere night.
+        watchrooms, chat, and sync on top of each viewer&apos;s authenticated tab.
+        Check that everyone can play the selected episode in their region before
+        announcing the session.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Once accounts are squared away, browse{" "}

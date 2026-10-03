@@ -13,13 +13,15 @@ type Dependencies = {
 export async function loadWatchLibraryData(userId: string, deps: Dependencies) {
 	const before = await deps.access(userId);
 	if (before.ownerUserId !== userId) throw new Error("HISTORY_ACCESS_CHANGED");
-	const preferences = await deps.preferences(userId);
+	const [preferences, history] = await Promise.all([
+    deps.preferences(userId),
+    deps.history(userId),
+  ]);
 	if (
 		preferences.meta.ownerUserId !== userId ||
 		preferences.meta.accountGeneration !== before.accountGeneration
 	)
 		throw new Error("HISTORY_ACCESS_CHANGED");
-	const history = await deps.history(userId);
 	const after = await deps.access(userId);
 	if (
 		after.ownerUserId !== userId ||

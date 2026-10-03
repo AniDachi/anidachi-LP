@@ -35,12 +35,12 @@ const faq = [
   {
     question: "How do we watch action anime without spoiling fight outcomes?",
     answer:
-      "Pin a safe episode marker in your AniDachi watchroom. Use feelings-only reactions ('that was insane') until everyone crosses the same episode. Episode-scoped chat threads keep spoilers contained.",
+      "Agree on a safe episode before starting your AniDachi room. Use feelings-only reactions until everyone finishes it, and keep later-episode discussion in a separate labeled chat. Live chat does not automatically hide spoilers.",
   },
   {
     question: "Should action anime watch parties be live or async?",
     answer:
-      "Live sync for finale fights and transformation scenes. Async for weekly episodes when schedules diverge — AniDachi supports both in the same watchroom.",
+      "Use live sync for finale fights and transformation scenes. If someone misses a weekly episode, let them watch independently before the next meeting. AniDachi currently supports live rooms; Async catch-up is coming soon.",
   },
 ];
 
@@ -70,7 +70,7 @@ export default function BestActionAnimeToWatchWithFriendsPage() {
       description="Action anime picks for synced Crunchyroll watchrooms."
       url="/guides/best-action-anime-to-watch-with-friends"
       datePublished="2026-07-02"
-      dateModified="2026-07-02"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -86,7 +86,7 @@ export default function BestActionAnimeToWatchWithFriendsPage() {
           Action anime is built for group reactions — transformation sequences,
           power reveals, and cliffhanger endings hit hardest when someone else
           is watching. These 18 picks pair with AniDachi watchrooms for synced
-          or async Crunchyroll sessions.
+          Crunchyroll sessions with live chat.
         </strong>
       </p>
 
@@ -107,7 +107,7 @@ export default function BestActionAnimeToWatchWithFriendsPage() {
       </h2>
       <ul className="space-y-4 text-foreground/80 mb-10">
         <li><strong><Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-brand-orange hover:underline">Fullmetal Alchemist: Brotherhood</Link></strong> — 64 episodes; conspiracy layers spark weekly theory threads.</li>
-        <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-brand-orange hover:underline">Hunter x Hunter</Link></strong> — Chimera Ant arc is a group-commitment event; async catch-up essential for busy members.</li>
+        <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-brand-orange hover:underline">Hunter x Hunter</Link></strong> — Chimera Ant arc is a group-commitment event; allow time for busy members to catch up independently.</li>
         <li><strong><Link href="/watch/bleach-with-friends" className="text-brand-orange hover:underline">Bleach</Link></strong> — Thousand-Year Blood War delivers modern spectacle; skip filler for tighter action pacing.</li>
         <li><strong><Link href="/watch/my-hero-academia-with-friends" className="text-brand-orange hover:underline">My Hero Academia</Link></strong> — Sports festival arc (S2 eps 14–25) is a self-contained group starter.</li>
         <li><strong><Link href="/watch/black-clover-with-friends" className="text-brand-orange hover:underline">Black Clover</Link></strong> — Underdog shonen energy; animation improves sharply after episode 50.</li>

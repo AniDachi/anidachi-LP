@@ -87,6 +87,7 @@ const deps = {
 	release: async () => {},
 	resolveUserId: async () => null as string | null,
 	resolveSubscriptionOwner: async () => null as string | null,
+	readTrial: async () => null,
 };
 test("ignores unmappable subscriptions without mirror mutation", async () => {
 	assert.equal(
@@ -97,6 +98,38 @@ test("ignores unmappable subscriptions without mirror mutation", async () => {
 		),
 		null,
 	);
+});
+
+test("managed trial snapshot is included in the same fenced subscription commit", async () => {
+	const sub = subscriptionFixture({ priceId: "price_plus", planCode: "plus" });
+	sub.metadata = {
+		userId: "owner",
+		planCode: "plus",
+		anidachiTrial: "72h_v1",
+		checkoutReservationId: "11111111-1111-4111-8111-111111111111",
+	};
+	sub.trial_start = 1_790_000_000;
+	sub.trial_end = sub.trial_start + 72 * 3600;
+	sub.status = "trialing";
+	const stripe = fakeStripe(sub);
+	stripe.invoices = {
+		list: async () => ({ data: [], has_more: false }),
+	} as unknown as Stripe.InvoicesResource;
+	let committed = false;
+	await syncStripeSubscriptionById(stripe, sub.id, {
+		...deps,
+		resolveUserId: async () => "owner",
+		commit: async (p) => {
+			assert.equal(p.trial?.firstPaymentState, "awaiting");
+			assert.equal(
+				p.trial?.trialEndsAt,
+				new Date(sub.trial_end! * 1000).toISOString(),
+			);
+			committed = true;
+			return "plus";
+		},
+	});
+	assert.equal(committed, true);
 });
 test("lease precedes fresh retrieval and commit; cancellation at period end remains active", async () => {
 	const order: string[] = [];
@@ -224,4 +257,22 @@ test("flexible portal cancellation persists pending renewal and never extends pa
 		assert.equal(synced?.currentPeriodEnd, expectedEnd);
 		assert.equal(synced?.effectivePlan, "plus");
 	}
+});
+
+test("annual renewal and cancellation sync use Stripe's actual end date, never a synthetic month", async () => {
+	const sub = subscriptionFixture({ priceId: "price_year", planCode: "plus" });
+	const end = Date.parse("2032-10-01T00:00:00Z") / 1000;
+	sub.items.data[0].current_period_end = end;
+	sub.cancel_at_period_end = true;
+	const result = await syncStripeSubscriptionById(fakeStripe(sub), sub.id, {
+		...deps,
+		resolveUserId: async () => "owner",
+		commit: async (p) => {
+			assert.equal(p.stripePriceId, "price_year");
+			assert.equal(p.currentPeriodEnd, "2032-10-01T00:00:00.000Z");
+			assert.equal(p.cancelAtPeriodEnd, true);
+			return "plus";
+		},
+	});
+	assert.equal(result?.currentPeriodEnd, "2032-10-01T00:00:00.000Z");
 });

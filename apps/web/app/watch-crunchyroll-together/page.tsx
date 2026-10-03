@@ -136,7 +136,7 @@ const faq = [
   {
     question: "How do you watch Crunchyroll together (step by step)?",
     answer:
-      "Add AniDachi from the Chrome Web Store via /extension, open the episode on Crunchyroll, detect the show, create a watchroom, and share the invite. Full walkthrough: /guides/how-to-watch-crunchyroll-with-friends.",
+      "Add AniDachi from the Chrome Web Store via /extension and open a Crunchyroll episode; the extension detects the player automatically. With active Plus, Pro, or trial access, choose Create room and invite Free friends. Full walkthrough: /guides/how-to-watch-crunchyroll-with-friends.",
   },
 ];
 
@@ -154,8 +154,8 @@ const tocHeadings: TocHeading[] = [
 
 const howToSteps = [
   { name: "Get AniDachi", text: `${INSTALL_HOWTO_STEP_TEXT} Start from /extension.` },
-  { name: "Navigate to any Crunchyroll anime", text: "Open any episode on Crunchyroll and click 'Detect Anime' in the AniDachi toolbar." },
-  { name: "Create a watchroom", text: "Click 'Create Room' in AniDachi. The room is linked to the detected anime and episode." },
+  { name: "Open a Crunchyroll episode", text: "Open the episode in desktop Chrome. AniDachi detects the player automatically." },
+  { name: "Create a room", text: "With active Plus, Pro, or trial access, choose 'Create room' in AniDachi. Free friends can join through your invite." },
   { name: "Share the invite link", text: "Copy the invite link and share it with friends via Discord, text, or email." },
   { name: "Watch together live", text: "Go live together with synced playback and real-time chat. Async catch-up is planned and is not available today." },
 ];
@@ -182,7 +182,7 @@ export default function WatchCrunchyrollTogetherPage() {
       description="Host a Crunchyroll watch party with AniDachi — synced playback and live chat on each person's account."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-09-21"
+      dateModified="2026-10-01"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -283,11 +283,11 @@ export default function WatchCrunchyrollTogetherPage() {
           },
           {
             name: "Navigate to any anime on Crunchyroll",
-            text: 'Click "Detect Anime." AniDachi identifies the show and episode.',
+            text: "Open the episode in desktop Chrome. AniDachi detects the player automatically.",
           },
           {
             name: "Create a watchroom",
-            text: "One click creates the room — share the invite link with friends.",
+            text: "With active Plus, Pro, or trial access, create a room and share its invite link. Free friends can join.",
           },
           {
             name: "Watch together",
@@ -295,7 +295,7 @@ export default function WatchCrunchyrollTogetherPage() {
           },
           {
             name: "Resume your own progress",
-            text: "Plus and Pro save personal history. Open Watch in the extension menu to resume later.",
+            text: "Your own Plus/Pro access and recording permission enable personal history. Open Watch in the extension menu to resume later.",
           },
         ]}
       />
@@ -393,7 +393,7 @@ export default function WatchCrunchyrollTogetherPage() {
           },
           {
             title: "Set a spoiler rule before episode one",
-            body: "Agree on whether to pause for reactions or discuss in chat after each episode. AniDachi's persistent chat keeps spoiler discussions visible only after a friend has watched the relevant episode.",
+            body: "Agree on whether to pause for reactions or discuss after each episode. Keep later-episode details in a separate chat; AniDachi room chat is live and does not automatically hide spoilers.",
           },
           {
             title: "Agree on a shared time",

@@ -18,6 +18,7 @@
  */
 
 import { spawn } from "node:child_process";
+import { createServer } from "node:http";
 import { createHmac } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -688,6 +689,22 @@ async function runScenarios() {
 }
 
 async function main() {
+  // Local control-plane fixture. Production still requires fresh Web authority;
+  // this harness isolates signaling and never talks to a deployed database.
+  const authority = createServer(async (req, res) => {
+    if (req.method !== "POST" || req.headers.authorization !== `Bearer ${SECRET}`) {
+      res.writeHead(401); res.end(); return;
+    }
+    let raw = ""; for await (const chunk of req) raw += chunk;
+    const body = JSON.parse(raw);
+    const match = req.url.match(/^\/api\/internal\/rooms\/([^/]+)\/admission$/);
+    const response = match ? { roomId: decodeURIComponent(match[1]), roomGeneration: 1, allowed: true }
+      : req.url.endsWith("/source") ? { ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration }
+      : { ok: true, usageFinalized: true, ...(body.eventId ? { eventId: body.eventId } : {}) };
+    res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(response));
+  });
+  await new Promise(resolve => authority.listen(0, "127.0.0.1", resolve));
+  const authorityUrl = `http://127.0.0.1:${authority.address().port}`;
   console.log(`booting wrangler dev on :${PORT} ...`);
   const worker = spawn(
     "pnpm",
@@ -702,6 +719,10 @@ async function main() {
       `ANIDACHI_JWT_SECRET:${SECRET}`,
       "--var",
       "ANIDACHI_ENV:test",
+      "--var",
+      `ANIDACHI_INTERNAL_API_SECRET:${SECRET}`,
+      "--var",
+      `ANIDACHI_WEB_INTERNAL_BASE_URL:${authorityUrl}`,
     ],
     { cwd: API_DIR, stdio: ["ignore", "pipe", "pipe"] },
   );
@@ -713,6 +734,7 @@ async function main() {
   if (!ready) {
     console.error("wrangler dev did not become ready:\n" + workerLog.slice(-1500));
     worker.kill("SIGTERM");
+    authority.close();
     process.exit(1);
   }
 
@@ -725,6 +747,8 @@ async function main() {
     failed = 1;
   } finally {
     worker.kill("SIGTERM");
+    authority.closeAllConnections();
+    authority.close();
   }
 
   console.log(`\n${results.length - failed}/${results.length} scenarios passed`);

@@ -36,7 +36,7 @@ const faq = [
   {
     question: "Is AniDachi only for Crunchyroll?",
     answer:
-      "No. AniDachi supports full watchrooms on Crunchyroll and YouTube. Crunchyroll stays the focus for anime clubs (detection, episode progress); YouTube covers full youtube.com/watch nights. Netflix, Disney+, and similar services are not supported.",
+      "No. AniDachi supports live rooms on Crunchyroll and full youtube.com/watch pages. Your own Plus/Pro access and recording permission enable personal history, with a separate YouTube recording toggle. Netflix, Disney+, and similar services are not supported.",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function AniDachiVsSyncplayPage() {
       description="Compare Crunchyroll-first watchrooms with desktop sync workflows."
       url="/compare/anidachi-vs-syncplay"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-10-01"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -90,7 +90,7 @@ export default function AniDachiVsSyncplayPage() {
       </h2>
       <p className="text-foreground/80 mb-8">
         <strong>AniDachi:</strong> Crunchyroll-first watchrooms, sync, chat, and optional
-        async catch-up. <strong>Syncplay:</strong> desktop sync style workflows (often for
+        live reactions. <strong>Syncplay:</strong> desktop sync style workflows (often for
         local playback) that don’t map cleanly onto per-user Crunchyroll accounts.
       </p>
 
@@ -131,8 +131,8 @@ export default function AniDachiVsSyncplayPage() {
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Your anime nights happen on Crunchyroll.</li>
-        <li>You want a persistent watchroom for a show (not a one-off link).</li>
-        <li>Your group needs async catch-up without losing episode context.</li>
+        <li>You want chat, reactions, and voice/video beside the provider’s player.</li>
+        <li>You want to record your own viewing progress with Plus or Pro.</li>
       </ul>
 
       <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
@@ -158,4 +158,3 @@ export default function AniDachiVsSyncplayPage() {
     </SeoPageLayout>
   );
 }
-

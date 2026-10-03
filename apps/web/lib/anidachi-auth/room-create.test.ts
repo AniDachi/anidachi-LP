@@ -2,6 +2,50 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { handleRoomCreateRequestBody } from "./room-create";
 import { RoomSourcePersistenceError } from "./room-source";
+import { hostingDeniedResponse } from "./hosting-denial";
+
+test("hosting policy denial gives old clients readable text and new clients pricing metadata", async () => {
+	const result = await handleRoomCreateRequestBody({
+		readBody: async () => JSON.stringify({ participantSessionId: "free-host" }),
+		create: async () => {
+			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
+		},
+	});
+	assert.equal(result.ok, false);
+	if (result.ok) throw new Error("unexpected room");
+	assert.equal(result.status, 403);
+	assert.equal(result.body.code, "HOST_SUBSCRIPTION_REQUIRED");
+	assert.match(result.body.error, /join.*free/i);
+	assert.match(result.body.error, /Plus|Pro/);
+	assert.equal(
+		(result.body as { pricingUrl?: string }).pricingUrl,
+		"https://www.anidachi.app/pricing",
+	);
+});
+
+test("authority outage remains retryable and does not offer an upgrade", async () => {
+	const result = await handleRoomCreateRequestBody({
+		readBody: async () => JSON.stringify({ participantSessionId: "paid-host" }),
+		create: async () => {
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		},
+	});
+	assert.equal(result.ok, false);
+	if (result.ok) throw new Error("unexpected room");
+	assert.equal(result.status, 503);
+	assert.equal(result.body.code, "ROOM_AUTHORITY_UNAVAILABLE");
+	assert.equal(result.body.pricingUrl, undefined);
+});
+
+test("closing room explains host eligibility without telling a Free guest to purchase", () => {
+	const response = hostingDeniedResponse(
+		"https://staging.anidachi.app/pricing",
+		false,
+	);
+	assert.match(response.message, /host.*room is closing/i);
+	assert.doesNotMatch(response.message, /choose|buy|upgrade/i);
+	assert.equal(response.pricingUrl, "https://staging.anidachi.app/pricing");
+});
 
 test("an empty room-create body is rejected without creating", async () => {
 	const inputs: unknown[] = [];
@@ -73,7 +117,13 @@ test("a room-create body read failure returns stable 400 without creating", asyn
 });
 
 test("room create requires one bounded participant tab session", async () => {
-	for (const participantSessionId of [undefined, null, 42, "", "x".repeat(129)]) {
+	for (const participantSessionId of [
+		undefined,
+		null,
+		42,
+		"",
+		"x".repeat(129),
+	]) {
 		let creates = 0;
 		const result = await handleRoomCreateRequestBody({
 			readBody: async () => JSON.stringify({ participantSessionId }),

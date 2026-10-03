@@ -159,6 +159,17 @@ function validateFixture(manifest: Manifest, javascript?: string) {
 }
 
 describe.sequential("extension release channel builds", () => {
+  it("rejects a production build without an explicitly selected release version", () => {
+    const result = run("bash", ["scripts/build-extension-public.sh"], {
+      WXT_EXTENSION_VERSION: "",
+      WXT_VAPID_PUBLIC_KEY: "",
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      "WXT_EXTENSION_VERSION is required for production extension builds",
+    );
+  });
+
   it("rejects an explicit unknown channel instead of silently building local", () => {
     const result = run(
       "pnpm",
@@ -177,6 +188,7 @@ describe.sequential("extension release channel builds", () => {
   }, () => {
     const result = run("bash", ["scripts/build-extension-public.sh"], {
       WXT_EXTENSION_CHANNEL: "local",
+      WXT_EXTENSION_VERSION: "0.1.2",
       WXT_VAPID_PUBLIC_KEY: testVapidPublicKey,
       ...hostileEnvironment,
     });
@@ -184,6 +196,7 @@ describe.sequential("extension release channel builds", () => {
 
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
     expect(manifest.name).toBe("AniDachi");
+    expect(manifest.version).toBe("0.1.2");
     expect(manifest.version_name).toBeUndefined();
     expect(manifest.key).toBeTypeOf("string");
     expect(deriveId(manifest.key ?? "")).toBe(productionId);

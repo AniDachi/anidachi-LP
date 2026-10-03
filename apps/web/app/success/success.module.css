@@ -1,0 +1,42 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100svh - 70px);
+  padding: 64px 24px 80px;
+  background: var(--ani-canvas);
+}
+.page[data-preview] { min-height: calc(100svh - 130px); }
+.content { width: 100%; max-width: 540px; text-align: center; }
+.header { animation: appear 250ms ease-out both; }
+.mark { position: relative; width: 56px; height: 56px; margin: 0 auto 32px; }
+.statusMark {
+  position: absolute;
+  bottom: -4px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border: 3px solid var(--ani-canvas);
+  border-radius: 50%;
+  background: var(--ani-text);
+  color: var(--ani-canvas);
+}
+.title { margin: 0; font-size: clamp(30px, 4vw, 44px); font-weight: 600; line-height: 1.12; letter-spacing: -0.045em; color: var(--ani-text); text-wrap: balance; }
+.message { max-width: 470px; margin: 20px auto 0; color: var(--ani-muted); font-size: 16px; line-height: 1.65; text-wrap: pretty; overflow-wrap: anywhere; }
+.error { color: var(--destructive); }
+.actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 32px; }
+.primary { min-height: 48px; min-width: 210px; padding: 12px 24px; border-radius: 8px; justify-content: space-between; gap: 28px; }
+.secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px; color: var(--ani-text); font-size: 14px; text-underline-offset: 4px; transition: color 150ms ease; }
+.secondary:hover { text-decoration: underline; }
+.nextStep { max-width: 370px; margin: 24px auto 0; color: var(--ani-muted); font-size: 14px; line-height: 1.7; text-wrap: pretty; }
+.trialNote { max-width: 370px; margin: 12px auto 0; color: var(--ani-muted); font-size: 13px; line-height: 1.7; }
+.trialNote a { text-decoration: underline; text-underline-offset: 3px; }
+.footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--ani-line); font-size: 13px; color: var(--ani-muted); }
+.footer a { display: inline-flex; min-height: 44px; align-items: center; transition: color 150ms ease; }
+.footer a:hover { color: var(--ani-text); }
+.secondary:focus-visible, .footer a:focus-visible, .trialNote a:focus-visible { outline: 2px solid var(--ani-focus); outline-offset: 4px; }
+@keyframes appear { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 480px) { .page { padding: 40px 24px; } .mark { margin-bottom: 28px; } .message { font-size: 15px; } }
+@media (prefers-reduced-motion: reduce) { .header { animation: none; } .secondary, .footer a { transition: none; } }

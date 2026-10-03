@@ -8,7 +8,7 @@ export function PopupRetainedPanel({ active, tab, children }: { active: boolean;
   return <div data-popup-tab={tab} hidden={!active}>{active || visited ? children : null}</div>;
 }
 
-export function usePopupNavigation(owner: string | null, shell: RefObject<HTMLElement | null>) {
+export function usePopupNavigation(owner: string | null, shell: RefObject<HTMLElement | null>, suspended = false) {
   const [state, setState] = useState<{ owner: string | null; tab: PopupTab }>({ owner, tab: owner ? readPopupView(owner).tab : "resources" });
   const tab = state.owner === owner ? state.tab : owner ? readPopupView(owner).tab : "resources";
   if (state.owner !== owner) setState({ owner, tab });
@@ -22,7 +22,7 @@ export function usePopupNavigation(owner: string | null, shell: RefObject<HTMLEl
   }, [owner, tab, shell]);
   useLayoutEffect(() => {
     const element = shell.current;
-    if (!element || !owner) return;
+    if (!element || !owner || suspended) return;
     const target = readPopupView(owner).scroll[tab] ?? 0;
     let restoring = true;
     const pane = element.querySelector<HTMLElement>(`[data-popup-tab="${tab}"]`);
@@ -49,6 +49,6 @@ export function usePopupNavigation(owner: string | null, shell: RefObject<HTMLEl
       element.removeEventListener("touchstart", cancel);
       element.removeEventListener("keydown", cancel);
     };
-  }, [owner, tab, shell]);
+  }, [owner, tab, shell, suspended]);
   return [tab, select] as const;
 }
