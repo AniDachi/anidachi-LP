@@ -9,7 +9,7 @@ import {
 } from "./watch-history";
 
 const Timestamp = z.iso.datetime({ offset: true });
-const Provider = z.enum(["crunchyroll", "youtube"]);
+const Provider = z.enum(["crunchyroll", "youtube", "netflix"]);
 const Key = z.string().trim().min(1).max(220);
 const filters = {
 	mode: z.enum(["personal", "solo", "shared"]),
