@@ -1,12 +1,17 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-09-08.
+Last updated: 2026-10-08.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
 to staging and production. It is intentionally operational: it avoids product
 pitch language and focuses on what a developer needs to understand before
 changing the system.
+
+The opening section of [current development state](current-development-state.md#current-development-baseline--october-8-2026)
+records the verified release baseline. Dated implementation and delivery notes
+in this document preserve historical context; their pending gates do not mean
+the October 3 production launch should be repeated.
 
 When the code, deployed behavior, endpoints, release channels, or branch rules
 change, update this document in the same PR or in an immediate follow-up PR.
@@ -118,7 +123,7 @@ Website:
 - React 19
 - Tailwind CSS 4
 - shadcn/ui style components
-- Supabase Auth and Postgres
+- custom Google/Discord OAuth and application sessions backed by Supabase Postgres
 - Stripe Checkout and webhook integration
 - Vercel deployment
 
@@ -152,7 +157,7 @@ Shared:
 
 ## Guest checkout continuation
 
-The October 1 local candidate preserves the selected Plus/Pro plan and billing
+The delivered checkout continuation preserves the selected Plus/Pro plan and billing
 period through website OAuth using `/checkout?plan=...&billing=...`. That noindex
 page requires the existing session and uses the existing billing offer and
 checkout APIs. Eligible trials resume automatically; an unavailable trial needs
@@ -197,12 +202,13 @@ document.
 
 ## Branch Model
 
-Production delivery currently has an additional
-[35-to-60 history transition gate](releases/personal-history-mvp/production-35-to-60-transition.md).
-The database, Worker and website must be released in the reviewed order after
-preservation and recovery evidence. A staging merge does not execute or unlock
-that transition; existing production deployment controls need separate operator
-verification before a future promotion.
+The historical [35-to-60 history transition procedure](releases/personal-history-mvp/production-35-to-60-transition.md)
+records a past schema rollout. Check the current development-state baseline
+before treating an old pending gate as current. Future database, Worker and
+website changes must still follow their reviewed dependency order with
+preservation and recovery evidence. Production Worker delivery requires manual
+dispatch from main and acknowledgement of the exact commit; normal workspace
+preparation does not execute or unlock a production transition.
 
 Use this development path:
 
@@ -236,19 +242,19 @@ Typical start:
 ```bash
 cd <repo>
 git switch staging
-git pull origin staging
+git pull --ff-only origin staging
 git switch -c codex/short-task-name
 ```
 
 Before opening a PR:
 
 ```bash
-pnpm check
-pnpm test
+pnpm dev:check
 ```
 
-If a task touches only documentation, `pnpm check` is usually enough unless code
-or package metadata changed.
+Run the resulting profile from [the quality gates](development-quality-gates.md).
+Documentation-only changes need link/path and consistency checks, plus the
+applicable Graphify refresh; they do not require room/media harnesses.
 
 ## Release Channels
 
@@ -258,7 +264,7 @@ environment variables and build scripts.
 ```txt
 local      -> local development build
 staging    -> stable unpacked Anidachi Staging tester artifact
-production -> future public Anidachi artifact
+production -> public Anidachi Chrome Web Store artifact
 ```
 
 Build commands:
@@ -299,10 +305,11 @@ Current responsibilities:
 - invite/join pages;
 - short-lived room tokens for the extension/Worker flow.
 
-Room creation for the commercial path is auth-only:
+Room creation requires a verified session and server-side entitlement checks:
 
 1. The extension opens or talks to the website auth flow.
-2. The signed-in user creates a room through the website/API path.
+2. The signed-in user requests a room through the website/API path. The server
+   resolves hosting access and rejects a denied account before creating a room.
 3. The website writes durable room data to Supabase.
 4. The website issues a short-lived room token.
 5. The extension uses that token to join the Worker WebSocket room.
@@ -394,6 +401,10 @@ Media transport:
 
 ## Watch Progress Direction
 
+The dated rollout notes below explain how these contracts were introduced.
+Use current development state for deployment status; they are not a request to
+repeat the old staging-only activation or production migration.
+
 Watch progress is durable product data. It should not be modeled as only live
 room state.
 
@@ -482,16 +493,17 @@ mediaProtocolVersion 2 (retained rooms) or 3 (new host-managed-seat rooms), with
 accessVersion/entitlementsVersion 1. The [v3 delivery record](releases/room-media-seats/2026-09-14-delivery.md)
 separates implemented contracts from current deployment and acceptance.
 
-Tasks 1–9 are reviewed and delivered to inactive staging through PR #273/274, runtime
-c7fbdb5; external acceptance and activation remain open. The
+Tasks 1–9 originally reached inactive staging through PR #273/274, runtime
+c7fbdb5. The subsequent release baseline is in current development state. The
 [verification record](personal-history-and-plans-mvp-verification.md) separates
 local SQL/Worker/actual-controller evidence from loaded-provider, physical-media,
-Stripe TEST and distributed-network acceptance. The [Task 10 delivery packet](releases/personal-history-mvp/README.md)
-orders additive DB prerequisites, compatible inactive Web/Worker, matching
-client and separate activation after review and acceptance. Keep data and epochs
-on recovery; a03c012 is not post-activation compatibility. No prior accepted v2
-deployment exists, so exact compatible recovery/rehearsal remains a gate.
-Production/main promotion is a separate decision.
+Stripe Sandbox and distributed-network acceptance. The [Task 10 delivery packet](releases/personal-history-mvp/README.md)
+records the original order: additive DB prerequisites, compatible inactive
+Web/Worker, matching client and separate activation after review and acceptance.
+Use the current release baseline to interpret its dated open gates. Keep data
+and epochs on recovery; the old a03c012 artifact is not a post-activation
+rollback candidate. Future recovery artifacts need current compatibility proof.
+Future production/main promotion remains a separate decision.
 
 ## Local Development
 
