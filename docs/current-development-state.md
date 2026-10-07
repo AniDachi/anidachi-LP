@@ -1,5 +1,63 @@
 # Current Development State
 
+## Current development baseline — October 8, 2026
+
+Use this section for the starting state of new work. Dated entries below are
+historical delivery snapshots: their "local", "not deployed", "main remains"
+and "awaiting publication" statements describe that date, not the current
+release. Preserve those receipts as evidence; do not replay a migration,
+activation or release merely because an old checklist is still open.
+
+### Repository and delivery evidence
+
+- [PR #376](https://github.com/AniDachi/anidachi-LP/pull/376) merged on
+  October 3, 2026 at 16:17:07 UTC. The observed production baseline is
+  `7654df74e27ea2cd92aef4cce76f9f7338e5b4de`; staging is
+  `8f8ac431dcbc1d77529f967a52678e18edbc7007`.
+- Both refs have the identical Git tree
+  `ea4770b58bb1e1a006bed41911cbcaac013cbd54`. Main has 12 additional history
+  commits, including promotion merges; there are no missing product changes
+  to backport to staging. Refresh refs before using these dated identities.
+- The [main check-and-test run](https://github.com/AniDachi/anidachi-LP/actions/runs/37136290199)
+  and [staging check-and-test run](https://github.com/AniDachi/anidachi-LP/actions/runs/37009402797)
+  succeeded. Vercel reported completed deployments for both refs. The main
+  extension build, production Worker delivery and subsequent smoke checks also
+  succeeded; staging room/signaling and P2P checks succeeded. These are delivery
+  records, not a new authenticated end-to-end test on October 8.
+- The owner confirmed publication of Store version 0.1.2 and accepted the
+  production transition during the October 3 rollout. Store dashboard state,
+  live billing configuration and database policy were not independently reread
+  in this repository-readiness check. The pre-publication hold in the October 2
+  entries is historical, not a reason to repeat that launch.
+
+### Starting the next task
+
+1. Inspect the exact checkout, branch and uncommitted files; preserve any other
+   task's work. A clean checkout on an old feature branch is still an old base.
+2. Fetch origin, update local staging with fast-forward only, and create a
+   `codex/<task>` branch from current staging. Follow the
+   [operating manual](project-operating-manual.md#everyday-development-loop).
+3. Use Node from `.node-version` and pnpm from `package.json`; install with
+   `--frozen-lockfile`. Choose checks through
+   [the quality gates](development-quality-gates.md) and `pnpm dev:check`.
+4. Keep `feature -> PR -> staging -> accepted promotion -> main`. Existing
+   site/docs auto-promotion still applies where its workflow allows it. A diff
+   containing Graphify artifacts requires manual promotion. Inspect the complete
+   diff before merging; do not change deployment settings as workspace cleanup.
+
+Production Worker deployment is already guarded by manual dispatch from main
+with the exact `production_ready_sha`; a main push alone does not deploy it.
+The [October 2 preparation procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md)
+explains the launch rationale and recovery constraints, rather than a fresh
+instruction to run those operations. New product work does not require a new
+production migration, policy activation, Stripe change or Store package until
+the actual task calls for one.
+
+## Historical delivery snapshots
+
+The following entries retain their original dates and acceptance boundaries.
+The current baseline above takes precedence for release status.
+
 ## Release safeguards delivered to staging, October 2, 2026
 
 [PR #397](https://github.com/AniDachi/anidachi-LP/pull/397) merged at 12:28:38 UTC

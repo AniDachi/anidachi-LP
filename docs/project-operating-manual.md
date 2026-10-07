@@ -1,11 +1,16 @@
 # Anidachi Project Operating Manual
 
-Last updated: 2026-09-08.
+Last updated: 2026-10-08.
 
 This is the practical map of how the current Anidachi project is organized and
 how development should move through local work, staging, tester extension builds,
 and production. Keep this file direct and operational. Do not turn it into
 marketing copy.
+
+For the latest verified release baseline, read the opening section of
+[current development state](current-development-state.md#current-development-baseline--october-8-2026).
+Older dated delivery packets retain their historical acceptance boundaries;
+they must not be interpreted as fresh instructions to repeat a completed launch.
 
 ## Source Of Truth
 
@@ -329,12 +334,12 @@ Flow:
 5. Browser WebRTC chooses a direct/STUN path when possible.
 6. Cloudflare TURN is used as fallback when direct paths fail.
 
-The deployed legacy P2P baseline targets small rooms around 2–4 people. The
-accepted September 8 MVP adds versioned 4/6/15 participant rooms with independent
-four-camera and 4/6/8-microphone caps. Its local actual-controller experiments
-are recorded in the verification matrix; distributed/TURN/device acceptance and
-coordinated staging rollout remain open. Do not infer release readiness from
-those short local samples or raise limits beyond the accepted contract.
+Room participant and publication limits come from the server-authorized host
+plan and room protocol. Historical small-room controller experiments are recorded
+in the verification matrix; their original pending-rollout notes do not describe
+the current release. Media changes still need distributed/TURN/device acceptance
+appropriate to the changed behavior. Do not infer that proof from short local
+samples or raise limits beyond the accepted contract.
 
 Legacy LiveKit runtime code has been removed. Do not reintroduce LiveKit or any
 SFU/media-server path unless a deliberate product/infra decision changes the
@@ -361,7 +366,7 @@ The same source code builds three extension channels.
 `production`:
 
 - name: `Anidachi`;
-- future public build; publication is a separate release decision;
+- public Chrome Web Store build; each publication is a separate release decision;
 - points at production web and production Worker endpoints;
 - should use narrow host permissions.
 
@@ -389,12 +394,11 @@ distributed as the staging candidate.
 
 ## Development Flow
 
-The September 12 [production history transition hold](releases/personal-history-mvp/production-35-to-60-transition.md)
-is an additional release gate: production DB/Worker/Web delivery needs a
-separately reviewed preservation procedure and explicit unlock. Do not treat a
-normal main merge as permission to apply the pending history reset. Staging
-delivery continues normally. Source guards do not prove existing production
-deployments or external Vercel promotion routes are already frozen.
+The September 12 [production history transition procedure](releases/personal-history-mvp/production-35-to-60-transition.md)
+is a historical migration record. Use the current development-state baseline
+before interpreting an old hold or pending reset. New schema or policy changes
+still require their own preservation, compatibility and recovery review; a
+normal main merge is not permission to repeat a history reset.
 
 Normal feature flow:
 
@@ -427,17 +431,19 @@ Site-only auto-promotion:
   `main..staging` diff.
 - If the diff contains only safe site/docs paths, it creates or updates the
   `staging -> main` PR and enables auto-merge.
-- If extension, API, workflow, package, auth, room, checkout, or other sensitive
-  files are present in the diff, auto-promotion is skipped.
+- If extension, API, workflow, package, auth, room, checkout, Graphify artifacts,
+  or other paths outside the allowlist are present, the workflow creates or
+  updates a promotion PR with auto-merge disabled.
 - Workflow changes under `.github/**` are intentionally never auto-promoted; the
   auto-promotion workflow itself must be installed in `main` manually once.
 
-Code promotion follows PR merge. The October 2 local release guard keeps staging
-Worker delivery automatic and requires manual production Worker dispatch from
-main after schema and compatible Web have been verified. Set
+Code promotion follows PR merge. The delivered release guard keeps staging
+Worker delivery automatic for relevant source changes and requires manual
+production Worker dispatch from main after schema and compatible Web have been
+verified. Set
 `production_ready_sha` to the exact full main commit being deployed; this is an
 operator acknowledgement, not an automated remote-readiness check. The guard
-must be promoted separately before the full product release. Other workflows
+is already present on main and staging. Other workflows
 retain their documented triggers. See the
 [production delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md).
 Release workflows must run from `staging` or `main`.
@@ -471,12 +477,17 @@ git fetch origin
 git switch staging
 git pull --ff-only origin staging
 git switch -c codex/task-name
+fnm use --install-if-missing
+corepack enable
+corepack prepare pnpm@11.2.2 --activate
 pnpm install --frozen-lockfile
-pnpm check
-pnpm test
+pnpm dev:check
 ```
 
-Run checks for the surface you touched.
+In a shell without fnm initialization, prefix project commands with
+`fnm exec --using="$(cat .node-version)"`. Run the checks selected by
+[the quality gates](development-quality-gates.md) for the surface you touched;
+docs-only work does not require new room/media acceptance or a product release.
 
 Web/auth/SEO change:
 
@@ -562,13 +573,22 @@ WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
 
-Deploy Workers:
+Deploy a staging Worker when a manual retry is needed:
 
 ```bash
 cd apps/api
 pnpm exec wrangler deploy --env staging
-pnpm exec wrangler deploy --env production
 ```
+
+Production delivery uses the reviewed main workflow after separate release
+authorization and verification of schema and compatible Web:
+
+```bash
+gh workflow run deploy-api.yml --ref main \
+  -f production_ready_sha="<verified-full-main-sha>"
+```
+
+Do not use a direct production Wrangler command to bypass that gate.
 
 ## Release Checklist
 
@@ -697,13 +717,11 @@ uses independent evidence of actual room presence, without storing title or
 progress for Free. Worker owns live room synchronization and publication
 limits; it does not fan out host checkpoints into guest histories.
 
-Tasks 1–9 are reviewed and delivered inactive through PR #273/274; external acceptance
-and activation remain open. Both tester folders contain the verified build with separate
-backups; folder sync is not loaded Chrome proof. Follow the
-[Task 10 delivery packet](releases/personal-history-mvp/README.md): review first,
-additive DB prerequisites, compatible inactive Web/Worker, matching verified
-client, then separately gated activation. New personal writes are already paid
-while inactive. After activation never disable policy or restore the old Free
-writer; preserve data/epochs and use verified compat recovery or a forward fix.
-Loaded provider/MV3, Stripe TEST, physical media and network acceptance remain
-explicit in the verification matrix. Main/production is a separate decision.
+Tasks 1–9 originally reached inactive staging through PR #273/274. The
+[Task 10 delivery packet](releases/personal-history-mvp/README.md) records that
+historical sequence and its acceptance boundaries; the current development-state
+baseline records the subsequent production rollout. Folder synchronization and
+CI do not substitute for loaded-provider, physical-media or network acceptance
+when those surfaces change. After activation never disable policy or restore the
+old Free writer; preserve data/epochs and use verified compatible recovery or a
+forward fix. Future production changes remain a separate release decision.

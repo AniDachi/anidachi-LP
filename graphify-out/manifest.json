@@ -3504,10 +3504,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1790944717.1567822,
-    "seen": 1790945138.343658,
+    "mtime": 1791412083.5232728,
+    "seen": 1791412602.953293,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "ae220bb3133e19ae77d66688d12822da"
+    "semantic_hash": "ce4407247bf2ebd51d1e372d59722874"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3552,10 +3552,10 @@
     "semantic_hash": "816771011a43e6458031004aba8d35d6"
   },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1790934685.2257864,
-    "seen": 1790938493.181267,
+    "mtime": 1791412257.2217975,
+    "seen": 1791412602.953295,
     "ast_hash": "55633098330483d3c2e4efbbc2d1ccd9",
-    "semantic_hash": "32f4f69f77184ccb098d9d83ba432bf3"
+    "semantic_hash": "1eca715214baaee9c15ea1fb8ccb915e"
   },
   "docs/project-knowledge-map.md": {
     "mtime": 1789490459.0058722,
@@ -3564,10 +3564,10 @@
     "semantic_hash": "74a0b81767a7bcfc393c9ae7075aacfd"
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1790934685.2254598,
-    "seen": 1790938493.181268,
+    "mtime": 1791412257.2023542,
+    "seen": 1791412602.953297,
     "ast_hash": "79179d527c1ce337a05b019f1a6b3647",
-    "semantic_hash": "2c41d625f75d6777d8be7358927f5ba3"
+    "semantic_hash": "21db17a600e177897c23aac65d97dbb2"
   },
   "docs/release-and-rollback-runbook.md": {
     "mtime": 1789490459.006036,
