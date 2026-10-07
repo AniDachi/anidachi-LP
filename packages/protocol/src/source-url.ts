@@ -80,6 +80,17 @@ export function canonicalizeRoomSourceUrl(
   return { ok: true, source };
 }
 
+/** Host recognition is independent of route, transport, credentials and port.
+ * This is a validation trigger, not an allowlist or a canonical source verdict. */
+export function hasNetflixHostname(value: string): boolean {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase();
+    return hostname === "netflix.com" || hostname.endsWith(".netflix.com");
+  } catch {
+    return false;
+  }
+}
+
 export function isLegacyRoomSourceFingerprintAlias(
   value: string,
   fingerprint: string,

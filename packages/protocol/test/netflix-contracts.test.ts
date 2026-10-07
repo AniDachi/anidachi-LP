@@ -246,3 +246,64 @@ it("retains valid legacy editor sources and rejects qualified foreign keys", () 
   expect(WatchHistoryEditorResponseSchema.safeParse(legacy).success).toBe(true);
   expect(WatchHistoryEditorResponseSchema.safeParse({ ...legacy, episodes: [{ ...legacy.episodes[0], episodeKey: "netflix:movie:81078819" }] }).success).toBe(false);
 });
+
+describe("review regression: provider and standalone movie boundaries", () => {
+  const observedEpisode = () => ({ episodeKey, episodeTitle: "Episode", episodeNumber: 1, seasonKey,
+    seasonTitle: "Season 2", seasonNumber: 2, sourceUrl, currentTime: 600, duration: 1200, progress: .5,
+    completedAt: null, lastWatchedAt: NOW, sessions: [] });
+  const page = () => ({ meta, generatedAt: NOW, provider: "netflix", titleKey, observedEpisodeCount: 1,
+    completedEpisodeCount: 0, episodes: [observedEpisode()], catalog: { state: "unavailable", title: null, aggregate: null, seasons: [] },
+    complete: true, nextCursor: null });
+  const item = () => ({ provider: "netflix", titleKey, itemKind: "series", title: "Series", sourceUrl, artworkUrl: null,
+    catalogState: "partial", observedEpisodeCount: 1, completedEpisodeCount: 0, episodePage: { complete: true, nextCursor: null },
+    aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null }, seasons: [{ seasonKey, seasonTitle: "Season 2", seasonNumber: 2, order: 1,
+      aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null }, episodes: [observedEpisode()], nextEpisode: null }],
+    sessions: [], latestActivity: { episodeKey, currentTime: 600, duration: 1200, progress: .5, completedAt: null, lastWatchedAt: NOW }, lastWatchedAt: NOW });
+  it("recognizes malformed Netflix sources before canonicalization when provider is foreign", () => {
+    const youtube = { provider: "youtube", title: "Video", sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+      canonicalUrl: "https://www.youtube.com/watch?v=abcdefghijk", videoFingerprint: "youtube|abcdefghijk" };
+    expect(WatchSourceDescriptorSchema.safeParse(youtube).success).toBe(true);
+    for (const foreignUrl of ["https://user:pass@www.netflix.com/watch/70196259", "https://www.netflix.com:444/watch/70196259",
+      "http://www.netflix.com/watch/70196259", "https://www.netflix.com/browse", "https://api.netflix.com/watch/70196259"]) {
+      expect(WatchSourceDescriptorSchema.safeParse({ ...youtube, sourceUrl: foreignUrl }).success).toBe(false);
+      expect(WatchSourceDescriptorSchema.safeParse({ ...youtube, canonicalUrl: foreignUrl }).success).toBe(false);
+    }
+  });
+  it("forbids Netflix movie episode metadata and series projections", () => {
+    const movieKey = "netflix:movie:81078819";
+    const movie = { ...page(), titleKey: movieKey, episodes: [{ ...observedEpisode(), episodeKey: movieKey,
+      sourceUrl: "https://www.netflix.com/watch/81078819", seasonKey: null, seasonTitle: null, seasonNumber: null, episodeNumber: null }] };
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse(movie).success).toBe(true);
+    for (const patch of [{ seasonTitle: "Season 1" }, { seasonNumber: 1 }, { episodeNumber: 1 }])
+      expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...movie, episodes: [{ ...movie.episodes[0], ...patch }] }).success).toBe(false);
+    const catalog = { state: "complete", title: "Series", aggregate,
+      seasons: [{ seasonKey, seasonTitle: "Season 2", seasonNumber: 2, order: 1, aggregate, nextEpisode: null }] };
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...movie, catalog }).success).toBe(false);
+    const nextEpisode = { episodeKey, episodeTitle: "Episode", seasonKey, seasonTitle: "Season 2", seasonNumber: 2,
+      episodeNumber: 1, sourceUrl, releasedAt: null };
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...movie, catalog: { ...catalog,
+      seasons: [{ ...catalog.seasons[0], nextEpisode }] } }).success).toBe(false);
+  });
+  it.each(["crunchyroll", "youtube"])("rejects Netflix read identities under declared %s while retaining bare legacy keys", provider => {
+    expect(WatchHistoryItemSchema.safeParse({ ...item(), provider }).success).toBe(false);
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...page(), provider }).success).toBe(false);
+    const legacyUrl = provider === "youtube" ? "https://www.youtube.com/watch?v=abcdefghijk" : "https://www.crunchyroll.com/watch/E1/legacy";
+    const legacyEpisode = { ...observedEpisode(), episodeKey: "E1", seasonKey: "S1", sourceUrl: legacyUrl };
+    const legacyPage = { ...page(), provider, titleKey: "T1", episodes: [legacyEpisode] };
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse(legacyPage).success).toBe(true);
+    for (const episodePatch of [{ episodeKey }, { seasonKey }, { sourceUrl },
+      { sourceUrl: "http://user:pass@www.netflix.com:444/watch/70196259" }])
+      expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...legacyPage,
+        episodes: [{ ...legacyEpisode, ...episodePatch }] }).success).toBe(false);
+    const legacyItem = { ...item(), provider, titleKey: "T1", sourceUrl: legacyUrl,
+      seasons: [{ ...item().seasons[0], seasonKey: "S1", episodes: [legacyEpisode] }],
+      latestActivity: { ...item().latestActivity, episodeKey: "E1" } };
+    expect(WatchHistoryItemSchema.safeParse(legacyItem).success).toBe(true);
+    for (const patch of [{ titleKey }, { sourceUrl }, { latestActivity: { ...legacyItem.latestActivity, episodeKey } },
+      { seasons: [{ ...legacyItem.seasons[0], seasonKey }] }, { seasons: [{ ...legacyItem.seasons[0], episodes: [observedEpisode()] }] }])
+      expect(WatchHistoryItemSchema.safeParse({ ...legacyItem, ...patch }).success).toBe(false);
+    const projection = { state: "complete", title: "Series", aggregate, seasons: [{ seasonKey: "S1", seasonTitle: "Season 1", seasonNumber: 1,
+      order: 0, aggregate, nextEpisode: { episodeKey, episodeTitle: "Episode", seasonKey, seasonTitle: "Season 2", seasonNumber: 2, episodeNumber: 1, sourceUrl, releasedAt: null } }] };
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...legacyPage, catalog: projection }).success).toBe(false);
+  });
+});

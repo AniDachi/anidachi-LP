@@ -5,7 +5,7 @@ import {
   WatchItemKindSchema,
   WatchProviderSchema,
 } from "./account";
-import { historyEpisodeSourceMatches, historyKeyMatchesProvider } from "./history-provider-validation";
+import { historyEpisodeSourceMatches, historyKeyMatchesProvider, historyReadReferencesMatchProvider } from "./history-provider-validation";
 import { NetflixHistoryIdentitySchema, NetflixProviderIdSchema } from "./netflix-identity";
 import { canonicalizeRoomSourceUrl } from "./source-url";
 import { RoomCapabilitiesSchema, RoomHistoryAuthoritySchema } from "./types";
@@ -847,6 +847,12 @@ export const WatchHistoryItemSchema = z
     lastWatchedAt: TimestampSchema,
   })
   .superRefine((item, context) => {
+    const references = item.seasons.flatMap(season => [...season.episodes, ...(season.nextEpisode ? [season.nextEpisode] : [])]);
+    if (!historyReadReferencesMatchProvider(item.provider,
+      [item.titleKey, item.latestActivity.episodeKey, ...item.seasons.map(season => season.seasonKey),
+        ...references.flatMap(episode => [episode.episodeKey, episode.seasonKey])],
+      [item.sourceUrl, ...references.map(episode => episode.sourceUrl)]))
+      context.addIssue({ code: "custom", message: "Title read references must match provider" });
     if (item.provider === "netflix") {
       if (!historyKeyMatchesProvider("netflix", item.titleKey, [item.itemKind === "movie" ? "movie" : "series"]) ||
         !historyKeyMatchesProvider("netflix", item.latestActivity.episodeKey, [item.itemKind === "movie" ? "movie" : "episode"]) ||
@@ -1016,7 +1022,17 @@ export const WatchHistoryTitleEpisodesResponseSchema = z
         path: ["nextCursor"],
       });
     }
+    const references = [...page.episodes, ...page.catalog.seasons.flatMap(season => season.nextEpisode ? [season.nextEpisode] : [])];
+    if (!historyReadReferencesMatchProvider(page.provider,
+      [page.titleKey, ...page.catalog.seasons.map(season => season.seasonKey),
+        ...references.flatMap(episode => [episode.episodeKey, episode.seasonKey])],
+      references.map(episode => episode.sourceUrl)))
+      context.addIssue({ code: "custom", message: "Episode page read references must match provider" });
     if (page.provider === "netflix") {
+      const movie = page.titleKey.startsWith("netflix:movie:");
+      if (movie && (page.catalog.seasons.length !== 0 || page.episodes.some(episode =>
+        episode.seasonKey !== null || episode.seasonTitle !== null || episode.seasonNumber !== null || episode.episodeNumber !== null)))
+        context.addIssue({ code: "custom", message: "Netflix movies cannot contain season or episode metadata" });
       if (!historyKeyMatchesProvider("netflix", page.titleKey, ["series", "movie"]) ||
         page.episodes.some(episode => !historyEpisodeSourceMatches("netflix", episode) ||
           (page.titleKey.startsWith("netflix:movie:") ? episode.episodeKey !== page.titleKey : !episode.episodeKey.startsWith("netflix:episode:"))))

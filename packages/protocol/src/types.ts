@@ -20,7 +20,7 @@ import {
   MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
 } from "./limits";
-import { canonicalizeRoomSourceUrl, RoomSourceDescriptorSchema } from "./source-url";
+import { hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
 
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
@@ -144,10 +144,8 @@ export const WatchSourceDescriptorSchema = z.object({
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
 }).superRefine((source, context) => {
-  const canonical = canonicalizeRoomSourceUrl(source.sourceUrl);
-  const canonicalTarget = canonicalizeRoomSourceUrl(source.canonicalUrl);
-  const hasNetflixSource = (canonical.ok && canonical.source.provider === "netflix") ||
-    (canonicalTarget.ok && canonicalTarget.source.provider === "netflix") || source.videoFingerprint.startsWith("netflix|");
+  const hasNetflixSource = hasNetflixHostname(source.sourceUrl) ||
+    hasNetflixHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("netflix|");
   if ((source.provider === "netflix" || hasNetflixSource) && !RoomSourceDescriptorSchema.safeParse({
     provider: source.provider, sourceUrl: source.sourceUrl,
     canonicalUrl: source.canonicalUrl, videoFingerprint: source.videoFingerprint,
