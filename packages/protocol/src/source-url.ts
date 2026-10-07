@@ -84,7 +84,7 @@ export function canonicalizeRoomSourceUrl(
  * This is a validation trigger, not an allowlist or a canonical source verdict. */
 export function hasNetflixHostname(value: string): boolean {
   try {
-    const hostname = new URL(value).hostname.toLowerCase();
+    const hostname = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
     return hostname === "netflix.com" || hostname.endsWith(".netflix.com");
   } catch {
     return false;

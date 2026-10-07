@@ -269,6 +269,25 @@ describe("review regression: provider and standalone movie boundaries", () => {
       expect(WatchSourceDescriptorSchema.safeParse({ ...youtube, canonicalUrl: foreignUrl }).success).toBe(false);
     }
   });
+  it.each(["crunchyroll", "youtube"])("rejects trailing-dot Netflix host under declared %s without accepting it canonically", provider => {
+    const foreignUrl = "https://www.netflix.com./watch/70196259";
+    const legacyUrl = provider === "youtube" ? "https://www.youtube.com/watch?v=abcdefghijk" : "https://www.crunchyroll.com/watch/E1";
+    const descriptor = { provider, title: "Video", sourceUrl: legacyUrl, canonicalUrl: legacyUrl,
+      videoFingerprint: provider === "youtube" ? "youtube|abcdefghijk" : "crunchyroll|watch/E1" };
+    expect(WatchSourceDescriptorSchema.safeParse(descriptor).success).toBe(true);
+    expect(WatchSourceDescriptorSchema.safeParse({ ...descriptor, sourceUrl: foreignUrl }).success).toBe(false);
+    expect(WatchSourceDescriptorSchema.safeParse({ ...descriptor, canonicalUrl: foreignUrl }).success).toBe(false);
+    const legacyEpisode = { ...observedEpisode(), episodeKey: "E1", seasonKey: "S1", sourceUrl: legacyUrl };
+    const legacyPage = { ...page(), provider, titleKey: "T1", episodes: [legacyEpisode] };
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse(legacyPage).success).toBe(true);
+    expect(WatchHistoryTitleEpisodesResponseSchema.safeParse({ ...legacyPage,
+      episodes: [{ ...legacyEpisode, sourceUrl: foreignUrl }] }).success).toBe(false);
+    const legacyItem = { ...item(), provider, titleKey: "T1", sourceUrl: legacyUrl,
+      seasons: [{ ...item().seasons[0], seasonKey: "S1", episodes: [legacyEpisode] }],
+      latestActivity: { ...item().latestActivity, episodeKey: "E1" } };
+    expect(WatchHistoryItemSchema.safeParse({ ...legacyItem, sourceUrl: foreignUrl }).success).toBe(false);
+    expect(canonicalizeRoomSourceUrl(foreignUrl, "netflix").ok).toBe(false);
+  });
   it("forbids Netflix movie episode metadata and series projections", () => {
     const movieKey = "netflix:movie:81078819";
     const movie = { ...page(), titleKey: movieKey, episodes: [{ ...observedEpisode(), episodeKey: movieKey,
