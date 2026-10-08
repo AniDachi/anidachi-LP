@@ -103,7 +103,7 @@ export default function HowToWatchNetflixWithFriendsPage() {
         aboveFoldCta
       >
         <SeoGuideTitle>How to watch Netflix with friends</SeoGuideTitle>
-        <SeoGuideAnswer>
+        <SeoGuideAnswer id="answer">
           <p>
             Watch Netflix with friends by picking one title and one start
             time, then having every friend open it on their own account.

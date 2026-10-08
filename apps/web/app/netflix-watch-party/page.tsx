@@ -111,7 +111,7 @@ export default function NetflixWatchPartyPage() {
       ]}
     >
       <SeoGuideTitle>Netflix watch party</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           A Netflix watch party is the same movie or episode at the same
           moment, with each person signed into their own Netflix account.

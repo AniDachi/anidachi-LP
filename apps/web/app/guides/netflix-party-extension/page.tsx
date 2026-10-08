@@ -77,7 +77,7 @@ export default function NetflixPartyExtensionPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Netflix Party extension</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           The Netflix Party extension is the Chrome add-on that used to carry
           that name. The listing is now Teleparty. Searching “Netflix Party

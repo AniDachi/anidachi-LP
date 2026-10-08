@@ -103,7 +103,7 @@ export default function HowToWatchNetflixTogetherPage() {
         aboveFoldCta
       >
         <SeoGuideTitle>How to watch Netflix together</SeoGuideTitle>
-        <SeoGuideAnswer>
+        <SeoGuideAnswer id="answer">
           <p>
             To watch Netflix together, each person opens the same title on
             their own account in desktop Chrome, then a Chrome extension keeps

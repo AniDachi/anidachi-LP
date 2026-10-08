@@ -74,7 +74,7 @@ export default function NetflixMovieNightPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Netflix movie night</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           A Netflix movie night is one film and a time everyone starts. It is
           a <Link href="/netflix-watch-party">Netflix watch party</Link> with

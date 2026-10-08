@@ -74,7 +74,7 @@ export default function NetflixTelepartyPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Netflix Teleparty</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           Netflix Teleparty means you are already on a Netflix title and you
           want Teleparty on that page. Teleparty is the Chrome extension

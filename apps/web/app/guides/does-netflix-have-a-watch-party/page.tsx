@@ -77,7 +77,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Does Netflix have a watch party?</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           Netflix does not have a watch party button. You can press play on
           your own account, and someone else can press play on theirs, but

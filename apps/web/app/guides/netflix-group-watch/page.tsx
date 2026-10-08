@@ -74,7 +74,7 @@ export default function NetflixGroupWatchPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Netflix group watch</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           A Netflix group watch is more than two people on the same title at
           the same time. It is still a{" "}
