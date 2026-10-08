@@ -405,7 +405,7 @@ export function ExtensionInstallHub({
             Click the puzzle-piece icon in Chrome&apos;s toolbar (top-right, next
             to your profile). Find AniDachi in the list. Click the{" "}
             <span className="text-ani-text">pin</span> on the right of that row
-            — it fills in when it is pinned. Then open Crunchyroll or YouTube
+            — it fills in when it is pinned. Then open Crunchyroll, YouTube or Netflix
             and sign in when AniDachi asks.
             {nextPath ? " Then return to your watchroom invite." : ""}
           </p>

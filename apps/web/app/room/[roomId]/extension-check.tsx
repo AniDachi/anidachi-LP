@@ -67,7 +67,7 @@ export function ExtensionCheck({ initialMobile = false }: { initialMobile?: bool
               if you haven&apos;t installed it yet.
               <ol className="mt-3 list-decimal space-y-1 pl-5">
                 <li>Use desktop Chrome with the extension installed.</li>
-                <li>Sign in to Crunchyroll or YouTube with your own account.</li>
+                <li>Sign in to Crunchyroll, YouTube or Netflix with your own account.</li>
                 <li>Open the same episode the host is watching.</li>
                 <li>
                   Click the AniDachi bubble. If playback is blocked, click Resume

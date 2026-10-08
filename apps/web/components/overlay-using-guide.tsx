@@ -66,14 +66,14 @@ export function OverlayUsingGuide({ compact = false }: { compact?: boolean }) {
         How to Watch Together
       </h2>
       <p className="mt-3 text-sm text-ani-muted">
-        Open a Crunchyroll title or a full YouTube watch page, then try the
+        Open a video on a supported streaming site, then try the
         player controls below. Changes stay in these examples.
       </p>
       {compact ? <WatchPlatformLinks className="mt-4 flex flex-wrap gap-2" /> : null}
       <ol className="mt-6 space-y-8">
         <InstallStep heading={stepHeading} n={1} title="Open the bubble">
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
-            On a Crunchyroll title or a full YouTube watch page, look at the{" "}
+            On a supported streaming site, look at the{" "}
             <span className="text-ani-text">top-right of the player</span>. Click
             the AniDachi bubble — logo, green dot, and a number.
           </p>

@@ -14,11 +14,11 @@ const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Discord Watch Party — Voice on Discord, Sync on AniDachi",
   description:
-    "Run a Discord watch party without a soft screen share. Keep the voice call in Discord and sync Crunchyroll or YouTube with AniDachi.",
+    "Run a Discord watch party without a soft screen share. Keep the voice call in Discord and sync Crunchyroll, YouTube or Netflix with AniDachi.",
   alternates: { canonical: "/discord-watch-party" },
   openGraph: {
     title: "Discord Watch Party",
-    description: "Discord for voice. AniDachi for synced Crunchyroll and YouTube.",
+    description: "Discord for voice. AniDachi for synced Crunchyroll, YouTube and Netflix.",
     url: "/discord-watch-party",
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
@@ -34,7 +34,7 @@ const faq = [
   {
     question: "Can Discord host a watch party?",
     answer:
-      "Discord can share a screen during a voice call. For Crunchyroll and YouTube, that share is often soft, late, or black because of video protection. AniDachi syncs each person’s own tab instead.",
+      "Discord can share a screen during a voice call. For protected videos, that share can be soft, late, or black. AniDachi syncs each person’s own tab instead.",
   },
   {
     question: "Should we leave the Discord call?",
@@ -42,9 +42,9 @@ const faq = [
       "No. Stay in the Discord voice call if you want to talk. Use AniDachi only for playback, chat in the room, and reactions.",
   },
   {
-    question: "Does AniDachi sync Netflix inside Discord?",
+    question: "Can I sync Netflix with AniDachi while calling on Discord?",
     answer:
-      "No. AniDachi syncs Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome. It does not sync Netflix.",
+      "Yes. AniDachi syncs Netflix watch pages, Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
   },
 ];
 
@@ -63,7 +63,7 @@ export default function DiscordWatchPartyPage() {
         { name: "Discord watch party", url: "/discord-watch-party" },
       ]}
       title="Discord watch party"
-      description="Discord voice plus synced Crunchyroll or YouTube."
+      description="Discord voice plus synced Crunchyroll, YouTube or Netflix."
       url="/discord-watch-party"
       datePublished="2026-09-26"
       dateModified="2026-09-27"
@@ -93,7 +93,7 @@ export default function DiscordWatchPartyPage() {
       <SeoGuideAnswer>
         <p>
           Keep the Discord call for voice. Sync the video with AniDachi so
-          everyone plays Crunchyroll or YouTube in their own tab. Screen share
+          everyone plays Crunchyroll, YouTube or Netflix in their own tab. Screen share
           still works for a quick demo. It is a poor way to watch a whole
           episode.
         </p>

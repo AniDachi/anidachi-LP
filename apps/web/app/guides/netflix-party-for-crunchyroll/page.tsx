@@ -113,7 +113,7 @@ export default function NetflixPartyForCrunchyrollPage() {
           Party brand) syncing a Crunchyroll episode — or a purpose-built anime
           watchroom like AniDachi.
         </strong>{" "}
-        AniDachi does not sync Netflix. It does host full Crunchyroll and YouTube
+        AniDachi syncs Netflix and hosts full Crunchyroll and YouTube
         watchrooms. Start at{" "}
         <Link href="/extension">the AniDachi install page</Link>.
       </SeoGuideAnswer>

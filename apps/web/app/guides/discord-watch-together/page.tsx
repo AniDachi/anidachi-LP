@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can a Discord bot sync two streams?",
     answer:
-      "No. A bot can post a link. It cannot keep two Crunchyroll or YouTube players on the same moment.",
+      "No. A bot can post a link. It cannot keep two Crunchyroll, YouTube or Netflix players on the same moment.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function DiscordWatchTogetherPage() {
         },
       ]}
       title="Discord watch together"
-      description="Watch Crunchyroll or YouTube while a Discord call stays up."
+      description="Watch Crunchyroll, YouTube or Netflix while a Discord call stays up."
       url="/guides/discord-watch-together"
       datePublished="2026-09-27"
       dateModified="2026-09-27"
@@ -122,7 +122,7 @@ export default function DiscordWatchTogetherPage() {
         <Link href="/extension" className="text-brand-orange hover:underline">
           /extension
         </Link>
-        . YouTube nights use a full watch page. Netflix is not supported.
+        . YouTube nights use a full watch page. Netflix watch pages are also supported.
       </p>
       <SeoGuideRelated
         links={[

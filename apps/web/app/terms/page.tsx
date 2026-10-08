@@ -57,7 +57,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 AniDachi provides watchrooms for synchronized viewing on
-                supported platforms (Crunchyroll and YouTube), with chat,
+                supported platforms (Crunchyroll, YouTube and Netflix), with chat,
                 reactions, and related social features through a Chrome
                 extension and website. Free accounts can join rooms hosted on
                 Plus or Pro, including rooms hosted during an active trial.
@@ -174,7 +174,7 @@ export default function TermsPage() {
                 You retain ownership of any content you create (e.g., chat
                 messages). By posting content, you grant us a license to display
                 it within the Service. AniDachi is not affiliated with
-                Crunchyroll, Sony, YouTube, Google, or any streaming platform.
+                Crunchyroll, Sony, YouTube, Google, Netflix, or any streaming platform.
               </p>
             </section>
 

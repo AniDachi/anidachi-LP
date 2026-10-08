@@ -235,7 +235,7 @@ function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof g
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
 			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
-            if (url.pathname.endsWith("/browse") && url.searchParams.get("provider") === "youtube") {
+            if (url.pathname.endsWith("/browse") && ["youtube", "netflix"].includes(url.searchParams.get("provider") ?? "")) {
               const empty = browse(); empty.history.items = []; empty.matches = []; empty.history.totalTitleCount = 0;
               empty.history.meta.accountGeneration = stored.activeGenerations?.[OWNER] ?? 1;
               return Response.json(empty);
@@ -366,9 +366,9 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
-  function providerLibrary() {
+  function providerLibrary(netflixSize = 0) {
     const requests: WatchHistoryBrowseQuery[] = [];
-    const sizes = { youtube: 45, crunchyroll: 23, netflix: 0 };
+    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize };
     const client = clientFixture(async message => {
       if (message.command !== "browse") return { ok: true };
       const query = message.input as WatchHistoryBrowseQuery;
@@ -379,6 +379,8 @@ describe("production watch browsing", () => {
         ...(provider === "youtube" ? { itemKind: "movie", seasons: [],
           sourceUrl: `https://www.youtube.com/watch?v=${String(index).padStart(11, "0")}`,
           latestActivity: { ...item.latestActivity, episodeKey: `youtube:video:${String(index).padStart(11, "0")}` } } : {}),
+        ...(provider === "netflix" ? { itemKind: "movie", titleKey: `netflix:movie:${index + 1}`, seasons: [],
+          sourceUrl: `https://www.netflix.com/watch/${index + 1}`, latestActivity: { ...item.latestActivity, episodeKey: `netflix:movie:${index + 1}` } } : {}),
         title: index === 44 ? "Hidden needle" : `${provider} title ${index + 1}`,
       }));
       const matches = all.filter(value => !query.search || value.title.toLowerCase().includes(query.search.toLowerCase()));
@@ -404,8 +406,8 @@ describe("production watch browsing", () => {
       expect(section.querySelector(".popup-watch-load-more")).not.toBeNull();
     }
     expect(container.querySelector(".popup-watch-screen > .popup-watch-load-more")).toBeNull();
-    expect(requests).toHaveLength(2);
-    expect(requests.every(query => query.limit === 20 && query.provider && !query.cursor)).toBe(true);
+    expect(requests).toHaveLength(3);
+    expect(requests.every(query => query.limit === 20 && query.providerVersion === 2 && query.provider && !query.cursor)).toBe(true);
     await click("Load more YouTube titles");
     expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
     expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
@@ -415,6 +417,54 @@ describe("production watch browsing", () => {
     expect(container.querySelector('[data-provider="youtube"] .popup-watch-load-more')).toBeNull();
     await click("Toggle Crunchyroll history");
     expect(container.querySelector('[data-provider="crunchyroll"] .popup-provider-body')?.hasAttribute("hidden")).toBe(true);
+  });
+
+  it.each([1, 2])("shows truthful Netflix capacity on version %s", async version => {
+    const fallback = clientFixture();
+    const client = clientFixture(async message => {
+      if (message.command === "capacity") return { ok: true, data: {
+        capacityVersion: version, ownerUserId: OWNER, accountGeneration: 1, serverTime: meta.serverTime,
+        providers: { youtube: { used: 0, limit: 100 }, crunchyroll: { used: 1, limit: 200 }, ...(version === 2 ? { netflix: { used: 200, limit: 200 } } : {}) },
+      } };
+      return fallback.request(message);
+    });
+    await mount(client, false);
+    expect(container.textContent).toContain(version === 2 ? "Netflix 200/200" : "Netflix storage unavailable");
+    if (version === 1) expect(container.textContent).not.toContain("Netflix 0/200");
+  });
+
+  it("opens Netflix series through its own season catalog and preserves Netflix resume", async () => {
+    const netflix = (value: unknown) => JSON.parse(JSON.stringify(value).replaceAll('crunchyroll:episode:one', 'netflix:episode:101').replaceAll('crunchyroll:title:one', 'netflix:series:900').replaceAll('season:one', 'netflix:season:800').replaceAll('https://www.crunchyroll.com/watch/ONE', 'https://www.netflix.com/watch/101').replaceAll('"crunchyroll"', '"netflix"'));
+    const page = netflix(browse());
+    const client = clientFixture(async message => {
+      if (message.command === "browse") return { ok: true, data: (message.input as WatchHistoryBrowseQuery).provider === "netflix" ? page : { ...page, history: { ...page.history, items: [], totalTitleCount: 0 }, matches: [] } };
+      if (message.command === "browse-title-episodes") return { ok: true, data: netflix(detail()) };
+      if (message.command === "browse-catalog") return { ok: true, data: netflix(unavailableGrid()) };
+      return { ok: true };
+    });
+    await mount(client);
+    expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "netflix", titleKey: "netflix:series:900", seasonKey: "netflix:season:800" } }));
+    expect(container.querySelector('[data-provider="netflix"]')).not.toBeNull();
+    await click("Resume Matching episode");
+    await settles(() => expect(client.openUrl).toHaveBeenCalledTimes(1));
+    const url = vi.mocked(client.openUrl).mock.calls[0]![0];
+    expect(new URL(url).pathname).toBe("/watch/101");
+    expect(parsePersonalHistoryResumeUrl(url)?.provider).toBe("netflix");
+  });
+
+  it("pages Netflix independently and searches its unloaded movies", async () => {
+    const { client, requests } = providerLibrary(45);
+    await mount(client, false);
+    expect(container.querySelector('[data-provider="netflix"] .popup-provider-name')?.textContent).toBe("Netflix");
+    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
+    await click("Load more Netflix titles");
+    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
+    expect(requests.at(-1)).toMatchObject({ provider: "netflix", providerVersion: 2, limit: 20, cursor: "20" });
+    await change("Search watch history", "needle");
+    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(1);
+    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "netflix", search: "needle", providerVersion: 2, limit: 20 })]));
+    expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
   });
 
   it("searches unloaded titles on both providers and restores each independently loaded depth", async () => {
@@ -903,8 +953,8 @@ describe("production watch browsing", () => {
     expect(reads).toBe(2);
   });
   it.each([
-    ["superseded", 4],
-    ["retryable", 2],
+    ["superseded", 6],
+    ["retryable", 3],
   ] as const)("bounds automatic browse recovery for %s and keeps manual Retry", async (status, expectedReads) => {
     let reads = 0;
     const fallback = clientFixture();
@@ -1547,7 +1597,7 @@ describe("production watch browsing", () => {
 			vi
 				.mocked(client.request)
 				.mock.calls.filter(([message]) => message.command === "browse"),
-		).toHaveLength(4);
+		).toHaveLength(6);
 		expect(
 			vi
 				.mocked(client.request)
@@ -1638,7 +1688,7 @@ describe("production watch browsing", () => {
 		).toHaveLength(1);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "browse"),
-		).toHaveLength(4);
+		).toHaveLength(6);
 		expect(container.querySelector('[role="alert"]')).toBeNull();
 	});
 	it("bounds failed generation recovery and manual Retry replays the current filtered query", async () => {
@@ -1863,7 +1913,7 @@ describe("production watch browsing", () => {
 			.mocked(client.request)
 			.mock.calls.map(([m]) => m)
 			.filter((m) => m.command === "browse");
-		expect(calls).toHaveLength(2);
+		expect(calls).toHaveLength(3);
 		expect(calls[0]).toMatchObject({
 			expectedOwnerUserId: OWNER,
 			input: { mode: "personal", limit: 20 },
@@ -1971,7 +2021,7 @@ describe("production watch browsing", () => {
 		expect(client.request).toHaveBeenCalledWith(
 			expect.objectContaining({
 				command: "browse",
-				input: { mode: "personal", limit: 20, provider: "crunchyroll", cursor: "title-next" },
+				input: { mode: "personal", limit: 20, providerVersion: 2, provider: "crunchyroll", cursor: "title-next" },
 			}),
 		);
 		expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(1);

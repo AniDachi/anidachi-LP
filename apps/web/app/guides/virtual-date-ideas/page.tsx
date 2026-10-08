@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can AniDachi be the virtual date night?",
     answer:
-      "Yes for Crunchyroll and full YouTube watch pages in desktop Chrome. Stay on your usual call for voice. AniDachi does not sync Netflix, Disney+, Hulu, or Prime.",
+      "Yes for Netflix, Crunchyroll and full YouTube watch pages in desktop Chrome. Stay on your usual call for voice. Disney+, Hulu and Prime are not supported.",
   },
 ];
 

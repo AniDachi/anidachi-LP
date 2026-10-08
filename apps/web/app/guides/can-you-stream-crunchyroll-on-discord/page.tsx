@@ -64,7 +64,7 @@ const faq = [
   {
     question: "What about YouTube in the same call?",
     answer:
-      "The same pattern works for a full YouTube watch page. Shorts, embeds, and the YouTube mobile app are not supported. Netflix is not supported.",
+      "The same pattern works for a full YouTube watch page. Shorts, embeds, and the YouTube mobile app are not supported. Netflix watch pages are also supported.",
   },
 ];
 
@@ -151,7 +151,7 @@ export default function CanYouStreamCrunchyrollOnDiscordPage() {
         >
           Discord watch together
         </Link>
-        . AniDachi does not sync Netflix.
+        . AniDachi also syncs Netflix.
       </p>
       <SeoGuideRelated
         links={[

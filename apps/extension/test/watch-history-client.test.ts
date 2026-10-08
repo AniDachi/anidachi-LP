@@ -151,7 +151,7 @@ describe("watch history v2 client", () => {
       getCurrentSession: async () => currentSession,
       storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = structuredClone(value); } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
       fetch: async (input) => {
-        expect(String(input)).toContain("/api/watch-history/v3/capacity");
+        expect(String(input)).toContain("/api/watch-history/v3/capacity?capacityVersion=2");
         if (variant === "session") currentSession = { ...session, user: { ...session.user, id: other } };
         return Response.json({ capacityVersion: 1, ownerUserId: variant === "owner" ? other : owner,
           accountGeneration: variant === "generation" ? 2 : 1, serverTime: "2026-09-09T00:00:00.000Z",
@@ -1403,7 +1403,7 @@ describe("watch history v2 client", () => {
     expect(message).not.toHaveProperty("ownerUserId");
     await expect(client.handle(message)).resolves.toEqual({ ok: false, status: "retryable" });
     expect(fetchImpl).toHaveBeenCalledWith(
-      "http://localhost:3003/api/watch-history/v3?limit=20",
+      "http://localhost:3003/api/watch-history/v3?providerVersion=2&limit=20",
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer access-token", "x-anidachi-history-owner": session.user.id }),
       }),
@@ -2757,7 +2757,7 @@ describe("watch history v2 client", () => {
     let resolveDrain: (() => void) | undefined;
     const drain = new Promise<void>((resolve) => { resolveDrain = resolve; });
     const fetchImpl = vi.fn(async (url: string) => {
-      if (url.endsWith("/api/watch-history/v3")) return new Response("offline", { status: 503 });
+      if (new URL(url).pathname.endsWith("/api/watch-history/v3")) return new Response("offline", { status: 503 });
       await drain;
       return new Response(JSON.stringify(progressAck(event.clientEventId)));
     });

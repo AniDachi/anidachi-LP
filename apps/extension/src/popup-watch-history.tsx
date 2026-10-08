@@ -367,6 +367,7 @@ export function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProvider
 function providerLabel(provider: WatchHistoryItem["provider"]): string {
   if (provider === "crunchyroll") return "Crunchyroll";
   if (provider === "youtube") return "YouTube";
+  if (provider === "netflix") return "Netflix";
   return provider;
 }
 
@@ -383,6 +384,10 @@ export function ProviderLogo({ label, provider }: { label: string; provider: str
         </svg>
       </span>
     );
+  }
+  // Netflix glyph reuses the website public/platforms/netflix.svg (svgl).
+  if (provider === "netflix") {
+    return <span aria-hidden="true" className="resource-provider-logo netflix"><svg viewBox="0 0 141 277" fill="currentColor"><path d="M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z" /></svg></span>;
   }
   if (provider === "youtube") {
     return (
