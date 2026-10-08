@@ -1,17 +1,25 @@
 import type { PlaybackState, WatchSourceDescriptor } from "@anidachi/protocol";
 import { Html5VideoAdapter } from "../core/html5-video-adapter";
+import type {
+	PlayerOverlayGeometry,
+	PlayerOverlayGeometryListener,
+} from "../core/overlay-geometry";
 import { DEFAULT_PLAYBACK_POLICY } from "../core/playback-policy";
 import type {
 	AdapterPlaybackSnapshot,
-	PlayerEvent,
 	PersonalResumeTarget,
+	PlayerEvent,
 } from "../core/types";
 import { runNetflixCommand } from "./bridge-client";
 import {
 	NETFLIX_VIDEO_GENERATION,
-	netflixWatchId,
 	type NetflixSnapshot,
+	netflixWatchId,
 } from "./contract";
+import {
+	getNetflixPlayerOverlayGeometry,
+	subscribeNetflixPlayerOverlayGeometry,
+} from "./player-chrome";
 
 export class NetflixVideoAdapter extends Html5VideoAdapter {
 	readonly id = "netflix";
@@ -109,6 +117,14 @@ export class NetflixVideoAdapter extends Html5VideoAdapter {
 			fillMountTarget: true,
 			useNativePlayerDoubleClick: true,
 		};
+	}
+	override getOverlayGeometry(): PlayerOverlayGeometry {
+		return getNetflixPlayerOverlayGeometry(this.container);
+	}
+	override subscribeOverlayGeometry(
+		listener: PlayerOverlayGeometryListener,
+	): () => void {
+		return subscribeNetflixPlayerOverlayGeometry(this.container, listener);
 	}
 	setPlaybackRate(rate: number): void {
 		if (this.getNetflixSnapshot()) super.setPlaybackRate(rate);
