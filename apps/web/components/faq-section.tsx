@@ -1,12 +1,52 @@
-"use client";
-
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { HomeSectionHeader } from "@/components/home-section-header";
+import { Minus, Plus } from "lucide-react";
+import styles from "./home/home-faq.module.css";
 
 export interface FAQItem {
   question: string;
   answer: string;
+}
+
+const visibleLimit = 6;
+
+export function FaqQuestionList({
+  questions,
+  openIndexes = [],
+}: {
+  questions: FAQItem[];
+  openIndexes?: number[];
+}) {
+  const split = Math.ceil(questions.length / 2);
+
+  return (
+    <div className={styles.columns}>
+      {[0, 1].map((columnIndex) => {
+        const start = columnIndex === 0 ? 0 : split;
+        const column = questions.slice(start, columnIndex === 0 ? split : undefined);
+        if (column.length === 0) return null;
+        return (
+          <div key={columnIndex}>
+            {column.map((item, itemIndex) => {
+              const index = start + itemIndex;
+              return (
+                <details
+                  key={`${index}-${item.question}`}
+                  className={styles.question}
+                  open={openIndexes.includes(index) ? true : undefined}
+                >
+                  <summary>
+                    <span>{item.question}</span>
+                    <Plus className={styles.plus} size={18} aria-hidden="true" />
+                    <Minus className={styles.minus} size={18} aria-hidden="true" />
+                  </summary>
+                  <p>{item.answer}</p>
+                </details>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function FAQSection({
@@ -20,61 +60,34 @@ export function FAQSection({
   defaultOpenIndexes?: number[];
   compact?: boolean;
 }) {
+  const visible = questions.slice(0, visibleLimit);
+  const hidden = questions.slice(visibleLimit);
+  const visibleOpen = defaultOpenIndexes.filter((index) => index < visible.length);
+  const hiddenOpen = defaultOpenIndexes
+    .filter((index) => index >= visible.length)
+    .map((index) => index - visible.length);
+
   return (
     <section
       id="faq"
-      className={compact ? "bg-ani-canvas pt-12" : "bg-ani-canvas py-16 lg:py-24"}
+      className={compact ? styles.compact : styles.section}
+      aria-labelledby="faq-title"
     >
-      <div className={compact ? undefined : "container mx-auto max-w-3xl px-4"}>
-        {compact ? (
-          <h2 className="mb-4 text-lg font-semibold tracking-[-0.02em] text-ani-text">
-            {title}
-          </h2>
-        ) : (
-          <HomeSectionHeader title={title} />
-        )}
-        <div className="divide-y divide-ani-line overflow-hidden rounded-[20px] border border-ani-line">
-          {questions.map((q, i) => (
-            <FAQAccordion
-              key={i}
-              question={q.question}
-              answer={q.answer}
-              defaultOpen={defaultOpenIndexes.includes(i)}
-            />
-          ))}
-        </div>
+      <div className={styles.container}>
+        <h2 id="faq-title">{title}</h2>
+        <FaqQuestionList questions={visible} openIndexes={visibleOpen} />
+        {hidden.length > 0 ? (
+          <details className={styles.more} open={hiddenOpen.length > 0 ? true : undefined}>
+            <summary>
+              <span className={styles.closedLabel}>More questions</span>
+              <span className={styles.openLabel}>Fewer questions</span>
+              <Plus className={styles.plus} size={18} aria-hidden="true" />
+              <Minus className={styles.minus} size={18} aria-hidden="true" />
+            </summary>
+            <FaqQuestionList questions={hidden} openIndexes={hiddenOpen} />
+          </details>
+        ) : null}
       </div>
     </section>
-  );
-}
-
-function FAQAccordion({
-  question,
-  answer,
-  defaultOpen = false,
-}: FAQItem & { defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div>
-      <button
-        className="group flex min-h-12 w-full items-center justify-between gap-4 px-5 py-4 text-left font-medium tracking-[-0.01em] text-ani-text motion-safe:transition-colors motion-safe:duration-[160ms] hover:bg-ani-hover"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-      >
-        <span className="text-pretty">{question}</span>
-        <ChevronDown
-          className={`h-5 w-5 shrink-0 text-ani-progress motion-safe:transition-transform motion-safe:duration-[180ms] ${
-            open ? "rotate-180" : ""
-          }`}
-          aria-hidden="true"
-        />
-      </button>
-      {open ? (
-        <div className="px-5 pb-5 text-sm leading-relaxed text-ani-muted">
-          {answer}
-        </div>
-      ) : null}
-    </div>
   );
 }

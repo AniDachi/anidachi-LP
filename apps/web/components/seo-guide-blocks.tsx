@@ -14,7 +14,7 @@ export function SeoGuideTitle({
   return (
     <h1
       className={cn(
-        "mb-6 max-w-[22ch] text-balance text-4xl font-bold tracking-[-0.03em] text-ani-text md:mb-8 md:max-w-none md:text-5xl md:leading-[1.08]",
+        "mb-6 max-w-[22ch] text-balance text-4xl font-semibold tracking-[-0.035em] text-ani-text md:mb-8 md:max-w-none md:text-5xl md:leading-[1.08]",
         className,
       )}
     >

@@ -102,6 +102,29 @@
   color: var(--ani-primary);
 }
 
+/* Lists that set orange on the parent still inherit it. Cream the anchors. */
+[data-ani-theme="account"] .seo-prose .text-brand-orange,
+[data-ani-theme="account"] .seo-prose .text-brand-orange a,
+[data-ani-theme="account"] .seo-prose a.text-brand-orange,
+[data-ani-theme="account"] .seo-prose a.text-brand-orange-bright {
+  color: var(--ani-text);
+}
+
+[data-ani-theme="account"] .seo-prose .text-brand-orange a,
+[data-ani-theme="account"] .seo-prose a.text-brand-orange,
+[data-ani-theme="account"] .seo-prose a.text-brand-orange-bright {
+  text-decoration-line: underline;
+  text-decoration-color: var(--ani-line);
+  text-underline-offset: 2px;
+}
+
+[data-ani-theme="account"] .seo-prose .text-brand-orange a:hover,
+[data-ani-theme="account"] .seo-prose a.text-brand-orange:hover,
+[data-ani-theme="account"] .seo-prose a.text-brand-orange-bright:hover {
+  color: var(--ani-primary);
+  text-decoration-color: var(--ani-muted);
+}
+
 [data-ani-theme="account"] ::selection {
   background: color-mix(in srgb, var(--ani-progress) 40%, transparent);
   color: var(--ani-text);

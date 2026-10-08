@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingArticle } from "@/components/marketing-article";
 
 export const metadata: Metadata = {
   title: "Editorial Policy",
@@ -25,14 +26,8 @@ export const metadata: Metadata = {
 
 export default function EditorialPolicyPage() {
   return (
-    <main id="main-content" className="min-h-screen bg-background">
-      <article className="container mx-auto max-w-3xl px-4 py-16">
-        <h1 className="text-4xl font-bold text-foreground mb-2">
-          Editorial Policy
-        </h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: September 15, 2026</p>
-
-        <div className="space-y-8 text-foreground/80 leading-relaxed">
+    <MarketingArticle title="Editorial Policy" updated="September 15, 2026">
+      <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
               Purpose
@@ -170,8 +165,7 @@ export default function EditorialPolicyPage() {
               </Link>
             </p>
           </section>
-        </div>
-      </article>
-    </main>
+      </div>
+    </MarketingArticle>
   );
 }

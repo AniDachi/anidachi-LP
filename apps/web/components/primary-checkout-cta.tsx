@@ -13,13 +13,13 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const COPY = {
   default: {
-    body: "Install the Chrome extension in about 2 minutes — Crunchyroll and YouTube watchrooms.",
+    body: "Install the Chrome extension in about 2 minutes — Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
   },
   guide: {
-    body: "Install AniDachi in Chrome. Join friends for free, or host with Plus or Pro on Crunchyroll and YouTube.",
+    body: "Install AniDachi in Chrome. Join friends for free, or host with Plus or Pro on Crunchyroll and YouTube. Netflix is coming soon.",
   },
   compare: {
-    body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll and YouTube watchrooms.",
+    body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
   },
   anime: {
     body: "Install AniDachi and open the video. Host with Plus or Pro, including during a trial; friends join free.",
