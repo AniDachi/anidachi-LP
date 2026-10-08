@@ -175,6 +175,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/netflix-watch-party"
+                  className="hover:text-ani-text transition-colors"
+                >
+                  Netflix Watch Party
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/anime-watch-party"
                   className="hover:text-ani-text transition-colors"
                 >

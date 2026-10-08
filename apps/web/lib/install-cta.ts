@@ -1,7 +1,7 @@
 /** Public install hub and the canonical Chrome Web Store destination. */
 export const INSTALL_HUB_PATH = "/extension";
 
-export const INSTALL_CTA_LABEL = "Download for Chrome";
+export const INSTALL_CTA_LABEL = "Start a Watchroom";
 
 export const INSTALL_ZIP_CTA_LABEL = "Download AniDachi (.zip)";
 
