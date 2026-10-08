@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingArticle } from "@/components/marketing-article";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 export const metadata: Metadata = {
@@ -26,12 +27,8 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main id="main-content" className="min-h-screen bg-background">
-      <article className="container mx-auto max-w-3xl px-4 py-16">
-        <h1 className="text-4xl font-bold text-foreground mb-2">About AniDachi</h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: October 1, 2026</p>
-
-        <div className="space-y-8 text-foreground/80 leading-relaxed">
+    <MarketingArticle title="About AniDachi" updated="October 1, 2026">
+      <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
               What we build
@@ -157,8 +154,7 @@ export default function AboutPage() {
               </Link>
             </p>
           </section>
-        </div>
-      </article>
-    </main>
+      </div>
+    </MarketingArticle>
   );
 }

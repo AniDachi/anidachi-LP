@@ -243,6 +243,16 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
 	},
 	{
+		href: "/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll",
+		label: "Remove Shows from Continue Watching on Crunchyroll",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"crunchyroll",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
 		href: "/guides/crunchyroll-watch-party-chrome-extension",
 		label: "Best Crunchyroll Watch Party Chrome Extensions",
 		tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
@@ -677,7 +687,13 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/can-you-screen-share-youtube-on-discord",
 		label: "Can You Screen Share YouTube on Discord?",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube", "discord"],
+		tags: [
+			"template-c",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+			"discord",
+		],
 	},
 	{
 		href: "/guides/rave-alternatives-for-youtube",
@@ -720,7 +736,13 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/best-teleparty-alternatives-for-youtube",
 		label: "Best Teleparty Alternatives for YouTube",
-		tags: ["template-c", "listicle", "youtube", "watch-party", "pillar-watch-youtube"],
+		tags: [
+			"template-c",
+			"listicle",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
 	},
 	{
 		href: "/guides/how-to-watch-youtube-together-without-screen-share",
@@ -787,12 +809,7 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/teleparty-not-working-youtube",
 		label: "Teleparty Not Working on YouTube",
-		tags: [
-			"template-c",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
 		href: "/guides/how-to-watch-crunchyroll-together-without-screen-share",
@@ -818,7 +835,12 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/how-to-screen-share-on-discord",
 		label: "How to Screen Share on Discord",
-		tags: ["template-c", "how-to-core", "discord", "pillar-discord-watch-party"],
+		tags: [
+			"template-c",
+			"how-to-core",
+			"discord",
+			"pillar-discord-watch-party",
+		],
 	},
 	{
 		href: "/guides/dubbed-anime-on-crunchyroll",
@@ -853,7 +875,13 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/can-you-stream-crunchyroll-on-discord",
 		label: "Can You Stream Crunchyroll on Discord?",
-		tags: ["template-c", "how-to-core", "discord", "crunchyroll", "pillar-discord-watch-party"],
+		tags: [
+			"template-c",
+			"how-to-core",
+			"discord",
+			"crunchyroll",
+			"pillar-discord-watch-party",
+		],
 	},
 	{
 		href: "/guides/discord-watch-together",
@@ -879,6 +907,71 @@ export const guideLinks: GuideLinkItem[] = [
 		href: "/guides/things-to-do-long-distance",
 		label: "Things to Do Long Distance",
 		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
+	{
+		href: "/crunchyroll-watch-history",
+		label: "Crunchyroll Watch History",
+		tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
+	},
+	{
+		href: "/guides/how-to-clear-watch-history-on-crunchyroll",
+		label: "Clear Crunchyroll Watch History",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"crunchyroll",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll",
+		label: "Remove Anime from Continue Watching",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"crunchyroll",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/resume-anime",
+		label: "Resume Anime",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"crunchyroll",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/discord-go-live",
+		label: "Discord Go Live",
+		tags: ["template-c", "discord", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/how-to-stream-anime-on-discord",
+		label: "How to Stream Anime on Discord",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"discord",
+			"pillar-discord-watch-party",
+		],
+	},
+	{
+		href: "/guides/discord-watch-together-activity",
+		label: "Discord Watch Together Activity",
+		tags: ["template-c", "discord", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/chrome-watch-party",
+		label: "Chrome Watch Party",
+		tags: ["template-c", "watch-party", "pillar-watch-party-app"],
+	},
+	{
+		href: "/virtual-movie-night",
+		label: "Virtual Movie Night",
+		tags: ["template-c", "watch-party", "pillar-watch-party-app"],
 	},
 ];
 

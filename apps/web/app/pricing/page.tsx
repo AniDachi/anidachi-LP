@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Pricing } from "@/components/pricing";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
-import { SocialProof } from "@/components/social-proof";
 import { StoreReviews } from "@/components/store-reviews";
 import { getPlanPolicy } from "@anidachi/protocol";
 
@@ -106,13 +105,8 @@ export default function PricingPage() {
 				</nav>
 
 				<Pricing headingLevel={1} showPlanMatrix />
-				<SocialProof />
 				<StoreReviews />
-				<FAQSection
-					title="Pricing FAQ"
-					questions={faq}
-					defaultOpenIndexes={[0]}
-				/>
+				<FAQSection title="Pricing FAQ" questions={faq} />
 				<section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-ani-muted">
 					<p>
 						Looking for how watch parties work? See{" "}

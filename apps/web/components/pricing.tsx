@@ -104,7 +104,8 @@ export function Pricing({
 		async function fetchOffer(
 			resetAccount: boolean,
 		): Promise<PricingOffer | null> {
-			controller?.abort();
+			// A bare abort() is reported by the Next.js overlay as a crash.
+			controller?.abort("pricing-offer-replaced");
 			controller = new AbortController();
 			const started = Date.now();
 			const version = ++offerVersion.current;
@@ -163,7 +164,8 @@ export function Pricing({
 		return () => {
 			clearTimeout(refreshTimer);
 			clearTimeout(expiryTimer);
-			controller?.abort();
+			// A bare abort() is reported by the Next.js overlay as a crash.
+			controller?.abort("pricing-offer-cancelled");
 			requestOffer.current = null;
 			// This is a request generation, not a DOM ref: retire the latest response.
 			// eslint-disable-next-line react-hooks/exhaustive-deps

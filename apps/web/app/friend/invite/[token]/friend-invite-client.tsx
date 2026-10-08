@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Loader2, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type PublicProfile = {
   userId: string;
@@ -66,7 +67,7 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
   }, [token, ownerUserId]);
 
   return (
-    <div className="rounded-lg border border-brand-border bg-brand-surface p-6">
+    <div className="rounded-[20px] border border-ani-line bg-ani-panel p-6">
       <div className="flex items-center gap-4">
         {sender.avatarUrl ? (
           <img
@@ -75,21 +76,21 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
             src={sender.avatarUrl}
           />
         ) : (
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-orange text-lg font-bold text-foreground">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-ani-line bg-ani-canvas text-lg font-semibold text-ani-text">
             {initials(sender.displayName)}
           </span>
         )}
         <div className="min-w-0">
-          <p className="truncate text-lg font-semibold text-foreground">{sender.displayName}</p>
-          <p className="truncate text-sm text-foreground/50">
+          <p className="truncate text-lg font-semibold tracking-[-0.02em] text-ani-text">{sender.displayName}</p>
+          <p className="truncate text-sm text-ani-muted">
             {sender.handle ? `@${sender.handle}` : "AniDachi user"}
           </p>
         </div>
       </div>
 
       {accepted ? (
-        <div className="mt-6 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-3 text-sm text-brand-orange">
-          <Check className="mr-2 inline h-4 w-4" aria-hidden />
+        <div className="mt-6 rounded-[12px] border border-ani-line bg-ani-selected-quiet px-4 py-3 text-sm text-ani-text">
+          <Check className="mr-2 inline h-4 w-4 text-ani-progress" aria-hidden />
           You are friends.
         </div>
       ) : null}
@@ -101,11 +102,13 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
       ) : null}
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange-deep disabled:cursor-not-allowed disabled:opacity-60"
+        <Button
+          className="w-full sm:w-auto"
           disabled={busy || accepted}
           onClick={acceptInvite}
+          size="control"
           type="button"
+          variant="cream"
         >
           {busy ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -113,13 +116,10 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
             <UserPlus className="h-4 w-4" aria-hidden />
           )}
           {accepted ? "Already friends" : "Add friend"}
-        </button>
-        <Link
-          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground/90 transition hover:bg-brand-orange/20"
-          href="/account/friends"
-        >
-          Open friends
-        </Link>
+        </Button>
+        <Button asChild className="w-full sm:w-auto" size="control" variant="creamOutline">
+          <Link href="/account/friends">Open friends</Link>
+        </Button>
       </div>
     </div>
   );

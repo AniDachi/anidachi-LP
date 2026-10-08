@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingArticle } from "@/components/marketing-article";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
@@ -24,17 +25,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <>
-      <main id="main-content" className="min-h-screen bg-background">
-        <article className="container mx-auto max-w-3xl px-4 py-16">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Privacy Policy
-          </h1>
-          <p className="text-sm text-foreground/50 mb-10">
-            Last updated: October 1, 2026
-          </p>
-
-          <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
+    <MarketingArticle title="Privacy Policy" updated="October 1, 2026">
+      <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">1. AniDachi and your account</h2>
               <p>AniDachi operates this website and the AniDachi Chrome extension for synchronized viewing, calls, invitations and personal watch history on supported video services.</p>
@@ -90,9 +82,7 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-semibold text-foreground mb-4">7. Changes and contact</h2>
               <p>We update this page when our data practices change. Where a change requires a new disclosure or choice, we will provide it in the product before starting that collection. For privacy questions, contact <a href="mailto:anidachi.app@gmail.com" className="text-brand-orange hover:underline">anidachi.app@gmail.com</a>. You can return to <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link> at any time.</p>
             </section>
-          </div>
-        </article>
-      </main>
-    </>
+      </div>
+    </MarketingArticle>
   );
 }
