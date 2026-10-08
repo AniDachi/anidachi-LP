@@ -5,7 +5,7 @@ import styles from "./upcoming-platforms.module.css";
 // (static/library); Paramount+ from https://commons.wikimedia.org/wiki/File:Paramount%2B_logo.svg.
 // These marks identify planned integrations, not currently supported providers.
 const platforms = [
-  { name: "Netflix", file: "netflix", width: 160, height: 43 },
+  { name: "Netflix", file: "netflix", width: 140, height: 38 },
   { name: "Hulu", file: "hulu", width: 110, height: 36 },
   { name: "Disney+", file: "disneyplus", width: 162, height: 92 },
   { name: "Paramount+", file: "paramountplus", width: 190, height: 44 },

@@ -73,7 +73,7 @@ export default function AnimeTrackerPage() {
       description="Personal Crunchyroll and YouTube progress with AniDachi."
       url="/anime-tracker"
       datePublished="2026-09-26"
-      dateModified="2026-10-01"
+      dateModified="2026-10-08"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -93,6 +93,16 @@ export default function AnimeTrackerPage() {
           name: "Anime checklist",
           url: "/guides/anime-checklist",
           position: 3,
+        },
+        {
+          name: "Anime watchlist",
+          url: "/guides/anime-watchlist",
+          position: 4,
+        },
+        {
+          name: "Crunchyroll watch history",
+          url: "/crunchyroll-watch-history",
+          position: 5,
         },
       ]}
     >
@@ -162,6 +172,20 @@ export default function AnimeTrackerPage() {
           className="text-brand-orange hover:underline"
         >
           anime checklist
+        </Link>
+        . The longer plan-to-watch list is the{" "}
+        <Link
+          href="/guides/anime-watchlist"
+          className="text-brand-orange hover:underline"
+        >
+          anime watchlist
+        </Link>
+        . Crunchyroll’s own episode list stays on{" "}
+        <Link
+          href="/crunchyroll-watch-history"
+          className="text-brand-orange hover:underline"
+        >
+          Crunchyroll watch history
         </Link>
         . Open the title on Crunchyroll or YouTube and install AniDachi
         from{" "}

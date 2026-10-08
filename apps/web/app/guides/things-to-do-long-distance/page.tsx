@@ -44,7 +44,7 @@ const faq = [
   {
     question: "What are long distance activities for couples?",
     answer:
-      "Couples can use the same ideas. A synced episode is one activity, not the only one. AniDachi covers Crunchyroll and YouTube in desktop Chrome. It does not sync Netflix.",
+      "Couples can use the same ideas. A synced episode is one activity, not the only one. AniDachi covers Crunchyroll and YouTube in desktop Chrome. Netflix is coming soon and is not supported yet.",
   },
 ];
 

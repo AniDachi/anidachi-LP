@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingArticle } from "@/components/marketing-article";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
@@ -24,17 +25,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <>
-      <main id="main-content" className="min-h-screen bg-background">
-        <article className="container mx-auto max-w-3xl px-4 py-16">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Privacy Policy
-          </h1>
-          <p className="text-sm text-foreground/50 mb-10">
-            Last updated: October 1, 2026
-          </p>
-
-          <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
+    <MarketingArticle title="Privacy Policy" updated="October 1, 2026">
+      <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">1. AniDachi and your account</h2>
               <p>AniDachi operates this website and the AniDachi Chrome extension for synchronized viewing, calls, invitations and personal watch history on supported video services.</p>
@@ -43,7 +35,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">2. Video information and personal history</h2>
-              <p>The extension reads video information and playback state on supported YouTube and Crunchyroll pages to synchronize a room or save your progress. This includes the video URL and provider identifiers, title, cover image, episode and season details, playback position, duration and timestamps. It does not collect your general browsing history.</p>
+              <p>The extension reads video information and playback state on supported YouTube and Crunchyroll pages to synchronize a room or save your progress. This includes the video URL and provider identifiers, title, cover image, episode and season details, playback position, duration and timestamps. It does not collect your general browsing history. Netflix is coming soon and is not a supported watchroom yet.</p>
               <p><strong>Automatic personal-history recording is enabled by default for signed-in accounts with Plus or Pro access, including a trial.</strong> You can turn it off in the extension Settings for your account in this browser. An existing disabled setting stays off after an update. The welcome explains this feature; viewing or dismissing it does not control recording. YouTube recording also requires its separate switch in Settings. When enabled, eligible progress is saved locally and synchronized with your AniDachi account during both solo and room viewing. Pending updates may be retried after a connection failure.</p>
               <p>You can stop recording in the extension Settings. Disabling recording does not delete history already saved. Previously dispatched updates may finish processing; new capture stops. Losing Plus or Pro access also stops new recording and editing. Saved history remains available to read, resume and delete on Free. History belongs to your account; it is not a shared group completion record.</p>
             </section>
@@ -90,9 +82,7 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-semibold text-foreground mb-4">7. Changes and contact</h2>
               <p>We update this page when our data practices change. Where a change requires a new disclosure or choice, we will provide it in the product before starting that collection. For privacy questions, contact <a href="mailto:anidachi.app@gmail.com" className="text-brand-orange hover:underline">anidachi.app@gmail.com</a>. You can return to <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link> at any time.</p>
             </section>
-          </div>
-        </article>
-      </main>
-    </>
+      </div>
+    </MarketingArticle>
   );
 }

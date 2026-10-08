@@ -20,11 +20,11 @@ function InviteError({ message }: { message: string }) {
   return (
     <AuthPageShell maxWidth="max-w-md">
       <AuthPageCard>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
+        <p className="text-sm font-medium tracking-[-0.01em] text-ani-muted">
           AniDachi
         </p>
-        <h1 className="mt-3 text-2xl font-bold text-foreground">Friend invite</h1>
-        <p className="mt-3 text-sm text-foreground/70">{message}</p>
+        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">Friend invite</h1>
+        <p className="mt-3 text-sm text-ani-muted">{message}</p>
       </AuthPageCard>
     </AuthPageShell>
   );
@@ -55,11 +55,11 @@ export default async function FriendInvitePage({ params }: Props) {
 
   return (
     <AuthPageShell maxWidth="max-w-md">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
+      <p className="text-sm font-medium tracking-[-0.01em] text-ani-muted">
         AniDachi
       </p>
-      <h1 className="mt-3 text-3xl font-bold text-foreground">Add friend</h1>
-      <p className="mt-2 text-sm text-foreground/50">
+      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-ani-text">Add friend</h1>
+      <p className="mt-2 text-sm text-ani-muted">
         Accept the invite to add this person to your AniDachi friends.
       </p>
       <div className="mt-6">

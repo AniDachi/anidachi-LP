@@ -138,7 +138,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
           },
           {
             feature: "Amazon Prime Video support",
-            values: { anidachi: "No — CR & YouTube only", amazon: "yes" },
+            values: { anidachi: "No", amazon: "yes" },
           },
           {
             feature: "Asynchronous watching",

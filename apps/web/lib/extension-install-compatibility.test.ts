@@ -1,25 +1,16 @@
+import { dom } from "./test-helpers/account-client-dom";
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Window } from "happy-dom";
 import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { ExtensionInstallHub } from "../components/extension-install-hub";
 import { ExtensionCheck } from "../app/room/[roomId]/extension-check";
 import type { PublicExtensionArtifact } from "./extension-artifact";
 import { CHROME_WEB_STORE_URL } from "./install-cta";
 
-(globalThis as { React?: typeof React }).React = React;
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-const dom = new Window({ url: "http://localhost/room/test-room" });
-for (const [key, value] of Object.entries({
-  window: dom, self: dom, document: dom.document, navigator: dom.navigator,
-  Node: dom.Node, Element: dom.Element, HTMLElement: dom.HTMLElement,
-  Event: dom.Event, CustomEvent: dom.CustomEvent,
-})) {
-  Object.defineProperty(globalThis, key, { value, writable: true, configurable: true });
-}
+dom.history.replaceState(null, "", "/room/test-room");
 
 const artifact: PublicExtensionArtifact = {
   available: true, version: "0.1.0", bytes: 1_000_000,

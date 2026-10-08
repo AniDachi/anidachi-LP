@@ -55,7 +55,7 @@
   .section { padding-inline: 24px; }
   .container { padding-block: 36px 28px; }
   .title { max-width: 290px; margin-inline: auto; }
-  .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 28px; margin-top: 24px; }
+  .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin-top: 24px; }
   .logos li { min-height: 82px; }
   .logo { max-width: 90%; }
 }

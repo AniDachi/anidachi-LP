@@ -144,7 +144,7 @@ export default function AniDachiVsRavePage() {
           { feature: "Crunchyroll support", values: { anidachi: "yes", rave: "yes" } },
           {
             feature: "Multi-platform (Netflix, Disney+, etc.)",
-            values: { anidachi: "No — CR & YouTube only", rave: "yes" },
+            values: { anidachi: "Netflix coming soon", rave: "yes" },
           },
           {
             feature: "Asynchronous watching",

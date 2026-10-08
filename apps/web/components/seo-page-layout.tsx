@@ -10,7 +10,6 @@ import {
 import { TableOfContents, type TocHeading } from "@/components/table-of-contents";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
-import { SocialProof } from "@/components/social-proof";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
 
@@ -174,15 +173,12 @@ export function SeoPageLayout({
           </article>
         )}
 
-        {faq && faq.length > 0 && (
-          <>
-            <SocialProof />
-            <FAQSection
-              questions={faq}
-              defaultOpenIndexes={faqDefaultOpenIndexes ?? [0]}
-            />
-          </>
-        )}
+        {faq && faq.length > 0 ? (
+          <FAQSection
+            questions={faq}
+            defaultOpenIndexes={faqDefaultOpenIndexes}
+          />
+        ) : null}
       </main>
       <BreadcrumbJsonLd items={breadcrumbs} />
       <ArticleJsonLd

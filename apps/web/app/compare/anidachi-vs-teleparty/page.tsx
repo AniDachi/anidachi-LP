@@ -153,7 +153,7 @@ export default function AniDachiVsTelepartyPage() {
           { feature: "YouTube support", values: { anidachi: "yes", teleparty: "yes" } },
           {
             feature: "Netflix / Disney+ / HBO",
-            values: { anidachi: "No — CR & YouTube only", teleparty: "yes" },
+            values: { anidachi: "Netflix coming soon", teleparty: "yes" },
           },
           {
             feature: "Asynchronous watching",
