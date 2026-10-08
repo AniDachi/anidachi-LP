@@ -12,6 +12,8 @@ const Timestamp = z.iso.datetime({ offset: true });
 const Provider = z.enum(["crunchyroll", "youtube", "netflix"]);
 const Key = z.string().trim().min(1).max(220);
 const filters = {
+	// Omission preserves legacy cursor bindings and CR/YT-only reads.
+	providerVersion: z.union([z.literal(1), z.literal(2)]).optional(),
 	mode: z.enum(["personal", "solo", "shared"]),
 	search: z.string().trim().min(1).max(200).optional(),
 	groupId: z.uuid().optional(),
@@ -64,6 +66,7 @@ export const WatchHistoryBrowseSessionsQuerySchema = z
 	.superRefine(validateFilters);
 export const WatchHistoryBrowseOptionsQuerySchema = z.strictObject({
 	mode: z.literal("shared"),
+	providerVersion: filters.providerVersion,
 	limit: filters.limit,
 	cursor: filters.cursor,
 });

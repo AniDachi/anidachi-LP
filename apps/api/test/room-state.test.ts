@@ -1053,3 +1053,18 @@ class RoomSourceMemoryStorage {
     return closure(this as unknown as DurableObjectTransaction);
   }
 }
+
+describe("Netflix room source admission", () => {
+  it("accepts canonical Netflix state and pins provider across episode changes", () => {
+    const room = new RoomState("netflix-room"); room.join(participant("host", "host"));
+    const source = (id: string): WatchSourceDescriptor => ({ provider: "netflix", sourceUrl: `https://www.netflix.com/watch/${id}`, canonicalUrl: `https://www.netflix.com/watch/${id}`, videoFingerprint: `netflix|watch/${id}`, title: "Netflix episode" });
+    const first = source("70196259");
+    expect(room.updateHostState("host", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(true);
+    const next = source("70196260");
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), next).sourceChanged).toBe(true);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, provider: "crunchyroll" }).accepted).toBe(false);
+    const snapshot = room.snapshot;
+    if (snapshot.type !== "ROOM_SNAPSHOT") throw Error("unexpected snapshot");
+    expect(snapshot.source?.provider).toBe("netflix");
+  });
+});
