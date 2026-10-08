@@ -9426,9 +9426,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/netflix/adapter.ts": {
-    "mtime": 1791419573.0477307,
-    "seen": 1791422025.2373528,
-    "ast_hash": "86d3b2752fd3a3f512ff3092686b18cd",
+    "mtime": 1791424843.0744472,
+    "seen": 1791424847.3034172,
+    "ast_hash": "d99cab15f885f2a20728ff40bc32879a",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/netflix/bridge-client.ts": {
@@ -9550,5 +9550,17 @@
     "seen": 1791422111.398016,
     "ast_hash": "",
     "semantic_hash": "ee5b1fde367f0958d0570530252f3850"
+  },
+  "apps/extension/src/source-adapters/netflix/player-chrome.ts": {
+    "mtime": 1791424757.8444476,
+    "seen": 1791424770.408919,
+    "ast_hash": "93cdd2826edd7217637741be5b474447",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/netflix/player-chrome.test.ts": {
+    "mtime": 1791424843.0744445,
+    "seen": 1791424847.3034198,
+    "ast_hash": "f0ca6ddc7aaf80e657e8b0e8a7340c8c",
+    "semantic_hash": ""
   }
 }
