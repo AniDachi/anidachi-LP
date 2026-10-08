@@ -4,7 +4,7 @@ const trustItems = [
   { icon: Shield, label: "Secure Stripe checkout" },
   {
     icon: CheckCircle2,
-    label: "Everyone keeps their own Crunchyroll or YouTube login",
+    label: "Everyone keeps their own Crunchyroll, YouTube or Netflix login",
   },
   { icon: Sparkles, label: "Cancel renewal from your account" },
 ];

@@ -2729,7 +2729,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		const expectedOwnerUserId = participant?.id;
 		if (!expectedOwnerUserId) return;
 		const definition = getDefinitionForProvider(adapter.provider);
-		if (!definition?.historyPolicy) return;
+		if (!definition?.historyPolicy || definition.provider === "generic") return;
+		const historyProvider = definition.provider;
 		const pageHistory = createWatchHistoryPageResolver({ send: requestWatchHistory });
 		const closeHistoryPage = () => pageHistory.suspendCatalogs();
 		window.addEventListener("pagehide", closeHistoryPage);
@@ -2740,7 +2741,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		const controller = createWatchHistoryController({
 			onPersisted: pageHistory.resolve,
 			isOwnerCurrent: (owner) => participantRef.current?.id === owner,
-			getProvider: () => definition.id === "youtube" ? "youtube" : "crunchyroll",
+			getProvider: () => historyProvider,
 			getObservation: (preferences) =>
 				definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
 			getRoomActive: () =>

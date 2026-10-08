@@ -39,7 +39,7 @@ const faq = [
   {
     question: "Can AniDachi sync Netflix anime?",
     answer:
-      "No — AniDachi does not sync Netflix. It supports Crunchyroll and YouTube watchrooms. If your anime is on Netflix only (some films and select series), use Teleparty or Netflix's regional alternatives. For most popular anime catalogs, Crunchyroll plus AniDachi is the correct stack; for YouTube videos use AniDachi's YouTube watchrooms.",
+      "Yes. AniDachi supports Netflix, Crunchyroll and YouTube watchrooms in desktop Chrome. Each person plays the same title through their own provider access; AniDachi adds live sync, chat, reactions and calls.",
   },
   {
     question: "Which is better for anime watch parties, AniDachi or Netflix Teleparty?",

@@ -934,7 +934,8 @@ function normalizeRoomSourceUpdate(
   }
 	if (
 		candidate.provider !== "crunchyroll" &&
-		candidate.provider !== "youtube"
+		candidate.provider !== "youtube" &&
+		candidate.provider !== "netflix"
 	) {
     return null;
   }
@@ -954,7 +955,8 @@ function normalizeWatchSourceDescriptor(
 ): NormalizedWatchSourceDescriptor | null {
 	if (
 		candidate.provider !== "crunchyroll" &&
-		candidate.provider !== "youtube"
+		candidate.provider !== "youtube" &&
+		candidate.provider !== "netflix"
 	) {
     return null;
   }

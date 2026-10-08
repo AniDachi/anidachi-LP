@@ -36,7 +36,7 @@ const faq = [
   {
     question: "Is AniDachi only for Crunchyroll?",
     answer:
-      "No. AniDachi supports live rooms on Crunchyroll and full youtube.com/watch pages. Your own Plus/Pro access and recording permission enable personal history, with a separate YouTube recording toggle. Netflix, Disney+, and similar services are not supported.",
+      "No. AniDachi supports live rooms on Crunchyroll and full youtube.com/watch pages. Your own Plus/Pro access and recording permission enable personal history, with a separate YouTube recording toggle. Netflix is supported; Disney+ and similar services are not supported.",
   },
 ];
 

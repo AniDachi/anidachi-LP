@@ -1742,3 +1742,15 @@ function mockLocation(url: string): void {
     value: new URL(url),
   });
 }
+
+it("preserves Netflix stable identity in durable personal progress without CR pending resolution", async () => {
+  const identity = { kind: "episode" as const, providerSeriesId: "10", providerSeasonIdentifier: "20", providerEpisodeIdentifier: "30" };
+  const fixture = createFixture({ getProvider: () => "netflix", getObservation: (_preferences, observation) => ({ ...observation,
+    provider: "netflix", providerLabel: "Netflix", netflixIdentity: identity, titleKey: "netflix:series:10", episodeKey: "netflix:episode:30",
+    seasonKey: "netflix:season:20", sourceUrl: "https://www.netflix.com/watch/30" }) });
+  await fixture.controller.start(); fixture.setTime(11); await fixture.controller.observe("heartbeat");
+  expect(fixture.enqueued.at(-1)).toMatchObject({ provider: "netflix", netflixIdentity: identity, titleKey: "netflix:series:10" });
+  expect(fixture.enqueued.at(-1)).not.toHaveProperty("crunchyrollIdentity");
+  expect(fixture.enqueued.at(-1)).not.toHaveProperty("identityPending");
+  await fixture.controller.dispose();
+});

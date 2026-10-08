@@ -275,7 +275,7 @@ export function CheckoutSessionStatus({
 
 			{isSynced ? (
 				<p className={styles.nextStep}>
-					Ready to watch? Open Crunchyroll or YouTube and create a room from the
+					Ready to watch? Open Crunchyroll, YouTube or Netflix and create a room from the
 					AniDachi extension.
 				</p>
 			) : null}

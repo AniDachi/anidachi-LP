@@ -17,6 +17,7 @@ import {
   flushWatchHistoryInBackground,
   handleWatchHistoryAuthSessionChange,
   isWatchHistoryMessage,
+  isWatchHistorySenderAllowed,
   parseWatchHistoryBootstrapData,
   reconcileWatchHistoryThenDrain,
   usesStoredWatchHistorySession,
@@ -150,7 +151,7 @@ describe("watch history v2 client", () => {
       getCurrentSession: async () => currentSession,
       storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = structuredClone(value); } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
       fetch: async (input) => {
-        expect(String(input)).toContain("/api/watch-history/v3/capacity");
+        expect(String(input)).toContain("/api/watch-history/v3/capacity?capacityVersion=2");
         if (variant === "session") currentSession = { ...session, user: { ...session.user, id: other } };
         return Response.json({ capacityVersion: 1, ownerUserId: variant === "owner" ? other : owner,
           accountGeneration: variant === "generation" ? 2 : 1, serverTime: "2026-09-09T00:00:00.000Z",
@@ -1402,7 +1403,7 @@ describe("watch history v2 client", () => {
     expect(message).not.toHaveProperty("ownerUserId");
     await expect(client.handle(message)).resolves.toEqual({ ok: false, status: "retryable" });
     expect(fetchImpl).toHaveBeenCalledWith(
-      "http://localhost:3003/api/watch-history/v3?limit=20",
+      "http://localhost:3003/api/watch-history/v3?providerVersion=2&limit=20",
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer access-token", "x-anidachi-history-owner": session.user.id }),
       }),
@@ -2756,7 +2757,7 @@ describe("watch history v2 client", () => {
     let resolveDrain: (() => void) | undefined;
     const drain = new Promise<void>((resolve) => { resolveDrain = resolve; });
     const fetchImpl = vi.fn(async (url: string) => {
-      if (url.endsWith("/api/watch-history/v3")) return new Response("offline", { status: 503 });
+      if (new URL(url).pathname.endsWith("/api/watch-history/v3")) return new Response("offline", { status: 503 });
       await drain;
       return new Response(JSON.stringify(progressAck(event.clientEventId)));
     });
@@ -2941,3 +2942,16 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
   isHistoryRecordingEnabled: async () => true,
 }));
+
+
+it("allows Netflix history capture only from this extension in a canonical top-level watch tab", () => {
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+  try {
+    const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
+    const sender = { id: "test-extension", url: "https://www.netflix.com/watch/30", tab: { id: 8 }, frameId: 0 } as chrome.runtime.MessageSender;
+    expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
+    for (const url of ["https://www.netflix.com/browse", "https://www.netflix.com.evil/watch/30", "https://user@www.netflix.com/watch/30", "http://www.netflix.com/watch/30"]) expect(isWatchHistorySenderAllowed(message, { ...sender, url })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, frameId: 1 })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, id: "foreign-extension" })).toBe(false);
+  } finally { vi.unstubAllGlobals(); }
+});

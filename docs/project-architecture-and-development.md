@@ -32,6 +32,8 @@ Read domain-specific documents when the task touches that area:
 - `docs/experimental-features.md` for P2P media and experimental extension
   behavior.
 - `docs/shared-watch-progress-tracker.md` for the planned watch progress model.
+- `docs/netflix-adapter-notes.md` and `docs/netflix-staging-verification.md` for
+  the October 8 Netflix candidate, compatibility and pending staging acceptance.
 - `apps/web/docs/seo-content-guidelines.md` for SEO/content pages.
 
 Historical execution plans live in `docs/superpowers/plans/`. They explain why
@@ -338,7 +340,8 @@ The extension runs as a content-script overlay on supported video pages.
 
 Current responsibilities:
 
-- detect YouTube and Crunchyroll video players;
+- detect YouTube, Crunchyroll and Netflix video players (Netflix is the October 8
+  staging candidate; delivered acceptance is tracked separately);
 - mount an isolated Shadow DOM overlay into the video/player container;
 - keep the overlay visible in fullscreen;
 - show the `A` menu and compact room controls;
@@ -411,6 +414,16 @@ Current ownership:
   group membership;
 - Worker may broadcast live progress inside an active room, but durable progress
   belongs to Supabase.
+
+The Netflix candidate uses provider IDs for series/season/episode identity and a
+separate movie key; it never derives a Crunchyroll identity from Netflix metadata.
+Its MAIN-world bridge isolates the observed undocumented Netflix player API,
+checks route/player/video generations and suspends history/control in unsafe or
+unknown phases. The existing background writer, access leases, account generation,
+catalog fencing and owner-private library remain authoritative. Default v1 reads
+exclude Netflix before counts/pagination; new popup, website SSR/client and browse
+consumers opt into `providerVersion=2`. Capacity v2 adds Netflix's 200-title bucket
+while the v1 shape stays exact. See the [adapter notes](netflix-adapter-notes.md).
 
 Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work
 adds bounded server-side search, date,

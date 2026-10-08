@@ -37,7 +37,7 @@ const rows: { feature: string; values: Record<Product, string> }[] = [
 	{
 		feature: "Where you watch",
 		values: {
-			anidachi: "Crunchyroll + YouTube",
+			anidachi: "Crunchyroll + YouTube + Netflix",
 			teleparty: "YouTube, Netflix + more",
 			crunchyrollParty: "Crunchyroll",
 			discord: "Shared app or screen",

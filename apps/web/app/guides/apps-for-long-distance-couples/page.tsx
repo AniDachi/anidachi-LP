@@ -131,7 +131,7 @@ export default function AppsForLongDistanceCouplesPage() {
       <p className="mb-6 leading-relaxed text-ani-muted">
         That phrase is the same list: a call app plus a way to watch. AniDachi
         is the watch half for Crunchyroll and YouTube. It does not replace your
-        messages, and it does not sync Netflix.
+        messages, and it also syncs Netflix.
       </p>
       <SeoGuideRelated
         links={[

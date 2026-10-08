@@ -142,7 +142,7 @@ test("malformed RPC rows fail closed instead of allowing room admission", () => 
       {
         outcome: "conflict",
         room_record: null,
-        active_room: { ...activeRoom, provider: "netflix" },
+        active_room: { ...activeRoom, provider: "amazon" },
       },
     ],
     [
@@ -208,4 +208,11 @@ test("room creation reports an active assignment without implicitly departing it
 	assert.doesNotMatch(source, /handleActiveRoomRecoveryDeparture/);
 	assert.doesNotMatch(source, /syncParticipant(?:Departure|Detach)ToWorker/);
 	assert.doesNotMatch(source, /active-session\/depart/);
+});
+
+
+test("active assignment conflict can describe a Netflix room", () => {
+  const result = parseActiveRoomCreateRpcResult([{ outcome: "conflict", room_record: null, active_room: { ...activeRoom, provider: "netflix" } }]);
+  assert.equal(result.outcome, "conflict");
+  if (result.outcome === "conflict") assert.equal(result.activeRoom.provider, "netflix");
 });

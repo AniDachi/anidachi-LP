@@ -7,11 +7,13 @@ import {
 	WatchHistoryResponseMetaSchema,
 } from "./watch-history";
 
+import { historyEpisodeSourceMatches, historyReadKeyMatchesProvider } from "./history-provider-validation";
+
 const Key = z.string().trim().min(1).max(220);
 export const WATCH_HISTORY_GRID_PAGE_SIZE = 50;
 
 export const WatchHistoryGridQuerySchema = z.strictObject({
-	provider: z.literal("crunchyroll"),
+	provider: z.enum(["crunchyroll", "netflix"]),
 	titleKey: Key,
 	seasonKey: Key.optional(),
 	limit: z
@@ -21,6 +23,10 @@ export const WatchHistoryGridQuerySchema = z.strictObject({
 		.max(WATCH_HISTORY_GRID_PAGE_SIZE)
 		.default(WATCH_HISTORY_GRID_PAGE_SIZE),
 	cursor: z.string().min(1).max(2048).optional(),
+}).superRefine((value, context) => {
+  if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
+    (value.seasonKey !== undefined && !historyReadKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
+    context.addIssue({ code: "custom", message: "Grid query must match provider" });
 });
 
 // Classification requires an explicit provider group label. In particular,
@@ -47,7 +53,7 @@ export const WatchHistoryGridEpisodeSchema = z.strictObject({
 	sourceUrl: z
 		.string()
 		.max(2048)
-		.regex(/^https:\/\/www\.crunchyroll\.com\/watch\/[A-Za-z0-9_-]+$/),
+		.regex(/^https:\/\/www\.(?:crunchyroll\.com\/watch\/[A-Za-z0-9_-]+|netflix\.com\/watch\/[1-9][0-9]{0,19})$/),
 	history: WatchHistoryEpisodeSchema.extend({
 		sessions: WatchHistoryEpisodeSchema.shape.sessions.max(0),
 	}).nullable(),
@@ -56,7 +62,7 @@ export const WatchHistoryGridEpisodeSchema = z.strictObject({
 export const WatchHistoryGridResponseSchema = z
 	.strictObject({
 		meta: WatchHistoryResponseMetaSchema,
-		provider: z.literal("crunchyroll"),
+		provider: z.enum(["crunchyroll", "netflix"]),
 		titleKey: Key,
 		state: WatchCatalogStateSchema,
 		revision: z.string().min(1).max(64).nullable(),
@@ -70,6 +76,19 @@ export const WatchHistoryGridResponseSchema = z
 		nextCursor: z.string().min(1).max(2048).nullable(),
 	})
 	.superRefine((value, context) => {
+		if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
+		  (value.seasonKey !== null && !historyReadKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
+		  context.addIssue({ code: "custom", message: "Grid identity must match provider" });
+		for (const season of value.seasons) {
+		  if (!historyReadKeyMatchesProvider(value.provider, season.seasonKey, ["season"]) ||
+		    (season.nextEpisode && (season.nextEpisode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches(value.provider, season.nextEpisode))))
+		    context.addIssue({ code: "custom", message: "Grid season must match provider" });
+		}
+		for (const episode of value.episodes) {
+		  if (!historyEpisodeSourceMatches(value.provider, episode) ||
+		    (episode.history && !historyEpisodeSourceMatches(value.provider, episode.history)))
+		    context.addIssue({ code: "custom", message: "Grid episode source must match provider" });
+		}
 		if (
 			value.state !== "complete" &&
 			(value.revision ||
