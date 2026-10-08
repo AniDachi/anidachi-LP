@@ -4,12 +4,10 @@ import { getSession, requireAuth } from "@/lib/anidachi-auth/session";
 import {
   getRoomById,
   getUserById,
-  getRoomMemberCount,
   isRoomMember,
 } from "@/lib/anidachi-auth/db";
-import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
+import { RoomInviteShell as Shell, RoomInviteView } from "./room-invite-view";
 import { Button } from "@/components/ui/button";
-import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ExtensionCheck } from "./extension-check";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
@@ -32,19 +30,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Watchroom ${roomId} — AniDachi`,
     robots: { index: false, follow: false },
   };
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthPageShell maxWidth="max-w-md">
-      <AuthPageCard>
-        <div className="mb-6 flex justify-center">
-          <AnidachiLogo size={48} />
-        </div>
-        {children}
-      </AuthPageCard>
-    </AuthPageShell>
-  );
 }
 
 export default async function RoomPage({ params, searchParams }: Props) {
@@ -79,9 +64,8 @@ export default async function RoomPage({ params, searchParams }: Props) {
     );
   }
 
-  const [host, memberCount, alreadyMember] = await Promise.all([
+  const [host, alreadyMember] = await Promise.all([
     getUserById(room.host_user_id),
-    getRoomMemberCount(roomId),
     session ? isRoomMember(roomId, session.userId) : Promise.resolve(false),
   ]);
 
@@ -119,9 +103,6 @@ export default async function RoomPage({ params, searchParams }: Props) {
               {host?.display_name ?? "Unknown"}
             </span>
           </span>
-          <span>
-            Members: <span className="font-medium text-ani-text">{memberCount}</span>
-          </span>
         </div>
         <ExtensionCheck initialMobile={initialMobile} />
         <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
@@ -130,53 +111,19 @@ export default async function RoomPage({ params, searchParams }: Props) {
     );
   }
 
-  const ctaLabel = launchUrl ? "Open watchroom" : "Join room";
-  const roomSubtitle = room.episode_id ?? (launchUrl ? "Ready to open in your video tab" : null);
+  const roomSubtitle = room.episode_id ?? null;
 
   return (
-    <Shell>
-      <div className="mb-1 flex items-center gap-2">
-        <span
-          className={`inline-block h-2 w-2 rounded-full ${
-            room.status === "live" ? "bg-brand-orange" : "bg-brand-orange/50"
-          }`}
-        />
-        <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
-          {room.status === "live" ? "Live" : "Lobby"}
-        </span>
-      </div>
-
-      <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">{roomTitle}</h1>
-      {roomSubtitle && <p className="mt-1 text-sm text-ani-muted">{roomSubtitle}</p>}
-
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-ani-muted">
-        <span>
-          Host:{" "}
-          <span className="font-medium text-ani-text">{host?.display_name ?? "Unknown"}</span>
-        </span>
-        <span>
-          Members: <span className="font-medium text-ani-text">{memberCount}</span>
-        </span>
-      </div>
-
-      <form action={`/api/rooms/${roomId}/join`} method="POST" className="mt-6">
-        <Button type="submit" variant="cream" size="control" className="w-full">
-          {ctaLabel}
-        </Button>
-      </form>
-
-      <RoomMobileHandoff
-        variant={isParticipant && launchUrl ? "joined" : "ready"}
-        initialMobile={initialMobile}
-      />
-
-      {isParticipant && launchUrl && (
-        <p className="mt-3 text-center text-xs text-ani-muted">
-          You&apos;re already in this room — opening it relaunches your video tab.
-        </p>
-      )}
-
-      <ExtensionCheck initialMobile={initialMobile} />
-    </Shell>
+    <RoomInviteView
+      status={room.status}
+      roomTitle={roomTitle}
+      roomSubtitle={roomSubtitle}
+      hostName={host?.display_name ?? "Unknown"}
+      sourceProvider={source?.source.provider}
+      joinAction={`/api/rooms/${roomId}/join`}
+      isParticipant={isParticipant}
+      hasLaunchUrl={Boolean(launchUrl)}
+      initialMobile={initialMobile}
+    />
   );
 }
