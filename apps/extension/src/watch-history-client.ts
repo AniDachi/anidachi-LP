@@ -1904,7 +1904,7 @@ function browseReadRevision(partition: WatchHistoryAccountPartition, input: Brow
 }
 
 function browsePath(command: BrowseCommand, input: BrowseInput): string {
-  const query = new URLSearchParams({ providerVersion: "2" });
+  const query = new URLSearchParams();
   const values = input as Record<string, unknown>;
   for (const key of [
     "providerVersion",
