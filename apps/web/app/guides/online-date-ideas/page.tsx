@@ -77,6 +77,9 @@ export default function OnlineDateIdeasPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Online date ideas from two computers</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           An online date is one activity you both start from your own

@@ -9564,9 +9564,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/anime-watchlist/page.tsx": {
-    "mtime": 1791473521.9548538,
-    "seen": 1791473766.329557,
-    "ast_hash": "0ca8d488dfcb0872fde8a3560fdb9ba2",
+    "mtime": 1791474831.843279,
+    "seen": 1791474922.131505,
+    "ast_hash": "89cbfb774d99c342427053b8f9a5562b",
     "semantic_hash": ""
   },
   "apps/web/app/guides/chrome-watch-party/page.tsx": {
@@ -9582,15 +9582,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-screen-share-black-screen/page.tsx": {
-    "mtime": 1791473521.9576209,
-    "seen": 1791473766.32956,
-    "ast_hash": "0d41274e4e43d8a3c29308f182093406",
+    "mtime": 1791474833.7034814,
+    "seen": 1791474922.1315079,
+    "ast_hash": "233a7628e23bcb45c21905fcc32e64f1",
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-screen-share-not-working/page.tsx": {
-    "mtime": 1791473521.9577446,
-    "seen": 1791473766.329561,
-    "ast_hash": "402bd48b2b5026278f70127693531681",
+    "mtime": 1791474836.1733975,
+    "seen": 1791474922.131509,
+    "ast_hash": "7fad4fb81ebbd5f18dbbf87d59848ac7",
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-watch-together-activity/page.tsx": {
@@ -9624,15 +9624,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/long-distance-date-night-ideas/page.tsx": {
-    "mtime": 1791473521.959541,
-    "seen": 1791473766.329567,
-    "ast_hash": "f9a564c23e007af315815d1e2d37d993",
+    "mtime": 1791474840.3691344,
+    "seen": 1791474922.13151,
+    "ast_hash": "1c2d812f5f19169e2985fb035d320ed0",
     "semantic_hash": ""
   },
   "apps/web/app/guides/online-date-ideas/page.tsx": {
-    "mtime": 1791473521.9598622,
-    "seen": 1791473766.329569,
-    "ast_hash": "32bc3b2b6491a4b3c6423ce24fb7622e",
+    "mtime": 1791474841.990965,
+    "seen": 1791474922.13151,
+    "ast_hash": "865979af9094012f6d24b8836702f968",
     "semantic_hash": ""
   },
   "apps/web/app/guides/resume-anime/page.tsx": {
@@ -9642,15 +9642,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/romance-anime-dubbed/page.tsx": {
-    "mtime": 1791473521.9600549,
-    "seen": 1791473766.32957,
-    "ast_hash": "4e00e7ab81d92ad61179cc5879c38cf6",
+    "mtime": 1791474842.8655448,
+    "seen": 1791474922.131511,
+    "ast_hash": "c1e3f177d3b34821e428b52f3adec9ef",
     "semantic_hash": ""
   },
   "apps/web/app/guides/subbed-anime/page.tsx": {
-    "mtime": 1791473521.9603572,
-    "seen": 1791473766.32957,
-    "ast_hash": "9e6d6b2b715d5bb701e9e0d2a73fdbdb",
+    "mtime": 1791474842.9873357,
+    "seen": 1791474922.131511,
+    "ast_hash": "c46381a442c9f10c2dc70304d63cafa5",
     "semantic_hash": ""
   },
   "apps/web/app/virtual-movie-night/page.tsx": {
