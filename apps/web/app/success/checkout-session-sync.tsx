@@ -19,6 +19,7 @@ import {
 	formatBillingTime,
 	billingDisplayValidityMs,
 } from "@/lib/billing-view";
+import { INSTALL_CTA_LABEL } from "@/lib/install-cta";
 
 export type SyncState = {
 	status: "syncing" | "synced" | "error" | "missing" | "inactive";
@@ -268,7 +269,7 @@ export function CheckoutSessionStatus({
 				</Button>
 				{isSynced ? (
 					<Link href="/extension" className={styles.secondary}>
-						Download for Chrome
+						{INSTALL_CTA_LABEL}
 					</Link>
 				) : null}
 			</div>

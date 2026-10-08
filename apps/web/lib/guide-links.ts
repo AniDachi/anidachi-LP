@@ -1008,6 +1008,56 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "Long Distance Date Night Ideas",
 		tags: ["template-c", "long-distance", "pillar-long-distance"],
 	},
+	{
+		href: "/guides/how-to-watch-netflix-together",
+		label: "How to Watch Netflix Together",
+		tags: ["template-c", "how-to-core", "pillar-netflix"],
+	},
+	{
+		href: "/guides/watch-netflix-together",
+		label: "Watch Netflix Together",
+		tags: ["template-c", "pillar-netflix"],
+	},
+	{
+		href: "/guides/how-to-watch-netflix-with-friends",
+		label: "How to Watch Netflix with Friends",
+		tags: ["template-c", "how-to-core", "pillar-netflix"],
+	},
+	{
+		href: "/guides/does-netflix-have-a-watch-party",
+		label: "Does Netflix Have a Watch Party?",
+		tags: ["template-c", "pillar-netflix"],
+	},
+	{
+		href: "/guides/netflix-group-watch",
+		label: "Netflix Group Watch",
+		tags: ["template-c", "pillar-netflix"],
+	},
+	{
+		href: "/guides/netflix-party-extension",
+		label: "Netflix Party Extension",
+		tags: ["template-c", "pillar-netflix"],
+	},
+	{
+		href: "/guides/teleparty-netflix",
+		label: "Teleparty Netflix",
+		tags: ["template-c", "pillar-netflix"],
+	},
+	{
+		href: "/guides/netflix-teleparty",
+		label: "Netflix Teleparty",
+		tags: ["template-c", "pillar-netflix"],
+	},
+	{
+		href: "/guides/how-to-screen-share-netflix-on-discord",
+		label: "How to Screen Share Netflix on Discord",
+		tags: ["template-c", "how-to-core", "discord", "pillar-netflix"],
+	},
+	{
+		href: "/guides/netflix-movie-night",
+		label: "Netflix Movie Night",
+		tags: ["template-c", "pillar-netflix"],
+	},
 ];
 
 export function getGuideLinks({

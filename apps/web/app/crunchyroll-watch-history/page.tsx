@@ -16,7 +16,7 @@ const HISTORY_HELP =
 export const metadata: Metadata = {
 	title: "Crunchyroll Watch History — Where It Is and What It Stores",
 	description:
-		"Crunchyroll watch history is under your avatar, then History. It lists episodes. Continue Watching is the homepage row of series still in progress.",
+		"Crunchyroll watch history is under your avatar, then History. It lists episodes. Continue Watching is separate. AniDachi keeps its own progress when you clear that list.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Crunchyroll Watch History",
@@ -40,26 +40,26 @@ const faq = [
 			"On the Crunchyroll website, click your avatar and choose History. That page lists episodes you opened. The trash icon deletes one episode. Clear History deletes the list.",
 	},
 	{
-		question: "Is Continue Watching the same as watch history?",
+		question: "Is Crunchyroll watch history the same as Continue Watching?",
 		answer:
 			"No. Continue Watching is the homepage row of series still in progress. History is the episode list under your avatar. Deleting an episode from History can change what that row offers.",
+	},
+	{
+		question: "Does clearing Crunchyroll history delete AniDachi progress?",
+		answer:
+			"No. AniDachi stores episode progress from your own Crunchyroll or YouTube player on your AniDachi account. Clearing Crunchyroll History leaves that record as it is.",
 	},
 	{
 		question: "Does watch history include payments?",
 		answer:
 			"No. History on this page is episodes. Membership and payment settings are elsewhere in the account.",
 	},
-	{
-		question: "Does AniDachi read Crunchyroll watch history?",
-		answer:
-			"No. AniDachi Watch Library stores episode progress from watchrooms on your AniDachi account. Cleaning Crunchyroll History leaves that library as it is.",
-	},
 ];
 
 const tocHeadings: TocHeading[] = [
 	{ id: "answer", label: "Short answer", level: 2 },
 	{ id: "row", label: "History and Continue Watching", level: 2 },
-	{ id: "library", label: "AniDachi Watch Library", level: 2 },
+	{ id: "library", label: "Versus AniDachi", level: 2 },
 	{ id: "faq", label: "FAQ", level: 2 },
 ];
 
@@ -137,28 +137,43 @@ export default function CrunchyrollWatchHistoryPage() {
 				id="library"
 				className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text"
 			>
-				AniDachi Watch Library
+				Crunchyroll watch history versus AniDachi
 			</h2>
-			<p className="mb-8 leading-relaxed text-ani-muted">
-				<Link
-					href="/account/watch-library"
-					className="text-brand-orange hover:underline"
-				>
-					Watch Library
+			<p className="mb-4 leading-relaxed text-ani-muted">
+				Crunchyroll History is Crunchyroll’s episode list. AniDachi does not
+				read it, import it, or delete it.{" "}
+				<Link href="/anime-tracker" className="text-brand-orange hover:underline">
+					AniDachi
 				</Link>{" "}
-				is episode progress from Crunchyroll and YouTube watchrooms on your
-				AniDachi account. Recording and editing need your own Plus or Pro
-				access. Saved history, Resume, and deletion stay available on Free.
-				Install from{" "}
-				<Link href="/extension" className="text-brand-orange hover:underline">
-					the install page
+				records the title you are playing in desktop Chrome, on your AniDachi
+				account, including a full YouTube watch page. Clearing the Crunchyroll
+				list does not clear that record.
+			</p>
+			<p className="mb-8 leading-relaxed text-ani-muted">
+				Recording and editing need your own Plus or Pro access, including a
+				trial, plus permission in the extension. YouTube recording is a
+				separate switch. Free can open saved history, Resume, and delete it.
+				Details are on{" "}
+				<Link href="/pricing" className="text-brand-orange hover:underline">
+					pricing
 				</Link>
-				. Picking a saved episode back up is{" "}
+				. Install from{" "}
+				<Link href="/extension" className="text-brand-orange hover:underline">
+					/extension
+				</Link>
+				, then pick a saved episode back up on{" "}
 				<Link
 					href="/guides/resume-anime"
 					className="text-brand-orange hover:underline"
 				>
 					resume anime
+				</Link>
+				. A plan of titles you have not started is an{" "}
+				<Link
+					href="/guides/anime-watchlist"
+					className="text-brand-orange hover:underline"
+				>
+					anime watchlist
 				</Link>
 				.
 			</p>

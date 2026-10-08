@@ -270,7 +270,7 @@ test("Free account without billing has no cancellation action", async () => {
 	assert.match(container.textContent ?? "", /Up to 4 people/);
 	assert.equal(
 		container.querySelector('a[href="/extension#using"]')?.textContent?.trim(),
-		"Download for Chrome",
+		"Start a Watchroom",
 	);
 	assert.equal(
 		container.querySelector('a[href="/pricing"]')?.textContent?.trim(),

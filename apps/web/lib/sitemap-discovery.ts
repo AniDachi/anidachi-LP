@@ -89,6 +89,8 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/discord-watch-party" ||
     urlPath === "/sub-vs-dub" ||
     urlPath === "/watch-party-app" ||
+    urlPath === "/netflix-watch-party" ||
+    urlPath === "/netflix-party" ||
     urlPath === "/pricing"
   ) {
     return { changeFrequency: "weekly", priority: 0.9 };

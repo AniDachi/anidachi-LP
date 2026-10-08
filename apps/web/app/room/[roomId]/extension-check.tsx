@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Copy, Info, Share2 } from "lucide-react";
-import {
-  INSTALL_CTA_LABEL,
-  INSTALL_HUB_PATH,
-  installHubHref,
-} from "@/lib/install-cta";
+import { INSTALL_HUB_PATH, installHubHref } from "@/lib/install-cta";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 
@@ -62,7 +58,7 @@ export function ExtensionCheck({ initialMobile = false }: { initialMobile?: bool
                 href={installHref}
                 className="font-semibold text-ani-text underline underline-offset-2 hover:text-ani-primary"
               >
-                {INSTALL_CTA_LABEL}
+                Add to Chrome
               </a>{" "}
               if you haven&apos;t installed it yet.
               <ol className="mt-3 list-decimal space-y-1 pl-5">
