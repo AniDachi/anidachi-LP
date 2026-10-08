@@ -112,6 +112,9 @@ export default function LongDistanceDateNightIdeasPage() {
         aboveFoldCta
       >
         <SeoGuideTitle>Long distance date night ideas for one evening</SeoGuideTitle>
+        <h2 id="answer" className="scroll-mt-24">
+          Short answer
+        </h2>
         <SeoGuideAnswer>
           <p>
             Long distance date night ideas come down to one block of time, not

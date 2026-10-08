@@ -106,6 +106,9 @@ export default function RomanceAnimeDubbedPage() {
         aboveFoldCta
       >
         <SeoGuideTitle>Romance anime dubbed for a live room</SeoGuideTitle>
+        <h2 id="answer" className="scroll-mt-24">
+          Short answer
+        </h2>
         <SeoGuideAnswer>
           <p>
             Romance anime dubbed means the English voice track is the version
