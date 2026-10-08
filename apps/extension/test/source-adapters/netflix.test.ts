@@ -455,6 +455,11 @@ describe("Netflix subscribed adapter", () => {
 			duration: 2800,
 		});
 		expect(events).toContain("phasechange");
+		// A trusted Netflix document can navigate back to browse without a full
+		// reload. Its last valid player snapshot must not record catalog previews.
+		route("/browse");
+		expect(netflixHistoryPolicy.observe({ adapter, preferences: null })).toBeNull();
+		route("/watch/70196260");
 		f.player.play();
 		f.video.dispatchEvent(new Event("play"));
 		await vi.waitFor(() => expect(events).toContain("play"));

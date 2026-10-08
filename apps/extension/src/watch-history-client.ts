@@ -1,6 +1,5 @@
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
-  canonicalizeRoomSourceUrl,
   WatchHistoryCapacityCompatibleSchema,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
@@ -2024,7 +2023,12 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
   if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname)) return false;
-  if (url.hostname === "www.netflix.com" && !canonicalizeRoomSourceUrl(sender.url, "netflix").ok) return false;
+  if (url.hostname === "www.netflix.com") {
+    if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
+    // Trust the document origin, not its initial route: Netflix opens players
+    // from /browse without reloading. The adapter/schema validate watch content;
+    // final progress and catalog cleanup can arrive after returning to /browse.
+  }
   return ["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command);
 }
 
