@@ -2944,14 +2944,59 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
 }));
 
 
-it("allows Netflix history capture only from this extension in a canonical top-level watch tab", () => {
+it("trusts Netflix history messages only from this extension's top-level Netflix document", () => {
   vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
   try {
     const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
     const sender = { id: "test-extension", url: "https://www.netflix.com/watch/30", tab: { id: 8 }, frameId: 0 } as chrome.runtime.MessageSender;
     expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
-    for (const url of ["https://www.netflix.com/browse", "https://www.netflix.com.evil/watch/30", "https://user@www.netflix.com/watch/30", "http://www.netflix.com/watch/30"]) expect(isWatchHistorySenderAllowed(message, { ...sender, url })).toBe(false);
+    for (const url of ["https://www.netflix.com.evil/watch/30", "https://user@www.netflix.com/watch/30", "https://www.netflix.com:8443/browse", "http://www.netflix.com/watch/30"]) expect(isWatchHistorySenderAllowed(message, { ...sender, url })).toBe(false);
     expect(isWatchHistorySenderAllowed(message, { ...sender, frameId: 1 })).toBe(false);
     expect(isWatchHistorySenderAllowed(message, { ...sender, id: "foreign-extension" })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, tab: undefined })).toBe(false);
+    expect(isWatchHistorySenderAllowed({ ...message, command: "list" }, sender)).toBe(false);
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it.each(["https://www.netflix.com/browse", "https://www.netflix.com/browse?jbv=14546747"])(
+  "keeps Netflix history available after SPA navigation from %s",
+  (documentUrl) => {
+    vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+    try {
+      const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
+      // The document may still be identified by its original /browse URL after
+      // opening either a movie or a series. The adapter validates the live route.
+      const sender = { id: "test-extension", url: documentUrl, tab: { id: 8, url: "https://www.netflix.com/watch/14546747?trackId=123" }, frameId: 0 } as chrome.runtime.MessageSender;
+      expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
+      expect(isWatchHistorySenderAllowed(message, { ...sender, tab: { ...sender.tab!, url: undefined } })).toBe(true);
+      expect(isWatchHistorySenderAllowed(message, {
+        ...sender, tab: { ...sender.tab!, url: "https://www.netflix.com/watch/80077368" },
+      })).toBe(true);
+    } finally { vi.unstubAllGlobals(); }
+  },
+);
+
+it("allows Netflix's final history write and catalog cleanup after returning to browse", () => {
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+  try {
+    const sender = { id: "test-extension", url: "https://www.netflix.com/watch/14546747", tab: { id: 8, url: "https://www.netflix.com/browse" }, frameId: 0 } as chrome.runtime.MessageSender;
+    const { crunchyrollIdentity, ...base } = progressEvent();
+    const event = {
+      ...base, provider: "netflix", itemKind: "movie", title: "Movie", titleKey: "netflix:movie:14546747",
+      episodeKey: "netflix:movie:14546747", episodeTitle: null, seasonKey: null,
+      sourceUrl: "https://www.netflix.com/watch/14546747",
+      netflixIdentity: { kind: "movie", providerMovieId: "14546747" }, kind: "source_change",
+    } as const;
+    // These messages finish the previous player session; requiring the tab to
+    // still be on /watch would discard the final progress and catalog release.
+    const messages = [
+      { type: "ANIDACHI_WATCH_HISTORY_V3", command: "observe-progress", expectedOwnerUserId: session.user.id, event, queueForSync: true, flushNow: true },
+      { type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: session.user.id, pageId: "page:netflix", accountGeneration: 1, titleKey: "netflix:series:80057281", revision: 1 },
+      { type: "ANIDACHI_WATCH_HISTORY_V3", command: "flush" },
+    ] as const;
+    for (const message of messages) {
+      expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
+      expect(isWatchHistorySenderAllowed(message, { ...sender, url: "https://www.netflix.com/browse" })).toBe(true);
+    }
   } finally { vi.unstubAllGlobals(); }
 });
