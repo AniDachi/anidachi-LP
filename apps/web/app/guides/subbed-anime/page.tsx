@@ -74,6 +74,9 @@ export default function SubbedAnimePage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Subbed anime when the group can read together</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           Subbed anime is the original audio plus the on-screen text. Use it

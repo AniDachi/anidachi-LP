@@ -77,6 +77,9 @@ export default function DiscordScreenShareBlackScreenPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Discord screen share black screen</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           A Discord screen share black screen means friends see a dark window,

@@ -74,6 +74,9 @@ export default function RomanceAnimeDubbedPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Romance anime dubbed for a live room</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           Romance anime dubbed only works as a shared watch when everyone is

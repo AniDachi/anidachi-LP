@@ -74,6 +74,9 @@ export default function AnimeWatchlistPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Anime watchlist for titles you plan to start</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           An anime watchlist is the set of titles you mean to open later.{" "}

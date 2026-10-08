@@ -80,6 +80,9 @@ export default function LongDistanceDateNightIdeasPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Long distance date night ideas for one evening</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           A long distance date night is one block of time, not a list of apps.

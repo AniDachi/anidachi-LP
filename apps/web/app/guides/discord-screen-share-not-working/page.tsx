@@ -77,6 +77,9 @@ export default function DiscordScreenShareNotWorkingPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Discord screen share not working</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
+        Short answer
+      </h2>
       <SeoGuideAnswer>
         <p>
           Discord screen share not working usually means the share never
