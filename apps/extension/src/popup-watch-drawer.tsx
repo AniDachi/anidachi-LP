@@ -589,9 +589,10 @@ function WatchDrawer({
 	const knownKeys = new Set(known.map(item => pendingTitleKey(item.provider, item.titleKey)));
 	const remaining = {
 		youtube: 20 * Math.max(1, browsing.providers.youtube.pages.length) - known.filter(item => item.provider === "youtube").length,
+		netflix: 20 * Math.max(1, browsing.providers.netflix.pages.length) - known.filter(item => item.provider === "netflix").length,
 		crunchyroll: 20 * Math.max(1, browsing.providers.crunchyroll.pages.length) - known.filter(item => item.provider === "crunchyroll").length,
 	};
-	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll")
+	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix")
 		&& (knownKeys.has(pendingTitleKey(item.provider, item.titleKey)) || remaining[item.provider]-- > 0)).map((item) => {
 		const durable = known.find(
 			(value) =>
@@ -646,7 +647,7 @@ function WatchDrawer({
 		}
 		if (actionGeneration.current === token) setBusy(null);
 	};
-	const openUrl = (url: string, currentTime?: number) =>
+	const openUrl = (url: string, currentTime?: number, provider?: WatchHistoryItem["provider"]) =>
 		void runAction("open", async () => {
 			const token = actionGeneration.current;
 			const generation =
@@ -656,6 +657,7 @@ function WatchDrawer({
 				await client.openUrl(url);
 				return;
 			}
+			if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix") return;
 			const bootstrapped = await requestPopupWatchHistory(client, {
 				type: "ANIDACHI_WATCH_HISTORY_V3",
 				command: "bootstrap",
@@ -674,9 +676,7 @@ function WatchDrawer({
 			const launch = await buildPersonalHistoryResumeUrl({
 				ownerUserId,
 				accountGeneration: data.accountGeneration,
-				provider: new URL(url).hostname.endsWith("youtube.com")
-					? "youtube"
-					: "crunchyroll",
+				provider,
 				sourceUrl: url,
 				currentTime,
 			});
@@ -892,7 +892,7 @@ function WatchDrawer({
 			{items.length ? (
 				<div className="popup-resource-list">
 					{groupWatchHistoryItems(items).map((group) => {
-						if (group.provider !== "youtube" && group.provider !== "crunchyroll") return null;
+						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix") return null;
 						const stream = browsing.providers[group.provider];
 						const count = stream.pages[0]?.history.totalTitleCount;
 						const branch = JSON.stringify([group.provider]);
@@ -958,7 +958,7 @@ function WatchDrawer({
 													pendingTitleKey(item.provider, item.titleKey),
 												)}
 												busy={busy}
-												onOpen={openUrl}
+												onOpen={(url, time) => openUrl(url, time, item.provider)}
 											/>
 										))}
 										{stream.nextCursor && dates.ok ? (
@@ -1125,7 +1125,7 @@ function PopupWatchHistoryItem({
 			.map((match) => [match.episodeKey, match]),
 	);
 	const isSeries =
-		item.provider === "crunchyroll" && item.itemKind === "series";
+		item.itemKind === "series";
 	const fullHistory =
 		input.mode === "personal" && !input.search && !input.from && !input.until;
 	const [chosenSeason, setChosenSeason] = useState<string | null>(() => readPopupHistoryView(ownerUserId, generation).seasons[branch] ?? null);
@@ -1146,7 +1146,7 @@ function PopupWatchHistoryItem({
 			command: "browse-catalog",
 			expectedOwnerUserId: ownerUserId,
 			input: {
-				provider: "crunchyroll",
+				provider: item.provider,
 				titleKey: item.titleKey,
 				...(requestedSeason && requestedSeason !== "__unseasoned__"
 					? { seasonKey: requestedSeason }
@@ -1250,7 +1250,7 @@ function PopupWatchHistoryItem({
 			setChosenSeason(selectedSeason.seasonKey);
 	}, [providerOpen, open, selectedSeason?.seasonKey, chosenSeason, fullHistory, exactCatalog]);
 	const overall =
-		item.itemKind === "movie" && item.provider === "crunchyroll"
+		item.itemKind === "movie" && item.provider !== "youtube"
 			? {
 					label: item.latestActivity.completedAt
 						? "Watched"
@@ -1577,8 +1577,7 @@ function PopupWatchHistoryItem({
 								</p>
 							) : null}
 						</>
-					) : isSeries ? null : item.itemKind === "movie" &&
-						item.provider === "crunchyroll" ? (
+					) : isSeries ? null : item.itemKind === "movie" && item.provider !== "youtube" ? (
 						(() => {
 							const film =
 								matchingEpisodes.find(

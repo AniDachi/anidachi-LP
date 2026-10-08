@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Pricing } from "@/components/pricing";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
-import { SocialProof } from "@/components/social-proof";
 import { StoreReviews } from "@/components/store-reviews";
 import { getPlanPolicy } from "@anidachi/protocol";
 
@@ -13,7 +12,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
 	title: "AniDachi Pricing — Free Chrome Watch Party for Crunchyroll & YouTube",
 	description:
-		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms, and check your trial availability.",
+		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms, and check your trial availability. Netflix is coming soon.",
 	alternates: { canonical: "/pricing" },
 	openGraph: {
 		images: [
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
 
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms.",
+			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
 		url: "/pricing",
 	},
 	twitter: {
@@ -53,7 +52,7 @@ const faq = [
 	},
 	{
 		question: "What's the difference between Plus and Pro?",
-		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll and YouTube.`,
+		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll and YouTube. Netflix is coming soon and is not supported yet.`,
 	},
 	{
 		question: "How does the free trial work?",
@@ -68,7 +67,7 @@ const faq = [
 	{
 		question: "Do I still need Crunchyroll or YouTube?",
 		answer:
-			"Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription.",
+			"Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription. Netflix is coming soon and is not supported yet.",
 	},
 ];
 
@@ -106,13 +105,8 @@ export default function PricingPage() {
 				</nav>
 
 				<Pricing headingLevel={1} showPlanMatrix />
-				<SocialProof />
 				<StoreReviews />
-				<FAQSection
-					title="Pricing FAQ"
-					questions={faq}
-					defaultOpenIndexes={[0]}
-				/>
+				<FAQSection title="Pricing FAQ" questions={faq} />
 				<section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-ani-muted">
 					<p>
 						Looking for how watch parties work? See{" "}

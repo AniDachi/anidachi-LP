@@ -1,3 +1,4 @@
+import { isNetflixArtworkUrl } from "./netflix-artwork";
 import {
 	PersonalWatchProgressRequestSchema,
 	WatchProgressAckSchema,
@@ -40,7 +41,7 @@ export async function applyPersonalWatchProgress(params: {
 			"Update the extension to continue personal history",
 		);
 	const parsed = PersonalWatchProgressRequestSchema.safeParse(params.input);
-	if (!parsed.success)
+	if (!parsed.success || (parsed.data.event.provider === "netflix" && !isNetflixArtworkUrl(parsed.data.event.artworkUrl)))
 		throw new WatchHistoryV3ApiError(
 			400,
 			"INVALID_REQUEST",

@@ -16,7 +16,7 @@ export default function AccountHelpPage() {
         <h1>Get started with AniDachi</h1>
         <p>
           A watch party runs in the Chrome extension, on each person’s own
-          Crunchyroll or YouTube tab. Open a title, then use the same controls
+          Crunchyroll or YouTube tab. Netflix is coming soon. Open a title, then use the same controls
           shown below.
         </p>
       </header>
@@ -24,7 +24,7 @@ export default function AccountHelpPage() {
         <h2>Before the room starts</h2>
         <ul className="help-facts">
           <li>Sign in on Crunchyroll or YouTube with your own account. AniDachi does not share logins.</li>
-          <li>Use a Crunchyroll title or a full youtube.com/watch page. Shorts, embeds, and the homepage do not sync.</li>
+          <li>Use a Crunchyroll title or a full youtube.com/watch page. Netflix is coming soon and is not supported yet. Shorts, embeds, and browse/homepage previews do not sync.</li>
           <li>If the browser blocked autoplay, or an ad paused sync, click Resume sync in the player.</li>
           <li>Join a Plus, Pro, or trial host for free. Creating your own room requires your own Plus or Pro access, including during an active trial.</li>
         </ul>

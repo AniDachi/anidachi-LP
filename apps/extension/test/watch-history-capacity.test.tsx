@@ -29,7 +29,8 @@ describe("history capacity notice", () => {
     expect(new URL(vi.mocked(c.openUrl).mock.calls[0]![0]).pathname).toBe("/account/watch-library");
     used = 99;
     await render(c, "2");
-    expect(container.textContent).toBe("");
+    expect(container.textContent).toContain("Netflix storage unavailable");
+    expect(container.textContent).not.toContain("history full");
   });
   it("does not show old-owner metadata or let a late response restore it", async () => {
     let finish!: (value: WatchHistoryMessageResponse) => void;

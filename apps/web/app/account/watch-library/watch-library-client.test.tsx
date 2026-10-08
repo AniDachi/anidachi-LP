@@ -783,7 +783,7 @@ function installServer(
         ...preferencesFixture,
         preferences: { youtubeHistoryEnabled: init?.method === "PATCH" },
       });
-    if (path.endsWith("/capacity"))
+    if (path.startsWith("/api/watch-history/v3/capacity?"))
       return Response.json(
         capacityFixture(
           history.items.length ? 200 : 199,
@@ -928,7 +928,7 @@ it("storage counts and full warnings follow the platform without refetching or c
     assert.match(storage(), /YouTube 12 \/ 100 videos/);
     assert.match(storage(), /Crunchyroll 200 \/ 200 titles/);
     assert.equal(
-      server.calls.filter((call) => call.path.endsWith("/capacity")).length,
+      server.calls.filter((call) => call.path.startsWith("/api/watch-history/v3/capacity?")).length,
       1,
     );
     assert.equal(server.calls.filter((call) => call.body).length, 0);
@@ -1836,7 +1836,7 @@ it("Crunchyroll filter requests its own first page without paging through YouTub
     assert.equal(query.get("cursor"), null);
     assert.equal(reads[0].headers.get(WATCH_HISTORY_OWNER_HEADER), OWNER_ID);
     assert.equal(server.calls.filter(call => call.path.includes("cursor=youtube-next-page")).length, 0);
-    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 1);
+    assert.equal(server.calls.filter(call => call.path.startsWith("/api/watch-history/v3/capacity?")).length, 1);
   } finally { await unmount(view.root); }
 });
 
@@ -1874,11 +1874,11 @@ it("filtered pagination and refresh keep the platform cursor and do not refetch 
     assert.equal(server.calls.filter(call => call.path.includes("/browse?")).length, 1);
     await click(buttonByText(view.container, "Load more titles"));
     assert.ok(view.container.querySelector('[aria-label="Manage Second series"]'));
-    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 1);
+    assert.equal(server.calls.filter(call => call.path.startsWith("/api/watch-history/v3/capacity?")).length, 1);
     await click(buttonByLabel(view.container, "Refresh history"));
     assert.ok(view.container.querySelector('[aria-label="Manage Second series"]'));
     assert.equal(server.calls.filter(call => call.path.includes("/browse?")).length, 4);
-    assert.equal(server.calls.filter(call => call.path.endsWith("/capacity")).length, 2);
+    assert.equal(server.calls.filter(call => call.path.startsWith("/api/watch-history/v3/capacity?")).length, 2);
     assert.equal(server.calls.filter(call => call.path.startsWith("/api/watch-history/v3?")).length, 0);
   } finally { await unmount(view.root); }
 });
@@ -1929,5 +1929,63 @@ it("platform transitions do not offer stale cards or clear-history actions", asy
     await act(async () => { finish(Response.json(historyFixture())); });
     assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
     assert.equal(view.container.querySelector('summary[aria-label="Library options"]')!.getAttribute("aria-disabled"), "false");
+  } finally { await unmount(view.root); }
+});
+
+function netflixFixture(movie: boolean) {
+  const history = historyFixture();
+  const title = history.items[0];
+  title.provider = "netflix";
+  title.titleKey = movie ? "netflix:movie:101" : "netflix:series:900";
+  title.title = movie ? "Netflix film" : "Netflix show";
+  title.itemKind = movie ? "movie" : "series";
+  title.sourceUrl = "https://www.netflix.com/watch/101";
+  title.artworkUrl = "https://art.nflxso.net/poster.jpg";
+  title.latestActivity.episodeKey = movie ? title.titleKey : "netflix:episode:101";
+  title.seasons = movie ? [] : [{ ...title.seasons[0], seasonKey: "netflix:season:800", episodes: title.seasons[0].episodes.map((ep, index) => ({ ...ep, episodeKey: `netflix:episode:${101 + index}`, seasonKey: "netflix:season:800", sourceUrl: `https://www.netflix.com/watch/${101 + index}` })) }];
+  const editor = editorFixture();
+  editor.provider = "netflix";
+  editor.titleKey = title.titleKey;
+  editor.catalogComplete = movie;
+  editor.episodes = editor.episodes.slice(0, movie ? 1 : 2).map((ep, index) => ({ ...ep, episodeKey: movie ? title.titleKey : `netflix:episode:${101 + index}`, seasonKey: movie ? null : "netflix:season:800", seasonTitle: movie ? null : "Season One", seasonNumber: movie ? null : 1, episodeNumber: movie ? null : index + 1, sourceUrl: `https://www.netflix.com/watch/${101 + index}` })) as typeof editor.episodes;
+  return { history, editor };
+}
+
+it("Netflix movies and shows retain their own provider, editor identity and resume source", async () => {
+  for (const movie of [true, false]) {
+    const { history, editor } = netflixFixture(movie);
+    const server = installServer({ intercept: path => {
+      if (path.includes("/browse?")) return Response.json({ history, matches: [] });
+      if (path.includes("/editor?")) return Response.json(editor);
+      if (path.includes("/capacity?")) return Response.json({ ...capacityFixture(), capacityVersion: 2, providers: { ...capacityFixture().providers, netflix: { used: 200, limit: 200 } } });
+      return undefined;
+    } });
+    const view = await renderClient(history);
+    try {
+      await click(buttonByLabel(view.container, "Netflix"));
+      await waitFor(() => assert.ok(view.container.querySelector(`button[aria-label="Manage ${history.items[0].title}"]`)));
+      assert.ok(server.calls.some(call => call.path.includes("provider=netflix") && call.path.includes("providerVersion=2")));
+      assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Netflix 200 \/ 200 titles.*Netflix history is full/);
+      await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
+      await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
+      assert.equal(Boolean(view.container.querySelector(".wh-season-row")), !movie);
+      if (!movie) assert.match(view.container.textContent ?? "", /Open this title in Netflix/);
+      assert.equal(view.container.querySelector(".wh-detail-cover img")?.getAttribute("src"), "https://art.nflxso.net/poster.jpg");
+      assert.ok(server.calls.some(call => call.path.includes("/editor?provider=netflix") && call.path.includes(encodeURIComponent(history.items[0].titleKey))));
+      await click(buttonByText(view.container, "Resume"));
+      await waitFor(() => assert.equal(new URL(testWindow.location.href).hostname, "www.netflix.com"));
+      assert.equal(new URL(testWindow.location.href).pathname, "/watch/101");
+    } finally { await unmount(view.root); }
+  }
+});
+
+it("legacy capacity shows Netflix unavailable rather than manufacturing zero usage", async () => {
+  const server = installServer();
+  const view = await renderClient();
+  try {
+    await waitFor(() => assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Netflix storage unavailable/));
+    await click(buttonByLabel(view.container, "Netflix"));
+    assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /^Netflix storage unavailable$/);
+    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=2"));
   } finally { await unmount(view.root); }
 });

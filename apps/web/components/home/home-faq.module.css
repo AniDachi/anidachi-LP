@@ -18,6 +18,11 @@
 .more > summary { justify-content: flex-start; gap: 12px; min-height: 44px; width: fit-content; font-size: 14px; font-weight: 500; }
 .more > .columns { margin-top: 16px; }
 
+.compact { padding: 48px 0 0; background: transparent; color: var(--ani-text); scroll-margin-top: 88px; }
+.compact .container h2 { margin-bottom: 8px; font-size: 20px; font-weight: 600; letter-spacing: -0.03em; text-align: left; }
+.compact .columns { grid-template-columns: 1fr; }
+.compact .question summary { min-height: 64px; }
+
 @media (max-width: 767px) {
   .section { padding: 72px 24px 48px; }
   .container h2 { font-size: 34px; margin-bottom: 24px; }

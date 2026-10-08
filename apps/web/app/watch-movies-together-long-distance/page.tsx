@@ -35,12 +35,12 @@ const faq = [
   {
     question: "What is the best app to watch movies together long distance?",
     answer:
-      "Teleparty is the most widely supported option across Netflix, Disney+, Hulu, and Crunchyroll. Rave is a strong free alternative that adds built-in voice and video calling. AniDachi supports Crunchyroll and YouTube live rooms with chat, reactions, and voice/video; async catch-up is coming soon.",
+      "Teleparty is the most widely supported option across Netflix, Disney+, Hulu, and Crunchyroll. Rave is a strong free alternative that adds built-in voice and video calling. AniDachi supports Crunchyroll and YouTube live rooms with chat, reactions, and voice/video. Netflix is coming soon and is not supported yet. Async catch-up is coming soon.",
   },
   {
     question: "Is there a way to watch movies together long distance for free?",
     answer:
-      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi supports Crunchyroll and YouTube watchrooms with a Free tier to join rooms; ${PRICING_COMPARE_OVERVIEW}`,
+      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi supports Crunchyroll and YouTube watchrooms with a Free tier to join rooms. Netflix is coming soon and is not supported yet. ${PRICING_COMPARE_OVERVIEW}`,
   },
   {
     question: "Does Netflix have a built-in watch party?",
@@ -213,10 +213,9 @@ export default function WatchMoviesTogetherLongDistancePage() {
         Personal history needs each viewer’s own Plus/Pro access and recording permission.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi does not support Netflix, Disney+, or other general
-        streaming platforms. It supports Crunchyroll and YouTube watchrooms
-        and is the right tool when your primary shared content is anime or
-        YouTube.{" "}
+        AniDachi supports Crunchyroll and YouTube watchrooms.
+        Netflix is coming soon and is not supported yet. Disney+ and other streaming platforms are not supported.
+        Each person needs their own access to the same title.{" "}
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           Learn how async anime watching works across time zones.
         </Link>
@@ -247,6 +246,16 @@ export default function WatchMoviesTogetherLongDistancePage() {
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange">
+        <li>
+          <Link href="/guides/online-date-ideas" className="hover:underline">
+            Online date ideas
+          </Link>
+        </li>
+        <li>
+          <Link href="/guides/long-distance-date-night-ideas" className="hover:underline">
+            Long distance date night ideas
+          </Link>
+        </li>
         <li>
           <Link href="/guides/virtual-date-ideas" className="hover:underline">
             Virtual date ideas

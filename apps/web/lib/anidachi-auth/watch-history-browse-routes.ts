@@ -42,7 +42,8 @@ export function createWatchHistoryBrowseHandler(
 			for (const [key, value] of request.nextUrl.searchParams) {
 				if (
 					Object.hasOwn(input, key) ||
-					(key === "limit" && !/^\d{1,2}$/.test(value))
+					(key === "limit" && !/^\d{1,2}$/.test(value)) ||
+					(key === "providerVersion" && value !== "1" && value !== "2")
 				)
 					throw new WatchHistoryV3ApiError(
 						400,
@@ -50,7 +51,7 @@ export function createWatchHistoryBrowseHandler(
 						"History filters are invalid",
 					);
 				input[key] =
-					key === "limit"
+					(key === "limit" || key === "providerVersion")
 						? Number(value)
 						: key === "includeEpisodePreviews" && value === "true"
 							? true

@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Install AniDachi Chrome Extension",
   description:
-    "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms.",
+    "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
   alternates: { canonical: INSTALL_HUB_PATH },
   openGraph: {
     images: [
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
     title: "Install AniDachi on Chrome",
     description:
-      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms.",
+      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
     url: INSTALL_HUB_PATH,
   },
   twitter: {
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Install AniDachi on Chrome",
     description:
-      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms.",
+      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
   },
 };
 
@@ -54,7 +54,7 @@ const howToSteps = [
   },
   {
     name: "Pin and open Crunchyroll or YouTube",
-    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode or a full YouTube watch page and sign in when asked. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
+    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode or a full YouTube watch page and sign in when asked. Netflix is coming soon and is not supported yet. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
   },
 ];
 
@@ -72,12 +72,12 @@ export default function ExtensionInstallPage() {
       <FAQPageJsonLd questions={extensionInstallFaq} />
       <HowToJsonLd
         name="How to install the AniDachi Chrome extension"
-        description="Install the official AniDachi Chrome extension from the Chrome Web Store, then open a Crunchyroll or YouTube watch page."
+        description="Install the official AniDachi Chrome extension from the Chrome Web Store, then open a Crunchyroll or YouTube watch page. Netflix is coming soon."
         steps={howToSteps}
       />
       <HowToJsonLd
         name="How to Watch Together"
-        description="Host a live Crunchyroll or YouTube room with Plus or Pro, including during a trial. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
+        description="Host a live Crunchyroll or YouTube room with Plus or Pro, including during a trial. Friends join for free. Netflix is coming soon. Use the overlay for invites, calls, reactions, and room settings."
         steps={extensionUsingSteps.map(({ name, text }) => ({ name, text }))}
       />
       <main id="main-content" className="min-h-screen bg-ani-canvas">

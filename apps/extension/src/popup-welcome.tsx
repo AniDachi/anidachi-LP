@@ -45,7 +45,7 @@ export function PopupWelcome({ active, onOpenSettings, onDismiss }: {
         <Users size={20} strokeWidth={1.7} aria-hidden="true" />
         <div>
           <h3>Watch with friends</h3>
-          <p>Open a video on Crunchyroll or YouTube, then create a room in AniDachi with Plus or Pro. Joining a friend’s room is free.</p>
+          <p>Open a video on Crunchyroll, YouTube or Netflix, then create a room in AniDachi with Plus or Pro. Joining a friend’s room is free.</p>
         </div>
       </div>
       <div className="popup-welcome-item">

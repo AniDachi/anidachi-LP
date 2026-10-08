@@ -6,6 +6,8 @@ import {
   type WatchCatalogBeginAck, type WatchCatalogBeginRequest,
   type WatchCatalogCommitAck, type WatchCatalogCommitRequest,
 } from "@anidachi/protocol";
+import { runNetflixCommand } from "./source-adapters/netflix/bridge-client";
+import type { NetflixSnapshot } from "./source-adapters/netflix/contract";
 import { runCrunchyrollMainCommand } from "./source-adapters/crunchyroll/bridge-client";
 import type { CrunchyrollHistoryMetadata } from "./source-adapters/crunchyroll/bridge-contract";
 import type { WatchHistoryMessage, WatchHistoryMessageResponse } from "./watch-history-client";
@@ -128,11 +130,13 @@ function matches(owner: string, input: WatchCatalogBeginRequest | WatchCatalogCo
 export function createWatchHistoryPageResolver(dependencies: {
   send(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
   command?: typeof runCrunchyrollMainCommand;
+  netflixCommand?: typeof runNetflixCommand;
   pageId?: string;
   now?: () => number;
 }) {
   const pageId = dependencies.pageId ?? crypto.randomUUID();
   const command = dependencies.command ?? runCrunchyrollMainCommand;
+  const netflixCommand = dependencies.netflixCommand ?? runNetflixCommand;
   const now = dependencies.now ?? Date.now;
   const mappings = new Map<string, { promise: Promise<CrunchyrollHistoryMetadata | null>; attemptedAt: number; abort: AbortController; settled: boolean }>();
   const activeCatalogs = new Map<string, { abort: AbortController; signature: string; visitId: string; promise: Promise<void> }>();
@@ -140,6 +144,7 @@ export function createWatchHistoryPageResolver(dependencies: {
   const visits = new Map<string, string>();
   let disposed = false;
   let currentSource: string | null = null;
+  let sourceAbort = new AbortController();
 
   async function eligible(event: WatchHistoryLocalEvent, owner: string): Promise<boolean> {
     if (disposed || !event.captureProof) return false;
@@ -151,32 +156,52 @@ export function createWatchHistoryPageResolver(dependencies: {
   }
   async function resolve(event: WatchHistoryLocalEvent, owner: string, options: { refreshCatalog: boolean }): Promise<void> {
     const pending = event.identityPending;
-    if (disposed || !pending || event.provider !== "crunchyroll" || !await eligible(event, owner)) return;
-    const sourceKey = `${owner}:${event.accountGeneration}:${event.clientSessionKey}:${pending.watchId}`;
+    const netflixIdentity = event.provider === "netflix" && event.netflixIdentity?.kind === "episode" ? event.netflixIdentity : null;
+    if (disposed || (!netflixIdentity && (!pending || event.provider !== "crunchyroll")) || !await eligible(event, owner)) return;
+    const watchId = netflixIdentity?.providerEpisodeIdentifier ?? pending!.watchId;
+    const sourceKey = `${owner}:${event.accountGeneration}:${event.clientSessionKey}:${watchId}`;
     if (options.refreshCatalog && sourceKey !== currentSource) {
       currentSource = sourceKey;
       abortCatalogs();
+      sourceAbort = new AbortController();
     }
-    const mappingKey = `${owner}:${event.accountGeneration}:${pending.watchId}:${pending.requestedLocale}`;
-    const prior = mappings.get(mappingKey);
-    if (!prior || prior.settled && options.refreshCatalog && now() - prior.attemptedAt >= 10_000) {
-      const abort = new AbortController();
-      const mapping = { attemptedAt: now(), abort, settled: false, promise: command("historyIdentity", { contentId: pending.watchId, locale: pending.requestedLocale }, 30_000, abort.signal)
-        .then((response) => response.ok && response.metadata?.identity.providerContentId === pending.watchId ? response.metadata : null)
-        .catch(() => null).finally(() => { mapping.settled = true; }) };
-      mappings.set(mappingKey, mapping);
+    let netflix: NetflixSnapshot | null = null;
+    let metadata: CrunchyrollHistoryMetadata | null = null;
+    let resolution: Promise<unknown> = Promise.resolve();
+    if (netflixIdentity) {
+      if (!options.refreshCatalog || sourceKey !== currentSource) return;
+      const response = await netflixCommand({ action: "snapshot", movieId: watchId }, sourceAbort.signal);
+      netflix = response?.ok ? response.snapshot ?? null : null;
+      if (!netflix || netflix.metadata.identity.kind !== "episode" ||
+        netflix.metadata.identity.providerSeriesId !== netflixIdentity.providerSeriesId ||
+        netflix.metadata.identity.providerSeasonIdentifier !== netflixIdentity.providerSeasonIdentifier ||
+        netflix.metadata.identity.providerEpisodeIdentifier !== watchId || !await eligible(event, owner)) return;
+    } else {
+      const identityPending = pending!;
+      const mappingKey = `${owner}:${event.accountGeneration}:${identityPending.watchId}:${identityPending.requestedLocale}`;
+      const prior = mappings.get(mappingKey);
+      if (!prior || prior.settled && options.refreshCatalog && now() - prior.attemptedAt >= 10_000) {
+        const abort = new AbortController();
+        const mapping = { attemptedAt: now(), abort, settled: false, promise: command("historyIdentity", { contentId: identityPending.watchId, locale: identityPending.requestedLocale }, 30_000, abort.signal)
+          .then((response) => response.ok && response.metadata?.identity.providerContentId === identityPending.watchId ? response.metadata : null)
+          .catch(() => null).finally(() => { mapping.settled = true; }) };
+        mappings.set(mappingKey, mapping);
+      }
+      metadata = await mappings.get(mappingKey)!.promise;
+      if (disposed || !metadata || !await eligible(event, owner)) return;
+      resolution = dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resolve-identity", expectedOwnerUserId: owner,
+        accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity,
+        episodeNumber: metadata.episodeNumber, artworkUrl: metadata.artworkUrl });
     }
-    const metadata = await mappings.get(mappingKey)!.promise;
-    if (disposed || !metadata || !await eligible(event, owner)) return;
-    const resolution = dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "resolve-identity", expectedOwnerUserId: owner,
-      accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity,
-      episodeNumber: metadata.episodeNumber, artworkUrl: metadata.artworkUrl });
-    if (!options.refreshCatalog || sourceKey !== currentSource || !metadata.context.region) { await resolution; return; }
-    const titleKey = `crunchyroll:series:${metadata.identity.providerSeriesId}`;
+    const context = netflix?.metadata.context ?? metadata?.context;
+    if (!options.refreshCatalog || disposed || sourceKey !== currentSource || !context?.region) { await resolution; return; }
+    const provider = netflixIdentity ? "netflix" as const : "crunchyroll" as const;
+    const providerSeriesId = netflixIdentity?.providerSeriesId ?? metadata!.identity.providerSeriesId;
+    const titleKey = `${provider}:series:${providerSeriesId}`;
     const jobKey = `${owner}:${event.accountGeneration}:${titleKey}`;
     if (!visits.has(sourceKey)) visits.set(sourceKey, `${pageId}:${visits.size + 1}`);
     const visitId = visits.get(sourceKey)!;
-    const signature = contextKey(metadata.context);
+    const signature = contextKey(context);
     const active = activeCatalogs.get(jobKey);
     if (active?.signature === signature && active.visitId === visitId) { await Promise.all([resolution, active.promise]); return; }
     active?.abort.abort();
@@ -184,8 +209,8 @@ export function createWatchHistoryPageResolver(dependencies: {
     if (attemptedCatalogs.has(attemptKey)) { await resolution; return; }
     attemptedCatalogs.add(attemptKey);
     const abort = new AbortController();
-    const input: WatchCatalogBeginRequest = { schemaVersion: 3, provider: "crunchyroll", accountGeneration: event.accountGeneration,
-      titleKey, providerSeriesId: metadata.identity.providerSeriesId, context: structuredClone(metadata.context),
+    const input: WatchCatalogBeginRequest = { schemaVersion: 3, provider, accountGeneration: event.accountGeneration,
+      titleKey, providerSeriesId, context: structuredClone(context),
       historyAccess: { accessVersion: 1, accessEpoch: event.captureProof!.access.accessEpoch } };
     const collecting = (async () => {
       let revision: number | null = null;
@@ -196,10 +221,12 @@ export function createWatchHistoryPageResolver(dependencies: {
         if (!parsed.success || !matches(owner, input, parsed.data)) return;
         revision = parsed.data.revision;
         if (disposed || abort.signal.aborted || !parsed.data.refreshRequired || !await eligible(event, owner)) return;
-        const result = await command("historyCatalog", { seriesId: input.providerSeriesId, context: input.context }, 120_000, abort.signal);
-        if (!result.ok || !result.catalog || disposed || abort.signal.aborted || !await eligible(event, owner)) return;
+        const result = netflix
+          ? await netflixCommand({ action: "catalog", movieId: watchId, generation: netflix.generation }, abort.signal)
+          : await command("historyCatalog", { seriesId: input.providerSeriesId, context: input.context }, 120_000, abort.signal);
+        if (!result?.ok || !result.catalog || (netflix && (result.catalog.provider !== input.provider || result.catalog.titleKey !== input.titleKey || contextKey(result.catalog.context) !== contextKey(input.context))) || disposed || abort.signal.aborted || !await eligible(event, owner)) return;
         await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-commit", expectedOwnerUserId: owner, pageId: visitId,
-          input: { ...input, revision: parsed.data.revision, snapshot: result.catalog } });
+          input: { ...input, revision: parsed.data.revision, snapshot: netflix ? { ...result.catalog, context: input.context } : result.catalog } });
       } catch { /* One bounded attempt per context/visit; a new visit can retry. */ }
       finally {
         if (revision !== null) await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,
@@ -211,6 +238,7 @@ export function createWatchHistoryPageResolver(dependencies: {
     await Promise.all([resolution, collecting]);
   }
   function abortCatalogs(visitId?: string): void {
+    if (!visitId) sourceAbort.abort();
     for (const [key, active] of activeCatalogs) if (!visitId || active.visitId === visitId) {
       active.abort.abort(); activeCatalogs.delete(key);
     }

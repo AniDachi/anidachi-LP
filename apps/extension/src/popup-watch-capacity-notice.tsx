@@ -1,6 +1,6 @@
 import {
-	WatchHistoryCapacitySchema,
-	type WatchHistoryCapacity,
+	WatchHistoryCapacityCompatibleSchema,
+	type WatchHistoryCapacityCompatible,
 } from "@anidachi/protocol";
 import { useEffect, useState } from "react";
 import {
@@ -25,7 +25,7 @@ export function PopupWatchCapacityNotice({
 }) {
 	const [result, setResult] = useState<{
 		client: PopupWatchHistoryClient;
-		data: WatchHistoryCapacity;
+		data: WatchHistoryCapacityCompatible;
 	} | null>(null);
 	useEffect(() => {
 		let disposed = false;
@@ -37,7 +37,7 @@ export function PopupWatchCapacityNotice({
 		}).then((response) => {
 			if (disposed) return;
 			const parsed = response.ok
-				? WatchHistoryCapacitySchema.safeParse(response.data)
+				? WatchHistoryCapacityCompatibleSchema.safeParse(response.data)
 				: null;
 			setResult(
 				parsed?.success &&
@@ -60,10 +60,10 @@ export function PopupWatchCapacityNotice({
 		return null;
 	const full = (
 		Object.entries(result.data.providers) as Array<
-			["youtube" | "crunchyroll", { used: number; limit: number }]
+			["youtube" | "crunchyroll" | "netflix", { used: number; limit: number }]
 		>
 	).filter(([, value]) => value.used >= value.limit);
-	if (!full.length) return null;
+	if (!full.length && result.data.capacityVersion === 2) return null;
 	return (
 		<aside className="popup-watch-plan-notice" role="status">
 			<div>
@@ -71,17 +71,18 @@ export function PopupWatchCapacityNotice({
 					{full
 						.map(
 							([provider, value]) =>
-								`${provider === "youtube" ? "YouTube" : "Crunchyroll"} ${value.used}/${value.limit}`,
+								`${({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix" })[provider]} ${value.used}/${value.limit}`,
 						)
 						.join(" · ")}{" "}
-					— history full
+					{full.length ? "— history full" : "Netflix storage unavailable"}
 				</strong>
-				<span>
+				{full.length > 0 && result.data.capacityVersion === 1 && <span>Netflix storage unavailable.</span>}
+				{full.length > 0 && <span>
 					New titles cannot be saved. Clear space in your history. Saved titles
 					keep updating.
-				</span>
+				</span>}
 			</div>
-			<button
+			{full.length > 0 && <button
 				type="button"
 				aria-label="Manage full watch history"
 				onClick={() =>
@@ -91,7 +92,7 @@ export function PopupWatchCapacityNotice({
 				}
 			>
 				Manage
-			</button>
+			</button>}
 		</aside>
 	);
 }

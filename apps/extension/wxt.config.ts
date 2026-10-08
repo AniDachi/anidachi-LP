@@ -19,6 +19,7 @@ const STORE_VIDEO_HOST_PERMISSIONS = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];

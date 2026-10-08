@@ -93,6 +93,7 @@ watch surfaces and Anidachi infrastructure:
 - YouTube
 - YouTube embeds / `youtube-nocookie`
 - Crunchyroll
+- Netflix at exactly `https://www.netflix.com/*` (October 8 candidate)
 - the channel web app host
 - the configured Cloudflare Workers API host for the channel
 
@@ -108,6 +109,16 @@ The logo's `web_accessible_resources` entry uses the same supported video
 origins in narrow builds; unrelated sites cannot request it. The validator also
 rejects additional resources, extension IDs, or broad logo match patterns.
 The explicit local-broad build retains its separate development-only behavior.
+
+The Netflix MAIN bridge uses the same exact Netflix match to survive SPA route
+changes. Runtime overlay/history admission still requires a canonical
+`https://www.netflix.com/watch/<numeric-id>` page and matching primary content;
+browse previews never become recording sources. No optional permission prompt or
+broad host permission is added. Candidate source matching does not establish
+Store publication or loaded-artifact acceptance. See
+[Netflix adapter notes](netflix-adapter-notes.md) and
+[staging verification](netflix-staging-verification.md) for the source/artifact
+identity and acceptance gates.
 
 Every extension entrypoint imports `src/zod-csp.ts` before shared protocol
 schemas. It sets Zod's `jitless` option to avoid dynamic compilation and even the
@@ -283,5 +294,5 @@ Share staging access details out of band; do not commit them to git.
 Current instruction shape:
 
 ```txt
-Install Anidachi Staging, then open a YouTube or Crunchyroll video page. Click the small "A" bubble on the video, sign in through the staging site with Google/Discord. If asked for access, use the provided tester code. Click Create room, Copy invite, and open it in another Chrome profile/device. Controls: A opens menu; Sync now resyncs; keys 1-6 send emoji; hold V for push-to-talk; Alt/Option+C opens text chat; Ghost Cam toggles camera.
+Install Anidachi Staging, then open a full YouTube watch page, Crunchyroll episode, or Netflix movie/episode watch page. Netflix requires the matching candidate artifact and the acceptance checks in the Netflix staging verification record. Click the small "A" bubble on the video, sign in through the staging site with Google/Discord. If asked for access, use the provided tester code. Click Create room, Copy invite, and open it in another Chrome profile/device. Controls: A opens menu; Sync now resyncs; keys 1-6 send emoji; hold V for push-to-talk; Alt/Option+C opens text chat; Ghost Cam toggles camera.
 ```

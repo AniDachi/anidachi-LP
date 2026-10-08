@@ -134,7 +134,7 @@ function WatchLibraryOwnerClient({
   }, [hideInaccessible]);
 
   const readPage = useCallback(async (cursor: string | null = null, signal?: AbortSignal) => {
-    const query = new URLSearchParams({ limit: "24" });
+    const query = new URLSearchParams({ limit: "24", providerVersion: "2" });
     if (cursor) query.set("cursor", cursor);
     const filtered = provider !== "all";
     if (filtered) { query.set("mode", "personal"); query.set("provider", provider); }
@@ -380,7 +380,7 @@ function WatchLibraryOwnerClient({
       currentTime: number,
     ) => {
       if (busyAction || mutationInFlight.current || !canRead) return;
-      if (provider !== "crunchyroll" && provider !== "youtube") return;
+      if (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix") return;
       const revision = operationRevision.current;
       const generation = history.meta.accountGeneration;
       const current = () =>

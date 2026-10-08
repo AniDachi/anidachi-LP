@@ -32,6 +32,7 @@ import type {
 } from "../src/source-adapters/core/types";
 import { startCrunchyrollStudyIfEnabled } from "../src/source-adapters/crunchyroll/study";
 import { detectSourceAdapter } from "../src/source-adapters/registry";
+import { NETFLIX_COMPOSER_CHROME_STYLES } from "../src/source-adapters/netflix/composer-chrome";
 import { YOUTUBE_COMPOSER_CHROME_STYLES } from "../src/source-adapters/youtube/composer-chrome";
 
 export interface MountedOverlay {
@@ -86,6 +87,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -313,6 +315,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
     ) {
       return "youtube";
     }
+    if (hostname === "www.netflix.com") return "netflix";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")
@@ -327,6 +330,8 @@ function providerFromUrl(pageUrl: string): SourceProvider {
 
 function installMessageComposerKeyboardGuard(): () => void {
   const consumedKeys = new Set<string>();
+  const netflixTypingKeys = new Set<string>();
+  const isNetflixComposer = () => location.hostname === "www.netflix.com" && isComposerOpen();
   let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
     document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";
@@ -350,12 +355,12 @@ function installMessageComposerKeyboardGuard(): () => void {
       );
       return;
     }
-    // Fullscreen Escape belongs to Chrome unless the page has Keyboard Lock.
-    // Do not request a new permission just to dismiss a message input.
+    // Chrome can consume fullscreen Escape before page handlers. Netflix can
+    // dismiss when Escape is delivered, without requesting Keyboard Lock.
     if (
       isComposerOpen() &&
       (event.key === "Escape" || event.key === "Esc") &&
-      !document.fullscreenElement &&
+      (!document.fullscreenElement || location.hostname === "www.netflix.com") &&
       !event.isComposing && event.keyCode !== 229
     ) {
       consumedKeys.add(keyId(event));
@@ -376,24 +381,35 @@ function installMessageComposerKeyboardGuard(): () => void {
           new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT),
         );
       }
+      return;
+    }
+    if (isNetflixComposer()) {
+      // Netflix installs capture handlers above the overlay. Preserve native
+      // text editing/default shortcuts while keeping those handlers quiet.
+      netflixTypingKeys.add(keyId(event));
+      event.stopImmediatePropagation();
     }
   };
+  const handleKeyPress = (event: KeyboardEvent) => { if (isNetflixComposer()) event.stopImmediatePropagation(); };
   const handleKeyUp = (event: KeyboardEvent) => {
     // Submission removes the input before keyup; its new target can be the player.
     const wasConsumed = consumedKeys.delete(keyId(event));
     if (wasConsumed || (isComposerOpen() && event.key === "Enter"))
       consume(event);
+    else if (netflixTypingKeys.delete(keyId(event)) || isNetflixComposer()) event.stopImmediatePropagation();
   };
-  const clearConsumedKeys = () => consumedKeys.clear();
+  const clearConsumedKeys = () => { consumedKeys.clear(); netflixTypingKeys.clear(); };
   window.addEventListener("keydown", handleKeyDown, true);
   window.addEventListener("keyup", handleKeyUp, true);
+  window.addEventListener("keypress", handleKeyPress, true);
   window.addEventListener("blur", clearConsumedKeys);
   return () => {
     window.removeEventListener("keydown", handleKeyDown, true);
     window.removeEventListener("keyup", handleKeyUp, true);
+    window.removeEventListener("keypress", handleKeyPress, true);
     window.removeEventListener("blur", clearConsumedKeys);
     releasePageGuard?.();
-    consumedKeys.clear();
+    clearConsumedKeys();
   };
 }
 
@@ -694,6 +710,7 @@ function ensurePageStyles(): void {
   style.id = "anidachi-page-style";
   style.textContent = `
     ${YOUTUBE_COMPOSER_CHROME_STYLES}
+    ${NETFLIX_COMPOSER_CHROME_STYLES}
 
     [data-anidachi-adapter="generic-html5-video"] video[data-anidachi-video="true"]::-webkit-media-controls-fullscreen-button {
       display: none !important;
@@ -704,7 +721,8 @@ function ensurePageStyles(): void {
     }
 
     [data-anidachi-adapter="youtube"] anidachi-overlay-root,
-    [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root {
+    [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root,
+    [data-anidachi-adapter="netflix"] anidachi-overlay-root {
       position: absolute !important;
       inset: 0 !important;
       z-index: 2147483647 !important;

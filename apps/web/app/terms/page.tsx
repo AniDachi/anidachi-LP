@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingArticle } from "@/components/marketing-article";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
@@ -24,17 +25,8 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <>
-      <main className="min-h-screen bg-background">
-        <article className="container mx-auto max-w-3xl px-4 py-16">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Terms of Service
-          </h1>
-          <p className="text-sm text-foreground/50 mb-10">
-            Last updated: October 1, 2026
-          </p>
-
-          <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
+    <MarketingArticle title="Terms of Service" updated="October 1, 2026">
+      <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 1. Acceptance of Terms
@@ -174,7 +166,7 @@ export default function TermsPage() {
                 You retain ownership of any content you create (e.g., chat
                 messages). By posting content, you grant us a license to display
                 it within the Service. AniDachi is not affiliated with
-                Crunchyroll, Sony, YouTube, Google, or any streaming platform.
+                Crunchyroll, Sony, YouTube, Google, Netflix, or any streaming platform.
               </p>
             </section>
 
@@ -261,9 +253,7 @@ export default function TermsPage() {
                 </Link>
               </p>
             </section>
-          </div>
-        </article>
-      </main>
-    </>
+      </div>
+    </MarketingArticle>
   );
 }

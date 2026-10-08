@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketingArticle } from "@/components/marketing-article";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 export const metadata: Metadata = {
@@ -19,19 +20,15 @@ export const metadata: Metadata = {
 
     title: "About AniDachi",
     description:
-      "AniDachi helps friends watch together on Crunchyroll and YouTube with synced watchrooms — built by an independent team.",
+      "AniDachi helps friends watch together on Crunchyroll and YouTube with synced watchrooms — built by an independent team. Netflix is coming soon.",
     url: "/about",
   },
 };
 
 export default function AboutPage() {
   return (
-    <main id="main-content" className="min-h-screen bg-background">
-      <article className="container mx-auto max-w-3xl px-4 py-16">
-        <h1 className="text-4xl font-bold text-foreground mb-2">About AniDachi</h1>
-        <p className="text-sm text-foreground/50 mb-10">Last updated: October 1, 2026</p>
-
-        <div className="space-y-8 text-foreground/80 leading-relaxed">
+    <MarketingArticle title="About AniDachi" updated="October 1, 2026">
+      <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
               What we build
@@ -98,7 +95,10 @@ export default function AboutPage() {
                 Rooms stay on one provider per session (Crunchyroll or YouTube).
               </li>
               <li>
-                Netflix, Disney+, Hulu, and Amazon Prime Video sync are not
+                Netflix is coming soon and is not supported yet.
+              </li>
+              <li>
+                Disney+, Hulu, and Amazon Prime Video sync are not
                 supported.
               </li>
             </ul>
@@ -157,8 +157,7 @@ export default function AboutPage() {
               </Link>
             </p>
           </section>
-        </div>
-      </article>
-    </main>
+      </div>
+    </MarketingArticle>
   );
 }

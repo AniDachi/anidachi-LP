@@ -65,6 +65,7 @@ const videoHosts = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];

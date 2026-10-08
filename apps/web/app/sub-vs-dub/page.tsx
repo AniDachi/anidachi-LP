@@ -162,6 +162,14 @@ export default function SubVsDubPage() {
             label: "English dubbed anime",
           },
           {
+            href: "/guides/romance-anime-dubbed",
+            label: "Romance anime dubbed",
+          },
+          {
+            href: "/guides/subbed-anime",
+            label: "Subbed anime",
+          },
+          {
             href: "/glossary/dub-vs-sub-watch-party",
             label: "Dub vs sub glossary",
           },

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Copy, Monitor, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 
@@ -52,18 +53,20 @@ export function RoomMobileHandoff({ variant, initialMobile = false }: RoomMobile
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   return (
-    <div className="mt-6 rounded-xl border border-brand-border bg-brand-surface px-4 py-4">
+    <div className="mt-6 rounded-[20px] border border-ani-line bg-ani-canvas px-4 py-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ani-line text-ani-muted">
           <Monitor className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">{copy.title}</p>
-          <p className="mt-1 text-sm text-foreground/55">{copy.body}</p>
-          <button
+          <p className="text-sm font-semibold tracking-[-0.01em] text-ani-text">{copy.title}</p>
+          <p className="mt-1 text-sm text-ani-muted">{copy.body}</p>
+          <Button
             type="button"
+            variant="cream"
+            size="control"
+            className="mt-3 w-full"
             onClick={() => void handleShare()}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-border bg-background px-4 text-sm font-semibold text-foreground transition hover:border-brand-orange/40 hover:text-brand-orange"
           >
             {canShare ? (
               <Share2 className="h-4 w-4" aria-hidden />
@@ -77,7 +80,7 @@ export function RoomMobileHandoff({ variant, initialMobile = false }: RoomMobile
                 : canShare
                   ? "Share room link"
                   : "Copy room link"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -24,6 +24,7 @@ type Props = {
   onResume(provider: WatchHistoryItem["provider"], url: string, time: number): void;
   onDelete(target: WatchHistoryDeleteScope): void;
 };
+const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", amazon: "Prime Video" })[provider];
 const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
   useAccountScrollRestoration(`${props.owner}:library:scroll`);
@@ -70,7 +71,7 @@ export function HistoryBrowser(props: Props) {
           <span className="wh-cover"><HistoryArtwork key={item.artworkUrl} item={item} />{isTitleWatched(item) && <span className="wh-cover-check"><Check size={14} /><span className="sr-only">Watched</span></span>}</span>
           <span className="wh-card-title" dir="auto">{item.title}</span>
           <span className="wh-card-progress">{titleProgress(item)}</span>
-          <span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span>
+          <span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span>
         </button>)}
       </div>
       {!props.listReady && props.loading && <p className="wh-empty" role="status">Loading titles…</p>}
@@ -95,7 +96,7 @@ function LibraryFirstWatch({ canEdit }: { canEdit: boolean }) {
     ? [
         "Install AniDachi in desktop Chrome and sign in.",
         "Open AniDachi from Chrome’s toolbar. In Settings, choose Allow recording. For YouTube, turn on Track YouTube history too.",
-        "Watch a Crunchyroll title or a full youtube.com/watch page, alone or in a room.",
+        "Watch a Crunchyroll title or a full youtube.com/watch page, alone or in a room. Netflix is coming soon.",
       ]
     : [
         "Install AniDachi in desktop Chrome and sign in.",
@@ -131,10 +132,12 @@ function LibraryFirstWatch({ canEdit }: { canEdit: boolean }) {
   );
 }
 
+// Netflix glyph reuses public/platforms/netflix.svg (svgl brand artwork).
 const historyPlatforms = [
   { value: "all", label: "All", name: "All platforms" },
   { value: "crunchyroll", label: "Crunchyroll", name: "Crunchyroll" },
   { value: "youtube", label: "YouTube", name: "YouTube" },
+  { value: "netflix", label: "Netflix", name: "Netflix" },
 ] as const;
 
 function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; onChange(value: HistoryPlatform): void }) {
@@ -158,6 +161,7 @@ function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; on
         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.121 2.136c1.872.505 9.377.505 9.377.505s7.505 0 9.376-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814Z" fill="currentColor" />
         <path d="m9.545 15.568 6.273-3.568-6.273-3.568v7.136Z" fill="#fff" />
       </svg>}
+      {platform.value === "netflix" && <svg viewBox="0 0 141 277" className="wh-platform-logo wh-platform-netflix" aria-hidden="true"><path fill="currentColor" d="M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z" /></svg>}
       <span>{platform.label}</span>
     </button>)}
   </div>;
@@ -357,7 +361,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     <dialog ref={dialog} className="wh-inspector" aria-label={`${item.title} progress`} onCancel={event => { event.preventDefault(); onClose(); }}>
       <div className="wh-inspector-top"><button className="wh-text" onClick={onClose}><ChevronLeft size={16} /> Library</button><button className="wh-icon" aria-label="Close title" onClick={onClose}><X size={18} /></button></div>
       <div className="wh-identity"><div className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork item={item} /></div>
-        <div><span className={`wh-provider wh-provider-${item.provider}`}>{item.provider === "youtube" ? "YouTube" : "Crunchyroll"}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
+        <div><span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
         <div><h3>{editing ? "Edit progress" : "Your progress"}</h3>{editing && <span className="wh-edit-count" role="status">{dirty ? `${changeCount} unsaved ${changeCount === 1 ? "change" : "changes"}` : "No changes yet"}</span>}</div>
@@ -376,7 +380,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
-        {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in Crunchyroll with the extension to load its full catalog.</p>}
+        {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
         </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "saved"}` : `${episodes.filter(watched).length} watched`}</span></div>}

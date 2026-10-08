@@ -1,8 +1,8 @@
 "use client";
 
 import {
-	WatchHistoryCapacitySchema,
-	type WatchHistoryCapacity,
+	WatchHistoryCapacityCompatibleSchema,
+	type WatchHistoryCapacityCompatible,
 } from "@anidachi/protocol";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
@@ -22,15 +22,15 @@ export function WatchLibraryCapacity({
 	recordingAllowed: boolean;
 	provider?: HistoryPlatform;
 }) {
-	const [capacity, setCapacity] = useState<WatchHistoryCapacity | null>(null);
+	const [capacity, setCapacity] = useState<WatchHistoryCapacityCompatible | null>(null);
 	useEffect(() => {
 		let disposed = false;
-		void api<unknown>("/api/watch-history/v3/capacity", {
+		void api<unknown>("/api/watch-history/v3/capacity?capacityVersion=2", {
 			headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
 		})
 			.then((value) => {
 				if (disposed) return;
-				const parsed = WatchHistoryCapacitySchema.safeParse(value);
+				const parsed = WatchHistoryCapacityCompatibleSchema.safeParse(value);
 				setCapacity(
 					parsed.success &&
 						parsed.data.ownerUserId === ownerUserId &&
@@ -52,21 +52,21 @@ export function WatchLibraryCapacity({
 		capacity.accountGeneration !== accountGeneration
 	)
 		return null;
-	const providers = (["crunchyroll", "youtube"] as const).filter(
+	const providers = (["crunchyroll", "youtube", "netflix"] as const).filter(
 		key => provider === "all" || key === provider,
 	);
-	const full = providers.filter(key => capacity.providers[key].used >= capacity.providers[key].limit);
-	const name = (key: "crunchyroll" | "youtube") => key === "youtube" ? "YouTube" : "Crunchyroll";
+	const usage = (key: typeof providers[number]) => key === "netflix" ? (capacity.capacityVersion === 2 ? capacity.providers.netflix : null) : capacity.providers[key];
+	const full = providers.filter(key => { const value = usage(key); return value && value.used >= value.limit; });
+	const name = (key: typeof providers[number]) => ({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix" })[key];
 	return (
 		<section
 			aria-label="History storage"
 			className="wh-storage"
 		>
 			<div className="wh-storage-counts">
-				{providers.map(key => <span key={key}>
-					{name(key)}{" "}<strong>{capacity.providers[key].used} / {capacity.providers[key].limit}</strong>{" "}
-					{key === "youtube" ? "videos" : "titles"}
-				</span>)}
+				{providers.map(key => { const value = usage(key); return <span key={key}>
+					{name(key)}{" "}{value ? <><strong>{value.used} / {value.limit}</strong>{" "}{key === "youtube" ? "videos" : "titles"}</> : "storage unavailable"}
+				</span>; })}
 			</div>
 			{full.length > 0 && recordingAllowed && <p className="wh-storage-notice" role="status">
 				{full.map(name).join(" and ")} history is full. Delete saved titles to add new ones. Progress on saved titles keeps updating.

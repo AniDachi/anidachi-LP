@@ -1,6 +1,6 @@
 import { Minus, Plus } from "lucide-react";
 import { homeFAQ } from "@/lib/home-faq";
-import type { FAQItem } from "@/components/faq-section";
+import { FaqQuestionList } from "@/components/faq-section";
 import styles from "./home-faq.module.css";
 
 // Keep the shared answers and JSON-LD intact; only prioritize their presentation.
@@ -8,38 +8,12 @@ const primaryIndexes = [0, 2, 6, 7, 8, 10];
 const primaryQuestions = primaryIndexes.map((index) => homeFAQ[index]);
 const otherQuestions = homeFAQ.filter((_, index) => !primaryIndexes.includes(index));
 
-function Question({ question, answer }: FAQItem) {
-  return (
-    <details className={styles.question}>
-      <summary>
-        <span>{question}</span>
-        <Plus className={styles.plus} size={18} aria-hidden="true" />
-        <Minus className={styles.minus} size={18} aria-hidden="true" />
-      </summary>
-      <p>{answer}</p>
-    </details>
-  );
-}
-
-function Questions({ questions }: { questions: FAQItem[] }) {
-  const split = Math.ceil(questions.length / 2);
-  return (
-    <div className={styles.columns}>
-      {[questions.slice(0, split), questions.slice(split)].map((column, index) => (
-        <div key={index}>
-          {column.map((item) => <Question key={item.question} {...item} />)}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function HomeFAQ() {
   return (
     <section id="faq" className={styles.section} aria-labelledby="home-faq-title">
       <div className={styles.container}>
         <h2 id="home-faq-title">Questions? <span>Answers.</span></h2>
-        <Questions questions={primaryQuestions} />
+        <FaqQuestionList questions={primaryQuestions} />
         <details className={styles.more}>
           <summary>
             <span className={styles.closedLabel}>More questions</span>
@@ -47,7 +21,7 @@ export function HomeFAQ() {
             <Plus className={styles.plus} size={18} aria-hidden="true" />
             <Minus className={styles.minus} size={18} aria-hidden="true" />
           </summary>
-          <Questions questions={otherQuestions} />
+          <FaqQuestionList questions={otherQuestions} />
         </details>
       </div>
     </section>

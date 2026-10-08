@@ -68,6 +68,7 @@ function fixture() {
 		nextEpisode: null,
 	}));
 	const row = {
+		provider: "crunchyroll",
 		user_id: OWNER,
 		history_generation: 3,
 		title_key: TITLE,
@@ -330,4 +331,26 @@ test("catalog launch variants never replace a saved raw Resume observation", asy
 	assert.equal(result.episodes[0]!.sourceUrl, "https://www.crunchyroll.com/watch/MAIN0EN");
 	assert.equal(result.episodes[0]!.history!.sourceUrl, progress.source_url);
 	assert.equal(result.episodes[0]!.history!.currentTime, 437);
+});
+
+test("Netflix grid binds store reads, snapshot, progress and resume to its provider", async () => {
+  const titleKey = "netflix:series:70143836", seasonKey = "netflix:season:70114191";
+  const episodeKey = "netflix:episode:70196259", sourceUrl = "https://www.netflix.com/watch/70196259";
+  const context = { region: "VN", requestedLocale: "en-US", audioLocale: null, subtitleLocales: [], observedAt: NOW };
+  const season = { seasonKey, providerSeasonIdentifier: "70114191", title: "Season 2", seasonNumber: 2, order: 0,
+    episodes: [{ episodeKey, providerEpisodeIdentifier: "70196259", title: "Episode 1", episodeNumber: 1, order: 0, available: true, releasedAt: null,
+      watchVariants: [{ providerContentId: "70196259", audioLocale: null, original: true, order: 0, sourceUrl }] }] };
+  const row = { user_id: OWNER, history_generation: 3, provider: "netflix", title_key: titleKey, revision: 1, accepted_revision: 1, accepted_hash: "hash", context, accepted_context: context, preferred_audio_locale: null,
+    snapshot: { schemaVersion: 3, provider: "netflix", titleKey, providerSeriesId: "70143836", title: "Breaking Bad", completeness: "complete", context, seasons: [season] },
+    projection: { seasons: [{ seasonKey, seasonTitle: "Season 2", seasonNumber: 2, order: 0, aggregate: { completedEpisodes: 0, availableEpisodes: 1, progress: 0 }, nextEpisode: null }] } };
+  const store: WatchHistoryGridStore = {
+    settings: async () => ({ history_generation: 3, write_schema_version: 3 }),
+    catalog: async (_owner, _generation, _title, _snapshot, provider) => { assert.equal(provider, "netflix"); return row; },
+    progress: async (_owner, _generation, _title, _episodes, provider) => { assert.equal(provider, "netflix"); return []; },
+  };
+  const result = await read(store, { provider: "netflix", titleKey });
+  assert.equal(result.provider, "netflix"); assert.equal(result.state, "complete");
+  assert.equal(result.episodes[0]!.sourceUrl, sourceUrl); assert.equal(result.episodes[0]!.history, null);
+  row.provider = "crunchyroll";
+  await assert.rejects(read(store, { provider: "netflix", titleKey }), { code: "INVALID_RESPONSE" });
 });

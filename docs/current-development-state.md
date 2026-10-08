@@ -1,5 +1,32 @@
 # Current Development State
 
+## Netflix staging candidate, October 8, 2026
+
+The approved `codex/netflix-platform-staging` candidate adds Netflix movies and
+series to canonical room sources, personal history, the extension adapter and
+popup/site library. Tasks 1–4 are implemented and locally reviewed through
+`fc7bb3e8`; final integration adds lifecycle coverage, staging target protection
+and launch guidance. This checkpoint describes candidate source, not deployed
+Netflix support. Earlier dated sections below retain their historical context.
+
+Legacy all-provider history reads and capacity remain version 1 with only
+Crunchyroll/YouTube. New consumers explicitly request `providerVersion=2` and
+`capacityVersion=2`; an explicit Netflix provider filter opts into Netflix reads.
+Netflix capacity is 200 titles, with no pricing or entitlement change. Recording
+still requires the viewer's existing paid/trial access and history authority.
+
+Local SQL, protocol, Web/Worker, extension and room-harness evidence is recorded
+in [Netflix staging verification](netflix-staging-verification.md). The exact
+delivered revisions, protected-site smoke and immutable final artifact receipt
+will be recorded in the feature PR description and controller release report;
+the verification document preserves the state at this source checkpoint without
+requiring a docs-only deployment loop. Loaded-extension movie/series/history acceptance,
+native episode replacement, two-client room sync and real ad-plan behavior remain
+pending. The browser's current Free/empty staging account cannot prove recording.
+No main promotion, production migration/deploy, Store publication or entitlement
+change is authorized. See [adapter contracts and limitations](netflix-adapter-notes.md)
+and the [approved plan](superpowers/plans/2026-10-08-netflix-staging.md).
+
 ## Release safeguards delivered to staging, October 2, 2026
 
 [PR #397](https://github.com/AniDachi/anidachi-LP/pull/397) merged at 12:28:38 UTC

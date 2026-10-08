@@ -16,10 +16,10 @@ export function Footer() {
             />
             <p className="mb-4 max-w-md text-sm leading-relaxed text-ani-muted">
               AniDachi (アニ友) — watch together with friends on Crunchyroll and
-              YouTube. Live sync and chat now; async watchrooms coming soon.
+              YouTube. Live sync and chat now; Netflix and async watchrooms coming soon.
             </p>
             <p className="text-xs text-ani-muted">
-              Not affiliated with Crunchyroll, Sony, YouTube, Google, or any
+              Not affiliated with Crunchyroll, Sony, YouTube, Google, Netflix, or any
               streaming platform.
             </p>
           </div>
