@@ -75,7 +75,7 @@ export default function NetflixPartyPage() {
       conversionTemplate="pillar"
     >
       <SeoGuideTitle>Netflix Party</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           Netflix Party was the Chrome extension for watching Netflix
           together. That extension is now called Teleparty. People still

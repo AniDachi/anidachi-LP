@@ -74,7 +74,7 @@ export default function WatchNetflixTogetherPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Watch Netflix together</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           Watch Netflix together means both of you are on the same movie or
           episode at the same time, each signed into Netflix. A{" "}

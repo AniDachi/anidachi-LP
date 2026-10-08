@@ -74,7 +74,7 @@ export default function TelepartyNetflixPage() {
       aboveFoldCta
     >
       <SeoGuideTitle>Teleparty Netflix</SeoGuideTitle>
-      <SeoGuideAnswer>
+      <SeoGuideAnswer id="answer">
         <p>
           Teleparty Netflix means Teleparty running on a Netflix title in
           Chrome. One person opens Netflix, starts a Teleparty session, and

@@ -1794,9 +1794,9 @@
     "semantic_hash": "806c309f9e755cdbb4ac01e8da82e499"
   },
   "apps/web/app/room/[roomId]/extension-check.tsx": {
-    "mtime": 1791473521.961248,
-    "seen": 1791473766.3295748,
-    "ast_hash": "342c2cd0024aafebd0fc065ca8b4169b",
+    "mtime": 1791484160.1816,
+    "seen": 1791484224.195885,
+    "ast_hash": "f99bd1333fcfc9b0060e6b3ba8c992ff",
     "semantic_hash": ""
   },
   "apps/web/app/room/[roomId]/page.tsx": {
@@ -1824,9 +1824,9 @@
     "semantic_hash": "46a327b6821f708019d26ad3ff303c3c"
   },
   "apps/web/app/success/checkout-session-sync.tsx": {
-    "mtime": 1791473521.9617906,
-    "seen": 1791473766.329577,
-    "ast_hash": "4e9f4f3fdf71c76a0dede91510bfedd8",
+    "mtime": 1791484160.1818733,
+    "seen": 1791484224.195885,
+    "ast_hash": "21cf2006630fc7cb1437bdfd8946a91b",
     "semantic_hash": ""
   },
   "apps/web/app/success/page.tsx": {
@@ -2076,9 +2076,9 @@
     "semantic_hash": "dc084536996de5c0faf4b427c04aa307"
   },
   "apps/web/components/footer.tsx": {
-    "mtime": 1791473521.9637394,
-    "seen": 1791473766.3295832,
-    "ast_hash": "f02fbff05dede9975a5473507b6fecee",
+    "mtime": 1791484160.182103,
+    "seen": 1791484224.1958861,
+    "ast_hash": "f515cf88c8a50de649f460b8cd29f91c",
     "semantic_hash": ""
   },
   "apps/web/components/hero.tsx": {
@@ -2496,9 +2496,9 @@
     "semantic_hash": "389fb9bd79ae9a2283e569593c043c00"
   },
   "apps/web/lib/conversion-events.ts": {
-    "mtime": 1790511342.467272,
-    "seen": 1790527610.087538,
-    "ast_hash": "a6bc14191f63fee2a5a0526ca3295f38",
+    "mtime": 1791484160.1832008,
+    "seen": 1791484224.195889,
+    "ast_hash": "b48f315839a2c1005a680e2581ed6baa",
     "semantic_hash": ""
   },
   "apps/web/lib/founder-discord.ts": {
@@ -2562,9 +2562,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/guide-links.ts": {
-    "mtime": 1791473521.9670074,
-    "seen": 1791473766.32959,
-    "ast_hash": "ccddd6957a734f9da0274fd3442e6e66",
+    "mtime": 1791484160.1834128,
+    "seen": 1791484224.19589,
+    "ast_hash": "2f1618771eb58631b751f48025f2ad98",
     "semantic_hash": ""
   },
   "apps/web/lib/home-faq.ts": {
@@ -2790,9 +2790,9 @@
     "semantic_hash": "6cb8b5856710f9e7c6f41f41403cb52e"
   },
   "apps/web/lib/sitemap-discovery.ts": {
-    "mtime": 1790511342.476411,
-    "seen": 1790527610.087583,
-    "ast_hash": "6b74fc6772212f2e31871ff087d45f64",
+    "mtime": 1791484160.1838446,
+    "seen": 1791484224.1958919,
+    "ast_hash": "76ab14b9966e03e04b689af964607f69",
     "semantic_hash": ""
   },
   "apps/web/lib/social-account-limits.ts": {
@@ -4818,9 +4818,9 @@
     "semantic_hash": "8c031f301f5f2eedd0a660b06e156fd5"
   },
   "apps/web/scripts/seo/portfolio-audit.ts": {
-    "mtime": 1790511342.5088053,
-    "seen": 1790527610.087605,
-    "ast_hash": "dd81bd867144be7209597ce3c1195598",
+    "mtime": 1791484160.1842287,
+    "seen": 1791484224.1958919,
+    "ast_hash": "3eb2c4f0ca9f2024f733c25dd2fb1177",
     "semantic_hash": ""
   },
   "apps/web/docs/seo-portfolio-freeze.md": {
@@ -5148,9 +5148,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/seo-guide-blocks.tsx": {
-    "mtime": 1791473521.9655104,
-    "seen": 1791473766.329587,
-    "ast_hash": "f5445f065305f2989835752e8488eec2",
+    "mtime": 1791484203.749984,
+    "seen": 1791484224.195888,
+    "ast_hash": "81eba935a6ce9f839a585d03d55d3522",
     "semantic_hash": ""
   },
   "apps/web/lib/kreatli-crm/contact-message-shared.ts": {
@@ -7314,9 +7314,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1790819393.3747547,
-    "seen": 1790844799.913161,
-    "ast_hash": "5694e8c9875069bf669a94ab86a39264",
+    "mtime": 1791484160.1826353,
+    "seen": 1791484224.195888,
+    "ast_hash": "2b62fd51c438e85d610a1d1eea210ca3",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
@@ -8280,9 +8280,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/install-cta.ts": {
-    "mtime": 1790511342.4704351,
-    "seen": 1790527610.087553,
-    "ast_hash": "adfe4215f62079b1ed0c916f5d624978",
+    "mtime": 1791484160.1836205,
+    "seen": 1791484224.195891,
+    "ast_hash": "fdcd13e4453bfcd93168cbd83b7fd505",
     "semantic_hash": ""
   },
   "apps/web/lib/kreatli-crm/public-signup-count.ts": {
@@ -9558,15 +9558,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/crunchyroll-watch-history/page.tsx": {
-    "mtime": 1791473521.9534116,
-    "seen": 1791473766.329552,
-    "ast_hash": "82c527053d695782aecae048b8b593b4",
+    "mtime": 1791484160.174087,
+    "seen": 1791484224.195869,
+    "ast_hash": "e266cb0f6de7e7a75a64c3316e04d589",
     "semantic_hash": ""
   },
   "apps/web/app/guides/anime-watchlist/page.tsx": {
-    "mtime": 1791474831.843279,
-    "seen": 1791474922.131505,
-    "ast_hash": "89cbfb774d99c342427053b8f9a5562b",
+    "mtime": 1791484160.174447,
+    "seen": 1791484224.195872,
+    "ast_hash": "9bcd4aa6d0e9e02a1b5b0e3431ef4516",
     "semantic_hash": ""
   },
   "apps/web/app/guides/chrome-watch-party/page.tsx": {
@@ -9582,15 +9582,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-screen-share-black-screen/page.tsx": {
-    "mtime": 1791474833.7034814,
-    "seen": 1791474922.1315079,
-    "ast_hash": "233a7628e23bcb45c21905fcc32e64f1",
+    "mtime": 1791484160.1746798,
+    "seen": 1791484224.195873,
+    "ast_hash": "eacf243540976d4c8f428a887ad64ebb",
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-screen-share-not-working/page.tsx": {
-    "mtime": 1791474836.1733975,
-    "seen": 1791474922.131509,
-    "ast_hash": "7fad4fb81ebbd5f18dbbf87d59848ac7",
+    "mtime": 1791484160.174874,
+    "seen": 1791484224.195874,
+    "ast_hash": "c7b35cedec7e5331617252b542a6272f",
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-watch-together-activity/page.tsx": {
@@ -9624,15 +9624,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/long-distance-date-night-ideas/page.tsx": {
-    "mtime": 1791474840.3691344,
-    "seen": 1791474922.13151,
-    "ast_hash": "1c2d812f5f19169e2985fb035d320ed0",
+    "mtime": 1791484160.1760204,
+    "seen": 1791484224.1958778,
+    "ast_hash": "aa1c93bb450606b91d97a6fef6652d70",
     "semantic_hash": ""
   },
   "apps/web/app/guides/online-date-ideas/page.tsx": {
-    "mtime": 1791474841.990965,
-    "seen": 1791474922.13151,
-    "ast_hash": "865979af9094012f6d24b8836702f968",
+    "mtime": 1791484160.1790411,
+    "seen": 1791484224.195881,
+    "ast_hash": "efe2cceca9f94c684dcddd3f56112533",
     "semantic_hash": ""
   },
   "apps/web/app/guides/resume-anime/page.tsx": {
@@ -9642,15 +9642,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/romance-anime-dubbed/page.tsx": {
-    "mtime": 1791474842.8655448,
-    "seen": 1791474922.131511,
-    "ast_hash": "c1e3f177d3b34821e428b52f3adec9ef",
+    "mtime": 1791484160.1794736,
+    "seen": 1791484224.195882,
+    "ast_hash": "534ede6ed681c880e6c28e3707776ca4",
     "semantic_hash": ""
   },
   "apps/web/app/guides/subbed-anime/page.tsx": {
-    "mtime": 1791474842.9873357,
-    "seen": 1791474922.131511,
-    "ast_hash": "c46381a442c9f10c2dc70304d63cafa5",
+    "mtime": 1791484160.1797745,
+    "seen": 1791484224.195882,
+    "ast_hash": "c3aa93940e744d455e4603975f008341",
     "semantic_hash": ""
   },
   "apps/web/app/virtual-movie-night/page.tsx": {
@@ -9669,6 +9669,78 @@
     "mtime": 1791473728.9430532,
     "seen": 1791473766.329591,
     "ast_hash": "d2397b234603600b09c6b7a727a3687c",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/does-netflix-have-a-watch-party/page.tsx": {
+    "mtime": 1791484203.7966864,
+    "seen": 1791484224.1958752,
+    "ast_hash": "1602d4dce4bec07fb0b3d0b592a3be2a",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/how-to-screen-share-netflix-on-discord/page.tsx": {
+    "mtime": 1791484203.8107083,
+    "seen": 1791484224.1958761,
+    "ast_hash": "ac81e4f29c24bde82dd859a84e11bc9e",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/how-to-watch-netflix-together/page.tsx": {
+    "mtime": 1791484203.8249834,
+    "seen": 1791484224.1958761,
+    "ast_hash": "560bd0095105247613262e4132bbc29e",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/how-to-watch-netflix-with-friends/page.tsx": {
+    "mtime": 1791484203.8389726,
+    "seen": 1791484224.195877,
+    "ast_hash": "901e619c6d48219312e85357e2d78690",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/netflix-group-watch/page.tsx": {
+    "mtime": 1791484203.8533788,
+    "seen": 1791484224.195879,
+    "ast_hash": "137c2790ac536ca5764b5a2da2334d8b",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/netflix-movie-night/page.tsx": {
+    "mtime": 1791484203.8670757,
+    "seen": 1791484224.195879,
+    "ast_hash": "92ff76db7503a0265a28657d5af64644",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/netflix-party-extension/page.tsx": {
+    "mtime": 1791484203.8812413,
+    "seen": 1791484224.195879,
+    "ast_hash": "06865ab2ced2290e4aac790d726b40d0",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/netflix-teleparty/page.tsx": {
+    "mtime": 1791484203.894865,
+    "seen": 1791484224.19588,
+    "ast_hash": "dba1798dc02291178a4f271c9b26f572",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/teleparty-netflix/page.tsx": {
+    "mtime": 1791484203.9086447,
+    "seen": 1791484224.195882,
+    "ast_hash": "2ae0240c16df4c9251934dfd7919c23b",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/watch-netflix-together/page.tsx": {
+    "mtime": 1791484203.9228687,
+    "seen": 1791484224.195883,
+    "ast_hash": "8a824333ada5a66a599c6693f2e3687a",
+    "semantic_hash": ""
+  },
+  "apps/web/app/netflix-party/page.tsx": {
+    "mtime": 1791484203.7823822,
+    "seen": 1791484224.195884,
+    "ast_hash": "b98886346c9947ec6bf64cb3a8f995f8",
+    "semantic_hash": ""
+  },
+  "apps/web/app/netflix-watch-party/page.tsx": {
+    "mtime": 1791484203.7676256,
+    "seen": 1791484224.195884,
+    "ast_hash": "5d596793b538d7a0a5789da3005aec89",
     "semantic_hash": ""
   }
 }

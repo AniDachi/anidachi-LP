@@ -29,12 +29,15 @@ export function SeoGuideTitle({
 export function SeoGuideAnswer({
   children,
   className,
+  id,
 }: {
   children: ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
     <div
+      id={id}
       className={cn(
         "not-prose relative mb-10 overflow-hidden rounded-[20px] border border-ani-line bg-ani-panel px-5 py-5 sm:px-7 sm:py-6",
         className,

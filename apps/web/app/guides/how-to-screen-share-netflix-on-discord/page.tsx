@@ -104,7 +104,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
         aboveFoldCta
       >
         <SeoGuideTitle>How to screen share Netflix on Discord</SeoGuideTitle>
-        <SeoGuideAnswer>
+        <SeoGuideAnswer id="answer">
           <p>
             Join a Discord voice channel and share the Chrome window that has
             Netflix. If friends see black, the share is not a movie night.
