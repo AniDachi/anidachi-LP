@@ -60,7 +60,9 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
     path === "/anime-tracker" ||
     path === "/discord-watch-party" ||
     path === "/sub-vs-dub" ||
-    path === "/watch-party-app"
+    path === "/watch-party-app" ||
+    path === "/netflix-watch-party" ||
+    path === "/netflix-party"
   ) {
     return "pillar";
   }
