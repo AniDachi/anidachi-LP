@@ -5,7 +5,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 export const metadata: Metadata = {
   title: "How to Watch Netflix Together Long Distance (2026) | AniDachi",
   description:
-    "Short answer: Netflix has no native watch party feature. Long-distance couples use Teleparty or Rave for Netflix sync — and AniDachi for Netflix, Crunchyroll and YouTube rooms.",
+    "Short answer: Netflix has no native watch party feature. Long-distance couples use Teleparty or Rave for Netflix sync. AniDachi syncs Crunchyroll and YouTube. Netflix on AniDachi is coming soon.",
   alternates: { canonical: "/watch-netflix-together-long-distance" },
   openGraph: {
     images: [
@@ -28,7 +28,7 @@ const faq = [
   {
     question: "How do I watch Netflix together long distance?",
     answer:
-      "AniDachi supports Netflix watchrooms in desktop Chrome: install the extension, open the same title with your own Netflix access, and join a Plus, Pro, or trial host through their room invite. Teleparty is another option. Both people install the Teleparty Chrome extension, one person opens a Netflix show and creates a Teleparty session, shares the link, and playback syncs with text chat. Rave is a free alternative that adds voice and video calling.",
+      "AniDachi does not sync Netflix yet. Netflix is coming soon. For Netflix today, both people install the Teleparty Chrome extension, one person opens a Netflix show and creates a Teleparty session, shares the link, and playback syncs with text chat. Rave is a free alternative that adds voice and video calling. AniDachi syncs Crunchyroll and YouTube in desktop Chrome.",
   },
   {
     question: "Does Netflix have a built-in watch party feature?",
@@ -95,8 +95,8 @@ export default function WatchNetflixTogetherLongDistancePage() {
           option that includes voice and video calling.
         </strong>{" "}
         Neither supports async watching — both require you online at the
-        same time. AniDachi offers live rooms for Netflix, Crunchyroll and YouTube;
-        its async catch-up is coming soon.
+        same time. AniDachi offers live rooms for Crunchyroll and YouTube.
+        Netflix on AniDachi is coming soon and is not supported yet. Async catch-up is also coming soon.
       </p>
 
       <h2
@@ -161,10 +161,10 @@ export default function WatchNetflixTogetherLongDistancePage() {
         id="anidachi"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        Watch Netflix with AniDachi
+        AniDachi and Netflix
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        AniDachi supports Netflix films and shows alongside Crunchyroll and YouTube. It offers
+        AniDachi does not sync Netflix yet. Netflix is coming soon. Today it syncs Crunchyroll and YouTube, with
         live sync, chat, reactions, and voice/video beside each person’s player.
         A Plus, Pro, or trial host creates the room and Free friends can join.
         Personal history needs your own Plus/Pro access and recording permission.

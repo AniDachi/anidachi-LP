@@ -958,7 +958,7 @@ it("bulk clearing stays in Library options and requires confirmation on Free", a
       return false;
     };
     await click(buttonByText(view.container, "Clear all history"));
-    assert.match(message, /YouTube, Crunchyroll and Netflix/);
+    assert.match(message, /YouTube and Crunchyroll/);
     assert.equal(server.calls.filter((call) => call.body).length, 0);
     assert.equal(options.open, false);
     await act(async () => {

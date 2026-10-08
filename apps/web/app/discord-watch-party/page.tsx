@@ -88,6 +88,16 @@ export default function DiscordWatchPartyPage() {
 					url: "/guides/discord-watch-together",
 					position: 3,
 				},
+				{
+					name: "Discord screen share black screen",
+					url: "/guides/discord-screen-share-black-screen",
+					position: 4,
+				},
+				{
+					name: "Discord screen share not working",
+					url: "/guides/discord-screen-share-not-working",
+					position: 5,
+				},
 			]}
 		>
 			<SeoGuideTitle>
@@ -162,6 +172,20 @@ export default function DiscordWatchPartyPage() {
 					className="text-brand-orange hover:underline"
 				>
 					Discord watch together
+				</Link>
+				. A dark window is{" "}
+				<Link
+					href="/guides/discord-screen-share-black-screen"
+					className="text-brand-orange hover:underline"
+				>
+					Discord screen share black screen
+				</Link>
+				. A missing share button is{" "}
+				<Link
+					href="/guides/discord-screen-share-not-working"
+					className="text-brand-orange hover:underline"
+				>
+					Discord screen share not working
 				</Link>
 				.
 			</p>

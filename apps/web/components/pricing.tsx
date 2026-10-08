@@ -463,7 +463,7 @@ export function Pricing({
 										audience: "Join a friend’s room for free.",
 										summary: "Join a Plus, Pro or trial host for free.",
 										features: [
-											"Join rooms on Crunchyroll + YouTube + Netflix",
+											"Join rooms on Crunchyroll + YouTube",
 											"Synced video, chat & reactions",
 											"Voice & video within your host’s limits",
 											"Read saved history & resume",
@@ -593,7 +593,7 @@ function TierCardBody({
 	const features = paidTier
 		? [
 				"No daily hosting limit",
-				"Crunchyroll + YouTube + Netflix",
+				"Crunchyroll + YouTube",
 				"Synced video, chat & reactions",
 				`Up to ${policy.maxCameras} cameras & ${policy.maxMicrophones} mics`,
 				"Save, edit & resume watch progress",

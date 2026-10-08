@@ -16,7 +16,7 @@ const steps = [
   {
     icon: Play,
     title: "Open a video",
-    description: "Choose something to watch on YouTube, Crunchyroll or Netflix.",
+    description: "Choose something to watch on YouTube or Crunchyroll. Netflix is coming soon.",
   },
   {
     icon: Users,

@@ -84,10 +84,10 @@ export default function DiscordWatchTogetherActivityPage() {
 			</h2>
 			<SeoGuideAnswer>
 				<p>
-					Discord's Watch Together Activity plays YouTube inside Discord.
+					Discord&apos;s Watch Together Activity plays YouTube inside Discord.
 					AniDachi does not replace that activity. It keeps the voice channel
 					and syncs a Crunchyroll episode, or a full YouTube watch page, in each
-					person's desktop Chrome tab.
+					person&apos;s desktop Chrome tab.
 				</p>
 			</SeoGuideAnswer>
 			<h2

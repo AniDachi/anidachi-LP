@@ -37,7 +37,7 @@ export function Hero() {
           </h1>
 
           <p className="mb-8 max-w-xl text-pretty text-lg leading-relaxed text-ani-muted md:text-xl">
-            Watch together on Crunchyroll, YouTube and Netflix — synced, in chat, across
+            Watch together on Crunchyroll and YouTube — synced, in chat, across
             time zones.
           </p>
 

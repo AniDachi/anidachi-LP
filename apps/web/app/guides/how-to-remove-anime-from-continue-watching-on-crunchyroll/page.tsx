@@ -116,9 +116,9 @@ export default function HowToRemoveAnimeFromContinueWatchingPage() {
 				</h2>
 				<SeoGuideAnswer>
 					<p>
-						Open the anime's series page and choose Mark Series as Watched from
+						Open the anime&apos;s series page and choose Mark Series as Watched from
 						the three-dot menu in the top right. A multi-season show can leave
-						one season on the row. Open that season's menu and choose Mark
+						one season on the row. Open that season&apos;s menu and choose Mark
 						Season as Watched.
 					</p>
 				</SeoGuideAnswer>
@@ -130,7 +130,7 @@ export default function HowToRemoveAnimeFromContinueWatchingPage() {
 				</h2>
 				<SeoGuideSteps steps={howToSteps} />
 				<p className="mb-8 leading-relaxed text-ani-muted">
-					Crunchyroll's mark-as-watched article, published 28 August 2026, is
+					Crunchyroll&apos;s mark-as-watched article, published 28 August 2026, is
 					the source for those menus. Checked 8 October 2026:{" "}
 					<a
 						href={MARK_WATCHED_HELP}

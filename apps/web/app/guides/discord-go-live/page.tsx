@@ -87,8 +87,8 @@ export default function DiscordGoLivePage() {
 				<p>
 					Discord Go Live is screen share in a voice channel. One person sends a
 					window. Crunchyroll often shows a black window. YouTube can appear,
-					then everyone's picture depends on that one upload. For the episode,
-					stay in the call and play the video on each person's own tab.
+					then everyone&apos;s picture depends on that one upload. For the episode,
+					stay in the call and play the video on each person&apos;s own tab.
 				</p>
 			</SeoGuideAnswer>
 			<h2
@@ -129,7 +129,7 @@ export default function DiscordGoLivePage() {
 				<Link href="/extension" className="text-brand-orange hover:underline">
 					the install page
 				</Link>
-				. Netflix is coming soon and is not supported yet. Discord's built-in YouTube activity is a
+				. Netflix is coming soon and is not supported yet. Discord&apos;s built-in YouTube activity is a
 				different feature:{" "}
 				<Link
 					href="/guides/discord-watch-together-activity"

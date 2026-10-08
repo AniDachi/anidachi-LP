@@ -34,7 +34,7 @@ const faq = [
   {
     question: "What is a good long distance date idea?",
     answer:
-      "Pick one episode or movie you can both stream, stay on a voice or video call, and sync playback so you react at the same moment. AniDachi does that for Crunchyroll, YouTube and Netflix.",
+      "Pick one episode or movie you can both stream, stay on a voice or video call, and sync playback so you react at the same moment. AniDachi does that for Crunchyroll and YouTube. Netflix is coming soon.",
   },
   {
     question: "Do we have to be online at the same time?",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can we watch Netflix together this way?",
     answer:
-      "Yes. AniDachi syncs Netflix watch pages, Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
+      "Yes for Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome. Netflix is coming soon and is not supported yet.",
   },
 ];
 

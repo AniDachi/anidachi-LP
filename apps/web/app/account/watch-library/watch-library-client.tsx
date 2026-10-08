@@ -844,7 +844,7 @@ function deleteScopeKey(target: WatchHistoryDeleteScope): string {
 
 function deleteConfirmation(target: WatchHistoryDeleteScope): string {
   if (target.scope === "all")
-    return "Clear all your AniDachi watch history on YouTube, Crunchyroll and Netflix? This cannot be undone.";
+    return "Clear all your AniDachi watch history on YouTube and Crunchyroll? This cannot be undone.";
   if (target.scope === "title")
     return "Delete this title from your watch history?";
   return "Delete this episode from your watch history?";

@@ -176,6 +176,7 @@ export default function CrunchyrollWatchHistoryPage() {
 						href: "/watch-crunchyroll-together",
 						label: "Crunchyroll watch party",
 					},
+					{ href: "/anime-tracker", label: "Anime tracker" },
 				]}
 			/>
 		</SeoPageLayout>

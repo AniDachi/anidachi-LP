@@ -49,7 +49,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 AniDachi provides watchrooms for synchronized viewing on
-                supported platforms (Crunchyroll, YouTube and Netflix), with chat,
+                supported platforms (Crunchyroll and YouTube), with chat,
                 reactions, and related social features through a Chrome
                 extension and website. Free accounts can join rooms hosted on
                 Plus or Pro, including rooms hosted during an active trial.

@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 
 export const CRUNCHYROLL_URL = "https://www.crunchyroll.com";
 export const YOUTUBE_URL = "https://www.youtube.com";
-export const NETFLIX_URL = "https://www.netflix.com/browse";
 
 export function WatchPlatformLinks({
   className = "flex flex-wrap gap-2",
@@ -21,12 +20,6 @@ export function WatchPlatformLinks({
         <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer">
           YouTube
           <span className="sr-only">, opens in a new tab. Use a full watch page, not the homepage, Shorts, or embeds.</span>
-        </a>
-      </Button>
-      <Button asChild variant="creamOutline" size="control">
-        <a href={NETFLIX_URL} target="_blank" rel="noopener noreferrer">
-          Netflix
-          <span className="sr-only">, opens in a new tab. Choose a movie or episode and open its watch page.</span>
         </a>
       </Button>
     </div>

@@ -39,7 +39,7 @@ const faq = [
   {
     question: "Can AniDachi sync Netflix anime?",
     answer:
-      "Yes. AniDachi supports Netflix, Crunchyroll and YouTube watchrooms in desktop Chrome. Each person plays the same title through their own provider access; AniDachi adds live sync, chat, reactions and calls.",
+      "Not yet. Netflix is coming soon and is not supported. AniDachi supports Crunchyroll and YouTube watchrooms in desktop Chrome. Each person plays the same title through their own provider access; AniDachi adds live sync, chat, reactions and calls.",
   },
   {
     question: "Which is better for anime watch parties, AniDachi or Netflix Teleparty?",
@@ -117,7 +117,7 @@ export default function AniDachiVsNetflixWatchPartyPage() {
         ]}
         rows={[
           { feature: "Crunchyroll support", values: { anidachi: "yes", netflix: "No" } },
-          { feature: "Netflix support", values: { anidachi: "No — CR & YouTube only", netflix: "yes" } },
+          { feature: "Netflix support", values: { anidachi: "Coming soon", netflix: "yes" } },
           { feature: "Asynchronous watching", values: { anidachi: "Coming soon", netflix: "no" } },
           { feature: "Live synchronized playback", values: { anidachi: "yes", netflix: "yes" } },
           { feature: "Per-user episode progress", values: { anidachi: "Own Plus/Pro + recording permission", netflix: "no" } },

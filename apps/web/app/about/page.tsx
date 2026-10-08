@@ -6,7 +6,7 @@ import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 export const metadata: Metadata = {
   title: "About AniDachi",
   description:
-    "Who operates AniDachi, what the product does on Crunchyroll, YouTube and Netflix, and how we stay independent of streaming platforms.",
+    "Who operates AniDachi, what the product does on Crunchyroll and YouTube, and how we stay independent of streaming platforms.",
   alternates: { canonical: "/about" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "About AniDachi",
     description:
-      "AniDachi helps friends watch together on Crunchyroll, YouTube and Netflix with synced watchrooms — built by an independent team.",
+      "AniDachi helps friends watch together on Crunchyroll and YouTube with synced watchrooms — built by an independent team. Netflix is coming soon.",
     url: "/about",
   },
 };
@@ -36,7 +36,7 @@ export default function AboutPage() {
             <p>
               AniDachi (アニ友) is a Chrome extension and web product for watching
               together with friends. You create a watchroom, sync playback on{" "}
-              <strong>Crunchyroll</strong>, <strong>YouTube</strong> or <strong>Netflix</strong>, chat in
+              <strong>Crunchyroll</strong> or <strong>YouTube</strong>, chat in
               real time, and share live reactions, voice, and video.
             </p>
             <p className="mt-4">
@@ -92,7 +92,10 @@ export default function AboutPage() {
                 mobile apps.
               </li>
               <li>
-                Rooms stay on one provider per session (Crunchyroll, YouTube or Netflix).
+                Rooms stay on one provider per session (Crunchyroll or YouTube).
+              </li>
+              <li>
+                Netflix is coming soon and is not supported yet.
               </li>
               <li>
                 Disney+, Hulu, and Amazon Prime Video sync are not

@@ -36,18 +36,18 @@ const shouldNoindex = isRobotsIndexingDisabled();
 export const metadata: Metadata = {
   title: {
     default:
-      "AniDachi – Watch Together | Sync Crunchyroll, YouTube & Netflix with Friends",
+      "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     template: "%s | AniDachi",
   },
   description:
-    "AniDachi lets you watch together with friends on Crunchyroll, YouTube and Netflix. Create watchrooms, sync playback, and chat in real-time. Async catch-up is coming soon in a later batch.",
+    "AniDachi lets you watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, and chat in real-time. Netflix and async catch-up are coming soon.",
   metadataBase: new URL(getResolvedSiteOrigin()),
   alternates: { canonical: "/" },
   openGraph: {
     title:
-      "AniDachi – Watch Together | Sync Crunchyroll, YouTube & Netflix with Friends",
+      "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     description:
-      "Create watchrooms for Crunchyroll, YouTube and Netflix, sync with friends, and chat in real-time. Async catch-up is coming soon.",
+      "Create watchrooms for Crunchyroll and YouTube, sync with friends, and chat in real-time. Netflix and async catch-up are coming soon.",
     type: "website",
     siteName: "AniDachi",
     images: [
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AniDachi – Watch Anime Together",
     description:
-      "Watchrooms for Crunchyroll, YouTube and Netflix — live sync and chat in desktop Chrome. Async catch-up coming soon.",
+      "Watchrooms for Crunchyroll and YouTube — live sync and chat in desktop Chrome. Netflix and async catch-up are coming soon.",
     images: [ANIDACHI_OG_IMAGE_PATH],
   },
   robots: {

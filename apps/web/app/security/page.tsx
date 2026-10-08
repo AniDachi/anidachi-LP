@@ -34,7 +34,7 @@ export default function SecurityPage() {
             </h2>
             <p>
               AniDachi separates your streaming logins from our account system.
-              You keep your own Crunchyroll, YouTube or Netflix session in Chrome. We do
+              You keep your own Crunchyroll or YouTube session in Chrome. We do
               not ask for those platform passwords.
             </p>
           </section>
@@ -77,7 +77,7 @@ export default function SecurityPage() {
             <p className="mt-4">
               The extension overlays watchroom controls on supported pages and
               detects playback so friends can stay in sync. Store builds use
-              narrow host permissions for YouTube, Crunchyroll, Netflix, AniDachi web,
+              narrow host permissions for YouTube, Crunchyroll, AniDachi web,
               and our Worker hosts — not blanket access to every site.
             </p>
             <p className="mt-4">

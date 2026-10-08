@@ -973,6 +973,41 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "Virtual Movie Night",
 		tags: ["template-c", "watch-party", "pillar-watch-party-app"],
 	},
+	{
+		href: "/guides/anime-watchlist",
+		label: "Anime Watchlist",
+		tags: ["template-c", "how-to-core", "pillar-anime-tracker"],
+	},
+	{
+		href: "/guides/discord-screen-share-black-screen",
+		label: "Discord Screen Share Black Screen",
+		tags: ["template-c", "discord", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/discord-screen-share-not-working",
+		label: "Discord Screen Share Not Working",
+		tags: ["template-c", "discord", "pillar-discord-watch-party"],
+	},
+	{
+		href: "/guides/romance-anime-dubbed",
+		label: "Romance Anime Dubbed",
+		tags: ["template-c", "pillar-sub-vs-dub"],
+	},
+	{
+		href: "/guides/subbed-anime",
+		label: "Subbed Anime",
+		tags: ["template-c", "pillar-sub-vs-dub"],
+	},
+	{
+		href: "/guides/online-date-ideas",
+		label: "Online Date Ideas",
+		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
+	{
+		href: "/guides/long-distance-date-night-ideas",
+		label: "Long Distance Date Night Ideas",
+		tags: ["template-c", "long-distance", "pillar-long-distance"],
+	},
 ];
 
 export function getGuideLinks({

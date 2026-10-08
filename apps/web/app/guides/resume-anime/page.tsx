@@ -115,7 +115,7 @@ export default function ResumeAnimePage() {
 						Resume opens the episode saved in AniDachi Watch Library. Plus or
 						Pro, with recording permission, writes that progress. Once it is
 						saved, a Free account can open it, resume, and delete it.
-						Crunchyroll's Continue Watching row is a separate list.
+						Crunchyroll&apos;s Continue Watching row is a separate list.
 					</p>
 				</SeoGuideAnswer>
 				<h2
@@ -154,7 +154,7 @@ export default function ResumeAnimePage() {
 					id="crunchyroll"
 					className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text"
 				>
-					Crunchyroll's row
+					Crunchyroll&apos;s row
 				</h2>
 				<p className="mb-8 leading-relaxed text-ani-muted">
 					Cleaning Continue Watching does not move your AniDachi spot. Those

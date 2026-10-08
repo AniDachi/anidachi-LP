@@ -61,7 +61,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Chrome, Web",
     description:
-      "Join friends for free on Crunchyroll, YouTube and Netflix. Host rooms with Plus or Pro, including during a trial, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Async catch-up is coming soon.",
+      "Join friends for free on Crunchyroll and YouTube. Host rooms with Plus or Pro, including during a trial, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Netflix and async catch-up are coming soon.",
     url: siteUrl,
     offers: {
       "@type": "AggregateOffer",

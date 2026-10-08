@@ -65,7 +65,7 @@ const faq = [
   {
     question: "Can AniDachi replace a Netflix screen share?",
     answer:
-      "Yes. AniDachi syncs Netflix watch pages, Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
+      "Not yet. Netflix is coming soon and is not supported. AniDachi syncs Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
   },
 ];
 

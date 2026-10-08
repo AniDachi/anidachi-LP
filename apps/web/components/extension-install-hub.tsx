@@ -337,8 +337,8 @@ export function ExtensionInstallHub({
         <div className="mt-10 rounded-xl border border-ani-line bg-ani-panel px-4 py-3 text-sm leading-relaxed text-ani-muted">
           <p>
             Chrome will install AniDachi and keep it updated automatically. After
-            installation, pin it from the extensions menu and open a Crunchyroll,
-            YouTube or Netflix watch page. Join a friend for free, or create a room
+            installation, pin it from the extensions menu and open a Crunchyroll
+            or YouTube watch page. Netflix is coming soon. Join a friend for free, or create a room
             with Plus or Pro, including during a trial.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -405,7 +405,7 @@ export function ExtensionInstallHub({
             Click the puzzle-piece icon in Chrome&apos;s toolbar (top-right, next
             to your profile). Find AniDachi in the list. Click the{" "}
             <span className="text-ani-text">pin</span> on the right of that row
-            — it fills in when it is pinned. Then open Crunchyroll, YouTube or Netflix
+            — it fills in when it is pinned. Then open Crunchyroll or YouTube
             and sign in when AniDachi asks.
             {nextPath ? " Then return to your watchroom invite." : ""}
           </p>
