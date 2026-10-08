@@ -54,7 +54,7 @@ const howToSteps = [
   },
   {
     name: "Pin and open Crunchyroll, YouTube or Netflix",
-    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode or a full YouTube watch page and sign in when asked. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
+    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode, a full YouTube watch page, or a Netflix movie or episode watch page and sign in when asked. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
   },
 ];
 

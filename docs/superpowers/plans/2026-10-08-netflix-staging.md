@@ -13,6 +13,7 @@
 - Deliver only to staging through a PR. Never promote main, deploy production, publish the Store package, or change payments/entitlements.
 - Add narrow Netflix host matches through the existing manifest path. Never request broad hosts or create optional-permission UX.
 - Preserve existing history and protocol compatibility. Default capacity responses remain version 1 with exactly YouTube and Crunchyroll; new clients explicitly request version 2, which adds Netflix with the existing series-provider limit of 200 titles. No plan or pricing change.
+- All-provider history reads preserve old clients: omitted `providerVersion` means version 1 (Crunchyroll/YouTube only), while new clients request `providerVersion=2` to include Netflix. An explicit Netflix provider filter is itself an opt-in. Apply filtering before counts/pagination, including browse facets/sessions.
 - Canonical Netflix source is HTTPS `www.netflix.com/watch/<numeric-id>`; route/player IDs must agree. Reject credentials, unsupported hosts/routes, cross-provider identities, and stale source generations.
 - Netflix IDs, not localized labels or episode numbers, identify a series/season/episode. Movies have independent movie keys and no invented season. Do not import Netflix account bookmarks/history.
 - No recording or remote playback during ads, trailers, supplemental recaps, ambiguous metadata, or player replacement. Unknown data stays unknown. No DRM/ad bypass or direct-video seek fallback when the player API is unavailable.
@@ -30,6 +31,8 @@ Metadata is available through `getVideoMetadataByVideoId(id)._metadataObject.vid
 Breaking Bad: series 70143836; season 70114191; episode 70196259 (S2E1), next episode 70196260 (S2E2). Next-episode navigation replaced the video element with a transient no-video state. Film El Camino: route and main movie 81078819, but initial recap was actual player ID 81169895 with type supplemental. Suspend during this mismatch. Main movie metadata has type movie and no seasons.
 
 Stable DOM roots: `[data-uia="watch-video"]`, `[data-uia="player"]`, `[data-uia="video-canvas"]`. Fullscreen root is the watch-video container. Browse/detail autoplay videos must never mount the adapter or record history.
+
+Follow-up inspection found explicit catalog context at `netflix.reactContext.models.geo.data.requestCountry.id` (two-letter country) and `.locale.id` (BCP locale). Read only these fields; never infer region from language, as the observed locale suffix and request country differed. Missing context yields partial catalog state. `player.getAdManager().adPresenting` is an observable object with a boolean `_value`, not itself a boolean; an unknown ad state must not be treated as false.
 
 ## Review focus
 
@@ -51,7 +54,7 @@ Tests: Netflix canonicalization and hostile URLs, movie/series identities, forei
 
 Files: history/room validators under `apps/web/lib/anidachi-auth/`, watch-history route handlers, corresponding Worker source allowlists under `apps/api/src/`, one new migration under `apps/web/supabase/migrations/`, SQL contracts/tests. Never rewrite earlier migrations.
 
-Trace and update the currently active SQL functions, table checks and capacity admission for Netflix progress, catalog refresh/commit/projection, grid, editor, browse, deletion and room sources. Preserve ownership locks, current access/epoch and generation validation, receipts/idempotency, role grants and authenticated rejection. Default v1 capacity RPC/HTTP output stays exact; version 2 is requested explicitly and includes Netflix. Existing provider data is unchanged. Artwork allowlist must accept observed Netflix CDN safely without allowing lookalikes/private hosts.
+Trace and update the currently active SQL functions, table checks and capacity admission for Netflix progress, catalog refresh/commit/projection, grid, editor, browse, deletion and room sources. Preserve ownership locks, current access/epoch and generation validation, receipts/idempotency, role grants and authenticated rejection. Default v1 capacity RPC/HTTP output stays exact; version 2 is requested explicitly and includes Netflix. Add optional `providerVersion=2` to shared/read queries and SQL filtering for all-provider list/browse/facets/session compatibility; old unspecified requests exclude Netflix before counts and pagination. Explicit Netflix filters opt in directly. Existing provider data is unchanged. Artwork allowlist must accept observed Netflix CDN safely without allowing lookalikes/private hosts.
 
 Use the disposable local database harness for migration/runtime tests, not a production clone mutation. Validate existing provider fixtures and new Netflix movie/series, season/episode reads, resume URLs, edit/delete, provider capacity isolation, and unauthorized writes. Run relevant web/API type checks and tests; record staging migration/deployment order and rollback. No remote deployment in this task.
 
@@ -69,7 +72,7 @@ Integrate existing quiet-composer behavior: opening/typing/sending/Escape dismis
 
 Files: watch library and popup provider names/logos/filters/capacity, history client requests, metadata/artwork presentation, supported-platform UI/copy and upcoming-platform block, relevant focused tests.
 
-Add Netflix alongside existing providers, using real IDs and shared contracts from prior tasks. Explicitly request capacity v2. Movies remain standalone; shows expose seasons/episodes and accurate progress/resume. Keep per-provider 20-title initial popup page, load-more inside each provider and search across all available titles. Check provider options, grid/editor, pending/catalog states and empty/error UI for hardcoded CR/YT fallbacks. Reuse the current Netflix artwork asset where possible. Update relevant supported-platform copy only; remaining future platforms stay coming soon. Run web/extension checks and focused tests, inspect responsive local UI.
+Add Netflix alongside existing providers, using real IDs and shared contracts from prior tasks. Explicitly request capacity v2 and providerVersion=2 for all-provider reads, including the web initial server render. Movies remain standalone; shows expose seasons/episodes and accurate progress/resume. Keep per-provider 20-title initial popup page, load-more inside each provider and search across all available titles. Check provider options, grid/editor, pending/catalog states and empty/error UI for hardcoded CR/YT fallbacks. Reuse the current Netflix artwork asset where possible. Update relevant supported-platform copy only; remaining future platforms stay coming soon. Run web/extension checks and focused tests, inspect responsive local UI.
 
 ### Task 5: Integration proof and staging delivery
 

@@ -320,6 +320,106 @@ describe("Netflix page bridge", () => {
 });
 
 describe("Netflix subscribed adapter", () => {
+	it("fences a delayed result across old-video, no-video and replacement-video lifecycles", async () => {
+		vi.useFakeTimers();
+		const f = fixture();
+		const container = f.video.parentElement!;
+		// Keep the player container stable while replacing its actual DOM video.
+		vi.spyOn(f.player, "getElement").mockReturnValue(container);
+		let heldRequestId: string | undefined;
+		let delayedResult: unknown;
+		const deliver = (data: unknown) =>
+			window.dispatchEvent(
+				new MessageEvent("message", {
+					source: window,
+					origin: location.origin,
+					data,
+				}),
+			);
+		f.posts.mockImplementation((data) => {
+			if (
+				data.source === NETFLIX_REQUEST &&
+				data.action === "seek" &&
+				!heldRequestId
+			)
+				heldRequestId = data.id;
+			if (data.source === NETFLIX_RESULT && data.id === heldRequestId && data.ok) {
+				delayedResult = data;
+				return;
+			}
+			deliver(data);
+		});
+		const oldAdapter = new NetflixVideoAdapter(f.video, container);
+		const stopOld = oldAdapter.subscribe(() => {});
+		await vi.advanceTimersByTimeAsync(0);
+		const oldSnapshot = oldAdapter.getNetflixSnapshot()!;
+		expect(oldSnapshot).not.toBeNull();
+		const target = {
+			sourceUrl: "https://www.netflix.com/watch/70196260",
+			currentTime: 40,
+			expiresAt: Date.now() + 10000,
+			intentId: "dom-replacement",
+		};
+		const oldResume = oldAdapter.seekPersonalResume(target, () => true);
+		await vi.advanceTimersByTimeAsync(100);
+		expect(delayedResult).toMatchObject({
+			ok: true,
+			snapshot: { generation: oldSnapshot.generation },
+		});
+
+		f.video.remove();
+		await vi.advanceTimersByTimeAsync(500);
+		expect(oldAdapter.getPlaybackSnapshot().phase).toBe("transition");
+		expect(f.video.hasAttribute(NETFLIX_VIDEO_GENERATION)).toBe(false);
+		expect(
+			netflixHistoryPolicy.observe({ adapter: oldAdapter, preferences: null }),
+		).toBe(HISTORY_OBSERVATION_SUSPENDED);
+
+		const replacement = document.createElement("video");
+		Object.defineProperty(replacement, "readyState", {
+			configurable: true,
+			value: 4,
+		});
+		container.append(replacement);
+		const newAdapter = new NetflixVideoAdapter(replacement, container);
+		const stopNew = newAdapter.subscribe(() => {});
+		await vi.advanceTimersByTimeAsync(0);
+		expect(newAdapter.getPlaybackSnapshot().phase).toBe("content");
+		expect(newAdapter.getNetflixSnapshot()?.generation).not.toBe(
+			oldSnapshot.generation,
+		);
+		expect(
+			netflixHistoryPolicy.observe({ adapter: newAdapter, preferences: null }),
+		).toMatchObject({ episodeKey: "netflix:episode:70196260" });
+
+		// Replay the actual old command success only after a new binding exists.
+		deliver(delayedResult);
+		await expect(oldResume).resolves.toBe("waiting");
+		expect(oldAdapter.getNetflixSnapshot()).toBeNull();
+		f.player.seek.mockClear();
+		oldAdapter.seek(100);
+		const stale = await runNetflixCommand({
+			action: "seek",
+			movieId: "70196260",
+			generation: oldSnapshot.generation,
+			time: 100,
+		});
+		expect(stale?.ok).toBe(false);
+		expect(f.player.seek).not.toHaveBeenCalled();
+
+		const newResume = newAdapter.seekPersonalResume(
+			{ ...target, currentTime: 42 },
+			() => true,
+		);
+		await vi.advanceTimersByTimeAsync(100);
+		await expect(newResume).resolves.toBe("consumed");
+		expect(f.player.seek).toHaveBeenCalledExactlyOnceWith(42000);
+		expect(replacement.currentTime).toBe(0);
+		stopOld();
+		stopNew();
+		f.stop();
+		expect(vi.getTimerCount()).toBe(0);
+	});
 	it("captures validated personal history, cancels on replacement and releases every listener/timer", async () => {
 		const f = fixture();
 		f.posts.mockImplementation((data) => {
