@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { WatchHistoryResponseMetaSchema } from "./watch-history";
 
-import { historyEpisodeSourceMatches, historyKeyMatchesProvider } from "./history-provider-validation";
+import { historyEpisodeSourceMatches, historyKeyMatchesProvider, historyReadKeyMatchesProvider } from "./history-provider-validation";
 
 const Key = z.string().min(1).max(220);
 const Provider = z.enum(["crunchyroll", "youtube", "netflix"]);
@@ -11,7 +11,7 @@ export const WATCH_HISTORY_EDITOR_LIMIT = 2000;
 export const WatchHistoryEditorQuerySchema = z.strictObject({
   provider: Provider, titleKey: Key, accountGeneration: z.number().int().positive(),
 }).superRefine((value, context) => {
-  if (!historyKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]))
+  if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]))
     context.addIssue({ code: "custom", message: "Editor query must match provider" });
 });
 export const WatchHistoryEditRequestSchema = WatchHistoryEditorQuerySchema.safeExtend({
@@ -43,7 +43,7 @@ export const WatchHistoryEditorResponseSchema = z.strictObject({
 }).superRefine((value, ctx) => {
   if (new Set(value.episodes.map(episode => episode.episodeKey)).size !== value.episodes.length)
     ctx.addIssue({ code: "custom", message: "Duplicate editor episode" });
-  if (!historyKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]))
+  if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]))
     ctx.addIssue({ code: "custom", message: "Editor title must match provider" });
   for (const episode of value.episodes) {
     if (!historyEpisodeSourceMatches(value.provider, episode) ||

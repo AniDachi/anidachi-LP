@@ -53,6 +53,7 @@ export function sourceProviderFromUrl(value: string): SourceProvider | null {
     ) {
       return "youtube";
     }
+    if (hostname === "www.netflix.com") return "netflix";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")

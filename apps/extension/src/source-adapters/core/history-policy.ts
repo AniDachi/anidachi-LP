@@ -4,9 +4,10 @@ import type { VideoAdapter } from "./types";
 
 export type HistoryObservation = {
   identityPending?: WatchHistoryLocalEvent["identityPending"];
+  netflixIdentity?: WatchHistoryLocalEvent["netflixIdentity"];
   crunchyrollIdentity?: WatchHistoryLocalEvent["crunchyrollIdentity"];
   youtubeVideoId?: string;
-  provider: "crunchyroll" | "youtube";
+  provider: "crunchyroll" | "youtube" | "netflix";
   providerLabel: string;
   titleKey: string;
   itemKind: "movie" | "series";
@@ -35,7 +36,7 @@ export type HistoryObservationResult =
   | null;
 
 export type ProviderPlaybackMetadata = {
-  provider: "crunchyroll" | "youtube";
+  provider: "crunchyroll" | "youtube" | "netflix";
   kind: "movie" | "episode";
   itemId: string;
   itemTitle: string;

@@ -7,7 +7,7 @@ import {
 	WatchHistoryResponseMetaSchema,
 } from "./watch-history";
 
-import { historyEpisodeSourceMatches, historyKeyMatchesProvider } from "./history-provider-validation";
+import { historyEpisodeSourceMatches, historyReadKeyMatchesProvider } from "./history-provider-validation";
 
 const Key = z.string().trim().min(1).max(220);
 export const WATCH_HISTORY_GRID_PAGE_SIZE = 50;
@@ -24,8 +24,8 @@ export const WatchHistoryGridQuerySchema = z.strictObject({
 		.default(WATCH_HISTORY_GRID_PAGE_SIZE),
 	cursor: z.string().min(1).max(2048).optional(),
 }).superRefine((value, context) => {
-  if (!historyKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
-    (value.seasonKey !== undefined && !historyKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
+  if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
+    (value.seasonKey !== undefined && !historyReadKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
     context.addIssue({ code: "custom", message: "Grid query must match provider" });
 });
 
@@ -76,11 +76,11 @@ export const WatchHistoryGridResponseSchema = z
 		nextCursor: z.string().min(1).max(2048).nullable(),
 	})
 	.superRefine((value, context) => {
-		if (!historyKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
-		  (value.seasonKey !== null && !historyKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
+		if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
+		  (value.seasonKey !== null && !historyReadKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
 		  context.addIssue({ code: "custom", message: "Grid identity must match provider" });
 		for (const season of value.seasons) {
-		  if (!historyKeyMatchesProvider(value.provider, season.seasonKey, ["season"]) ||
+		  if (!historyReadKeyMatchesProvider(value.provider, season.seasonKey, ["season"]) ||
 		    (season.nextEpisode && (season.nextEpisode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches(value.provider, season.nextEpisode))))
 		    context.addIssue({ code: "custom", message: "Grid season must match provider" });
 		}

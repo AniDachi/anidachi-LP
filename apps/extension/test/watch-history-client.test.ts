@@ -17,6 +17,7 @@ import {
   flushWatchHistoryInBackground,
   handleWatchHistoryAuthSessionChange,
   isWatchHistoryMessage,
+  isWatchHistorySenderAllowed,
   parseWatchHistoryBootstrapData,
   reconcileWatchHistoryThenDrain,
   usesStoredWatchHistorySession,
@@ -2941,3 +2942,16 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
   isHistoryRecordingEnabled: async () => true,
 }));
+
+
+it("allows Netflix history capture only from this extension in a canonical top-level watch tab", () => {
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+  try {
+    const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
+    const sender = { id: "test-extension", url: "https://www.netflix.com/watch/30", tab: { id: 8 }, frameId: 0 } as chrome.runtime.MessageSender;
+    expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
+    for (const url of ["https://www.netflix.com/browse", "https://www.netflix.com.evil/watch/30", "https://user@www.netflix.com/watch/30", "http://www.netflix.com/watch/30"]) expect(isWatchHistorySenderAllowed(message, { ...sender, url })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, frameId: 1 })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, id: "foreign-extension" })).toBe(false);
+  } finally { vi.unstubAllGlobals(); }
+});

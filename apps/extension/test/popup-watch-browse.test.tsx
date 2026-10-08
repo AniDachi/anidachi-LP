@@ -368,7 +368,7 @@ async function change(label: string, value: string) {
 describe("production watch browsing", () => {
   function providerLibrary() {
     const requests: WatchHistoryBrowseQuery[] = [];
-    const sizes = { youtube: 45, crunchyroll: 23 };
+    const sizes = { youtube: 45, crunchyroll: 23, netflix: 0 };
     const client = clientFixture(async message => {
       if (message.command !== "browse") return { ok: true };
       const query = message.input as WatchHistoryBrowseQuery;
@@ -376,6 +376,9 @@ describe("production watch browsing", () => {
       const provider = query.provider ?? "crunchyroll";
       const all = Array.from({ length: sizes[provider] }, (_, index) => ({
         ...item, provider, titleKey: `${provider}:title:${index}`,
+        ...(provider === "youtube" ? { itemKind: "movie", seasons: [],
+          sourceUrl: `https://www.youtube.com/watch?v=${String(index).padStart(11, "0")}`,
+          latestActivity: { ...item.latestActivity, episodeKey: `youtube:video:${String(index).padStart(11, "0")}` } } : {}),
         title: index === 44 ? "Hidden needle" : `${provider} title ${index + 1}`,
       }));
       const matches = all.filter(value => !query.search || value.title.toLowerCase().includes(query.search.toLowerCase()));
@@ -623,7 +626,8 @@ describe("production watch browsing", () => {
   it("shows artwork for existing YouTube rows whose stored artwork is null", async () => {
     const page = browse("Saved YouTube video");
     page.history.items[0] = { ...required(page.history.items[0]), provider: "youtube", itemKind: "movie",
-      titleKey: "youtube:video:FyS5dAywkEo", sourceUrl: "https://www.youtube.com/watch?v=FyS5dAywkEo", artworkUrl: null };
+      titleKey: "youtube:video:FyS5dAywkEo", sourceUrl: "https://www.youtube.com/watch?v=FyS5dAywkEo", artworkUrl: null,
+      seasons: [], latestActivity: { ...item.latestActivity, episodeKey: "youtube:video:FyS5dAywkEo" } };
     page.matches = [{ ...required(page.matches[0]), provider: "youtube", titleKey: "youtube:video:FyS5dAywkEo" }];
     const client = clientFixture(async message => message.command === "browse" ? { ok: true, data: page } : { ok: true });
     await mount(client);
