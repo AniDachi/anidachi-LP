@@ -13,12 +13,12 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-	title: "Watch Party App for Crunchyroll, YouTube and Netflix",
+	title: "Watch Party App for Crunchyroll and YouTube",
 	description:
-		"AniDachi is a watch party app for Crunchyroll, YouTube and Netflix. Add it from the Chrome Web Store, share a link, and watch in sync on desktop Chrome.",
+		"AniDachi is a watch party app for Crunchyroll and YouTube. Add it from the Chrome Web Store, share a link, and watch in sync on desktop Chrome. Netflix is coming soon.",
 	alternates: { canonical: "/watch-party-app" },
 	openGraph: {
-		title: "Watch Party App for Crunchyroll, YouTube and Netflix",
+		title: "Watch Party App for Crunchyroll and YouTube",
 		description:
 			"A Chrome extension watchroom. Each person uses their own account.",
 		url: "/watch-party-app",
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Watch Party App for Crunchyroll, YouTube and Netflix",
-		description: "Sync Crunchyroll, YouTube or Netflix from a shared room link.",
+		title: "Watch Party App for Crunchyroll and YouTube",
+		description: "Sync Crunchyroll or YouTube from a shared room link.",
 		images: ["/opengraph-image.png"],
 	},
 };
@@ -41,7 +41,7 @@ const faq = [
 	{
 		question: "Is AniDachi a watch party website?",
 		answer:
-			"The room link lives on the site. The sync runs in the Chrome extension on each person’s own Crunchyroll, YouTube or Netflix tab. It is not a new streaming site.",
+			"The room link lives on the site. The sync runs in the Chrome extension on each person’s own Crunchyroll or YouTube tab. It is not a new streaming site.",
 	},
 	{
 		question: "Is there a free watch party app?",
@@ -50,7 +50,7 @@ const faq = [
 	{
 		question: "Can we watch a movie together?",
 		answer:
-			"Yes on YouTube, or an anime film on Crunchyroll. See watch movies together online. AniDachi also syncs Netflix.",
+			"Yes on YouTube, or an anime film on Crunchyroll. See watch movies together online. Netflix is coming soon and is not supported yet.",
 	},
 ];
 
@@ -68,7 +68,7 @@ export default function WatchPartyAppPage() {
 				{ name: "Watch party app", url: "/watch-party-app" },
 			]}
 			title="Watch party app"
-			description="Crunchyroll, YouTube and Netflix watch parties in desktop Chrome."
+			description="Crunchyroll and YouTube watch parties in desktop Chrome."
 			url="/watch-party-app"
 			datePublished="2026-05-08"
 			dateModified="2026-10-08"
@@ -90,7 +90,7 @@ export default function WatchPartyAppPage() {
 				},
 			]}
 		>
-			<SeoGuideTitle>Watch party app for Crunchyroll, YouTube and Netflix</SeoGuideTitle>
+			<SeoGuideTitle>Watch party app for Crunchyroll and YouTube</SeoGuideTitle>
 			<SeoGuideAnswer>
 				<p>
 					Add AniDachi from the Chrome Web Store, open the same Crunchyroll
@@ -108,7 +108,7 @@ export default function WatchPartyAppPage() {
 				items={[
 					{
 						title: "Watch party website",
-						body: "The link is a web page. The player stays on Crunchyroll, YouTube or Netflix.",
+						body: "The link is a web page. The player stays on Crunchyroll or YouTube.",
 					},
 					{
 						title: "Watch together app",

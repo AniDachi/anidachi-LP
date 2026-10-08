@@ -12,9 +12,9 @@ const PAGE_PATH = "/guides/chrome-watch-party";
 const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-	title: "Chrome Watch Party for Crunchyroll, YouTube and Netflix",
+	title: "Chrome Watch Party for Crunchyroll and YouTube",
 	description:
-		"A Chrome watch party with AniDachi runs in desktop Chrome. Add the extension, open Crunchyroll, YouTube or Netflix, and share the room link.",
+		"A Chrome watch party with AniDachi runs in desktop Chrome. Add the extension, open Crunchyroll or a full YouTube watch page, and share the room link.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Chrome Watch Party",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 	twitter: {
 		card: "summary_large_image",
 		title: "Chrome Watch Party",
-		description: "Desktop Chrome. Crunchyroll, YouTube or Netflix.",
+		description: "Desktop Chrome. Crunchyroll or a full YouTube watch page.",
 		images: ["/opengraph-image.png"],
 	},
 };
@@ -35,7 +35,7 @@ const faq = [
 	{
 		question: "How do I start a Chrome watch party?",
 		answer:
-			"Install AniDachi in desktop Chrome, open a Crunchyroll catalog page, a full YouTube watch page, or a Netflix watch page, create a room, and send the link. Friends join in desktop Chrome on their own accounts.",
+			"Install AniDachi in desktop Chrome, open a Crunchyroll catalog page or a full YouTube watch page, create a room, and send the link. Friends join in desktop Chrome on their own accounts.",
 	},
 	{
 		question: "Does it work in mobile Chrome?",
@@ -50,7 +50,7 @@ const faq = [
 	{
 		question: "Which sites can the room sync?",
 		answer:
-			"Crunchyroll catalog pages, full youtube.com/watch pages, and Netflix watch pages. Shorts and embeds are not supported.",
+			"Crunchyroll catalog pages and full youtube.com/watch pages. Netflix is coming soon and is not supported yet. Shorts and embeds are not supported.",
 	},
 ];
 
@@ -70,7 +70,7 @@ export default function ChromeWatchPartyPage() {
 				{ name: "Chrome watch party", url: PAGE_PATH },
 			]}
 			title="Chrome watch party"
-			description="Desktop Chrome extension for Crunchyroll, YouTube and Netflix watchrooms."
+			description="Desktop Chrome extension for Crunchyroll and YouTube watchrooms."
 			url={PAGE_PATH}
 			datePublished="2026-10-08"
 			dateModified="2026-10-08"
@@ -86,7 +86,7 @@ export default function ChromeWatchPartyPage() {
 			<SeoGuideAnswer>
 				<p>
 					A Chrome watch party with AniDachi is a room in desktop Chrome. Add
-					the extension, open Crunchyroll, YouTube or Netflix, and send
+					the extension, open Crunchyroll or a full YouTube watch page, and send
 					one link. Each person uses their own account. Mobile Chrome and Safari
 					do not host the room.
 				</p>

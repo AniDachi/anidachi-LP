@@ -39,7 +39,7 @@ const faq = [
 	{
 		question: "Does this work for Netflix movies?",
 		answer:
-			"Yes. AniDachi syncs Netflix, YouTube movie pages and Crunchyroll films in desktop Chrome. Each person needs their own access to the title. Disney+, Hulu and Prime Video are not supported.",
+			"Not yet. Netflix is coming soon and is not supported. Use a YouTube movie page or a Crunchyroll film. Disney+, Hulu, and Prime Video are not supported.",
 	},
 	{
 		question: "What if we are in different cities?",

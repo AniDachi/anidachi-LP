@@ -14,12 +14,12 @@ const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
 	title: "Discord Watch Party — Voice on Discord, Sync on AniDachi",
 	description:
-		"Run a Discord watch party without a soft screen share. Keep the voice call in Discord and sync Crunchyroll, YouTube or Netflix with AniDachi.",
+		"Run a Discord watch party without a soft screen share. Keep the voice call in Discord and sync Crunchyroll or YouTube with AniDachi.",
 	alternates: { canonical: "/discord-watch-party" },
 	openGraph: {
 		title: "Discord Watch Party",
 		description:
-			"Discord for voice. AniDachi for synced Crunchyroll, YouTube and Netflix.",
+			"Discord for voice. AniDachi for synced Crunchyroll and YouTube.",
 		url: "/discord-watch-party",
 		images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
 	},
@@ -45,7 +45,7 @@ const faq = [
 	{
 		question: "Can I sync Netflix with AniDachi while calling on Discord?",
 		answer:
-			"Yes. AniDachi syncs Netflix watch pages, Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
+			"Not yet. Netflix is coming soon and is not supported. AniDachi currently syncs Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
 	},
 ];
 
@@ -64,7 +64,7 @@ export default function DiscordWatchPartyPage() {
 				{ name: "Discord watch party", url: "/discord-watch-party" },
 			]}
 			title="Discord watch party"
-			description="Discord voice plus synced Crunchyroll, YouTube or Netflix."
+			description="Discord voice plus synced Crunchyroll or YouTube."
 			url="/discord-watch-party"
 			datePublished="2026-09-26"
 			dateModified="2026-10-08"
@@ -96,7 +96,7 @@ export default function DiscordWatchPartyPage() {
 			<SeoGuideAnswer>
 				<p>
 					Keep the Discord call for voice. Sync the video with AniDachi so
-					everyone plays Crunchyroll, YouTube or Netflix in their own tab. Screen share
+					everyone plays Crunchyroll or YouTube in their own tab. Screen share
 					still works for a quick demo. It is a poor way to watch a whole
 					episode.
 				</p>

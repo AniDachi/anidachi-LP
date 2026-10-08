@@ -129,7 +129,7 @@ export default function DiscordGoLivePage() {
 				<Link href="/extension" className="text-brand-orange hover:underline">
 					the install page
 				</Link>
-				. Netflix watch pages are also supported. Discord's built-in YouTube activity is a
+				. Netflix is coming soon and is not supported yet. Discord's built-in YouTube activity is a
 				different feature:{" "}
 				<Link
 					href="/guides/discord-watch-together-activity"

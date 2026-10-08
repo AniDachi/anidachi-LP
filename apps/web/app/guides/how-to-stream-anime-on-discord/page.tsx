@@ -156,7 +156,7 @@ export default function HowToStreamAnimeOnDiscordPage() {
 					>
 						Discord Go Live
 					</Link>
-					. Netflix watch pages are also supported.
+					. Netflix is coming soon and is not supported yet.
 				</p>
 				<SeoGuideRelated
 					links={[

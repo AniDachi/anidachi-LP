@@ -12,14 +12,14 @@ const PAGE_PATH = "/virtual-movie-night";
 const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-	title: "Virtual Movie Night on Crunchyroll, YouTube or Netflix",
+	title: "Virtual Movie Night on Crunchyroll or YouTube",
 	description:
-		"Host a virtual movie night on Crunchyroll, YouTube or Netflix. Each person uses their own account. Disney+, Hulu and Prime Video are not included.",
+		"Host a virtual movie night on a Crunchyroll film or a full YouTube watch page. Each person uses their own account. Netflix is coming soon.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Virtual Movie Night",
 		description:
-			"One film, each person on their own Crunchyroll, YouTube or Netflix tab.",
+			"One film, each person on their own Crunchyroll or YouTube tab.",
 		url: PAGE_PATH,
 		images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
 	},
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "Virtual Movie Night",
 		description:
-			"Crunchyroll, YouTube or Netflix. One sitting. Each person presses play locally.",
+			"Crunchyroll or YouTube. One sitting. Each person presses play locally.",
 		images: ["/opengraph-image.png"],
 	},
 };
@@ -36,12 +36,12 @@ const faq = [
 	{
 		question: "How do you do a virtual movie night?",
 		answer:
-			"Pick a film on Crunchyroll, YouTube or Netflix, have each person open it in desktop Chrome, and join one AniDachi room so play stays aligned.",
+			"Pick a film on Crunchyroll or a full YouTube watch page, have each person open it in desktop Chrome, and join one AniDachi room so play stays aligned.",
 	},
 	{
 		question: "Can this sync Netflix?",
 		answer:
-			"Yes. AniDachi syncs Netflix, YouTube movie pages and Crunchyroll films in desktop Chrome. Disney+, Hulu and Prime Video are not supported.",
+			"Not yet. Netflix is coming soon and is not supported. Disney+, Hulu, and Prime Video are not supported. The film has to be on Crunchyroll or YouTube.",
 	},
 	{
 		question: "How long should the film be?",
@@ -74,7 +74,7 @@ export default function VirtualMovieNightPage() {
 				{ name: "Virtual movie night", url: PAGE_PATH },
 			]}
 			title="Virtual movie night"
-			description="A Crunchyroll, YouTube or Netflix film, synced for one sitting."
+			description="A Crunchyroll or YouTube film, synced for one sitting."
 			url={PAGE_PATH}
 			datePublished="2026-10-08"
 			dateModified="2026-10-08"
@@ -89,9 +89,10 @@ export default function VirtualMovieNightPage() {
 			</h2>
 			<SeoGuideAnswer>
 				<p>
-					A virtual movie night on AniDachi is one film on Crunchyroll, YouTube
-					or Netflix. Each person opens it in desktop Chrome. The room keeps
-					play aligned. Disney+, Hulu, and Prime Video are not synced.
+					A virtual movie night on AniDachi is one film on Crunchyroll or a full
+					YouTube watch page. Each person opens it in desktop Chrome. The room
+					keeps play aligned. Netflix is coming soon and is not supported yet.
+					Disney+, Hulu, and Prime Video are not synced.
 				</p>
 			</SeoGuideAnswer>
 			<h2
