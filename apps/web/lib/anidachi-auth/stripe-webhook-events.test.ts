@@ -6,6 +6,47 @@ import { processSubscriptionWebhookEvent } from "./stripe-webhook-events";
 function fixture(type: string, object: unknown, livemode = true) {
 	return { type, livemode, data: { object } } as Stripe.Event;
 }
+test("cardless setup uses the same finalizer without announcing a purchase", async () => {
+	const calls: string[] = [];
+	await processSubscriptionWebhookEvent(
+		fixture("checkout.session.completed", {
+			id: "cs_setup",
+			mode: "setup",
+			metadata: { trialRenewalId: "op" },
+		}),
+		{
+			sync: async () => {
+				calls.push("sync");
+			},
+			alert: async () => {
+				calls.push("alert");
+			},
+			completeSetup: async (id) => {
+				calls.push(id);
+			},
+		},
+	);
+	assert.deepEqual(calls, ["cs_setup"]);
+});
+test("unresolved setup finalizer fails delivery so Stripe retries", async () => {
+	await assert.rejects(
+		processSubscriptionWebhookEvent(
+			fixture("checkout.session.completed", {
+				id: "cs_setup",
+				mode: "setup",
+				metadata: { trialRenewalId: "op" },
+			}),
+			{
+				sync: async () => {},
+				alert: async () => {},
+				completeSetup: async () => {
+					throw Error("pending retry");
+				},
+			},
+		),
+		/pending retry/,
+	);
+});
 test("action-required invoice refreshes current subscription just like failed/paid", async () => {
 	for (const type of [
 		"invoice.payment_action_required",

@@ -4,12 +4,12 @@ import type {
 	BillingTrial,
 } from "../billing-view";
 import { resolveAccountEntitlements } from "./account-entitlements";
+import { readBillingPrice } from "./billing-price";
 import {
 	getBillingCustomerByUserId,
 	getSubscriptionTrial,
 	listSubscriptionsForUser,
 } from "./db";
-import { readBillingPrice } from "./billing-price";
 import {
 	createStripeClient,
 	resolveStripeMode,
@@ -117,6 +117,22 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 			);
 		}
 		const stripe = deps.createStripe();
+		const trial = await deps.readTrial(row.stripe_subscription_id);
+		if (
+			trial &&
+			(trial.user_id !== userId ||
+				trial.stripe_subscription_id !== row.stripe_subscription_id)
+		)
+			throw new BillingError(503, "Trial ownership could not be verified.");
+		if (
+			trial?.trial_mode === "cardless" &&
+			trial.first_payment_state !== "paid" &&
+			Date.parse(trial.trial_ends_at) > (deps.now ?? Date.now)()
+		)
+			throw new BillingError(
+				409,
+				"Use the trial renewal controls to confirm or cancel payment after your trial.",
+			);
 		const result = await deps.sync(stripe, row.stripe_subscription_id, {
 			expectedUserId: userId,
 		});

@@ -336,3 +336,66 @@ RED -> **3 GREEN**, compatibility/offer suites **52/52**, OAuth suites **14/14**
 Full web: **1016 total, 1010 passed, 6 existing skips, 0 failures**. TypeScript and
 `git diff --check` passed. No hosted migration, flag, deployment or Stripe object
 was changed in Task 2. Setup/renewal, full webhook recovery and UI remain Task 3–5.
+
+## Task 3: local consent, setup finalizer and recovery
+
+Server billing now uses owner-scoped quotes, a persisted consent before Checkout,
+card-only setup, fresh Session/SetupIntent/PaymentMethod ownership checks, and a
+single serialized Schedule update. The all-trial phase retains its original
+dates. Saved cards, setup redirects and zero invoices do not grant paid access.
+The pinned Checkout SDK accepts setup metadata, not a `usage` override; Checkout
+creates an off-session SetupIntent and the finalizer explicitly verifies that
+usage. No SDK/API upgrade was made.
+
+New migration `20261011135040_cardless_trial_renewal_setup.sql` persists the
+setup origin/request/Session and fences transitions against the latest account
+generation. Applying mutations cannot be overtaken. An ambiguous outcome after
+expiry is settled only after fresh proof of native cancellation. Webhook and
+return use the same finalizer; pending outcomes request webhook redelivery.
+The common refresh can recover a pending activation after a lost Schedule
+response, including a delayed canceled subscription, without recreating it.
+
+Independent server review reproduced two P2s, then regression tests turned
+RED -> GREEN: old cancel replay after a newer successful opt-in no longer claims
+cancellation (`superseded`, HTTP409); quote hashes use canonical allowlisted
+fields irrespective of client property order or extras. A P3 stored-key mismatch
+was corrected before any hosted use: runtime now sends the activation's stored
+`cardless-trial-v1:<id>` key. Task 2's historical `trial:<id>` implementation is
+superseded; proof runner fixture keys are independent of product records.
+Owner-scoped `/api/billing/trial/recover` resumes the stored request and frozen
+terms, including when another tab lost the request ID before any Stripe create.
+It never creates a reservation and uses the same CSRF/session/owner/rate guards.
+Pending legacy reconciliation is explicitly `kind=legacy_checkout`, without a
+fake activation ID: repeat start with the same selection/request. Cardless
+`kind=activation` includes the actual recoverable activation ID. This final
+contract regression also went RED -> GREEN; the four focused service/route suites
+passed **46/46** with TypeScript green after that refinement.
+
+Verification after the repair pass:
+
+- Full web **1053 total: 1047 passed, 6 existing skips, 0 failures**; TypeScript passed.
+- Disposable PostgreSQL: **203 assertions** (57 cardless, 11 launch, 21 renewal,
+  114 legacy). Real separate-connection races passed for old/new trial creation
+  and setup completion versus cancellation: one durable external authority.
+- Cases include stale callbacks with a new request, lost Stripe update/DB commit,
+  lost setup creation, foreign owner/PM/Intent, expired quote and trial, changed
+  price, off-session intent verification, flag-off recovery and preserved dates.
+- `git diff --check` passed. New runtime behavior is local; no hosted migrations,
+  policy changes, deployments or customer subscriptions were changed.
+
+Sandbox webhook registration was inspected read-only using the guarded CLI
+transport: account `acct_1RlmiIPQIEOqG7pr`, livemode=false, endpoint
+`we_1Tkl14PQIEOqG7prAB0aLM7a`, enabled on the staging webhook URL.
+`checkout.session.completed`, subscription created/updated/deleted, invoice
+paid/payment_failed/payment_action_required and entitlement summary updates
+are already registered. No endpoint edit was necessary. Existing webhook payload
+version is `2025-06-30.basil`; authoritative fresh application requests retain
+`2025-08-27.basil`. This does not assert anything about Live configuration.
+
+Independent repair review accepted all four original findings and the legacy pending
+contract refinement with no remaining finding in the server scope. The reviewer
+ran the four focused suites independently (46/46); UI, hosted behavior and later
+operator recovery remain outside that review.
+
+UI/account integration, analytics, hosted staging verification, operator recovery
+past Stripe's safe replay window and owner acceptance remain Tasks 4–5.

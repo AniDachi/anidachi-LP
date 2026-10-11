@@ -59,7 +59,7 @@ Stripe API 2025-08-27.basil, WXT extension, Cloudflare room runtime.
 | Политика и ledger | `apps/web/supabase/migrations/20260927131509_paid_hosting_trial_foundation.sql`, `20260927132751_subscription_checkout_reservations.sql`, `20260927134951_stripe_trial_lifecycle.sql` — читать как контракты | Новая timestamped migration `*_cardless_subscription_trials.sql`; `apps/web/supabase/tests/cardless_subscription_trials.test.sql`; `apps/web/supabase/contracts/cardless_trial_contract.mjs` |
 | Trial/Stripe | `apps/web/lib/anidachi-auth/subscription-trial.ts`, `subscription-checkout-server.ts`, `stripe-trial-state.ts`, `stripe-webhook-events.ts` | В той же папке `cardless-trial.ts`, `cardless-trial-server.ts`, `trial-renewal.ts`, `trial-renewal-server.ts` и соответствующие `*.test.ts` |
 | Общий refresh | `apps/web/lib/anidachi-auth/stripe-subscription-sync.ts::syncStripeSubscriptionById` и consumers; сохранить lease, ownership и fresh Stripe reads | Обновить существующий refresh, не создать параллельный источник прав |
-| API | `apps/web/lib/anidachi-auth/billing-routes.ts`, `apps/web/app/api/create-checkout-session/route.ts` | `apps/web/app/api/billing/trial/start/route.ts`, `renewal/quote/route.ts`, `renewal/setup/route.ts`, `renewal/complete/route.ts`, `renewal/cancel/route.ts` (renewal routes под `trial/`) |
+| API | `apps/web/lib/anidachi-auth/billing-routes.ts`, `apps/web/app/api/create-checkout-session/route.ts` | `apps/web/app/api/billing/trial/start/route.ts`, `recover/route.ts`, `renewal/quote/route.ts`, `renewal/setup/route.ts`, `renewal/complete/route.ts`, `renewal/cancel/route.ts` (renewal routes под `trial/`) |
 | Управление подпиской | `apps/web/lib/anidachi-auth/billing.ts`, `trial-plan-change.ts`, `billing-routes.ts` | Для cardless trial consent-aware путь; paid/legacy Portal сохраняет поведение |
 | Предложение | `apps/web/lib/anidachi-auth/pricing-offer.ts`, `apps/web/lib/pricing-offer.ts`, `apps/web/lib/checkout-selection.ts` | Совместимые optional-поля; новые типы в `cardless-trial.ts`/`trial-renewal.ts` |
 | Сайт | `apps/web/components/pricing.tsx`, `primary-checkout-cta.tsx`, `sticky-mobile-checkout-bar.tsx`; `apps/web/app/checkout/checkout-continuation.tsx`; `apps/web/app/account/billing/billing-client.tsx`; `apps/web/app/success/checkout-session-sync.tsx`; `apps/web/lib/billing-view.ts` | Точечные сценарии trial/оплаты и mode-aware объяснения |
@@ -184,10 +184,13 @@ type TrialStartInput = {
 };
 type TrialStartResult =
   | { state: 'active'; trialEndsAt: string; planCode: 'plus' | 'pro' }
-  | { state: 'pending'; operationId: string }
+  | { state: 'pending'; kind: 'activation'; operationId: string }
+  | { state: 'pending'; kind: 'legacy_checkout' }
   | { state: 'ineligible' | 'offer_changed' | 'unavailable' | 'verification_required' };
 // userId приходит только из проверенной website session.
 startCardlessTrial(userId: string, input: TrialStartInput): Promise<TrialStartResult>;
+// POST /api/billing/trial/recover resumes only an existing owner reservation.
+recoverCardlessTrial(userId: string, operationId?: string): Promise<TrialStartResult>;
 ```
 Фабрика `createCardlessTrialService(deps)` изолирует Stripe/storage/time для tests;
 `cardless-trial-server.ts` связывает ее с действующими server clients и RPC Task 1.
@@ -208,7 +211,8 @@ changed, 503 unavailable; auth/owner failures сохраняют текущие 
   lib/anidachi-auth/cardless-trial.test.ts`: RED.
 - [x] Реализовать серверную проверку актуального offer, owner, eligibility и
   Customer; pending старый Session read/expire/reconcile до native create.
-  Создавать Schedule с параметрами spec и стабильным ключом `trial:<activationId>`.
+  Создавать Schedule с параметрами spec и сохраненным стабильным ключом
+  `cardless-trial-v1:<activationId>` (унифицирован с ledger при Task 3 review).
   Проверять его Subscription, владельца обоих объектов и точные 259200 секунд.
   Не повторять blind create после истечения Stripe idempotency retention.
 - [x] Подключить private/no-store API и существующие Origin/Sec-Fetch-Site,
@@ -240,34 +244,51 @@ type TrialRenewalQuote = RenewalQuoteInput & {
 };
 quoteTrialRenewal(userId: string, input: RenewalQuoteInput): Promise<TrialRenewalQuote>;
 beginTrialRenewal(userId: string, quoteId: string, requestId: string):
-  Promise<{ state: 'setup'; url: string } | { state: 'offer_changed' | 'expired' }>;
+  Promise<{ state: 'setup'; url: string } | RenewalResult>;
+type RenewalResult = { state: 'active' | 'pending' | 'expired' | 'canceled'
+  | 'superseded' | 'offer_changed' | 'unavailable' };
 completeTrialRenewal(userId: string, operationId: string):
-  Promise<{ state: 'active' | 'pending' | 'expired' | 'canceled' | 'offer_changed' }>;
+  Promise<RenewalResult>;
 cancelTrialRenewal(userId: string, requestId: string):
-  Promise<{ state: 'canceled' | 'pending' }>;
+  Promise<RenewalResult>;
 ```
 Quote TTL — максимум 5 минут, не позже исходного trial_end. Он разрешает начать
 setup, но не обойти повторную проверку выбранных условий и срока при завершении.
 Confirmed setup может завершиться после quote TTL при неизменных условиях и
 активном trial; после original trial_end требует нового платного Checkout.
 
-- [ ] Написать tests `setup_does_not_grant_paid_access`,
+`superseded` (HTTP 409) означает устаревшую generation: UI перечитывает текущее
+состояние, а не подтверждает отмену. Повтор cancel C после нового opt-in B не
+может отменить B или показать, что B отменен. Quote fingerprint строится из
+канонического whitelist серверных условий, без порядка JSON/extra полей клиента.
+
+Task 3 review также закрывает gap Task 2: owner-scoped recovery route принимает
+optional activation ID, без него находит единственную свою nonfailed activation.
+Она восстанавливает исходные request/price/key и не резервирует новый trial;
+работает после flag off и потери browser request ID. Отсутствие операции не дает
+прав и не запускает новую. Ключ в activation ledger равен отправленному Stripe.
+Ожидание старого Checkout возвращает `pending.kind='legacy_checkout'` без
+фиктивного activation ID: UI повторяет start с исходным request/выбором.
+При потере этих данных другая вкладка сначала заново показывает актуальное
+предложение и получает явное подтверждение; новая activation еще не создана.
+
+- [x] Написать tests `setup_does_not_grant_paid_access`,
   `saved_card_is_not_renewal_consent`, `duplicate_setup_event_is_noop`,
   `late_setup_after_cancel_stays_canceled`, `setup_for_other_owner_rejected`,
   `expired_setup_requires_new_payment_confirmation`, `changed_price_invalidates_quote`.
   Assertions: subscription mutation count 0 на запрещенных путях; original
   trial_end неизменен; один confirmed renewal на допустимом повторе.
-- [ ] Запустить `pnpm --filter @anidachi/web exec tsx --test
+- [x] Запустить `pnpm --filter @anidachi/web exec tsx --test
   lib/anidachi-auth/trial-renewal.test.ts`: RED.
-- [ ] Реализовать quote и setup с серверными ID/ценой и явными условиями будущего
+- [x] Реализовать quote и setup с серверными ID/ценой и явными условиями будущего
   списания. Проверять Checkout Session + SetupIntent + принадлежность Customer/PM.
   Записывать согласие до обращения к Stripe; статус applied — только после
   подтвержденного изменения нужного Schedule/Subscription и записи результата.
-- [ ] Реализовать последовательные account billing mutations с поколением
+- [x] Реализовать последовательные account billing mutations с поколением
   операции: cancel/restore/change plan/setup используют один порядок; неизвестная
   Stripe mutation сначала reconciles, потом допускается следующая. Долгое ожидание
   показывать pending, не сообщать успешную отмену без подтвержденного результата.
-- [ ] Применить доказанный Task 0 путь: Schedule end_behavior=release + owned
+- [x] Применить доказанный Task 0 путь: Schedule end_behavior=release + owned
   default PM + выбранная цена одним update; сохранить original start/end/trial_end,
   исключить немедленные prorations. Schedule остается прикрепленным до trial_end;
   API release до этого срока не вызывать. Отмена до конца trial меняет end_behavior
@@ -278,16 +299,16 @@ Confirmed setup может завершиться после quote TTL при н
   может описывать состояние до более поздней отмены. После истечения не создавать
   новую подписку из callback. Пограничную гарантию
   проверить отдельно, не выдавать timestamp-check за Stripe atomic compare-and-set.
-- [ ] Расширить `checkout.session.completed` для setup через тот же идемпотентный
+- [x] Расширить `checkout.session.completed` для setup через тот же идемпотентный
   finalizer. Return page и webhook сходятся к одному результату. Existing event
   registration проверить read-only; новые live webhook changes сюда не подразумеваются.
-- [ ] Закрыть обход через старую Restore renewal/Portal/change-plan логику только
+- [x] Закрыть обход через старую Restore renewal/Portal/change-plan логику только
   для нового trial. Later cancel инвалидирует pending setup. Для paid/legacy
   сохраняется действующее управление. Нулевой invoice не переводит ledger в paid.
-- [ ] Добавить assertions для failure/action_required/retry/out-of-order invoice:
+- [x] Добавить assertions для failure/action_required/retry/out-of-order invoice:
   прежний first-payment deadline не растет; успешный повторный платеж восстанавливает
   доступ только после fresh verified snapshot, stale failure не откатывает paid.
-- [ ] Повторить focused suite + existing webhook/trial/billing tests: GREEN.
+- [x] Повторить focused suite + existing webhook/trial/billing tests: GREEN.
   Commit `feat(billing): require explicit renewal consent for cardless trials`.
 
 ## Task 4: Единый понятный flow сайта и расширения

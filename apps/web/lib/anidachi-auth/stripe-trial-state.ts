@@ -9,6 +9,8 @@ export type CardlessTrialActivationRecord = {
 	stripe_subscription_id: string | null;
 	trial_started_at: string | null;
 	trial_ends_at: string | null;
+	plan_code?: "plus" | "pro";
+	price_id?: string;
 };
 export type SubscriptionTrialRecord = {
 	user_id: string;

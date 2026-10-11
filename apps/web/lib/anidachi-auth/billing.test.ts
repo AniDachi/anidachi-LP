@@ -200,6 +200,20 @@ function fixture(
 	return { service, calls, params: () => portalParams };
 }
 
+test("cardless trial cannot use legacy cancellation or restore Portal", async () => {
+	for (const method of ["cancellationPortal", "renewalPortal"] as const) {
+		const f = fixture({
+			trial: { ...trialRecord, trial_mode: "cardless" },
+			syncResult: { ...result, status: "trialing", cancelAtPeriodEnd: true },
+		});
+		await assert.rejects(
+			f.service[method]("owner", row.id, returnUrl),
+			/trial renewal controls/i,
+		);
+		assert.ok(!f.calls.includes("portal"));
+	}
+});
+
 test("cancellation refreshes owned subscription before creating the verified end-period portal", async () => {
 	const f = fixture();
 	await f.service.cancellationPortal("owner", row.id, returnUrl);

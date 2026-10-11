@@ -20,14 +20,41 @@ type StartDeps = {
 	getUser?: (request: NextRequest) => Promise<{ id: string } | null>;
 	allowRequest?: (userId: string) => Promise<boolean>;
 	start?: (userId: string, input: TrialStartInput) => Promise<TrialStartResult>;
+	recover?: (userId: string, operationId?: string) => Promise<TrialStartResult>;
 };
 export function createCardlessTrialStartHandler(deps: StartDeps = {}) {
+	return createCardlessTrialHandler("start", deps);
+}
+export function createCardlessTrialRecoveryHandler(deps: StartDeps = {}) {
+	return createCardlessTrialHandler("recover", deps);
+}
+function validRecoveryInput(value: unknown): value is { operationId?: string } {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+	const id = (value as Record<string, unknown>).operationId;
+	return (
+		id === undefined ||
+		(typeof id === "string" &&
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+				id,
+			))
+	);
+}
+function createCardlessTrialHandler(
+	action: "start" | "recover",
+	deps: StartDeps,
+) {
 	let service: ReturnType<typeof cardlessTrialService> | undefined;
 	const start =
 		deps.start ??
 		((userId: string, input: TrialStartInput) => {
 			if (!service) service = cardlessTrialService();
 			return service.startCardlessTrial(userId, input);
+		});
+	const recover =
+		deps.recover ??
+		((userId: string, operationId?: string) => {
+			if (!service) service = cardlessTrialService();
+			return service.recoverCardlessTrial(userId, operationId);
 		});
 	return async (request: NextRequest) => {
 		const json = (
@@ -67,7 +94,11 @@ export function createCardlessTrialStartHandler(deps: StartDeps = {}) {
 			} catch {
 				return json({ error: "Invalid trial request." }, 400);
 			}
-			if (!validTrialStartInput(body))
+			if (
+				!(action === "start"
+					? validTrialStartInput(body)
+					: validRecoveryInput(body))
+			)
 				return json({ error: "Review your trial offer first." }, 400);
 			if (
 				!(await (
@@ -77,7 +108,13 @@ export function createCardlessTrialStartHandler(deps: StartDeps = {}) {
 				return json({ error: "Please wait a moment and try again." }, 429, {
 					"Retry-After": "60",
 				});
-			const result = await start(user.id, body);
+			const result =
+				action === "start"
+					? await start(user.id, body as TrialStartInput)
+					: await recover(
+							user.id,
+							(body as { operationId?: string }).operationId,
+						);
 			return json(
 				{ ...result, ownerUserId: user.id },
 				result.state === "active"

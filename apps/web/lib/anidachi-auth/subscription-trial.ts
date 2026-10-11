@@ -152,6 +152,17 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 		customerId: string,
 		input: CheckoutInput,
 	): Promise<CheckoutResult> {
+		const active = await existingSubscription(customerId, input.userId);
+		if (
+			active?.metadata.anidachiTrialMode === "cardless_v1" &&
+			(active.status === "trialing" ||
+				!active.trial_end ||
+				active.trial_end * 1000 > (deps.now ?? Date.now)())
+		)
+			throw new SubscriptionCheckoutError(
+				"Use the trial renewal controls to confirm or cancel payment after your trial.",
+				409,
+			);
 		const session = await stripe.billingPortal.sessions.create(
 			{ customer: customerId, return_url: input.origin + "/account/billing" },
 			REQUEST,

@@ -1,18 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 
 import {
 	beginStripeEventProcessing,
 	markStripeEventFailed,
 	markStripeEventProcessed,
 } from "@/lib/anidachi-auth/db";
-import { syncStripeSubscriptionById } from "@/lib/anidachi-auth/stripe-subscription-sync";
-import { processSubscriptionWebhookEvent } from "@/lib/anidachi-auth/stripe-webhook-events";
-import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 import {
 	createStripeClient,
 	getStripeWebhookSecret,
 } from "@/lib/anidachi-auth/stripe-env";
+import { syncStripeSubscriptionById } from "@/lib/anidachi-auth/stripe-subscription-sync";
+import { processSubscriptionWebhookEvent } from "@/lib/anidachi-auth/stripe-webhook-events";
+import { finalizeTrialSetupSession } from "@/lib/anidachi-auth/trial-renewal-server";
+import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 
 export async function POST(request: NextRequest) {
 	const webhookSecret = getStripeWebhookSecret();
@@ -71,6 +72,8 @@ export async function POST(request: NextRequest) {
 				await syncStripeSubscriptionById(stripe, subscriptionId);
 			},
 			alert: sendSubscriptionAlertEmail,
+			completeSetup: (sessionId) =>
+				finalizeTrialSetupSession(stripe, sessionId),
 		});
 
 		await markStripeEventProcessed(event.id);

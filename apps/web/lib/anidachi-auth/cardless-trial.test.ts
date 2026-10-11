@@ -111,6 +111,7 @@ function fixture() {
 		now: () => state.now,
 		isVerified: async () => true,
 		findActivation: async () => activation,
+		findRecoverableActivation: async () => activation,
 		offer: async () => ({
 			action: state.eligible ? "trial" : "subscribe",
 			trialMode: state.enabled ? "cardless" : "card_required",
@@ -125,6 +126,7 @@ function fixture() {
 				id: ACTIVATION,
 				user_id: USER,
 				request_id: REQUEST,
+				idempotency_key: `cardless-trial-v1:${ACTIVATION}`,
 				plan_code: "plus",
 				billing_period: "monthly",
 				price_id: "price_plus",
@@ -201,7 +203,7 @@ test("double_click_reuses_activation", async () => {
 		interval_count: 3,
 	});
 	assert.equal(f.state.params[0].phases?.[0].trial, true);
-	assert.equal(f.state.keys[0], "trial:" + ACTIVATION);
+	assert.equal(f.state.keys[0], f.activation()?.idempotency_key);
 });
 test("created_but_response_lost_reconciles", async () => {
 	const f = fixture();
@@ -241,6 +243,22 @@ test("completed_legacy_checkout_blocks_cardless", async () => {
 	);
 	assert.equal(f.state.reserves, 0);
 	assert.equal(f.state.creates, 0);
+});
+
+test("pending legacy checkout is not advertised as a recoverable cardless activation", async () => {
+	const f = fixture();
+	f.state.legacy = "pending";
+	assert.deepEqual(await f.service.startCardlessTrial(USER, input), {
+		state: "pending",
+		kind: "legacy_checkout",
+	});
+	assert.equal(f.state.reserves, 0);
+	assert.equal(f.state.creates, 0);
+	f.state.legacy = "clear";
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input)).state,
+		"active",
+	);
 });
 test("flag_disabled_during_recovery_finishes_existing_operation", async () => {
 	const f = fixture();
@@ -346,4 +364,72 @@ test("new trial requires provider-verified email without consuming an activation
 		"verification_required",
 	);
 	assert.equal(f.state.reserves, 0);
+});
+
+test("another tab can recover the owner's reservation before Stripe creation without the original request", async () => {
+	const f = fixture();
+	const create = f.deps.stripe.customers.create;
+	f.deps.stripe.customers.create = async () => {
+		throw new Error("request stopped before Customer create");
+	};
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input)).state,
+		"pending",
+	);
+	assert.equal(f.state.creates, 0);
+	assert.equal(f.state.customerCreates, 0);
+	f.deps.stripe.customers.create = create;
+	f.state.enabled = false;
+	f.deps.isVerified = async () => {
+		throw Error("do not restart eligibility");
+	};
+	const result = await f.service.recoverCardlessTrial(USER);
+	assert.equal(result.state, "active");
+	assert.equal(f.state.reserves, 1);
+	assert.equal(f.state.creates, 1);
+	assert.equal(f.activation()?.request_id, REQUEST);
+});
+test("owner-scoped operation recovery reuses a lost Schedule response without creating again", async () => {
+	const f = fixture();
+	f.state.loseCreate = true;
+	const pending = await f.service.startCardlessTrial(USER, input);
+	assert.equal(pending.state, "pending");
+	assert.equal(
+		(await f.service.recoverCardlessTrial(USER, ACTIVATION)).state,
+		"active",
+	);
+	assert.equal(f.state.creates, 1);
+	assert.equal(f.state.reserves, 1);
+});
+test("recovery never starts an unreserved trial or uses a different owner's activation", async () => {
+	const f = fixture();
+	assert.equal(
+		(await f.service.recoverCardlessTrial(USER)).state,
+		"ineligible",
+	);
+	assert.equal(f.state.reserves, 0);
+	assert.equal(f.state.creates, 0);
+	f.state.loseCreate = true;
+	await f.service.startCardlessTrial(USER, input);
+	const creates = f.state.creates;
+	assert.equal(
+		(
+			await f.service.recoverCardlessTrial(
+				"a1000000-0000-4000-8000-000000000002",
+				ACTIVATION,
+			)
+		).state,
+		"unavailable",
+	);
+	assert.equal(
+		(
+			await f.service.recoverCardlessTrial(
+				USER,
+				"a3000000-0000-4000-8000-000000000002",
+			)
+		).state,
+		"unavailable",
+	);
+	assert.equal(f.state.creates, creates);
+	assert.equal(f.state.syncs, 0);
 });

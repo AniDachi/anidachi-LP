@@ -532,10 +532,17 @@ export async function getSubscriptionTrial(
 }
 export async function getCardlessTrialActivation(activationId: string): Promise<import("./stripe-trial-state").CardlessTrialActivationRecord | null> {
 	const { data, error } = await db().from("subscription_trial_activations")
-		.select("id,user_id,state,stripe_customer_id,stripe_schedule_id,stripe_subscription_id,trial_started_at,trial_ends_at")
+		.select("id,user_id,state,stripe_customer_id,stripe_schedule_id,stripe_subscription_id,trial_started_at,trial_ends_at,plan_code,price_id")
 		.eq("id", activationId).abortSignal(AbortSignal.timeout(10_000)).maybeSingle();
 	if (error) throw new Error("Trial activation unavailable");
 	return data;
+}
+export async function recordCardlessTrialCreated(userId: string, activationId: string, proof: import("./cardless-trial").TrialCreatedProof): Promise<import("./stripe-trial-state").CardlessTrialActivationRecord> {
+  const { data, error } = await db().rpc("record_cardless_trial_created_v1", {
+    p_user_id:userId,p_activation_id:activationId,p_customer_id:proof.customerId,p_schedule_id:proof.scheduleId,p_subscription_id:proof.subscriptionId,p_price_id:proof.priceId,p_trial_start:proof.trialStartedAt,p_trial_end:proof.trialEndsAt,
+  }).abortSignal(AbortSignal.timeout(10000));
+  if (error || !data) throw new Error("Trial activation recovery unavailable");
+  return data;
 }
 export async function beginStripeSubscriptionRefresh(
 	subscriptionId: string,

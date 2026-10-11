@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { NextRequest } from "next/server";
 import { BILLING_OWNER_HEADER } from "../billing-view";
-import { createCardlessTrialStartHandler } from "./cardless-trial-routes";
+import {
+	createCardlessTrialRecoveryHandler,
+	createCardlessTrialStartHandler,
+} from "./cardless-trial-routes";
 
 const OWNER = "a1000000-0000-4000-8000-000000000001";
 const body = {
@@ -83,7 +86,7 @@ test("trial response is private, owner-bound and distinguishes pending, used and
 				return state === "active"
 					? { state, planCode: "plus", trialEndsAt: "2030-01-04T00:00:00Z" }
 					: state === "pending"
-						? { state, operationId: "operation" }
+						? { state, kind: "activation", operationId: "operation" }
 						: { state };
 			},
 		});
@@ -118,4 +121,64 @@ test("unauthenticated request cannot reach storage or Stripe and errors remain g
 	const response = await failing(request());
 	assert.equal(response.status, 503);
 	assert.ok(!(await response.text()).includes("upstream"));
+});
+
+test("recovery uses the same session, CSRF, owner and quota guards without trusting a body owner", async () => {
+	let calls = 0,
+		quota = true;
+	const handler = createCardlessTrialRecoveryHandler({
+		getUser: async () => ({ id: OWNER }),
+		allowRequest: async () => quota,
+		recover: async (user, operationId) => {
+			calls++;
+			assert.equal(user, OWNER);
+			assert.equal(operationId, undefined);
+			return {
+				state: "pending",
+				kind: "activation",
+				operationId: body.requestId,
+			};
+		},
+	});
+	assert.equal(
+		(await handler(request({ origin: "https://foreign.test" }, {}))).status,
+		403,
+	);
+	assert.equal(
+		(await handler(request({ [BILLING_OWNER_HEADER]: "other" }, {}))).status,
+		409,
+	);
+	assert.equal(
+		(await handler(request({}, { operationId: "not-a-uuid" }))).status,
+		400,
+	);
+	quota = false;
+	assert.equal((await handler(request({}, {}))).status, 429);
+	assert.equal(calls, 0);
+	quota = true;
+	const r = await handler(request({}, { userId: "other" }));
+	assert.equal(r.status, 202);
+	assert.equal((await r.json()).ownerUserId, OWNER);
+	assert.equal(r.headers.get("cache-control"), "private, no-store");
+	const guest = createCardlessTrialRecoveryHandler({
+		getUser: async () => null,
+		recover: async () => {
+			throw Error("must not run");
+		},
+	});
+	assert.equal((await guest(request({}, {}))).status, 401);
+});
+
+test("recovery forwards only the optional validated activation ID", async () => {
+	const handler = createCardlessTrialRecoveryHandler({
+		getUser: async () => ({ id: OWNER }),
+		allowRequest: async () => true,
+		recover: async (user, id) => {
+			assert.equal(user, OWNER);
+			assert.equal(id, body.requestId);
+			return { state: "ineligible" };
+		},
+	});
+	const r = await handler(request({}, { operationId: body.requestId }));
+	assert.equal(r.status, 409);
 });

@@ -11,7 +11,8 @@ export type TrialStartInput = {
 };
 export type TrialStartResult =
 	| { state: "active"; trialEndsAt: string; planCode: PaidPlanCode }
-	| { state: "pending"; operationId: string }
+	| { state: "pending"; kind: "activation"; operationId: string }
+	| { state: "pending"; kind: "legacy_checkout" }
 	| {
 			state:
 				| "ineligible"
@@ -21,6 +22,7 @@ export type TrialStartResult =
 	  };
 export type CardlessTrialActivation = CardlessTrialActivationRecord & {
 	request_id: string;
+	idempotency_key: string;
 	plan_code: PaidPlanCode;
 	billing_period: BillingPeriod;
 	price_id: string;
@@ -50,6 +52,10 @@ export type CardlessTrialDeps = {
 	findActivation(
 		userId: string,
 		requestId: string,
+	): Promise<CardlessTrialActivation | null>;
+	findRecoverableActivation(
+		userId: string,
+		operationId?: string,
 	): Promise<CardlessTrialActivation | null>;
 	offer(
 		userId: string,
@@ -108,6 +114,7 @@ export function parseCardlessTrialActivation(
 		!uuid.test(a.id) ||
 		!uuid.test(a.user_id) ||
 		!uuid.test(a.request_id) ||
+		a.idempotency_key !== `cardless-trial-v1:${a.id}` ||
 		!["plus", "pro"].includes(a.plan_code) ||
 		!["monthly", "yearly"].includes(a.billing_period) ||
 		!Number.isSafeInteger(a.policy_revision) ||
@@ -147,6 +154,66 @@ export function parseCardlessTrialActivation(
 const id = (v: string | { id: string } | null) =>
 	typeof v === "string" ? v : (v?.id ?? null);
 
+/** Shared by the initiating request and webhook recovery. No grants or external
+ * writes happen until the durable reservation agrees with both fresh objects. */
+export function verifyCardlessTrialCreated(
+	a: CardlessTrialActivationRecord,
+	schedule: Stripe.SubscriptionSchedule,
+	sub: Stripe.Subscription,
+	livemode: boolean,
+): TrialCreatedProof {
+	const phase = schedule.phases[0],
+		start = sub.trial_start,
+		end = sub.trial_end;
+	if (
+		!a.price_id ||
+		!a.plan_code ||
+		!a.stripe_customer_id ||
+		id(schedule.subscription) !== sub.id ||
+		id(sub.customer) !== a.stripe_customer_id ||
+		id(schedule.customer) !== a.stripe_customer_id ||
+		sub.livemode !== livemode ||
+		schedule.livemode !== livemode ||
+		[sub.metadata, schedule.metadata].some(
+			(m) =>
+				m?.userId !== a.user_id ||
+				m?.trialActivationId !== a.id ||
+				m?.anidachiTrialMode !== "cardless_v1" ||
+				m?.anidachiTrial !== "72h_v1" ||
+				m?.planCode !== a.plan_code,
+		) ||
+		!start ||
+		!end ||
+		end - start !== 259200 ||
+		schedule.end_behavior !== "cancel" ||
+		schedule.phases.length !== 1 ||
+		phase?.start_date !== start ||
+		phase.end_date !== end ||
+		phase.trial_end !== end ||
+		phase.items.length !== 1 ||
+		id(phase.items[0].price) !== a.price_id ||
+		phase.items[0].quantity !== 1 ||
+		sub.items.has_more ||
+		sub.items.data.length !== 1 ||
+		sub.items.data[0].price.id !== a.price_id ||
+		sub.items.data[0].quantity !== 1 ||
+		(schedule.status === "active"
+			? id(sub.schedule) !== schedule.id ||
+				sub.status !== "trialing" ||
+				sub.cancel_at !== end
+			: !(schedule.status === "completed" && sub.status === "canceled"))
+	)
+		throw new CardlessTrialError("unavailable");
+	return {
+		customerId: a.stripe_customer_id,
+		scheduleId: schedule.id,
+		subscriptionId: sub.id,
+		priceId: a.price_id,
+		trialStartedAt: new Date(start * 1000).toISOString(),
+		trialEndsAt: new Date(end * 1000).toISOString(),
+	};
+}
+
 /** The DB reservation and Stripe key provide cross-instance safety; the map only
  * coalesces simultaneous clicks served by this instance. No rights live here. */
 export function createCardlessTrialService(deps: CardlessTrialDeps) {
@@ -156,10 +223,13 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 	async function run(
 		userId: string,
 		input: TrialStartInput,
+		reservedActivation?: CardlessTrialActivation,
 	): Promise<TrialStartResult> {
 		let a: CardlessTrialActivation | null = null;
 		try {
-			const existing = await deps.findActivation(userId, input.requestId);
+			const existing =
+				reservedActivation ??
+				(await deps.findActivation(userId, input.requestId));
 			if (
 				existing &&
 				(existing.user_id !== userId || existing.request_id !== input.requestId)
@@ -183,11 +253,15 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 				const previous = await deps.reconcileLegacy(userId);
 				if (previous !== "clear")
 					return previous === "pending"
-						? { state: "pending", operationId: input.requestId }
+						? { state: "pending", kind: "legacy_checkout" }
 						: { state: "ineligible" };
 				a = await deps.reserve(userId, input, offer);
 			}
-			if (a.user_id !== userId || a.request_id !== input.requestId)
+			if (
+				a.user_id !== userId ||
+				a.request_id !== input.requestId ||
+				a.idempotency_key !== `cardless-trial-v1:${a.id}`
+			)
 				throw new CardlessTrialError("unavailable");
 			if (
 				a.plan_code !== input.planCode ||
@@ -270,7 +344,7 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 							],
 							metadata,
 						},
-						{ ...REQUEST, idempotencyKey: `trial:${a.id}` },
+						{ ...REQUEST, idempotencyKey: a.idempotency_key },
 					);
 				}
 				// A cached create response is not evidence of the present state.
@@ -282,52 +356,12 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 				const subId = id(schedule.subscription);
 				if (!subId) throw new CardlessTrialError("unavailable");
 				const sub = await stripe.subscriptions.retrieve(subId, {}, REQUEST);
-				const phase = schedule.phases[0];
-				const start = sub.trial_start,
-					end = sub.trial_end;
-				if (
-					sub.id !== subId ||
-					id(sub.customer) !== a.stripe_customer_id ||
-					id(schedule.customer) !== a.stripe_customer_id ||
-					sub.livemode !== deps.livemode ||
-					schedule.livemode !== deps.livemode ||
-					[sub.metadata, schedule.metadata].some(
-						(m) =>
-							m?.userId !== userId ||
-							m?.trialActivationId !== reserved.id ||
-							m?.anidachiTrialMode !== "cardless_v1" ||
-							m?.anidachiTrial !== "72h_v1" ||
-							m?.planCode !== reserved.plan_code,
-					) ||
-					!start ||
-					!end ||
-					end - start !== 259200 ||
-					schedule.end_behavior !== "cancel" ||
-					schedule.phases.length !== 1 ||
-					phase?.start_date !== start ||
-					phase.end_date !== end ||
-					phase.trial_end !== end ||
-					phase.items.length !== 1 ||
-					id(phase.items[0].price) !== a.price_id ||
-					phase.items[0].quantity !== 1 ||
-					sub.items.data.length !== 1 ||
-					sub.items.data[0].price.id !== a.price_id ||
-					sub.items.data[0].quantity !== 1 ||
-					(schedule.status === "active"
-						? id(sub.schedule) !== schedule.id ||
-							sub.status !== "trialing" ||
-							sub.cancel_at !== end
-						: !(schedule.status === "completed" && sub.status === "canceled"))
-				)
-					throw new CardlessTrialError("unavailable");
-				a = await deps.recordCreated(userId, a.id, {
-					customerId: customerId,
-					scheduleId: schedule.id,
-					subscriptionId: subId,
-					priceId: a.price_id,
-					trialStartedAt: new Date(start * 1000).toISOString(),
-					trialEndsAt: new Date(end * 1000).toISOString(),
-				});
+				if (sub.id !== subId) throw new CardlessTrialError("unavailable");
+				a = await deps.recordCreated(
+					userId,
+					a.id,
+					verifyCardlessTrialCreated(a, schedule, sub, deps.livemode),
+				);
 			}
 			if (!a.stripe_subscription_id || !a.trial_ends_at)
 				throw new CardlessTrialError("unavailable");
@@ -344,15 +378,52 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 			};
 		} catch (error) {
 			// A timeout or persistence error cannot clear the reservation or invent a new key.
-			if (a) return { state: "pending", operationId: a.id };
+			if (a) return { state: "pending", kind: "activation", operationId: a.id };
 			if (error instanceof CardlessTrialError)
 				return error.operationId
-					? { state: "pending", operationId: error.operationId }
+					? {
+							state: "pending",
+							kind: "activation",
+							operationId: error.operationId,
+						}
 					: { state: error.state };
 			return { state: "unavailable" };
 		}
 	}
 	return {
+		async recoverCardlessTrial(
+			userId: string,
+			operationId?: string,
+		): Promise<TrialStartResult> {
+			if (
+				!uuid.test(userId) ||
+				(operationId !== undefined && !uuid.test(operationId))
+			)
+				return { state: "unavailable" };
+			try {
+				// This resumes an existing account reservation, including after a tab
+				// lost its request ID. It cannot reserve a trial or alter its terms.
+				const a = await deps.findRecoverableActivation(userId, operationId);
+				if (!a) return { state: "ineligible" };
+				if (
+					a.user_id !== userId ||
+					(operationId !== undefined && a.id !== operationId)
+				)
+					return { state: "unavailable" };
+				return run(
+					userId,
+					{
+						requestId: a.request_id,
+						planCode: a.plan_code,
+						billingPeriod: a.billing_period,
+						offerRevision: String(a.policy_revision),
+					},
+					a,
+				);
+			} catch {
+				return { state: "unavailable" };
+			}
+		},
 		startCardlessTrial(
 			userId: string,
 			input: TrialStartInput,
