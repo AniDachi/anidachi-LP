@@ -100,6 +100,107 @@ test("ignores unmappable subscriptions without mirror mutation", async () => {
 	);
 });
 
+test("created webhook recovers a pending cardless activation only from verified original objects", async () => {
+	const start = 1790000000,
+		end = start + 259200;
+	const activation = {
+		id: "a2000000-0000-4000-8000-000000000001",
+		user_id: "owner",
+		state: "pending" as const,
+		stripe_customer_id: "cus_test",
+		stripe_subscription_id: null,
+		stripe_schedule_id: null,
+		trial_started_at: null,
+		trial_ends_at: null,
+		plan_code: "plus" as const,
+		price_id: "price_plus",
+	};
+	const sub = subscriptionFixture({ priceId: "price_plus", planCode: "plus" });
+	Object.assign(sub, {
+		status: "trialing",
+		livemode: false,
+		trial_start: start,
+		trial_end: end,
+		schedule: "sched_pending",
+		cancel_at: end,
+		metadata: {
+			userId: "owner",
+			planCode: "plus",
+			anidachiTrial: "72h_v1",
+			anidachiTrialMode: "cardless_v1",
+			trialActivationId: activation.id,
+		},
+	});
+	sub.items.data[0].quantity = 1;
+	const schedule = {
+		id: "sched_pending",
+		customer: "cus_test",
+		livemode: false,
+		subscription: sub.id,
+		status: "active",
+		end_behavior: "cancel",
+		metadata: sub.metadata,
+		phases: [
+			{
+				start_date: start,
+				end_date: end,
+				trial_end: end,
+				items: [{ price: "price_plus", quantity: 1 }],
+			},
+		],
+	};
+	const stripe = fakeStripe(sub);
+	stripe.subscriptionSchedules = {
+		retrieve: async () => structuredClone(schedule),
+		list: async () => ({ data: [structuredClone(schedule)], has_more: false }),
+	} as never;
+	stripe.invoices = {
+		list: async () => ({ data: [], has_more: false }),
+	} as never;
+	let recorded = 0,
+		committed = 0;
+	const options = {
+		...deps,
+		resolveUserId: async () => "owner",
+		readTrialActivation: async () => activation,
+		recordTrialActivation: async (
+			user: string,
+			activationId: string,
+			p: import("./cardless-trial").TrialCreatedProof,
+		) => {
+			recorded++;
+			assert.equal(user, "owner");
+			assert.equal(activationId, activation.id);
+			return {
+				...activation,
+				state: "created" as const,
+				stripe_schedule_id: p.scheduleId,
+				stripe_subscription_id: p.subscriptionId,
+				trial_started_at: p.trialStartedAt,
+				trial_ends_at: p.trialEndsAt,
+			};
+		},
+		commit: async (p: import("./db").StripeSubscriptionCommit) => {
+			committed++;
+			assert.equal(p.trial?.trialMode, "cardless");
+			return "plus" as const;
+		},
+	};
+	await syncStripeSubscriptionById(stripe, sub.id, options);
+	assert.equal(recorded, 1);
+	assert.equal(committed, 1);
+	sub.schedule = null;
+	sub.status = "canceled";
+	schedule.status = "completed";
+	await syncStripeSubscriptionById(stripe, sub.id, options);
+	assert.equal(recorded, 2);
+	assert.equal(committed, 2);
+	schedule.phases[0].items[0].price = "price_other";
+	await assert.rejects(syncStripeSubscriptionById(stripe, sub.id, options));
+	assert.equal(recorded, 2);
+	assert.equal(committed, 2);
+});
+
 test("managed trial snapshot is included in the same fenced subscription commit", async () => {
 	const sub = subscriptionFixture({ priceId: "price_plus", planCode: "plus" });
 	sub.metadata = {

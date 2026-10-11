@@ -4,7 +4,10 @@ import { Window } from "happy-dom";
 import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { preloadAccountNavigation, clearAccountPreloads } from "./account-navigation-preload";
+import {
+	preloadAccountNavigation,
+	clearAccountPreloads,
+} from "./account-navigation-preload";
 import { BillingClient } from "../app/account/billing/billing-client";
 import { BILLING_OWNER_HEADER, type BillingOverview } from "./billing-view";
 
@@ -88,7 +91,11 @@ for (const stage of ["trial", "processing"] as const) {
 		);
 	});
 }
-async function mount(returnedFromPortal = false, initial?: { overview: BillingOverview; remainingMs: number }) {
+async function mount(
+	returnedFromPortal = false,
+	initial?: { overview: BillingOverview; remainingMs: number },
+	trialSetupReturn?: { operationId: string; canceled: boolean },
+) {
 	container = document.createElement("div");
 	document.body.appendChild(container);
 	root = createRoot(container);
@@ -98,6 +105,7 @@ async function mount(returnedFromPortal = false, initial?: { overview: BillingOv
 				ownerUserId: "owner",
 				returnedFromPortal,
 				initial,
+				trialSetupReturn,
 			}),
 		);
 	});
@@ -107,6 +115,215 @@ afterEach(async () => {
 	root = null;
 	document.body.innerHTML = "";
 	globalThis.fetch = originalFetch;
+	testWindow.happyDOM.setURL("https://staging.anidachi.app/account/billing");
+});
+
+const cardless: BillingOverview = {
+	...active,
+	subscriptions: [
+		{
+			...active.subscriptions[0],
+			status: "trialing",
+			cancelAtPeriodEnd: true,
+			canCancel: false,
+			price: { unitAmount: 799, currency: "usd", billingPeriod: "monthly" },
+			trial: {
+				mode: "cardless",
+				stage: "trial",
+				renewalState: "not_enabled",
+				renewalEnabled: false,
+				endsAt: "2030-01-04T00:00:00Z",
+				pendingUntil: "2030-01-04T02:00:00Z",
+			},
+		},
+	],
+};
+function trialButton(label: RegExp) {
+	const button = [...container.querySelectorAll("button")].find((b) =>
+		label.test(b.textContent ?? ""),
+	);
+	assert.ok(button, `Missing ${label}`);
+	return button;
+}
+const renewalQuote = {
+	state: "quoted",
+	ownerUserId: "owner",
+	id: "renewal-quote",
+	planCode: "plus",
+	billingPeriod: "monthly",
+	amount: 799,
+	currency: "usd",
+	firstChargeAt: "2030-01-04T00:00:00Z",
+	expiresAt: "2030-01-01T00:05:00Z",
+	termsRevision: "cardless-renewal-v1",
+};
+
+test("cardless billing reviews exact renewal terms before explicitly opening card setup", async () => {
+	const actions: string[] = [];
+	globalThis.fetch = async (path, init) => {
+		if (String(path).includes("/trial/renewal/")) {
+			actions.push(String(path));
+			assert.equal(
+				new Headers(init?.headers).get(BILLING_OWNER_HEADER),
+				"owner",
+			);
+			if (String(path).endsWith("/quote")) return Response.json(renewalQuote);
+			return Response.json({
+				state: "setup",
+				ownerUserId: "owner",
+				url: "https://checkout.stripe.com/setup-card",
+			});
+		}
+		return Response.json(cardless);
+	};
+	await mount();
+	assert.match(container.textContent!, /Free trial/);
+	assert.match(container.textContent!, /No automatic charge/i);
+	assert.doesNotMatch(
+		container.textContent!,
+		/Renewal canceled|Renews automatically after your trial/,
+	);
+	await act(async () => trialButton(/^Review renewal$/).click());
+	assert.deepEqual(actions, ["/api/billing/trial/renewal/quote"]);
+	assert.match(container.textContent!, /\$7.99\/month/);
+	assert.match(container.textContent!, /First payment/);
+	assert.match(container.textContent!, /No payment today/);
+	await act(async () => trialButton(/Add card.*enable renewal/i).click());
+	assert.equal(actions.length, 2);
+	assert.equal(window.location.href, "https://checkout.stripe.com/setup-card");
+});
+
+test("a card setup return after expiry offers an explicit paid path without opening checkout", async () => {
+	const paths: string[] = [];
+	const ended: BillingOverview = {
+		...cardless,
+		planCode: "free",
+		serverTime: "2030-01-05T00:00:00Z",
+		subscriptions: [
+			{
+				...cardless.subscriptions[0],
+				status: "canceled",
+				trial: { ...cardless.subscriptions[0].trial!, stage: "ended" },
+			},
+		],
+	};
+	globalThis.fetch = async (path) => {
+		paths.push(String(path));
+		return String(path).endsWith("/complete")
+			? Response.json(
+					{ ownerUserId: "owner", state: "expired" },
+					{ status: 409 },
+				)
+			: Response.json(ended);
+	};
+	await mount(false, undefined, {
+		operationId: "expired-setup",
+		canceled: false,
+	});
+	assert.ok(paths.includes("/api/billing/trial/renewal/complete"));
+	assert.ok(paths.includes("/api/billing/refresh"));
+	assert.ok(!paths.includes("/api/create-checkout-session"));
+	assert.ok(
+		[...container.querySelectorAll("a")].some(
+			(a) =>
+				/Continue with Plus/.test(a.textContent ?? "") &&
+				a.getAttribute("href") === "/checkout?plan=plus&billing=monthly",
+		),
+	);
+	assert.equal(window.location.pathname, "/account/billing");
+});
+
+test("foreign renewal quote and a late setup URL are retired before they can redirect", async () => {
+	let responseOwner = "foreign";
+	let resolveSetup!: (response: Response) => void;
+	globalThis.fetch = async (path) => {
+		if (String(path).endsWith("/quote"))
+			return Response.json({ ...renewalQuote, ownerUserId: responseOwner });
+		if (String(path).endsWith("/setup"))
+			return new Promise((resolve) => {
+				resolveSetup = resolve;
+			});
+		return Response.json(cardless);
+	};
+	await mount();
+	await act(async () => trialButton(/^Review renewal$/).click());
+	assert.match(container.textContent!, /account changed/i);
+	assert.ok(
+		![...container.querySelectorAll("button")].some((b) =>
+			/Add card.*enable renewal/i.test(b.textContent ?? ""),
+		),
+	);
+	responseOwner = "owner";
+	await act(async () => trialButton(/^Review renewal$/).click());
+	await act(async () => trialButton(/Add card.*enable renewal/i).click());
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	await act(async () =>
+		resolveSetup(
+			Response.json({
+				state: "setup",
+				ownerUserId: "owner",
+				url: "https://checkout.stripe.com/stale",
+			}),
+		),
+	);
+	assert.equal(window.location.pathname, "/account/billing");
+});
+
+test("a pending cancellation never claims that an already enabled renewal is off", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...cardless,
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					trial: {
+						...cardless.subscriptions[0].trial,
+						renewalState: "pending",
+						renewalEnabled: true,
+						pendingRenewal: { id: "pending-cancel", action: "cancel" },
+					},
+				},
+			],
+		});
+	await mount();
+	assert.match(
+		container.textContent!,
+		/Renewal remains enabled until cancellation is confirmed/i,
+	);
+	assert.doesNotMatch(container.textContent!, /No automatic charge/i);
+});
+
+test("an unresolved renewal remains recoverable after trial expiry instead of offering another purchase", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...cardless,
+			planCode: "free",
+			serverTime: "2030-01-05T00:00:00Z",
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					status: "canceled",
+					trial: {
+						...cardless.subscriptions[0].trial,
+						stage: "ended",
+						renewalState: "pending",
+						pendingRenewal: { id: "unknown-outcome", action: "enable" },
+					},
+				},
+			],
+		});
+	await mount();
+	assert.ok(trialButton(/Check renewal status/));
+	assert.ok(
+		![...container.querySelectorAll("a")].some((a) =>
+			/Continue with Plus/.test(a.textContent ?? ""),
+		),
+	);
+	assert.ok(
+		![...container.querySelectorAll("button")].some((b) =>
+			/Resume card setup|Review renewal/.test(b.textContent ?? ""),
+		),
+	);
 });
 
 test("trial shows original deadline and reviewed plan change before confirming", async () => {
@@ -417,8 +634,12 @@ test("return from renewal restoration rereads Stripe and retains the original tr
 	assert.equal(
 		container.querySelector("dd")?.textContent,
 		new Date("2030-02-01T12:00:00Z").toLocaleString("en-US", {
-			dateStyle: "medium",
-			timeStyle: "short",
+			year: "numeric",
+			month: "short",
+			day: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+			timeZoneName: "short",
 		}),
 	);
 	assert.doesNotMatch(
@@ -601,43 +822,91 @@ for (const status of ["past_due", "unpaid", "incomplete", "paused"]) {
 }
 
 test("quiet focus refresh keeps the valid subscription visible and does not reconcile Stripe", async () => {
-  let finish!: (value: Response) => void;
-  const paths: string[] = [];
-  globalThis.fetch = async path => {
-    paths.push(String(path));
-    return paths.length === 1 ? Response.json(active) : new Promise(resolve => { finish = resolve; });
-  };
-  await mount();
-  await act(async () => window.dispatchEvent(new Event("focus")));
-  assert.match(container.textContent!, /Plus/);
-  assert.equal(paths[1], "/api/billing/subscription");
-  await act(async () => finish(Response.json(active)));
+	let finish!: (value: Response) => void;
+	const paths: string[] = [];
+	globalThis.fetch = async (path) => {
+		paths.push(String(path));
+		return paths.length === 1
+			? Response.json(active)
+			: new Promise((resolve) => {
+					finish = resolve;
+				});
+	};
+	await mount();
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.match(container.textContent!, /Plus/);
+	assert.equal(paths[1], "/api/billing/subscription");
+	await act(async () => finish(Response.json(active)));
 });
 
- test("server billing data is shown without an immediate duplicate request", async () => {
-  const calls: string[] = [];
-  globalThis.fetch = async path => { calls.push(String(path)); return Response.json(active); };
-  await mount(false, { overview: active, remainingMs: 60_000 });
-  assert.match(container.textContent!, /Plus subscription/);
-  assert.deepEqual(calls, []);
- });
- test("Stripe return reconciles even when server billing data is supplied", async () => {
-  const calls: string[] = [];
-  globalThis.fetch = async path => { calls.push(String(path)); return Response.json(active); };
-  await mount(true, { overview: active, remainingMs: 60_000 });
-  assert.deepEqual(calls, ["/api/billing/refresh"]);
- });
+test("server billing data is shown without an immediate duplicate request", async () => {
+	const calls: string[] = [];
+	globalThis.fetch = async (path) => {
+		calls.push(String(path));
+		return Response.json(active);
+	};
+	await mount(false, { overview: active, remainingMs: 60_000 });
+	assert.match(container.textContent!, /Plus subscription/);
+	assert.deepEqual(calls, []);
+});
+test("Stripe return reconciles even when server billing data is supplied", async () => {
+	const calls: string[] = [];
+	globalThis.fetch = async (path) => {
+		calls.push(String(path));
+		return Response.json(active);
+	};
+	await mount(true, { overview: active, remainingMs: 60_000 });
+	assert.deepEqual(calls, ["/api/billing/refresh"]);
+});
 
-test("billing consumes its click-time request once and includes navigation time in the lease", async t => {
-  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
-  let calls = 0;
-  globalThis.fetch = async () => { calls++; return Response.json({ ...active, selectedPlanExpiresAt: "2030-01-01T00:00:01Z" }); };
-  try {
-    preloadAccountNavigation("owner", "/account/billing");
-    t.mock.timers.tick(1_100);
-    await mount();
-    assert.equal(calls, 1);
-    assert.doesNotMatch(container.textContent!, /Plus subscription/);
-    assert.match(container.textContent!, /Subscription status expired/);
-  } finally { clearAccountPreloads(); }
+test("billing consumes its click-time request once and includes navigation time in the lease", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+	let calls = 0;
+	globalThis.fetch = async () => {
+		calls++;
+		return Response.json({
+			...active,
+			selectedPlanExpiresAt: "2030-01-01T00:00:01Z",
+		});
+	};
+	try {
+		preloadAccountNavigation("owner", "/account/billing");
+		t.mock.timers.tick(1_100);
+		await mount();
+		assert.equal(calls, 1);
+		assert.doesNotMatch(container.textContent!, /Plus subscription/);
+		assert.match(container.textContent!, /Subscription status expired/);
+	} finally {
+		clearAccountPreloads();
+	}
+});
+
+test("billing exposes persisted activation recovery before any subscription exists", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			planCode: "free",
+			subscriptions: [],
+			pendingTrialActivation: {
+				id: "activation-a",
+				planCode: "pro",
+				billingPeriod: "yearly",
+			},
+		});
+	await mount();
+	assert.match(container.textContent!, /Your Pro trial is being prepared/);
+	const recovery = [...container.querySelectorAll("a")].find(
+		(a) => a.textContent === "Check trial status",
+	);
+	assert.ok(recovery);
+	assert.equal(
+		recovery.getAttribute("href"),
+		"/checkout?plan=pro&billing=yearly",
+	);
+	assert.equal(
+		[...container.querySelectorAll("a")].some(
+			(a) => a.textContent?.trim() === "View plans",
+		),
+		false,
+	);
 });

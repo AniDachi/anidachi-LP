@@ -57,7 +57,7 @@ const faq = [
 	{
 		question: "How does the free trial work?",
 		answer:
-			"If your account is eligible, you can try Plus or Pro once for 3 days with a card. After that, you are charged for your chosen monthly or yearly plan, which renews automatically at the price shown in checkout. Cancel renewal before the trial ends to avoid the first charge. Switching plans during the trial does not restart it.",
+			"If your account is eligible, you can try Plus or Pro once for 3 days. The plan cards show your current offer. A trial without a card ends automatically unless you add a card and explicitly enable renewal in Account → Subscription. You review the plan, price and first payment date before confirming. A trial started with a card keeps its original checkout terms and renews unless canceled. Switching plans does not restart the trial.",
 	},
 	{
 		question: "How do I cancel my subscription?",

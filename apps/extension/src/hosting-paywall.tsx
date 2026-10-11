@@ -68,9 +68,8 @@ export function HostingPaywall({
 			<div className="hosting-paywall-status" role="status">
 				{eligible ? (
 					<p>
-						Try Plus or Pro with a 3-day free trial. Card required. Your
-						selected plan renews automatically after the trial unless you cancel
-						before it ends.
+						Try Plus or Pro with a 3-day free trial. Review your current offer
+						and payment terms on the plans page before starting.
 					</p>
 				) : current?.error ? (
 					<p>

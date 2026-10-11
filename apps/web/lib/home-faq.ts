@@ -1,4 +1,5 @@
 import { getPlanPolicy } from "@anidachi/protocol";
+import { PRICING_TRIAL_NOTE } from "./pricing-copy";
 
 export const homeFAQ = [
   {
@@ -34,7 +35,7 @@ export const homeFAQ = [
   {
     question: "Is AniDachi free?",
     answer:
-      "Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. If your Free account has not used a trial before, you can try either plan for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel.",
+      `Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. ${PRICING_TRIAL_NOTE}`,
   },
   {
     question: "Do all my friends need an AniDachi subscription?",

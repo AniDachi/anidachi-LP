@@ -1,3 +1,4 @@
+import { recordVerifiedAccountEmail } from "./verified-email";
 import { checkoutLoginErrorPath } from "../checkout-selection";
 import { NextRequest, NextResponse } from "next/server";
 import { upsertUser as defaultUpsertUser } from "./db";
@@ -12,6 +13,7 @@ import { setAuthCookies as defaultSetAuthCookies } from "./session";
 import { issueTokenPair as defaultIssueTokenPair } from "./tokens";
 
 type OAuthProfile = {
+  emailVerified?: boolean;
   providerId: string;
   email: string;
   displayName: string;
@@ -19,6 +21,7 @@ type OAuthProfile = {
 };
 
 type HandleOAuthCallbackDependencies = {
+  recordVerifiedEmail?: typeof recordVerifiedAccountEmail;
   consumeTransaction?: typeof consumeOAuthLoginTransaction;
   upsertUser?: typeof defaultUpsertUser;
   issueTokenPair?: typeof defaultIssueTokenPair;
@@ -133,6 +136,13 @@ export async function handleOAuthCallback({
       provider,
       correlationCookieName,
     );
+  }
+
+  // This proof gates only the new cardless trial. Storage outages must not
+  // break ordinary login or change existing paid rights.
+  if (profile.emailVerified === true) {
+    try { await (dependencies.recordVerifiedEmail ?? recordVerifiedAccountEmail)(user.id, profile.email); }
+    catch { /* No proof is recorded; trial start will ask for a fresh verified login. */ }
   }
 
   const issueTokenPair = dependencies.issueTokenPair ?? defaultIssueTokenPair;

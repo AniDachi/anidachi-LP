@@ -140,6 +140,15 @@ function fixture() {
 		},
 	};
 }
+test("cardless trial rejects old plan mutation even when Schedule is absent from stale client state", async () => {
+	const f = fixture();
+	Object.assign(f.trial, { trial_mode: "cardless" });
+	await assert.rejects(
+		f.service.quote("owner", "local-row", "pro"),
+		/trial renewal controls/i,
+	);
+	assert.equal(f.updates.length, 0);
+});
 test("trial quote is read-only and presents price, original end and cancellation", async () => {
 	const f = fixture();
 	f.sub.cancel_at_period_end = true;

@@ -8,14 +8,31 @@ import { AuthPageShell } from "@/components/auth-page-shell";
 import { Button } from "@/components/ui/button";
 import {
 	checkoutSessionRecoveryPath,
+	checkoutReturnPath,
 	type CheckoutSelection,
 } from "@/lib/checkout-selection";
 import { PUBLISHED_PRICING } from "@/lib/pricing-tiers";
 import type { PricingOffer } from "@/lib/pricing-offer";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 import { trackConversion } from "@/lib/conversion-events";
+import { postTrialAction, trialResultMessage } from "@/lib/trial-client";
+import type { TrialStartResult } from "@/lib/anidachi-auth/cardless-trial";
+import { LoginOAuthButtons } from "../login/login-oauth-buttons";
 
-type Stage = "checking" | "opening" | "subscribe" | "error";
+type Stage =
+	| "checking"
+	| "opening"
+	| "subscribe"
+	| "trial"
+	| "pending"
+	| "verification"
+	| "error";
+type Confirmation = {
+	owner: string;
+	action: PricingOffer["action"];
+	mode: PricingOffer["trialMode"];
+	revision?: string;
+};
 
 export function CheckoutContinuation({
 	selection,
@@ -32,16 +49,21 @@ export function CheckoutContinuation({
 	const period = billing === "yearly" ? "year" : "month";
 	const [stage, setStage] = useState<Stage>("checking");
 	const [message, setMessage] = useState("");
-	const [confirmationOwner, setConfirmationOwner] = useState<string | null>(
-		null,
-	);
+	const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+	const reviewedCardless = useRef(false);
+	const recovery = useRef<{
+		owner: string;
+		operationId?: string;
+		legacy?: boolean;
+		revision: string;
+	} | null>(null);
 	const busy = useRef(false);
 	const generation = useRef(0);
 	const controller = useRef<AbortController | null>(null);
 	const request = useRef<{ owner: string; id: string } | null>(null);
 
 	const start = useCallback(
-		async (confirmedOwner?: string) => {
+		async (confirmed?: Confirmation) => {
 			if (busy.current) return;
 			busy.current = true;
 			const version = ++generation.current;
@@ -51,7 +73,41 @@ export function CheckoutContinuation({
 				version === generation.current && !abort.signal.aborted;
 			setStage("checking");
 			setMessage("");
-			setConfirmationOwner(null);
+			setConfirmation(null);
+			const showTrialResult = (
+				result: TrialStartResult,
+				owner: string,
+				revision: string,
+			) => {
+				if (result.state === "active") {
+					recovery.current = null;
+					window.location.replace("/account/billing");
+				} else if (result.state === "pending") {
+					recovery.current = {
+						owner,
+						revision,
+						...(result.kind === "activation"
+							? { operationId: result.operationId }
+							: { legacy: true }),
+					};
+					setStage("pending");
+					setMessage(
+						"Your trial is being prepared. You can safely check its status here.",
+					);
+				} else {
+					if (result.state !== "unavailable") recovery.current = null;
+					// Only a confirmed terminal result retires the old request. Unknown outcomes keep recovery.
+					if (result.state === "ineligible") request.current = null;
+					setStage(
+						result.state === "verification_required"
+							? "verification"
+							: recovery.current
+								? "pending"
+								: "error",
+					);
+					setMessage(trialResultMessage(result.state));
+				}
+			};
 			try {
 				const started = Date.now();
 				const response = await fetch("/api/billing/offer", {
@@ -76,9 +132,52 @@ export function CheckoutContinuation({
 					throw new Error(
 						"We could not confirm your account. Please try again.",
 					);
-				if (confirmedOwner && confirmedOwner !== offer.ownerUserId)
+				if (
+					(confirmed && confirmed.owner !== offer.ownerUserId) ||
+					(recovery.current && recovery.current.owner !== offer.ownerUserId)
+				) {
+					recovery.current = null;
 					throw new Error(
 						"Your account changed. Please check your subscription again.",
+					);
+				}
+				if (offer.pendingTrialActivation && !recovery.current) {
+					recovery.current = {
+						owner: offer.ownerUserId,
+						operationId: offer.pendingTrialActivation.id,
+						revision: offer.trialOfferRevision ?? "",
+					};
+				}
+				if (recovery.current) {
+					const pending = recovery.current;
+					setStage("opening");
+					const result = await postTrialAction<TrialStartResult>(
+						pending.legacy ? "start" : "recover",
+						offer.ownerUserId,
+						pending.legacy
+							? {
+									requestId: request.current?.id,
+									planCode: plan,
+									billingPeriod: billing,
+									offerRevision: pending.revision,
+								}
+							: pending.operationId
+								? { operationId: pending.operationId }
+								: {},
+						abort.signal,
+					);
+					if (current())
+						showTrialResult(result, offer.ownerUserId, pending.revision);
+					return;
+				}
+				if (
+					confirmed &&
+					(confirmed.action !== offer.action ||
+						confirmed.mode !== offer.trialMode ||
+						confirmed.revision !== offer.trialOfferRevision)
+				)
+					throw new Error(
+						"The offer changed. Please review the current terms again.",
 					);
 				if (offer.action === "manage") {
 					window.location.replace("/account/billing");
@@ -99,9 +198,20 @@ export function CheckoutContinuation({
 					);
 				}
 				// The original guest action offered a trial. Never silently replace it with an immediate payment.
-				if (offer.action === "subscribe" && !confirmedOwner) {
-					setConfirmationOwner(offer.ownerUserId);
-					setStage("subscribe");
+				const cardless =
+					offer.action === "trial" && offer.trialMode === "cardless";
+				if (cardless) reviewedCardless.current = true;
+				if (
+					!confirmed &&
+					(offer.action === "subscribe" || cardless || reviewedCardless.current)
+				) {
+					setConfirmation({
+						owner: offer.ownerUserId,
+						action: offer.action,
+						mode: offer.trialMode,
+						revision: offer.trialOfferRevision,
+					});
+					setStage(offer.action === "subscribe" ? "subscribe" : "trial");
 					return;
 				}
 				if (request.current?.owner !== offer.ownerUserId)
@@ -110,6 +220,34 @@ export function CheckoutContinuation({
 						id: crypto.randomUUID(),
 					};
 				setStage("opening");
+				if (cardless) {
+					if (!offer.trialOfferRevision)
+						throw new Error(
+							"The offer changed. Review the plans before continuing.",
+						);
+					recovery.current = {
+						owner: offer.ownerUserId,
+						revision: offer.trialOfferRevision,
+					};
+					const result = await postTrialAction<TrialStartResult>(
+						"start",
+						offer.ownerUserId,
+						{
+							requestId: request.current!.id,
+							planCode: plan,
+							billingPeriod: billing,
+							offerRevision: offer.trialOfferRevision,
+						},
+						abort.signal,
+					);
+					if (current())
+						showTrialResult(
+							result,
+							offer.ownerUserId,
+							offer.trialOfferRevision,
+						);
+					return;
+				}
 				const attribution = getSeoAttributionFields();
 				trackConversion("checkout_session_started", {
 					page_path: "/checkout",
@@ -180,7 +318,7 @@ export function CheckoutContinuation({
 						? error.message
 						: "We could not open checkout. Check your connection and try again.",
 				);
-				setStage("error");
+				setStage(recovery.current ? "pending" : "error");
 			} finally {
 				if (current()) busy.current = false;
 			}
@@ -194,7 +332,7 @@ export function CheckoutContinuation({
 			++generation.current;
 			controller.current?.abort();
 			busy.current = false;
-			setConfirmationOwner(null);
+			setConfirmation(null);
 			setStage("error");
 			setMessage("Please check your account again to continue checkout.");
 		};
@@ -234,7 +372,9 @@ export function CheckoutContinuation({
 						<Loader2 size={18} className="animate-spin" aria-hidden="true" />
 						{stage === "checking"
 							? "Checking your subscription…"
-							: "Opening secure checkout…"}
+							: reviewedCardless.current
+								? "Confirming your trial…"
+								: "Opening secure checkout…"}
 					</p>
 				)}
 				{stage === "subscribe" && (
@@ -246,10 +386,48 @@ export function CheckoutContinuation({
 						</p>
 						<Button
 							className="mt-6 w-full"
-							onClick={() => void start(confirmationOwner ?? undefined)}
+							onClick={() => void start(confirmation ?? undefined)}
 						>
 							Subscribe to {label}
 						</Button>
+					</div>
+				)}
+				{stage === "trial" && (
+					<div className="mt-8 border-t border-ani-line pt-6">
+						<p className="text-xl font-medium">3 days of {label}</p>
+						<p className="mt-3 text-sm leading-6 text-ani-muted">
+							{confirmation?.mode === "cardless"
+								? "No card required. No automatic charge. Your trial starts when you confirm and ends 72 hours later. You can choose to add a card and enable renewal from Billing."
+								: `A card is required. After 3 days, ${amount} is charged every ${period} unless you cancel renewal.`}
+						</p>
+						<Button
+							className="mt-6 w-full"
+							onClick={() => void start(confirmation ?? undefined)}
+						>
+							{confirmation?.mode === "cardless"
+								? "Start my 3-day trial"
+								: "Continue to card checkout"}
+						</Button>
+					</div>
+				)}
+				{(stage === "pending" || stage === "verification") && (
+					<div className="mt-8">
+						<p role="status" className="text-sm leading-6 text-ani-muted">
+							{message}
+						</p>
+						{stage === "pending" ? (
+							<Button className="mt-5 w-full" onClick={() => void start()}>
+								Check trial status
+							</Button>
+						) : (
+							<div className="mt-5">
+								<LoginOAuthButtons
+									safeNext={encodeURIComponent(
+										checkoutReturnPath({ plan, billing }),
+									)}
+								/>
+							</div>
+						)}
 					</div>
 				)}
 				{stage === "error" && (

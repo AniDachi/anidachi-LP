@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type Stripe from "stripe";
 import {
+	type CheckoutReservation,
 	createSubscriptionCheckoutService,
 	parseCheckoutReservation,
-	type CheckoutReservation,
 } from "./subscription-trial";
 
 const input = {
@@ -128,6 +128,7 @@ function fixture(
 	} as unknown as Stripe;
 	const service = createSubscriptionCheckoutService({
 		stripe,
+		readReservation: async () => (reserved ? reservation : null),
 		offer: readOffer,
 		now: () => clock,
 		reserve: async (next) => {
@@ -248,14 +249,18 @@ function fixture(
 		loseResponse() {
 			uncertain = true;
 		},
-		activeSubscription(visibleAtRead = 1) {
+		activeSubscription(visibleAtRead = 1, cardless = false) {
 			subscriptionVisibleAt = visibleAtRead;
 			subscriptionRows = [
 				{
 					id: "sub_current",
 					customer: "cus_owner",
-					status: "active",
-					metadata: { userId: input.userId },
+					status: cardless ? "trialing" : "active",
+					trial_end: Math.floor(now / 1000) + 259200,
+					metadata: {
+						userId: input.userId,
+						...(cardless ? { anidachiTrialMode: "cardless_v1" } : {}),
+					},
 				},
 			];
 		},
@@ -302,6 +307,15 @@ test("known open checkout is reused without another Stripe create", async () => 
 	const second = await f.service.prepareSubscriptionCheckout(input);
 	assert.equal(second.url, "https://checkout.stripe.com/c/pay/cs_new");
 	assert.equal(f.createCalls, 1);
+});
+test("legacy checkout cannot open a generic Portal for a cardless trial", async () => {
+	const f = fixture();
+	f.activeSubscription(1, true);
+	await assert.rejects(
+		f.service.prepareSubscriptionCheckout(input),
+		/trial renewal controls/i,
+	);
+	assert.equal(f.createCalls, 0);
 });
 test("active subscription is managed instead of creating another", async () => {
 	const f = fixture();
@@ -687,4 +701,46 @@ test("used trial cannot get another trial by selecting yearly billing", async ()
 	assert.deepEqual(f.params?.line_items, [
 		{ price: "price_plus_year", quantity: 1 },
 	]);
+});
+
+test("cardless policy rejects a new legacy trial even without displayed offer", async () => {
+	const f = fixture(true, async () => ({
+		action: "trial",
+		trialMode: "cardless",
+		price: { unitAmount: 799, currency: "usd" },
+	}));
+	await assert.rejects(f.service.prepareSubscriptionCheckout(input), {
+		status: 409,
+	});
+	assert.equal(f.createdRequests.length, 0);
+});
+test("an already reserved card-required checkout retains its terms after the policy changes", async () => {
+	let cardless = false;
+	const f = fixture(true, async () => ({
+		action: "trial",
+		trialMode: cardless ? "cardless" : "card_required",
+		price: { unitAmount: 799, currency: "usd" },
+	}));
+	await f.service.prepareSubscriptionCheckout(input);
+	cardless = true;
+	const result = await f.service.prepareSubscriptionCheckout(input);
+	assert.equal(result.kind, "checkout");
+	assert.equal(result.trialOffered, true);
+	assert.equal(f.createdRequests.length, 1);
+});
+test("cardless transition retires the existing reserved Checkout before releasing authority", async () => {
+	const f = fixture();
+	await f.service.prepareSubscriptionCheckout(input);
+	assert.equal(await f.service.retireForCardless(input.userId), "clear");
+	assert.equal(f.reservation.state, "expired");
+	assert.equal(f.createdRequests.length, 1);
+});
+test("cardless transition recovers an unknown old create with its original key before expiring", async () => {
+	const f = fixture();
+	f.loseResponse();
+	await assert.rejects(f.service.prepareSubscriptionCheckout(input));
+	assert.equal(await f.service.retireForCardless(input.userId), "clear");
+	assert.equal(f.reservation.state, "expired");
+	assert.equal(f.createdRequests[0].key, f.createdRequests[1].key);
+	assert.deepEqual(f.createdRequests[0].params, f.createdRequests[1].params);
 });

@@ -1,11 +1,14 @@
 import type Stripe from "stripe";
+import { verifyCardlessTrialCreated } from "./cardless-trial";
 
 import {
 	beginStripeSubscriptionRefresh,
 	commitStripeSubscriptionRefresh,
+	getCardlessTrialActivation,
 	getSubscriptionOwner,
 	getSubscriptionTrial,
 	getUserIdByStripeCustomerId,
+	recordCardlessTrialCreated,
 	releaseStripeSubscriptionRefresh,
 	type StripeRefreshLease,
 	type StripeSubscriptionCommit,
@@ -17,6 +20,7 @@ import {
 	stripeSubscriptionCancellationScheduled,
 } from "./stripe-plans";
 import {
+	type CardlessTrialActivationRecord,
 	resolveStripeTrialSnapshot,
 	type SubscriptionTrialRecord,
 } from "./stripe-trial-state";
@@ -75,6 +79,10 @@ export function resolveStripeSubscriptionPlan(
 }
 
 export type SyncStripeSubscriptionDeps = {
+	recordTrialActivation?: typeof recordCardlessTrialCreated;
+	readTrialActivation?: (
+		activationId: string,
+	) => Promise<CardlessTrialActivationRecord | null>;
 	readTrial?: (
 		subscriptionId: string,
 	) => Promise<SubscriptionTrialRecord | null>;
@@ -147,11 +155,60 @@ export async function syncStripeSubscriptionById(
 		if (!userId) return null; // Untracked Stripe customer; no mirror to mutate.
 		const { planCode, stripePriceId } =
 			resolveStripeSubscriptionPlan(subscription);
+		const activationId =
+			priorTrial?.trial_activation_id ??
+			subscription.metadata.trialActivationId;
+		let activation = activationId
+			? await (deps.readTrialActivation ?? getCardlessTrialActivation)(
+					activationId,
+				)
+			: null;
+		if (activation?.state === "pending") {
+			let scheduleId = stripeSubscriptionIdFromUnknown(subscription.schedule);
+			if (
+				activation.user_id !== userId ||
+				activation.stripe_customer_id !== stripeCustomerId
+			)
+				throw new StripeSubscriptionSyncError(
+					"Pending activation owner unavailable",
+				);
+			if (!scheduleId) {
+				// A completed Schedule may have detached before a delayed webhook.
+				// Recover only a unique positive match, never create from delivery.
+				const schedules = await stripe.subscriptionSchedules.list(
+					{ customer: stripeCustomerId, limit: 100 },
+					requestOptions(),
+				);
+				const matches = schedules.data.filter(
+					(s) => s.metadata?.trialActivationId === activationId,
+				);
+				if (schedules.has_more || matches.length !== 1)
+					throw new StripeSubscriptionSyncError(
+						"Pending activation Schedule unavailable",
+					);
+				scheduleId = matches[0].id;
+			}
+			const schedule = await stripe.subscriptionSchedules.retrieve(
+				scheduleId,
+				{},
+				requestOptions(),
+			);
+			const proof = verifyCardlessTrialCreated(
+				activation,
+				schedule,
+				subscription,
+				subscription.livemode,
+			);
+			activation = await (
+				deps.recordTrialActivation ?? recordCardlessTrialCreated
+			)(userId, activation.id, proof);
+		}
 		const trial = await resolveStripeTrialSnapshot(
 			stripe,
 			subscription,
 			priorTrial,
 			requestOptions,
+			activation,
 		);
 		const effectivePlan = await (
 			deps.commit ?? commitStripeSubscriptionRefresh

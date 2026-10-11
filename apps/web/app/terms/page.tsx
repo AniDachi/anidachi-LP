@@ -110,12 +110,18 @@ export default function TermsPage() {
               </p>
               <p className="mt-4">
                 New and existing Free accounts with an unused trial can try
-                Plus or Pro for three days with a card. There is one trial per
-                account across both plans and billing periods. Unless you
-                cancel renewal before the trial ends, Stripe charges your card
-                for the selected monthly or yearly subscription when it ends.
-                Changing plans or billing periods does not restart or extend
-                the trial.
+                Plus or Pro for three days, when offered on the pricing page.
+                There is one trial per account across both plans and billing
+                periods. A trial offered without a card lasts 72 hours and ends
+                without a payment unless you explicitly add a card and enable
+                renewal. Having a saved card alone does not enable renewal.
+                Before enabling it, you review the selected plan, billing period,
+                price and first payment date. Completing that card setup authorizes
+                Stripe to charge for the selected subscription at the original
+                trial end and renew it thereafter unless you cancel renewal.
+                Trials started with a card retain the terms confirmed at checkout:
+                they renew automatically unless canceled before the trial ends.
+                Changing plans or billing periods does not restart or extend a trial.
               </p>
               <p className="mt-4">
                 You can cancel renewal from Account → Subscription. Trial

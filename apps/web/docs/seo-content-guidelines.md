@@ -20,7 +20,7 @@ Current features: live synchronized players, on-player chat and reactions, voice
 
 Free accounts join Plus/Pro/trial hosts; creating rooms requires the host's own Plus or Pro access. Plus supports 6 people including the host, Pro 15; friends join free. Recording and editing personal history require each viewer's own paid/trial access. Automatic recording additionally requires permission in the extension; YouTube has a separate recording switch. Saved history, Resume and deletion remain available on Free.
 
-Plus and Pro offer monthly/yearly billing and one 3-day card-backed trial per account, for either new or existing Free accounts that have not used it. After the trial, the selected plan renews automatically unless renewal is canceled before the trial ends. Do not promise a new trial for switching plans or billing periods.
+Plus and Pro offer monthly/yearly billing and one 3-day trial per eligible account, including existing Free accounts that have not used it. Describe the current server offer: a card-required trial renews automatically unless renewal is canceled before the end; a cardless trial requires no card and ends without payment unless the user explicitly enables renewal with the displayed plan, period, price and first-charge date. Existing card-required trials retain their original terms. Cardless rollout remains gated; do not claim it is enabled in an environment merely because its code exists. Do not promise a new trial for switching plans or billing periods.
 
 **Planned only:** async catch-up, shared group progress, persistent room context/chat and replayed reactions. Never sell these as current features or paid-plan benefits. Mark future mentions clearly; do not include them among instructions users can follow today.
 

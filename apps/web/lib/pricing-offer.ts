@@ -1,7 +1,10 @@
-import type { MonthlyPrice } from "./billing-view";
+import type { PendingTrialActivation, MonthlyPrice } from "./billing-view";
 export type PricingPrices = Record<"plus" | "pro", MonthlyPrice>;
 
 export type PricingOffer = {
+	pendingTrialActivation?: PendingTrialActivation;
+	trialMode?: "card_required" | "cardless";
+	trialOfferRevision?: string;
 	ownerUserId: string | null;
 	paidHostingActive: boolean;
 	/** Missing in older responses means the trial offer is unconfirmed. */

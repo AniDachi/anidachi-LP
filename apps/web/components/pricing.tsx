@@ -23,7 +23,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 import { hasConfirmedTrialOffer, type PricingOffer, type PricingPrices } from "@/lib/pricing-offer";
 import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
-import { checkoutLoginPath, checkoutSessionRecoveryPath } from "@/lib/checkout-selection";
+import { checkoutLoginPath, checkoutSessionRecoveryPath, checkoutReturnPath } from "@/lib/checkout-selection";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -250,7 +250,9 @@ export function Pricing({
 			if (
 				offer &&
 				(currentOffer.ownerUserId !== offer.ownerUserId ||
-					currentOffer.action !== offer.action)
+					currentOffer.action !== offer.action ||
+					currentOffer.trialMode !== offer.trialMode ||
+					currentOffer.trialOfferRevision !== offer.trialOfferRevision)
 			) {
 				setCheckoutError(
 					"Your subscription options changed. Please choose your plan again.",
@@ -285,6 +287,10 @@ export function Pricing({
 				setCheckoutError(
 					"Checkout for this price is temporarily unavailable. Please try again later.",
 				);
+				return;
+			}
+			if (currentOffer.action === "trial" && currentOffer.trialMode === "cardless") {
+				window.location.href = checkoutReturnPath({ plan: tier, billing: period });
 				return;
 			}
 			trackConversion("checkout_session_started", {
@@ -498,8 +504,9 @@ export function Pricing({
 				<div className="pricing-plans__footer">
 					{showTrialTerms ? (
 						<p id="pricing-trial-terms" className="pricing-plans__trial-terms">
-							Card required. One trial per account. Cancel before your trial ends
-							to avoid a charge.
+							{offer?.trialMode === "cardless"
+								? "No card required. No automatic charge. One 3-day trial per eligible account."
+								: "Card required. One trial per account. Cancel before your trial ends to avoid a charge."}
 						</p>
 					) : null}
 					<p className="pricing-plans__terms">
@@ -632,7 +639,9 @@ function TierCardBody({
 		: "—";
 	const unit = yearly ? "year" : "month";
 	const termsSummary =
-		offer?.action === "sign_in" && trialOffered
+		trialOffered && offer?.trialMode === "cardless"
+			? `3 days free. Continue for ${recurringAmount}/${unit} only if you enable renewal.`
+			: offer?.action === "sign_in" && trialOffered
 			? `Then ${recurringAmount}/${unit} automatically.`
 			: offer?.action === "trial"
 				? `3 days free, then ${recurringAmount}/${unit} automatically.`

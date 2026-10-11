@@ -248,6 +248,18 @@ body:has(.account-notifications:modal) { overflow: hidden; }
 .billing-terms p + p { margin-top: 6px; }
 .billing-terms .billing-tax-note { font-size: 13px; color: var(--account-muted); }
 .billing-terms .billing-warning { color: #edb5a4; }
+.billing-trial-controls { margin-top: 28px; padding: 24px; border: 1px solid var(--account-line); border-radius: 18px; background: rgba(255,255,255,.025); display: grid; gap: 16px; }
+.billing-trial-controls h3 { font-size: 17px; font-weight: 600; letter-spacing: -.025em; }
+.billing-trial-controls p { font-size: 14px; line-height: 1.65; }
+.billing-trial-controls > .ac-button { justify-self: start; }
+.billing-trial-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.billing-trial-selection label { display: grid; gap: 8px; color: var(--account-muted); font-size: 13px; }
+.billing-trial-selection select { width: 100%; padding: 12px; border: 1px solid var(--account-line); border-radius: 10px; background: var(--account-bg, #171719); color: var(--account-cream); font: inherit; color-scheme: dark; }
+.billing-trial-review { border-top: 1px solid var(--account-line); padding-top: 18px; display: grid; gap: 12px; }
+.billing-trial-review .billing-trial-review-price { font-size: 18px; font-weight: 600; }
+.billing-trial-controls .billing-actions { margin-top: 4px; }
+.billing-trial-controls .billing-tax-note { color: var(--account-muted); font-size: 12px; }
+@media (max-width: 540px) { .billing-trial-controls { padding: 18px; } .billing-trial-controls .ac-button { white-space: normal; text-align: center; } }
 .billing-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-top: 26px; }
 .billing-actions .ac-renewal-action { margin: 0; gap: 10px; }
 .billing-actions .ac-renewal-action:has(.ac-notice) { flex-basis: 100%; }

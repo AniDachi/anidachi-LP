@@ -1,5 +1,26 @@
 # Current Development State
 
+## Cardless trial candidate, October 11, 2026
+
+`codex/cardless-trial` is isolated from the local extension redesign. The
+Schedule-based 72-hour trial, durable account authority, explicit renewal
+consent/setup/cancellation, recovery and website states are implemented. The
+original ordinary-subscription prototype failed the already-open Portal test;
+its result is retained rather than relabeled as passing. The Schedule capability
+suite passed fourteen real sandbox cases, including hosted 3DS.
+
+Local candidate checks now include web/protocol/API/extension tests, Worker
+runtime and room harness, plus 258 SQL assertions and four actual DB concurrency scenarios. The
+new verified funnel uses the existing Amplitude publisher behind a durable
+outbox with its own disabled scheduler. No new production feature is enabled.
+Final review found and prompted fixes for pending activation discovery, safe
+operator settlement, and credit-paid recurring service. Repair review is pending.
+Hosted staging deployment, real account/loaded-extension acceptance and owner
+sign-off are still pending at this source checkpoint. See
+[acceptance evidence](superpowers/plans/2026-10-11-cardless-trial-acceptance.md) and
+[rollout/recovery runbook](releases/cardless-trial/staging-runbook.md). Production
+requires separate authorization and an isolated billing promotion diff.
+
 ## Netflix staging candidate, October 8, 2026
 
 The approved `codex/netflix-platform-staging` candidate adds Netflix movies and
