@@ -1,22 +1,33 @@
 # Current Development State
 
-## Cardless trial candidate, October 11, 2026
+## Cardless trial staging delivery, October 11, 2026
 
-`codex/cardless-trial` is isolated from the local extension redesign. The
-Schedule-based 72-hour trial, durable account authority, explicit renewal
-consent/setup/cancellation, recovery and website states are implemented. The
-original ordinary-subscription prototype failed the already-open Portal test;
-its result is retained rather than relabeled as passing. The Schedule capability
-suite passed fourteen real sandbox cases, including hosted 3DS.
+[PR #410](https://github.com/AniDachi/anidachi-LP/pull/410) merged as
+`2471411b7bede05a5564679988fee7725df93d17`. The Schedule-based 72-hour trial,
+account authority, explicit renewal consent/setup/cancellation, recovery,
+website states and verified funnel are deployed to staging with new starts off.
+All five additive migrations applied. A before/after fingerprint comparison
+preserved all 17 subscription rows, nine legacy trial rows, the empty manual-grant
+set and existing paid-hosting/trial policy fields. Production is untouched.
 
-Local candidate checks now include web/protocol/API/extension tests, Worker
-runtime and room harness, plus 258 SQL assertions and four actual DB concurrency scenarios. The
-new verified funnel uses the existing Amplitude publisher behind a durable
-outbox with its own disabled scheduler. No new production feature is enabled.
-Final review found and prompted fixes for pending activation discovery, safe
-operator settlement, and credit-paid recurring service. Repair review is pending.
-Hosted staging deployment, real account/loaded-extension acceptance and owner
-sign-off are still pending at this source checkpoint. See
+Independent final review accepted runtime `4b6a8027`; Graphify was refreshed in
+`32250893`. Staging Web is READY on the merge SHA; protected-site smoke and the
+staging extension build/validation passed. The existing paid account Billing
+page was inspected without payment actions. The local extension redesign folder
+remains separate. Local proof includes fourteen real Stripe Sandbox Schedule
+cases, 258 SQL assertions and four DB concurrency scenarios.
+
+The authenticated staging analytics probe returned 503 while the scheduler was
+disabled and its queue empty. The follow-up candidate identifies the environment
+by the Vercel target plus exact Git branch, instead of the public SEO origin.
+Its focused tests (12), full web suite (1095 passed, six existing skips),
+TypeScript and changed-file lint passed. Hosted success remains unproven at this
+source checkpoint. The exact follow-up delivery and probe receipt belong in its
+PR description/controller report rather than a docs-only deployment loop.
+
+New starts and analytics delivery remain disabled. Fresh OAuth/trial/setup,
+actual AniDachi-project event delivery, loaded current/old extension behavior,
+72-hour room expiry and owner acceptance remain open. See
 [acceptance evidence](superpowers/plans/2026-10-11-cardless-trial-acceptance.md) and
 [rollout/recovery runbook](releases/cardless-trial/staging-runbook.md). Production
 requires separate authorization and an isolated billing promotion diff.

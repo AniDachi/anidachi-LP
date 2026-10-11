@@ -39,24 +39,17 @@ const EVENT_TYPES = new Set<TrialConversionEvent["eventType"]>([
 	"trial_first_shared_session",
 ]);
 
-/** Only canonical deployments deliver. A local build never guesses production from a fallback URL. */
+/** Only reviewed deployment targets deliver; public SEO URLs do not identify a runtime. */
 export function resolveTrialAnalyticsEnvironment(
-	env: Record<string, string | undefined> = process.env,
+	env: Record<string, string | undefined> = {
+		VERCEL_ENV: process.env.VERCEL_ENV,
+		VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
+	},
 ): TrialAnalyticsEnvironment | null {
-	try {
-		const url = new URL(env.NEXT_PUBLIC_SITE_URL ?? "");
-		if (url.protocol !== "https:" || url.username || url.password || url.port)
-			return null;
-		if (env.VERCEL_ENV === "preview" && url.hostname === "staging.anidachi.app")
-			return "staging";
-		if (
-			env.VERCEL_ENV === "production" &&
-			["www.anidachi.app", "anidachi.app"].includes(url.hostname)
-		)
-			return "production";
-	} catch {
-		/* no configured canonical environment */
-	}
+	if (env.VERCEL_ENV === "preview" && env.VERCEL_GIT_COMMIT_REF === "staging")
+		return "staging";
+	if (env.VERCEL_ENV === "production" && env.VERCEL_GIT_COMMIT_REF === "main")
+		return "production";
 	return null;
 }
 

@@ -90,36 +90,49 @@ test("invalid environment, identity, plan and unverified click/setup are never s
 	assert.equal(calls, 0);
 });
 
-test("disabled or mismatched environment fails closed; canonical staging/production are separate", () => {
-	assert.equal(
-		resolveTrialAnalyticsEnvironment({
-			VERCEL_ENV: "preview",
-			NEXT_PUBLIC_SITE_URL: "https://staging.anidachi.app",
-		}),
-		"staging",
-	);
-	assert.equal(
-		resolveTrialAnalyticsEnvironment({
-			VERCEL_ENV: "production",
-			NEXT_PUBLIC_SITE_URL: "https://www.anidachi.app",
-		}),
-		"production",
-	);
-	assert.equal(resolveTrialAnalyticsEnvironment({}), null);
-	assert.equal(
-		resolveTrialAnalyticsEnvironment({
-			VERCEL_ENV: "preview",
-			NEXT_PUBLIC_SITE_URL: "https://www.anidachi.app",
-		}),
-		null,
-	);
-	assert.equal(
-		resolveTrialAnalyticsEnvironment({
-			VERCEL_ENV: "production",
-			NEXT_PUBLIC_SITE_URL: "https://staging.anidachi.app",
-		}),
-		null,
-	);
+test("trial analytics uses the deployed target and branch, independent of public SEO origin", () => {
+	for (const origin of [
+		undefined,
+		"https://staging.anidachi.app",
+		"https://www.anidachi.app",
+	]) {
+		assert.equal(
+			resolveTrialAnalyticsEnvironment({
+				VERCEL_ENV: "preview",
+				VERCEL_GIT_COMMIT_REF: "staging",
+				NEXT_PUBLIC_SITE_URL: origin,
+			}),
+			"staging",
+		);
+		assert.equal(
+			resolveTrialAnalyticsEnvironment({
+				VERCEL_ENV: "production",
+				VERCEL_GIT_COMMIT_REF: "main",
+				NEXT_PUBLIC_SITE_URL: origin,
+			}),
+			"production",
+		);
+	}
+});
+
+test("unknown, local and feature deployments cannot deliver trial analytics", () => {
+	for (const env of [
+		{},
+		{ VERCEL_ENV: "development", VERCEL_GIT_COMMIT_REF: "staging" },
+		{ VERCEL_ENV: "preview" },
+		{ VERCEL_ENV: "production" },
+		{ VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "codex/cardless-trial" },
+		{ VERCEL_ENV: "preview", VERCEL_GIT_COMMIT_REF: "main" },
+		{ VERCEL_ENV: "production", VERCEL_GIT_COMMIT_REF: "staging" },
+	]) {
+		assert.equal(
+			resolveTrialAnalyticsEnvironment({
+				...env,
+				NEXT_PUBLIC_SITE_URL: "https://staging.anidachi.app",
+			}),
+			null,
+		);
+	}
 });
 
 test("delivery failure keeps a claimed transition retryable and success acknowledges its lease", async () => {

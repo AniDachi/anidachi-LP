@@ -3498,10 +3498,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1791735820.913116,
-    "seen": 1791737251.464194,
+    "mtime": 1791739275.1347475,
+    "seen": 1791739661.044661,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "d98563f01c5ce1cec3bbf9898a706634"
+    "semantic_hash": "4b52dc9e48a882c50c367c089dea1616"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3516,10 +3516,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1791733836.1581898,
-    "seen": 1791737251.464195,
+    "mtime": 1791739275.1338909,
+    "seen": 1791739661.0446641,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "0209b84c6151dd69e15cf4e216b2fd55"
+    "semantic_hash": "b09ec57a4db3bd8e16f054ffbe330257"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -9762,16 +9762,16 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md": {
-    "mtime": 1791735820.914621,
-    "seen": 1791737251.4641972,
+    "mtime": 1791739275.1354313,
+    "seen": 1791739661.044665,
     "ast_hash": "",
-    "semantic_hash": "f6bfb0b64e223cc39ed8de0e076f8951"
+    "semantic_hash": "a024d4fda28fe0e6d54e5c99dcf77636"
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial.md": {
-    "mtime": 1791735820.9125273,
-    "seen": 1791737251.4641979,
+    "mtime": 1791739275.1358252,
+    "seen": 1791739661.044666,
     "ast_hash": "",
-    "semantic_hash": "c50393b43e83242f66669e72030c262f"
+    "semantic_hash": "6db9a3938add0c4324b2a541c393b33f"
   },
   "docs/superpowers/specs/2026-10-11-cardless-trial-design.md": {
     "mtime": 1791735820.9120936,
@@ -9996,21 +9996,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/trial-conversion-events.test.ts": {
-    "mtime": 1791733483.1464145,
-    "seen": 1791737251.412149,
-    "ast_hash": "beb65b1de8a000962a3f678e60c0793f",
+    "mtime": 1791738853.4136255,
+    "seen": 1791739641.410045,
+    "ast_hash": "907e440dc5fd7734cedad4a8328ffc6e",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/trial-conversion-events.ts": {
-    "mtime": 1791733483.1464143,
-    "seen": 1791737251.412149,
-    "ast_hash": "0f8dbb5d63a8639723672c700d6bab97",
+    "mtime": 1791738853.0295656,
+    "seen": 1791739641.410048,
+    "ast_hash": "7931c3bd76a5f4fdb04e860924a0a3b8",
     "semantic_hash": ""
   },
   "apps/web/lib/internal-trial-events-drain-route.test.ts": {
-    "mtime": 1791733483.146169,
-    "seen": 1791737251.412152,
-    "ast_hash": "a056442bed66146c2afc93067494e021",
+    "mtime": 1791739170.2177088,
+    "seen": 1791739641.410049,
+    "ast_hash": "c7d9728d3ad1c12a7a4ee6b834822ee9",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20261011153028_trial_conversion_events.sql": {

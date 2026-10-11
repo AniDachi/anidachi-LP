@@ -24,7 +24,10 @@ Stripe API 2025-08-27.basil, WXT extension, Cloudflare room runtime.
 Task 4 реализован и проверен локально: явный запуск trial, подключение/отмена оплаты,
 состояния Billing и совместимые тексты. Локальные desktop/mobile проверки не
 заменяют приемку staging. Task 5: серверная аналитика и общие локальные проверки готовы;
-hosted-проверки и приемка еще открыты. Новая модель нигде не включена.
+PR #410 доставлен на staging с выключенным флагом; пять миграций и сохранность
+старых записей проверены. Исправление определения окружения аналитики готово
+локально; hosted-проверки нового trial и приемка еще открыты. Новая модель нигде
+не включена.
 Исходная обычная Subscription отклонена из-за обхода через старый Portal;
 ее результаты сохраняются отдельно и не засчитываются новой схеме.
 [Текущие доказательства и ограничения](2026-10-11-cardless-trial-acceptance.md).
@@ -372,12 +375,15 @@ publisher; `cardless-trial-acceptance.md`; текущие billing/domain docs.
 - [x] Выполнить repo `pnpm check`, `pnpm test`, `pnpm harness:rooms` и
   `pnpm --filter @anidachi/api test:runtime`; SQL contract Task 1.
   Ожидается GREEN; не менять unrelated код ради обхода проверок.
-- [ ] Собрать `pnpm build:extension:staging`, затем
-  `pnpm validate:extension:staging`. Проверить загруженную сборку, права и старую
-  опубликованную версию. Если меняются shared fields — проверить все consumers.
-- [ ] Через обычный PR в staging проверить новую миграцию и deploy с flag off,
-  затем включить только staging. Снять before/after evidence для старых paid,
-  отмененных paid, trial с картой и ручного grant: исходные условия сохранены.
+- [x] Собрать `pnpm build:extension:staging`, затем
+  `pnpm validate:extension:staging`: workflow `38157882289`, SHA `2471411b`.
+- [ ] Проверить загруженную сборку, права и старую опубликованную версию.
+  Если меняются shared fields — проверить все consumers.
+- [x] Через PR #410 применить пять миграций и deploy с flag off; before/after
+  подтвердил сохранность 17 подписок, девяти legacy trial и пустого manual-grant
+  набора. Реальный grant-flow не считать проверенным на пустом наборе.
+- [ ] Проверить исправление аналитики на hosted staging, затем включить только
+  staging для согласованных новых тестовых аккаунтов.
 - [ ] Завершить browser gate Task 4 на настоящем staging: desktop/mobile,
   signed-out/Free/trial/paid, Plus/Pro и оба периода, verification login,
   начало/окончание trial, setup return и отмена без ложных обещаний доступа/оплаты.
@@ -405,7 +411,8 @@ publisher; `cardless-trial-acceptance.md`; текущие billing/domain docs.
   terminal settlement без TTL reset и ручной выдачи entitlement.
 - [x] Recurring invoice, погашенный балансом, сохраняет доступ; первая денежная
   конверсия имеет отдельные immutable поля и может случиться в следующем цикле.
-- [ ] Повторный независимый review нового SHA, Graphify и hosted gates выше.
+- [x] Повторный независимый review runtime `4b6a8027`, Graphify `32250893`.
+- [ ] Hosted gates выше и отдельный review исправления analytics environment.
 
 ## Task 6: Контролируемый выпуск и восстановление
 
