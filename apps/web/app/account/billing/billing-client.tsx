@@ -287,19 +287,20 @@ function BillingWorkspace({
 		[load, ownerUserId],
 	);
 
+	const trialSetupOperationId = trialSetupReturn?.operationId;
 	useEffect(() => {
-		if (!trialSetupReturn) return;
+		if (!trialSetupOperationId) return;
 		let disposed = false;
 		queueMicrotask(() => {
 			if (!disposed)
 				void trialAction("complete", {
-					operationId: trialSetupReturn.operationId,
+					operationId: trialSetupOperationId,
 				});
 		});
 		return () => {
 			disposed = true;
 		};
-	}, [trialAction, trialSetupReturn?.operationId]);
+	}, [trialAction, trialSetupOperationId]);
 
 	async function changeTrial(
 		subscriptionId: string,

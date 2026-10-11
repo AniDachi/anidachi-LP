@@ -7,7 +7,7 @@ test("server publisher acknowledges only a successful HTTP API receipt and retai
 	const originalKey = process.env.AMPLITUDE_API_KEY;
 	process.env.AMPLITUDE_API_KEY = "test-public-project-key";
 	try {
-		let payload: any;
+		let payload: { events: Record<string, unknown>[] } = { events: [] };
 		globalThis.fetch = async (_url, init) => {
 			assert.ok(init?.signal);
 			payload = JSON.parse(String(init?.body));

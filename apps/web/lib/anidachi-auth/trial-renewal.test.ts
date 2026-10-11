@@ -20,7 +20,7 @@ function fixture() {
 		anidachiTrialMode: "cardless_v1",
 		planCode: "plus",
 	};
-	const sub: any = {
+	const sub = {
 		id: "sub_trial",
 		customer: "cus_trial",
 		livemode: false,
@@ -28,23 +28,23 @@ function fixture() {
 		status: "trialing",
 		trial_start: start,
 		trial_end: end,
-		schedule: "sched_trial",
-		cancel_at: end,
+		schedule: "sched_trial" as string | null,
+		cancel_at: end as number | null,
 		cancel_at_period_end: false,
-		default_payment_method: null,
+		default_payment_method: null as string | null,
 		collection_method: "charge_automatically",
 		items: { data: [{ price: { id: "price_plus_monthly" }, quantity: 1 }] },
 	};
-	const schedule: any = {
+	const schedule = {
 		id: "sched_trial",
 		customer: "cus_trial",
 		livemode: false,
 		metadata: { ...metadata },
 		status: "active",
-		subscription: sub.id,
-		released_subscription: null,
+		subscription: sub.id as string | null,
+		released_subscription: null as string | null,
 		end_behavior: "cancel",
-		default_settings: { default_payment_method: null },
+		default_settings: { default_payment_method: null as string | null },
 		phases: [
 			{
 				start_date: start,
@@ -56,10 +56,36 @@ function fixture() {
 		],
 	};
 	const operations = new Map<string, TrialRenewalOperation>();
-	const sessions = new Map<string, any>();
-	const intents = new Map<string, any>();
-	const updates: any[] = [],
-		creates: any[] = [],
+	type SetupSessionFixture = {
+		id: string;
+		mode: string;
+		customer: string;
+		livemode: boolean;
+		status: string;
+		metadata: Stripe.Checkout.SessionCreateParams["metadata"];
+		client_reference_id: string | undefined;
+		setup_intent: string | null;
+		url: string;
+	};
+	type SetupIntentFixture = {
+		id: string;
+		customer: string;
+		livemode: boolean;
+		status: string;
+		usage: string;
+		payment_method: string;
+		metadata: SetupSessionFixture["metadata"];
+	};
+	const sessions = new Map<string, SetupSessionFixture>();
+	const intents = new Map<string, SetupIntentFixture>();
+	const updates: {
+			params: Stripe.SubscriptionScheduleUpdateParams;
+			key: string | undefined;
+		}[] = [],
+		creates: {
+			params: Stripe.Checkout.SessionCreateParams;
+			key: string | undefined;
+		}[] = [],
 		syncs: string[] = [];
 	let changedPrice = false,
 		failCommit = false,
@@ -77,12 +103,18 @@ function fixture() {
 		stripe: {
 			subscriptionSchedules: {
 				retrieve: async () => structuredClone(schedule),
-				update: async (_id: string, params: any, options: any) => {
+				update: async (
+					_id: string,
+					params: Stripe.SubscriptionScheduleUpdateParams,
+					options: Stripe.RequestOptions,
+				) => {
 					updates.push({ params, key: options.idempotencyKey });
 					assert.equal(schedule.status, "active");
 					Object.assign(schedule, params);
 					if (params.phases) {
-						sub.items.data[0].price.id = params.phases[0].items[0].price;
+						const price = params.phases[0].items[0].price;
+						assert.equal(typeof price, "string");
+						sub.items.data[0].price.id = price!;
 						sub.metadata = { ...sub.metadata, ...params.phases[0].metadata };
 					}
 					sub.default_payment_method =
@@ -103,9 +135,12 @@ function fixture() {
 						has_more: false,
 					}),
 					retrieve: async (id: string) => structuredClone(sessions.get(id)),
-					create: async (params: any, options: any) => {
+					create: async (
+						params: Stripe.Checkout.SessionCreateParams,
+						options: Stripe.RequestOptions,
+					) => {
 						creates.push({ params, key: options.idempotencyKey });
-						const session = {
+						const session: SetupSessionFixture = {
 							id: `cs_${creates.length}`,
 							mode: "setup",
 							customer: "cus_trial",
@@ -297,7 +332,7 @@ test("setup_does_not_grant_paid_access and saved_card_is_not_renewal_consent", a
 	assert.equal(result.state, "setup");
 	assert.equal(f.creates[0].params.mode, "setup");
 	assert.equal(
-		f.creates[0].params.setup_intent_data.metadata.trialRenewalId,
+		f.creates[0].params.setup_intent_data!.metadata!.trialRenewalId,
 		quote.id,
 	);
 	assert.equal(f.creates[0].params.line_items, undefined);
@@ -323,10 +358,10 @@ test("duplicate_setup_event_is_noop and explicit annual opt-in preserves origina
 	);
 	assert.equal(f.updates.length, 1);
 	assert.equal(f.sub.trial_end, f.end);
-	assert.equal(f.updates[0].params.phases[0].end_date, f.end);
-	assert.equal(f.updates[0].params.phases[0].trial_end, f.end);
+	assert.equal(f.updates[0].params.phases![0].end_date, f.end);
+	assert.equal(f.updates[0].params.phases![0].trial_end, f.end);
 	assert.equal(
-		f.updates[0].params.phases[0].items[0].price,
+		f.updates[0].params.phases![0].items[0].price,
 		"price_plus_yearly",
 	);
 	assert.equal(f.updates[0].params.proration_behavior, "none");
