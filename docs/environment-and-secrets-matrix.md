@@ -29,6 +29,7 @@ Project: Anidachi web app.
 | `ANIDACHI_API_INTERNAL_BASE_URL` | Preview / `staging` | Server-only Worker origin, expected `https://anidachi-api-staging.vladislav-gul7.workers.dev` | Host room end succeeds and the Worker receives `/internal/rooms/:roomId/end` |
 | `ANIDACHI_API_INTERNAL_BASE_URL` | Production | Server-only Worker origin, expected `https://anidachi-api-production.vladislav-gul7.workers.dev` | Production host room end reaches the production Worker, never staging |
 | `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls and invitation-outbox recovery; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; authenticated recovery acknowledges a bounded drain; unauthenticated internal requests return `401` |
+| `ANIDACHI_TRIAL_EVENT_DRAIN_SECRET` | Candidate: Preview / exact branch `staging`; Production only after separate approval | Dedicated analytics-drain bearer, same environment's Vault name `anidachi_trial_event_drain_secret`. Distinct from room/notification credentials. Never include in Worker or clients | Missing/wrong bearer fails before DB access; initially disabled private scheduler; verify canonical environment and AniDachi Amplitude project `813335` before enabling |
 | `ANIDACHI_NOTIFICATION_DRAIN_SECRET` | Preview / exact branch `staging`; production only after separate promotion | Dedicated server-only authority for the notification drain; same environment's value is stored in Vault as `anidachi_notification_drain_secret`. Never reuse the room/internal secret | Missing/wrong bearer fails before database access; dedicated bearer works only at the drain, not room callbacks; verify after a new web deployment |
 | `ANIDACHI_HOSTING_CUTOVER_DRAIN_SECRET` | Planned Preview / exact branch `staging`, then separately Production | Server-only cutover-drain authority; matching same-environment Vault name `anidachi_hosting_cutover_drain_secret`. Distinct from room and notification keys; never put in Worker or extension | New Web drain accepts only this bearer; room admission rejects it; private SQL recovery remains disabled until verified. Not configured remotely by the local implementation |
 | `ANIDACHI_VAPID_SUBJECT` | Production / Preview `staging` | Server-side contact identity for existing Web Push delivery | Complete VAPID configuration is accepted; unavailable configuration leaves observable retry work |
@@ -50,7 +51,7 @@ Project: Anidachi web app.
 | OAuth client vars | Production / Preview | Google/Discord web auth | Login smoke on matching environment |
 | Supabase public vars | Production / Preview | Browser-safe Supabase project config | `/api/me` and room APIs work |
 | `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Production (Preview optional) | Browser Amplitude project key | Client `trackConversion` events reach AniDachi Amplitude |
-| `AMPLITUDE_API_KEY` | Production (optional; falls back to public key) | Server Amplitude HTTP key for zip downloads | `/api/extension/download` records `extension_zip_download` |
+| `AMPLITUDE_API_KEY` | Production (optional; falls back to public key) | Existing Amplitude HTTP publisher for ZIP downloads and the candidate verified trial funnel | Key must belong to AniDachi project `813335`; trial events include explicit environment and immutable insert IDs. No new project or key is provisioned |
 | `EXTENSION_ZIP_URL` | Production (Preview optional) | Sole source: immutable public HTTPS Blob/CDN URL of the approved zip, without credentials or a fragment | `/api/extension/download` redirects only to this URL; no local-file fallback |
 | `EXTENSION_ZIP_VERSION` | Same as zip URL | Semver shown on `/extension` | Hub version matches the built artifact |
 | `EXTENSION_ZIP_SHA256` | Same as zip URL | 64 hex SHA-256 of the zip bytes | `/api/extension/latest` checksum matches downloaded zip during release acceptance |
@@ -193,3 +194,22 @@ When changing any dashboard variable or secret:
 4. Run the relevant smoke test.
 5. Update this document and `docs/current-development-state.md` if behavior or
    ownership changed.
+
+## Cardless trial candidate: staging rollout
+
+The four October 11 migrations add the disabled `cardless_trials_enabled` policy,
+provider email proof, durable activation/consent records and a disabled analytics
+scheduler. No new Stripe key, price, webhook endpoint or shared Portal setting is
+required by the candidate. Existing Test credentials remain staging-only.
+
+`anidachi_private.trial_event_scheduler` is separate from notification delivery.
+Its environment must match both `VERCEL_ENV` and the canonical
+`NEXT_PUBLIC_SITE_URL`: preview + staging.anidachi.app, or production +
+www.anidachi.app/anidachi.app. Development and arbitrary Preview hosts do not
+drain. The private scheduler uses only the dedicated Vault bearer and a fixed
+matching host, eight events per batch, and bounded retry leases. Configure its
+secret/environment before enabling; a missing key does not lose pending events.
+
+This document records required configuration, not a claim of hosted activation.
+Follow the [staging runbook](releases/cardless-trial/staging-runbook.md) and
+[acceptance evidence](superpowers/plans/2026-10-11-cardless-trial-acceptance.md).

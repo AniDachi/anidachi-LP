@@ -109,6 +109,21 @@ if (
 				"\ncommit;",
 		);
 }
+if (
+	sql(
+		"select to_regclass('public.trial_conversion_events') is null;",
+	).trim() === "t"
+) {
+	const migration = readdirSync(resolve(base, "migrations")).find((f) =>
+		f.endsWith("_trial_conversion_events.sql"),
+	);
+	if (migration)
+		sql(
+			"begin;\n" +
+				readFileSync(resolve(base, "migrations", migration), "utf8") +
+				"\ncommit;",
+		);
+}
 assert.equal(
 	snapshot(),
 	before,
@@ -118,6 +133,7 @@ for (const name of [
 	"cardless_subscription_trials",
 	"cardless_trial_launch",
 	"cardless_trial_renewal",
+	"trial_conversion_events",
 	"paid_hosting_trials",
 	"unified_trial_eligibility",
 	"subscription_checkout_reservations",
@@ -192,10 +208,12 @@ try {
 }
 // Separate service-role connections race setup finalization against cancellation.
 // The DB must choose one mutation authority even when HTTP workers overlap.
-const renewalUser = randomUUID(), renewalActivation = randomUUID();
-const renewalSub = `sub_${renewalUser}`, renewalCustomer = `cus_${renewalUser}`;
+const renewalUser = randomUUID(),
+	renewalActivation = randomUUID();
+const renewalSub = `sub_${renewalUser}`,
+	renewalCustomer = `cus_${renewalUser}`;
 try {
-  sql(`begin;
+	sql(`begin;
  insert into public.users(id,email,display_name) values('${renewalUser}','${renewalUser}@example.test','Renewal race');
  insert into public.billing_customers(user_id,stripe_customer_id) values('${renewalUser}','${renewalCustomer}');
  insert into public.subscriptions(user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,plan_code,status,current_period_end)
@@ -204,15 +222,45 @@ try {
  values('${renewalActivation}','${renewalUser}','${randomUUID()}','plus','monthly','price_plus',1,'${renewalCustomer}','sched_${renewalUser}','${renewalSub}','committed',now(),now()+interval '72 hours');
  insert into public.account_subscription_trials(user_id,stripe_subscription_id,trial_started_at,trial_ends_at,trial_mode,trial_activation_id,stripe_schedule_id)
  values('${renewalUser}','${renewalSub}',now(),now()+interval '72 hours','cardless','${renewalActivation}','sched_${renewalUser}');commit;`);
-  const op=JSON.parse(sql(`set role service_role;select public.reserve_trial_renewal_v1('${renewalUser}','${randomUUID()}','${renewalSub}','enable','{"planCode":"plus","billingPeriod":"monthly","priceId":"price_plus","amount":799,"currency":"usd","termsRevision":"v1","quoteRevision":"q1"}');`).trim());
-  sql(`set role service_role;select public.begin_trial_setup_v1('${renewalUser}','${op.id}',${op.generation},'${randomUUID()}','https://staging.anidachi.app');select public.record_trial_setup_session_v1('${renewalUser}','${op.id}',${op.generation},'cs_${renewalUser}');`);
-  const races=await Promise.allSettled([
-    `select public.commit_trial_renewal_v2('${renewalUser}','${op.id}',${op.generation},'setup_pending','applying','{"setupSessionId":"cs_${renewalUser}","setupIntentId":"seti_${renewalUser}","paymentMethodId":"pm_${renewalUser}"}');`,
-    `select public.reserve_trial_renewal_v1('${renewalUser}','${randomUUID()}','${renewalSub}','cancel','{}');`,
-  ].map(s=>parallelSql(`begin;set local role service_role;${s}select pg_sleep(0.15);commit;`)));
-  assert.equal(races.filter(r=>r.status==='fulfilled').length,1,"Only enable or cancellation may own the unresolved external mutation");
-  for(const r of races) if(r.status==='rejected') assert.match(r.reason.message,/TRIAL_RENEWAL_STALE|TRIAL_MUTATION_UNRESOLVED/);
-  assert.equal(sql(`select count(*) from public.subscription_trial_renewals where user_id='${renewalUser}' and state='applying';`).trim(),'1');
-  console.log("PASS setup completion / cancel concurrency: one durable mutation authority");
-} finally { sql(`delete from public.users where id='${renewalUser}';`); }
+	const op = JSON.parse(
+		sql(
+			`set role service_role;select public.reserve_trial_renewal_v1('${renewalUser}','${randomUUID()}','${renewalSub}','enable','{"planCode":"plus","billingPeriod":"monthly","priceId":"price_plus","amount":799,"currency":"usd","termsRevision":"v1","quoteRevision":"q1"}');`,
+		).trim(),
+	);
+	sql(
+		`set role service_role;select public.begin_trial_setup_v1('${renewalUser}','${op.id}',${op.generation},'${randomUUID()}','https://staging.anidachi.app');select public.record_trial_setup_session_v1('${renewalUser}','${op.id}',${op.generation},'cs_${renewalUser}');`,
+	);
+	const races = await Promise.allSettled(
+		[
+			`select public.commit_trial_renewal_v2('${renewalUser}','${op.id}',${op.generation},'setup_pending','applying','{"setupSessionId":"cs_${renewalUser}","setupIntentId":"seti_${renewalUser}","paymentMethodId":"pm_${renewalUser}"}');`,
+			`select public.reserve_trial_renewal_v1('${renewalUser}','${randomUUID()}','${renewalSub}','cancel','{}');`,
+		].map((s) =>
+			parallelSql(
+				`begin;set local role service_role;${s}select pg_sleep(0.15);commit;`,
+			),
+		),
+	);
+	assert.equal(
+		races.filter((r) => r.status === "fulfilled").length,
+		1,
+		"Only enable or cancellation may own the unresolved external mutation",
+	);
+	for (const r of races)
+		if (r.status === "rejected")
+			assert.match(
+				r.reason.message,
+				/TRIAL_RENEWAL_STALE|TRIAL_MUTATION_UNRESOLVED/,
+			);
+	assert.equal(
+		sql(
+			`select count(*) from public.subscription_trial_renewals where user_id='${renewalUser}' and state='applying';`,
+		).trim(),
+		"1",
+	);
+	console.log(
+		"PASS setup completion / cancel concurrency: one durable mutation authority",
+	);
+} finally {
+	sql(`delete from public.users where id='${renewalUser}';`);
+}
 assert.equal(snapshot(), before, "Tests preserve preexisting records");

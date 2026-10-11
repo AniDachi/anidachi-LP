@@ -1,8 +1,8 @@
 # Cardless trial: acceptance evidence
 
-Date: 2026-10-11. Status: **Stripe Schedule capability checks and local storage /
-refresh checks passed. Start/renewal services, UI and staging acceptance remain
-pending. No rollout.**
+Date: 2026-10-11. Status: **Stripe Schedule capability, local server/client and
+analytics checks passed. Hosted staging deployment and real account acceptance
+remain pending. No rollout.**
 
 - [Design](../specs/2026-10-11-cardless-trial-design.md)
 - [Implementation plan](2026-10-11-cardless-trial.md)
@@ -451,3 +451,51 @@ Ruling: hosted desktop/mobile acceptance moves from Task 4 into Task 5 alongside
 the first staging PR/deploy. The requirement remains open until that real browser
 evidence exists; local fixtures do not satisfy it. Analytics, loaded artifact,
 operator recovery and owner staging acceptance also remain Task 5.
+
+
+## Task 5: verified funnel and local integration checkpoint
+
+The dedicated outbox migration does not backfill existing trials. New cardless
+ledger, applied renewal and first positive paid-invoice transitions record stable
+IDs inside their DB transaction. Existing room creation and verified Durable
+Object host+guest presence record the first room/shared-presence milestones.
+The presence function keeps its original authority/ownership/deadline checks;
+no Worker protocol change or video/chat telemetry is introduced.
+
+The existing Amplitude publisher adds bounded acknowledgement handling. A new
+dedicated analytics drain secret and initially disabled private scheduler keep
+its authority separate from notification and room callbacks. Canonical
+environment checks fail closed. Unknown receipts retain the same ID/time; after
+six days from the first attempt automatic replay stops for operator review.
+The new events instrument cardless trials only. They do not establish a new
+comparably instrumented card-required cohort or subsequent-renewal dashboard.
+
+Local evidence on the isolated worktree:
+
+- New analytics/route tests observed RED then GREEN: **20/20**, including existing
+  notification-drain regressions. Fetch was mocked; no ingestion was performed.
+- Disposable PostgreSQL: **238 assertions** (57 cardless, 11 launch, 21 renewal,
+  35 analytics, 114 legacy) and both actual separate-connection races passed.
+  New cases cover setup/zero invoice versus paid, no premature activation,
+  verified host+guest presence, duplicate transitions, wrong environment/lease,
+  missing secret, disabled drain, six-day recovery horizon and access controls.
+- Repo check: all six tasks successful. Repo tests: all six tasks successful;
+  web **1087 total / 1081 passed / 6 existing skips**, protocol **245 passed**,
+  API **253 passed**, extension **2210 passed**. Room harness **39/39** and real
+  local Worker runtime **96/96** passed.
+- The shell log wrapper used a read-only zsh variable after those commands and
+  exited nonzero; the preserved runner summaries above show actual completion.
+  This wrapper error is not a product/test failure and is not hidden as exit0.
+- The lost-success renewal case already verifies recovery after native Schedule
+  release without repeating the Stripe update. Unknown expired mutations settle
+  only on positive cancellation evidence.
+- Deletion SQL proves the outbox cascades after fixture-room cleanup. The actual
+  product currently requests account deletion by email; there is no new automatic
+  deletion endpoint. DB deletion is not evidence of Stripe cancellation.
+
+Hosted preflight read-only: staging project `cyppqpprkygjloyfvvvj` is healthy and
+ends at migration `20261007235706`; none of the four new migrations is applied.
+This matches the checked-in staging workflow target. No production project was
+queried. New real-account flows, actual analytics delivery, loaded current/old
+extensions, full 72h/room expiry and owner acceptance remain pending.
+Operator procedure: [staging runbook](../../releases/cardless-trial/staging-runbook.md).
