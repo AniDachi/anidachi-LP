@@ -20,6 +20,9 @@ export type SubscriptionTrialRecord = {
 	first_invoice_id: string | null;
 	first_payment_state: "awaiting" | "paid" | "failed" | "action_required";
 	first_paid_at: string | null;
+	first_cash_invoice_id?: string | null;
+	first_cash_paid_at?: string | null;
+	first_cash_amount_paid?: number | null;
 	trial_mode?: "card_required" | "cardless";
 	trial_activation_id?: string | null;
 	stripe_schedule_id?: string | null;
@@ -32,6 +35,9 @@ export type StripeTrialSnapshot = {
 	firstInvoiceId: string | null;
 	firstPaymentState: SubscriptionTrialRecord["first_payment_state"];
 	firstPaidAt: string | null;
+	firstCashInvoiceId?: string | null;
+	firstCashPaidAt?: string | null;
+	firstCashAmountPaid?: number | null;
 	trialMode?: "cardless";
 	trialActivationId?: string;
 	stripeScheduleId?: string;
@@ -143,13 +149,20 @@ export async function resolveStripeTrialSnapshot(
 		Object.assign(result, {
 			checkoutReservationId: null,
 			trialMode: "cardless",
+			firstCashInvoiceId: prior?.first_cash_invoice_id ?? null,
+			firstCashPaidAt: prior?.first_cash_paid_at ?? null,
+			firstCashAmountPaid: prior?.first_cash_amount_paid ?? null,
 			trialActivationId: activation.id,
 			stripeScheduleId: schedule.id,
 			scheduleStatus: schedule.status,
 			scheduleEndBehavior: schedule.end_behavior,
 		});
 	}
-	if (result.firstPaymentState === "paid") return result;
+	if (
+		result.firstPaymentState === "paid" &&
+		(!cardless || result.firstCashInvoiceId)
+	)
+		return result;
 	function verifyInvoice(inv: Stripe.Invoice) {
 		if (
 			id(inv.customer) !== customer ||
@@ -172,21 +185,59 @@ export async function resolveStripeTrialSnapshot(
 				"Trial invoice does not prove a recurring service period.",
 			);
 	}
-	let invoiceId = result.firstInvoiceId;
-	if (!invoiceId) {
+
+	let recurring: Stripe.Invoice[] | undefined;
+	async function recurringInvoices() {
+		if (recurring) return recurring;
 		const list = await stripe.invoices.list(
-			{ subscription: subscription.id, created: { gte: end }, limit: 100 },
+			{ subscription: subscription.id, created: { gte: trialEnd }, limit: 100 },
 			requestOptions(),
 		);
 		if (list.has_more)
 			throw new Error("First trial invoice requires reconciliation.");
-		const regular = list.data
+		recurring = list.data
 			.filter(
 				(inv) =>
-					inv.billing_reason === "subscription_cycle" && inv.created >= end,
+					inv.billing_reason === "subscription_cycle" &&
+					inv.created >= trialEnd,
 			)
-			.filter((inv) => !cardless || inv.amount_due > 0)
 			.sort((a, b) => a.created - b.created);
+		return recurring;
+	}
+	function isCashPayment(inv: Stripe.Invoice) {
+		return (
+			inv.status === "paid" &&
+			inv.amount_remaining === 0 &&
+			Number.isSafeInteger(inv.amount_paid) &&
+			inv.amount_paid > 0
+		);
+	}
+	async function recordCashPayment(current?: Stripe.Invoice) {
+		if (!cardless || result.firstCashInvoiceId) return result;
+		let cash = current && isCashPayment(current) ? current : undefined;
+		if (!cash) {
+			const candidate = (await recurringInvoices()).find(isCashPayment);
+			if (!candidate?.id) return result;
+			cash = await stripe.invoices.retrieve(candidate.id, {}, requestOptions());
+			if (cash.id !== candidate.id)
+				throw new Error("Cash invoice identity mismatch.");
+		}
+		verifyInvoice(cash);
+		if (!isCashPayment(cash)) return result;
+		const paidAt = cash.status_transitions.paid_at;
+		if (!paidAt || paidAt < trialEnd)
+			throw new Error("Cash payment timestamp unavailable.");
+		result.firstCashInvoiceId = cash.id!;
+		result.firstCashPaidAt = iso(paidAt);
+		result.firstCashAmountPaid = cash.amount_paid;
+		return result;
+	}
+	// Settled service keeps access even when customer credit covered the invoice.
+	// Cash conversion can occur on a later cycle and has its own immutable proof.
+	if (result.firstPaymentState === "paid") return recordCashPayment();
+	let invoiceId = result.firstInvoiceId;
+	if (!invoiceId) {
+		const regular = await recurringInvoices();
 		if (!regular.length) return result;
 		verifyInvoice(regular[0]);
 		invoiceId = regular[0].id ?? null;
@@ -202,17 +253,13 @@ export async function resolveStripeTrialSnapshot(
 		throw new Error("Trial invoice identity mismatch.");
 	verifyInvoice(invoice);
 	result.firstInvoiceId = invoiceId;
-	if (
-		invoice.status === "paid" &&
-		invoice.amount_remaining === 0 &&
-		(!cardless || invoice.amount_paid > 0)
-	) {
+	if (invoice.status === "paid" && invoice.amount_remaining === 0) {
 		const paidAt = invoice.status_transitions.paid_at;
 		if (!paidAt || paidAt < end)
 			throw new Error("First recurring payment timestamp unavailable.");
 		result.firstPaymentState = "paid";
 		result.firstPaidAt = iso(paidAt);
-		return result;
+		return recordCashPayment(invoice);
 	}
 	if (invoice.status === "void" || invoice.status === "uncollectible") {
 		result.firstPaymentState = "failed";

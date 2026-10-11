@@ -124,6 +124,21 @@ if (
 				"\ncommit;",
 		);
 }
+if (
+	sql(
+		"select to_regclass('public.subscription_trial_activation_attempts') is null;",
+	).trim() === "t"
+) {
+	const migration = readdirSync(resolve(base, "migrations")).find((f) =>
+		f.endsWith("_cardless_trial_review_guards.sql"),
+	);
+	if (migration)
+		sql(
+			"begin;\n" +
+				readFileSync(resolve(base, "migrations", migration), "utf8") +
+				"\ncommit;",
+		);
+}
 assert.equal(
 	snapshot(),
 	before,
@@ -134,6 +149,7 @@ for (const name of [
 	"cardless_trial_launch",
 	"cardless_trial_renewal",
 	"trial_conversion_events",
+	"cardless_trial_review_guards",
 	"paid_hosting_trials",
 	"unified_trial_eligibility",
 	"subscription_checkout_reservations",
@@ -262,5 +278,75 @@ try {
 	);
 } finally {
 	sql(`delete from public.users where id='${renewalUser}';`);
+}
+// Separate connections verify operator hold and positive webhook recovery use the same account fence.
+const guardedUser = randomUUID(),
+	guardedActivation = randomUUID();
+try {
+	sql(`insert into public.users(id,email,display_name) values('${guardedUser}','${guardedUser}@example.test','Guard race');
+ insert into public.billing_customers(user_id,stripe_customer_id) values('${guardedUser}','cus_${guardedUser}');
+ insert into public.subscription_trial_activations(id,user_id,request_id,plan_code,billing_period,price_id,policy_revision,stripe_customer_id)
+ values('${guardedActivation}','${guardedUser}','${randomUUID()}','plus','monthly','price_plus',1,'cus_${guardedUser}');`);
+	const key = `cardless-trial-v1:${guardedActivation}`;
+	const admission = `select public.begin_cardless_trial_attempt_v1('${guardedUser}','${guardedActivation}','schedule','${key}');`;
+	const hold = `select anidachi_private.hold_cardless_trial_activation_v1('${guardedUser}','${guardedActivation}','${key}',true);`;
+	const attempts = await Promise.allSettled([
+		parallelSql(
+			`begin;set local role service_role;${admission}select pg_sleep(0.15);commit;`,
+		),
+		parallelSql(`begin;${hold}select pg_sleep(0.15);commit;`),
+	]);
+	assert.equal(attempts[1].status, "fulfilled");
+	if (attempts[0].status === "rejected")
+		assert.match(attempts[0].reason.message, /TRIAL_RECOVERY_HELD/);
+	else
+		assert.equal(
+			sql(
+				`select count(*) from public.subscription_trial_activation_attempts where activation_id='${guardedActivation}' and outcome='applying';`,
+			).trim(),
+			"1",
+		);
+	let attemptId = sql(
+		`select id from public.subscription_trial_activation_attempts where activation_id='${guardedActivation}';`,
+	).trim();
+	if (!attemptId) {
+		sql(
+			`select anidachi_private.hold_cardless_trial_activation_v1('${guardedUser}','${guardedActivation}','${key}',false);`,
+		);
+		attemptId = sql(`set role service_role;${admission}`).trim();
+		sql(hold);
+	}
+	sql(
+		`set role service_role;select public.finish_cardless_trial_attempt_v1('${guardedUser}','${guardedActivation}','${attemptId}','succeeded','sched_${guardedUser}','req_success');`,
+	);
+	const createdAt = sql(
+		`select created_at from public.subscription_trial_activations where id='${guardedActivation}';`,
+	).trim();
+	const settle = `select anidachi_private.settle_cardless_trial_activation_v1('${guardedUser}','${guardedActivation}','${key}','${createdAt}','Operator tries settlement while a positive Schedule receipt exists');`;
+	const commit = `select public.record_cardless_trial_created_v1('${guardedUser}','${guardedActivation}','cus_${guardedUser}','sched_${guardedUser}','sub_${guardedUser}','price_plus',now(),now()+interval '72 hours');`;
+	const race = await Promise.allSettled([
+		parallelSql(`begin;${settle}select pg_sleep(0.15);commit;`),
+		parallelSql(
+			`begin;set local role service_role;${commit}select pg_sleep(0.15);commit;`,
+		),
+	]);
+	assert.equal(race[0].status, "rejected");
+	if (race[0].status === "rejected")
+		assert.match(
+			race[0].reason.message,
+			/TRIAL_EXTERNAL_EFFECT_EXISTS|TRIAL_ACTIVATION_MISMATCH/,
+		);
+	assert.equal(race[1].status, "fulfilled");
+	assert.equal(
+		sql(
+			`select state from public.subscription_trial_activations where id='${guardedActivation}';`,
+		).trim(),
+		"created",
+	);
+	console.log(
+		"PASS create admission / operator hold and webhook / settlement concurrency",
+	);
+} finally {
+	sql(`delete from public.users where id='${guardedUser}';`);
 }
 assert.equal(snapshot(), before, "Tests preserve preexisting records");

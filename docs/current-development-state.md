@@ -10,9 +10,11 @@ its result is retained rather than relabeled as passing. The Schedule capability
 suite passed fourteen real sandbox cases, including hosted 3DS.
 
 Local candidate checks now include web/protocol/API/extension tests, Worker
-runtime and room harness, plus 238 SQL assertions and two actual DB races. The
+runtime and room harness, plus 258 SQL assertions and four actual DB concurrency scenarios. The
 new verified funnel uses the existing Amplitude publisher behind a durable
 outbox with its own disabled scheduler. No new production feature is enabled.
+Final review found and prompted fixes for pending activation discovery, safe
+operator settlement, and credit-paid recurring service. Repair review is pending.
 Hosted staging deployment, real account/loaded-extension acceptance and owner
 sign-off are still pending at this source checkpoint. See
 [acceptance evidence](superpowers/plans/2026-10-11-cardless-trial-acceptance.md) and

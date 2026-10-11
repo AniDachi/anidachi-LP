@@ -93,12 +93,12 @@ coverage. Do not mix `environment=staging` with production.
 | `trial_first_room_created` | Host's room inserted during the original trial window | Activation |
 | `trial_first_shared_session` | Existing validated Durable Object presence reports host and at least one guest together during that trial | Activation |
 | `trial_renewal_enabled` | Latest consent generation applied after verified owned off-session setup | Renewal operation |
-| `trial_first_payment_succeeded` | Common billing refresh verifies the first positive post-trial invoice as paid | First invoice |
+| `trial_first_payment_succeeded` | Common billing refresh verifies the first positive post-trial invoice as paid | First cash-paid invoice |
 
 The shared-session milestone means connected presence, not verified video
 attention or playback duration. Invite clicks, membership inserts and personal
 history writes do not count. Saving a card, redirect success, initial zero
-invoices and zero-value subscription updates do not count as payment. An opt-in
+invoices and zero-value subscription updates do not count as payment. A recurring invoice settled by Customer credit preserves paid access but adds no new cash conversion. The separate `first_cash_*` proof can be established on a later cycle. An opt-in
 may be canceled and confirmed again: calculate account/activation conversion,
 not the raw number of `trial_renewal_enabled` events. Subsequent paid renewals
 still use the existing billing records; this change adds no recurring-revenue

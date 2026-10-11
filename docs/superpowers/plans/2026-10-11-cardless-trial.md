@@ -306,7 +306,7 @@ optional activation ID, без него находит единственную 
   registration проверить read-only; новые live webhook changes сюда не подразумеваются.
 - [x] Закрыть обход через старую Restore renewal/Portal/change-plan логику только
   для нового trial. Later cancel инвалидирует pending setup. Для paid/legacy
-  сохраняется действующее управление. Нулевой invoice не переводит ledger в paid.
+  сохраняется действующее управление. Initial/update нулевой invoice не переводит ledger в paid; погашенный кредитным балансом recurring invoice сохраняет оплаченный доступ, но денежная конверсия требует отдельного положительного receipt.
 - [x] Добавить assertions для failure/action_required/retry/out-of-order invoice:
   прежний first-payment deadline не растет; успешный повторный платеж восстанавливает
   доступ только после fresh verified snapshot, stale failure не откатывает paid.
@@ -362,14 +362,14 @@ publisher; `cardless-trial-acceptance.md`; текущие billing/domain docs.
 Использовать существующую доставку; recoverable pending delivery хранить с
 операцией, повторная доставка использует тот же ID. Не обещать exactly-once сеть.
 
-- [ ] Написать RED tests: same transition дважды → один логический event ID;
+- [x] Написать RED tests: same transition дважды → один логический event ID;
   zero invoice/setup/click → нет paid event; environment обязательный, без
   email/PM/card data. Реализовать и выполнить focused suite до GREEN.
-- [ ] Зафиксировать funnel с существующими room событиями: первый реальный
+- [x] Зафиксировать funnel с существующими room событиями: первый реальный
   shared session = host + хотя бы один подключенный guest, а не copy invite click.
   Если такого события нет, записать пробел и добавить минимальное серверное
   подтверждение присутствия с тестом, без video/chat content telemetry.
-- [ ] Выполнить repo `pnpm check`, `pnpm test`, `pnpm harness:rooms` и
+- [x] Выполнить repo `pnpm check`, `pnpm test`, `pnpm harness:rooms` и
   `pnpm --filter @anidachi/api test:runtime`; SQL contract Task 1.
   Ожидается GREEN; не менять unrelated код ради обхода проверок.
 - [ ] Собрать `pnpm build:extension:staging`, затем
@@ -395,6 +395,17 @@ publisher; `cardless-trial-acceptance.md`; текущие billing/domain docs.
   выполнить `pnpm dev:check`. Commit `test(billing): verify cardless trial rollout`.
 - [ ] Получить приемку владельца на staging. Ни наличие плана, ни зеленый unit
   suite сами по себе не являются разрешением production promotion.
+
+### Task 5 review repairs before staging
+
+- [x] Fresh owner-scoped offer/Billing обнаруживают pending activation после
+  перезагрузки и выключения новых trial; восстановление предшествует Checkout.
+- [x] Customer/Schedule create получают durable admission. Private hold, проверка
+  завершения исполнителей и положительный provider outcome позволяют аудируемый
+  terminal settlement без TTL reset и ручной выдачи entitlement.
+- [x] Recurring invoice, погашенный балансом, сохраняет доступ; первая денежная
+  конверсия имеет отдельные immutable поля и может случиться в следующем цикле.
+- [ ] Повторный независимый review нового SHA, Graphify и hosted gates выше.
 
 ## Task 6: Контролируемый выпуск и восстановление
 

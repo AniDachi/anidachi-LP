@@ -494,8 +494,38 @@ Local evidence on the isolated worktree:
   deletion endpoint. DB deletion is not evidence of Stripe cancellation.
 
 Hosted preflight read-only: staging project `cyppqpprkygjloyfvvvj` is healthy and
-ends at migration `20261007235706`; none of the four new migrations is applied.
+ends at migration `20261007235706`; none of the five new migrations is applied.
 This matches the checked-in staging workflow target. No production project was
 queried. New real-account flows, actual analytics delivery, loaded current/old
 extensions, full 72h/room expiry and owner acceptance remain pending.
 Operator procedure: [staging runbook](../../releases/cardless-trial/staging-runbook.md).
+
+
+## Task 5 review repairs (before hosted delivery)
+
+Independent review of `6603637f` found three P2 issues and no critical issue.
+That SHA was **not ready for staging**. No hosted mutation occurred while it
+was under review. Repairs are implemented; a fresh immutable review is pending.
+
+- Durable owner-scoped offer/Billing recovery after reload and flag-off:
+  RED -> GREEN, 96 focused UI/service tests; committed `4ccf2833`.
+- Fresh DB admission before every Customer/Schedule create, private operator
+  hold/evidence reconciliation/terminal settlement. Unknown outcomes and
+  abandoned applying markers never release on age alone. Positive Schedule
+  evidence only permits recovery; retained Customer identity is not replaced.
+- Settled recurring service and positive cash conversion now have separate
+  immutable proofs. Credit-paid first cycle keeps access; a later first cash
+  receipt records conversion. Initial/update zero invoices remain excluded.
+- New service regressions RED6 -> GREEN. Final full web suite: **1098 total,
+  1092 passed, 6 existing skips, 0 failures**; web TypeScript passed.
+- SQL **258 assertions**: 57 cardless, 11 launch, 21 renewal, 37 analytics,
+  18 review guards, 114 legacy. Four separate-connection scenarios passed:
+  old/new account reservation, enable/cancel, create admission/operator hold,
+  and verified object recording/operator settlement. Existing records preserved.
+- The operator tests use simulated positive no-dispatch/provider evidence; they
+  prove database guards and audit behavior, not a real provider investigation.
+  Hosted staging must still verify wiring and operator procedure on owned fixtures.
+
+Fifth additive migration: `20261011161158_cardless_trial_review_guards.sql`.
+The original four migration files remain unchanged. New secrets are still
+unprovisioned; analytics delivery and all hosted acceptance remain pending.

@@ -169,7 +169,7 @@ test("completed cancellation and automatic release retain the same trial identit
 		assert.equal(result?.trialEndsAt, iso(end));
 	}
 });
-test("zero recurring invoice is not a cardless paid conversion", async () => {
+test("a credit-settled recurring service grants access without recording cash conversion", async () => {
 	const zero = {
 		id: "in_zero",
 		customer: "cus_trial",
@@ -198,8 +198,9 @@ test("zero recurring invoice is not a cardless paid conversion", async () => {
 		undefined,
 		activation,
 	);
-	assert.equal(result?.firstPaymentState, "awaiting");
-	assert.equal(result?.firstInvoiceId, null);
+	assert.equal(result?.firstPaymentState, "paid");
+	assert.equal(result?.firstInvoiceId, "in_zero");
+	assert.equal(result?.firstCashInvoiceId, null);
 });
 test("sync reads activation after lease and passes provenance to the common commit", async () => {
 	const { stripe, reads } = client();
@@ -246,4 +247,52 @@ test("invalid activation never reaches the shared mirror commit", async () => {
 		/activation|owner/i,
 	);
 	assert.equal(committed, false);
+});
+
+test("a later cash payment is recorded after the first cycle was covered by credit", async () => {
+	const cash = {
+		id: "in_cash_later",
+		customer: "cus_trial",
+		billing_reason: "subscription_cycle",
+		created: end + 30 * 86400,
+		status: "paid",
+		amount_due: 799,
+		amount_paid: 799,
+		amount_remaining: 0,
+		parent: { subscription_details: { subscription: "sub_trial" } },
+		status_transitions: { paid_at: end + 30 * 86400 + 1 },
+		lines: {
+			has_more: false,
+			data: [
+				{
+					period: { start: end + 30 * 86400, end: end + 60 * 86400 },
+					parent: { subscription_item_details: { subscription: "sub_trial" } },
+				},
+			],
+		},
+	} as unknown as Stripe.Invoice;
+	const prior = {
+		user_id: "owner",
+		stripe_subscription_id: subscription.id,
+		trial_mode: "cardless" as const,
+		trial_activation_id: activation.id,
+		stripe_schedule_id: schedule.id,
+		trial_started_at: iso(start),
+		trial_ends_at: iso(end),
+		first_invoice_id: "in_credit",
+		first_payment_state: "paid" as const,
+		first_paid_at: iso(end + 1),
+	};
+	const result = await resolveStripeTrialSnapshot(
+		client(subscription, schedule, [cash]).stripe,
+		subscription,
+		prior,
+		undefined,
+		activation,
+	);
+	assert.equal(result?.firstInvoiceId, "in_credit");
+	assert.equal(result?.firstPaidAt, iso(end + 1));
+	assert.equal(result?.firstCashInvoiceId, cash.id);
+	assert.equal(result?.firstCashPaidAt, iso(end + 30 * 86400 + 1));
+	assert.equal(result?.firstCashAmountPaid, 799);
 });

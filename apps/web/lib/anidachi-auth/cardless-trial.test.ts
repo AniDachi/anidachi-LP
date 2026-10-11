@@ -107,6 +107,8 @@ function fixture() {
 	} as unknown as Stripe;
 	const deps: CardlessTrialDeps = {
 		stripe,
+		beginExternalAttempt: async () => "test-attempt",
+		finishExternalAttempt: async () => {},
 		livemode: false,
 		now: () => state.now,
 		isVerified: async () => true,
@@ -432,4 +434,99 @@ test("recovery never starts an unreserved trial or uses a different owner's acti
 	);
 	assert.equal(f.state.creates, creates);
 	assert.equal(f.state.syncs, 0);
+});
+
+test("a stale recovery must obtain a fresh create permit after an operator hold", async () => {
+	const f = fixture();
+	let permitted = false;
+	Object.assign(f.deps, {
+		beginExternalAttempt: async () => {
+			permitted = true;
+			throw Error("TRIAL_RECOVERY_HELD");
+		},
+	});
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input)).state,
+		"pending",
+	);
+	assert.equal(permitted, true);
+	assert.equal(f.state.customerCreates, 0);
+	assert.equal(f.state.creates, 0);
+});
+test("both external creates are durably admitted and completed before activation commits", async () => {
+	const f = fixture();
+	const events: string[] = [];
+	Object.assign(f.deps, {
+		beginExternalAttempt: async (
+			_u: string,
+			_a: string,
+			kind: string,
+			key: string,
+		) => {
+			events.push(`begin:${kind}:${key}`);
+			return kind;
+		},
+		finishExternalAttempt: async (
+			_u: string,
+			_a: string,
+			attempt: string,
+			result: { outcome: string; objectId: string | null },
+		) => {
+			events.push(`finish:${attempt}:${result.outcome}:${result.objectId}`);
+		},
+	});
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input)).state,
+		"active",
+	);
+	assert.deepEqual(events, [
+		`begin:customer:trial-customer:${ACTIVATION}`,
+		"finish:customer:succeeded:cus_trial",
+		`begin:schedule:cardless-trial-v1:${ACTIVATION}`,
+		"finish:schedule:succeeded:sched_trial",
+	]);
+});
+test("even a Stripe 400 retains unknown authority and its request evidence", async () => {
+	const f = fixture();
+	const receipts: unknown[] = [];
+	Object.assign(f.deps, {
+		beginExternalAttempt: async () => "attempt",
+		finishExternalAttempt: async (
+			_u: string,
+			_a: string,
+			_id: string,
+			receipt: unknown,
+		) => {
+			receipts.push(receipt);
+		},
+	});
+	f.deps.stripe.customers.create = async () => {
+		throw Object.assign(Error("private response body"), {
+			requestId: "req_rejected",
+			statusCode: 400,
+		});
+	};
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input)).state,
+		"pending",
+	);
+	assert.deepEqual(receipts, [
+		{ outcome: "unknown", objectId: null, requestId: "req_rejected" },
+	]);
+	assert.equal(f.activation()?.state, "pending");
+});
+test("failure to persist a successful create never authorizes a second kind of mutation", async () => {
+	const f = fixture();
+	Object.assign(f.deps, {
+		beginExternalAttempt: async () => "attempt",
+		finishExternalAttempt: async () => {
+			throw Error("db unavailable");
+		},
+	});
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input)).state,
+		"pending",
+	);
+	assert.equal(f.state.customerCreates, 1);
+	assert.equal(f.state.creates, 0);
 });

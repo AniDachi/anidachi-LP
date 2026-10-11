@@ -523,7 +523,7 @@ export async function getSubscriptionTrial(
 ): Promise<SubscriptionTrialRecord | null> {
 	const { data, error } = await db()
 		.from("account_subscription_trials")
-		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at,trial_mode,trial_activation_id,stripe_schedule_id,renewal_operation_id")
+		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at,trial_mode,trial_activation_id,stripe_schedule_id,renewal_operation_id,first_cash_invoice_id,first_cash_paid_at,first_cash_amount_paid")
 		.eq("stripe_subscription_id", subscriptionId)
 		.abortSignal(AbortSignal.timeout(10_000))
 		.maybeSingle();

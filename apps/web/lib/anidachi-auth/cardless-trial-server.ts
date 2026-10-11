@@ -50,7 +50,34 @@ export function cardlessTrialService(stripe: Stripe = createStripeClient()) {
 	return createCardlessTrialService({
 		stripe,
 		livemode: resolveStripeMode() === "live",
+
 		isVerified: hasVerifiedAccountEmail,
+		async beginExternalAttempt(userId, activationId, kind, key) {
+			const { data, error } = await db()
+				.rpc("begin_cardless_trial_attempt_v1", {
+					p_user_id: userId,
+					p_activation_id: activationId,
+					p_kind: kind,
+					p_key: key,
+				})
+				.abortSignal(AbortSignal.timeout(20000));
+			if (error || typeof data !== "string" || !/^[0-9a-f-]{36}$/i.test(data))
+				throw new CardlessTrialError("unavailable");
+			return data;
+		},
+		async finishExternalAttempt(userId, activationId, attemptId, receipt) {
+			const { error } = await db()
+				.rpc("finish_cardless_trial_attempt_v1", {
+					p_user_id: userId,
+					p_activation_id: activationId,
+					p_attempt_id: attemptId,
+					p_outcome: receipt.outcome,
+					p_object_id: receipt.objectId,
+					p_request_id: receipt.requestId,
+				})
+				.abortSignal(AbortSignal.timeout(20000));
+			if (error) throw new CardlessTrialError("unavailable");
+		},
 		async findRecoverableActivation(userId, operationId) {
 			let query = db()
 				.from("subscription_trial_activations")

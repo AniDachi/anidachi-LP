@@ -78,6 +78,23 @@ export type CardlessTrialDeps = {
 		activationId: string,
 		proof: TrialCreatedProof,
 	): Promise<CardlessTrialActivation>;
+
+	beginExternalAttempt(
+		userId: string,
+		activationId: string,
+		kind: "customer" | "schedule",
+		key: string,
+	): Promise<string>;
+	finishExternalAttempt(
+		userId: string,
+		activationId: string,
+		attemptId: string,
+		receipt: {
+			outcome: "succeeded" | "unknown";
+			objectId: string | null;
+			requestId: string | null;
+		},
+	): Promise<void>;
 	sync(subscriptionId: string, userId: string): Promise<{ status: string }>;
 };
 export class CardlessTrialError extends Error {
@@ -217,6 +234,47 @@ export function verifyCardlessTrialCreated(
 /** The DB reservation and Stripe key provide cross-instance safety; the map only
  * coalesces simultaneous clicks served by this instance. No rights live here. */
 export function createCardlessTrialService(deps: CardlessTrialDeps) {
+	async function createExternal<T extends { id: string }>(
+		a: CardlessTrialActivation,
+		kind: "customer" | "schedule",
+		key: string,
+		create: () => Promise<T>,
+	): Promise<T> {
+		// Admission is rechecked in the database even when run() holds an old snapshot.
+		const attemptId = await deps.beginExternalAttempt(
+			a.user_id,
+			a.id,
+			kind,
+			key,
+		);
+		let value: T;
+		try {
+			value = await create();
+		} catch (error) {
+			const requestId =
+				error &&
+				typeof error === "object" &&
+				"requestId" in error &&
+				typeof error.requestId === "string" &&
+				/^req_[A-Za-z0-9_]{1,251}$/.test(error.requestId)
+					? error.requestId
+					: null;
+			await deps.finishExternalAttempt(a.user_id, a.id, attemptId, {
+				outcome: "unknown",
+				objectId: null,
+				requestId,
+			});
+			throw error;
+		}
+		const response = value as T & { lastResponse?: { requestId?: string } };
+		await deps.finishExternalAttempt(a.user_id, a.id, attemptId, {
+			outcome: "succeeded",
+			objectId: value.id,
+			requestId: response.lastResponse?.requestId ?? null,
+		});
+		return value;
+	}
+
 	const inflight = new Map<string, Promise<TrialStartResult>>();
 	const now = deps.now ?? Date.now;
 	const stripe = deps.stripe;
@@ -289,9 +347,15 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 						throw new CardlessTrialError("unavailable");
 					customer = found.data[0];
 				} else
-					customer = await stripe.customers.create(
-						{ metadata: { userId, trialActivationId: a.id } },
-						{ ...REQUEST, idempotencyKey: `trial-customer:${a.id}` },
+					customer = await createExternal(
+						a,
+						"customer",
+						`trial-customer:${a.id}`,
+						() =>
+							stripe.customers.create(
+								{ metadata: { userId, trialActivationId: a!.id } },
+								{ ...REQUEST, idempotencyKey: `trial-customer:${a!.id}` },
+							),
 					);
 				if (
 					!customer ||
@@ -328,23 +392,29 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 						anidachiTrialMode: "cardless_v1",
 						planCode: a.plan_code,
 					};
-					schedule = await stripe.subscriptionSchedules.create(
-						{
-							customer: customerId,
-							start_date: "now",
-							end_behavior: "cancel",
-							phases: [
+					schedule = await createExternal(
+						a,
+						"schedule",
+						a.idempotency_key,
+						() =>
+							stripe.subscriptionSchedules.create(
 								{
-									items: [{ price: a.price_id, quantity: 1 }],
-									duration: { interval: "day", interval_count: 3 },
-									trial: true,
-									proration_behavior: "none",
+									customer: customerId,
+									start_date: "now",
+									end_behavior: "cancel",
+									phases: [
+										{
+											items: [{ price: reserved.price_id, quantity: 1 }],
+											duration: { interval: "day", interval_count: 3 },
+											trial: true,
+											proration_behavior: "none",
+											metadata,
+										},
+									],
 									metadata,
 								},
-							],
-							metadata,
-						},
-						{ ...REQUEST, idempotencyKey: a.idempotency_key },
+								{ ...REQUEST, idempotencyKey: reserved.idempotency_key },
+							),
 					);
 				}
 				// A cached create response is not evidence of the present state.

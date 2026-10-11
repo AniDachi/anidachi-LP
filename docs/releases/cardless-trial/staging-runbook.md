@@ -21,8 +21,8 @@ comparisons of IDs, prices, intervals, cancellation settings and entitlement
 dates; never put secrets or real-person details in the release record. Exclude
 owned synthetic test fixtures from the preservation comparison.
 
-The four new migrations are `20261011124600`, `20261011132247`,
-`20261011135040`, `20261011153028`. They add disabled policy/schema and do not
+The five new migrations are `20261011124600`, `20261011132247`,
+`20261011135040`, `20261011153028`, `20261011161158`. They add disabled policy/schema and do not
 rewrite old subscription prices or opt them into the new trial. The normal
 staging workflow applies ordered pending migrations. Keep cardless starts off
 until migration and compatible Web deployment have both succeeded. Check auth,
@@ -67,8 +67,61 @@ even when new starts are disabled. It never creates a replacement reservation.
    existing reconciliation with the same owned object. Never construct a new
    subscription, extend trial dates, clear the ledger or grant access manually.
 4. If ownership/outcome cannot be established, keep the reservation pending and
-   escalate with the operation ID and verified evidence. There is intentionally
-   no unsafe automatic reset; any new repair tool requires a reviewed change.
+   escalate with the operation ID and verified evidence. HTTP 400, a timeout,
+   stopped invocation or empty object search alone never releases the account.
+
+### Confirmed failed activation: private operator settlement
+
+Use only the intended environment's operator connection. These functions are
+`postgres`-only, unavailable to `service_role`, authenticated users and HTTP
+routes. They preserve Customer identity and do not alter entitlement records.
+Every hold/reconciliation/settlement writes a private audit record. Evidence is
+an operator attestation with references to verified logs, not automatic provider
+verification performed by SQL. Never paste secrets or response bodies into it.
+
+1. Verify all serving versions have the new create-attempt guard. Retire any
+   older invocation/deployment that could create without it. This candidate has
+   not been hosted before these guards; do not roll back to an unguarded version.
+2. Read the exact activation owner, ID, generated key, `created_at` and all
+   `subscription_trial_activation_attempts`. Put it on hold using
+   `anidachi_private.hold_cardless_trial_activation_v1(user_id, activation_id,
+   frozen_key, true)`. The same account lock serializes hold, create admission,
+   object recording and terminal settlement. An already-admitted request may
+   still execute and must be accounted for.
+3. Let all admitted invocations finish or positively verify their termination.
+   Start/recover routes have a 180-second maximum duration; manual reconciliation
+   additionally enforces at least five minutes after hold. **Elapsed time is
+   not sufficient evidence.** Inspect the execution records and corresponding
+   Stripe request logs: an HTTP request can continue at Stripe after its caller
+   ends. If a deployment cannot enforce this bound or execution cannot be
+   established, keep the hold and resolve that uncertainty first.
+4. For every `applying` or `unknown` attempt, establish the actual outcome. An
+   abandoned `begin` response or crash before dispatch requires positive
+   no-dispatch execution evidence. A dispatched request requires its verified
+   Stripe request/result evidence. If positive Schedule evidence exists, record
+   `succeeded` and recover that exact object; never settle the activation failed.
+   For a confirmed no-effect attempt, use
+   `anidachi_private.reconcile_cardless_trial_attempt_v1(user_id, activation_id,
+   attempt_id, 'no_effect', null, verified_request_id_or_null,
+   provider_or_no_dispatch_evidence, terminated_executor_evidence)`.
+   The function rejects missing evidence and does not expire any marker itself.
+   Successful response markers are immutable. If Customer creation succeeded,
+   verify and bind that same Customer through the existing owner-fenced
+   `record_cardless_trial_customer_v1` before settling; do not create another.
+5. Once every issued attempt is resolved, use
+   `anidachi_private.settle_cardless_trial_activation_v1(user_id, activation_id,
+   frozen_key, frozen_created_at, evidence_reference)`. It refuses unresolved
+   attempts, any known Schedule success, recorded subscription/trial, mismatched
+   identity or unbound successful Customer. It marks only that activation
+   `failed`, retaining audit and allowing a new explicit request. A stale tab
+   must obtain fresh admission and cannot revive the failed activation.
+6. If reconciliation instead finds a real Schedule, normal positive-object
+   recovery remains available during hold. If further retries are warranted,
+   resume with the same hold function and `false`; preserve the original
+   idempotency keys and 23-hour replay boundary.
+
+This procedure does not promise automatic recovery from all unknown external
+outcomes. An unverifiable provider result remains held for investigation.
 
 ## Unknown renewal or cancellation result
 
@@ -86,8 +139,13 @@ unknown mutation settles only after verified native cancellation. Repeat the
 desired cancellation after reconciliation using the current account state.
 
 After Schedule release the ordinary subscription payment/recovery flow owns
-decline and 3DS. Initial and update zero invoices are never payment proof. Confirm
-the same first positive invoice, and retain cancellation while payment is due.
+decline and 3DS. Initial and update zero invoices are never recurring service or
+cash conversion proof. A genuine post-trial recurring invoice fully settled by
+Customer credit grants the paid service period; it need not charge the card.
+`first_invoice_id`/`first_paid_at` retain that first settlement. Separate immutable
+`first_cash_*` fields record the first positive cash receipt, even on a later
+cycle, and only that receipt creates `trial_first_payment_succeeded`. Retain
+cancellation while payment is due.
 
 ## Analytics delivery recovery
 
