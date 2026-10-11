@@ -132,6 +132,7 @@ const cardless: BillingOverview = {
 				stage: "trial",
 				renewalState: "not_enabled",
 				renewalEnabled: false,
+				renewalQuoteId: "renewal-quote",
 				endsAt: "2030-01-04T00:00:00Z",
 				pendingUntil: "2030-01-04T02:00:00Z",
 			},
@@ -410,6 +411,116 @@ for (const reason of [
 			);
 	});
 }
+
+for (const trigger of ["focus", "refresh"] as const) {
+	test(
+		"restored renewal terms expire at their own boundary after " + trigger,
+		async (t) => {
+			t.mock.timers.enable({
+				apis: ["setTimeout", "Date"],
+				now: Date.parse(cardless.serverTime!),
+			});
+			globalThis.fetch = async (path) =>
+				Response.json(
+					String(path).endsWith("/quote")
+						? proYearlyQuote
+						: { ...cardless, serverTime: new Date().toISOString() },
+				);
+			await mount();
+			await selectProYearly();
+			await act(async () => trialButton(/^Review renewal$/).click());
+			await act(async () => window.dispatchEvent(new Event("blur")));
+			await act(async () => t.mock.timers.tick(290_000));
+			await act(async () => window.dispatchEvent(new Event("focus")));
+			if (trigger === "refresh")
+				await act(async () => trialButton(/^Refresh status$/).click());
+			assert.ok(container.querySelector('[aria-label="Review renewal terms"]'));
+			await act(async () => t.mock.timers.tick(10_001));
+			assert.ok(
+				!container.querySelector('[aria-label="Review renewal terms"]'),
+			);
+			assertProYearlySelection();
+			assert.ok(trialButton(/^Review renewal$/));
+		},
+	);
+}
+
+for (const latestId of ["another-tabs-quote", undefined]) {
+	test(
+		"a refreshed overview retires a quote that is no longer the current generation: " +
+			latestId,
+		async () => {
+			let latest = "renewal-quote" as string | undefined;
+			globalThis.fetch = async (path) =>
+				Response.json(
+					String(path).endsWith("/quote")
+						? proYearlyQuote
+						: {
+								...cardless,
+								subscriptions: [
+									{
+										...cardless.subscriptions[0],
+										trial: {
+											...cardless.subscriptions[0].trial!,
+											renewalQuoteId: latest,
+										},
+									},
+								],
+							},
+				);
+			await mount();
+			await selectProYearly();
+			await act(async () => trialButton(/^Review renewal$/).click());
+			assert.ok(container.querySelector('[aria-label="Review renewal terms"]'));
+			await act(async () => window.dispatchEvent(new Event("blur")));
+			latest = latestId;
+			await act(async () => window.dispatchEvent(new Event("focus")));
+			assert.ok(
+				!container.querySelector('[aria-label="Review renewal terms"]'),
+			);
+			assertProYearlySelection();
+		},
+	);
+}
+
+test("quote expiry does not abort an already dispatched card setup", async (t) => {
+	t.mock.timers.enable({
+		apis: ["setTimeout", "Date"],
+		now: Date.parse(cardless.serverTime!),
+	});
+	let finishSetup!: (response: Response) => void;
+	let setupSignal: AbortSignal | null | undefined;
+	globalThis.fetch = async (path, init) => {
+		if (String(path).endsWith("/quote")) return Response.json(proYearlyQuote);
+		if (String(path).endsWith("/setup")) {
+			setupSignal = init?.signal;
+			return new Promise((resolve) => {
+				finishSetup = resolve;
+			});
+		}
+		return Response.json({ ...cardless, serverTime: new Date().toISOString() });
+	};
+	await mount();
+	await selectProYearly();
+	await act(async () => trialButton(/^Review renewal$/).click());
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	await act(async () => t.mock.timers.tick(290_000));
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	await act(async () => trialButton(/Add card.*enable renewal/i).click());
+	await act(async () => t.mock.timers.tick(10_001));
+	assert.ok(!container.querySelector('[aria-label="Review renewal terms"]'));
+	assert.equal(setupSignal?.aborted, false);
+	await act(async () =>
+		finishSetup(
+			Response.json({
+				state: "setup",
+				ownerUserId: "owner",
+				url: "https://checkout.stripe.com/setup-card",
+			}),
+		),
+	);
+	assert.equal(window.location.href, "https://checkout.stripe.com/setup-card");
+});
 
 test("an account mismatch clears the renewal draft before any later same-owner recovery", async () => {
 	let readOwner = "owner";

@@ -312,6 +312,37 @@ test("a newly viewed quote cannot erase previously enabled renewal", async () =>
 	assert.equal(view.trial?.renewalState, "enabled");
 });
 
+test("billing only confirms the latest owned, unexpired renewal quote", async () => {
+	for (const [state, expiry, id] of [
+		["quoted", "2030-01-03T00:05:00Z", "current-quote"],
+		["quoted", "2030-01-03T00:00:00Z", undefined],
+		["canceled", "2030-01-03T00:05:00Z", undefined],
+		["setup_pending", "2030-01-03T00:05:00Z", undefined],
+	] as const) {
+		const view = (
+			await fixture({
+				access: trialAccess("2030-01-03T00:00:00Z"),
+				rows: [{ ...row, status: "trialing" }],
+				trial: { ...trialRecord, trial_mode: "cardless" },
+				renewal: {
+					id: "current-quote",
+					user_id: "owner",
+					stripe_subscription_id: "sub_owner",
+					action: "enable",
+					state,
+					quote_expires_at: expiry,
+					original_trial_end: trialRecord.trial_ends_at,
+				} as TrialRenewalOperation,
+			}).service.overview("owner")
+		).subscriptions[0];
+		assert.equal(view.trial?.renewalQuoteId, id, state + " " + expiry);
+		assert.doesNotMatch(
+			JSON.stringify(view),
+			/sub_owner|cus_owner|stripe_price/,
+		);
+	}
+});
+
 test("after a declined first payment cardless billing still offers cancellation in Stripe", async () => {
 	const view = (
 		await fixture({

@@ -3582,10 +3582,10 @@
     "semantic_hash": "297535b2a1e217a5aec894d4937eeb74"
   },
   "docs/social-pricing-model.md": {
-    "mtime": 1791735875.0045767,
-    "seen": 1791737251.4641972,
+    "mtime": 1791746508.9917636,
+    "seen": 1791746954.234352,
     "ast_hash": "24a8c5405395a7a64e8aec2f8b7dfe11",
-    "semantic_hash": "9fda8707253e043d360d7c0efbe0f8b8"
+    "semantic_hash": "2c9ae103e38e45bf2ed128e53c7485b9"
   },
   "docs/staging-acceptance-checklist.md": {
     "mtime": 1789490459.0094938,
@@ -7236,9 +7236,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1791745742.456568,
-    "seen": 1791745801.680246,
-    "ast_hash": "ba9aa9d2d2dcd3c85797ce2c66a571ac",
+    "mtime": 1791746456.497475,
+    "seen": 1791746581.169475,
+    "ast_hash": "1c845e7dc83ca8a793b9047aa7f6cb89",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
@@ -7290,15 +7290,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.test.ts": {
-    "mtime": 1791734986.964332,
-    "seen": 1791737251.412143,
-    "ast_hash": "3e35bb4749f73e34a8614e8b39e04e53",
+    "mtime": 1791746456.4970028,
+    "seen": 1791746581.1694772,
+    "ast_hash": "dafb9901bebf0164e58efb0cace83831",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.ts": {
-    "mtime": 1791734986.9638276,
-    "seen": 1791737251.4121442,
-    "ast_hash": "38ec5753714aa0e6de762839916478ad",
+    "mtime": 1791746456.4956958,
+    "seen": 1791746581.169478,
+    "ast_hash": "ddecee7d2d68c101e9e12c197d086282",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-capacity.test.ts": {
@@ -7314,15 +7314,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1791745742.4569745,
-    "seen": 1791745801.680251,
-    "ast_hash": "e1f2118484bb8997450614190cde2d20",
+    "mtime": 1791746456.4979775,
+    "seen": 1791746581.169479,
+    "ast_hash": "18bf35a5502229c0a8fc46b992f399f1",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
-    "mtime": 1791734986.9640605,
-    "seen": 1791737251.412151,
-    "ast_hash": "59b4eb77c73d6fd137bf97c18ddaff8e",
+    "mtime": 1791746455.9601402,
+    "seen": 1791746581.1694798,
+    "ast_hash": "816f8e1895ce3f5593c67807406db032",
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/watch_history_capacity_concurrency_contract.mjs": {

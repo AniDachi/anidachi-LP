@@ -290,6 +290,14 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 													? ("enabled" as const)
 													: ("not_enabled" as const),
 											renewalEnabled,
+											...(operation?.state === "quoted" &&
+											operation.action === "enable" &&
+											live &&
+											end > now &&
+											Date.parse(operation.quote_expires_at) > now &&
+											Date.parse(operation.original_trial_end) === end
+												? { renewalQuoteId: operation.id }
+												: {}),
 											...(pending
 												? {
 														pendingRenewal: {

@@ -121,9 +121,11 @@ function BillingWorkspace({
 		| (CardlessQuoteView & {
 				subscriptionId: string;
 				context: string;
+				expiresAtLocal: number;
 		  })
 		| null
 	>(null);
+	const serverClock = useRef({ time: Number.NaN, receivedAt: 0 });
 	const trialAbort = useRef<AbortController | null>(null);
 	const cancelRequestId = useRef<string | null>(null);
 	const displayTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -167,6 +169,10 @@ function BillingWorkspace({
 					billingDisplayValidityMs(result) - (Date.now() - started);
 				if (!(remaining > 0))
 					throw new Error("Subscription status expired. Please refresh.");
+				const receivedAt = Date.now();
+				const serverNow =
+					Date.parse(result.serverTime ?? "") + (receivedAt - started);
+				serverClock.current = { time: serverNow, receivedAt };
 				setRenewalSelections((previous) =>
 					Object.fromEntries(
 						result.subscriptions
@@ -184,16 +190,21 @@ function BillingWorkspace({
 					const subscription = result.subscriptions.find(
 						(s) => s.id === previous.subscriptionId,
 					);
-					const serverNow =
-						Date.parse(result.serverTime ?? "") + (Date.now() - started);
 					return subscription?.trial?.mode === "cardless" &&
 						subscription.trial.stage === "trial" &&
 						!subscription.trial.pendingRenewal &&
+						subscription.trial.renewalQuoteId === previous.quote.id &&
 						cardlessRenewalContext(subscription) === previous.context &&
 						Date.parse(previous.quote.expiresAt) > serverNow &&
 						Date.parse(previous.quote.firstChargeAt) ===
 							Date.parse(subscription.trial.endsAt)
-						? previous
+						? {
+								...previous,
+								expiresAtLocal: Math.min(
+									previous.expiresAtLocal,
+									receivedAt + Date.parse(previous.quote.expiresAt) - serverNow,
+								),
+							}
 						: null;
 				});
 				setOverview(result);
@@ -232,7 +243,14 @@ function BillingWorkspace({
 		const remaining = snapshot
 			? serverSnapshotRemainingMs(snapshot.remainingMs)
 			: 0;
-		if (remaining > 0) {
+		if (remaining > 0 && snapshot) {
+			serverClock.current = {
+				time:
+					Date.parse(snapshot.overview.serverTime ?? "") +
+					billingDisplayValidityMs(snapshot.overview) -
+					remaining,
+				receivedAt: Date.now(),
+			};
 			validUntil.current = Date.now() + remaining;
 			displayTimer.current = setTimeout(() => {
 				validUntil.current = 0;
@@ -272,6 +290,21 @@ function BillingWorkspace({
 		};
 	}, [load, returnedFromPortal, snapshot]);
 
+	useEffect(() => {
+		if (!renewalQuote) return;
+		// Retire terms independently of the subscription display lease. This must
+		// never invalidate or abort a setup request already sent with consent.
+		const timer = setTimeout(
+			() => {
+				setRenewalQuote((current) =>
+					current?.requestId === renewalQuote.requestId ? null : current,
+				);
+			},
+			Math.max(0, renewalQuote.expiresAtLocal - Date.now()),
+		);
+		return () => clearTimeout(timer);
+	}, [renewalQuote]);
+
 	const trialAction = useCallback(
 		async (
 			action: CardlessRenewalAction,
@@ -310,7 +343,18 @@ function BillingWorkspace({
 						throw new Error(
 							"Renewal terms could not be confirmed. Please review them again.",
 						);
+					const now = Date.now();
+					const remaining =
+						Date.parse(result.expiresAt) -
+						(serverClock.current.time + now - serverClock.current.receivedAt);
+					if (
+						!(remaining > 0) ||
+						Date.parse(result.firstChargeAt) !==
+							Date.parse(subscription.trial?.endsAt ?? "")
+					)
+						throw new Error("Renewal terms expired. Please review them again.");
 					setRenewalQuote({
+						expiresAtLocal: now + remaining,
 						quote: result,
 						requestId: crypto.randomUUID(),
 						subscriptionId: subscription.id,
