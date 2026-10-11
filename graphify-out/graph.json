@@ -974,7 +974,11 @@
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_5_initial_local_analytics_evidence",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_5_review_repairs_and_final_local_evidence",
-          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_operator_evidence_test_boundary"
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_operator_evidence_test_boundary",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_authenticated_empty_queue_probe_failure",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_artifact_and_existing_billing_inspection"
         ],
         "relation": "form",
         "confidence": "EXTRACTED",
@@ -176137,7 +176141,7 @@
     {
       "id": "docs_environment_and_secrets_matrix_environment_and_secrets_matrix_semantic",
       "label": "Environment And Secrets Matrix",
-      "description": "Documents variable names, ownership, allowed exposure, environment separation and verification without secret values. Dashboard secrets require fresh deployments. Vercel web, Worker, extension, Supabase and GitHub have distinct authorities; production is www.anidachi.com while staging stays protected and noindex. Candidate cardless secrets and migrations are preparation, not deployed state. Some older dated rows precede later release evidence.",
+      "description": "Records variable names,ownership,exposure and verification without secret values. Secrets belong in dashboards and changes affect fresh deployments. Vercel,Worker,extension,Supabase and CI authorities are separate; production canonical is https://www.anidachi.app and staging https://staging.anidachi.app remains protected/noindex. Candidate requires five additive migrations and a dedicated trial analytics bearer. Runtime analytics identity uses Vercel target plus exact Git branch,not SEO origin. Configuration requirements alone are not hosted activation evidence.",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
       "source_location": null,
@@ -176146,7 +176150,7 @@
       "author": null,
       "contributor": null,
       "_origin": "semantic",
-      "status": "canonical_environment_ownership_with_dated_rollout_snapshots",
+      "status": "canonical_configuration_contract_with_five_migration_candidate_and_runtime_metadata_gate",
       "source_sections": [
         "Environment And Secrets Matrix",
         "Principles",
@@ -176165,9 +176169,9 @@
         "superpowers/plans/2026-10-11-cardless-trial-acceptance.md"
       ],
       "source_read_complete": true,
-      "source_snapshot_commit": "154ce1ef6fdfd17a71266b19cf7dec913aa06f31",
-      "source_line_count": 215,
-      "source_byte_count": 17998
+      "source_snapshot_commit": "8e4add95c65590176f5507aecadfb7b04875ac4f",
+      "source_line_count": 217,
+      "source_byte_count": 18196
     },
     {
       "id": "apps_web_public_demo_credits_pixabay_asset_source",
@@ -184313,12 +184317,12 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Chronological project state combines the October11 cardless local candidate and earlier dated deployment, product, billing, history, security, room/P2P and release checkpoints. Preserve each snapshot scope and newer superseding decisions. Local/unit/synthetic, hosted staging, owner acceptance, production deployment and Store publication are separate proof levels. Document references and full section inventory accompany this compact semantic representation.",
+      "description": "Chronological source includes October11 cardless staging delivery and analytics-environment repair candidate, alongside historical deployment, billing, history, security, room/P2P and release checkpoints. PR410 deployed with cardless starts and analytics delivery disabled. New environment resolver passed local checks; hosted acknowledgment remains unproven at this source checkpoint. Preserve historical status and later superseding decisions, keeping local tests, staging deployment, real account acceptance, production and Store publication distinct.",
       "_origin": "semantic",
-      "status": "canonical_dated_state_snapshots_latest_cardless_local_candidate",
+      "status": "canonical_dated_state_latest_cardless_staging_flag_off_delivery",
       "source_sections": [
         "Current Development State",
-        "Cardless trial candidate, October 11, 2026",
+        "Cardless trial staging delivery, October 11, 2026",
         "Netflix staging candidate, October 8, 2026",
         "Release safeguards delivered to staging, October 2, 2026",
         "Stripe preparation and 3DS verification, October 2, 2026",
@@ -184418,6 +184422,7 @@
         "https://github.com/AniDachi/anidachi-LP/pull/391",
         "https://github.com/AniDachi/anidachi-LP/pull/393",
         "https://github.com/AniDachi/anidachi-LP/pull/397",
+        "https://github.com/AniDachi/anidachi-LP/pull/410",
         "netflix-adapter-notes.md",
         "netflix-staging-verification.md",
         "public-community-count.md",
@@ -184493,9 +184498,9 @@
         "youtube-adapter-notes.md#message-composer-interaction-local-candidate-october-1-2026"
       ],
       "source_read_complete": true,
-      "source_snapshot_commit": "154ce1ef6fdfd17a71266b19cf7dec913aa06f31",
-      "source_line_count": 2867,
-      "source_byte_count": 181878
+      "source_snapshot_commit": "8e4add95c65590176f5507aecadfb7b04875ac4f",
+      "source_line_count": 2878,
+      "source_byte_count": 182571
     },
     {
       "id": "apps_extension_src_source_adapters_netflix_adapter_netflixvideoadapter_getoverlaygeometry",
@@ -186219,8 +186224,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "tasks0_to4_complete_task5_local_candidate_hosted_and_fresh_repair_review_pending",
-      "description": "Approved cardless Schedule implementation: Tasks 0–4 have recorded local completion; Task 5 analytics, durable recovery and review repairs are implemented locally. Final documented checks are web 1098 total/1092 passed/6 skips, 258 SQL assertions and four real separate-connection races. Three P2 findings from review of 6603637f were repaired; fresh immutable repair review remains pending in this document. Five additive migrations remain unapplied on hosted staging; analytics secret, hosted acceptance and owner decision remain open. Task 6 production requires separate permission. Netflix and extension redesign are outside this release.",
+      "status": "tasks0_to4_complete_task5_staging_flag_off_delivered_analytics_repair_and_acceptance_pending",
+      "description": "Approved cardless Schedule implementation with Tasks0–4 committed and locally verified. Task5 server analytics and broad local checks are complete; PR410 delivered to staging with cardless disabled and all five migrations plus existing-data preservation verified. Final runtime review accepted4b6a8027, followed by Graphify32250893. Environment resolver correction is local; its independent review and hosted acknowledgment are pending in this source. The new model is enabled nowhere. Fresh-account, loaded-extension, full lifecycle and owner staging acceptance remain open; Task6 production needs separate authorization. Rejected ordinary Subscription/old Portal evidence remains separate. Netflix and extension redesign are excluded.",
       "_origin": "semantic",
       "completed_commits": {
         "task0": "8048e631",
@@ -186228,7 +186233,7 @@
         "task2": "f78a024a",
         "task3": "9a3ce499"
       },
-      "source_note": "The closing table is creation-time history. Current Task 5 sections establish the source checkpoint; subsequent unrecorded runtime messages are not source evidence.",
+      "source_note": "The final table is explicitly creation-time history. Later Task5 and hosted-delivery sections supersede earlier local-only/review-pending checkpoints; this extraction does not import outcomes outside the source snapshot.",
       "source_sections": [
         "Cardless Three-Day Trial Implementation Plan",
         "Global Constraints",
@@ -186249,9 +186254,9 @@
         "2026-10-11-cardless-trial-acceptance.md"
       ],
       "source_read_complete": true,
-      "source_snapshot_commit": "154ce1ef6fdfd17a71266b19cf7dec913aa06f31",
-      "source_line_count": 451,
-      "source_byte_count": 43416
+      "source_snapshot_commit": "8e4add95c65590176f5507aecadfb7b04875ac4f",
+      "source_line_count": 458,
+      "source_byte_count": 44082
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_stripe_sandbox_contract_proof",
@@ -186283,8 +186288,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task1_committed_local_contracts_passed_not_hosted",
-      "description": "Task 1 is documented complete locally: disabled policy, durable activation and fenced renewal records, immutable mode/dates/Schedule provenance and legacy card_required defaults. Initial Customer is nullable so account reservation precedes external creation; record_cardless_trial_customer_v1 binds verified Customer with owner/operation fencing and stable replay. Legacy Checkout shares serialization. SQL is not held across Stripe HTTP; age/flag-off cannot free uncertain mutations. Refresh v3 verifies stored activation; v2 rejects cardless provenance. Disposable-DB replay, SQL/concurrency, new-account Customer race and existing-data preservation passed. No hosted schema or full flow acceptance is implied.",
+      "status": "task1_local_contracts_verified_five_migrations_delivered_staging_disabled",
+      "description": "Task1 defines disabled policy,durable activation/fenced renewal,immutable mode/dates/Schedule provenance and legacy card_required defaults. Reserve account before external Customer creation with nullable Customer and owner-fenced record_cardless_trial_customer_v1 binding/replay. Legacy Checkout shares serialization; SQL is never held across Stripe HTTP and age/flag-off cannot free unknown authority. Refreshv3 verifies stored activation, whilev2 rejects cardless provenance. Disposable replay/SQL/races/preservation passed. The later PR410 delivery applied all five additive migrations on staging with cardless disabled; hosted fresh-trial and lifecycle acceptance remain open.",
       "references": [
         "reserve_cardless_trial_v1",
         "record_cardless_trial_customer_v1",
@@ -186306,7 +186311,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_start_and_owner_recovery_reviewed_local_client_integrated_staging_pending",
+      "status": "deployed_staging_flag_off_owner_recovery_contract_hosted_trial_pending",
       "description": "POST /api/billing/trial/start is behind disabled cardless policy with session-derived owner, Origin/Sec-Fetch-Site/JSON/X-Anidachi-Billing-Owner checks, private/no-store responses and durable account limits. It accepts requestId/planCode/billingPeriod/offerRevision; fresh current-email proof is required before reservation. Active returns 200 after shared fresh Stripe refresh; pending returns 202 with kind activation plus real operationId or kind legacy_checkout without a fabricated activation. Conflicts including verification_required return 409; unavailable returns 503; existing auth/owner failure codes remain. POST /api/billing/trial/recover accepts optional activation ID, otherwise finds the owner only nonfailed activation, and resumes original request/frozen price/stored key without new reservation even after flag off or lost browser request ID. No operation gives no rights and no fresh trial. Legacy pending retries start with retained request/selection; if those are lost, another tab must display an up-to-date offer and obtain explicit confirmation. Canonical stored Schedule key is cardless-trial-v1:<activationId>. Optional trialMode/revision retain the action enum; stale legacy offer receives offer_changed without paid fallback.",
       "_origin": "semantic",
       "references": [
@@ -186333,7 +186338,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task3_server_committed_independently_reviewed_local_client_integrated",
+      "status": "reviewed_runtime_deployed_staging_flag_off_real_trial_acceptance_pending",
       "description": "Task 3 checked complete for server scope. Owner-scoped quote/begin/complete/cancel use quote TTL at most five minutes and no later than original trial_end. Quote authorizes setup start; completion revalidates unchanged terms and active original trial, allowing completion after quote TTL but never automatic resurrection after trial end. Consent is persisted before Stripe and applied only after verified Schedule/Subscription update and result storage. Latest account generation serializes cancel/restore/plan-change/setup; applying or uncertain mutation must reconcile before another gains authority. Superseded returns 409 and rereads current state; old cancel C cannot cancel or report cancellation of newer opt-in B. Canonical allowlisted quote fields ignore JSON order/extras. One Schedule update sets release behavior, owned PM and price with original dates/no prorations; keep attached until trial end. Return/webhook use one idempotent finalizer, pending asks redelivery, and current reads preserve access deadlines and monotonic paid state. Local client integration is recorded under Task 4; hosted client/server acceptance remains pending.",
       "_origin": "semantic",
       "references": [
@@ -186367,8 +186372,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task5_local_analytics_and_review_repairs_passed_hosted_acceptance_pending",
-      "description": "Server-verified cardless events use the existing AniDachi Amplitude project 813335 and durable outbox; disabled private scheduler needs a new dedicated drain secret. First room and connected host-plus-guest evidence are server-derived. Recurring service-credit settlement is distinct from immutable first positive-cash payment and only the latter emits conversion. Initial 238 SQL/two races and 1087 web checkpoints were followed by final 258 SQL/four races and 1098 web checks. Review repairs cover flag-off pending recovery, explicit external-create admission/operator fencing and credit-versus-cash evidence. Fresh independent repair review, hosted migrations, actual delivery, desktop/mobile identity/billing matrix, loaded old/current extension, real 72-hour expiry, non-resetting room closure and owner acceptance remain open.",
+      "status": "task5_staging_flag_off_delivered_local_environment_repair_hosted_ack_pending",
+      "description": "Existing AniDachi Amplitude813335 publisher and durable outbox record stable server-verified transitions, including host-plus-connected-guest milestones and first positive cash separately from credit service settlement. Broad local checks passed. PR410 applied five migrations and delivered compatible web with cardless off; preserved17 subscriptions,nine legacy trials and empty manual-grant set. Staging extension build/validation workflow38157882289 passed on2471411b, but loading it and old published-client checks remain open. Environment resolver repair needs independent review and hosted acknowledgment before staging-only activation for approved new test accounts. Fresh OAuth/account/billing matrix, failures/races,72-hour expiry,five-minute room closure,operator recovery,real analytics and owner acceptance remain required.",
       "_origin": "semantic"
     },
     {
@@ -186381,8 +186386,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task6_pending_staging_runbook_prepared_not_executed",
-      "description": "Use the staging runbook, exact reviewed changes and five ordered additive migrations before compatible server deployment with cardless off. Preserve existing subscriptions, prices, manual rights and legacy trials; provision dedicated analytics drain credentials separately, then enable only accepted staging policy. Forward recovery retains durable ledgers and compatible handlers; flag off blocks fresh starts, not uncertain operation reconciliation. Production promotion requires separate owner permission after staging acceptance. No hosted mutation or production rollout is established by these documents.",
+      "status": "task6_production_pending_staging_delivery_does_not_authorize_promotion",
+      "description": "Production Task6 remains unstarted pending accepted staging SHAs, exact isolated billing diff, fresh read-only LIVE catalog/event checks and old/current client proof. Rehearse flag-off recovery with pending/active/renewal-enabled trials, retaining ledgers,consent,compatible handlers and deadlines. After separate authorization use additive schema then compatible server,site/extension,verified clients then flag. No production rollout or full lifecycle claim follows from PR410 staging delivery; anomalous charges require separately agreed financial handling.",
       "_origin": "semantic"
     },
     {
@@ -186566,10 +186571,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task5_local_checks_passed_fresh_repair_review_and_hosted_acceptance_pending",
-      "description": "Preserves rejected ordinary Subscription evidence, fourteen passing Schedule capability cases plus old-Portal proof, historical Tasks 1–4 local SQL/server/client checkpoints and Task 5 local analytics/recovery repairs. Latest documented full web is 1098 total,1092 passed,six existing skips,zero failures; SQL has 258 assertions and four separate-connection races. Review 6603637f found three P2 issues, repaired locally with fresh independent repair review still pending in this source. Sandbox feasibility and local fixtures do not establish hosted behavior, actual Amplitude delivery, loaded extension, real 72-hour lifecycle or owner acceptance. Five additive migrations and new dedicated drain secret remain unapplied/unprovisioned on staging; no rollout.",
+      "status": "candidate_deployed_staging_flag_off_analytics_environment_repair_and_account_acceptance_open",
+      "description": "Preserves rejected ordinary Subscription diagnostics,14 passing Schedule cases plus old Portal,Tasks1–4 local contracts/UI and Task5 local analytics/review repairs. Later hosted checkpoint supersedes local-only status: PR410 merged2471411b at2026-10-11T16:55:02Z after runtime4b6a8027 acceptance and Graphify32250893; five migrations applied and existing data preserved. Exact staging web READY/protected smoke/extension build passed with cardless starts and analytics disabled. Dedicated staging bearer provisioned;813335 key association still requires confirmation. Two authenticated empty-queue probes returned503. Local resolver repair passed12/12 and web1101/1095/6 plus types/lint; hosted200,repair acceptance and all fresh-account/loaded-client/expiry/funnel/owner gates remain open. Production untouched.",
       "_origin": "semantic",
-      "source_note": "Earlier headings and pending lists are historical checkpoints. The latest source section contains local Task 5 review repairs; the historical trial:<id> Schedule key is superseded by stored cardless-trial-v1:<id>.",
+      "source_note": "Task0 release-state and Tasks1–5 local/preflight paragraphs are historical checkpoints. The final hosted-delivery section establishes current applied schema,deployment,secret and accepted-runtime facts. It does not prove hosted success of the follow-up resolver. Historical trial:<id> product key remains superseded by cardless-trial-v1:<id>.",
       "source_sections": [
         "Cardless trial: acceptance evidence",
         "Verified tooling and access",
@@ -186587,7 +186592,8 @@
         "Task 3: local consent, setup finalizer and recovery",
         "Task 4: local clients and visible payment terms",
         "Task 5: verified funnel and local integration checkpoint",
-        "Task 5 review repairs (before hosted delivery)"
+        "Task 5 review repairs (before hosted delivery)",
+        "Hosted staging delivery and environment repair checkpoint"
       ],
       "references": [
         "../../releases/cardless-trial/staging-runbook.md",
@@ -186597,9 +186603,9 @@
         "https://docs.stripe.com/customer-management#limitations"
       ],
       "source_read_complete": true,
-      "source_snapshot_commit": "154ce1ef6fdfd17a71266b19cf7dec913aa06f31",
-      "source_line_count": 531,
-      "source_byte_count": 32746
+      "source_snapshot_commit": "8e4add95c65590176f5507aecadfb7b04875ac4f",
+      "source_line_count": 585,
+      "source_byte_count": 36194
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
@@ -186676,8 +186682,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_capabilities_and_local_tasks1_to5_passed_hosted_acceptance_pending",
-      "description": "Fourteen selected Schedule cases and separate old-Portal check passed; rejected ordinary Subscription evidence remains separate. Hosted setup/3DS and monthly charge were covered by scoped Sandbox fixtures, while optional ordinary Checkout was not run. Tasks 1–5 record local contracts, server/client behavior, analytics and recovery tests. Existing staging webhook registration is read-only evidence with a payload-version distinction. Authenticated hosted users, fresh application finalizer behavior, actual analytics delivery, loaded extension, full 72-hour lifecycle and owner staging acceptance remain open.",
+      "status": "stripe_capabilities_local_contracts_and_flag_off_delivery_passed_real_account_acceptance_pending",
+      "description": "Fourteen native Schedule cases and separate old-Portal check passed, distinct from rejected ordinary Subscription. Hosted setup/3DS uses synthetic Sandbox fixtures; optional ordinary Checkout was not run. Local Tasks1–5 cover application contracts,SQL,races,clients and analytics without real ingestion. PR410 now supplies staging migration/deployment/preservation receipts,not fresh trial acceptance. Existing webhook payload2025-06-30.basil remains distinct from fresh API2025-08-27.basil. Actual OAuth/trial/setup,loaded clients,full72-hour lifecycle,funnel delivery and owner acceptance remain open.",
       "scenario_evidence": {
         "schedule_named_cases": "14_passed",
         "schedule_old_portal_renew_path": "passed_separately",
@@ -186718,8 +186724,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_candidate_only_no_hosted_migrations_or_rollout",
-      "description": "Five additive October 11 migrations are local only. Read-only staging ledger cyppqpprkygjloyfvvvj ends at 20261007235706 and contains none of them; production was not queried. Existing Sandbox endpoint registration and local tests do not prove deployed finalizers. Dedicated trial-event secret, actual drain delivery, hosted acceptance, fresh repair review and owner decision remain open. Existing subscriptions, trials, prices and manual rights must be preserved; no implementation evidence authorizes production promotion.",
+      "status": "staging_flag_off_delivered_production_and_trial_acceptance_pending",
+      "description": "Five candidate migrations applied on staging through workflow38157618111; automatic38157586770 also succeeded idempotently. Exact merge2471411b owns READY staging deployment,smoke and build pass. Cardless starts remain false,activation/renewal/event tables empty,scheduler disabled with no environment/run timestamps.17 subscriptions,nine legacy trials and empty manual grants preserved. This is flag-off staging delivery,not a trial lifecycle,real manual-grant-flow,loaded artifact or production acceptance. New staging bearer exists,but813335 association and hosted analytics repair remain gates.",
       "rationale": "Distinguish local implementation, fixture-based visual proof, actual hosted acceptance and production authorization so completed local work cannot imply deployment readiness.",
       "_origin": "semantic"
     },
@@ -187165,8 +187171,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "hosted_and_owner_acceptance_pending_after_local_task5_repairs",
-      "description": "Sandbox capability proof does not prove AniDachi concurrency, account ownership, current entitlements, webhook ordering, analytics delivery or client behavior. Local Tasks 1–5 cover those contracts at SQL/unit/component level; latest review repairs still await fresh independent review in this source. Hosted matrix must cover actual provider OAuth, all account/plan/period states, duplicates/out-of-order callbacks, network/account changes, pending recovery and flag off, operator fixtures, old/current loaded clients, real 72-hour expiry and five-minute non-resetting room closure. Account deletion requires resolving Stripe effects first; owner staging acceptance remains explicit.",
+      "status": "fresh_account_loaded_client_actual_analytics_and_owner_acceptance_pending_after_delivery",
+      "description": "Local proofs and PR410 flag-off delivery do not establish fresh OAuth/trial/setup,all account/plan/period states,network/account changes,duplicate/out-of-order callbacks,pending recovery,operator fixture investigation,loaded current/old extension,real72-hour expiry or non-resetting five-minute room closure. Existing paid Billing inspection was read-only and manual-grant set was empty. Analytics resolver repair must obtain its separate review and hosted acknowledgment; project813335 association must be confirmed before enabling delivery. Owner acceptance and production permission remain separate.",
       "rationale": "Track each proof layer separately rather than marking remaining integration complete from passing lower-level checks.",
       "_origin": "semantic"
     },
@@ -187703,7 +187709,8 @@
       "references": [
         "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
@@ -187750,7 +187757,8 @@
       "status": "local_provenance_and_lost_activation_response_recovery_verified_hosted_pending",
       "description": "Common refresh retains original lease and fresh Stripe reads. Cardless v3 requires stored activation and owned Schedule identity; legacy v2 rejects cardless provenance. Automatic release uses Schedule.released_subscription, previously verified against owned Sandbox fixtures. A linkless canceled Schedule is accepted only for an already-recorded matching canceled Subscription and cannot grant access. Task 3 also recovers pending activation after a lost Schedule response, including a delayed canceled Subscription, without recreating it. Local checks cover identity, dates, terminal linkage and zero invoices; hosted behavior remains pending.",
       "rationale": "Current verified object linkage and stored activation prove provenance; released or linkless terminal objects must never create entitlement from metadata alone.",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
@@ -187824,7 +187832,8 @@
       "_origin": "semantic",
       "canonical_schedule_key": "cardless-trial-v1:<activationId>",
       "customer_key": "trial-customer:<activationId>",
-      "historical_superseded_schedule_key": "trial:<activationId>"
+      "historical_superseded_schedule_key": "trial:<activationId>",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
@@ -187843,7 +187852,8 @@
         "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
         "apps/web/lib/anidachi-auth/verified-email.ts"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_private_trial_request_limits",
@@ -187860,7 +187870,8 @@
       "references": [
         "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_frozen_legacy_checkout_recovery",
@@ -187878,7 +187889,8 @@
       "references": [
         "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
@@ -188345,7 +188357,8 @@
         "apps/web/supabase/migrations/20261011135040_cardless_trial_renewal_setup.sql"
       ],
       "rationale": "Persist consent and mutation authority before external effects and converge return/webhook on current verified state, preventing duplicate setup effects or unsafe expiry assumptions.",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_canonical_renewal_quote_fingerprint",
@@ -188451,7 +188464,8 @@
         "hosted_behavior",
         "operator_recovery_after_safe_replay_window"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "apps_web_app_api_billing_trial_recover_route",
@@ -189156,8 +189170,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "reference_to_included_source",
-      "description": "The source explicitly cites the Cardless Trial Design. That complete design source is included and source-hashed in this semantic replacement fragment.",
+      "status": "reference_to_unchanged_source_outside_fragment",
+      "description": "The source cites docs/superpowers/specs/2026-10-11-cardless-trial-design.md as the contract. That unchanged design is outside this four-source replacement; this reference concept belongs to the citing source.",
       "references": [
         "docs/superpowers/specs/2026-10-11-cardless-trial-design.md"
       ],
@@ -189173,8 +189187,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "reference_to_included_source",
-      "description": "The source explicitly cites the Cardless Trial Design. That complete design source is included and source-hashed in this semantic replacement fragment.",
+      "status": "reference_to_unchanged_source_outside_fragment",
+      "description": "The source cites docs/superpowers/specs/2026-10-11-cardless-trial-design.md as the contract. That unchanged design is outside this four-source replacement; this reference concept belongs to the citing source.",
       "references": [
         "docs/superpowers/specs/2026-10-11-cardless-trial-design.md"
       ],
@@ -189208,7 +189222,8 @@
       "status": "task4_local_client_implementation_and_tests_passed",
       "description": "Pricing and checkout use authoritative server offer mode. Sign-in alone never starts trial; the signed-in person explicitly confirms the selected plan. Fresh account/offer checks retire stale results and preserve card-required flow. Provider verification invokes actual Google/Discord OAuth endpoints instead of merely reopening a session-bearing login page. Pending activation reuses the owner record, including flag-off. Local regression cases cover account changes, late returns, stale offers and verification login; hosted identity acceptance is pending.",
       "rationale": "A login or stale browser state cannot substitute for current owner consent, selected terms or fresh provider confirmation.",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
@@ -189223,7 +189238,8 @@
       "status": "task4_local_billing_implementation_and_tests_passed",
       "description": "Billing shows original trial end with timezone and avoids labeling default no-consent expiry as an already canceled subscription. Renewal review displays server plan, period, full amount and first-charge date before setup. Pending setup exposes frozen terms and recovery; unknown result never claims future billing disabled. Expired pending setup remains recoverable but cannot resume card collection or disappear behind old subscription history. After first-payment failure the existing cancellation action remains available. Saved card and return URL never grant paid access.",
       "rationale": "Show verified terms and uncertainty accurately so recovery or cancellation UI cannot falsely promise payment or access state.",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_compatible_extension_and_marketing_copy",
@@ -189237,7 +189253,8 @@
       "contributor": null,
       "status": "task4_local_copy_and_install_cta_checks_passed",
       "description": "Extension paywall directs users to the current website offer without assuming card-required/cardless mode from an old strict hosting payload. Task 4 changed no shared protocol fields, auto-create behavior, Netflix or local redesign. Primary and mobile website CTAs remain install actions with no billing action. FAQ, pricing and terms explain both trial modes; the SEO content guide records the rollout boundary. Local extension checks pass, while a loaded artifact and hosted acceptance remain Task 5.",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
@@ -189261,7 +189278,8 @@
         "extension_files": 143,
         "extension_tests_passed": 2210
       },
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_billing_and_pricing_browser_evidence",
@@ -189284,7 +189302,8 @@
         "/private/tmp/anidachi-cardless-proof/task4-{desktop,mobile}-{trial,review,pricing}.png",
         "/private/tmp/anidachi-cardless-proof/task4-{ui,pricing}-qa.log"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
@@ -189650,8 +189669,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_repairs_verified_fresh_review_pending",
-      "description": "Review of 6603637f produced three P2 findings. Repairs restore pending activation recovery across reload/flag off before Checkout, require per-Customer/Schedule create-attempt admission and private operator hold/evidence fences, and separate credit service settlement from first positive cash. Final source checkpoint has web1098/1092/6 and SQL258/four races; no hosted rollout. The source does not yet contain later runtime review acceptance.",
+      "status": "runtime_repairs_independently_accepted_separate_analytics_repair_review_pending",
+      "description": "Three P2 repairs restore owner pending recovery before Checkout across reload/flag-off, require durable Customer/Schedule admission with private operator evidence fences, and separate recurring-credit service from first cash. Their historical1098 web/258 SQL/four-race checkpoint is retained in acceptance. Repeated independent runtime review accepted4b6a8027; Graphify32250893 followed and PR410 delivered to staging flag off. Hosted gates and separate review of the subsequent analytics-environment correction remain open.",
       "_origin": "semantic"
     },
     {
@@ -189709,7 +189728,8 @@
         "room_harness": 39,
         "worker_runtime": 96
       },
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "evidence_scope": "Historical local checkpoint retained in full; later hosted-delivery nodes record deployment without upgrading this proof to fresh-account acceptance."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_5_review_repairs_and_final_local_evidence",
@@ -189721,8 +189741,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_repairs_passed_fresh_independent_review_pending",
-      "description": "Review 6603637f found three P2s and no critical finding; candidate was not ready for staging. Pending recovery repair at 4ccf2833 passed 96 focused UI/service checks. Create-attempt/operator fencing and first cash repairs have six service RED/GREEN checks. Final web1098 total/1092 passed/6 skips/0 failures and typecheck pass. Fresh disposable replay preserves canonical records; SQL258 comprises57 cardless,11 launch,21 renewal,37 analytics,18 review,114 legacy. Four independent-connection races cover old/new reservation, enable/cancel, create admission/operator hold, and verified result/operator settlement. Fresh immutable repair review remains open in this source.",
+      "status": "historical1098_local_repair_checkpoint_superseded_by_accepted_runtime_delivery",
+      "description": "Review6603637f found three P2s and no critical issue; candidate was not ready then. Recovery repair4ccf2833 passed96 focused UI/service tests. Create-attempt/operator fencing and first-cash repairs had six service RED/GREEN cases. Historical full web1098/1092/6 and typecheck passed; SQL258 comprises57 cardless,11 launch,21 renewal,37 analytics,18 review,114 legacy,with four separate-connection races and canonical preservation. The later hosted section records fresh final runtime review accepted4b6a8027 and staging delivery; its earlier pending-review sentence is historical. This checkpoint does not claim real operator investigation or hosted trial acceptance.",
       "results": {
         "web_total": 1098,
         "web_passed": 1092,
@@ -189766,8 +189786,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "read_only_staging_ledger_checked_no_migration_applied",
-      "description": "Read-only staging project cyppqpprkygjloyfvvvj was healthy; recorded ledger ends at20261007235706. None of five candidate migrations20261011124600,20261011132247,20261011135040,20261011153028,20261011161158 is applied. The final review-guards migration is additive and the preceding four remain unchanged. Production was not queried; the new drain secret is not provisioned.",
+      "status": "historical_read_only_preflight_superseded_by_five_applied_staging_migrations",
+      "description": "Historical read-only preflight found healthy stagingcyppqpprkygjloyfvvvj at20261007235706 with none of five candidate migrations applied; production was not queried. The later hosted receipt explicitly supersedes that state: all five prefixes20261011124600,20261011132247,20261011135040,20261011153028,20261011161158 applied through PR410 while preserving existing state and cardless off. The additive review-guards file did not edit earlier four migrations.",
       "migration_prefixes": [
         "20261011124600",
         "20261011132247",
@@ -189787,8 +189807,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "mocked_http_and_durable_contracts_passed_actual_ingestion_pending",
-      "description": "Trial conversion uses existing Amplitude delivery and private disabled outbox, scoped only to AniDachi813335. Tests exercise stable event ID/time, checked HTTP acknowledgment, unknown-delivery retry, separate service versus cash evidence and six-day manual-recovery fencing. Fetch mocks are not Amplitude ingestion evidence. Dedicated drain secret, real scheduler delivery and hosted account evidence remain open.",
+      "status": "local_ack_contracts_passed_hosted_empty_probe503_actual_ingestion_not_performed",
+      "description": "Existing Amplitude publisher/private outbox uses immutable IDs,time,environment,bounded acknowledgment/retry and six-day manual horizon. Local tests mock fetch and prove service-credit versus first-cash distinctions,not ingestion. Dedicated bearer now exists only on exact staging Preview and staging Vault. Two authenticated empty-queue hosted requests returned503,while SQL claim returned zero and unauthenticated request401. No events were sent or scheduler enabled. Local Vercel metadata resolver fix awaits hosted200 and813335 key association confirmation.",
       "_origin": "semantic"
     },
     {
@@ -189857,8 +189877,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_candidate_secret_unprovisioned_scheduler_disabled",
-      "description": "ANIDACHI_TRIAL_EVENT_DRAIN_SECRET must be dedicated and distinct from notification/room secrets, configured on exact staging Vercel Preview and matching Vault anidachi_trial_event_drain_secret. Existing Amplitude project813335 only. Drain batch is eight with bounded retry; allow canonical staging Preview or production www/apex origins, reject development/arbitrary previews. Missing configuration keeps rows durable without making trial access depend on HTTP ingestion. No client/extension/Worker authority is introduced.",
+      "status": "documented_staging_configuration_required_delivery_disabled_at_acceptance_checkpoint",
+      "description": "ANIDACHI_TRIAL_EVENT_DRAIN_SECRET is dedicated and distinct from room/notification authority,with matching Vault anidachi_trial_event_drain_secret and no Worker/client exposure. Existing Amplitude key must belong to813335. Configure secret/environment before enabling initially disabled private trial_event_scheduler. Fixed matching host,eight-event batch,bounded leases/retries; missing key retains pending events. Accept only VERCEL_ENV preview plus VERCEL_GIT_COMMIT_REF staging or production plus main. Both system variables must reach server runtime; development,missing metadata and feature Previews never drain. NEXT_PUBLIC_SITE_URL is public SEO config,not runtime identity. The matrix is a configuration contract; actual staging provisioning is separately recorded by acceptance.",
       "_origin": "semantic"
     },
     {
@@ -189871,13 +189891,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "historical_rows_preserved_with_known_source_discrepancy",
-      "description": "Matrix records September30 annual TEST configuration and pending LIVE readiness; current-development-state later records October2 LIVE preparation, which does not prove deployed payment behavior. The cardless candidate paragraph still says four October11 migrations, while current plan, acceptance and staging runbook specify five including20261011161158 review guards. Preserve this document discrepancy and use the explicit current five-file release inventory.",
-      "source_discrepancy": {
-        "matrix_count": 4,
-        "current_runbook_count": 5,
-        "additional_prefix": "20261011161158"
-      },
+      "status": "historical_billing_rows_preserved_five_migration_inventory_corrected",
+      "description": "September30 rows retain TEST annual configuration and then-pending LIVE readiness; current-state later records October2 LIVE preparation without implying deployed payment acceptance. Current cardless paragraph now correctly lists five October11 additive migrations. No new Stripe key,price,webhook endpoint or shared Portal configuration is required. Test credentials remain staging-only. Matrix requirements and historical rows do not themselves establish current runtime activation.",
       "_origin": "semantic"
     },
     {
@@ -190199,8 +190214,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_tasks0_to5_candidate_hosted_and_fresh_repair_review_pending",
-      "description": "Native Schedule cardless trial is approved locally and disabled. One72-hour account trial across Plus/Pro and periods; no-consent no charge/no two-hour wait, preserved existing terms and five-minute non-resetting room closure. Fourteen Sandbox cases and old-Portal path passed, unlike rejected ordinary Subscription with explicit Portal Renew. Five additive migrations remain unapplied on hosted staging. Final documented web1098/1092/6 and SQL258 with four races support local repairs; fresh independent review, new analytics secret, real delivery, hosted users, loaded clients, real72-hour lifecycle and owner acceptance remain open. Owner recovery, private create-attempt settlement and separate recurring-credit service/first-cash evidence are required. Production requires separate permission.",
+      "status": "deployed_staging_flag_off_preservation_passed_analytics_repair_hosted_pending",
+      "description": "PR410 merged as2471411b7bede05a5564679988fee7725df93d17. Native72-hour Schedule, account authority, explicit consent/setup/cancellation, recovery, website states and verified funnel are deployed on staging with new starts off. All five migrations applied; before/after fingerprints preserve17 subscriptions,nine legacy trials,the empty manual-grant set and existing paid-hosting/trial policy. Runtime4b6a8027 independently accepted; Graphify32250893. Exact staging web READY, protected smoke and extension build/validation passed; existing paid Billing inspected read-only. Local evidence includes14 Sandbox cases,258 SQL assertions,four races. Authenticated empty-queue analytics probe returned503. Resolver based on Vercel target plus exact branch passed12 focused and full1095/6 checks, but hosted success is unproven. Fresh OAuth/trial/setup, actual813335 delivery, loaded current/old clients, real72-hour expiry and owner acceptance remain open. Production untouched and requires separately authorized isolated promotion.",
       "_origin": "semantic"
     },
     {
@@ -190888,7 +190903,7 @@
       "label": "recordTrialConversion()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L64",
+      "source_location": "L57",
       "_callable": true,
       "_origin": "ast"
     },
@@ -190897,7 +190912,7 @@
       "label": "drainTrialConversionEvents()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L99",
+      "source_location": "L92",
       "_callable": true,
       "_origin": "ast"
     },
@@ -190906,7 +190921,7 @@
       "label": "defaultRepository",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L148",
+      "source_location": "L141",
       "_origin": "ast"
     },
     {
@@ -190940,7 +190955,7 @@
       "label": "request()",
       "file_type": "code",
       "source_file": "apps/web/lib/internal-trial-events-drain-route.test.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "_callable": true,
       "_origin": "ast"
     },
@@ -191335,6 +191350,154 @@
       "source_file": "apps/web/supabase/tests/trial_conversion_events.test.sql",
       "source_location": "L12",
       "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "label": "Hosted Staging Flag Off Delivery",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "deployed_staging_on_exact_merge_sha_new_starts_and_analytics_disabled",
+      "description": "PR410 merged2026-10-11T16:55:02Z as2471411b7bede05a5564679988fee7725df93d17. Independent runtime review accepted4b6a8027,Graphify-only32250893 followed and exact feature-head CI passed. CodeRabbit skipped non-default branch and is not counted as independent review. DB workflow38157618111 applied all five migrations; automatic38157586770 succeeded idempotently. Verceldpl_6VGZp6PqUqqgswip1wvx7HL9UNUj READY owns staging.anidachi.app on exact merge; protected smoke38158036228 passed. No Worker deploy required. Cardless false,no activation/renewal/events and scheduler disabled with no environment or run times. Production untouched.",
+      "merge_commit": "2471411b7bede05a5564679988fee7725df93d17",
+      "merged_at": "2026-10-11T16:55:02Z",
+      "runtime_review_commit": "4b6a8027",
+      "graphify_commit": "32250893",
+      "database_workflows": [
+        "38157618111",
+        "38157586770"
+      ],
+      "web_deployment": "dpl_6VGZp6PqUqqgswip1wvx7HL9UNUj",
+      "smoke_workflow": "38158036228",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_existing_record_preservation",
+      "label": "Staging Existing Record Preservation",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "before_after_fingerprints_passed_empty_manual_grants_not_flow_proof",
+      "description": "Snapshots at16:39 and2026-10-11T16:59:54Z preserved17 subscription rows,nine legacy trial rows and an empty manual-grant set. Fingerprints omit bookkeeping timestamps/new trial fields but include price,period,cancellation and entitlement fields. Existing paid-hosting activation,trial flag and revision2 unchanged. An unchanged empty grant set does not prove a real manual-grant flow. No new cardless activation/renewal/event rows existed.",
+      "counts": {
+        "subscriptions": 17,
+        "legacy_trials": 9,
+        "manual_grants": 0
+      },
+      "policy_revision": 2,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_authenticated_empty_queue_probe_failure",
+      "label": "Authenticated Empty Queue Probe Failure",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "two_hosted503_observed_environment_diagnosis_candidate_not_proven_fix",
+      "description": "Two authenticated empty-queue requests from staging PostgreSQL reached the analytics drain and returned503. Service-role SQL claim succeeded with zero rows; unauthenticated HTTP returned401. Vercel deployment metadata says Preview/staging,while public canonical metadata points at production. Exact private SEO env value was not read: classifying by public origin is a supported diagnosis candidate,not a demonstrated hosted fix. Neither request enabled scheduler or sent events.",
+      "authenticated_probe_statuses": [
+        503,
+        503
+      ],
+      "unauthenticated_status": 401,
+      "sql_claim_rows": 0,
+      "rationale": "An empty queue and valid route admission isolate observed failure without fabricating event delivery; deployment metadata and public canonical output do not reveal the unread private variable.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "label": "Analytics Environment Resolver Repair",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "local_regressions_passed_hosted200_and_separate_review_pending",
+      "description": "Follow-up resolver accepts only Vercel Preview/staging or Production/main via VERCEL_ENV and exact VERCEL_GIT_COMMIT_REF,with missing/feature metadata rejected before DB access. NEXT_PUBLIC_SITE_URL no longer determines runtime identity. Resolver tests observed RED then GREEN; route fixture now supplies required branch and tests feature Preview rejection.12/12 focused,web1101 total/1095 passed/6 skips/0 failures,TypeScript and changed-file lint passed. Hosted200 acknowledgment and separate repair review remain required at this source checkpoint. Exact later deployment/probe receipts belong in follow-up PR/controller report,not inferred here.",
+      "results": {
+        "focused_total": 12,
+        "focused_passed": 12,
+        "web_total": 1101,
+        "web_passed": 1095,
+        "web_skipped": 6,
+        "web_failed": 0,
+        "typescript": "passed",
+        "changed_file_lint": "passed"
+      },
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_drain_secret_and_project_association",
+      "label": "Staging Drain Secret And Project Association",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "dedicated_staging_secret_provisioned_project813335_association_confirmation_pending",
+      "description": "Dedicated drain bearer was provisioned only on Vercel Preview exact branch staging and matching staging Vault. Values are not recorded and room/notification credentials are not reused. Existing Amplitude key association with project813335 still must be confirmed before enabling delivery. Scheduler remains disabled with no event ingestion; production provisioning is not claimed.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_artifact_and_existing_billing_inspection",
+      "label": "Staging Artifact And Existing Billing Inspection",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "build_and_read_only_existing_account_check_passed_loaded_trial_gates_open",
+      "description": "Extension workflow38157882289 passed check,test,build and artifact validation on2471411b. No artifact replaced the owner local extension-design folder. Loading current artifact and checking old published client remain pending. Read-only browser inspection of an existing paid account Billing showed active monthly plan and renewal controls; no cancellation,card or purchase action. This is not a fresh trial or OAuth proof.",
+      "extension_workflow": "38157882289",
+      "source_commit": "2471411b7bede05a5564679988fee7725df93d17",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_current_development_state_staging_analytics_environment_repair",
+      "label": "Staging Analytics Environment Repair",
+      "file_type": "concept",
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "local_candidate_passed_hosted_success_unproven",
+      "description": "Authenticated staging analytics request returned503 with scheduler disabled and queue empty. Follow-up derives environment from Vercel target plus exact branch instead of public SEO origin. Twelve focused tests,1095 passing full-web tests/six existing skips,types and changed-file lint pass. At this source checkpoint hosted success is unproven; exact follow-up deployment/probe evidence belongs in PR/controller report. Cardless starts and analytics delivery remain off; this repair does not complete fresh-trial,loaded-client or owner acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_canonical_analytics_runtime_metadata",
+      "label": "Canonical Analytics Runtime Metadata",
+      "file_type": "rationale",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "required_fail_closed_runtime_identity_contract",
+      "description": "Private analytics scheduler/drain accepts VERCEL_ENV=preview with VERCEL_GIT_COMMIT_REF=staging,or VERCEL_ENV=production with VERCEL_GIT_COMMIT_REF=main. Both must be exposed to server runtime. Development,missing metadata and feature Preview branches do not drain. NEXT_PUBLIC_SITE_URL is SEO/public-origin configuration and cannot identify runtime environment. Fixed environment-matching host,dedicated Vault bearer,bounded batch and retry remain.",
+      "rationale": "Public canonical origin may intentionally refer to production on a protected Preview; deployment target and exact branch define permitted analytics identity.",
+      "_origin": "semantic"
     }
   ],
   "links": [
@@ -593206,17 +593369,6 @@
     },
     {
       "source": "docs_current_development_state_current_development_state",
-      "target": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_current_development_state_current_development_state",
       "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -593284,17 +593436,6 @@
     {
       "source": "docs_environment_and_secrets_matrix_environment_and_secrets_matrix_semantic",
       "target": "docs_environment_and_secrets_matrix_dated_billing_environment_snapshots",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_environment_and_secrets_matrix_environment_and_secrets_matrix_semantic",
-      "target": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -593502,17 +593643,6 @@
       "_origin": "semantic"
     },
     {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
       "source": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
       "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_official_stripe_documentation_references",
       "relation": "references",
@@ -593614,28 +593744,6 @@
     {
       "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
       "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_analytics_delivery_boundary",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
-      "target": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -594008,28 +594116,6 @@
       "_origin": "semantic"
     },
     {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_referenced_cardless_trial_design",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_linked_cardless_trial_design",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
       "source": "docs_current_development_state_october_11_cardless_candidate",
       "target": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
       "relation": "references",
@@ -594047,39 +594133,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_current_development_state_october_11_cardless_candidate",
-      "target": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_controlled_release_and_recovery",
-      "target": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_analytics_and_staging_acceptance",
-      "target": "apps_web_docs_conversion_metrics_conversion_metrics",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
@@ -594113,39 +594166,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_environment_and_secrets_matrix_dated_billing_environment_snapshots",
-      "target": "docs_releases_cardless_trial_staging_runbook_five_migration_flag_off_rollout",
-      "relation": "conceptually_related_to",
-      "confidence": "AMBIGUOUS",
-      "confidence_score": 0.2,
-      "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_current_development_state_crm_durable_recovery_evidence",
-      "target": "apps_web_docs_conversion_metrics_analytics_deduplication_recovery_limit",
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_current_development_state_single_room_assignment_and_reliable_tab_cleanup",
-      "target": "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/current-development-state.md",
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
@@ -594892,7 +594912,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L64",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594902,7 +594922,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L99",
+      "source_location": "L92",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594912,7 +594932,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L148",
+      "source_location": "L141",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594923,7 +594943,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L109",
+      "source_location": "L102",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594934,7 +594954,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L115",
+      "source_location": "L108",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594945,7 +594965,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L129",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594956,7 +594976,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L134",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -595074,7 +595094,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/internal-trial-events-drain-route.test.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -595085,7 +595105,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/internal-trial-events-drain-route.test.ts",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -595792,7 +595812,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.test.ts",
-      "source_location": "L129",
+      "source_location": "L142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -595804,9 +595824,295 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/trial-conversion-events.ts",
-      "source_location": "L72",
+      "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast"
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_staging_analytics_environment_repair",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_environment_and_secrets_matrix_semantic",
+      "target": "docs_environment_and_secrets_matrix_canonical_analytics_runtime_metadata",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_existing_record_preservation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_authenticated_empty_queue_probe_failure",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_drain_secret_and_project_association",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_artifact_and_existing_billing_inspection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_existing_record_preservation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_artifact_and_existing_billing_inspection",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_drain_secret_and_project_association",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_authenticated_empty_queue_probe_failure",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_authenticated_empty_queue_probe_failure",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_drain_secret_and_project_association",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_analytics_delivery_boundary",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_five_migration_staging_preflight",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_5_review_repairs_and_final_local_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_artifact_and_existing_billing_inspection",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_trial_analytics_secret_and_disabled_scheduler",
+      "target": "docs_environment_and_secrets_matrix_canonical_analytics_runtime_metadata",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_current_development_state_october_11_cardless_candidate",
+      "target": "docs_current_development_state_staging_analytics_environment_repair",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_current_development_state_october_11_cardless_candidate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_current_development_state_staging_analytics_environment_repair",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/current-development-state.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_analytics_and_staging_acceptance",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_analytics_and_staging_acceptance",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_task_5_review_repair_boundaries",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+      "target": "docs_environment_and_secrets_matrix_canonical_analytics_runtime_metadata",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
     }
   ],
   "hyperedges": [
@@ -596781,7 +597087,11 @@
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_5_initial_local_analytics_evidence",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_5_review_repairs_and_final_local_evidence",
-        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_operator_evidence_test_boundary"
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_operator_evidence_test_boundary",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_staging_flag_off_delivery",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_authenticated_empty_queue_probe_failure",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_analytics_environment_resolver_repair",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_staging_artifact_and_existing_billing_inspection"
       ],
       "relation": "form",
       "confidence": "EXTRACTED",
