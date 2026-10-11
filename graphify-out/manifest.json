@@ -7236,9 +7236,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1791746456.497475,
-    "seen": 1791746581.169475,
-    "ast_hash": "1c845e7dc83ca8a793b9047aa7f6cb89",
+    "mtime": 1791754860.748507,
+    "seen": 1791755191.531425,
+    "ast_hash": "5eb25d49626731858f88477bcf0c4468",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
@@ -7314,9 +7314,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1791746456.4979775,
-    "seen": 1791746581.169479,
-    "ast_hash": "18bf35a5502229c0a8fc46b992f399f1",
+    "mtime": 1791754861.2885094,
+    "seen": 1791755191.531431,
+    "ast_hash": "9d34d56a91b3863644b35fe722e54678",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
@@ -8652,15 +8652,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts": {
-    "mtime": 1790517850.7804413,
-    "seen": 1790527610.087511,
-    "ast_hash": "e18cbf0b201d2e9e06feaab3533ec2b4",
+    "mtime": 1791754861.2874155,
+    "seen": 1791755191.53143,
+    "ast_hash": "214fe69d853d37ce292566b0f6e9bf98",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-trial-state.ts": {
-    "mtime": 1791735537.8397825,
-    "seen": 1791737251.412148,
-    "ast_hash": "1bfd0dd091def9df6a2cedefeee84950",
+    "mtime": 1791754860.747954,
+    "seen": 1791755191.53143,
+    "ast_hash": "76ce9447106d996b8442d0838583aeec",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-webhook-events.test.ts": {
@@ -9804,9 +9804,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts": {
-    "mtime": 1791735537.8397887,
-    "seen": 1791737251.412148,
-    "ast_hash": "13e6abf2ac5d4dd5bf9eeff6e47b6145",
+    "mtime": 1791754861.287599,
+    "seen": 1791755191.531428,
+    "ast_hash": "4d57b9eccc29e3e41c08e78ba462f558",
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/cardless_trial_contract.mjs": {
@@ -10038,9 +10038,9 @@
     "semantic_hash": ""
   },
   "docs/releases/cardless-trial/staging-runbook.md": {
-    "mtime": 1791735820.911267,
-    "seen": 1791737251.4641962,
+    "mtime": 1791754914.7881515,
+    "seen": 1791755243.442181,
     "ast_hash": "",
-    "semantic_hash": "87c5e1b536ad814229a9e5617fe1f0f6"
+    "semantic_hash": "c0df512d99b8205c1611acee83426941"
   }
 }
