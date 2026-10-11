@@ -1001,6 +1001,55 @@
         "confidence_score": 1.0,
         "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
         "_origin": "semantic"
+      },
+      {
+        "id": "docs_social_pricing_model_shared_plan_access",
+        "label": "Free, Plus, and Pro share platform and social access",
+        "nodes": [
+          "docs_social_pricing_model_free_plan",
+          "docs_social_pricing_model_plus_plan",
+          "docs_social_pricing_model_pro_plan",
+          "docs_social_pricing_model_platform_and_social_access"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/social-pricing-model.md",
+        "_origin": "semantic"
+      },
+      {
+        "id": "docs_social_pricing_model_independent_room_and_history_rights",
+        "label": "Room rights and personal-history rights use independent plan ownership",
+        "nodes": [
+          "docs_social_pricing_model_entitlement_ownership",
+          "docs_social_pricing_model_media_publication_limits",
+          "docs_social_pricing_model_free_hosting_quota",
+          "docs_social_pricing_model_guest_hosting_access",
+          "docs_social_pricing_model_personal_watch_history",
+          "docs_social_pricing_model_free_history_privacy"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/social-pricing-model.md",
+        "_origin": "semantic"
+      },
+      {
+        "id": "docs_social_pricing_model_verified_billing_renewal_flow",
+        "label": "Billing preserves selection while revalidating terms and completing explicitly authorized payment setup",
+        "nodes": [
+          "docs_social_pricing_model_billing_selection_memory",
+          "docs_social_pricing_model_renewal_quote_id",
+          "docs_social_pricing_model_quote_revalidation",
+          "docs_social_pricing_model_renewal_consent",
+          "docs_social_pricing_model_verified_setupintent",
+          "docs_social_pricing_model_payment_setup_timer"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/social-pricing-model.md",
+        "_origin": "semantic"
       }
     ]
   },
@@ -13821,7 +13870,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L424"
+      "source_location": "L432"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_subscriptionrow",
@@ -13859,7 +13908,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L68"
+      "source_location": "L70"
     },
     {
       "id": "apps_web_lib_billing_view_billingsubscription",
@@ -13871,7 +13920,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L47"
+      "source_location": "L49"
     },
     {
       "id": "packages_protocol_src_personal_history_resume_personalhistoryresume",
@@ -67827,7 +67876,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L68"
+      "source_location": "L88"
     },
     {
       "id": "apps_web_app_account_billing_billing_client_formatdate",
@@ -67838,7 +67887,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L55"
+      "source_location": "L75"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_billingerror_constructor",
@@ -67971,7 +68020,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L134"
+      "source_location": "L136"
     },
     {
       "id": "apps_web_lib_billing_view_subscriptionstatuslabel",
@@ -67982,7 +68031,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L98"
+      "source_location": "L100"
     },
     {
       "id": "apps_extension_src_watch_history_resume_applypersonalhistoryresume",
@@ -131765,7 +131814,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L44"
+      "source_location": "L45"
     },
     {
       "id": "apps_web_app_api_billing_cancellation_portal_route",
@@ -152345,47 +152394,6 @@
       "source_url": null
     },
     {
-      "id": "docs_social_pricing_model_social_pricing_model",
-      "label": "Social Pricing Model",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 78,
-      "community_name": "Personal History MVP Design",
-      "contributor": null,
-      "file_type": "document",
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "source_url": null,
-      "status": "dated_product_contract_with_disabled_cardless_candidate",
-      "description": "Maintains historical September social-plan decisions and subsequent annual-pricing and October11 cardless candidate notes. Current candidate uses native Schedule, explicit renewal consent, durable recovery and separate credit service versus first-cash evidence; it is not enabled. Older Free-hosting and rollout statements are dated snapshots, not permission to override current paid-hosting policy.",
-      "source_sections": [
-        "Тарифы AniDachi для MVP",
-        "Cardless trial: локальный кандидат от 11 октября 2026",
-        "Исторический срез цен и Free-модели",
-        "Согласованная сетка",
-        "Время Free-комнаты",
-        "Личная история",
-        "Примеры",
-        "Границы внедрения"
-      ],
-      "references": [
-        "releases/cardless-trial/staging-runbook.md",
-        "releases/paid-hosting-trial/annual-billing-2026-09-30.md",
-        "releases/paid-hosting-trial/transition-master-plan-ru.md",
-        "releases/personal-history-mvp/README.md",
-        "superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md",
-        "superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
-        "superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md",
-        "superpowers/specs/2026-10-11-cardless-trial-design.md",
-        "watch-history-capacity.md"
-      ],
-      "source_read_complete": true,
-      "source_snapshot_commit": "154ce1ef6fdfd17a71266b19cf7dec913aa06f31",
-      "source_line_count": 145,
-      "source_byte_count": 14221
-    },
-    {
       "id": "docs_superpowers_plans_2026_09_08_personal_history_and_plans_mvp_personal_history_and_plans_mvp",
       "label": "Personal History Plans and Room Capabilities MVP",
       "_origin": "semantic",
@@ -169234,7 +169242,7 @@
       "label": "billingDisplayValidityMs()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L79",
+      "source_location": "L81",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -169257,7 +169265,7 @@
       "label": "formatBillingTime()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L36",
+      "source_location": "L38",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -169268,7 +169276,7 @@
       "label": "formatMonthlyPrice()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L30",
+      "source_location": "L32",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -173391,7 +173399,7 @@
       "label": "subscriptionPriceLabel()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L46",
+      "source_location": "L66",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173400,7 +173408,7 @@
       "label": "BillingClientProps",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L62",
+      "source_location": "L82",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -173410,7 +173418,7 @@
       "label": "BillingWorkspace()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L71",
+      "source_location": "L91",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173419,7 +173427,7 @@
       "label": "changeTrial()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L305",
+      "source_location": "L422",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173428,7 +173436,7 @@
       "label": "openStripe()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L364",
+      "source_location": "L481",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173437,7 +173445,7 @@
       "label": "BillingView()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L432",
+      "source_location": "L565",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173446,7 +173454,7 @@
       "label": "isPastSubscription()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L845",
+      "source_location": "L978",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173455,7 +173463,7 @@
       "label": "SubscriptionFacts()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L857",
+      "source_location": "L990",
       "_callable": true,
       "_origin": "ast"
     },
@@ -173513,7 +173521,7 @@
       "label": "example",
       "file_type": "code",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -173521,7 +173529,7 @@
       "label": "BillingPreview()",
       "file_type": "code",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L46",
+      "source_location": "L47",
       "_callable": true,
       "_origin": "ast"
     },
@@ -189541,7 +189549,7 @@
       "label": "CardlessRenewalAction",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -189551,7 +189559,7 @@
       "label": "CardlessQuoteView",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -189561,7 +189569,7 @@
       "label": "CardlessTrialControls()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L17",
+      "source_location": "L20",
       "_callable": true,
       "_origin": "ast"
     },
@@ -189588,7 +189596,7 @@
       "label": "trialButton()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L141",
+      "source_location": "L142",
       "_callable": true,
       "_origin": "ast"
     },
@@ -189597,7 +189605,7 @@
       "label": "renewalQuote",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L148",
+      "source_location": "L149",
       "_origin": "ast"
     },
     {
@@ -189893,62 +189901,6 @@
       "contributor": null,
       "status": "historical_billing_rows_preserved_five_migration_inventory_corrected",
       "description": "September30 rows retain TEST annual configuration and then-pending LIVE readiness; current-state later records October2 LIVE preparation without implying deployed payment acceptance. Current cardless paragraph now correctly lists five October11 additive migrations. No new Stripe key,price,webhook endpoint or shared Portal configuration is required. Test credentials remain staging-only. Matrix requirements and historical rows do not themselves establish current runtime activation.",
-      "_origin": "semantic"
-    },
-    {
-      "id": "docs_social_pricing_model_social_plan_and_shared_session_entitlements",
-      "label": "Social Plan And Shared Session Entitlements",
-      "file_type": "rationale",
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "status": "historical_september_social_pricing_contract",
-      "description": "Historical Free hosting is30 monthly host-plus-guest minutes, paid unlimited. People capacities Free/Plus/Pro4/6/15 include the host; cameras4 for all, microphones4/6/8, groups1/5/15. Usage counts shared presence even while paused, UTC reset and five-minute warning, no reconnect/new-room reset; guests do not spend host allowance. Paid hosts and paid viewers have distinct benefits. Crunchyroll/YouTube support never grants provider access. Later paid-hosting rollout supersedes Free creation allowances.",
-      "_origin": "semantic"
-    },
-    {
-      "id": "docs_social_pricing_model_personal_history_and_capacity_decisions",
-      "label": "Personal History And Capacity Decisions",
-      "file_type": "rationale",
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "status": "documented_viewer_owned_history_contract",
-      "description": "Personal History belongs to the paying viewer for solo and shared viewing; Free has hidden/no new capture and no retrospective Free-period backfill. Recent People requires copresence without titles; groups are invitation audiences, not access to others history. Capacity100 YouTube videos and200 Crunchyroll series, one series slot; full capacity blocks only new titles without automatic eviction, while existing progress continues. Free retains read/resume/delete where documented. Earlier3/15/50 title and7/92/366 day models were rejected.",
-      "_origin": "semantic"
-    },
-    {
-      "id": "docs_social_pricing_model_annual_prices_and_plan_change_boundaries",
-      "label": "Annual Prices And Plan Change Boundaries",
-      "file_type": "rationale",
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "status": "documented_annual_contract_with_historical_release_status",
-      "description": "September30 annual contract is PlusUSD76.70 and ProUSD143.90, twenty-percent savings against twelve monthly payments with cent rounding. Monthly Plus7.99/Pro14.99 and explicit prorated upgrade remain; one trial per account across plan/period. Historical not-published notes describe their dated checkpoint. D02–D05 cover plan changes, occupied seats, editing and offline behavior. Synthetic4/6/15 participant checks are not physical media or TURN acceptance, and pricing work does not authorize unrelated new media features.",
-      "_origin": "semantic"
-    },
-    {
-      "id": "docs_social_pricing_model_cardless_pricing_consent_and_recovery",
-      "label": "Cardless Pricing Consent And Recovery",
-      "file_type": "rationale",
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "status": "approved_local_candidate_not_enabled",
-      "description": "One72-hour Plus/Pro trial starts without card; no consent means native Schedule cancellation without billing or first-payment wait. Existing prices and subscriptions keep terms. Add-card setup requires explicit plan, period, full amount and original charge date; store consent before external effects. Original trial dates never extend. Owner recovery and private operator attempt evidence preserve uncertain external authority. Recurring paid service with credit remains distinct from first positive cash conversion; hosted acceptance and production permission remain separate.",
       "_origin": "semantic"
     },
     {
@@ -190929,7 +190881,7 @@
       "label": "PendingTrialActivation",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L62",
+      "source_location": "L64",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -191497,6 +191449,553 @@
       "status": "required_fail_closed_runtime_identity_contract",
       "description": "Private analytics scheduler/drain accepts VERCEL_ENV=preview with VERCEL_GIT_COMMIT_REF=staging,or VERCEL_ENV=production with VERCEL_GIT_COMMIT_REF=main. Both must be exposed to server runtime. Development,missing metadata and feature Preview branches do not drain. NEXT_PUBLIC_SITE_URL is SEO/public-origin configuration and cannot identify runtime environment. Fixed environment-matching host,dedicated Vault bearer,bounded batch and retry remain.",
       "rationale": "Public canonical origin may intentionally refer to production on a protected Preview; deployment target and exact branch define permitted analytics identity.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_app_account_billing_billing_client_cardlessrenewalcontext",
+      "label": "cardlessRenewalContext()",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L48",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalselection",
+      "label": "CardlessRenewalSelection",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L14",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_client_test_selectproyearly",
+      "label": "selectProYearly()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L197",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_client_test_assertproyearlyselection",
+      "label": "assertProYearlySelection()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L213",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_client_test_proyearlyquote",
+      "label": "proYearlyQuote",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L226",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_social_pricing_model_document",
+      "label": "AniDachi MVP pricing model and historical pricing snapshots",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_cardless_trial",
+      "label": "October 11 local candidate: one 72-hour Plus or Pro cardless trial behind disabled cardless_trials_enabled",
+      "file_type": "rationale",
+      "rationale": "A saved card must not authorize payment. Without separate renewal confirmation, the trial ends without a charge attempt or a two-hour wait for the first payment.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_stripe_trial_schedule",
+      "label": "Stripe Schedule: three-day trial phase with cancel ending",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_renewal_consent",
+      "label": "Billing renewal confirmation of plan, billing period, full amount, and first charge date",
+      "file_type": "rationale",
+      "rationale": "Renewal requires an explicit user decision on verified terms; an existing payment card alone is insufficient authorization.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_verified_setupintent",
+      "label": "Verified SetupIntent authorizes renewal on the original trial-end date",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_renewal_quote_id",
+      "label": "trial.renewalQuoteId identifies the latest user-owned valid renewal quote without changing Stripe or entitlements",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_billing_selection_memory",
+      "label": "Billing keeps the selected plan and period in tab memory for the current account and subscription across status refreshes",
+      "file_type": "rationale",
+      "rationale": "Quote replacement or expiry must not erase the user's selection for the same active trial subscription.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_quote_revalidation",
+      "label": "Previously verified renewal terms require a fresh Billing renewalQuoteId match; replacement, expiry, or subscription change requires reviewing terms again",
+      "file_type": "rationale",
+      "rationale": "Terms must remain associated with the current valid quote, including when another tab replaces the quote.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_payment_setup_timer",
+      "label": "Renewal-terms timer does not interrupt an already submitted payment-setup request",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_invoice_accounting",
+      "label": "Stripe-balance-settled recurring invoices preserve paid access; first monetary charge is separate, and zero initial/update invoices do not count as payment",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_trial_recovery",
+      "label": "Incomplete trial startup survives reload; confirmed failures use a private operator runbook without manual entitlement edits",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_trial_acceptance_stages",
+      "label": "Separate cardless-trial verification stages: Stripe, local contracts, staging, and owner acceptance; local candidate is not rollout evidence",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_cardless_trial_design",
+      "label": "Cardless-trial design specification: superpowers/specs/2026-10-11-cardless-trial-design.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_cardless_trial_acceptance",
+      "label": "Cardless-trial verification record: superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_cardless_trial_runbook",
+      "label": "Cardless-trial recovery and delivery runbook: releases/cardless-trial/staging-runbook.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_annual_billing",
+      "label": "September 30 unpublished annual candidate: Plus $76.70/year and Pro $143.90/year, 20% discount rounded to cents, one trial across periods, user-confirmed immediate Stripe proration for paid monthly-to-annual switching",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_annual_billing_acceptance",
+      "label": "Annual-billing status and acceptance: releases/paid-hosting-trial/annual-billing-2026-09-30.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_paid_hosting_transition",
+      "label": "New Free/trial transition master plan: releases/paid-hosting-trial/transition-master-plan-ru.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_historical_pricing_candidate",
+      "label": "September 9 historical pricing candidate: Tasks 1–9 checked and reviewed, Task 10 delivery package prepared, staging acceptance open, no public release",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_personal_history_release_package",
+      "label": "Personal-history MVP delivery package: releases/personal-history-mvp/README.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_personal_history_specification",
+      "label": "Personal-history and plans specification: superpowers/specs/2026-09-08-personal-history-and-plans-mvp-design.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_personal_history_plan",
+      "label": "Personal-history and plans execution plan: superpowers/plans/2026-09-08-personal-history-and-plans-mvp.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_entitlement_ownership",
+      "label": "Host plan controls room capabilities; each participant's own plan controls personal-history recording",
+      "file_type": "rationale",
+      "rationale": "A paid guest records history even with a Free host, while a Free guest receives no recording entitlement from a paid host. Paid subscriptions serve personal history as well as hosting, so 'only the host pays' is inaccurate.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_free_plan",
+      "label": "Historical Free: $0, 30 hosting minutes/day, 4 people including host, 4 cameras, 4 microphones, no history recording, 1 personal invitation group, no push sending or room naming",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_plus_plan",
+      "label": "Historical Plus: $7.99/month, unlimited daily hosting, 6 people including host, 4 cameras, 6 microphones, personal-history recording, 5 personal invitation groups, push sending and room naming",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_pro_plan",
+      "label": "Historical Pro: $14.99/month, unlimited daily hosting, 15 people including host, 4 cameras, 8 microphones, personal-history recording, 15 personal invitation groups, push sending and room naming",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_platform_and_social_access",
+      "label": "All plans share supported platforms, sync, chat, reactions, link invitations, invitation receiving, friends, and recent people",
+      "file_type": "rationale",
+      "rationale": "Crunchyroll and YouTube integrations are available on Free, Plus, and Pro; future integrations are not intended to be tier-separated. AniDachi integration access does not replace the video service's subscription or regional rights.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_media_publication_limits",
+      "label": "Camera and microphone publishers are counted separately within room membership; other participants can receive allowed media",
+      "file_type": "rationale",
+      "rationale": "A participant using both camera and microphone consumes one slot of each type; media slots do not add people beyond room capacity.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_free_hosting_quota",
+      "label": "Historical Free quota: UTC day, time accrues with host plus guest, video pause still counts, solo waiting does not, warning at 5 minutes, room ends at zero, reconnect/new room does not reset quota",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_guest_hosting_access",
+      "label": "Joining another host does not consume the guest's hosting quota; Free guests have no personal 30-minute limit in Plus/Pro rooms",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_personal_watch_history",
+      "label": "Plus/Pro personal history unifies solo and shared viewing and saves each user's own playback position",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_free_history_privacy",
+      "label": "Free does not collect checkpoints, queued progress, or hidden history for later paid disclosure; upgrading never backfills the Free interval",
+      "file_type": "rationale",
+      "rationale": "Personal history must not become a hidden free tracking system.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_recent_people",
+      "label": "Recent People uses shared presence without storing the video title or playback position",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_history_retention_d01",
+      "label": "D01: downgrade to Free preserves history and permits reading, resuming, and deletion; recording resumes only on Plus/Pro; old 3/15/50 title and 7/92/366-day restrictions are retired",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_history_capacity",
+      "label": "Per-account history capacity: 100 YouTube videos and 200 Crunchyroll titles; series or film uses one slot; full resource blocks new titles only; existing progress/episodes continue for Plus/Pro; no automatic deletion",
+      "file_type": "rationale",
+      "rationale": "Users free capacity by deleting their own titles on the website. Previously saved history above capacity remains available.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_history_capacity_contract",
+      "label": "Watch-history capacity contract: watch-history-capacity.md",
+      "file_type": "document",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_personal_invitation_groups",
+      "label": "MVP groups remain personal friend-invitation lists with no shared viewing progress",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_unchanged_legacy_entitlements",
+      "label": "Cardless candidate preserves prices, active subscriptions, old card trials, manual grants, history reading, and free guest joining; historical history work preserved currencies, Stripe Price IDs, payment mechanics, groups, push, and room naming",
+      "file_type": "rationale",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_accepted_behavior_decisions_d02_d05",
+      "label": "D02–D05 accepted September 8: active-room plan changes, occupied camera/microphone slots, history editing, and brief offline access",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_media_acceptance_gate",
+      "label": "Media publication gate requires acceptance and separate production decision, including actual 15-person/4-camera/8-microphone verification; no additional product rollout flag",
+      "file_type": "rationale",
+      "rationale": "Local real-controller tests with 4, 6, or 15 participants and synthetic devices do not establish TURN, different networks, physical devices, or loaded-artifact behavior. Public promises must match accepted and verified implementation.",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_shared_site_policy",
+      "label": "Shared policy supplies consistent website pricing language",
+      "file_type": "concept",
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
       "_origin": "semantic"
     }
   ],
@@ -398809,7 +399308,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -398819,7 +399318,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L55",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -398829,7 +399328,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L68",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -416444,7 +416943,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L424",
+      "source_location": "L432",
       "weight": 1.0
     },
     {
@@ -424606,7 +425105,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -424616,7 +425115,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L98",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -424636,7 +425135,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L134",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -424646,7 +425145,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -469649,39 +470148,6 @@
       "confidence_score": 1.0,
       "source_file": "docs/social-pricing-model.md",
       "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_superpowers_plans_2026_09_08_personal_history_and_plans_mvp_personal_history_and_plans_mvp",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": "L15",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_releases_personal_history_mvp_readme_personal_history_mvp_staging_delivery_packet",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_watch_history_capacity_watch_history_capacity",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -529507,7 +529973,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L79",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -529527,7 +529993,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -529537,7 +530003,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -542726,7 +543192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L62",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -542736,7 +543202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L432",
+      "source_location": "L565",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -542746,7 +543212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L71",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -542756,7 +543222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L845",
+      "source_location": "L978",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -542766,7 +543232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L857",
+      "source_location": "L990",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -542776,7 +543242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L46",
+      "source_location": "L66",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -542875,7 +543341,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L51",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
@@ -542886,7 +543352,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L51",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
@@ -542896,7 +543362,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L305",
+      "source_location": "L422",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542906,7 +543372,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L364",
+      "source_location": "L481",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542917,7 +543383,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L109",
+      "source_location": "L139",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542929,7 +543395,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L140",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542940,7 +543406,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L122",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542953,7 +543419,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L134",
+      "source_location": "L163",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542964,7 +543430,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L175",
+      "source_location": "L244",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -542976,7 +543442,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L679",
+      "source_location": "L812",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -542987,7 +543453,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L663",
+      "source_location": "L796",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -542998,7 +543464,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L471",
+      "source_location": "L604",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -543009,7 +543475,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L819",
+      "source_location": "L952",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -543020,7 +543486,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L722",
+      "source_location": "L855",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -543031,7 +543497,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L730",
+      "source_location": "L863",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -543042,7 +543508,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L721",
+      "source_location": "L854",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -543053,7 +543519,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L633",
+      "source_location": "L766",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -543064,7 +543530,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L886",
+      "source_location": "L1019",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -543075,7 +543541,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L865",
+      "source_location": "L998",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -543086,7 +543552,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L885",
+      "source_location": "L1018",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -543097,7 +543563,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L881",
+      "source_location": "L1014",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -543795,7 +544261,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_dev_billing_billing_preview",
@@ -543805,7 +544271,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_dev_billing_billing_preview",
@@ -552975,7 +553441,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L418",
+      "source_location": "L426",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554380,7 +554846,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L772",
+      "source_location": "L1128",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -558414,18 +558880,6 @@
       "source_location": "L25-L29",
       "weight": 1,
       "summary": "Design explicitly references the trial execution plan.",
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_paid_hosting_trial_transition_master_plan_ru_source_and_document_navigation",
-      "target": "docs_social_pricing_model_social_pricing_model",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1,
-      "source_file": "docs/releases/paid-hosting-trial/transition-master-plan-ru.md",
-      "source_location": "L1144-L1159",
-      "weight": 1,
-      "summary": "Master explicitly warns to read historical pricing with new policy.",
       "_origin": "semantic"
     },
     {
@@ -592137,7 +592591,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -592288,7 +592742,7 @@
     },
     {
       "source": "apps_web_app_account_billing_cardless_trial_controls",
-      "target": "ref_react",
+      "target": "apps_web_lib_billing_view",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -592299,23 +592753,12 @@
     },
     {
       "source": "apps_web_app_account_billing_cardless_trial_controls",
-      "target": "apps_web_lib_billing_view",
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_account_billing_cardless_trial_controls",
       "target": "apps_web_lib_billing_view_billingperiodunit",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592326,7 +592769,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592337,7 +592780,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592348,7 +592791,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592359,7 +592802,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592370,7 +592813,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -592382,7 +592825,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592392,7 +592835,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592402,7 +592845,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592412,7 +592855,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L17",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592566,7 +593009,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592577,7 +593020,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592653,7 +593096,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L141",
+      "source_location": "L142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592663,7 +593106,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L148",
+      "source_location": "L149",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592674,7 +593117,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L186",
+      "source_location": "L187",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592856,7 +593299,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L250",
+      "source_location": "L364",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -592868,7 +593311,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L267",
+      "source_location": "L381",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -592880,9 +593323,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0,
-      "_origin": "ast"
+      "_origin": "ast",
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
@@ -592891,9 +593335,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L69",
+      "source_location": "L71",
       "weight": 1.0,
-      "_origin": "ast"
+      "_origin": "ast",
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
@@ -592902,9 +593347,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0,
-      "_origin": "ast"
+      "_origin": "ast",
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_app_checkout_checkout_continuation_checkoutcontinuation",
@@ -592926,7 +593372,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L518",
+      "source_location": "L651",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592974,19 +593420,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L384",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_billing_client_test",
-      "target": "apps_web_lib_checkout_continuation_test_button",
-      "relation": "indirect_call",
-      "context": "argument",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L432",
+      "source_location": "L740",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593451,83 +593885,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_social_pricing_model_social_plan_and_shared_session_entitlements",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_social_pricing_model_personal_history_and_capacity_decisions",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_social_pricing_model_annual_prices_and_plan_change_boundaries",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_social_pricing_model_cardless_pricing_consent_and_recovery",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_social_pricing_model",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
@@ -594028,17 +594385,6 @@
       "_origin": "semantic"
     },
     {
-      "source": "docs_social_pricing_model_cardless_pricing_consent_and_recovery",
-      "target": "docs_social_pricing_model_annual_prices_and_plan_change_boundaries",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
       "source": "docs_current_development_state_october_11_cardless_candidate",
       "target": "docs_current_development_state_paid_hosting_and_legacy_trial_contract",
       "relation": "conceptually_related_to",
@@ -594155,17 +594501,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_social_pricing_model_cardless_pricing_consent_and_recovery",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/social-pricing-model.md",
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
@@ -594986,7 +595321,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596113,6 +596448,705 @@
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalselection",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_billing_client_cardlessrenewalcontext",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_billingworkspace",
+      "target": "apps_web_app_account_billing_billing_client_cardlessrenewalcontext",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L197",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalselection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalselection",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_selectproyearly",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L197",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_assertproyearlyselection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L213",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_proyearlyquote",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L226",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_selectproyearly",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L257",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_assertproyearlyselection",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L281",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_social_pricing_model_document",
+      "target": "docs_social_pricing_model_cardless_trial",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_stripe_trial_schedule",
+      "target": "docs_social_pricing_model_cardless_trial",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_cardless_trial",
+      "target": "docs_social_pricing_model_renewal_consent",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_verified_setupintent",
+      "target": "docs_social_pricing_model_renewal_consent",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_quote_revalidation",
+      "target": "docs_social_pricing_model_renewal_quote_id",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_quote_revalidation",
+      "target": "docs_social_pricing_model_renewal_consent",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_billing_selection_memory",
+      "target": "docs_social_pricing_model_quote_revalidation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_payment_setup_timer",
+      "target": "docs_social_pricing_model_quote_revalidation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_payment_setup_timer",
+      "target": "docs_social_pricing_model_verified_setupintent",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_cardless_trial",
+      "target": "docs_social_pricing_model_invoice_accounting",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_cardless_trial",
+      "target": "docs_social_pricing_model_trial_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_trial_recovery",
+      "target": "docs_social_pricing_model_cardless_trial_runbook",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_cardless_trial",
+      "target": "docs_social_pricing_model_cardless_trial_design",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_trial_acceptance_stages",
+      "target": "docs_social_pricing_model_cardless_trial_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_cardless_trial",
+      "target": "docs_social_pricing_model_trial_acceptance_stages",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_cardless_trial",
+      "target": "docs_social_pricing_model_unchanged_legacy_entitlements",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_document",
+      "target": "docs_social_pricing_model_annual_billing",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_annual_billing",
+      "target": "docs_social_pricing_model_annual_billing_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_document",
+      "target": "docs_social_pricing_model_paid_hosting_transition",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_document",
+      "target": "docs_social_pricing_model_historical_pricing_candidate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_personal_history_release_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_personal_history_specification",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_personal_history_plan",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_shared_site_policy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_media_acceptance_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_free_plan",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_plus_plan",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_pro_plan",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_annual_billing",
+      "target": "docs_social_pricing_model_plus_plan",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_annual_billing",
+      "target": "docs_social_pricing_model_pro_plan",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_free_plan",
+      "target": "docs_social_pricing_model_free_hosting_quota",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_free_plan",
+      "target": "docs_social_pricing_model_free_history_privacy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_free_hosting_quota",
+      "target": "docs_social_pricing_model_guest_hosting_access",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_entitlement_ownership",
+      "target": "docs_social_pricing_model_guest_hosting_access",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_entitlement_ownership",
+      "target": "docs_social_pricing_model_personal_watch_history",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_entitlement_ownership",
+      "target": "docs_social_pricing_model_media_publication_limits",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_plus_plan",
+      "target": "docs_social_pricing_model_personal_watch_history",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_pro_plan",
+      "target": "docs_social_pricing_model_personal_watch_history",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_personal_watch_history",
+      "target": "docs_social_pricing_model_personal_invitation_groups",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_free_history_privacy",
+      "target": "docs_social_pricing_model_recent_people",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_platform_and_social_access",
+      "target": "docs_social_pricing_model_recent_people",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_personal_watch_history",
+      "target": "docs_social_pricing_model_history_retention_d01",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_personal_watch_history",
+      "target": "docs_social_pricing_model_history_capacity",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_history_capacity",
+      "target": "docs_social_pricing_model_history_capacity_contract",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_history_capacity",
+      "target": "docs_social_pricing_model_history_retention_d01",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_history_retention_d01",
+      "target": "docs_social_pricing_model_free_plan",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_history_retention_d01",
+      "target": "docs_social_pricing_model_free_history_privacy",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_accepted_behavior_decisions_d02_d05",
+      "target": "docs_social_pricing_model_personal_history_specification",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_accepted_behavior_decisions_d02_d05",
+      "target": "docs_social_pricing_model_media_publication_limits",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_accepted_behavior_decisions_d02_d05",
+      "target": "docs_social_pricing_model_personal_watch_history",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_media_acceptance_gate",
+      "target": "docs_social_pricing_model_media_publication_limits",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_media_acceptance_gate",
+      "target": "docs_social_pricing_model_shared_site_policy",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_historical_pricing_candidate",
+      "target": "docs_social_pricing_model_unchanged_legacy_entitlements",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_social_pricing_model_unchanged_legacy_entitlements",
+      "target": "docs_social_pricing_model_personal_invitation_groups",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
     }
   ],
   "hyperedges": [
@@ -597113,6 +598147,55 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_shared_plan_access",
+      "label": "Free, Plus, and Pro share platform and social access",
+      "nodes": [
+        "docs_social_pricing_model_free_plan",
+        "docs_social_pricing_model_plus_plan",
+        "docs_social_pricing_model_pro_plan",
+        "docs_social_pricing_model_platform_and_social_access"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_independent_room_and_history_rights",
+      "label": "Room rights and personal-history rights use independent plan ownership",
+      "nodes": [
+        "docs_social_pricing_model_entitlement_ownership",
+        "docs_social_pricing_model_media_publication_limits",
+        "docs_social_pricing_model_free_hosting_quota",
+        "docs_social_pricing_model_guest_hosting_access",
+        "docs_social_pricing_model_personal_watch_history",
+        "docs_social_pricing_model_free_history_privacy"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_social_pricing_model_verified_billing_renewal_flow",
+      "label": "Billing preserves selection while revalidating terms and completing explicitly authorized payment setup",
+      "nodes": [
+        "docs_social_pricing_model_billing_selection_memory",
+        "docs_social_pricing_model_renewal_quote_id",
+        "docs_social_pricing_model_quote_revalidation",
+        "docs_social_pricing_model_renewal_consent",
+        "docs_social_pricing_model_verified_setupintent",
+        "docs_social_pricing_model_payment_setup_timer"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/social-pricing-model.md",
       "_origin": "semantic"
     }
   ],

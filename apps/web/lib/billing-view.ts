@@ -13,6 +13,8 @@ export type BillingTrial = {
 	renewalState?: "not_enabled" | "pending" | "enabled";
 	// Confirmed state stays visible while a newer change is unresolved.
 	renewalEnabled?: boolean;
+	// Latest owned, unexpired quote; read-only confirmation for retained UI terms.
+	renewalQuoteId?: string;
 	pendingRenewal?: {
 		id: string;
 		action: "enable" | "cancel";
