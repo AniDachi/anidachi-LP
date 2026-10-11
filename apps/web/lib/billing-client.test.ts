@@ -193,6 +193,251 @@ test("cardless billing reviews exact renewal terms before explicitly opening car
 	assert.equal(window.location.href, "https://checkout.stripe.com/setup-card");
 });
 
+async function selectProYearly() {
+	await act(async () => {
+		const plan = container.querySelector<HTMLSelectElement>(
+			'[aria-label="Renewal plan"]',
+		)!;
+		plan.value = "pro";
+		plan.dispatchEvent(new Event("change", { bubbles: true }));
+	});
+	await act(async () => {
+		const period = container.querySelector<HTMLSelectElement>(
+			'[aria-label="Renewal billing period"]',
+		)!;
+		period.value = "yearly";
+		period.dispatchEvent(new Event("change", { bubbles: true }));
+	});
+}
+function assertProYearlySelection() {
+	assert.equal(
+		container.querySelector<HTMLSelectElement>('[aria-label="Renewal plan"]')
+			?.value,
+		"pro",
+	);
+	assert.equal(
+		container.querySelector<HTMLSelectElement>(
+			'[aria-label="Renewal billing period"]',
+		)?.value,
+		"yearly",
+	);
+}
+const proYearlyQuote = {
+	...renewalQuote,
+	planCode: "pro",
+	billingPeriod: "yearly",
+	amount: 14390,
+};
+
+for (const trigger of ["timer", "tab", "refresh"] as const) {
+	test(
+		"renewal draft and reviewed terms survive same-account " +
+			trigger +
+			" refresh",
+		async (t) => {
+			t.mock.timers.enable({
+				apis: ["setTimeout", "Date"],
+				now: Date.parse(cardless.serverTime!),
+			});
+			let finishRead: ((response: Response) => void) | undefined;
+			globalThis.fetch = async (path, init) => {
+				if (String(path).endsWith("/quote")) {
+					assert.deepEqual(JSON.parse(String(init?.body)), {
+						planCode: "pro",
+						billingPeriod: "yearly",
+					});
+					return Response.json(proYearlyQuote);
+				}
+				return new Promise((resolve) => {
+					finishRead = resolve;
+				});
+			};
+			await mount(false, { overview: cardless, remainingMs: 60_000 });
+			await selectProYearly();
+			await act(async () => trialButton(/^Review renewal$/).click());
+			assert.match(
+				container.querySelector('[aria-label="Review renewal terms"]')
+					?.textContent ?? "",
+				/143\.90\/year/,
+			);
+			await act(async () => {
+				if (trigger === "timer") t.mock.timers.tick(60_000);
+				else if (trigger === "tab") {
+					window.dispatchEvent(new Event("blur"));
+					window.dispatchEvent(new Event("focus"));
+				} else trialButton(/^Refresh status$/).click();
+			});
+			assert.equal(
+				container.querySelector('[aria-label="Review renewal terms"]'),
+				null,
+			);
+			assert.ok(finishRead);
+			await act(async () =>
+				finishRead!(
+					Response.json({ ...cardless, serverTime: "2030-01-01T00:01:00Z" }),
+				),
+			);
+			assertProYearlySelection();
+			assert.match(
+				container.querySelector('[aria-label="Review renewal terms"]')
+					?.textContent ?? "",
+				/143\.90\/year/,
+			);
+		},
+	);
+}
+
+for (const action of ["quote", "setup"] as const) {
+	test(
+		"billing display expiry does not discard an in-flight renewal " + action,
+		async (t) => {
+			t.mock.timers.enable({
+				apis: ["setTimeout", "Date"],
+				now: Date.parse(cardless.serverTime!),
+			});
+			let finishAction!: (response: Response) => void;
+			let reads = 0;
+			globalThis.fetch = async (path) => {
+				if (String(path).endsWith("/" + action))
+					return new Promise((resolve) => {
+						finishAction = resolve;
+					});
+				if (String(path).endsWith("/quote"))
+					return Response.json(proYearlyQuote);
+				reads++;
+				return Response.json({
+					...cardless,
+					serverTime: "2030-01-01T00:01:00Z",
+				});
+			};
+			await mount(false, { overview: cardless, remainingMs: 60_000 });
+			await selectProYearly();
+			await act(async () => trialButton(/^Review renewal$/).click());
+			if (action === "setup")
+				await act(async () => trialButton(/Add card.*enable renewal/i).click());
+			await act(async () => t.mock.timers.tick(60_000));
+			assert.doesNotMatch(
+				container.textContent!,
+				/Free trial|Add card.*enable renewal/i,
+			);
+			assert.equal(
+				reads,
+				0,
+				"expiry must retire claims without interrupting the user's request",
+			);
+			await act(async () =>
+				finishAction(
+					Response.json(
+						action === "quote"
+							? proYearlyQuote
+							: {
+									state: "setup",
+									ownerUserId: "owner",
+									url: "https://checkout.stripe.com/setup-card",
+								},
+					),
+				),
+			);
+			if (action === "setup")
+				assert.equal(
+					window.location.href,
+					"https://checkout.stripe.com/setup-card",
+				);
+			else {
+				assertProYearlySelection();
+				assert.match(
+					container.querySelector('[aria-label="Review renewal terms"]')
+						?.textContent ?? "",
+					/143\.90\/year/,
+				);
+			}
+		},
+	);
+}
+
+for (const reason of [
+	"quote expired",
+	"renewal changed",
+	"different subscription",
+	"trial ended",
+] as const) {
+	test("refresh discards reviewed renewal terms when " + reason, async () => {
+		let refreshed = cardless;
+		globalThis.fetch = async (path) =>
+			Response.json(
+				String(path).endsWith("/quote") ? proYearlyQuote : refreshed,
+			);
+		await mount();
+		await selectProYearly();
+		await act(async () => trialButton(/^Review renewal$/).click());
+		refreshed = {
+			...cardless,
+			serverTime:
+				reason === "quote expired"
+					? "2030-01-01T00:06:00Z"
+					: reason === "trial ended"
+						? "2030-01-05T00:00:00Z"
+						: cardless.serverTime,
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					id:
+						reason === "different subscription"
+							? "replacement-sub"
+							: "local-sub",
+					trial: {
+						...cardless.subscriptions[0].trial!,
+						stage: reason === "trial ended" ? "ended" : "trial",
+						renewalEnabled: reason === "renewal changed",
+						renewalState:
+							reason === "renewal changed" ? "enabled" : "not_enabled",
+					},
+				},
+			],
+		};
+		await act(async () => window.dispatchEvent(new Event("focus")));
+		assert.equal(
+			container.querySelector('[aria-label="Review renewal terms"]'),
+			null,
+		);
+		if (reason === "quote expired") assertProYearlySelection();
+		if (reason === "different subscription")
+			assert.equal(
+				container.querySelector<HTMLSelectElement>(
+					'[aria-label="Renewal plan"]',
+				)?.value,
+				"plus",
+			);
+	});
+}
+
+test("an account mismatch clears the renewal draft before any later same-owner recovery", async () => {
+	let readOwner = "owner";
+	globalThis.fetch = async (path) =>
+		Response.json(
+			String(path).endsWith("/quote")
+				? proYearlyQuote
+				: { ...cardless, ownerUserId: readOwner },
+		);
+	await mount();
+	await selectProYearly();
+	await act(async () => trialButton(/^Review renewal$/).click());
+	readOwner = "foreign";
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.equal(container.querySelector('[aria-label="Renewal plan"]'), null);
+	readOwner = "owner";
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.equal(
+		container.querySelector<HTMLSelectElement>('[aria-label="Renewal plan"]')
+			?.value,
+		"plus",
+	);
+	assert.equal(
+		container.querySelector('[aria-label="Review renewal terms"]'),
+		null,
+	);
+});
+
 test("a card setup return after expiry offers an explicit paid path without opening checkout", async () => {
 	const paths: string[] = [];
 	const ended: BillingOverview = {

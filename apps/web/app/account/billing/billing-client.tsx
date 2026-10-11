@@ -38,10 +38,30 @@ import {
 	CardlessTrialControls,
 	type CardlessQuoteView,
 	type CardlessRenewalAction,
+	type CardlessRenewalSelection,
 } from "./cardless-trial-controls";
 import type { ReactNode } from "react";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
+
+// Retain reviewed terms only while the same verified subscription is unchanged.
+function cardlessRenewalContext(subscription: BillingSubscription): string {
+	return JSON.stringify([
+		subscription.id,
+		subscription.planCode,
+		subscription.status,
+		subscription.cancelAtPeriodEnd,
+		subscription.price?.unitAmount,
+		subscription.price?.currency,
+		subscription.price?.billingPeriod,
+		subscription.trial?.mode,
+		subscription.trial?.stage,
+		subscription.trial?.endsAt,
+		subscription.trial?.renewalState,
+		subscription.trial?.renewalEnabled,
+		subscription.trial?.pendingRenewal?.id,
+	]);
+}
 
 function subscriptionPriceLabel(
 	subscription: BillingSubscription,
@@ -93,9 +113,17 @@ function BillingWorkspace({
 		requestId: string;
 	} | null>(null);
 	const actionLock = useRef(false);
-	const [renewalQuote, setRenewalQuote] = useState<CardlessQuoteView | null>(
-		null,
-	);
+	// Draft choices belong to this owner-keyed workspace, not the expiring display.
+	const [renewalSelections, setRenewalSelections] = useState<
+		Record<string, CardlessRenewalSelection>
+	>({});
+	const [renewalQuote, setRenewalQuote] = useState<
+		| (CardlessQuoteView & {
+				subscriptionId: string;
+				context: string;
+		  })
+		| null
+	>(null);
 	const trialAbort = useRef<AbortController | null>(null);
 	const cancelRequestId = useRef<string | null>(null);
 	const displayTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -113,7 +141,6 @@ function BillingWorkspace({
 			setBusy(true);
 			if (refresh || Date.now() >= validUntil.current) setOverview(null);
 			setPlanQuote(null);
-			setRenewalQuote(null);
 			setError(null);
 			setNotice(null);
 			try {
@@ -140,13 +167,42 @@ function BillingWorkspace({
 					billingDisplayValidityMs(result) - (Date.now() - started);
 				if (!(remaining > 0))
 					throw new Error("Subscription status expired. Please refresh.");
+				setRenewalSelections((previous) =>
+					Object.fromEntries(
+						result.subscriptions
+							.filter(
+								(s) =>
+									s.trial?.mode === "cardless" &&
+									s.trial.stage === "trial" &&
+									previous[s.id],
+							)
+							.map((s) => [s.id, previous[s.id]]),
+					),
+				);
+				setRenewalQuote((previous) => {
+					if (!previous) return null;
+					const subscription = result.subscriptions.find(
+						(s) => s.id === previous.subscriptionId,
+					);
+					const serverNow =
+						Date.parse(result.serverTime ?? "") + (Date.now() - started);
+					return subscription?.trial?.mode === "cardless" &&
+						subscription.trial.stage === "trial" &&
+						!subscription.trial.pendingRenewal &&
+						cardlessRenewalContext(subscription) === previous.context &&
+						Date.parse(previous.quote.expiresAt) > serverNow &&
+						Date.parse(previous.quote.firstChargeAt) ===
+							Date.parse(subscription.trial.endsAt)
+						? previous
+						: null;
+				});
 				setOverview(result);
 				validUntil.current = Date.now() + remaining;
 				clearTimeout(displayTimer.current);
 				displayTimer.current = setTimeout(() => {
 					validUntil.current = 0;
 					setOverview(null);
-					void load(false);
+					if (!trialAbort.current) void load(false);
 				}, remaining);
 				if (refresh) setNotice("Subscription status updated.");
 			} catch (failure) {
@@ -157,6 +213,8 @@ function BillingWorkspace({
 				) {
 					validUntil.current = 0;
 					setOverview(null);
+					setRenewalSelections({});
+					setRenewalQuote(null);
 				}
 				setError(
 					failure instanceof Error
@@ -179,7 +237,7 @@ function BillingWorkspace({
 			displayTimer.current = setTimeout(() => {
 				validUntil.current = 0;
 				setOverview(null);
-				void load(false);
+				if (!trialAbort.current) void load(false);
 			}, remaining);
 		} else void load(returnedFromPortal, true);
 		const onFocus = () => {
@@ -190,7 +248,7 @@ function BillingWorkspace({
 			trialAbort.current?.abort();
 			trialAbort.current = null;
 			actionLock.current = false;
-			setRenewalQuote(null);
+			clearTimeout(displayTimer.current);
 			setPlanQuote(null);
 			setBusy(false);
 			validUntil.current = 0;
@@ -215,7 +273,11 @@ function BillingWorkspace({
 	}, [load, returnedFromPortal, snapshot]);
 
 	const trialAction = useCallback(
-		async (action: CardlessRenewalAction, input: Record<string, unknown>) => {
+		async (
+			action: CardlessRenewalAction,
+			input: Record<string, unknown>,
+			subscription?: BillingSubscription,
+		) => {
 			if (actionLock.current) return;
 			actionLock.current = true;
 			const current = ++version.current;
@@ -235,6 +297,9 @@ function BillingWorkspace({
 				if (current !== version.current || abort.signal.aborted) return;
 				if (result.state === "quoted") {
 					if (
+						!subscription ||
+						result.planCode !== input.planCode ||
+						result.billingPeriod !== input.billingPeriod ||
 						!result.id ||
 						!Number.isFinite(result.amount) ||
 						result.amount <= 0 ||
@@ -245,7 +310,12 @@ function BillingWorkspace({
 						throw new Error(
 							"Renewal terms could not be confirmed. Please review them again.",
 						);
-					setRenewalQuote({ quote: result, requestId: crypto.randomUUID() });
+					setRenewalQuote({
+						quote: result,
+						requestId: crypto.randomUUID(),
+						subscriptionId: subscription.id,
+						context: cardlessRenewalContext(subscription),
+					});
 				} else if (result.state === "setup") {
 					window.location.assign(secureTrialSetupUrl(result.url));
 				} else {
@@ -280,7 +350,10 @@ function BillingWorkspace({
 				if (trialAbort.current === abort) {
 					trialAbort.current = null;
 					actionLock.current = false;
-					if (current === version.current) setBusy(false);
+					if (current === version.current) {
+						setBusy(false);
+						if (Date.now() >= validUntil.current) void load(false);
+					}
 				}
 			}
 		},
@@ -419,8 +492,24 @@ function BillingWorkspace({
 					key={subscription.id}
 					subscription={subscription}
 					busy={busy}
-					quote={renewalQuote}
-					onAction={trialAction}
+					selection={
+						renewalSelections[subscription.id] ?? {
+							planCode: subscription.planCode === "pro" ? "pro" : "plus",
+							billingPeriod: subscription.price?.billingPeriod ?? "monthly",
+						}
+					}
+					onSelectionChange={(selection) =>
+						setRenewalSelections((previous) => ({
+							...previous,
+							[subscription.id]: selection,
+						}))
+					}
+					quote={
+						renewalQuote?.subscriptionId === subscription.id
+							? renewalQuote
+							: null
+					}
+					onAction={(action, input) => trialAction(action, input, subscription)}
 					onDismiss={() => setRenewalQuote(null)}
 				/>
 			)}

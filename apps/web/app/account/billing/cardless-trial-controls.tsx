@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
 	billingPeriodUnit,
 	formatBillingTime,
@@ -12,16 +11,24 @@ import type { TrialRenewalQuote } from "@/lib/anidachi-auth/trial-renewal";
 
 export type CardlessRenewalAction = "quote" | "setup" | "complete" | "cancel";
 export type CardlessQuoteView = { quote: TrialRenewalQuote; requestId: string };
+export type CardlessRenewalSelection = {
+	planCode: "plus" | "pro";
+	billingPeriod: BillingPeriod;
+};
 
 /** Uses the same controls in billing and the local preview. All writes belong to the caller. */
 export function CardlessTrialControls({
 	subscription,
+	selection,
+	onSelectionChange,
 	busy,
 	quote,
 	onAction,
 	onDismiss,
 }: {
 	subscription: BillingSubscription;
+	selection: CardlessRenewalSelection;
+	onSelectionChange: (selection: CardlessRenewalSelection) => void;
 	busy: boolean;
 	quote: CardlessQuoteView | null;
 	onAction: (
@@ -30,12 +37,7 @@ export function CardlessTrialControls({
 	) => Promise<void>;
 	onDismiss: () => void;
 }) {
-	const [planCode, setPlan] = useState(
-		subscription.planCode === "pro" ? "pro" : "plus",
-	);
-	const [billingPeriod, setPeriod] = useState<BillingPeriod>(
-		subscription.price?.billingPeriod ?? "monthly",
-	);
+	const { planCode, billingPeriod } = selection;
 	const trial = subscription.trial;
 	if (
 		!trial ||
@@ -115,7 +117,10 @@ export function CardlessTrialControls({
 								value={planCode}
 								disabled={busy}
 								onChange={(e) => {
-									setPlan(e.target.value);
+									onSelectionChange({
+										...selection,
+										planCode: e.target.value === "pro" ? "pro" : "plus",
+									});
 									onDismiss();
 								}}
 							>
@@ -130,7 +135,10 @@ export function CardlessTrialControls({
 								value={billingPeriod}
 								disabled={busy}
 								onChange={(e) => {
-									setPeriod(e.target.value as BillingPeriod);
+									onSelectionChange({
+										...selection,
+										billingPeriod: e.target.value as BillingPeriod,
+									});
 									onDismiss();
 								}}
 							>

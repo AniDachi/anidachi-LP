@@ -8,6 +8,7 @@ import type { BillingOverview } from "@/lib/billing-view";
 import {
 	CardlessTrialControls,
 	type CardlessQuoteView,
+	type CardlessRenewalSelection,
 	type CardlessRenewalAction,
 } from "../../account/billing/cardless-trial-controls";
 import { PUBLISHED_PRICING } from "@/lib/pricing-tiers";
@@ -47,6 +48,10 @@ export function BillingPreview() {
 	const [notice, setNotice] = useState<string | null>(null);
 	const [variant, setVariant] = useState("Card trial");
 	const [quote, setQuote] = useState<CardlessQuoteView | null>(null);
+	const [selection, setSelection] = useState<CardlessRenewalSelection>({
+		planCode: "plus",
+		billingPeriod: "monthly",
+	});
 	const isCardless = variant !== "Card trial";
 	const enabled = variant === "Renewal enabled";
 	const ended = variant === "Trial ended";
@@ -164,6 +169,8 @@ export function BillingPreview() {
 								subscription={s}
 								busy={false}
 								quote={quote}
+								selection={selection}
+								onSelectionChange={setSelection}
 								onAction={previewRenewal}
 								onDismiss={() => setQuote(null)}
 							/>
