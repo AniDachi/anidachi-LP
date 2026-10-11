@@ -1,7 +1,8 @@
 # Cardless trial: acceptance evidence
 
-Date: 2026-10-11. Status: **Stripe Schedule capability checks passed.
-Product implementation and staging acceptance are still pending. No rollout.**
+Date: 2026-10-11. Status: **Stripe Schedule capability checks and local storage /
+refresh checks passed. Start/renewal services, UI and staging acceptance remain
+pending. No rollout.**
 
 - [Design](../specs/2026-10-11-cardless-trial-design.md)
 - [Implementation plan](2026-10-11-cardless-trial.md)
@@ -31,10 +32,10 @@ The connector schema (`2026-09-30.preview`) is not used as pinned-version proof.
 No live billing calls or settings changes were performed.
 
 - Ten guard/transport tests: RED observed for new behavior, then GREEN.
-- Web TypeScript check: passed, including both sandbox scripts.
-- Existing full web suite: 986 tests, 980 passed, six skipped, zero failures.
-  The suite ran before the scripts-only CLI/Portal additions; no product code
-  changed afterwards. Scripts have their separate explicit test command below.
+- At the Task 0 checkpoint, TypeScript passed including all three proof scripts.
+- Task 0 baseline web suite: 986 tests, 980 passed, six skipped, zero failures.
+  Task 1 product changes and their newer results are recorded separately below.
+  Scripts have their separate explicit test command below.
 
 ```sh
 pnpm --filter @anidachi/web exec tsx --test \
@@ -253,3 +254,49 @@ subscriptions, shared Portal settings, product runtime, migrations, flags,
 extension builds and deployments remain unchanged. The original extension
 checkout is preserved. The Stripe capability gate is satisfied; Tasks 1 onward
 implement and prove the application contract before any release decision.
+
+
+## Task 1: local database and common refresh
+
+Local only, based on Task 0 commit `8048e631`. Migration
+`20261011124600_cardless_subscription_trials.sql` adds a disabled policy flag,
+activation/consent records, immutable provenance and service-role-only RPCs.
+The existing Checkout shares account serialization through an insert guard.
+Uncertain external mutations remain durable; age/flag-off never releases them.
+New cancellation generations fence old completion callbacks. An unresolved
+external mutation must reconcile before the next one can reserve authority.
+
+Verified on PostgreSQL 17.6 from cached Supabase image `17.6.1.156`, new container
+`anidachi-paid-hosting-cardless-db-v2-20261011` in local context
+`colima-anidachi-personal-mvp`, labels disposable/paid-hosting, network `none`,
+no published ports. Existing containers/data were not used for these tests.
+No hosted schema or billing policy was changed.
+
+- Existing ordered migration replay and populated canonical-data preservation passed.
+- New SQL RED: missing policy column, before migration implementation. GREEN:
+  cardless **57**, legacy trials **36**, eligibility **27**, Checkout reservations
+  **14**, legacy lifecycle **15**, room admission **22**: **171 assertions**.
+- New-account Customer race: RED on the initial required Customer, then GREEN.
+  Account reservation now precedes external Customer creation; owner-fenced binding
+  persists the same mapping on replay and rejects another owner or missing Customer.
+- Real concurrent service-role transactions for old Checkout / Plus / Pro yield
+  one durable creation authority. Both reservation orderings are also checked.
+- New snapshot/refresh tests: **8 RED -> 8 GREEN**. Focused refresh suites **30/30**.
+  Checks cover missing/wrong activation, owner/customer/subscription/dates, fresh
+  schedule reads, completed/released schedule identity and zero paid invoices.
+- Full web suite **994 total: 988 passed, 6 existing skips, 0 failures**; TypeScript passed.
+- SQL covers exact trial expiry without consent, confirmed renewal waiting limit,
+  decline/3DS/retry, monotonic paid state, canceled stale setup, ordinary later
+  paid checkout, legacy defaults and manual grants. Migration preserves populated
+  users/subscriptions/history/customer mappings/fences; no data backfill is done.
+
+The common refresh still uses the original lease and fresh reads. Cardless writes
+use v3 and require the stored activation plus verified Schedule identity. Legacy
+writes retain v2; v2 rejects cardless provenance. After automatic release, the
+Schedule's `released_subscription` is used, verified read-only against our owned
+sandbox fixtures. A canceled Schedule with no subscription link is accepted only
+for an already-recorded matching canceled subscription; it cannot grant access.
+
+This is storage/refresh evidence, not full application or staging acceptance.
+Start/renewal endpoints, recovery orchestration, anti-abuse guards, UI, webhook
+integration and analytics remain Tasks 2–5; production remains unapproved.

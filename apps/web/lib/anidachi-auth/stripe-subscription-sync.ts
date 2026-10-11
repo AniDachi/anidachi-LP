@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import {
 	beginStripeSubscriptionRefresh,
 	commitStripeSubscriptionRefresh,
+	getCardlessTrialActivation,
 	getSubscriptionOwner,
 	getSubscriptionTrial,
 	getUserIdByStripeCustomerId,
@@ -17,6 +18,7 @@ import {
 	stripeSubscriptionCancellationScheduled,
 } from "./stripe-plans";
 import {
+	type CardlessTrialActivationRecord,
 	resolveStripeTrialSnapshot,
 	type SubscriptionTrialRecord,
 } from "./stripe-trial-state";
@@ -75,6 +77,9 @@ export function resolveStripeSubscriptionPlan(
 }
 
 export type SyncStripeSubscriptionDeps = {
+	readTrialActivation?: (
+		activationId: string,
+	) => Promise<CardlessTrialActivationRecord | null>;
 	readTrial?: (
 		subscriptionId: string,
 	) => Promise<SubscriptionTrialRecord | null>;
@@ -152,6 +157,12 @@ export async function syncStripeSubscriptionById(
 			subscription,
 			priorTrial,
 			requestOptions,
+			priorTrial?.trial_activation_id || subscription.metadata.trialActivationId
+				? await (deps.readTrialActivation ?? getCardlessTrialActivation)(
+						priorTrial?.trial_activation_id ??
+							subscription.metadata.trialActivationId,
+					)
+				: null,
 		);
 		const effectivePlan = await (
 			deps.commit ?? commitStripeSubscriptionRefresh

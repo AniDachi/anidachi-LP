@@ -523,12 +523,19 @@ export async function getSubscriptionTrial(
 ): Promise<SubscriptionTrialRecord | null> {
 	const { data, error } = await db()
 		.from("account_subscription_trials")
-		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at")
+		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at,trial_mode,trial_activation_id,stripe_schedule_id,renewal_operation_id")
 		.eq("stripe_subscription_id", subscriptionId)
 		.abortSignal(AbortSignal.timeout(10_000))
 		.maybeSingle();
 	if (error) throw new Error("Trial ledger unavailable");
 	return data as SubscriptionTrialRecord | null;
+}
+export async function getCardlessTrialActivation(activationId: string): Promise<import("./stripe-trial-state").CardlessTrialActivationRecord | null> {
+	const { data, error } = await db().from("subscription_trial_activations")
+		.select("id,user_id,state,stripe_customer_id,stripe_schedule_id,stripe_subscription_id,trial_started_at,trial_ends_at")
+		.eq("id", activationId).abortSignal(AbortSignal.timeout(10_000)).maybeSingle();
+	if (error) throw new Error("Trial activation unavailable");
+	return data;
 }
 export async function beginStripeSubscriptionRefresh(
 	subscriptionId: string,
@@ -566,7 +573,7 @@ export async function commitStripeSubscriptionRefresh(
 	lease: StripeRefreshLease,
 ): Promise<PlanCode> {
 	const { data, error } = await db()
-		.rpc("commit_stripe_subscription_refresh_v2", {
+		.rpc(params.trial?.trialMode === "cardless" ? "commit_stripe_subscription_refresh_v3" : "commit_stripe_subscription_refresh_v2", {
 			p_subscription_id: params.stripeSubscriptionId,
 			p_fence: lease.fence,
 			p_token: lease.token,

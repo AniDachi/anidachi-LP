@@ -1038,8 +1038,8 @@
         "label": "Task 0 Evidence Separation",
         "nodes": [
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
-          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_anidachi_sandbox_connection",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_schedule_capability_case_matrix",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate"
         ],
@@ -13035,7 +13035,7 @@
       "file_type": "code",
       "norm_label": "stripesubscriptionsyncerror",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L24"
+      "source_location": "L26"
     },
     {
       "id": "apps_web_scripts_stripe_ensure_subscription_prices_subscriptionplanconfig",
@@ -13910,7 +13910,7 @@
       "file_type": "code",
       "norm_label": "stripesubscriptionsyncresult",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L36"
+      "source_location": "L38"
     },
     {
       "id": "apps_web_lib_billing_view_billingoverview",
@@ -14947,7 +14947,7 @@
       "file_type": "code",
       "norm_label": "activeroomclaimresult",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L621"
+      "source_location": "L628"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_activeroomcreateresult",
@@ -14960,7 +14960,7 @@
       "file_type": "code",
       "norm_label": "activeroomcreateresult",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L614"
+      "source_location": "L621"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_activeroomsummary",
@@ -14973,7 +14973,7 @@
       "file_type": "code",
       "norm_label": "activeroomsummary",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L612"
+      "source_location": "L619"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_billingcustomerrow",
@@ -15181,7 +15181,7 @@
       "file_type": "code",
       "norm_label": "stripesubscriptionplanresolution",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L31"
+      "source_location": "L33"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_syncstripesubscriptiondeps",
@@ -15194,7 +15194,7 @@
       "file_type": "code",
       "norm_label": "syncstripesubscriptiondeps",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L77"
+      "source_location": "L79"
     },
     {
       "id": "packages_protocol_src_source_url_roomsourceprovider",
@@ -27499,7 +27499,7 @@
       "file_type": "code",
       "norm_label": "claimactiveroomsession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L678"
+      "source_location": "L685"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_createroomwithactivesession",
@@ -27511,7 +27511,7 @@
       "file_type": "code",
       "norm_label": "createroomwithactivesession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L625"
+      "source_location": "L632"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getpersonalhistorypolicyactive",
@@ -27523,7 +27523,7 @@
       "file_type": "code",
       "norm_label": "getpersonalhistorypolicyactive()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L966"
+      "source_location": "L973"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getusagesecondsforday",
@@ -27535,7 +27535,7 @@
       "file_type": "code",
       "norm_label": "getusagesecondsforday()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L906"
+      "source_location": "L913"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_renewroommedialease",
@@ -27547,7 +27547,7 @@
       "file_type": "code",
       "norm_label": "renewroommedialease()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L977"
+      "source_location": "L984"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_resolvewatchhistoryaccess",
@@ -27571,7 +27571,7 @@
       "file_type": "code",
       "norm_label": "roomcapabilitiesfromroom()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L822"
+      "source_location": "L829"
     },
     {
       "id": "apps_web_lib_anidachi_auth_device_push_revokedevicepushsubscription",
@@ -48193,7 +48193,7 @@
       "file_type": "code",
       "norm_label": "listroommembers()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L954"
+      "source_location": "L961"
     },
     {
       "id": "apps_web_lib_anidachi_auth_plan_entitlements_getlegacywatchlibraryentitlements",
@@ -64406,7 +64406,7 @@
       "file_type": "code",
       "norm_label": "commitroomusageday()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L984"
+      "source_location": "L991"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_endhostlobbyforactivesession",
@@ -64418,7 +64418,7 @@
       "file_type": "code",
       "norm_label": "endhostlobbyforactivesession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L734"
+      "source_location": "L741"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_finalizeroomusage",
@@ -64430,7 +64430,7 @@
       "file_type": "code",
       "norm_label": "finalizeroomusage()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L868"
+      "source_location": "L875"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getactiveroomsessionassignment",
@@ -64442,7 +64442,7 @@
       "file_type": "code",
       "norm_label": "getactiveroomsessionassignment()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L720"
+      "source_location": "L727"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_releaseactiveroomsession",
@@ -64454,7 +64454,7 @@
       "file_type": "code",
       "norm_label": "releaseactiveroomsession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L704"
+      "source_location": "L711"
     },
     {
       "id": "apps_web_lib_anidachi_auth_room_lifecycle_completehostroomend",
@@ -65628,7 +65628,7 @@
       "file_type": "code",
       "norm_label": "invoicesubscriptionid()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L194"
+      "source_location": "L205"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_resolvestripesubscriptionplan",
@@ -65640,7 +65640,7 @@
       "file_type": "code",
       "norm_label": "resolvestripesubscriptionplan()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L63"
+      "source_location": "L65"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_stripecustomeridfrom",
@@ -65652,7 +65652,7 @@
       "file_type": "code",
       "norm_label": "stripecustomeridfrom()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L46"
+      "source_location": "L48"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_stripesubscriptionidfromunknown",
@@ -65664,7 +65664,7 @@
       "file_type": "code",
       "norm_label": "stripesubscriptionidfromunknown()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L53"
+      "source_location": "L55"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_stripesubscriptionsyncerror_constructor",
@@ -65676,7 +65676,7 @@
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L25"
+      "source_location": "L27"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_syncstripesubscriptionbyid",
@@ -65688,7 +65688,7 @@
       "file_type": "code",
       "norm_label": "syncstripesubscriptionbyid()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L96"
+      "source_location": "L101"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_subscription_sync_test_fakestripe",
@@ -68012,7 +68012,7 @@
       "file_type": "code",
       "norm_label": "listsubscriptionsforuser()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L599"
+      "source_location": "L606"
     },
     {
       "id": "apps_web_lib_billing_client_test_mount",
@@ -72510,7 +72510,7 @@
       "file_type": "code",
       "norm_label": "addroommember()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L920"
+      "source_location": "L927"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_beginstripesubscriptionrefresh",
@@ -72522,7 +72522,7 @@
       "file_type": "code",
       "norm_label": "beginstripesubscriptionrefresh()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L533"
+      "source_location": "L540"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_commitstripesubscriptionrefresh",
@@ -72534,7 +72534,7 @@
       "file_type": "code",
       "norm_label": "commitstripesubscriptionrefresh()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L564"
+      "source_location": "L571"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_createrefreshtokenfamily",
@@ -72558,7 +72558,7 @@
       "file_type": "code",
       "norm_label": "createroom()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L758"
+      "source_location": "L765"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_databaseresultorthrow",
@@ -72582,7 +72582,7 @@
       "file_type": "code",
       "norm_label": "getactiveroombyclientrequestid()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L832"
+      "source_location": "L839"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getroombyid",
@@ -72594,7 +72594,7 @@
       "file_type": "code",
       "norm_label": "getroombyid()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L895"
+      "source_location": "L902"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getroommembercount",
@@ -72606,7 +72606,7 @@
       "file_type": "code",
       "norm_label": "getroommembercount()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L946"
+      "source_location": "L953"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getsubscriptionowner",
@@ -72618,7 +72618,7 @@
       "file_type": "code",
       "norm_label": "getsubscriptionowner()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L587"
+      "source_location": "L594"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getsupabaseserviceclient",
@@ -72690,7 +72690,7 @@
       "file_type": "code",
       "norm_label": "isroommember()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L933"
+      "source_location": "L940"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_isuuid",
@@ -72738,7 +72738,7 @@
       "file_type": "code",
       "norm_label": "persistroomsource()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L806"
+      "source_location": "L813"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_releasestripesubscriptionrefresh",
@@ -72750,7 +72750,7 @@
       "file_type": "code",
       "norm_label": "releasestripesubscriptionrefresh()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L551"
+      "source_location": "L558"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_resolverefreshtokenfamily",
@@ -72810,7 +72810,7 @@
       "file_type": "code",
       "norm_label": "updateroom()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L846"
+      "source_location": "L853"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_upsertuser",
@@ -160770,7 +160770,7 @@
       "file_type": "code",
       "norm_label": "resolvestripetrialsnapshot()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L20"
+      "source_location": "L39"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_trial_state_resolvestripetrialsnapshot_verifyinvoice",
@@ -160782,7 +160782,7 @@
       "file_type": "code",
       "norm_label": "verifyinvoice()",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L61"
+      "source_location": "L151"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_trial_state_stripetrialsnapshot",
@@ -160795,7 +160795,7 @@
       "file_type": "code",
       "norm_label": "stripetrialsnapshot",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L12"
+      "source_location": "L26"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_trial_state_subscriptiontrialrecord",
@@ -160808,7 +160808,7 @@
       "file_type": "code",
       "norm_label": "subscriptiontrialrecord",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L3"
+      "source_location": "L13"
     },
     {
       "id": "apps_web_lib_anidachi_auth_stripe_trial_state_test",
@@ -190564,8 +190564,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_stripe_capabilities_passed_product_not_implemented_or_enabled",
-      "description": "Design dated 2026-10-11; owner approved implementation and continuing native Subscription Schedule proof after the differences were explained. Stripe capability checks passed, while product logic is not implemented or enabled. The selected mechanism is a three-day all-trial Schedule defaulting to cancel. Acceptance records exact proof limits. Source/Sandbox evidence is not production verification and conversion improvement remains a hypothesis. Existing auth, CSRF, owner fencing, server-only RPC, verified email and account limits remain required; no new device/card fingerprinting. Account deletion still cascades the trial ledger, so one lifetime trial per human is not guaranteed.",
+      "status": "stripe_capabilities_and_local_storage_refresh_passed_full_flow_pending",
+      "description": "Design dated 2026-10-11; owner approved implementation and native Schedule proof after explanation. Stripe capabilities passed and storage/common refresh are implemented locally; complete product flow is unfinished and disabled everywhere. The selected mechanism is a three-day all-trial Schedule defaulting to cancel. Acceptance separates Stripe, local storage/refresh and still-required application/staging evidence. Existing auth, CSRF, owner fencing, server-only RPC, verified email and account limits remain required; no new device/card fingerprinting. Account deletion cascades trial ledger, so one lifetime trial per human is not guaranteed. Conversion improvement remains a hypothesis.",
       "_origin": "semantic"
     },
     {
@@ -190608,8 +190608,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "selected_design_product_implementation_pending",
-      "description": "Stripe verifies Subscription and payments; AniDachi must store ownership, one-time eligibility, immutable original dates and consent operations. Proposed ledger trial_mode keeps legacy card_required and links verified cardless renewal. Customer/Schedule/Subscription ownership and dates require verification; metadata alone grants nothing. A Schedule normally has cancel_at=trial_end and cancel_at_period_end=false, so the latter is not renewal consent. No-consent expiry has no two-hour payment wait; applied renewal retains bounded waiting without deadline reset. Hosting loss retains five-minute non-resetting closure and history reads.",
+      "status": "storage_and_refresh_local_complete_end_to_end_flow_pending",
+      "description": "The design stores ownership, one-time eligibility, immutable dates, mode and renewal provenance in AniDachi while Stripe verifies subscriptions/payments. Local storage and common refresh are implemented; full service/application integration remains pending. Legacy mode stays card_required; cardless needs verified activation, Customer/Schedule/Subscription ownership and renewal operation. A Schedule normally has cancel_at=trial_end and cancel_at_period_end=false, which is not consent. No-consent expiry gets no two-hour wait; confirmed renewal has bounded waiting without reset. Hosting closure remains five minutes without reset and history reads remain available.",
       "rationale": "Saved cards, client timers, return URLs and cancel_at_period_end alone cannot establish payment or verified renewal consent.",
       "_origin": "semantic"
     },
@@ -190623,9 +190623,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "selected_design_product_implementation_pending",
-      "description": "Planned activation uses an independent record and account serialization shared with legacy Checkout. A pending legacy result reconciles before another flow. The stable activation key creates a Schedule, with both Schedule and linked Subscription IDs stored and ownership/dates verified. Lost responses or database writes recover the same operation; verified creation consumes eligibility. No blind recreate after Stripe idempotency retention. Disabling starts permits existing recovery.",
-      "rationale": "Schedule feasibility does not prove account-level one-time activation, database concurrency or unknown-outcome recovery; these remain application implementation requirements.",
+      "status": "storage_authority_and_customer_binding_local_verified_services_pending",
+      "description": "The activation design uses durable account reservation shared with legacy Checkout before any external Customer creation for a new account. Customer starts nullable, then an owner-fenced RPC binds the verified ID; replay uses the same key and mapping instead of creating another Customer. Stable Schedule create identity and both Schedule/Subscription IDs persist. Local storage authority is implemented; orchestration must still reconcile legacy sessions and external network/database uncertainty, verify dates and consume eligibility only after verified creation. No blind recreate after Stripe key retention; flag-off permits recovery of existing operations.",
+      "rationale": "Reserve the account before external Customer creation so a new-account race cannot establish competing customer mappings; complete external orchestration remains Task 2.",
       "_origin": "semantic"
     },
     {
@@ -190722,8 +190722,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_stripe_capability_gate_satisfied_product_not_started",
-      "description": "Approved sequential execution in codex/cardless-trial from origin/staging 60df2876 selects an all-trial native Schedule defaulting to cancel and releasing at original trial end only after consent. Owner authorized Schedule proof; its Stripe/API/hosted Checkout/3DS capabilities passed. Original Subscription results remain separate and are not credited to Schedule. Product code and rollout have not started; Tasks 1–5 must prove application behavior. Stack pins API 2025-08-27.basil and actual lockfile SDK 18.5.0 within package range ^18.3.0, with no upgrade. Additive migrations, existing refresh ownership/lease/fresh reads, shared protocol compatibility and current analytics remain planned. The original extension checkout stays separate; production needs permission after staging acceptance. The closing initial-state table is historical.",
+      "status": "task0_committed_task1_storage_refresh_local_verified_tasks2_onward_pending",
+      "description": "Task 0 committed as 8048e631. Task 1 storage and common refresh are implemented and locally verified in codex/cardless-trial from origin/staging 60df2876. Selected native Schedule uses an all-trial phase defaulting to cancel and release at original end only after consent. Fourteen Schedule cases and old-Portal proof remain separate from rejected ordinary-Subscription evidence. New start/renewal routes, UI and staging acceptance are pending; the model is enabled nowhere. API 2025-08-27.basil and lockfile SDK 18.5.0 within ^18.3.0 are unchanged. Original extension checkout is preserved; production requires separate permission after staging acceptance. The closing creation-time evidence table is historical.",
       "_origin": "semantic"
     },
     {
@@ -190736,8 +190736,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_capabilities_passed_application_acceptance_pending",
-      "description": "Task 0 now establishes Stripe API and hosted UI feasibility: all 14 named Schedule cases and the separately recorded old-Portal Schedule check passed, using owned test fixtures and pinned response version. The Schedule runner produces per-case receipts for dates, invoices and payments. Checks include native day=3 trial duration, saved/no card expiry, monthly/yearly opt-in, replay after cancellation, late setup, exact and delayed boundaries, decline and real 3DS. Application DB concurrency, new-key stale consent, rights, webhook/return finalizer and analytics remain mandatory in Tasks 1–5. The original CardlessStripeProof report remains incomplete and is not relabeled; the proof commit checkbox remains unchecked.",
+      "status": "task0_committed_schedule_capabilities_passed",
+      "description": "Task 0 is committed as 8048e631. Fourteen named Schedule cases and the separately recorded old-Portal Schedule check passed on owned fixtures and pinned API, including exact relative duration, no/saved card expiry, opt-in, cancellation replay, late/exact-boundary updates, decline and hosted 3DS. Per-case receipts describe dates/invoices/payments. The original CardlessStripeProof remains incomplete and is not relabeled. Task 0 establishes Stripe feasibility only; Task 1 now supplies separate local storage/common-refresh proof, while Tasks 2–5 and staging still establish complete application behavior.",
       "_origin": "semantic",
       "references": [
         "apps/web/scripts/verify-cardless-schedule-sandbox.ts",
@@ -190756,10 +190756,11 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "planned_application_implementation_and_acceptance_pending",
-      "description": "Task 1 remains unimplemented. Add disabled policy, activation records with Customer/Schedule/Subscription IDs and states pending/created/committed/failed, renewal states quoted/setup_pending/applying/applied/canceled/expired/failed, immutable dates, verified Schedule provenance and legacy card_required default. Initial Schedule cancel_at_period_end=false proves no consent. Owner/operation/revision RPCs serialize legacy Checkout and activation without holding SQL across Stripe HTTP. Refresh v3 checks provenance; old v2 cannot create cardless ledger. Guarded disposable DB, pgTAP, concurrency and regression tests remain required.",
+      "status": "task1_local_implementation_and_customer_race_checks_passed",
+      "description": "Task 1 is documented complete locally: disabled policy, durable activation and fenced renewal records, immutable mode/dates/Schedule provenance and legacy card_required defaults. Initial Customer is nullable so account reservation precedes external creation; record_cardless_trial_customer_v1 binds verified Customer with owner/operation fencing and stable replay. Legacy Checkout shares serialization. SQL is not held across Stripe HTTP; age/flag-off cannot free uncertain mutations. Refresh v3 verifies stored activation; v2 rejects cardless provenance. Disposable-DB replay, SQL/concurrency, new-account Customer race and existing-data preservation passed. No hosted schema or full flow acceptance is implied.",
       "references": [
         "reserve_cardless_trial_v1",
+        "record_cardless_trial_customer_v1",
         "record_cardless_trial_created_v1",
         "commit_stripe_subscription_refresh_v3",
         "reserve_trial_renewal_v1",
@@ -190779,7 +190780,7 @@
       "author": null,
       "contributor": null,
       "status": "planned_application_implementation_and_acceptance_pending",
-      "description": "Task 2 remains unimplemented. POST /api/billing/trial/start accepts requestId/planCode/billingPeriod/offerRevision; userId is session-derived. Results distinguish active/pending/ineligible/offer_changed/unavailable. Inject Stripe/storage/time, create Schedule with stable trial:<activationId>, verify its Subscription, both owners and exact 259200-second duration, and recover the same two IDs. Preserve Origin/Sec-Fetch-Site/JSON/session/X-Anidachi-Billing-Owner guards and rate limits. Optional trialMode/revision preserve action enum; stale card-required clients receive offer_changed without paid fallback.",
+      "description": "Task 2 remains unimplemented. POST /api/billing/trial/start accepts requestId/planCode/billingPeriod/offerRevision; userId is session-derived. Results distinguish active/pending/ineligible/offer_changed/unavailable. Reserve account authority before external Customer creation and bind through the Task 1 fenced RPC. Inject Stripe/storage/time, create Schedule with trial:<activationId>, verify its Subscription, both owners and exact 259200 seconds, and recover the same IDs. Preserve Origin/Sec-Fetch-Site/JSON/session/X-Anidachi-Billing-Owner guards/rate limits. Optional trialMode/revision preserve action enum; stale legacy offers return offer_changed without paid fallback.",
       "_origin": "semantic"
     },
     {
@@ -191019,8 +191020,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_capabilities_passed_product_and_staging_pending_no_rollout",
-      "description": "Evidence dated 2026-10-11 for codex/cardless-trial from 60df2876be22a55af5f719918ad5fd5b1c79df65. Owner authorized sequential implementation and continuing Schedule proof after explanation. Fourteen named Schedule cases and a separately recorded old-Portal Schedule check passed on pinned API. Original Subscription evidence, including its Portal-consent failure, remains historical and separate. Stripe capability gate is satisfied; product implementation, application acceptance and staging remain pending, with separate production authorization required.",
+      "status": "stripe_schedule_and_local_storage_refresh_passed_services_ui_staging_pending",
+      "description": "Acceptance dated 2026-10-11 records Task 0 commit 8048e631 and Task 1 local storage/common refresh in isolated codex/cardless-trial from 60df2876be22a55af5f719918ad5fd5b1c79df65. Fourteen Schedule cases plus old-Portal check passed separately from rejected original design. Final local Task 1 has 171 SQL assertions, a corrected new-account Customer reservation/binding race, real concurrent old/new reservation proof, 30 focused TS tests, full web 994 total/988 passed/6 skips, and TypeScript passed. Start/renewal services, recovery orchestration, anti-abuse, UI, webhook integration, analytics and staging remain pending; production is unapproved.",
       "_origin": "semantic"
     },
     {
@@ -191033,8 +191034,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "ten_guard_transport_tests_and_web_typecheck_passed",
-      "description": "Acceptance records ten guard/transport tests observed RED then GREEN and passing web TypeScript checks. Existing full web suite ran before scripts-only CLI/Portal additions: 986 tests, 980 passed, six skipped, no failures; no product code changed afterward. SDK is actual lockfile 18.5.0 within range ^18.3.0 with API 2025-08-27.basil and no upgrade. Runner requires --test/--account, validates response account/mode/version before writes and checks anidachiProof=cardless_trial plus unique run ownership. No real-customer enumeration, caller-supplied customer IDs or deletion.",
+      "status": "task0_historical_tooling_checkpoint_passed",
+      "description": "Task 0 tooling checkpoint reports ten guard/transport tests RED then GREEN and TypeScript covering all three proof scripts. Its baseline web suite was 986 total/980 passed/6 skipped/0 failures; Task 1 has newer results recorded separately. Actual SDK is lockfile 18.5.0 within ^18.3.0 and API 2025-08-27.basil, with no upgrade. Proof tooling requires --test/--account and validates response mode/account/version, fixture marker/run ownership, without real-customer enumeration, caller-supplied customer IDs or deletion.",
       "rationale": "Local tests validate guards and transport; separate real Sandbox runs establish only their specifically observed lifecycle behavior.",
       "references": [
         "apps/web/scripts/verify-cardless-trial-sandbox.ts",
@@ -191051,12 +191052,12 @@
       "validation_results": {
         "guard_transport_tests": 10,
         "guard_transport_result": "passed_after_observed_red",
-        "web_typecheck": "passed",
-        "existing_web_suite_total": 986,
-        "existing_web_suite_passed": 980,
-        "existing_web_suite_skipped": 6,
-        "existing_web_suite_failed": 0,
-        "existing_web_suite_timing": "before_scripts_only_cli_portal_additions_no_later_product_code_change"
+        "task0_typecheck": "passed_all_three_proof_scripts",
+        "task0_web_suite_total": 986,
+        "task0_web_suite_passed": 980,
+        "task0_web_suite_skipped": 6,
+        "task0_web_suite_failed": 0,
+        "scope": "historical_task0_checkpoint_task1_results_recorded_separately"
       }
     },
     {
@@ -191098,14 +191099,16 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "selected_schedule_stripe_cases_passed_application_gates_pending",
-      "description": "All 14 selected-Schedule cases and the separate old-Portal Schedule check passed. Covered: expiry with/without card, relative duration, monthly/annual opt-in, cancellation replay, post-expiry setup, delayed/exact boundaries with/without card, decline and hosted 3DS failure/retry. Original Subscription results remain separate, including failed AniDachi-only Portal consent. Ordinary hosted checkout without 3DS was optional and unexecuted; hosted setup was exercised by checkout-3ds and ordinary successful payment by opt-in-monthly. Application concurrency/access/webhooks/analytics and staging are not proved by these checks.",
+      "status": "schedule_stripe_gate_passed_task1_local_storage_proved_full_flow_pending",
+      "description": "All 14 selected-Schedule cases and separate old-Portal Schedule check passed, distinct from the rejected ordinary Subscription contract. Optional ordinary hosted checkout was not run; hosted setup was exercised with 3DS and ordinary charge with monthly opt-in. Task 1 adds local database reservation/concurrency, immutable provenance, access deadline and common-refresh proof. Start/renewal orchestration, integrated callbacks/webhooks, analytics, UI and staging acceptance still remain.",
       "scenario_evidence": {
         "schedule_named_cases": "14_passed",
         "schedule_old_portal_renew_path": "passed_separately",
         "original_subscription_portal_consent": "historical_failed_not_counted_for_schedule",
         "optional_ordinary_checkout": "not_executed_not_required_for_current_case_set",
-        "application_concurrency_access_webhooks_analytics": "pending_implementation_and_tests",
+        "task1_sql_and_real_reservation_race": "local_passed",
+        "task1_common_refresh": "local_focused_tests_passed",
+        "full_start_renewal_recovery_webhooks_analytics_ui": "pending",
         "staging_acceptance": "pending"
       },
       "_origin": "semantic"
@@ -191136,9 +191139,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_capability_gate_satisfied_product_implementation_and_acceptance_pending",
-      "description": "Stripe capability gate is satisfied; Tasks 1 onward must implement and prove the application contract before release. Only tagged synthetic Sandbox objects were created. Existing customer subscriptions, shared Portal settings, product runtime, migrations, flags, extension builds and deployments remain unchanged; original extension checkout is preserved. Database concurrency, fresh-key stale callbacks, recovery, webhooks/return, rights, analytics, legacy regressions and staging acceptance remain mandatory. Production needs separate authorization.",
-      "rationale": "Stripe API and hosted UI evidence do not implement application state, prove Postgres deadlines or authorize deployment.",
+      "status": "stripe_and_task1_local_gates_passed_full_application_and_staging_pending",
+      "description": "Stripe feasibility and local Task 1 storage/common-refresh checks passed. A local additive migration and common refresh changes now exist; no hosted schema or billing policy changed, and no deployments, extension builds, shared Portal settings or existing customer subscriptions were changed by this checkpoint. The original extension checkout is preserved. Start/renewal services, orchestration, anti-abuse, UI, webhook integration, analytics and staging remain Tasks 2–5; production still needs separate authorization.",
+      "rationale": "Isolated local SQL and refresh evidence do not prove deployed schema, complete user flow or staging/production acceptance.",
       "_origin": "semantic"
     },
     {
@@ -191418,7 +191421,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "selected_mechanism_stripe_checked_product_not_implemented",
+      "status": "selected_mechanism_verified_storage_local_start_service_pending",
       "description": "One server create uses start_date=now, end_behavior=cancel and a phase with duration day×3, trial=true and no prorations. Stripe computes exact 259200-second trial dates; verify response ownership and Customer/Schedule/Subscription linkage. Subscription has cancel_at=trial_end and cancel_at_period_end=false; default expiry cancels Subscription and completes Schedule even with saved card. Put provenance markers on Schedule and its phase. API remains 2025-08-27.basil and actual SDK 18.5.0 (^18.3.0), with no upgrade.",
       "rationale": "Relative duration prevents request latency from shortening access, while native Schedule restrictions prevent the tested old-Portal renewal bypass.",
       "_origin": "semantic"
@@ -191536,9 +191539,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_updates_verified_application_generation_checks_pending",
-      "description": "Opt-in performs one Schedule update with end_behavior=release, owned default PM, selected price, immutable original phase start/end/trial_end and no prorations. Schedule stays attached until original end, then releases Subscription to recurring billing; immediate release endpoint is not used. Pre-expiry cancellation sets end_behavior=cancel. Replaying the prior opt-in key returns cached earlier response, but fresh retrieval proved actual cancellation remained. A stale callback with a new mutation/key still requires application generation checks and serialized recovery.",
-      "rationale": "Idempotency caches request responses rather than guaranteeing that a response describes current entitlement state.",
+      "status": "stripe_updates_and_local_db_fencing_verified_service_integration_pending",
+      "description": "Stripe opt-in uses one Schedule update with end_behavior=release, owned PM, price, immutable phase dates and no prorations; it remains attached until end and then releases Subscription. Pre-expiry cancellation sets end_behavior=cancel. Same-key opt-in replay returns cached prior response, while fresh retrieval proved current cancellation remained. Task 1 adds local cancellation generations and durable mutation authority; services still must enforce these fences for stale callbacks attempting a new mutation/key and recover unknown external results.",
+      "rationale": "Idempotency caches a request response, not current access state; database fences need full service integration.",
       "_origin": "semantic"
     },
     {
@@ -191582,9 +191585,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "mandatory_tasks1_to5_and_staging_pending",
-      "description": "Still required: database concurrency and exactly-once activation, canceled consent with stale callback/new key, unknown-outcome recovery, webhook/return convergence, ledger/access deadlines, zero-invoice analytics and deduplication, legacy regressions and real staging acceptance. Stripe Test Clocks do not advance Postgres and cannot prove these application properties. Tasks 1 onward implement/prove them after satisfied Stripe capability gate.",
-      "rationale": "Verified external payment capabilities do not establish the application state machine, authorization or production lifecycle.",
+      "status": "local_storage_refresh_evidence_complete_tasks2_to5_staging_pending",
+      "description": "Task 1 now proves local reservation authority, canceled-generation fencing, provenance, deadlines and common refresh. Still pending: start/renewal endpoints, complete external recovery orchestration, request/anti-abuse guards, service-level stale/new-key callback handling, webhook/return convergence, UI, analytics classification/deduplication and full staging acceptance. Local legacy SQL regression preservation is proved; integrated legacy behavior still belongs to staging acceptance. Stripe clocks do not advance Postgres, and neither Stripe nor local DB results alone prove complete application behavior.",
+      "rationale": "Track each proof layer separately rather than marking remaining integration complete from passing lower-level checks.",
       "_origin": "semantic"
     },
     {
@@ -191725,6 +191728,504 @@
       "source_file": "apps/web/scripts/verify-cardless-trial-portal.ts",
       "source_location": "L34",
       "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_db_getcardlesstrialactivation",
+      "label": "getCardlessTrialActivation()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/db.ts",
+      "source_location": "L533",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "label": "stripe-cardless-trial-state.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_iso",
+      "label": "iso()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L9",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_activation",
+      "label": "activation",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L10",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_subscription",
+      "label": "subscription",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L20",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_schedule",
+      "label": "schedule",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L39",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_client",
+      "label": "client()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L54",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_trial_state_cardlesstrialactivationrecord",
+      "label": "CardlessTrialActivationRecord",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
+      "source_location": "L3",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract",
+      "label": "cardless_trial_contract.mjs",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_run",
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L15",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_args",
+      "label": "args",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_sql",
+      "label": "sql()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L44",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_base",
+      "label": "base",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L45",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_canonical",
+      "label": "canonical",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L46",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_snapshot",
+      "label": "snapshot()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L56",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_before",
+      "label": "before",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L65",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_parallelsql",
+      "label": "parallelSql()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L102",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_oldpolicy",
+      "label": "oldPolicy",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L118",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_contracts_cardless_trial_contract_user",
+      "label": "user",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L121",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "label": "20261011124600_cardless_subscription_trials.sql",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "public_hosting_commercial_policy",
+      "label": "public.hosting_commercial_policy",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "label": "public.subscription_trial_activations",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "public_users",
+      "label": "public.users",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_one_unresolved_trial_activation",
+      "label": "one_unresolved_trial_activation",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "label": "public.subscription_trial_renewals",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "public_subscriptions",
+      "label": "public.subscriptions",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_one_unresolved_trial_mutation",
+      "label": "one_unresolved_trial_mutation",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L65",
+      "_origin": "ast"
+    },
+    {
+      "id": "public_account_subscription_trials",
+      "label": "public.account_subscription_trials",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_preserve_subscription_trial_identity_v1",
+      "label": "public.preserve_subscription_trial_identity_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L79",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_access_grants_v1",
+      "label": "public.subscription_access_grants_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L90",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "label": "public.reserve_cardless_trial_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L103",
+      "_origin": "ast"
+    },
+    {
+      "id": "public_subscription_checkout_reservations",
+      "label": "public.subscription_checkout_reservations",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "public_billing_customers",
+      "label": "public.billing_customers",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_checkout_cardless_trial_guard",
+      "label": "checkout_cardless_trial_guard",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L170",
+      "_origin": "ast"
+    },
+    {
+      "id": "public_guard_checkout_cardless_trial_v1",
+      "label": "public.guard_checkout_cardless_trial_v1",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_guard_checkout_cardless_trial_v1",
+      "label": "public.guard_checkout_cardless_trial_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L162",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_record_cardless_trial_created_v1",
+      "label": "public.record_cardless_trial_created_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L172",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_trial_renewal_v1",
+      "label": "public.reserve_trial_renewal_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L194",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_commit_trial_renewal_v1",
+      "label": "public.commit_trial_renewal_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L225",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_commit_stripe_subscription_refresh_v3",
+      "label": "public.commit_stripe_subscription_refresh_v3()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L261",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_commit_stripe_subscription_refresh_v2",
+      "label": "public.commit_stripe_subscription_refresh_v2()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L327",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_cardless_subscription_trials_test",
+      "label": "cardless_subscription_trials.test.sql",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_cardless_subscription_trials_test_proof",
+      "label": "proof",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_reserve_trial",
+      "label": "pg_temp.reserve_trial()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_refresh_trial",
+      "label": "pg_temp.refresh_trial()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L63",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_move_renewal",
+      "label": "pg_temp.move_renewal()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L89",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_cardless_storage_migration",
+      "label": "Local Cardless Storage Migration",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "implemented_and_verified_locally_not_hosted",
+      "description": "Migration 20261011124600_cardless_subscription_trials.sql adds disabled policy, activation/consent records, immutable provenance and service-role-only RPCs. Customer is initially nullable: account authority is reserved before external Customer creation, then owner-fenced record_cardless_trial_customer_v1 binds the verified mapping idempotently. Existing Checkout shares serialization through an insert guard. Uncertain external mutations persist despite age/flag-off; cancellation generations fence old completions and unresolved mutation must reconcile before next authority. Fresh ordered replay/canonical-data preservation passed without backfill or hosted changes.",
+      "rationale": "One durable authority must cover old Checkout and new activations while preventing uncertainty or stale completion from reopening access.",
+      "references": [
+        "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
+      "label": "Disposable Database Contract Evidence",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "171_sql_assertions_customer_binding_and_real_reservation_race_passed",
+      "description": "Local PostgreSQL 17.6 from cached Supabase 17.6.1.156 ran in fresh anidachi-paid-hosting-cardless-db-v2-20261011 under colima-anidachi-personal-mvp, disposable/paid-hosting labels, network none and no ports. Existing containers/data were unused. SQL RED on missing policy then GREEN: 57 cardless + 36 legacy trials + 27 eligibility + 14 Checkout reservations + 15 legacy lifecycle + 22 room admission = 171. New-account required-Customer test was RED, then nullable pre-Customer account reservation and owner-fenced binding became GREEN; replay keeps mapping, rejecting other owner or missing Customer. Real concurrent old Checkout/Plus/Pro transactions yield one durable authority, including both orderings. Replay/canonical preservation, expiry/wait/payment failure/retry, monotonic paid, stale cancel, later paid Checkout and legacy/manual rights pass.",
+      "assertions": {
+        "cardless": 57,
+        "legacy_trials": 36,
+        "eligibility": 27,
+        "checkout_reservations": 14,
+        "legacy_lifecycle": 15,
+        "room_admission": 22,
+        "total": 171
+      },
+      "environment": {
+        "postgres": "17.6",
+        "cached_image": "17.6.1.156",
+        "container": "anidachi-paid-hosting-cardless-db-v2-20261011",
+        "context": "colima-anidachi-personal-mvp",
+        "network": "none",
+        "published_ports": false,
+        "scope": "fresh_disposable_local_database"
+      },
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_common_refresh_provenance",
+      "label": "Common Refresh Provenance",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "implemented_and_verified_locally_full_flow_pending",
+      "description": "Common refresh retains original lease and fresh Stripe reads. Cardless writes use v3 and require stored activation with verified owned Schedule identity; legacy writes retain v2, which rejects cardless provenance. After automatic release, use Schedule.released_subscription, verified read-only against owned Sandbox fixtures. A canceled Schedule without a subscription link is acceptable only for an already-recorded matching canceled Subscription and cannot grant access. Tests cover missing/wrong activation, owner, Customer, Subscription, dates, fresh Schedule read, completed/released identity and zero paid invoices.",
+      "rationale": "Current verified object linkage and stored activation prove provenance; released or linkless terminal objects must never create entitlement from metadata alone.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
+      "label": "Task 1 Local Test Results",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "local_sql_refresh_web_and_typescript_passed",
+      "description": "New snapshot/refresh tests were observed 8 RED then 8 GREEN; focused suites passed 30/30. Full web suite: 994 total, 988 passed, six existing skips, zero failures; TypeScript passed. Final fresh-db migration replay/canonical preservation and 171 SQL assertions passed, including Customer reservation/binding correction and a real old/new reservation race. This proves local storage/common refresh only; start/renewal services, external orchestration, UI, webhooks, analytics and staging remain pending.",
+      "results": {
+        "new_snapshot_refresh_red": 8,
+        "new_snapshot_refresh_green": 8,
+        "focused_refresh_passed": 30,
+        "focused_refresh_total": 30,
+        "web_total": 994,
+        "web_passed": 988,
+        "web_skipped": 6,
+        "web_failed": 0,
+        "typescript": "passed",
+        "sql_assertions": 171,
+        "new_account_customer_race": "red_then_green",
+        "fresh_migration_replay_and_canonical_preservation": "passed"
+      },
+      "base_commit": "8048e631",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "label": "Pre Customer Account Reservation",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task1_local_contract_implemented_task2_orchestration_pending",
+      "description": "The activation record permits an initially null Customer. Reserve account creation authority before contacting Stripe to create a Customer. record_cardless_trial_customer_v1 then binds the verified Customer using owner/operation/revision fencing. Reuse the same idempotency key and owner mapping for recovery; the remaining start service consumes this contract.",
+      "rationale": "An initial mandatory Customer would force external creation before account serialization and permit a new-account race.",
+      "references": [
+        "record_cardless_trial_customer_v1",
+        "reserve_cardless_trial_v1"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_record_cardless_trial_customer_v1",
+      "label": "public.record_cardless_trial_customer_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L138",
       "_origin": "ast"
     }
   ],
@@ -241377,10 +241878,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L924",
+      "source_location": "L931",
       "weight": 1.0
     },
     {
@@ -241389,7 +241889,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L451",
@@ -241401,10 +241900,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L536",
+      "source_location": "L543",
       "weight": 1.0
     },
     {
@@ -241413,10 +241911,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L685",
+      "source_location": "L692",
       "weight": 1.0
     },
     {
@@ -241428,7 +241925,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L701",
+      "source_location": "L708",
       "weight": 1.0
     },
     {
@@ -241437,10 +241934,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L988",
+      "source_location": "L995",
       "weight": 1.0
     },
     {
@@ -241449,10 +241945,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L568",
+      "source_location": "L575",
       "weight": 1.0
     },
     {
@@ -241461,7 +241956,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L344",
@@ -241473,7 +241967,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L347",
@@ -241485,7 +241978,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L350",
@@ -241500,7 +241992,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L769",
+      "source_location": "L776",
       "weight": 1.0
     },
     {
@@ -241509,10 +242001,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L774",
+      "source_location": "L781",
       "weight": 1.0
     },
     {
@@ -241521,10 +242012,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L796",
+      "source_location": "L803",
       "weight": 1.0
     },
     {
@@ -241536,7 +242026,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L638",
+      "source_location": "L645",
       "weight": 1.0
     },
     {
@@ -241545,10 +242035,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L643",
+      "source_location": "L650",
       "weight": 1.0
     },
     {
@@ -241560,7 +242049,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L670",
+      "source_location": "L677",
       "weight": 1.0
     },
     {
@@ -241569,7 +242058,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L56",
@@ -241581,10 +242069,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L740",
+      "source_location": "L747",
       "weight": 1.0
     },
     {
@@ -241596,7 +242083,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L749",
+      "source_location": "L756",
       "weight": 1.0
     },
     {
@@ -241605,10 +242092,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L873",
+      "source_location": "L880",
       "weight": 1.0
     },
     {
@@ -241617,10 +242103,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L836",
+      "source_location": "L843",
       "weight": 1.0
     },
     {
@@ -241629,10 +242114,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L723",
+      "source_location": "L730",
       "weight": 1.0
     },
     {
@@ -241644,7 +242128,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L731",
+      "source_location": "L738",
       "weight": 1.0
     },
     {
@@ -241653,7 +242137,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L410",
@@ -241665,10 +242148,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L967",
+      "source_location": "L974",
       "weight": 1.0
     },
     {
@@ -241677,10 +242159,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L896",
+      "source_location": "L903",
       "weight": 1.0
     },
     {
@@ -241689,10 +242170,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L947",
+      "source_location": "L954",
       "weight": 1.0
     },
     {
@@ -241701,10 +242181,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L590",
+      "source_location": "L597",
       "weight": 1.0
     },
     {
@@ -241713,10 +242192,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L910",
+      "source_location": "L917",
       "weight": 1.0
     },
     {
@@ -241725,7 +242203,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L222",
@@ -241737,7 +242214,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L227",
@@ -241749,7 +242225,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L421",
@@ -241761,7 +242236,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L267",
@@ -241773,10 +242247,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L937",
+      "source_location": "L944",
       "weight": 1.0
     },
     {
@@ -241785,10 +242258,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L957",
+      "source_location": "L964",
       "weight": 1.0
     },
     {
@@ -241797,10 +242269,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L602",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
@@ -241809,7 +242280,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L488",
@@ -241821,7 +242291,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L473",
@@ -241833,7 +242302,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L285",
@@ -241845,7 +242313,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L314",
@@ -241857,7 +242324,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L315",
@@ -241869,10 +242335,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L809",
+      "source_location": "L816",
       "weight": 1.0
     },
     {
@@ -241884,7 +242349,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L811",
+      "source_location": "L818",
       "weight": 1.0
     },
     {
@@ -241896,7 +242361,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L814",
+      "source_location": "L821",
       "weight": 1.0
     },
     {
@@ -241908,7 +242373,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L816",
+      "source_location": "L823",
       "weight": 1.0
     },
     {
@@ -241917,10 +242382,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L709",
+      "source_location": "L716",
       "weight": 1.0
     },
     {
@@ -241932,7 +242396,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L717",
+      "source_location": "L724",
       "weight": 1.0
     },
     {
@@ -241941,10 +242405,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L555",
+      "source_location": "L562",
       "weight": 1.0
     },
     {
@@ -241953,10 +242416,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L978",
+      "source_location": "L985",
       "weight": 1.0
     },
     {
@@ -241965,7 +242427,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L357",
@@ -241977,7 +242438,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L358",
@@ -241989,7 +242449,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L361",
@@ -242001,7 +242460,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L365",
@@ -242013,7 +242471,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L503",
@@ -242025,7 +242482,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L399",
@@ -242037,7 +242493,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L402",
@@ -242049,7 +242504,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L389",
@@ -242061,7 +242515,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L390",
@@ -242073,7 +242526,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L393",
@@ -242085,7 +242537,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L373",
@@ -242097,7 +242548,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L374",
@@ -242109,7 +242559,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L378",
@@ -242121,7 +242570,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L382",
@@ -242133,7 +242581,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L185",
@@ -242145,10 +242592,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L857",
+      "source_location": "L864",
       "weight": 1.0
     },
     {
@@ -242157,7 +242603,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L435",
@@ -242169,7 +242614,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L140",
@@ -242181,7 +242625,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L164",
@@ -246494,10 +246937,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L195",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -246509,7 +246951,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L67",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -246518,10 +246960,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L69",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -246530,10 +246971,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L128",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -246542,10 +246982,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L149",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -246557,7 +246996,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L166",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -246569,7 +247008,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -246578,10 +247017,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L106",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -308787,83 +309225,10 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_db",
-      "target": "packages_protocol_src_room_session_activeroomconflictresponse",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
-      "target": "packages_protocol_src_room_session_activeroomrole",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
-      "target": "packages_protocol_src_source_url_roomsourceprovider",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
-      "target": "packages_protocol_src_types_roomsourcepersistenceacknowledgement",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
-      "target": "packages_protocol_src_types_roomsourcepersistencecallback",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
-      "target": "packages_protocol_src_types_roomusagesummary",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
       "target": "apps_web_lib_anidachi_auth_active_room_session_activeroomassignment",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
@@ -308875,7 +309240,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
@@ -308887,7 +309251,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
@@ -308899,7 +309262,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
@@ -308911,7 +309273,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
@@ -308923,22 +309284,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_db",
-      "target": "apps_web_lib_anidachi_auth_plan_codes_plancode",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -308947,7 +309295,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L18",
@@ -308959,7 +309306,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L23",
@@ -308971,7 +309317,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L23",
@@ -308983,7 +309328,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L23",
@@ -308995,7 +309339,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L23",
@@ -312374,38 +312717,13 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
-      "target": "apps_web_lib_anidachi_auth_plan_codes_paidplancode",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L13",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
-      "target": "apps_web_lib_anidachi_auth_plan_codes_plancode",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L13",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
       "target": "apps_web_lib_anidachi_auth_stripe_plans_currentperiodendiso",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -312414,10 +312732,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -312426,10 +312743,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -312438,7 +312754,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -312450,7 +312765,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -312462,7 +312776,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -312474,7 +312787,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -312486,7 +312798,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -312498,7 +312809,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -312510,7 +312820,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -352019,7 +352328,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -352032,7 +352340,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L10",
@@ -352044,7 +352351,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L18",
@@ -352057,7 +352363,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L23",
@@ -352069,7 +352374,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L235",
@@ -353928,10 +354232,9 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "type_only": true,
       "weight": 1.0
     },
@@ -353941,10 +354244,9 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -353953,7 +354255,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -417091,7 +417392,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L125",
       "weight": 1.0
@@ -417102,7 +417402,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L133",
       "weight": 1.0
@@ -417113,7 +417412,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L184",
       "weight": 1.0
@@ -417124,7 +417422,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L221",
       "weight": 1.0
@@ -417135,7 +417432,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L237",
       "weight": 1.0
@@ -417146,7 +417442,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L241",
       "weight": 1.0
@@ -417157,7 +417452,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L245",
       "weight": 1.0
@@ -417168,7 +417462,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L247",
       "weight": 1.0
@@ -417179,7 +417472,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L253",
       "weight": 1.0
@@ -417190,7 +417482,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L262",
       "weight": 1.0
@@ -417201,7 +417492,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L266",
       "weight": 1.0
@@ -417212,7 +417502,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L270",
       "weight": 1.0
@@ -417223,7 +417512,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L281",
       "weight": 1.0
@@ -417234,7 +417522,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L32",
       "weight": 1.0
@@ -417245,7 +417532,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L291",
       "weight": 1.0
@@ -417256,7 +417542,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L338",
       "weight": 1.0
@@ -417267,7 +417552,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L353",
       "weight": 1.0
@@ -417278,7 +417562,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L368",
       "weight": 1.0
@@ -417289,7 +417572,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L42",
       "weight": 1.0
@@ -417300,7 +417582,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L385",
       "weight": 1.0
@@ -417311,7 +417592,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L396",
       "weight": 1.0
@@ -417322,7 +417602,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L407",
       "weight": 1.0
@@ -417333,7 +417612,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L418",
       "weight": 1.0
@@ -417344,7 +417622,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L431",
       "weight": 1.0
@@ -417355,7 +417632,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L447",
       "weight": 1.0
@@ -417366,7 +417642,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L472",
       "weight": 1.0
@@ -417377,7 +417652,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L484",
       "weight": 1.0
@@ -417388,7 +417662,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L500",
       "weight": 1.0
@@ -417399,7 +417672,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L509",
       "weight": 1.0
@@ -417410,7 +417682,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L510",
       "weight": 1.0
@@ -417421,7 +417692,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L55",
       "weight": 1.0
@@ -417432,9 +417702,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L533",
+      "source_location": "L540",
       "weight": 1.0
     },
     {
@@ -417443,9 +417712,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L551",
+      "source_location": "L558",
       "weight": 1.0
     },
     {
@@ -417454,9 +417722,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L564",
+      "source_location": "L571",
       "weight": 1.0
     },
     {
@@ -417465,9 +417732,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L587",
+      "source_location": "L594",
       "weight": 1.0
     },
     {
@@ -417476,7 +417742,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L61",
       "weight": 1.0
@@ -417487,9 +417752,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L599",
+      "source_location": "L606",
       "weight": 1.0
     },
     {
@@ -417498,9 +417762,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L612",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -417509,9 +417772,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L614",
+      "source_location": "L621",
       "weight": 1.0
     },
     {
@@ -417520,9 +417782,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L621",
+      "source_location": "L628",
       "weight": 1.0
     },
     {
@@ -417531,9 +417792,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L625",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
@@ -417542,9 +417802,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L678",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -417553,9 +417812,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L704",
+      "source_location": "L711",
       "weight": 1.0
     },
     {
@@ -417564,7 +417822,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L72",
       "weight": 1.0
@@ -417575,9 +417832,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L720",
+      "source_location": "L727",
       "weight": 1.0
     },
     {
@@ -417586,9 +417842,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L734",
+      "source_location": "L741",
       "weight": 1.0
     },
     {
@@ -417597,9 +417852,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L758",
+      "source_location": "L765",
       "weight": 1.0
     },
     {
@@ -417608,7 +417862,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L78",
       "weight": 1.0
@@ -417619,9 +417872,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L806",
+      "source_location": "L813",
       "weight": 1.0
     },
     {
@@ -417630,9 +417882,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L822",
+      "source_location": "L829",
       "weight": 1.0
     },
     {
@@ -417641,9 +417892,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L832",
+      "source_location": "L839",
       "weight": 1.0
     },
     {
@@ -417652,7 +417902,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L85",
       "weight": 1.0
@@ -417663,9 +417912,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L846",
+      "source_location": "L853",
       "weight": 1.0
     },
     {
@@ -417674,9 +417922,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L868",
+      "source_location": "L875",
       "weight": 1.0
     },
     {
@@ -417685,9 +417932,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L895",
+      "source_location": "L902",
       "weight": 1.0
     },
     {
@@ -417696,9 +417942,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L906",
+      "source_location": "L913",
       "weight": 1.0
     },
     {
@@ -417707,9 +417952,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L920",
+      "source_location": "L927",
       "weight": 1.0
     },
     {
@@ -417718,9 +417962,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L933",
+      "source_location": "L940",
       "weight": 1.0
     },
     {
@@ -417729,9 +417972,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L946",
+      "source_location": "L953",
       "weight": 1.0
     },
     {
@@ -417740,9 +417982,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L954",
+      "source_location": "L961",
       "weight": 1.0
     },
     {
@@ -417751,9 +417992,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L966",
+      "source_location": "L973",
       "weight": 1.0
     },
     {
@@ -417762,9 +418002,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L977",
+      "source_location": "L984",
       "weight": 1.0
     },
     {
@@ -417773,7 +418012,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L99",
       "weight": 1.0
@@ -417784,9 +418022,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L984",
+      "source_location": "L991",
       "weight": 1.0
     },
     {
@@ -421916,9 +422153,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L194",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -421927,9 +422163,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L24",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -421938,9 +422173,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -421949,9 +422183,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -421960,9 +422193,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L46",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -421971,9 +422203,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -421982,9 +422213,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L63",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -421993,9 +422223,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L77",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -422004,9 +422233,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L96",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -466654,9 +466882,8 @@
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L25",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -512833,7 +513060,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L521",
       "weight": 1.0
@@ -512844,7 +513070,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L18",
@@ -512856,7 +513081,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L19",
@@ -512869,7 +513093,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L19",
@@ -512881,7 +513104,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L19",
@@ -512893,7 +513115,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -512905,7 +513126,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -512917,7 +513137,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -512929,7 +513148,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -512941,7 +513159,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -512953,7 +513170,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L1",
@@ -512965,7 +513181,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L9",
@@ -512977,7 +513192,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
       "source_location": "L524",
@@ -515102,7 +515316,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L3",
@@ -515114,10 +515327,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -515126,10 +515338,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -515138,10 +515349,9 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -515150,10 +515360,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -515162,10 +515371,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -515174,7 +515382,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
       "source_location": "L1",
@@ -515187,10 +515394,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
-      "source_location": "L150",
+      "source_location": "L155",
       "weight": 1.0
     },
     {
@@ -515211,9 +515417,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L20",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -515222,9 +515427,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L12",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -515233,9 +515437,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L3",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -515244,7 +515447,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
       "source_location": "L1",
@@ -515257,10 +515459,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L61",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -589394,17 +589594,6 @@
       "_origin": "semantic"
     },
     {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_controlled_release_and_recovery",
-      "target": "docs_superpowers_plans_readme_safe_foundation_promotion_record",
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
       "source": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
       "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
       "relation": "references",
@@ -591313,6 +591502,1064 @@
       "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_db",
+      "target": "apps_web_lib_anidachi_auth_db_getcardlesstrialactivation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/db.ts",
+      "source_location": "L533",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_db_getcardlesstrialactivation",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/db.ts",
+      "source_location": "L534",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_db",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state",
+      "relation": "dynamic_import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/db.ts",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "ref_node_assert",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "ref_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_subscription_sync_syncstripesubscriptionbyid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_resolvestripetrialsnapshot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_iso",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_activation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_subscription",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_schedule",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_client",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_client",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L82",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_iso",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
+      "target": "apps_web_lib_anidachi_auth_db_getcardlesstrialactivation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_cardlesstrialactivationrecord",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_trial_state",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_cardlesstrialactivationrecord",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_trial_state_resolvestripetrialsnapshot",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_resolvestripetrialsnapshot_verifyinvoice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
+      "source_location": "L189",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "ref_node_assert",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "ref_node_child_process",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "ref_node_crypto",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "ref_node_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "ref_node_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_run",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_args",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_sql",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_base",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_canonical",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_snapshot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L56",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_before",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_parallelsql",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L102",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_oldpolicy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L118",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_user",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L121",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract_sql",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_contracts_cardless_trial_contract_snapshot",
+      "target": "apps_web_supabase_contracts_cardless_trial_contract_sql",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "target": "public_users",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "target": "public",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_one_unresolved_trial_activation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_one_unresolved_trial_activation",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "indexes",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "target": "public_users",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "target": "public_subscriptions",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "target": "public",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_one_unresolved_trial_mutation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_one_unresolved_trial_mutation",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "relation": "indexes",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "public_account_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "public_account_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_preserve_subscription_trial_identity_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_access_grants_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_access_grants_v1",
+      "target": "public_subscriptions",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L92",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_access_grants_v1",
+      "target": "public_account_subscription_trials",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_access_grants_v1",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_renewals",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L112",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L120",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L145",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_subscription_checkout_reservations",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L121",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_subscriptions",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_subscriptions",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L166",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_hosting_commercial_policy",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L124",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_billing_customers",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L127",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_checkout_cardless_trial_guard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L170",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_checkout_cardless_trial_guard",
+      "target": "public_guard_checkout_cardless_trial_v1",
+      "relation": "triggers",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L170",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_guard_checkout_cardless_trial_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L162",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_record_cardless_trial_created_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L172",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_trial_renewal_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L194",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_commit_trial_renewal_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L225",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_commit_stripe_subscription_refresh_v3",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L261",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_commit_stripe_subscription_refresh_v2",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L327",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_proof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_reserve_trial",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_refresh_trial",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L63",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_refresh_trial",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_proof",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_move_renewal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_move_renewal",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_proof",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_tests_cardless_subscription_trials_test_pg_temp_move_renewal",
+      "target": "apps_web_supabase_tests_cardless_subscription_trials_test_proof",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/tests/cardless_subscription_trials.test.sql",
+      "source_location": "L91",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_test_stripe",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L84",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_cardless_storage_migration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_common_refresh_provenance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_cardless_storage_migration",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_common_refresh_provenance",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_cardless_storage_migration",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_common_refresh_provenance",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_additive_storage_and_entitlement_contracts",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_cardless_storage_migration",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_additive_storage_and_entitlement_contracts",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_additive_storage_and_entitlement_contracts",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_authorized_trial_start_api",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_11_cardless_trial_design_durable_trial_activation",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-11-cardless-trial-design.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_cardless_storage_migration",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_subscription_trial_activations",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L165",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_billing_customers",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L148",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_reserve_cardless_trial_v1",
+      "target": "public_billing_customers",
+      "relation": "reads_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L152",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials",
+      "target": "apps_web_supabase_migrations_20261011124600_cardless_subscription_trials_public_record_cardless_trial_customer_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
+      "source_location": "L138",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [
@@ -592351,8 +593598,8 @@
       "label": "Task 0 Evidence Separation",
       "nodes": [
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
-        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_anidachi_sandbox_connection",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_schedule_capability_case_matrix",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate"
       ],

@@ -17,10 +17,12 @@ Stripe API 2025-08-27.basil, WXT extension, Cloudflare room runtime.
 
 **Spec:** [Проект решения](../specs/2026-10-11-cardless-trial-design.md).
 
-**Статус:** Выполнение согласовано 2026-10-11; идет Task 0 в отдельной ветке
+**Статус:** Выполнение согласовано 2026-10-11; Task 0 зафиксирован (`8048e631`),
+хранение и общий refresh Task 1 реализованы и проверены локально в отдельной ветке
 `codex/cardless-trial` от `origin/staging` (`60df2876`). Владелец разрешил продолжить
 проверку Subscription Schedule после объяснения отличий. Stripe-примитивы новой
-схемы проверены, включая Checkout/3DS в браузере. Product code и выпуск не начаты.
+схемы проверены, включая Checkout/3DS в браузере. Новые маршруты, интерфейс и
+приемка staging еще впереди; новая модель нигде не включена.
 Исходная обычная Subscription отклонена из-за обхода через старый Portal;
 ее результаты сохраняются отдельно и не засчитываются новой схеме.
 [Текущие доказательства и ограничения](2026-10-11-cardless-trial-acceptance.md).
@@ -115,7 +117,7 @@ Produces per-case Schedule receipts с API version, fixture ownership, исхо�
   Каждый завершенный обязательный Schedule case имеет `passed=true` без live-вызовов.
   Если пограничная семантика API не обеспечивает spec, пересмотреть spec до кода,
   а не отметить проверку пройденной на основании обычного happy path.
-- [ ] Зафиксировать проверочный инструмент и обезличенный результат отдельным
+- [x] Зафиксировать проверочный инструмент и обезличенный результат отдельным
   коммитом `test(billing): prove cardless trial lifecycle in Stripe sandbox`.
 
 ## Task 1: Хранение, одноразовость и права
@@ -127,7 +129,8 @@ Modify `apps/web/lib/anidachi-auth/stripe-trial-state.ts` и существую�
 - Produces policy `cardless_trials_enabled: boolean = false` с общей revision.
 - Produces `subscription_trial_activations`: ID, owner, request ID, plan/period,
   verified Price, policy revision, Stripe customer/schedule/subscription IDs, stable
-  idempotency key, состояние `pending | created | committed | failed`, даты.
+  idempotency key. Customer initially nullable: account reservation precedes
+  external Customer creation, then an owner-fenced RPC binds the verified ID; состояние `pending | created | committed | failed`, даты.
 - Produces `subscription_trial_renewals`: ID, owner/subscription, quote/terms
   revision, plan/period/price/amount/currency, original trial_end, setup session
   и intent IDs, mutation generation, состояние
@@ -136,33 +139,34 @@ Modify `apps/web/lib/anidachi-auth/stripe-trial-state.ts` и существую�
   `renewal_operation_id` для проверенного подключения, verified Schedule provenance;
   trial даты immutable. `cancel_at_period_end=false` само по себе ничего не
   говорит о согласии — это исходное состояние Schedule trial.
-- RPC contracts: `reserve_cardless_trial_v1`, `record_cardless_trial_created_v1`,
+- RPC contracts: `reserve_cardless_trial_v1`, `record_cardless_trial_customer_v1`,
+  `record_cardless_trial_created_v1`,
   `commit_stripe_subscription_refresh_v3`, `reserve_trial_renewal_v1`,
   `commit_trial_renewal_v1`. Inputs привязаны к owner/operation/revision;
   возвращают подтвержденную запись или typed conflict, не молчаливый успех.
 
-- [ ] Написать pgTAP assertions: legacy rows остаются `card_required`; cardless
+- [x] Написать pgTAP assertions: legacy rows остаются `card_required`; cardless
   без applied renewal теряет grant при `now >= trial_end` даже при ошибочном
   `cancel_at_period_end=false`; applied renewal сохраняет прежний first-payment
   предел 2 часа; paid/failed/action_required и ручные grants не регрессируют.
-- [ ] Написать concurrency contract: одновременные старый Checkout/new activation
+- [x] Написать concurrency contract: одновременные старый Checkout/new activation
   и Plus/Pro создают одну reservation authority; повтор request ID идемпотентен,
   чужой owner/price/revision отвергается; unknown outcome не освобождает слот.
-- [ ] Создать `cardless_trial_contract.mjs` по существующей disposable-DB защите:
+- [x] Создать `cardless_trial_contract.mjs` по существующей disposable-DB защите:
   только контейнер `anidachi-paid-hosting-*` с labels `anidachi.disposable=true`,
   `anidachi.task=paid-hosting`; ни remote DB URL, ни production допуска не добавлять.
   Runner применяет новую миграцию, запускает новый SQL и существующие trial,
   eligibility, checkout-reservation, lifecycle и room-admission regressions.
-- [ ] Запустить `node apps/web/supabase/contracts/cardless_trial_contract.mjs`
+- [x] Запустить `node apps/web/supabase/contracts/cardless_trial_contract.mjs`
   в настроенном disposable-контейнере: RED на отсутствующем новом контракте.
-- [ ] Реализовать additive схему и общую account-level сериализацию существующего
+- [x] Реализовать additive схему и общую account-level сериализацию существующего
   Checkout с новыми операциями. Не держать SQL transaction во время Stripe HTTP.
   Незавершенные сетевые операции имеют durable state; TTL не доказывает их провал.
-- [ ] Расширить refresh v3 проверкой activation ID/owner/provenance; сохранить
+- [x] Расширить refresh v3 проверкой activation ID/owner/provenance; сохранить
   существующий lease, fresh snapshot и immutable даты. Старый v2 остается
   совместимым для старых обработчиков; он не может создать cardless ledger.
-- [ ] Повторить SQL/concurrency command: GREEN; snapshot старых grants неизменен.
-- [ ] Commit `feat(billing): add fenced cardless trial and renewal records`.
+- [x] Повторить SQL/concurrency command: GREEN; snapshot старых grants неизменен.
+- [x] Commit `feat(billing): add fenced cardless trial and renewal records`.
 
 ## Task 2: Авторизованный старт без Checkout
 

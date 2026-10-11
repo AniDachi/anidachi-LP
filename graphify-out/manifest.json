@@ -2238,9 +2238,9 @@
     "semantic_hash": "1828197cc2e734653c06fe7fde317041"
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1790617236.1000676,
-    "seen": 1790618764.0275252,
-    "ast_hash": "3e428f1b81c2c9268cbd3c4169abee1a",
+    "mtime": 1791723202.3451939,
+    "seen": 1791723457.533917,
+    "ast_hash": "269689681dabed3a14d7b43491344144",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-codes.ts": {
@@ -2406,9 +2406,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-subscription-sync.ts": {
-    "mtime": 1790517850.780758,
-    "seen": 1790527610.087511,
-    "ast_hash": "cccdfb17469104bd0298913a72e77f4a",
+    "mtime": 1791723398.4102185,
+    "seen": 1791723457.533921,
+    "ast_hash": "61f716d1ba4cdffa63631f2760979a37",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/token-policy.ts": {
@@ -8658,9 +8658,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-trial-state.ts": {
-    "mtime": 1790517850.7804368,
-    "seen": 1790527610.087511,
-    "ast_hash": "40b08f7be85842314995c7c30e66f381",
+    "mtime": 1791724054.5663695,
+    "seen": 1791724365.831607,
+    "ast_hash": "b773a08efb90636c1a56e10d032de0b5",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-webhook-events.test.ts": {
@@ -9762,22 +9762,22 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md": {
-    "mtime": 1791721848.5886326,
-    "seen": 1791722334.653236,
+    "mtime": 1791724167.7343142,
+    "seen": 1791724365.882688,
     "ast_hash": "",
-    "semantic_hash": "eb63435ec851e04e6ddd39e05b1cf321"
+    "semantic_hash": "f011cf68164a88fcef92eea4bd91abc9"
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial.md": {
-    "mtime": 1791721848.588184,
-    "seen": 1791722334.653238,
+    "mtime": 1791724167.734164,
+    "seen": 1791724365.882689,
     "ast_hash": "",
-    "semantic_hash": "382d4c0c78f2fa01d86ef1a529f1e74d"
+    "semantic_hash": "1a4f1e716fb62849bca9b7d0ffac5309"
   },
   "docs/superpowers/specs/2026-10-11-cardless-trial-design.md": {
-    "mtime": 1791721848.5878477,
-    "seen": 1791722334.65324,
+    "mtime": 1791724167.7344477,
+    "seen": 1791724365.88269,
     "ast_hash": "",
-    "semantic_hash": "fad006bb1449ca9335dac9dbde9da842"
+    "semantic_hash": "94d85856005ea5e069c72ac8a777f59d"
   },
   "apps/web/scripts/stripe/stripe-test-cli-transport.test.ts": {
     "mtime": 1791718633.6850915,
@@ -9801,6 +9801,30 @@
     "mtime": 1791721961.7102036,
     "seen": 1791722334.600393,
     "ast_hash": "4aaa6e7fd36892784d69ac3795fbdabd",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts": {
+    "mtime": 1791723398.4102216,
+    "seen": 1791723457.5339189,
+    "ast_hash": "1d6aa1a0783ea3e5d889e205950efbef",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/cardless_trial_contract.mjs": {
+    "mtime": 1791723398.410215,
+    "seen": 1791723457.5339231,
+    "ast_hash": "791a226aaeddb2ccaa606ce56f6f6505",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql": {
+    "mtime": 1791724054.5655801,
+    "seen": 1791724365.8316102,
+    "ast_hash": "ed6f8cc66790b63f6deeb1c5da1a2628",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/cardless_subscription_trials.test.sql": {
+    "mtime": 1791724054.565826,
+    "seen": 1791724365.8316119,
+    "ast_hash": "8e4369ac30eeca11fb553781290776da",
     "semantic_hash": ""
   }
 }
