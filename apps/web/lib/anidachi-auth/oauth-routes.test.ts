@@ -412,3 +412,28 @@ it("checkout session recovery clears a stale access cookie before sign-in when r
     assert.equal(response.cookies.get(cookie)?.maxAge, 0);
   }
 });
+
+it("verified provider email is recorded for the signed-in account; missing proof does not become verified",async()=>{
+ for(const verified of [true,false,undefined]){
+  const seen:string[]=[];
+  const response=await handleOAuthCallback({provider:"google",request:callbackRequest("google",secret(21),secret(22),"code"),
+   exchangeFn:async()=>({...profile("google-user"),emailVerified:verified}),
+   dependencies:{consumeTransaction:async()=>({returnTo:"/account",codeVerifier:"V".repeat(43)}),upsertUser:async()=>({id:"user-1"}) as never,
+    recordVerifiedEmail:async(userId,email)=>{seen.push(userId+":"+email);},issueTokenPair:async()=>({accessToken:"access",refreshToken:"refresh"}),setAuthCookies:()=>{}}});
+  assert.equal(response.headers.get("location"),"https://staging.anidachi.app/account");assert.equal(seen.length,verified?1:0);
+  if(verified)assert.equal(seen[0],"user-1:"+profile("google-user").email);
+ }
+});
+it("verification-record outage cannot block an existing account login",async()=>{
+ const response=await handleOAuthCallback({provider:"google",request:callbackRequest("google",secret(23),secret(24),"code"),
+  exchangeFn:async()=>({...profile("google-user"),emailVerified:true}),dependencies:{consumeTransaction:async()=>({returnTo:"/account",codeVerifier:"V".repeat(43)}),
+   upsertUser:async()=>({id:"user-1"}) as never,recordVerifiedEmail:async()=>{throw Error("unavailable");},issueTokenPair:async()=>({accessToken:"access",refreshToken:"refresh"}),setAuthCookies:()=>{}}});
+ assert.equal(response.headers.get("location"),"https://staging.anidachi.app/account");
+});
+it("Google email proof is copied only from the provider boolean",async()=>{
+ process.env.ANIDACHI_GOOGLE_CLIENT_ID="google-client";process.env.ANIDACHI_GOOGLE_CLIENT_SECRET="google-secret";
+ for(const verified of [true,false,undefined,"true"]){
+  let call=0;globalThis.fetch=async()=>new Response(JSON.stringify(++call===1?{access_token:"fixture-token"}:{sub:"google-user",email:"fixture@example.test",email_verified:verified}));
+  const p=await exchangeGoogleCode("fixture-code","https://staging.anidachi.app","V".repeat(43));assert.equal(p.emailVerified,verified===true);
+ }
+});

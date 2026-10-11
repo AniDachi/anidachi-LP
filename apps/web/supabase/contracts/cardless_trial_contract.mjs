@@ -79,6 +79,21 @@ if (
 				"\ncommit;",
 		);
 }
+if (
+	sql(
+		"select to_regprocedure('public.consume_trial_action_rate_limit_v1(uuid,text)') is null;",
+	).trim() === "t"
+) {
+	const migration = readdirSync(resolve(base, "migrations")).find((f) =>
+		f.endsWith("_cardless_trial_launch_guards.sql"),
+	);
+	if (migration)
+		sql(
+			"begin;\n" +
+				readFileSync(resolve(base, "migrations", migration), "utf8") +
+				"\ncommit;",
+		);
+}
 assert.equal(
 	snapshot(),
 	before,
@@ -86,6 +101,7 @@ assert.equal(
 );
 for (const name of [
 	"cardless_subscription_trials",
+	"cardless_trial_launch",
 	"paid_hosting_trials",
 	"unified_trial_eligibility",
 	"subscription_checkout_reservations",
@@ -143,7 +159,7 @@ try {
 		if (r.status === "rejected")
 			assert.match(
 				r.reason.message,
-				/TRIAL_ACTIVATION_BUSY|TRIAL_CHECKOUT_UNRESOLVED/,
+				/TRIAL_ACTIVATION_BUSY|TRIAL_CHECKOUT_UNRESOLVED|CARDLESS_TRIAL_OFFER_CHANGED/,
 			);
 	assert.equal(
 		sql(

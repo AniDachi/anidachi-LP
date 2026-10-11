@@ -181,3 +181,14 @@ test("verified yearly prices share the same account trial eligibility as monthly
 	assert.equal(result.yearlyPrices?.plus.unitAmount, 7670);
 	assert.equal(result.yearlyPrices?.pro.unitAmount, 14390);
 });
+
+test("cardless mode and revision require every launch flag while keeping the existing action enum",async()=>{
+ for(const user of [null,"owner"]){
+  const offer=await getPricingOffer(user,{...deps,policy:async()=>({activation_at:time,trials_enabled:true,cardless_trials_enabled:true,revision:7})});
+  assert.equal(offer.trialMode,"cardless");assert.equal(offer.trialOfferRevision,"7");assert.equal(offer.action,user?"trial":"sign_in");
+ }
+ for(const override of [{cardless_trials_enabled:false},{trials_enabled:false},{activation_at:null}]){
+  const offer=await getPricingOffer(null,{...deps,policy:async()=>({activation_at:time,trials_enabled:true,cardless_trials_enabled:true,revision:7,...override})});
+  assert.equal(offer.trialMode,"card_required");
+ }
+});

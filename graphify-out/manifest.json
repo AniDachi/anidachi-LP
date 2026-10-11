@@ -2256,9 +2256,9 @@
     "semantic_hash": "6194c85527b0fac7609e381c2542a9e5"
   },
   "apps/web/lib/anidachi-auth/handle-oauth-callback.ts": {
-    "mtime": 1790853156.3426704,
-    "seen": 1790854426.051011,
-    "ast_hash": "ef22519face7f630650c54040a3d56f6",
+    "mtime": 1791725156.2097545,
+    "seen": 1791726008.866997,
+    "ast_hash": "fbaae169b5b5e4fe395438f7ab7013d7",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/jwt.test.ts": {
@@ -2274,16 +2274,16 @@
     "semantic_hash": "04e0770b1b600f8e5f33b03926224aa2"
   },
   "apps/web/lib/anidachi-auth/oauth/discord.ts": {
-    "mtime": 1789490458.9662693,
-    "seen": 1789807056.437068,
-    "ast_hash": "8ada637626009505950214e122ac117f",
-    "semantic_hash": "8ada637626009505950214e122ac117f"
+    "mtime": 1791725156.2102556,
+    "seen": 1791726008.8669991,
+    "ast_hash": "675374398bc19fcefd725350879e3793",
+    "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/oauth/google.ts": {
-    "mtime": 1789490458.9663246,
-    "seen": 1789807056.437069,
-    "ast_hash": "21950659d240dc2f41f1d7fc444fa2bc",
-    "semantic_hash": "21950659d240dc2f41f1d7fc444fa2bc"
+    "mtime": 1791725156.2101486,
+    "seen": 1791726008.8669991,
+    "ast_hash": "48fe4376ec575a826631dbb9b88c91b3",
+    "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/plan-codes.test.ts": {
     "mtime": 1789490458.966569,
@@ -5502,9 +5502,9 @@
     "semantic_hash": "dd3c486f031beaa34bf17ca4b136556a"
   },
   "apps/web/lib/anidachi-auth/oauth-routes.test.ts": {
-    "mtime": 1790853908.0044515,
-    "seen": 1790854426.051012,
-    "ast_hash": "209a6298793ffb758429095335c092f3",
+    "mtime": 1791725063.2639868,
+    "seen": 1791726008.866998,
+    "ast_hash": "adb46b1d378c4c8381f1d45c60a1727d",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/oauth-start.ts": {
@@ -8676,21 +8676,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-checkout-server.ts": {
-    "mtime": 1790757514.4714324,
-    "seen": 1790844799.9131572,
-    "ast_hash": "9500986798a316b9b1da5c533c639b0e",
+    "mtime": 1791725380.4221938,
+    "seen": 1791726008.867,
+    "ast_hash": "685418543131161a0248fe87c1661e37",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-trial.test.ts": {
-    "mtime": 1790758381.8605394,
-    "seen": 1790844799.913158,
-    "ast_hash": "83a3950e55166a4c6217ededaf63f6a2",
+    "mtime": 1791724790.4112434,
+    "seen": 1791726008.867001,
+    "ast_hash": "08759cb9a866872c4cb71f66899b8d21",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-trial.ts": {
-    "mtime": 1790758381.8591971,
-    "seen": 1790844799.913158,
-    "ast_hash": "a3496de6105a8ec678a7fc48ff3057a9",
+    "mtime": 1791725536.9776175,
+    "seen": 1791726008.867001,
+    "ast_hash": "d78c85764dbadfa4c8f4468ece1857fe",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/trial-plan-change.test.ts": {
@@ -8910,15 +8910,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.test.ts": {
-    "mtime": 1790894716.723628,
-    "seen": 1790895793.6195571,
-    "ast_hash": "af856bae04221dcbee23db576d51c0a6",
+    "mtime": 1791724790.4133053,
+    "seen": 1791726008.8669991,
+    "ast_hash": "37686c913cefb932b0ea7920db64498b",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.ts": {
-    "mtime": 1790894024.2101018,
-    "seen": 1790895793.6195571,
-    "ast_hash": "ce9f04f89708e4d88f1eb52f005731ab",
+    "mtime": 1791725415.528004,
+    "seen": 1791726008.867,
+    "ast_hash": "c1a05ffe2b83e23fb5a73ca6cac5284b",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
@@ -8928,9 +8928,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
-    "mtime": 1790894622.0672126,
-    "seen": 1790895793.6195579,
-    "ast_hash": "3bb3dbf38ff4a71dbab5f8f97dee2ef8",
+    "mtime": 1791725380.424784,
+    "seen": 1791726008.867002,
+    "ast_hash": "a51b11548377560103fc0bf3173e3ebf",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-connect-route.test.ts": {
@@ -9762,22 +9762,22 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md": {
-    "mtime": 1791724167.7343142,
-    "seen": 1791724365.882688,
+    "mtime": 1791725536.9792833,
+    "seen": 1791726008.917632,
     "ast_hash": "",
-    "semantic_hash": "f011cf68164a88fcef92eea4bd91abc9"
+    "semantic_hash": "7342e77b3a148beea5231740ab34e1ef"
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial.md": {
-    "mtime": 1791724167.734164,
-    "seen": 1791724365.882689,
+    "mtime": 1791725536.9781988,
+    "seen": 1791726008.917634,
     "ast_hash": "",
-    "semantic_hash": "1a4f1e716fb62849bca9b7d0ffac5309"
+    "semantic_hash": "0364446a091fc91f672d3fc41a106378"
   },
   "docs/superpowers/specs/2026-10-11-cardless-trial-design.md": {
-    "mtime": 1791724167.7344477,
-    "seen": 1791724365.88269,
+    "mtime": 1791725536.9787047,
+    "seen": 1791726008.917635,
     "ast_hash": "",
-    "semantic_hash": "94d85856005ea5e069c72ac8a777f59d"
+    "semantic_hash": "efff56a61c617a161c12a64b42332a81"
   },
   "apps/web/scripts/stripe/stripe-test-cli-transport.test.ts": {
     "mtime": 1791718633.6850915,
@@ -9810,9 +9810,9 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/cardless_trial_contract.mjs": {
-    "mtime": 1791723398.410215,
-    "seen": 1791723457.5339231,
-    "ast_hash": "791a226aaeddb2ccaa606ce56f6f6505",
+    "mtime": 1791725380.4226444,
+    "seen": 1791726008.867003,
+    "ast_hash": "1b597692e7d0c7c05486a3e525e68da8",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql": {
@@ -9825,6 +9825,60 @@
     "mtime": 1791724054.565826,
     "seen": 1791724365.8316119,
     "ast_hash": "8e4369ac30eeca11fb553781290776da",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/billing/trial/start/route.ts": {
+    "mtime": 1791725293.2353625,
+    "seen": 1791726008.866993,
+    "ast_hash": "6ab0fbae13804ff873c2d24e51d89eeb",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts": {
+    "mtime": 1791725415.8596523,
+    "seen": 1791726008.866994,
+    "ast_hash": "f820bee5813c34d4b54be4beb1c15daf",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cardless-trial-routes.ts": {
+    "mtime": 1791725415.859651,
+    "seen": 1791726008.8669949,
+    "ast_hash": "4aeb21ddacf12edbb066a87723a8e161",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cardless-trial-server.ts": {
+    "mtime": 1791725380.422204,
+    "seen": 1791726008.866996,
+    "ast_hash": "394c27a3aa5b2294ef83c6f83c24ec8b",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cardless-trial.test.ts": {
+    "mtime": 1791725415.5282133,
+    "seen": 1791726008.866996,
+    "ast_hash": "a92b695031e147e411590e17df753dbd",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cardless-trial.ts": {
+    "mtime": 1791725415.527863,
+    "seen": 1791726008.866996,
+    "ast_hash": "02642c726bdcdfc8f0da1f2b88043c82",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/verified-email.ts": {
+    "mtime": 1791725380.4252036,
+    "seen": 1791726008.867002,
+    "ast_hash": "9a40f3b49eb9773c8f164142601ab293",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql": {
+    "mtime": 1791725016.8950698,
+    "seen": 1791726008.867003,
+    "ast_hash": "e44b23da03d7b3fa83601c73affc298c",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/cardless_trial_launch.test.sql": {
+    "mtime": 1791724938.1832662,
+    "seen": 1791726008.867004,
+    "ast_hash": "3102338050d4821099dfdb5172d7d42c",
     "semantic_hash": ""
   }
 }

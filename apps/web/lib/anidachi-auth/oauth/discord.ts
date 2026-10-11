@@ -40,6 +40,7 @@ export function buildDiscordAuthUrl(
 }
 
 export type OAuthProfile = {
+  emailVerified: boolean;
   providerId: string;
   email: string;
   displayName: string;
@@ -95,6 +96,7 @@ export async function exchangeDiscordCode(
   return {
     providerId: user.id as string,
     email: user.email as string,
+    emailVerified: true,
     displayName: user.global_name ?? user.username ?? "Anonymous",
     avatarUrl,
   };

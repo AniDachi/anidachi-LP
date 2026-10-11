@@ -35,12 +35,13 @@ export type CheckoutResult = {
 	trialOffered: boolean;
 };
 export type CheckoutDeps = {
+	readReservation?: (userId: string) => Promise<CheckoutReservation | null>;
 	stripe: Stripe;
 	offer?: (
 		userId: string,
 		priceId: string,
 		billingPeriod: BillingPeriod,
-	) => Promise<{ action: string; price: MonthlyPrice }>;
+	) => Promise<{ action: string; price: MonthlyPrice; trialMode?: string }>;
 	now?: () => number;
 	reserve: (input: CheckoutInput) => Promise<CheckoutReservation>;
 	finish: (
@@ -231,7 +232,7 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 	}
 	async function retireLegacyCheckouts(
 		customerId: string,
-		input: CheckoutInput,
+		input: Pick<CheckoutInput, "userId">,
 	) {
 		// Older deployments issued unreserved sessions. Retire their URLs before
 		// preparing a new offer; a concurrently completed one must be synchronized.
@@ -264,10 +265,204 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 		}
 		return null;
 	}
+
+	function reservationAge(r: CheckoutReservation) {
+		const age = (deps.now ?? Date.now)() - Date.parse(r.created_at);
+		if (!Number.isFinite(age) || age < -300000)
+			throw new SubscriptionCheckoutError("Checkout clock unavailable.");
+		return age;
+	}
+	async function customerForReservation(
+		r: CheckoutReservation,
+		customer: Awaited<ReturnType<CheckoutDeps["getCustomer"]>>,
+	) {
+		if (customer) {
+			if (customer.user_id !== r.user_id)
+				throw new SubscriptionCheckoutError("Customer owner mismatch.");
+			return customer;
+		}
+		if (reservationAge(r) >= REPLAY_WINDOW_MS)
+			throw new SubscriptionCheckoutError(
+				"Customer reconciliation required before retry.",
+			);
+		const created = await stripe.customers.create(
+			{ metadata: { userId: r.user_id, checkoutReservationId: r.id } },
+			{ ...REQUEST, idempotencyKey: "checkout-customer:" + r.id },
+		);
+		await deps.saveCustomer(r.user_id, created.id);
+		return { user_id: r.user_id, stripe_customer_id: created.id };
+	}
+	async function recoverReservationSession(
+		r: CheckoutReservation,
+		customerId: string,
+	) {
+		const age = reservationAge(r);
+		let session: Stripe.Checkout.Session | null = null;
+		if (r.stripe_session_id)
+			session = await stripe.checkout.sessions.retrieve(
+				r.stripe_session_id,
+				{},
+				REQUEST,
+			);
+		else {
+			const sessions = await stripe.checkout.sessions.list(
+				{
+					customer: customerId,
+					limit: 100,
+					created: { gte: Math.floor(Date.parse(r.created_at) / 1000) - 1 },
+				},
+				REQUEST,
+			);
+			if (sessions.has_more)
+				throw new SubscriptionCheckoutError(
+					"Checkout reconciliation required.",
+				);
+			const matching = sessions.data.filter(
+				(s) => s.metadata?.checkoutReservationId === r.id,
+			);
+			if (matching.length > 1)
+				throw new SubscriptionCheckoutError(
+					"Checkout reconciliation required.",
+				);
+			session = matching[0] ?? null;
+			if (!session) {
+				if (age >= REPLAY_WINDOW_MS)
+					throw new SubscriptionCheckoutError(
+						"Checkout reconciliation required before retry.",
+					);
+				const metadata = {
+					...r.attribution,
+					userId: r.user_id,
+					planCode: r.plan_code,
+					checkoutReservationId: r.id,
+					...(r.trial_offered ? { anidachiTrial: "72h_v1" } : {}),
+				};
+				session = await stripe.checkout.sessions.create(
+					{
+						mode: "subscription",
+						customer: customerId,
+						client_reference_id: r.user_id,
+						// Recover the frozen legacy reservation with its original card-required terms.
+						payment_method_types: ["card"],
+						payment_method_collection: "always",
+						line_items: [{ price: r.price_id, quantity: 1 }],
+						success_url: r.origin + "/success?session_id={CHECKOUT_SESSION_ID}",
+						cancel_url:
+							r.origin +
+							"/pricing" +
+							(["monthly", "yearly"].includes(r.attribution.billingPeriod)
+								? `?billing=${r.attribution.billingPeriod}`
+								: ""),
+						allow_promotion_codes: true,
+						billing_address_collection: "required",
+						metadata,
+						subscription_data: {
+							metadata,
+							...(r.trial_offered
+								? {
+										trial_period_days: 3,
+										trial_settings: {
+											end_behavior: {
+												missing_payment_method: "cancel" as const,
+											},
+										},
+									}
+								: {}),
+						},
+					},
+					{ ...REQUEST, idempotencyKey: "checkout:" + r.id },
+				);
+			}
+		}
+		return session;
+	}
 	return {
+		async retireForCardless(
+			userId: string,
+		): Promise<"clear" | "ineligible" | "pending"> {
+			try {
+				if (!deps.readReservation)
+					throw new SubscriptionCheckoutError(
+						"Checkout reconciliation unavailable.",
+					);
+				const r = await deps.readReservation(userId);
+				let customer = await deps.getCustomer(userId);
+				if (customer && customer.user_id !== userId)
+					throw new SubscriptionCheckoutError("Customer owner mismatch.");
+				if (r) {
+					if (r.user_id !== userId)
+						throw new SubscriptionCheckoutError("Checkout owner mismatch.");
+					if (r.state === "pending" || r.state === "open") {
+						customer = await customerForReservation(r, customer);
+						let session = await recoverReservationSession(
+							r,
+							customer.stripe_customer_id,
+						);
+						verifySession(session, r, customer.stripe_customer_id);
+						if (session.status === "open")
+							session = await expireAndRead(
+								session,
+								customer.stripe_customer_id,
+								userId,
+							);
+						verifySession(session, r, customer.stripe_customer_id);
+						if (session.status === "expired")
+							await deps.finish(r, session.id, "expired");
+						else if (session.status === "complete") {
+							const subId = id(session.subscription);
+							if (!subId)
+								throw new SubscriptionCheckoutError(
+									"Subscription reconciliation required.",
+								);
+							await deps.sync(subId, userId);
+							await deps.finish(r, session.id, "complete", subId);
+							return "ineligible";
+						} else return "pending";
+					} else if (r.state === "complete" && r.stripe_subscription_id) {
+						const fresh = await deps.sync(r.stripe_subscription_id, userId);
+						if (!["canceled", "incomplete_expired"].includes(fresh.status))
+							return "ineligible";
+					}
+				}
+				if (customer) {
+					if (
+						await retireLegacyCheckouts(customer.stripe_customer_id, { userId })
+					)
+						return "ineligible";
+					const active = await existingSubscription(
+						customer.stripe_customer_id,
+						userId,
+					);
+					if (active) {
+						await deps.sync(active.id, userId);
+						return "ineligible";
+					}
+				}
+				return "clear";
+			} catch {
+				return "pending";
+			}
+		},
 		async prepareSubscriptionCheckout(
 			input: CheckoutInput,
 		): Promise<CheckoutResult> {
+			let cardlessPolicy = false;
+			if (deps.offer) {
+				const current = await deps.offer(
+					input.userId,
+					input.priceId,
+					input.billingPeriod ?? "monthly",
+				);
+				cardlessPolicy = current.trialMode === "cardless";
+				if (cardlessPolicy && current.action === "trial") {
+					const previous = await deps.readReservation?.(input.userId);
+					if (!previous || !["pending", "open"].includes(previous.state))
+						throw new SubscriptionCheckoutError(
+							"Displayed checkout offer changed.",
+							409,
+						);
+				}
+			}
 			// The browser sends only what was displayed. Recheck the account action
 			// and the configured Stripe price here, before any checkout side effect.
 			if (input.displayedOffer !== undefined) {
@@ -324,108 +519,17 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				const r = await deps.reserve(input);
 				if (r.user_id !== input.userId)
 					throw new SubscriptionCheckoutError("Reservation owner mismatch.");
-				const age = (deps.now ?? Date.now)() - Date.parse(r.created_at);
-				if (!Number.isFinite(age) || age < -300_000)
-					throw new SubscriptionCheckoutError("Checkout clock unavailable.");
-				if (!customer) {
-					if (age >= REPLAY_WINDOW_MS)
-						throw new SubscriptionCheckoutError(
-							"Customer reconciliation required before retry.",
-						);
-					// Omit mutable email/name from replay parameters; Checkout collects billing contact details.
-					const created = await stripe.customers.create(
-						{ metadata: { userId: input.userId, checkoutReservationId: r.id } },
-						{ ...REQUEST, idempotencyKey: "checkout-customer:" + r.id },
-					);
-					await deps.saveCustomer(input.userId, created.id);
-					customer = { user_id: input.userId, stripe_customer_id: created.id };
-				}
+				customer = await customerForReservation(r, customer);
 				const customerId = customer.stripe_customer_id;
 				const access = await deps.access(input.userId);
 				const matches =
 					r.plan_code === input.planCode &&
 					r.price_id === input.priceId &&
 					r.origin === input.origin &&
-					r.policy_revision === access.hostingPolicyVersion &&
+					(r.policy_revision === access.hostingPolicyVersion ||
+						(cardlessPolicy && r.trial_offered)) &&
 					r.trial_offered === (access.trialEligibility === "eligible");
-				let session: Stripe.Checkout.Session | null = null;
-				if (r.stripe_session_id)
-					session = await stripe.checkout.sessions.retrieve(
-						r.stripe_session_id,
-						{},
-						REQUEST,
-					);
-				else {
-					const sessions = await stripe.checkout.sessions.list(
-						{
-							customer: customerId,
-							limit: 100,
-							created: { gte: Math.floor(Date.parse(r.created_at) / 1000) - 1 },
-						},
-						REQUEST,
-					);
-					if (sessions.has_more)
-						throw new SubscriptionCheckoutError(
-							"Checkout reconciliation required.",
-						);
-					const matching = sessions.data.filter(
-						(s) => s.metadata?.checkoutReservationId === r.id,
-					);
-					if (matching.length > 1)
-						throw new SubscriptionCheckoutError(
-							"Checkout reconciliation required.",
-						);
-					session = matching[0] ?? null;
-					if (!session) {
-						if (age >= REPLAY_WINDOW_MS)
-							throw new SubscriptionCheckoutError(
-								"Checkout reconciliation required before retry.",
-							);
-						const metadata = {
-							...r.attribution,
-							userId: r.user_id,
-							planCode: r.plan_code,
-							checkoutReservationId: r.id,
-							...(r.trial_offered ? { anidachiTrial: "72h_v1" } : {}),
-						};
-						session = await stripe.checkout.sessions.create(
-							{
-								mode: "subscription",
-								customer: customerId,
-								client_reference_id: r.user_id,
-								// Product requirement is explicitly a card-backed trial; preserve the existing card-only flow.
-								payment_method_types: ["card"],
-								payment_method_collection: "always",
-								line_items: [{ price: r.price_id, quantity: 1 }],
-								success_url:
-									r.origin + "/success?session_id={CHECKOUT_SESSION_ID}",
-								cancel_url:
-									r.origin +
-									"/pricing" +
-									(["monthly", "yearly"].includes(r.attribution.billingPeriod)
-										? `?billing=${r.attribution.billingPeriod}`
-										: ""),
-								allow_promotion_codes: true,
-								billing_address_collection: "required",
-								metadata,
-								subscription_data: {
-									metadata,
-									...(r.trial_offered
-										? {
-												trial_period_days: 3,
-												trial_settings: {
-													end_behavior: {
-														missing_payment_method: "cancel" as const,
-													},
-												},
-											}
-										: {}),
-								},
-							},
-							{ ...REQUEST, idempotencyKey: "checkout:" + r.id },
-						);
-					}
-				}
+				const session = await recoverReservationSession(r, customerId);
 				verifySession(session, r, customerId);
 				if (session.status === "complete") {
 					const subscriptionId = id(session.subscription);

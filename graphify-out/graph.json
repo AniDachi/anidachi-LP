@@ -1034,12 +1034,13 @@
         "_origin": "semantic"
       },
       {
-        "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_0_evidence_separation",
-        "label": "Task 0 Evidence Separation",
+        "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_stripe_and_application_evidence_separation",
+        "label": "Stripe And Application Evidence Separation",
         "nodes": [
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_schedule_capability_case_matrix",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate"
         ],
@@ -13256,7 +13257,7 @@
       "file_type": "code",
       "norm_label": "handleoauthcallbackdependencies",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L21"
+      "source_location": "L23"
     },
     {
       "id": "apps_web_lib_anidachi_auth_handle_oauth_callback_handleoauthcallbackoptions",
@@ -13269,7 +13270,7 @@
       "file_type": "code",
       "norm_label": "handleoauthcallbackoptions",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L28"
+      "source_location": "L31"
     },
     {
       "id": "apps_web_lib_anidachi_auth_handle_oauth_callback_oauthprofile",
@@ -13282,7 +13283,7 @@
       "file_type": "code",
       "norm_label": "oauthprofile",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L14"
+      "source_location": "L15"
     },
     {
       "id": "apps_web_lib_anidachi_auth_jwt_accesstokenpayload",
@@ -56086,7 +56087,7 @@
       "file_type": "code",
       "norm_label": "handleoauthcallback()",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L39"
+      "source_location": "L42"
     },
     {
       "id": "apps_web_lib_anidachi_auth_handle_oauth_callback_redirectandcleartransaction",
@@ -56098,7 +56099,7 @@
       "file_type": "code",
       "norm_label": "redirectandcleartransaction()",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L161"
+      "source_location": "L171"
     },
     {
       "id": "apps_web_lib_anidachi_auth_oauth_discord_builddiscordauthurl",
@@ -56122,7 +56123,7 @@
       "file_type": "code",
       "norm_label": "exchangediscordcode()",
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
-      "source_location": "L49"
+      "source_location": "L50"
     },
     {
       "id": "apps_web_lib_anidachi_auth_oauth_discord_getcredentials",
@@ -56170,7 +56171,7 @@
       "file_type": "code",
       "norm_label": "exchangegooglecode()",
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
-      "source_location": "L56"
+      "source_location": "L57"
     },
     {
       "id": "apps_web_lib_anidachi_auth_oauth_google_getcredentials",
@@ -161002,7 +161003,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L148"
+      "source_location": "L149"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_existingsubscription",
@@ -161013,7 +161014,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L182"
+      "source_location": "L183"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_expireandread",
@@ -161024,7 +161025,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L201"
+      "source_location": "L202"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_portal",
@@ -161035,7 +161036,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L150"
+      "source_location": "L151"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_verifysession",
@@ -161046,7 +161047,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L165"
+      "source_location": "L166"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_id",
@@ -161057,7 +161058,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L131"
+      "source_location": "L132"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_parsecheckoutreservation",
@@ -161068,7 +161069,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L70"
+      "source_location": "L71"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_request",
@@ -161078,7 +161079,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L129"
+      "source_location": "L130"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_safestripeurl",
@@ -161089,7 +161090,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L133"
+      "source_location": "L134"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_subscriptioncheckouterror",
@@ -161101,7 +161102,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L61"
+      "source_location": "L62"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_subscriptioncheckouterror_constructor",
@@ -161112,7 +161113,7 @@
       "community_name": "plan-entitlements.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L62"
+      "source_location": "L63"
     },
     {
       "id": "apps_web_lib_anidachi_auth_subscription_trial_test",
@@ -170051,7 +170052,7 @@
       "label": "getPricingOffer()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L24",
+      "source_location": "L29",
       "_callable": true,
       "_origin": "ast",
       "community": 15,
@@ -170445,7 +170446,7 @@
       "label": "retireLegacyCheckouts()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L232",
+      "source_location": "L233",
       "_callable": true,
       "_origin": "ast",
       "community": 77,
@@ -181014,7 +181015,7 @@
       "label": "hasConfirmedTrialOffer()",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-offer.ts",
-      "source_location": "L15",
+      "source_location": "L17",
       "_callable": true,
       "_origin": "ast"
     },
@@ -190564,8 +190565,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_capabilities_and_local_storage_refresh_passed_full_flow_pending",
-      "description": "Design dated 2026-10-11; owner approved implementation and native Schedule proof after explanation. Stripe capabilities passed and storage/common refresh are implemented locally; complete product flow is unfinished and disabled everywhere. The selected mechanism is a three-day all-trial Schedule defaulting to cancel. Acceptance separates Stripe, local storage/refresh and still-required application/staging evidence. Existing auth, CSRF, owner fencing, server-only RPC, verified email and account limits remain required; no new device/card fingerprinting. Account deletion cascades trial ledger, so one lifetime trial per human is not guaranteed. Conversion improvement remains a hypothesis.",
+      "status": "stripe_capabilities_storage_refresh_and_start_local_passed_full_flow_pending",
+      "description": "Design dated 2026-10-11; owner approved implementation and native Schedule proof after explanation. Stripe capabilities passed; storage, common refresh and server start are implemented locally. Complete product flow is unfinished and disabled everywhere. The selected mechanism is a three-day all-trial Schedule defaulting to cancel. Local email-proof and account request guards accompany start; setup/renewal integration, complete callbacks, clients, analytics and staging remain separate obligations. Existing auth/CSRF/owner fencing and server-only RPC remain required; no new device/card fingerprinting. Account deletion cascades trial ledger, so one lifetime trial per human is not guaranteed. Conversion improvement remains a hypothesis.",
       "_origin": "semantic"
     },
     {
@@ -190578,7 +190579,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "selected_design_product_implementation_pending",
+      "status": "selected_contract_local_start_implemented_full_product_acceptance_pending",
       "description": "One explicitly started Plus/Pro trial per account across both billing periods. Prior usage and cancellation do not reset eligibility. Without renewal consent, exact server-time expiry returns to Free with no payment attempt or debt. Login alone does not activate trial; trial start does not create a room. Existing paid subscriptions, card-required trials, manual grants and free guest joining retain their terms. Source prices remain Plus $7.99/month or $76.70/year and Pro $14.99/month or $143.90/year, requiring recheck before release.",
       "rationale": "Remove the initial card requirement while preserving explicit user choice, existing commitments and transparent charging conditions.",
       "_origin": "semantic"
@@ -190608,8 +190609,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "storage_and_refresh_local_complete_end_to_end_flow_pending",
-      "description": "The design stores ownership, one-time eligibility, immutable dates, mode and renewal provenance in AniDachi while Stripe verifies subscriptions/payments. Local storage and common refresh are implemented; full service/application integration remains pending. Legacy mode stays card_required; cardless needs verified activation, Customer/Schedule/Subscription ownership and renewal operation. A Schedule normally has cancel_at=trial_end and cancel_at_period_end=false, which is not consent. No-consent expiry gets no two-hour wait; confirmed renewal has bounded waiting without reset. Hosting closure remains five minutes without reset and history reads remain available.",
+      "status": "storage_refresh_and_start_local_complete_end_to_end_flow_pending",
+      "description": "AniDachi stores ownership, one-time eligibility, immutable dates, mode and renewal provenance while Stripe verifies subscriptions/payments. Storage, common refresh and server start are implemented locally; renewal and full application/staging integration remain pending. Legacy mode stays card_required; cardless needs verified activation, Customer/Schedule/Subscription ownership and renewal operation. A Schedule normally has cancel_at=trial_end and cancel_at_period_end=false, which is not consent. No-consent expiry gets no two-hour wait; confirmed renewal has bounded waiting without reset. Hosting closure remains five minutes without reset and history reads remain available.",
       "rationale": "Saved cards, client timers, return URLs and cancel_at_period_end alone cannot establish payment or verified renewal consent.",
       "_origin": "semantic"
     },
@@ -190623,9 +190624,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "storage_authority_and_customer_binding_local_verified_services_pending",
-      "description": "The activation design uses durable account reservation shared with legacy Checkout before any external Customer creation for a new account. Customer starts nullable, then an owner-fenced RPC binds the verified ID; replay uses the same key and mapping instead of creating another Customer. Stable Schedule create identity and both Schedule/Subscription IDs persist. Local storage authority is implemented; orchestration must still reconcile legacy sessions and external network/database uncertainty, verify dates and consume eligibility only after verified creation. No blind recreate after Stripe key retention; flag-off permits recovery of existing operations.",
-      "rationale": "Reserve the account before external Customer creation so a new-account race cannot establish competing customer mappings; complete external orchestration remains Task 2.",
+      "status": "account_authority_customer_binding_and_start_recovery_local_verified",
+      "description": "The activation flow reserves durable account authority shared with legacy Checkout before external Customer creation. Customer starts nullable and an owner-fenced RPC binds its verified ID; replay uses the same identity and mapping. Stable Schedule create identity and both Schedule/Subscription IDs persist. Server start and recovery are locally implemented; unknown legacy Checkout outcomes block a competing flow, verified creation consumes eligibility, and uncertain external results remain pending. No blind recreation after Stripe key retention; flag-off permits recovery of existing operations. Fresh starts require provider-confirmed email; absence of proof does not block recovery of an existing activation.",
+      "rationale": "Reserve account authority before external Customer creation and recover the same external operation to avoid competing Customers, duplicate trials and lost eligibility.",
       "_origin": "semantic"
     },
     {
@@ -190722,9 +190723,13 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task0_committed_task1_storage_refresh_local_verified_tasks2_onward_pending",
-      "description": "Task 0 committed as 8048e631. Task 1 storage and common refresh are implemented and locally verified in codex/cardless-trial from origin/staging 60df2876. Selected native Schedule uses an all-trial phase defaulting to cancel and release at original end only after consent. Fourteen Schedule cases and old-Portal proof remain separate from rejected ordinary-Subscription evidence. New start/renewal routes, UI and staging acceptance are pending; the model is enabled nowhere. API 2025-08-27.basil and lockfile SDK 18.5.0 within ^18.3.0 are unchanged. Original extension checkout is preserved; production requires separate permission after staging acceptance. The closing creation-time evidence table is historical.",
-      "_origin": "semantic"
+      "status": "task0_and_task1_committed_task2_start_local_verified_tasks3_onward_pending",
+      "description": "Task 0 committed as 8048e631 and Task 1 as 2962f97c. Task 2 server start is implemented and locally verified on codex/cardless-trial. The model is enabled nowhere. Native Schedule uses an all-trial phase defaulting to cancel and releases at the original end only after consent. Fourteen Schedule cases and old-Portal proof remain distinct from the rejected ordinary Subscription evidence. Payment connection/setup, renewal services, UI and staging acceptance are pending. API 2025-08-27.basil and lockfile SDK 18.5.0 within ^18.3.0 are unchanged. Original extension checkout is preserved; production needs separate permission after staging acceptance. The closing creation-time evidence table is historical.",
+      "_origin": "semantic",
+      "completed_commits": {
+        "task0": "8048e631",
+        "task1": "2962f97c"
+      }
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_stripe_sandbox_contract_proof",
@@ -190737,7 +190742,7 @@
       "author": null,
       "contributor": null,
       "status": "task0_committed_schedule_capabilities_passed",
-      "description": "Task 0 is committed as 8048e631. Fourteen named Schedule cases and the separately recorded old-Portal Schedule check passed on owned fixtures and pinned API, including exact relative duration, no/saved card expiry, opt-in, cancellation replay, late/exact-boundary updates, decline and hosted 3DS. Per-case receipts describe dates/invoices/payments. The original CardlessStripeProof remains incomplete and is not relabeled. Task 0 establishes Stripe feasibility only; Task 1 now supplies separate local storage/common-refresh proof, while Tasks 2–5 and staging still establish complete application behavior.",
+      "description": "Task 0 is committed as 8048e631. Fourteen named Schedule cases and the separately recorded old-Portal Schedule check passed on owned fixtures and pinned API, including relative duration, no/saved-card expiry, opt-in, cancellation replay, late/exact-boundary updates, decline and hosted 3DS. Per-case receipts describe dates/invoices/payments. Original CardlessStripeProof remains incomplete and is not relabeled. Task 0 establishes Stripe feasibility only; Tasks 1 and 2 supply separate local storage/common-refresh and server-start evidence, while Tasks 3–5 and staging must establish the remaining application behavior.",
       "_origin": "semantic",
       "references": [
         "apps/web/scripts/verify-cardless-schedule-sandbox.ts",
@@ -190756,7 +190761,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task1_local_implementation_and_customer_race_checks_passed",
+      "status": "task1_committed_local_contracts_passed_not_hosted",
       "description": "Task 1 is documented complete locally: disabled policy, durable activation and fenced renewal records, immutable mode/dates/Schedule provenance and legacy card_required defaults. Initial Customer is nullable so account reservation precedes external creation; record_cardless_trial_customer_v1 binds verified Customer with owner/operation fencing and stable replay. Legacy Checkout shares serialization. SQL is not held across Stripe HTTP; age/flag-off cannot free uncertain mutations. Refresh v3 verifies stored activation; v2 rejects cardless provenance. Disposable-DB replay, SQL/concurrency, new-account Customer race and existing-data preservation passed. No hosted schema or full flow acceptance is implied.",
       "references": [
         "reserve_cardless_trial_v1",
@@ -190779,9 +190784,17 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "planned_application_implementation_and_acceptance_pending",
-      "description": "Task 2 remains unimplemented. POST /api/billing/trial/start accepts requestId/planCode/billingPeriod/offerRevision; userId is session-derived. Results distinguish active/pending/ineligible/offer_changed/unavailable. Reserve account authority before external Customer creation and bind through the Task 1 fenced RPC. Inject Stripe/storage/time, create Schedule with trial:<activationId>, verify its Subscription, both owners and exact 259200 seconds, and recover the same IDs. Preserve Origin/Sec-Fetch-Site/JSON/session/X-Anidachi-Billing-Owner guards/rate limits. Optional trialMode/revision preserve action enum; stale legacy offers return offer_changed without paid fallback.",
-      "_origin": "semantic"
+      "status": "task2_implemented_and_verified_locally_disabled_everywhere",
+      "description": "Task 2 implements POST /api/billing/trial/start behind disabled cardless policy. Session-derived user identity, Origin/Sec-Fetch-Site/JSON/session/X-Anidachi-Billing-Owner checks and durable account limits guard requestId/planCode/billingPeriod/offerRevision. Results include active, pending, verification_required, ineligible, offer_changed and unavailable; active returns 200, pending 202, conflicts including verification_required 409, unavailable 503. Fresh starts require proof of the current provider-confirmed email before reservation; legacy email/session is not backfilled as proof. Reserve authority before Customer creation, bind with owner-fenced RPC, create/recover the same Schedule and grant active only after shared fresh Stripe refresh. Existing activation recovery is not blocked by the new proof gate. Optional trialMode/revision preserve action enum and stale legacy offers receive offer_changed without paid fallback. Setup/renewal, UI and staging remain pending.",
+      "_origin": "semantic",
+      "references": [
+        "apps/web/lib/anidachi-auth/cardless-trial.ts",
+        "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+        "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+        "apps/web/app/api/billing/trial/start/route.ts",
+        "apps/web/lib/anidachi-auth/verified-email.ts",
+        "record_cardless_trial_customer_v1"
+      ]
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_renewal_operations_and_payment_lifecycle",
@@ -191020,9 +191033,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_schedule_and_local_storage_refresh_passed_services_ui_staging_pending",
-      "description": "Acceptance dated 2026-10-11 records Task 0 commit 8048e631 and Task 1 local storage/common refresh in isolated codex/cardless-trial from 60df2876be22a55af5f719918ad5fd5b1c79df65. Fourteen Schedule cases plus old-Portal check passed separately from rejected original design. Final local Task 1 has 171 SQL assertions, a corrected new-account Customer reservation/binding race, real concurrent old/new reservation proof, 30 focused TS tests, full web 994 total/988 passed/6 skips, and TypeScript passed. Start/renewal services, recovery orchestration, anti-abuse, UI, webhook integration, analytics and staging remain pending; production is unapproved.",
-      "_origin": "semantic"
+      "status": "stripe_capabilities_tasks1_and2_local_passed_setup_ui_staging_pending",
+      "description": "Acceptance records the rejected ordinary Subscription path, fourteen passing selected-Schedule cases plus old-Portal check, and separate local application checkpoints. Task 1 storage/common refresh has 171 SQL assertions, corrected pre-Customer reservation and binding, real old/new reservation concurrency, 30 focused TS tests and web 994 total/988 passed/6 skips. The later Task 2 section records implemented local server start, provider email proof, private account limits and legacy recovery/launch guards: 182 SQL checks, real concurrency, service 11, route 3, compatibility/offers 52, OAuth 14, web 1016 total/1010 passed/6 existing skips and TypeScript/diff checks passed. Setup/renewal, complete webhook recovery, UI, analytics and staging remain pending. No hosted migration, policy enablement, deployment or Stripe-object mutation occurred in Task 2.",
+      "_origin": "semantic",
+      "source_note": "The document retains earlier Task 0/Task 1 boundaries and an older header; the explicit later Task 2 checkpoint establishes current local server-start completion. Historical results are retained with their original scope."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
@@ -191035,7 +191049,7 @@
       "author": null,
       "contributor": null,
       "status": "task0_historical_tooling_checkpoint_passed",
-      "description": "Task 0 tooling checkpoint reports ten guard/transport tests RED then GREEN and TypeScript covering all three proof scripts. Its baseline web suite was 986 total/980 passed/6 skipped/0 failures; Task 1 has newer results recorded separately. Actual SDK is lockfile 18.5.0 within ^18.3.0 and API 2025-08-27.basil, with no upgrade. Proof tooling requires --test/--account and validates response mode/account/version, fixture marker/run ownership, without real-customer enumeration, caller-supplied customer IDs or deletion.",
+      "description": "Task 0 tooling checkpoint reports ten guard/transport tests RED then GREEN and TypeScript covering all three proof scripts. Its baseline web suite was 986 total/980 passed/6 skipped/0 failures; Tasks 1 and 2 have newer local results recorded separately. Actual SDK is lockfile 18.5.0 within ^18.3.0 and API 2025-08-27.basil, with no upgrade. Proof tooling requires --test/--account and validates response mode/account/version, fixture marker/run ownership, without real-customer enumeration, caller-supplied customer IDs or deletion.",
       "rationale": "Local tests validate guards and transport; separate real Sandbox runs establish only their specifically observed lifecycle behavior.",
       "references": [
         "apps/web/scripts/verify-cardless-trial-sandbox.ts",
@@ -191057,7 +191071,7 @@
         "task0_web_suite_passed": 980,
         "task0_web_suite_skipped": 6,
         "task0_web_suite_failed": 0,
-        "scope": "historical_task0_checkpoint_task1_results_recorded_separately"
+        "scope": "historical_task0_checkpoint_tasks1_and2_results_recorded_separately"
       }
     },
     {
@@ -191099,16 +191113,16 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_stripe_gate_passed_task1_local_storage_proved_full_flow_pending",
-      "description": "All 14 selected-Schedule cases and separate old-Portal Schedule check passed, distinct from the rejected ordinary Subscription contract. Optional ordinary hosted checkout was not run; hosted setup was exercised with 3DS and ordinary charge with monthly opt-in. Task 1 adds local database reservation/concurrency, immutable provenance, access deadline and common-refresh proof. Start/renewal orchestration, integrated callbacks/webhooks, analytics, UI and staging acceptance still remain.",
+      "status": "schedule_stripe_and_tasks1_and2_local_gates_passed_full_flow_pending",
+      "description": "Fourteen selected-Schedule cases and the separate old-Portal Schedule check passed, distinct from the rejected ordinary Subscription contract. Optional ordinary hosted checkout was not run; hosted setup was exercised with 3DS and ordinary charge with monthly opt-in. Task 1 supplies local reservation/concurrency, provenance, deadlines and common refresh. Task 2 supplies local guarded start/recovery, current-email proof, private limits and legacy launch compatibility. Renewal/setup services, integrated callbacks/webhooks, analytics, UI and staging acceptance remain required.",
       "scenario_evidence": {
         "schedule_named_cases": "14_passed",
         "schedule_old_portal_renew_path": "passed_separately",
         "original_subscription_portal_consent": "historical_failed_not_counted_for_schedule",
         "optional_ordinary_checkout": "not_executed_not_required_for_current_case_set",
-        "task1_sql_and_real_reservation_race": "local_passed",
-        "task1_common_refresh": "local_focused_tests_passed",
-        "full_start_renewal_recovery_webhooks_analytics_ui": "pending",
+        "task1_storage_common_refresh_and_real_reservation_race": "local_passed",
+        "task2_start_recovery_email_limits_and_legacy_guards": "local_passed",
+        "full_setup_renewal_webhook_recovery_analytics_ui": "pending",
         "staging_acceptance": "pending"
       },
       "_origin": "semantic"
@@ -191139,9 +191153,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_and_task1_local_gates_passed_full_application_and_staging_pending",
-      "description": "Stripe feasibility and local Task 1 storage/common-refresh checks passed. A local additive migration and common refresh changes now exist; no hosted schema or billing policy changed, and no deployments, extension builds, shared Portal settings or existing customer subscriptions were changed by this checkpoint. The original extension checkout is preserved. Start/renewal services, orchestration, anti-abuse, UI, webhook integration, analytics and staging remain Tasks 2–5; production still needs separate authorization.",
-      "rationale": "Isolated local SQL and refresh evidence do not prove deployed schema, complete user flow or staging/production acceptance.",
+      "status": "stripe_tasks1_and2_local_passed_full_application_and_staging_pending",
+      "description": "Stripe feasibility, local storage/common refresh and local server-start checks passed. Local additive migrations, server start, OAuth email-proof persistence, private request limits and legacy launch guards now exist behind disabled policy. Task 2 changed no hosted migration, enabled flag, deployment or Stripe object. Setup/renewal services, full webhook recovery, UI, analytics and staging remain Tasks 3–5. Existing subscriptions and original extension checkout retain their conditions; production still needs separate authorization.",
+      "rationale": "Local service, SQL and OAuth evidence do not prove deployed schema, completed user flow or staging/production acceptance.",
       "_origin": "semantic"
     },
     {
@@ -191421,7 +191435,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "selected_mechanism_verified_storage_local_start_service_pending",
+      "status": "selected_mechanism_stripe_verified_storage_and_start_local_implemented",
       "description": "One server create uses start_date=now, end_behavior=cancel and a phase with duration day×3, trial=true and no prorations. Stripe computes exact 259200-second trial dates; verify response ownership and Customer/Schedule/Subscription linkage. Subscription has cancel_at=trial_end and cancel_at_period_end=false; default expiry cancels Subscription and completes Schedule even with saved card. Put provenance markers on Schedule and its phase. API remains 2025-08-27.basil and actual SDK 18.5.0 (^18.3.0), with no upgrade.",
       "rationale": "Relative duration prevents request latency from shortening access, while native Schedule restrictions prevent the tested old-Portal renewal bypass.",
       "_origin": "semantic"
@@ -191585,8 +191599,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_storage_refresh_evidence_complete_tasks2_to5_staging_pending",
-      "description": "Task 1 now proves local reservation authority, canceled-generation fencing, provenance, deadlines and common refresh. Still pending: start/renewal endpoints, complete external recovery orchestration, request/anti-abuse guards, service-level stale/new-key callback handling, webhook/return convergence, UI, analytics classification/deduplication and full staging acceptance. Local legacy SQL regression preservation is proved; integrated legacy behavior still belongs to staging acceptance. Stripe clocks do not advance Postgres, and neither Stripe nor local DB results alone prove complete application behavior.",
+      "status": "tasks1_and2_local_complete_tasks3_to5_and_staging_pending",
+      "description": "Task 1 locally proves reservation authority, canceled-generation fencing, provenance, deadlines and common refresh. Task 2 locally proves server start/recovery, current-provider-email gate, durable private rate limits, frozen legacy Checkout recovery and fresh legacy insertion blocking. Still pending: setup/renewal services, full webhook/return recovery and convergence, renewal-level stale/new-key callback fencing, UI, analytics classification/deduplication and staging acceptance. Legacy SQL/offer/OAuth regressions pass locally; integrated legacy behavior remains a staging obligation. Stripe Test Clocks do not advance Postgres, and lower-level Stripe/database/service results alone do not prove complete application behavior.",
       "rationale": "Track each proof layer separately rather than marking remaining integration complete from passing lower-level checks.",
       "_origin": "semantic"
     },
@@ -191871,7 +191885,7 @@
       "label": "parallelSql()",
       "file_type": "code",
       "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
-      "source_location": "L102",
+      "source_location": "L118",
       "_callable": true,
       "_origin": "ast"
     },
@@ -191880,7 +191894,7 @@
       "label": "oldPolicy",
       "file_type": "code",
       "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
-      "source_location": "L118",
+      "source_location": "L134",
       "_origin": "ast"
     },
     {
@@ -191888,7 +191902,7 @@
       "label": "user",
       "file_type": "code",
       "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
-      "source_location": "L121",
+      "source_location": "L137",
       "_origin": "ast"
     },
     {
@@ -192135,7 +192149,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "171_sql_assertions_customer_binding_and_real_reservation_race_passed",
+      "status": "historical_task1_171_sql_assertions_and_real_reservation_race_passed",
       "description": "Local PostgreSQL 17.6 from cached Supabase 17.6.1.156 ran in fresh anidachi-paid-hosting-cardless-db-v2-20261011 under colima-anidachi-personal-mvp, disposable/paid-hosting labels, network none and no ports. Existing containers/data were unused. SQL RED on missing policy then GREEN: 57 cardless + 36 legacy trials + 27 eligibility + 14 Checkout reservations + 15 legacy lifecycle + 22 room admission = 171. New-account required-Customer test was RED, then nullable pre-Customer account reservation and owner-fenced binding became GREEN; replay keeps mapping, rejecting other owner or missing Customer. Real concurrent old Checkout/Plus/Pro transactions yield one durable authority, including both orderings. Replay/canonical preservation, expiry/wait/payment failure/retry, monotonic paid, stale cancel, later paid Checkout and legacy/manual rights pass.",
       "assertions": {
         "cardless": 57,
@@ -192182,8 +192196,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_sql_refresh_web_and_typescript_passed",
-      "description": "New snapshot/refresh tests were observed 8 RED then 8 GREEN; focused suites passed 30/30. Full web suite: 994 total, 988 passed, six existing skips, zero failures; TypeScript passed. Final fresh-db migration replay/canonical preservation and 171 SQL assertions passed, including Customer reservation/binding correction and a real old/new reservation race. This proves local storage/common refresh only; start/renewal services, external orchestration, UI, webhooks, analytics and staging remain pending.",
+      "status": "historical_task1_local_sql_refresh_web_and_typescript_passed",
+      "description": "Historical Task 1 checkpoint: snapshot/refresh tests were observed 8 RED then 8 GREEN; focused suites passed 30/30. Full web suite: 994 total, 988 passed, six existing skips, zero failures; TypeScript passed. Fresh-db migration replay/canonical preservation and 171 SQL assertions passed, including Customer reservation/binding correction and real old/new reservation race. This checkpoint proves local storage/common refresh. Server start and its newer tests are recorded separately under Task 2; renewal, UI, full webhook recovery, analytics and staging remain pending.",
       "results": {
         "new_snapshot_refresh_red": 8,
         "new_snapshot_refresh_green": 8,
@@ -192211,8 +192225,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task1_local_contract_implemented_task2_orchestration_pending",
-      "description": "The activation record permits an initially null Customer. Reserve account creation authority before contacting Stripe to create a Customer. record_cardless_trial_customer_v1 then binds the verified Customer using owner/operation/revision fencing. Reuse the same idempotency key and owner mapping for recovery; the remaining start service consumes this contract.",
+      "status": "task1_contract_committed_task2_start_orchestration_local_verified",
+      "description": "The activation record permits an initially null Customer. Account creation authority is reserved before contacting Stripe to create a Customer. record_cardless_trial_customer_v1 binds the verified Customer using owner/operation/revision fencing. Task 2 start consumes this contract and recovers the same idempotency identity and owner mapping; no second Customer is created merely because a response is pending.",
       "rationale": "An initial mandatory Customer would force external creation before account serialization and permit a new-account race.",
       "references": [
         "record_cardless_trial_customer_v1",
@@ -192226,6 +192240,524 @@
       "file_type": "code",
       "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
       "source_location": "L138",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "label": "Local Trial Start Recovery",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task2_local_service_and_recovery_tests_passed",
+      "description": "The disabled-policy server start uses trial-customer:<activationId> for Customer creation and trial:<activationId> for Schedule creation. Pending never consumes a new idempotency key. After 23 hours, absence of a found object does not authorize blind recreation; only positive uniquely owned Customer/Schedule discovery recovers IDs, while ambiguous outcomes remain pending. Active response requires shared fresh Stripe refresh. A saved Customer card does not alter create parameters. Existing activation recovery bypasses the new fresh-start email-proof gate.",
+      "rationale": "Retained operation identity and positive ownership reconciliation prevent response loss or expired idempotency retention from creating a duplicate trial.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "label": "Provider Verified Email Proof Gate",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task2_local_email_proof_persistence_and_start_gate_passed",
+      "description": "Migration 20261011132247_cardless_trial_launch_guards.sql adds private provider-email-proof records. New Google/Discord login persists only boolean provider confirmation. Google login previously did not persist email_verified; an old email or session is not proof and is not backfilled. Missing proof for the current email returns verification_required before fresh reservation. Future UI must request a fresh provider login. Ordinary login and paid rights continue if proof storage fails; recovery of an already-created activation bypasses this fresh-start gate.",
+      "rationale": "Account email text alone does not establish the provider confirmation required for a new trial.",
+      "references": [
+        "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+        "apps/web/lib/anidachi-auth/verified-email.ts"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_private_trial_request_limits",
+      "label": "Private Trial Request Limits",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task2_local_private_durable_limits_passed",
+      "description": "The launch-guards migration stores private durable request-limit records. Trial start applies an account limit of 20 requests per minute per operation alongside same-origin JSON, session and owner checks. The local Task 2 SQL/service/route checks pass; this is not evidence of hosted migration or enabled policy.",
+      "references": [
+        "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_frozen_legacy_checkout_recovery",
+      "label": "Frozen Legacy Checkout Recovery",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task2_local_legacy_recovery_and_fresh_insert_guard_passed",
+      "description": "Recover an already reserved legacy Checkout using its original frozen parameters, then expire it or retrieve its actual completion outcome before freeing account authority. A completed Checkout blocks a new trial. Uncertainty keeps the competing flow pending. A database insert guard prevents old deployments from creating fresh card-required reservations when cardless policy is active; already-reserved operations retain their original terms. Compatibility/offers tests pass locally; staging acceptance is pending.",
+      "rationale": "Preserve promises already made by the legacy flow while preventing parallel legacy and cardless starts for one account.",
+      "references": [
+        "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "label": "Task 2 Local Test Results",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "local_start_launch_guards_oauth_web_and_typescript_passed",
+      "description": "Task 2 completed local server start behind disabled policy. On the same disposable network-none db-v2 container, 182 SQL assertions passed: 57 cardless, 11 launch guards and 114 legacy regressions; real concurrent old/new/plan reservation authority passed. Service tests were observed RED then 11 GREEN; route tests RED then 3 GREEN. Compatibility/offers passed 52/52 and OAuth 14/14. Full web: 1016 total, 1010 passed, six existing skips, zero failures; TypeScript and git diff --check passed. No hosted migration, flag enablement, deployment or Stripe-object changes. Setup/renewal, full webhook recovery and UI remain Tasks 3–5.",
+      "results": {
+        "sql_assertions": 182,
+        "sql_cardless": 57,
+        "sql_launch_guards": 11,
+        "sql_legacy_regressions": 114,
+        "real_reservation_concurrency": "passed",
+        "service_red_then_green": 11,
+        "route_red_then_green": 3,
+        "compatibility_and_offers_passed": 52,
+        "compatibility_and_offers_total": 52,
+        "oauth_passed": 14,
+        "oauth_total": 14,
+        "web_total": 1016,
+        "web_passed": 1010,
+        "web_skipped": 6,
+        "web_failed": 0,
+        "typescript": "passed",
+        "git_diff_check": "passed"
+      },
+      "environment": {
+        "container": "anidachi-paid-hosting-cardless-db-v2-20261011",
+        "network": "none",
+        "scope": "disposable_local_database_and_local_web_tests"
+      },
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_google_verified_email_claim_reference",
+      "label": "Google Verified Email Claim Reference",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "official_reference_cited_by_task2_document",
+      "description": "The Task 2 acceptance document cites Google OpenID Connect documentation for the provider email_verified claim. This node records the source citation; it does not assert a separate documentation fetch by the extraction agent.",
+      "references": [
+        "https://developers.google.com/identity/openid-connect/openid-connect"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_app_api_billing_trial_start_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/billing/trial/start/route.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_billing_trial_start_route_post",
+      "label": "POST",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/billing/trial/start/route.ts",
+      "source_location": "L2",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "label": "cardless-trial-routes.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes_test_body",
+      "label": "body",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes_test_request",
+      "label": "request()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L14",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "label": "cardless-trial-routes.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes_private_headers",
+      "label": "PRIVATE_HEADERS",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes_startdeps",
+      "label": "StartDeps",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L19",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "label": "createCardlessTrialStartHandler()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L24",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "label": "cardless-trial-server.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "label": "cardlessTrialService()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L17",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "label": "rpc()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L19",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_server_allowtrialaction",
+      "label": "allowTrialAction()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L119",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "label": "cardless-trial.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_test_input",
+      "label": "input",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_test_fixture",
+      "label": "fixture()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L21",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial",
+      "label": "cardless-trial.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_trialstartinput",
+      "label": "TrialStartInput",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L6",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_trialstartresult",
+      "label": "TrialStartResult",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L12",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialactivation",
+      "label": "CardlessTrialActivation",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L22",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialoffer",
+      "label": "CardlessTrialOffer",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L30",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_trialcreatedproof",
+      "label": "TrialCreatedProof",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L37",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialdeps",
+      "label": "CardlessTrialDeps",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L45",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "label": "CardlessTrialError",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L77",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L78",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_request",
+      "label": "REQUEST",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L85",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_validtrialstartinput",
+      "label": "validTrialStartInput()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L88",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_parsecardlesstrialactivation",
+      "label": "parseCardlessTrialActivation()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L100",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_id",
+      "label": "id()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L147",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "label": "createCardlessTrialService()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L152",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice_run",
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L156",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_pricing_offer_trialofferfields",
+      "label": "trialOfferFields()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
+      "source_location": "L124",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_reservationage",
+      "label": "reservationAge()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L269",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_customerforreservation",
+      "label": "customerForReservation()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L275",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_recoverreservationsession",
+      "label": "recoverReservationSession()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L295",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_verified_email",
+      "label": "verified-email.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_verified_email_recordverifiedaccountemail",
+      "label": "recordVerifiedAccountEmail()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L4",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_verified_email_hasverifiedaccountemail",
+      "label": "hasVerifiedAccountEmail()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards",
+      "label": "20261011132247_cardless_trial_launch_guards.sql",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": null,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_subscription_trial_request_limits",
+      "label": "public.subscription_trial_request_limits",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_consume_trial_action_rate_limit_v1",
+      "label": "public.consume_trial_action_rate_limit_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_account_verified_emails",
+      "label": "public.account_verified_emails",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_record_verified_account_email_v1",
+      "label": "public.record_verified_account_email_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L35",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_guard_checkout_cardless_trial_v1",
+      "label": "public.guard_checkout_cardless_trial_v1()",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L44",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_supabase_tests_cardless_trial_launch_test",
+      "label": "cardless_trial_launch.test.sql",
+      "file_type": "code",
+      "source_file": "apps/web/supabase/tests/cardless_trial_launch.test.sql",
+      "source_location": null,
       "_origin": "ast"
     }
   ],
@@ -243395,7 +243927,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L124",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -243407,7 +243939,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L141",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -243419,7 +243951,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L150",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -243431,7 +243963,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L157",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -243443,7 +243975,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L53",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -243454,7 +243986,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L73",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -243466,7 +243998,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L171",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -243607,7 +244139,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L28",
@@ -243619,7 +244150,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L31",
@@ -243631,10 +244161,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -243643,10 +244172,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -243655,7 +244183,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L34",
@@ -243667,7 +244194,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L37",
@@ -243679,10 +244205,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -243691,10 +244216,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -309976,7 +310500,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -309987,7 +310511,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -309998,7 +310522,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -310009,7 +310533,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -310020,7 +310544,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -310031,7 +310555,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -310042,7 +310566,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -310053,7 +310577,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -352871,7 +353395,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -352882,7 +353406,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -352893,7 +353417,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -352904,7 +353428,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -352915,7 +353439,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -418900,7 +419424,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -418910,7 +419434,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L161",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -418920,7 +419444,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -418930,7 +419454,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L28",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -418940,7 +419464,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L39",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -419216,7 +419740,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L16",
       "weight": 1.0
@@ -419227,7 +419750,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L23",
       "weight": 1.0
@@ -419238,7 +419760,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L42",
       "weight": 1.0
@@ -419249,9 +419770,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -419260,7 +419780,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L5",
       "weight": 1.0
@@ -419271,7 +419790,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
       "source_location": "L7",
       "weight": 1.0
@@ -419282,7 +419800,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L11",
       "weight": 1.0
@@ -419293,7 +419810,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L22",
       "weight": 1.0
@@ -419304,7 +419820,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L29",
       "weight": 1.0
@@ -419315,7 +419830,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L49",
       "weight": 1.0
@@ -419326,7 +419840,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
       "source_location": "L5",
       "weight": 1.0
@@ -419337,9 +419850,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -513494,7 +514006,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -515758,7 +516270,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L4",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -515769,7 +516281,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L4",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -515780,7 +516292,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -515791,7 +516303,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -515802,7 +516314,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -515902,7 +516414,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L26",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
@@ -515924,7 +516436,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L58",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
@@ -515986,7 +516498,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L148",
+      "source_location": "L149",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial",
@@ -515996,7 +516508,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L131",
+      "source_location": "L132",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial",
@@ -516006,7 +516518,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L70",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial",
@@ -516016,7 +516528,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L129",
+      "source_location": "L130",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial",
@@ -516026,7 +516538,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial",
@@ -516036,7 +516548,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial",
@@ -516058,7 +516570,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L182",
+      "source_location": "L183",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
@@ -516068,7 +516580,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L201",
+      "source_location": "L202",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
@@ -516078,7 +516590,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L150",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
@@ -516088,7 +516600,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L165",
+      "source_location": "L166",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
@@ -516099,7 +516611,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L188",
+      "source_location": "L189",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_existingsubscription",
@@ -516110,7 +516622,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L211",
+      "source_location": "L212",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_expireandread",
@@ -516121,7 +516633,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L160",
+      "source_location": "L161",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_portal",
@@ -516132,7 +516644,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L178",
+      "source_location": "L179",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_verifysession",
@@ -516143,7 +516655,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L72",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_parsecheckoutreservation",
@@ -516154,7 +516666,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L135",
+      "source_location": "L136",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_safestripeurl",
@@ -516164,7 +516676,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_subscriptioncheckouterror",
@@ -530268,7 +530780,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_pricing_offer",
@@ -530279,7 +530791,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_pricing_offer",
@@ -530311,7 +530823,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L24",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_pricing_offer",
@@ -530805,7 +531317,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L232",
+      "source_location": "L233",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
@@ -530816,7 +531328,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L250",
+      "source_location": "L251",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_retirelegacycheckouts",
@@ -530827,7 +531339,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
-      "source_location": "L243",
+      "source_location": "L244",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_retirelegacycheckouts",
@@ -531134,7 +531646,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L2",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -531145,7 +531657,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L2",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server",
@@ -531156,7 +531668,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_pricing_offer",
@@ -531179,7 +531691,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L19",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
@@ -531253,7 +531765,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.test.ts",
-      "source_location": "L573",
+      "source_location": "L574",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_subscription_trial_test",
@@ -546918,17 +547430,6 @@
       "target": "apps_web_lib_billing_view_billingperiod"
     },
     {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/subscription-checkout-server.ts",
-      "source_location": "L22",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
-      "target": "apps_web_lib_anidachi_auth_billing_price_readbillingprice"
-    },
-    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -553987,7 +554488,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -553998,7 +554499,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554130,7 +554631,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/subscription-trial.test.ts",
-      "source_location": "L265",
+      "source_location": "L266",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562995,7 +563496,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -563006,7 +563507,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -563574,9 +564075,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
-      "source_location": "L90",
+      "source_location": "L93",
       "weight": 1.0,
-      "_origin": "ast"
+      "_origin": "ast",
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_lib_anidachi_auth_oauth_start_handleoauthstart",
@@ -567770,7 +568272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-offer.ts",
-      "source_location": "L15",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -591867,7 +592369,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
-      "source_location": "L102",
+      "source_location": "L118",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -591877,7 +592379,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
-      "source_location": "L118",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -591887,7 +592389,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/supabase/contracts/cardless_trial_contract.mjs",
-      "source_location": "L121",
+      "source_location": "L137",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -592558,6 +593060,1731 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/supabase/migrations/20261011124600_cardless_subscription_trials.sql",
       "source_location": "L138",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_private_trial_request_limits",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_private_trial_request_limits",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_frozen_legacy_checkout_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_frozen_legacy_checkout_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_google_verified_email_claim_reference",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_google_verified_email_claim_reference",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_common_refresh_provenance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_pre_customer_account_reservation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_frozen_legacy_checkout_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_disposable_database_contract_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_authorized_trial_start_api",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_authorized_trial_start_api",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_frozen_legacy_checkout_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_authorized_trial_start_api",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_authorized_trial_start_api",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_private_trial_request_limits",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_specs_2026_10_11_cardless_trial_design_durable_trial_activation",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/specs/2026-10-11-cardless-trial-design.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_app_api_billing_trial_start_route",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/trial/start/route.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_api_billing_trial_start_route",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/trial/start/route.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_api_billing_trial_start_route",
+      "target": "apps_web_app_api_billing_trial_start_route_post",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/billing/trial/start/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "ref_node_assert",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_billing_view_billing_owner_header",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_test_body",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_test_request",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_test_request",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.test.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_billing_view_billing_owner_header",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialstartinput",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialstartresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_validtrialstartinput",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_allowtrialaction",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cookies",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cookies_refresh_token_cookie",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_website_session",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_website_session_resolvewebsitesession",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_private_headers",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_startdeps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "ref_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_billing_price",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_billing_price_readbillingprice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialactivation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_parsecardlesstrialactivation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_db",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_pricing_offer",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_pricing_offer_getpricingoffer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_env",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_env_createstripeclient",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_env_resolvestripemode",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_plans",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_plans_stripepriceidforplancode",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_subscription_sync",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_stripe_subscription_sync_syncstripesubscriptionbyid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_subscription_checkout_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_verified_email",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_verified_email_hasverifiedaccountemail",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_allowtrialaction",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L119",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_allowtrialaction",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L123",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "ref_node_assert",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "ref_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialactivation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialdeps",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialstartinput",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_test_input",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_test_fixture",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_test_fixture",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L182",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "ref_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_billing_view_billingperiod",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_plan_entitlements",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_plan_entitlements_paidplancode",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_cardlesstrialactivationrecord",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialstartinput",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialstartresult",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialactivation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialoffer",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialcreatedproof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialdeps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L77",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L78",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_request",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L85",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_validtrialstartinput",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L88",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_parsecardlesstrialactivation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L100",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_id",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L147",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L152",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice_run",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L156",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_parsecardlesstrialactivation",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice_run",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.ts",
+      "source_location": "L191",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_handle_oauth_callback",
+      "target": "apps_web_lib_anidachi_auth_verified_email",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_handle_oauth_callback",
+      "target": "apps_web_lib_anidachi_auth_verified_email_recordverifiedaccountemail",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_pricing_offer",
+      "target": "apps_web_lib_anidachi_auth_pricing_offer_trialofferfields",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
+      "source_location": "L124",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_pricing_offer_getpricingoffer",
+      "target": "apps_web_lib_anidachi_auth_pricing_offer_trialofferfields",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/pricing-offer.ts",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_reservationage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L269",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_customerforreservation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L275",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_recoverreservationsession",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_reservationage",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_subscriptioncheckouterror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L272",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_customerforreservation",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_subscriptioncheckouterror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L281",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_customerforreservation",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_reservationage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L284",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_recoverreservationsession",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_reservationage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L299",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_subscription_trial_createsubscriptioncheckoutservice_recoverreservationsession",
+      "target": "apps_web_lib_anidachi_auth_subscription_trial_subscriptioncheckouterror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/subscription-trial.ts",
+      "source_location": "L317",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_verified_email",
+      "target": "apps_web_lib_anidachi_auth_db",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_verified_email",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_verified_email",
+      "target": "apps_web_lib_anidachi_auth_verified_email_recordverifiedaccountemail",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_verified_email",
+      "target": "apps_web_lib_anidachi_auth_verified_email_hasverifiedaccountemail",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards",
+      "target": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_subscription_trial_request_limits",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_subscription_trial_request_limits",
+      "target": "public_users",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_subscription_trial_request_limits",
+      "target": "public",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards",
+      "target": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_consume_trial_action_rate_limit_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards",
+      "target": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_account_verified_emails",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_account_verified_emails",
+      "target": "public_users",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_account_verified_emails",
+      "target": "public",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards",
+      "target": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_record_verified_account_email_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards",
+      "target": "apps_web_supabase_migrations_20261011132247_cardless_trial_launch_guards_public_guard_checkout_cardless_trial_v1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_validtrialstartinput",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L70",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_server_allowtrialaction",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_subscription_checkout_server_subscriptioncheckoutservice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_parsecardlesstrialactivation",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_pricing_offer_getpricingoffer",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_test_fixture",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_createcardlesstrialservice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial.test.ts",
+      "source_location": "L176",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_routes_createcardlesstrialstarthandler",
+      "target": "apps_web_lib_anidachi_auth_website_session_resolvewebsitesession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-routes.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_verified_email_hasverifiedaccountemail",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice",
+      "target": "apps_web_lib_anidachi_auth_stripe_env_resolvestripemode",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_cardlesstrialerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_cardlesstrialservice_rpc",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_parsecardlesstrialactivation",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cardless_trial_server_allowtrialaction",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/cardless-trial-server.ts",
+      "source_location": "L123",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_oauth_routes_test",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_routes_test_request",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/anidachi-auth/oauth-routes.test.ts",
+      "source_location": "L156",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_verified_email_recordverifiedaccountemail",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_verified_email_hasverifiedaccountemail",
+      "target": "apps_web_lib_anidachi_auth_db_db",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/verified-email.ts",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     }
@@ -593594,12 +595821,13 @@
       "_origin": "semantic"
     },
     {
-      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_0_evidence_separation",
-      "label": "Task 0 Evidence Separation",
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_stripe_and_application_evidence_separation",
+      "label": "Stripe And Application Evidence Separation",
       "nodes": [
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_schedule_capability_case_matrix",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate"
       ],

@@ -128,6 +128,7 @@ function fixture(
 	} as unknown as Stripe;
 	const service = createSubscriptionCheckoutService({
 		stripe,
+		readReservation: async () => reserved ? reservation : null,
 		offer: readOffer,
 		now: () => clock,
 		reserve: async (next) => {
@@ -687,4 +688,23 @@ test("used trial cannot get another trial by selecting yearly billing", async ()
 	assert.deepEqual(f.params?.line_items, [
 		{ price: "price_plus_year", quantity: 1 },
 	]);
+});
+
+test("cardless policy rejects a new legacy trial even without displayed offer", async()=>{
+ const f=fixture(true,async()=>({action:"trial",trialMode:"cardless",price:{unitAmount:799,currency:"usd"}}));
+ await assert.rejects(f.service.prepareSubscriptionCheckout(input),{status:409});assert.equal(f.createdRequests.length,0);
+});
+test("an already reserved card-required checkout retains its terms after the policy changes",async()=>{
+ let cardless=false;const f=fixture(true,async()=>({action:"trial",trialMode:cardless?"cardless":"card_required",price:{unitAmount:799,currency:"usd"}}));
+ await f.service.prepareSubscriptionCheckout(input);cardless=true;
+ const result=await f.service.prepareSubscriptionCheckout(input);assert.equal(result.kind,"checkout");assert.equal(result.trialOffered,true);assert.equal(f.createdRequests.length,1);
+});
+test("cardless transition retires the existing reserved Checkout before releasing authority",async()=>{
+ const f=fixture();await f.service.prepareSubscriptionCheckout(input);
+ assert.equal(await f.service.retireForCardless(input.userId),"clear");assert.equal(f.reservation.state,"expired");assert.equal(f.createdRequests.length,1);
+});
+test("cardless transition recovers an unknown old create with its original key before expiring",async()=>{
+ const f=fixture();f.loseResponse();await assert.rejects(f.service.prepareSubscriptionCheckout(input));
+ assert.equal(await f.service.retireForCardless(input.userId),"clear");assert.equal(f.reservation.state,"expired");
+ assert.equal(f.createdRequests[0].key,f.createdRequests[1].key);assert.deepEqual(f.createdRequests[0].params,f.createdRequests[1].params);
 });

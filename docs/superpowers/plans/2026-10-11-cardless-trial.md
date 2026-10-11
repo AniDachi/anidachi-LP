@@ -18,10 +18,10 @@ Stripe API 2025-08-27.basil, WXT extension, Cloudflare room runtime.
 **Spec:** [Проект решения](../specs/2026-10-11-cardless-trial-design.md).
 
 **Статус:** Выполнение согласовано 2026-10-11; Task 0 зафиксирован (`8048e631`),
-хранение и общий refresh Task 1 реализованы и проверены локально в отдельной ветке
+хранение/refresh Task 1 зафиксированы (`2962f97c`), серверный запуск Task 2 реализован и проверен локально в отдельной ветке
 `codex/cardless-trial` от `origin/staging` (`60df2876`). Владелец разрешил продолжить
 проверку Subscription Schedule после объяснения отличий. Stripe-примитивы новой
-схемы проверены, включая Checkout/3DS в браузере. Новые маршруты, интерфейс и
+схемы проверены, включая Checkout/3DS в браузере. Маршрут запуска готов локально; подключение оплаты, интерфейс и
 приемка staging еще впереди; новая модель нигде не включена.
 Исходная обычная Subscription отклонена из-за обхода через старый Portal;
 ее результаты сохраняются отдельно и не засчитываются новой схеме.
@@ -172,7 +172,9 @@ Modify `apps/web/lib/anidachi-auth/stripe-trial-state.ts` и существую�
 
 **Files:** Create `cardless-trial.ts`, `cardless-trial-server.ts`, их tests и
 `apps/web/app/api/billing/trial/start/route.ts`; modify pricing-offer,
-subscription-checkout-server и legacy create-checkout route из карты.
+subscription-checkout-server и общий legacy Checkout service. Дополнительно
+`verified-email.ts`, OAuth proof fields, `*_cardless_trial_launch_guards.sql`,
+`cardless_trial_launch.test.sql` и `cardless-trial-routes.ts`.
 
 **Interfaces:**
 ```ts
@@ -183,38 +185,42 @@ type TrialStartInput = {
 type TrialStartResult =
   | { state: 'active'; trialEndsAt: string; planCode: 'plus' | 'pro' }
   | { state: 'pending'; operationId: string }
-  | { state: 'ineligible' | 'offer_changed' | 'unavailable' };
+  | { state: 'ineligible' | 'offer_changed' | 'unavailable' | 'verification_required' };
 // userId приходит только из проверенной website session.
 startCardlessTrial(userId: string, input: TrialStartInput): Promise<TrialStartResult>;
 ```
 Фабрика `createCardlessTrialService(deps)` изолирует Stripe/storage/time для tests;
 `cardless-trial-server.ts` связывает ее с действующими server clients и RPC Task 1.
-UI не получает Stripe secrets. HTTP: 200 active, 202 pending, 409 ineligible/offer
+UI не получает Stripe secrets. Для старой сессии без сохраненного provider proof
+вернуть verification_required (409) до reservation; UI просит повторный вход.
+Наличие email в старой строке не backfill-ится как подтверждение. Обычный вход
+работает и при сбое сохранения proof; existing paid и recovery не блокируются.
+ HTTP: 200 active, 202 pending, 409 ineligible/offer
 changed, 503 unavailable; auth/owner failures сохраняют текущие коды guards.
 
-- [ ] Написать failing tests с named assertions:
+- [x] Написать failing tests с named assertions:
   `double_click_reuses_activation` — один Stripe create;
   `created_but_response_lost_reconciles` — те же schedule/subscription IDs;
   `completed_legacy_checkout_blocks_cardless` — ноль новых create;
   `flag_disabled_during_recovery_finishes_existing_operation` — recover разрешен,
   fresh reservation запрещена; `used_trial_never_becomes_paid_checkout` — явный 409.
-- [ ] Запустить `pnpm --filter @anidachi/web exec tsx --test
+- [x] Запустить `pnpm --filter @anidachi/web exec tsx --test
   lib/anidachi-auth/cardless-trial.test.ts`: RED.
-- [ ] Реализовать серверную проверку актуального offer, owner, eligibility и
+- [x] Реализовать серверную проверку актуального offer, owner, eligibility и
   Customer; pending старый Session read/expire/reconcile до native create.
   Создавать Schedule с параметрами spec и стабильным ключом `trial:<activationId>`.
   Проверять его Subscription, владельца обоих объектов и точные 259200 секунд.
   Не повторять blind create после истечения Stripe idempotency retention.
-- [ ] Подключить private/no-store API и существующие Origin/Sec-Fetch-Site,
+- [x] Подключить private/no-store API и существующие Origin/Sec-Fetch-Site,
   JSON, session и `X-Anidachi-Billing-Owner` guards. Ограничить частоту на account;
   исчерпание лимита не помечает trial использованным.
-- [ ] Расширить shared offer optional-полем `trialMode: 'card_required' | 'cardless'`
+- [x] Расширить shared offer optional-полем `trialMode: 'card_required' | 'cardless'`
   и revision, не менять существующий `action` enum. Флаг off оставляет старый flow;
   новый mode не возвращается при выключенных общих trials/paid-hosting.
-- [ ] Заблокировать создание новых card-required trial из устаревшей страницы
+- [x] Заблокировать создание новых card-required trial из устаревшей страницы
   при включенном cardless mode: вернуть offer_changed, обновить предложение;
   не переводить пользователя в немедленную оплату. Уже начатый Checkout обслужить.
-- [ ] Повторить focused tests и existing subscription-trial/pricing-offer tests:
+- [x] Повторить focused tests и existing subscription-trial/pricing-offer tests:
   GREEN. Commit `feat(billing): start cardless trials with durable recovery`.
 
 ## Task 3: Согласие на оплату, setup и платежный lifecycle

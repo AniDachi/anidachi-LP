@@ -1,7 +1,7 @@
 import type { PricingOffer } from "../pricing-offer";
 import { resolveAccountEntitlements } from "./account-entitlements";
-import { readPricingPrice } from "./pricing-catalog";
 import { db, listSubscriptionsForUser } from "./db";
+import { readPricingPrice } from "./pricing-catalog";
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 
 const defaults = {
@@ -13,12 +13,17 @@ const defaults = {
 	async policy() {
 		const { data, error } = await db()
 			.from("hosting_commercial_policy")
-			.select("activation_at,trials_enabled")
+			.select("activation_at,trials_enabled,cardless_trials_enabled,revision")
 			.eq("singleton", true)
 			.abortSignal(AbortSignal.timeout(8000))
 			.single();
 		if (error || !data) throw new Error("Pricing policy unavailable");
-		return data as { activation_at: string | null; trials_enabled: boolean };
+		return data as {
+			activation_at: string | null;
+			trials_enabled: boolean;
+			cardless_trials_enabled?: boolean;
+			revision?: number;
+		};
 	},
 };
 export async function getPricingOffer(
@@ -48,6 +53,11 @@ export async function getPricingOffer(
 			deps.subscriptions(userId),
 			yearly,
 		]);
+		const commercialPolicy = await deps.policy();
+		const paidHostingActive =
+			access.hosting?.hostingActivationAt != null &&
+			Date.parse(access.hosting.hostingActivationAt) <=
+				Date.parse(access.history.serverTime);
 		if (subscriptions.some((s) => s.user_id !== userId) || !access.hosting)
 			throw new Error("Offer authority unavailable");
 		const manage =
@@ -70,6 +80,7 @@ export async function getPricingOffer(
 			),
 		);
 		return {
+			...trialOfferFields(commercialPolicy, paidHostingActive),
 			validForMs,
 			trialAvailable: !manage && access.hosting.trialEligibility === "eligible",
 			ownerUserId: userId,
@@ -96,6 +107,7 @@ export async function getPricingOffer(
 	const paidHostingActive =
 		data.activation_at !== null && Date.parse(data.activation_at) <= now;
 	return {
+		...trialOfferFields(data, paidHostingActive),
 		validForMs:
 			data.activation_at && Date.parse(data.activation_at) > now
 				? Math.min(60_000, Date.parse(data.activation_at) - now)
@@ -106,5 +118,28 @@ export async function getPricingOffer(
 		paidHostingActive,
 		trialAvailable: paidHostingActive && data.trials_enabled === true,
 		action: "sign_in",
+	};
+}
+
+function trialOfferFields(
+	policy: {
+		trials_enabled: boolean;
+		cardless_trials_enabled?: boolean;
+		revision?: number;
+	},
+	active: boolean,
+) {
+	const cardless =
+		active && policy.trials_enabled && policy.cardless_trials_enabled === true;
+	if (
+		cardless &&
+		(!Number.isSafeInteger(policy.revision) || (policy.revision ?? 0) < 1)
+	)
+		throw new Error("Trial policy revision unavailable");
+	return {
+		trialMode: cardless ? ("cardless" as const) : ("card_required" as const),
+		...(Number.isSafeInteger(policy.revision) && (policy.revision ?? 0) > 0
+			? { trialOfferRevision: String(policy.revision) }
+			: {}),
 	};
 }

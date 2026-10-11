@@ -300,3 +300,39 @@ for an already-recorded matching canceled subscription; it cannot grant access.
 This is storage/refresh evidence, not full application or staging acceptance.
 Start/renewal endpoints, recovery orchestration, anti-abuse guards, UI, webhook
 integration and analytics remain Tasks 2–5; production remains unapproved.
+
+
+## Task 2: local start, compatible offers and request guards
+
+Local server start is implemented behind the disabled cardless policy. New API
+`POST /api/billing/trial/start` retains same-origin JSON/session/owner checks and
+adds a durable account limit (20 requests per minute per operation). Its active
+response requires the shared fresh Stripe refresh; pending never consumes a new
+idempotency key. A saved Customer card never changes creation parameters.
+
+The stable creation keys are `trial-customer:<activationId>` and
+`trial:<activationId>`. After 23 hours an absent object does not allow a blind
+recreate. Positive uniquely owned Customer/Schedule discovery can recover IDs;
+ambiguous outcomes remain pending. Existing legacy Checkout recovery reuses its
+original frozen parameters, then expires/reads the actual outcome before freeing
+the account. A completed Checkout blocks a new trial. A DB insert guard also
+blocks old deployments from reserving a fresh card-required trial when cardless
+policy is active; an already reserved one keeps its original terms.
+
+New migration `20261011132247_cardless_trial_launch_guards.sql` adds private
+request-limit and provider email-proof records. Google login previously did not
+persist `email_verified`; a legacy address/session is not treated as historical
+proof. Only boolean provider confirmation is stored. Before a fresh cardless
+reservation, a missing current-email proof returns `verification_required`;
+the future UI must ask for a fresh Google/Discord login. Ordinary login and paid
+rights still work if proof storage fails. Existing activations recover without
+this new-start gate. Google claim reference:
+https://developers.google.com/identity/openid-connect/openid-connect .
+
+Verification on the same disposable v2 container: **182 SQL assertions**
+(57 cardless + 11 launch guards + 114 legacy regressions), and real old/new/plan
+reservation concurrency passed. Service cases RED -> **11 GREEN**, route cases
+RED -> **3 GREEN**, compatibility/offer suites **52/52**, OAuth suites **14/14**.
+Full web: **1016 total, 1010 passed, 6 existing skips, 0 failures**. TypeScript and
+`git diff --check` passed. No hosted migration, flag, deployment or Stripe object
+was changed in Task 2. Setup/renewal, full webhook recovery and UI remain Task 3–5.
