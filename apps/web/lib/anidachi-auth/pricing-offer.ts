@@ -1,3 +1,4 @@
+import { readPendingTrialActivation } from "./cardless-trial-status";
 import type { PricingOffer } from "../pricing-offer";
 import { resolveAccountEntitlements } from "./account-entitlements";
 import { db, listSubscriptionsForUser } from "./db";
@@ -5,6 +6,7 @@ import { readPricingPrice } from "./pricing-catalog";
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 
 const defaults = {
+	pendingActivation: readPendingTrialActivation,
 	readPrice: readPricingPrice,
 	priceId: stripePriceIdForPlanCode,
 	access: resolveAccountEntitlements,
@@ -48,11 +50,13 @@ export async function getPricingOffer(
 		}),
 	);
 	if (userId) {
-		const [access, subscriptions, yearlyPrices] = await Promise.all([
-			deps.access(userId, new Date(deps.now())),
-			deps.subscriptions(userId),
-			yearly,
-		]);
+		const [access, subscriptions, yearlyPrices, pendingTrialActivation] =
+			await Promise.all([
+				deps.access(userId, new Date(deps.now())),
+				deps.subscriptions(userId),
+				yearly,
+				deps.pendingActivation(userId),
+			]);
 		const commercialPolicy = await deps.policy();
 		const paidHostingActive =
 			access.hosting?.hostingActivationAt != null &&
@@ -61,6 +65,7 @@ export async function getPricingOffer(
 		if (subscriptions.some((s) => s.user_id !== userId) || !access.hosting)
 			throw new Error("Offer authority unavailable");
 		const manage =
+			!!pendingTrialActivation ||
 			access.policy.planCode !== "free" ||
 			subscriptions.some(
 				(s) => !["canceled", "incomplete_expired"].includes(s.status),
@@ -81,6 +86,7 @@ export async function getPricingOffer(
 		);
 		return {
 			...trialOfferFields(commercialPolicy, paidHostingActive),
+			...(pendingTrialActivation ? { pendingTrialActivation } : {}),
 			validForMs,
 			trialAvailable: !manage && access.hosting.trialEligibility === "eligible",
 			ownerUserId: userId,

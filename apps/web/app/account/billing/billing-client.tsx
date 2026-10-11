@@ -505,6 +505,24 @@ export function BillingView({
 			)}
 			{owned && (
 				<>
+					{owned.pendingTrialActivation && (
+						<section className="ac-notice" aria-label="Trial request status">
+							<p>
+								Your {PLAN_NAMES[owned.pendingTrialActivation.planCode]} trial
+								is being prepared. Check this request before starting another
+								checkout.
+							</p>
+							<Link
+								className="ac-button ac-button-primary"
+								href={checkoutReturnPath({
+									plan: owned.pendingTrialActivation.planCode,
+									billing: owned.pendingTrialActivation.billingPeriod,
+								})}
+							>
+								Check trial status
+							</Link>
+						</section>
+					)}
 					{owned.planCode === "free" &&
 						owned.subscriptions
 							.filter(
@@ -544,13 +562,15 @@ export function BillingView({
 										>
 											{INSTALL_CTA_LABEL}
 										</Link>
-										<Link
-											href="/pricing"
-											className="ac-button ac-button-primary"
-										>
-											View plans
-											<ArrowRight size={16} aria-hidden />
-										</Link>
+										{!owned.pendingTrialActivation && (
+											<Link
+												href="/pricing"
+												className="ac-button ac-button-primary"
+											>
+												View plans
+												<ArrowRight size={16} aria-hidden />
+											</Link>
+										)}
 									</div>
 									<ul className="ac-plan-limits">
 										{owned.hosting &&

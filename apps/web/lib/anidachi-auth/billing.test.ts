@@ -115,6 +115,11 @@ function fixture(
 		now?: number;
 		portalUrl?: string;
 		renewal?: TrialRenewalOperation | null;
+		activation?: {
+			id: string;
+			planCode: "plus" | "pro";
+			billingPeriod: "monthly" | "yearly";
+		} | null;
 	} = {},
 ) {
 	const calls: string[] = [];
@@ -182,6 +187,7 @@ function fixture(
 			({ policy: { planCode: "free" } } as AccountEntitlements),
 		readTrial: async () => options.trial ?? null,
 		readRenewal: async () => options.renewal ?? null,
+		readActivation: async () => options.activation ?? null,
 		readPrice: async () => ({
 			unitAmount: 799,
 			currency: "usd",
@@ -648,4 +654,16 @@ test("payment problem and paused subscriptions can stop renewal without claiming
 		"unknown",
 	])
 		assert.equal(canCancelSubscription(status, false), false);
+});
+
+test("overview includes durable activation before Stripe subscription is committed", async () => {
+	const activation = {
+		id: "activation-a",
+		planCode: "plus" as const,
+		billingPeriod: "monthly" as const,
+	};
+	const { service } = fixture({ rows: [], activation });
+	const result = await service.overview("owner");
+	assert.deepEqual(result.pendingTrialActivation, activation);
+	assert.equal(result.subscriptions.length, 0);
 });

@@ -486,3 +486,43 @@ test("hiding a tab retires the checkout request even without a blur event", asyn
 		Reflect.deleteProperty(document, "visibilityState");
 	}
 });
+
+test("a new document discovers the persisted activation after cardless starts are disabled", async () => {
+	const posts: { url: string; body: unknown }[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json({
+				...offer,
+				action: "manage",
+				trialMode: "card_required",
+				pendingTrialActivation: {
+					id: "activation-a",
+					planCode: "pro",
+					billingPeriod: "monthly",
+				},
+			});
+		posts.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+		return Response.json(
+			{
+				state: "pending",
+				kind: "activation",
+				operationId: "activation-a",
+				ownerUserId: "owner-a",
+			},
+			{ status: 409 },
+		);
+	};
+	const first = await mount("plus", "yearly");
+	assert.match(first.textContent!, /Check trial status/);
+	await act(async () => root?.unmount());
+	root = null;
+	const reloaded = await mount("plus", "yearly");
+	assert.match(reloaded.textContent!, /Check trial status/);
+	assert.deepEqual(
+		posts,
+		[0, 1].map(() => ({
+			url: "/api/billing/trial/recover",
+			body: { operationId: "activation-a" },
+		})),
+	);
+});

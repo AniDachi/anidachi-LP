@@ -1,3 +1,4 @@
+import { readPendingTrialActivation } from "./cardless-trial-status";
 import type {
 	BillingOverview,
 	BillingSubscription,
@@ -59,6 +60,7 @@ function canRestoreRenewal(
 }
 
 type BillingDeps = {
+	readActivation: typeof readPendingTrialActivation;
 	now?: () => number;
 	listSubscriptions: typeof listSubscriptionsForUser;
 	getCustomer: typeof getBillingCustomerByUserId;
@@ -72,6 +74,7 @@ type BillingDeps = {
 };
 
 const defaultDeps: BillingDeps = {
+	readActivation: readPendingTrialActivation,
 	listSubscriptions: listSubscriptionsForUser,
 	getCustomer: getBillingCustomerByUserId,
 	resolveEntitlements: resolveAccountEntitlements,
@@ -228,9 +231,10 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 
 	return {
 		async overview(userId: string): Promise<BillingOverview> {
-			const [rows, access] = await Promise.all([
+			const [rows, access, pendingTrialActivation] = await Promise.all([
 				ownedSubscriptions(userId),
 				deps.resolveEntitlements(userId, new Date()),
+				deps.readActivation(userId),
 			]);
 			const subscriptions: BillingSubscription[] = await Promise.all(
 				rows
@@ -381,6 +385,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 			);
 			return {
 				ownerUserId: userId,
+				...(pendingTrialActivation ? { pendingTrialActivation } : {}),
 				planCode: access.policy.planCode,
 				subscriptions,
 				...(access.hosting ? { hosting: access.hosting } : {}),

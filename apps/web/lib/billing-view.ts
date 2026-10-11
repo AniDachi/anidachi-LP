@@ -59,7 +59,14 @@ export type BillingSubscription = {
 	canSwitchToYearly?: boolean;
 };
 
+export type PendingTrialActivation = {
+	id: string;
+	planCode: "plus" | "pro";
+	billingPeriod: BillingPeriod;
+};
+
 export type BillingOverview = {
+	pendingTrialActivation?: PendingTrialActivation;
 	ownerUserId: string;
 	planCode: PlanCode;
 	subscriptions: BillingSubscription[];

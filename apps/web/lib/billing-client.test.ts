@@ -880,3 +880,33 @@ test("billing consumes its click-time request once and includes navigation time 
 		clearAccountPreloads();
 	}
 });
+
+test("billing exposes persisted activation recovery before any subscription exists", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			planCode: "free",
+			subscriptions: [],
+			pendingTrialActivation: {
+				id: "activation-a",
+				planCode: "pro",
+				billingPeriod: "yearly",
+			},
+		});
+	await mount();
+	assert.match(container.textContent!, /Your Pro trial is being prepared/);
+	const recovery = [...container.querySelectorAll("a")].find(
+		(a) => a.textContent === "Check trial status",
+	);
+	assert.ok(recovery);
+	assert.equal(
+		recovery.getAttribute("href"),
+		"/checkout?plan=pro&billing=yearly",
+	);
+	assert.equal(
+		[...container.querySelectorAll("a")].some(
+			(a) => a.textContent?.trim() === "View plans",
+		),
+		false,
+	);
+});

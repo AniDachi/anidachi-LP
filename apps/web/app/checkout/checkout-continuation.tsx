@@ -139,6 +139,13 @@ export function CheckoutContinuation({
 						"Your account changed. Please check your subscription again.",
 					);
 				}
+				if (offer.pendingTrialActivation && !recovery.current) {
+					recovery.current = {
+						owner: offer.ownerUserId,
+						operationId: offer.pendingTrialActivation.id,
+						revision: offer.trialOfferRevision ?? "",
+					};
+				}
 				if (recovery.current) {
 					const pending = recovery.current;
 					setStage("opening");
