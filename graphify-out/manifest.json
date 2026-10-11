@@ -3660,10 +3660,10 @@
     "semantic_hash": "6e650e1cecebb157686b6e1daa58f2a4"
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1789490459.017664,
-    "seen": 1789807056.4377742,
+    "mtime": 1791721848.5888367,
+    "seen": 1791722334.653239,
     "ast_hash": "e2d1dde467749e25bd0a65bada19c3da",
-    "semantic_hash": "e2d1dde467749e25bd0a65bada19c3da"
+    "semantic_hash": "db1f667d7401514701743ef32b649cc2"
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1789490459.0391922,
@@ -9741,6 +9741,66 @@
     "mtime": 1791484203.7676256,
     "seen": 1791484224.195884,
     "ast_hash": "5d596793b538d7a0a5789da3005aec89",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/stripe/cardless-trial-proof.test.ts": {
+    "mtime": 1791718633.6850102,
+    "seen": 1791722334.600389,
+    "ast_hash": "8ffee97a4deab523b4c7a6027367ed11",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/stripe/cardless-trial-proof.ts": {
+    "mtime": 1791718633.685003,
+    "seen": 1791722334.600391,
+    "ast_hash": "536b68d4f8ccf1c0cc837dbf4491fb01",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/verify-cardless-trial-sandbox.ts": {
+    "mtime": 1791721961.709535,
+    "seen": 1791722334.600394,
+    "ast_hash": "5940bb8b18fca75c7699c474a35f6f1a",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md": {
+    "mtime": 1791721848.5886326,
+    "seen": 1791722334.653236,
+    "ast_hash": "",
+    "semantic_hash": "eb63435ec851e04e6ddd39e05b1cf321"
+  },
+  "docs/superpowers/plans/2026-10-11-cardless-trial.md": {
+    "mtime": 1791721848.588184,
+    "seen": 1791722334.653238,
+    "ast_hash": "",
+    "semantic_hash": "382d4c0c78f2fa01d86ef1a529f1e74d"
+  },
+  "docs/superpowers/specs/2026-10-11-cardless-trial-design.md": {
+    "mtime": 1791721848.5878477,
+    "seen": 1791722334.65324,
+    "ast_hash": "",
+    "semantic_hash": "fad006bb1449ca9335dac9dbde9da842"
+  },
+  "apps/web/scripts/stripe/stripe-test-cli-transport.test.ts": {
+    "mtime": 1791718633.6850915,
+    "seen": 1791722334.6003919,
+    "ast_hash": "ee3f702f892ba45836542b0fcd202d05",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/stripe/stripe-test-cli-transport.ts": {
+    "mtime": 1791718633.6850047,
+    "seen": 1791722334.6003919,
+    "ast_hash": "76375565bb8cf3398cf021c69d3514be",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/verify-cardless-schedule-sandbox.ts": {
+    "mtime": 1791721961.7183754,
+    "seen": 1791722334.600393,
+    "ast_hash": "f7f5ef645a875ee92c79835a8f1d2948",
+    "semantic_hash": ""
+  },
+  "apps/web/scripts/verify-cardless-trial-portal.ts": {
+    "mtime": 1791721961.7102036,
+    "seen": 1791722334.600393,
+    "ast_hash": "4aaa6e7fd36892784d69ac3795fbdabd",
     "semantic_hash": ""
   }
 }

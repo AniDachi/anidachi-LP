@@ -1,5 +1,13 @@
 # Plans
 
+Active cardless trial work:
+
+1. [2026-10-11-cardless-trial.md](2026-10-11-cardless-trial.md) — approved
+   staging-first execution; the native Schedule mechanism passed 14 sandbox
+   capability cases plus the already-open Portal check. Product implementation
+   and acceptance are still pending; see the acceptance record for exact proof
+   boundaries. Production rollout is not authorized.
+
 Files in this folder are historical execution plans and work logs. They are kept
 because they explain why certain migrations and architecture decisions happened.
 
