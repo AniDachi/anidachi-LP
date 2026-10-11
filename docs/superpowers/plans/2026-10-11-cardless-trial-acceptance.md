@@ -1,8 +1,9 @@
 # Cardless trial: acceptance evidence
 
-Date: 2026-10-11. Status: **Stripe Schedule capability, local server/client and
-analytics checks passed. Hosted staging deployment and real account acceptance
-remain pending. No rollout.**
+Date: 2026-10-11. Status: **Candidate deployed to staging with new starts and
+analytics delivery disabled. Preservation and deployment checks passed; an
+analytics environment repair and real account acceptance remain open. No
+production rollout.**
 
 - [Design](../specs/2026-10-11-cardless-trial-design.md)
 - [Implementation plan](2026-10-11-cardless-trial.md)
@@ -529,3 +530,56 @@ was under review. Repairs are implemented; a fresh immutable review is pending.
 Fifth additive migration: `20261011161158_cardless_trial_review_guards.sql`.
 The original four migration files remain unchanged. New secrets are still
 unprovisioned; analytics delivery and all hosted acceptance remain pending.
+
+
+## Hosted staging delivery and environment repair checkpoint
+
+PR #410 merged at **2026-10-11 16:55:02 UTC** as
+`2471411b7bede05a5564679988fee7725df93d17`. Its final runtime review accepted
+`4b6a8027`; Graphify-only `32250893` followed. The main feature CI passed on the
+exact PR head. CodeRabbit reported skipped for the non-default branch; this is
+not counted as an independent code review.
+
+- Staging database workflow `38157618111` applied all five migrations.
+  The automatic workflow `38157586770` also succeeded idempotently.
+- Before/after snapshots at 16:39 and **16:59:54 UTC** preserved 17 subscription
+  rows, nine legacy trial rows and the empty manual-grant set. Fingerprints
+  excluded bookkeeping timestamps and newly added trial fields; price, period,
+  cancellation and entitlement fields were included. Existing paid-hosting
+  activation, trial flag and policy revision 2 were unchanged.
+- `cardless_trials_enabled=false`; no cardless activation, renewal or event rows.
+  The new scheduler remains disabled without an environment or run timestamps.
+- Web deployment `dpl_6VGZp6PqUqqgswip1wvx7HL9UNUj` became READY and owns
+  `staging.anidachi.app` on the exact staging merge SHA. No Worker deploy is
+  required by this change. Protected-site smoke `38158036228` passed.
+- Extension build `38157882289` passed check/test/build/artifact validation.
+  No artifact was copied over the owner's local extension-design folder.
+  Loading that artifact and checking the old published client remain pending.
+- Read-only browser inspection of the existing paid account Billing page showed
+  its active monthly plan and renewal controls. No cancellation, card or purchase
+  action was performed. This is not proof of a fresh trial or OAuth flow.
+- A dedicated drain bearer was provisioned only on Vercel Preview branch
+  `staging` and matching staging Vault. Values are neither recorded nor reused
+  from room/notification credentials. The Amplitude key's association with
+  project `813335` still needs confirmation before delivery is enabled.
+
+Two authenticated empty-queue probes from staging PostgreSQL reached the drain
+but returned **503**. Service-role SQL claim returned zero rows successfully;
+unauthenticated HTTP returned 401. The Vercel deployment target/branch are
+Preview/staging, while public canonical metadata points at the production site.
+The exact private SEO env value was not read, so the environment-gate diagnosis
+is a supported candidate rather than a proven hosted fix.
+
+The follow-up resolver accepts only Preview/staging or Production/main from
+Vercel system metadata. It no longer classifies runtime identity by
+`NEXT_PUBLIC_SITE_URL`. Resolver regressions were observed RED then GREEN;
+the existing route fixture was updated to supply the required branch and to
+prove feature Preview rejection before DB access. Focused tests **12/12**;
+full web **1101 total / 1095 passed / six existing skips / zero failures**;
+TypeScript and changed-file lint passed. Hosted 200 acknowledgement remains a
+required follow-up receipt. Neither probe enabled the scheduler or sent events.
+
+All fresh-account, loaded-extension, expiration, actual funnel-delivery and
+owner acceptance gates remain open. The source checkpoint does not assert
+production readiness. Exact repair deployment/probe outcomes are recorded in
+the follow-up PR description and controller report.

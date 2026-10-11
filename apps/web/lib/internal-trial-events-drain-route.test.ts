@@ -14,6 +14,7 @@ beforeEach(() => {
 	process.env.ANIDACHI_INTERNAL_API_SECRET = "room-test";
 	process.env.ANIDACHI_NOTIFICATION_DRAIN_SECRET = "notification-test";
 	process.env.VERCEL_ENV = "preview";
+	process.env.VERCEL_GIT_COMMIT_REF = "staging";
 	process.env.NEXT_PUBLIC_SITE_URL = "https://staging.anidachi.app";
 	process.env.NEXT_PUBLIC_SUPABASE_URL = "https://database.example";
 	process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role";
@@ -55,10 +56,13 @@ test("analytics bearer cannot authorize room callbacks", async () => {
 	);
 	assert.equal(calls, 0);
 });
-test("only canonical environment produces a private bounded drain acknowledgement", async () => {
+test("only the reviewed deployment produces a private bounded drain acknowledgement", async () => {
 	const result = await POST(request("trial-drain-test"));
 	assert.equal(result.status, 200);
 	assert.deepEqual(await result.json(), { ok: true });
+	assert.equal(calls, 1);
+	process.env.VERCEL_GIT_COMMIT_REF = "codex/feature-preview";
+	assert.equal((await POST(request("trial-drain-test"))).status, 503);
 	assert.equal(calls, 1);
 	delete process.env.VERCEL_ENV;
 	assert.equal((await POST(request("trial-drain-test"))).status, 503);

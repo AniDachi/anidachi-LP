@@ -197,16 +197,18 @@ When changing any dashboard variable or secret:
 
 ## Cardless trial candidate: staging rollout
 
-The four October 11 migrations add the disabled `cardless_trials_enabled` policy,
+The five October 11 migrations add the disabled `cardless_trials_enabled` policy,
 provider email proof, durable activation/consent records and a disabled analytics
 scheduler. No new Stripe key, price, webhook endpoint or shared Portal setting is
 required by the candidate. Existing Test credentials remain staging-only.
 
 `anidachi_private.trial_event_scheduler` is separate from notification delivery.
-Its environment must match both `VERCEL_ENV` and the canonical
-`NEXT_PUBLIC_SITE_URL`: preview + staging.anidachi.app, or production +
-www.anidachi.app/anidachi.app. Development and arbitrary Preview hosts do not
-drain. The private scheduler uses only the dedicated Vault bearer and a fixed
+Its environment must match the reviewed Vercel target and Git branch:
+`VERCEL_ENV=preview` + `VERCEL_GIT_COMMIT_REF=staging`, or
+`VERCEL_ENV=production` + `VERCEL_GIT_COMMIT_REF=main`. Both system variables
+must be exposed to the server runtime. Development, missing metadata and feature
+Previews do not drain. `NEXT_PUBLIC_SITE_URL` is SEO/public-origin configuration
+and does not identify the analytics environment. The private scheduler uses only the dedicated Vault bearer and a fixed
 matching host, eight events per batch, and bounded retry leases. Configure its
 secret/environment before enabling; a missing key does not lose pending events.
 
