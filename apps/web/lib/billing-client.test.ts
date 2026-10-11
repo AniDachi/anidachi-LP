@@ -9,7 +9,11 @@ import {
 	clearAccountPreloads,
 } from "./account-navigation-preload";
 import { BillingClient } from "../app/account/billing/billing-client";
-import { BILLING_OWNER_HEADER, type BillingOverview } from "./billing-view";
+import {
+	BILLING_OWNER_HEADER,
+	formatBillingTime,
+	type BillingOverview,
+} from "./billing-view";
 
 (globalThis as typeof globalThis & { React?: typeof React }).React = React;
 (
@@ -1266,3 +1270,63 @@ test("billing exposes persisted activation recovery before any subscription exis
 		false,
 	);
 });
+
+for (const stage of ["processing", "payment_required", "ended"] as const) {
+	test(`cardless ${stage} displays the original trial deadline instead of the next billing period`, async () => {
+		const trial = { ...cardless.subscriptions[0].trial!, stage };
+		globalThis.fetch = async () =>
+			Response.json({
+				...cardless,
+				subscriptions: [
+					{
+						...cardless.subscriptions[0],
+						status: "past_due",
+						currentPeriodEnd: "2030-02-04T00:00:00Z",
+						trial,
+					},
+				],
+			});
+		await mount();
+		const label = [...container.querySelectorAll("dt")].find(
+			(dt) => dt.textContent === "Trial ends",
+		);
+		assert.ok(label);
+		assert.equal(
+			label.nextElementSibling?.textContent,
+			formatBillingTime(trial.endsAt),
+		);
+		assert.equal(
+			label.parentElement?.querySelector(".billing-timezone")?.textContent,
+			"Your local time",
+		);
+	});
+}
+
+for (const cancelAtPeriodEnd of [false, true]) {
+	test(`paid cardless billing retains its ${cancelAtPeriodEnd ? "end" : "renewal"} date`, async () => {
+		globalThis.fetch = async () =>
+			Response.json({
+				...active,
+				subscriptions: [
+					{
+						...active.subscriptions[0],
+						cancelAtPeriodEnd,
+						trial: { ...cardless.subscriptions[0].trial!, stage: "paid" },
+					},
+				],
+			});
+		await mount();
+		const label = [...container.querySelectorAll("dt")].find(
+			(dt) =>
+				dt.textContent === (cancelAtPeriodEnd ? "Subscription ends" : "Renews"),
+		);
+		assert.ok(label);
+		assert.equal(
+			label.nextElementSibling?.textContent,
+			new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(
+				new Date(active.subscriptions[0].currentPeriodEnd!),
+			),
+		);
+		assert.equal(container.querySelector(".billing-timezone"), null);
+	});
+}

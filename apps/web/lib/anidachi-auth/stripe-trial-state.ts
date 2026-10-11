@@ -189,8 +189,16 @@ export async function resolveStripeTrialSnapshot(
 	let recurring: Stripe.Invoice[] | undefined;
 	async function recurringInvoices() {
 		if (recurring) return recurring;
+		// Accelerated Sandbox invoices can be omitted by Stripe's created filter.
+		// Keep subscription scope and apply the returned timestamp check below.
+		const usesTestClock =
+			subscription.livemode === false && id(subscription.test_clock) !== null;
 		const list = await stripe.invoices.list(
-			{ subscription: subscription.id, created: { gte: trialEnd }, limit: 100 },
+			{
+				subscription: subscription.id,
+				...(usesTestClock ? {} : { created: { gte: trialEnd } }),
+				limit: 100,
+			},
 			requestOptions(),
 		);
 		if (list.has_more)

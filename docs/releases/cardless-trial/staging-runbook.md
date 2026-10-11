@@ -147,6 +147,26 @@ Customer credit grants the paid service period; it need not charge the card.
 cycle, and only that receipt creates `trial_first_payment_succeeded`. Retain
 cancellation while payment is due.
 
+## Accelerated first-invoice reconciliation
+
+In an existing-customer Sandbox Test Clock check, `created[gte=trial_end]`
+returned no cycle invoice even though that invoice's returned `created` equaled
+`trial_end`. For a fresh subscription with `livemode=false` and a Test Clock,
+refresh therefore lists up to 100 invoices scoped to that subscription without
+Stripe's date filter. It still filters returned timestamps and billing reasons,
+selects the earliest eligible cycle, retrieves it fresh, and verifies ownership,
+service period and settlement. Truncated history fails closed. Other
+subscriptions retain the provider date filter; this observation does not prove
+a Live Stripe issue.
+
+After recovery, verify the same already-paid invoice in `first_invoice_id` and
+`first_cash_*`, then repeat the ordinary Billing status refresh and check that
+there is still only one logical `trial_first_payment_succeeded` event. Do not
+charge again or manually patch the ledger. Analytics delivery remains separately
+gated. Unpaid cardless Billing states pair `Trial ends` with the original
+`trial.endsAt`, including local time, even when Stripe has moved the next billing
+period forward. Paid states retain their normal renewal/end date.
+
 ## Analytics delivery recovery
 
 Inspect `trial_conversion_events` aggregate counts and

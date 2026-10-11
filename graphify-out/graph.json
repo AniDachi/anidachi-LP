@@ -1050,6 +1050,54 @@
         "confidence_score": 1.0,
         "source_file": "docs/social-pricing-model.md",
         "_origin": "semantic"
+      },
+      {
+        "id": "docs_releases_cardless_trial_staging_runbook_staging_rollout_gates",
+        "label": "Cardless Trial Staging Rollout Gates",
+        "nodes": [
+          "docs_releases_cardless_trial_staging_runbook_staging_environment_targets",
+          "docs_releases_cardless_trial_staging_runbook_five_migration_flag_off_rollout",
+          "docs_releases_cardless_trial_staging_runbook_staging_trial_event_secret_provisioning",
+          "docs_releases_cardless_trial_staging_runbook_isolated_extension_validation",
+          "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+        "source_location": "L8-L49; L197-L208",
+        "_origin": "semantic"
+      },
+      {
+        "id": "docs_releases_cardless_trial_staging_runbook_private_activation_settlement",
+        "label": "Private Activation Settlement Protocol",
+        "nodes": [
+          "docs_releases_cardless_trial_staging_runbook_owner_activation_recovery_window",
+          "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
+          "docs_releases_cardless_trial_staging_runbook_failed_activation_settlement_preconditions"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+        "source_location": "L51-L124",
+        "_origin": "semantic"
+      },
+      {
+        "id": "docs_releases_cardless_trial_staging_runbook_first_invoice_billing_recovery",
+        "label": "First Invoice Billing Recovery Checks",
+        "nodes": [
+          "docs_releases_cardless_trial_staging_runbook_recurring_service_and_cash_conversion",
+          "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+          "docs_releases_cardless_trial_staging_runbook_original_trial_end_billing_date",
+          "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+        "source_location": "L141-L182",
+        "_origin": "semantic"
       }
     ]
   },
@@ -68009,7 +68057,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L94"
+      "source_location": "L98"
     },
     {
       "id": "apps_web_lib_billing_view_subscriptiondatelabel",
@@ -132033,7 +132081,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L39"
+      "source_location": "L43"
     },
     {
       "id": "apps_web_lib_billing_client_test_testwindow",
@@ -132043,7 +132091,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L18"
+      "source_location": "L22"
     },
     {
       "id": "apps_web_lib_billing_view",
@@ -189588,7 +189636,7 @@
       "label": "cardless",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L121",
+      "source_location": "L125",
       "_origin": "ast"
     },
     {
@@ -189596,7 +189644,7 @@
       "label": "trialButton()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L142",
+      "source_location": "L146",
       "_callable": true,
       "_origin": "ast"
     },
@@ -189605,7 +189653,7 @@
       "label": "renewalQuote",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L149",
+      "source_location": "L153",
       "_origin": "ast"
     },
     {
@@ -189908,19 +189956,20 @@
       "label": "Cardless Trial Staging Runbook",
       "file_type": "document",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L1-L208",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
       "status": "prepared_operator_procedure_not_execution_evidence",
-      "description": "Release and recovery procedure for exact feature PR to staging, Supabasecyppqpprkygjloyfvvvj, exact protected/noindex staging Preview, owned Stripe Sandboxacct_1RlmiIPQIEOqG7pr and AniDachi Amplitude813335. API2025-08-27.basil and SDK18.5.0 stay pinned. It records required actions and evidence, not claims that hosted migrations, secrets, scheduler, browser acceptance or real72-hour expiry have happened.",
+      "description": "Operator procedure for the cardless-trial staging candidate dated 2026-10-11. It specifies environment targets, ordered enablement, uncertain activation and renewal recovery, private failed-activation settlement, invoice reconciliation, analytics delivery, account deletion, rollback and hosted acceptance. The document is not evidence that deployment or activation occurred; actual outcomes belong in the linked acceptance record. Production requires separate owner authorization.",
       "source_sections": [
         "Cardless trial: staging rollout and recovery",
         "Targets and order",
         "Unknown activation result",
         "Confirmed failed activation: private operator settlement",
         "Unknown renewal or cancellation result",
+        "Accelerated first-invoice reconciliation",
         "Analytics delivery recovery",
         "Deletion, rollback and outstanding acceptance"
       ],
@@ -189928,23 +189977,22 @@
         "../../superpowers/plans/2026-10-11-cardless-trial-acceptance.md"
       ],
       "source_read_complete": true,
-      "source_snapshot_commit": "154ce1ef6fdfd17a71266b19cf7dec913aa06f31",
-      "source_line_count": 188,
-      "source_byte_count": 11834,
-      "_origin": "semantic"
+      "source_line_count": 208,
+      "source_byte_count": 13062,
+      "_origin": "semantic",
+      "source_sha256": "83c2ab3fc704f54c67196171806f69593c177e66846809f9d30043ee2c5d75ba"
     },
     {
       "id": "docs_releases_cardless_trial_staging_runbook_five_migration_flag_off_rollout",
       "label": "Five Migration Flag Off Rollout",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L18-L44",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_order_before_staging_enablement",
-      "description": "Fingerprint existing subscription identifiers, prices, intervals, cancel rights and manual access excluding explicitly tagged fixtures. Apply five additive migrations in order20261011124600,20261011132247,20261011135040,20261011153028,20261011161158 using normal workflow, then compatible web with cardless off. Validate auth, legacy paths, manual rights and staging protection before a versioned policy update that preserves other flags and revision. Only tagged synthetic accounts; no arbitrary Customer reuse. Build/load narrow isolated staging extension and test current plus old clients.",
+      "description": "Before merge, record exact diff and CI, hosted migrations, billing policy and existing subscription/trial/grant conditions. Preserve IDs, prices, intervals, cancellation settings and entitlement dates using read-only comparisons, excluding owned synthetic fixtures and without secrets or real-person details. Apply the five ordered migrations through normal staging workflow. They add disabled policy/schema without rewriting old subscription prices or opting existing accounts into the new trial. Keep cardless starts off until both migrations and compatible Web deployment succeed. Check auth, paid/canceled/card-required/manual-grant accounts and staging protection; a build is insufficient. Then enable cardless_trials_enabled through versioned billing policy, preserving trials_enabled and paid-hosting cutover, and capture the new revision. Use tagged synthetic accounts for start/setup/cancel/payment cases, never an arbitrary real Customer.",
       "migration_prefixes": [
         "20261011124600",
         "20261011132247",
@@ -189952,82 +190000,89 @@
         "20261011153028",
         "20261011161158"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "rationale": "Enablement waits for compatible schema, deployment and legacy-account checks so the new offer preserves existing billing terms and access."
     },
     {
       "id": "docs_releases_cardless_trial_staging_runbook_staging_trial_event_secret_provisioning",
       "label": "Staging Trial Event Secret Provisioning",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L32-L38",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_secret_and_delivery_gate_not_completed",
-      "description": "Provision new random ANIDACHI_TRIAL_EVENT_DRAIN_SECRET only on exact staging Preview and matching Vault anidachi_trial_event_drain_secret; keep distinct from notification/room credentials. Verify Amplitude813335 before enabling disabled private staging scheduler. Missing config retains outbox without blocking trial lifecycle. Capture actual delivery evidence separately from local mock tests and from queue acceptance.",
-      "_origin": "semantic"
+      "description": "Configure ANIDACHI_TRIAL_EVENT_DRAIN_SECRET only on the exact staging Preview branch and use the same value in staging Vault as anidachi_trial_event_drain_secret. Generate a separate strong random value, never reuse notification or room credentials or expose the value. Verify the configured Amplitude key belongs to AniDachi project 813335 before enabling anidachi_private.trial_event_scheduler with environment=staging. Missing configuration retains pending rows; trial operation does not depend on HTTP ingestion.",
+      "_origin": "semantic",
+      "rationale": "A dedicated environment-bound drain credential gates delivery while preserving pending events and independent trial operation."
     },
     {
       "id": "docs_releases_cardless_trial_staging_runbook_owner_activation_recovery_window",
       "label": "Owner Activation Recovery Window",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L51-L71; L118-L124",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_owner_bound_recovery_contract",
-      "description": "Within23 hours replay only original frozen Customer/Schedule keys and owner activation, including after flag off. Later recovery needs positive uniquely owned object evidence. No-result search, HTTP400, timeout, missing DB write or execution termination never proves no external effect. A successfully created Schedule must recover original identity; no fresh reservation or duplicate Schedule is allowed. During operator hold positive object recovery remains allowed; unhold preserves original keys/window.",
-      "rationale": "Stripe effects can outlive a caller and its durable result, so absence and elapsed time cannot safely authorize a second creation.",
-      "_origin": "semantic"
+      "description": "Billing/Checkout recovery calls owner-scoped POST /api/billing/trial/recover with normal session, same-origin JSON and owner guards. It resumes the persisted activation and frozen plan/period even when starts are disabled, never making a replacement reservation. Inspect activation, legacy Checkout reservation, stored IDs, key and operation time. Within the safe 23-hour window, replay only the same operation and key. Later recovery requires positive uniquely owned Stripe Customer/Schedule evidence; no-result searches, HTTP 400, timeout, stopped invocation or expired timer/lease do not release the account. Use matching sandbox metadata and verified webhook records to redeliver the matching event or reconcile the same owned object. Never make a new subscription, extend trial dates, clear the ledger or grant manual access. Keep unresolved reservations pending and escalate with operation ID and verified evidence. Positive-object recovery remains available during hold; resuming retries preserves the original keys and 23-hour boundary.",
+      "rationale": "A negative search or ended caller does not establish absence of a prior Stripe effect, so recovery requires the original operation or positive owned-object evidence.",
+      "_origin": "semantic",
+      "references": [
+        "POST /api/billing/trial/recover"
+      ]
     },
     {
       "id": "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
       "label": "Private Operator Attempt Fence",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L73-L110",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_private_operator_protocol_hosted_fixture_pending",
-      "description": "Private Postgres-only hold_cardless_trial_activation_v1, reconcile_cardless_trial_attempt_v1 and settle_cardless_trial_activation_v1 are unavailable through service-role/user/HTTP surfaces. Hold, create-attempt admission, verified result recording and settlement share account serialization. Retire old serving versions and invocations;180-second route bound and minimum five minutes after hold are necessary but insufficient. Positively terminate executors and inspect provider continuation for every applying/unknown attempt. Abandoned admission needs positive no-dispatch evidence; dispatched attempt requires provider/request result. Audit all actions without secrets or raw provider bodies. SQL validates recorded attestations; it does not perform provider investigation.",
+      "description": "Use only the intended environment operator connection. Private hold, reconciliation and settlement functions are postgres-only, unavailable to service_role, authenticated users and HTTP routes. They preserve Customer identity and entitlement records and write private audit records. Evidence is an operator attestation to verified logs; SQL does not perform provider verification. Do not include secrets or response bodies. All serving versions must have the create-attempt guard; retire older invocations/deployments. Read the owner, activation ID, generated key, created_at and subscription_trial_activation_attempts, then hold the activation with hold_cardless_trial_activation_v1. One account lock serializes hold, create admission, object recording and settlement. Already-admitted requests can still execute. Establish completion or termination of each executor and inspect Stripe continuation: routes have a 180-second maximum and manual reconciliation waits at least five minutes after hold, but elapsed time is insufficient. Every applying/unknown attempt requires positive no-dispatch evidence or verified dispatched-request/result evidence. Known Schedule success must be recovered. Record a verified no_effect through reconcile_cardless_trial_attempt_v1 with provider/no-dispatch and terminated-executor evidence; the function rejects missing evidence and never expires a marker. Successful response markers are immutable.",
       "references": [
         "anidachi_private.hold_cardless_trial_activation_v1",
         "anidachi_private.reconcile_cardless_trial_attempt_v1",
-        "anidachi_private.settle_cardless_trial_activation_v1"
+        "anidachi_private.settle_cardless_trial_activation_v1",
+        "subscription_trial_activation_attempts"
       ],
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "rationale": "An admitted or dispatched request may produce a Stripe effect after the caller ends; settlement must fence new creates and establish every issued attempt outcome."
     },
     {
       "id": "docs_releases_cardless_trial_staging_runbook_failed_activation_settlement_preconditions",
       "label": "Failed Activation Settlement Preconditions",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L98-L124",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_positive_evidence_and_immutable_identity",
-      "description": "Private settlement matches owner, activation, frozen idempotency key and created_at plus evidence reference. It rejects unresolved attempts, known Schedule/Subscription/trial, identity mismatch and unbound successful Customer. Bind verified Customer to original activation before any allowed failed settlement; successful Schedule has recovery only. Only that audited activation may become failed; later trial requires a new explicit request and a stale tab cannot revive the old request. No time-based automatic release or hand-edited entitlement.",
-      "_origin": "semantic"
+      "description": "If Customer creation succeeded, verify and bind that same Customer with the existing owner-fenced record_cardless_trial_customer_v1 before settlement; never create another. After all issued attempts are resolved, settle_cardless_trial_activation_v1 requires owner, activation, frozen key, frozen created_at and evidence reference. It rejects unresolved attempts, known Schedule success, recorded subscription/trial, identity mismatch and an unbound successful Customer. It marks only that activation failed, retains audit and allows a new explicit request. A stale tab needs fresh admission and cannot revive a failed activation. Real Schedule evidence requires normal positive-object recovery; unverified provider outcomes remain held for investigation. Unhold preserves original keys and the replay boundary.",
+      "_origin": "semantic",
+      "rationale": "Only positively resolved unsuccessful creation can release this activation for a new explicit request without duplicating a successful Customer or Schedule.",
+      "references": [
+        "record_cardless_trial_customer_v1",
+        "anidachi_private.settle_cardless_trial_activation_v1"
+      ]
     },
     {
       "id": "docs_releases_cardless_trial_staging_runbook_renewal_and_analytics_unknown_outcome_recovery",
       "label": "Renewal And Analytics Unknown Outcome Recovery",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L126-L148; L170-L182",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_durable_reconciliation_contract",
-      "description": "Renewal return/webhook share latest-generation finalizer with fresh Session/Intent/PaymentMethod/Schedule evidence. Unknown applying operation retains authority; successful enable can commit after native release without repeating mutation, while expired unknown settles only after positive cancellation proof. Analytics retry retains immutable insert ID, original time and environment; at six days set manual_recovery_at before seven-day deduplication window. Investigate AniDachi-only evidence and acknowledge or explicitly repair; do not reset age/identity or blindly resend old events.",
+      "description": "Renewal recovery finalizes the existing operation with fresh provider ownership and generation checks; applying mutations fence later changes until their outcome is known. Analytics unknown delivery likewise preserves the original event identity, account, time and frozen environment, with manual review after six days. Both procedures require verified evidence for reconciliation while preserving their stored operation or event identity; billing transitions must not be changed to make analytics match.",
       "_origin": "semantic"
     },
     {
@@ -190035,14 +190090,14 @@
       "label": "Hosted Acceptance And Forward Rollback",
       "file_type": "rationale",
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L192-L208",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "required_open_staging_and_owner_gates",
-      "description": "Hosted desktop/mobile matrix covers signed-out/Free/trial/paid, Plus/Pro, monthly/yearly, real provider verification, start/setup/3DS/cancel, duplicates/out-of-order events, account/network changes, pending purchase and flag off, current/old extension, original72-hour expiry and non-resetting five-minute room closure, guest/history and existing-data preservation. Stripe Test Clock does not advance DB/Worker; retain real due windows without shortening. Resolve Stripe before account deletion; database cascade does not cancel billing. Rollback disables new starts/scheduler but retains compatible handlers and durable ledgers; no old-schema rollback. Owner staging acceptance and separately approved production remain open.",
-      "_origin": "semantic"
+      "description": "Rollback disables new cardless starts and, if needed, the analytics scheduler, retaining compatible refresh/webhook/recovery code and operation records for started trials, confirmed renewals and payment retries. Do not roll schema or billing handlers back to pre-cardless versions. Required hosted acceptance covers signed-out/Free/trial/paid desktop/mobile states, Plus/Pro and both periods, verified-login start, explicit setup/cancel/recovery, saved card, decline, canceled/successful 3DS, duplicate/out-of-order webhooks, two tabs/account change/network loss, paid purchase during pending work, flag-off recovery, current/old extension clients, exact access expiry, five-minute room closing without reconnect reset, guest joining/history reads, preservation comparison and owner sign-off. Distinguish sandbox billing, local deadline tests and real-time hosted expiry, keeping any unfinished real 72-hour observation open with its due time.",
+      "_origin": "semantic",
+      "rationale": "Disabling admission while retaining compatible recovery and durable operation records allows existing billing work to finish safely; hosted acceptance requires separate observed evidence."
     },
     {
       "id": "apps_web_docs_conversion_metrics_conversion_metrics",
@@ -190738,7 +190793,7 @@
       "label": "isCashPayment()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L207",
+      "source_location": "L215",
       "_callable": true,
       "_origin": "ast"
     },
@@ -190747,7 +190802,7 @@
       "label": "recordCashPayment()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L215",
+      "source_location": "L223",
       "_callable": true,
       "_origin": "ast"
     },
@@ -191475,7 +191530,7 @@
       "label": "selectProYearly()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L197",
+      "source_location": "L201",
       "_callable": true,
       "_origin": "ast"
     },
@@ -191484,7 +191539,7 @@
       "label": "assertProYearlySelection()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L213",
+      "source_location": "L217",
       "_callable": true,
       "_origin": "ast"
     },
@@ -191493,7 +191548,7 @@
       "label": "proYearlyQuote",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L226",
+      "source_location": "L230",
       "_origin": "ast"
     },
     {
@@ -191996,6 +192051,172 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_clockfixture",
+      "label": "clockFixture()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L300",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_acceptance_record",
+      "label": "Cardless Trial Acceptance Record",
+      "file_type": "document",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L3-L6",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The linked 2026-10-11 cardless-trial acceptance record records actual rollout outcomes. The runbook itself is an operator procedure and does not establish deployment or activation.",
+      "references": [
+        "../../superpowers/plans/2026-10-11-cardless-trial-acceptance.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_staging_environment_targets",
+      "label": "Cardless Trial Staging Environment Targets",
+      "file_type": "concept",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L8-L16",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Use codex/cardless-trial through a reviewed PR into staging; never deploy this branch directly to production or promote the whole staging branch with Netflix. Target Supabase staging cyppqpprkygjloyfvvvj through db-staging.yml, staging.anidachi.app on Vercel Preview for the exact staging branch, Stripe sandbox acct_1RlmiIPQIEOqG7pr with existing test catalog and webhook, SDK 18.5.0 and API 2025-08-27.basil. Amplitude access is limited to AniDachi project 813335 with explicit staging properties.",
+      "targets": {
+        "git_destination": "staging",
+        "supabase_project": "cyppqpprkygjloyfvvvj",
+        "web": "https://staging.anidachi.app",
+        "stripe_account": "acct_1RlmiIPQIEOqG7pr",
+        "stripe_sdk": "18.5.0",
+        "stripe_api": "2025-08-27.basil",
+        "amplitude_project": "813335"
+      },
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_isolated_extension_validation",
+      "label": "Isolated Staging Extension Validation",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L46-L49",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Build the staging extension from the isolated checkout into its distinct generated folder. Validate staging identity, endpoints and narrow permissions. Loaded-artifact testing and the old published-client check remain explicit acceptance gates.",
+      "rationale": "The staging artifact is distinct from the owner's original local extension-design folder and must be validated as the actual loaded client.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_renewal_completion_finalizer",
+      "label": "Renewal Completion Finalizer",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L126-L148",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "POST /api/billing/trial/renewal/complete recovers the existing renewal operation; return and webhook use the same finalizer. It checks fresh Checkout, off-session SetupIntent, PaymentMethod ownership, frozen terms, current generation and original trial end. An old tab cannot confirm a newer operation. An applying operation fences later mutations and must not be described as canceled while unresolved. Inspect latest owned Schedule and Subscription instead of cached idempotent responses. Positive proof of an already-successful enable can commit after native Schedule release without another update; otherwise expired unknown mutation settles only after verified native cancellation. Repeat desired cancellation after reconciliation from current account state. Following Schedule release the ordinary subscription payment/recovery flow owns decline and 3DS. Keep cancellation available while payment is due.",
+      "rationale": "Fresh provider state, original terms and generation guards keep uncertain or stale operations from authorizing an incorrect later mutation.",
+      "references": [
+        "POST /api/billing/trial/renewal/complete"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_recurring_service_and_cash_conversion",
+      "label": "Recurring Service Settlement And First Cash Conversion",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L141-L148",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Initial and update zero invoices never prove recurring service or cash conversion. A genuine post-trial recurring invoice fully settled by Customer credit grants the paid service period without a card charge. first_invoice_id and first_paid_at retain that first settlement. Separate immutable first_cash_* fields retain the first positive cash receipt, potentially from a later cycle; only that receipt creates trial_first_payment_succeeded.",
+      "rationale": "Credit can settle a recurring service period while the first positive cash receipt remains a distinct later conversion event.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+      "label": "Accelerated First Invoice Reconciliation",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L150-L168",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "An existing-customer Sandbox Test Clock check observed created[gte=trial_end] return no cycle invoice even though that invoice returned created equal to trial_end. For a fresh subscription with livemode=false and a Test Clock, refresh lists up to 100 invoices scoped to the subscription without the Stripe date filter. It still filters returned timestamps and billing reasons, chooses the earliest eligible cycle, retrieves it fresh and verifies ownership, service period and settlement. Truncated history fails closed. Other subscriptions keep the provider date filter; the sandbox observation does not establish a Live Stripe issue. Following recovery, verify the same already-paid invoice in first_invoice_id and first_cash_*, repeat ordinary Billing status refresh and confirm only one logical trial_first_payment_succeeded event. Do not charge again or manually patch the ledger. Analytics delivery remains separately gated.",
+      "rationale": "The documented Test Clock date-filter mismatch motivates a bounded sandbox-only listing fallback while preserving invoice eligibility, ownership and settlement checks.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_original_trial_end_billing_date",
+      "label": "Original Trial End In Unpaid Billing States",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L166-L168",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Unpaid cardless Billing states pair the Trial ends label with the original trial.endsAt, including local time, even after Stripe advances its next billing period. Paid states keep their normal renewal or end date.",
+      "rationale": "An advanced Stripe billing period does not change the original trial-end timestamp displayed for an unpaid cardless state.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "label": "Trial Analytics Delivery Recovery",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L170-L182",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Inspect aggregate trial_conversion_events counts and private trial_event_scheduler status. Preserve each event ID, original time and frozen environment. Missing/wrong bearer and environment mismatch fail closed; only the dedicated drain leases and acknowledges bounded batches. Unknown delivery retains the same insert ID and account identity. At six days since the first attempt it enters manual_recovery_at; do not clear the field or blindly replay older unknown results because provider deduplication lasts seven days. Compare against AniDachi-scoped evidence before acknowledging observed delivery or making a separately reviewed repair. Do not alter source billing transitions to make a chart match.",
+      "rationale": "A fixed event identity and manual review before the provider deduplication window expires avoid blind duplicate delivery of unknown outcomes.",
+      "references": [
+        "trial_conversion_events",
+        "anidachi_private.trial_event_scheduler"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_account_deletion_billing_obligations",
+      "label": "Account Deletion And Stripe Obligations",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L184-L190",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Account deletion is a manual support request. Before deleting database records, resolve or cancel owned Stripe obligations through existing billing procedures and confirm their final state, then perform normal room/account cleanup. A ledger/outbox cascade does not cancel Stripe. This candidate adds no automated deletion endpoint or permanent per-person anti-abuse retention.",
+      "rationale": "Database record deletion cannot establish cancellation of external Stripe obligations.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_independent_clock_acceptance",
+      "label": "Independent Stripe Database And Worker Clocks",
+      "file_type": "rationale",
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L205-L208",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Stripe Test Clocks do not advance Postgres or Worker clocks. Report sandbox billing results, local deadline tests and real-time hosted expiry separately. If a real 72-hour observation is still running, record its due time and leave acceptance open without shortening a real trial or claiming the gate passed.",
+      "rationale": "An accelerated provider billing result cannot prove real-time database or Worker expiry.",
       "_origin": "semantic"
     }
   ],
@@ -425085,7 +425306,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -425095,7 +425316,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L39",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -475010,7 +475231,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L104",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -515024,7 +515245,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L4",
@@ -515036,7 +515256,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L4",
@@ -515048,8 +515267,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L20",
       "weight": 1.0
@@ -515060,8 +515277,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L19",
       "weight": 1.0
@@ -515072,8 +515287,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L45",
       "weight": 1.0
@@ -515084,7 +515297,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L8",
       "weight": 1.0
@@ -515095,7 +515307,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L1",
@@ -515107,7 +515318,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L2",
@@ -515119,7 +515329,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
       "source_location": "L3",
@@ -543345,7 +543554,8 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
-      "target": "apps_web_lib_billing_view_billingperiodunit"
+      "target": "apps_web_lib_billing_view_billingperiodunit",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -543356,7 +543566,8 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
-      "target": "apps_web_lib_billing_view_formatmonthlyprice"
+      "target": "apps_web_lib_billing_view_formatmonthlyprice",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -543399,7 +543610,8 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
-      "target": "apps_web_lib_billing_view_billingdisplayvalidityms"
+      "target": "apps_web_lib_billing_view_billingdisplayvalidityms",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -543490,7 +543702,8 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
-      "target": "apps_web_lib_billing_view_billingperiodunit"
+      "target": "apps_web_lib_billing_view_billingperiodunit",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -543501,7 +543714,8 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
-      "target": "apps_web_lib_billing_view_formatbillingtime"
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -543512,7 +543726,8 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
-      "target": "apps_web_lib_billing_view_formatmonthlyprice"
+      "target": "apps_web_lib_billing_view_formatmonthlyprice",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -543523,14 +543738,15 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
-      "target": "apps_web_lib_billing_view_subscriptionstatuslabel"
+      "target": "apps_web_lib_billing_view_subscriptionstatuslabel",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1019",
+      "source_location": "L1020",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -543541,7 +543757,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L998",
+      "source_location": "L999",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -543552,22 +543768,24 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1018",
+      "source_location": "L1019",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
-      "target": "apps_web_lib_billing_view_formatbillingtime"
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1014",
+      "source_location": "L1015",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
-      "target": "apps_web_lib_billing_view_subscriptiondatelabel"
+      "target": "apps_web_lib_billing_view_subscriptiondatelabel",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -546844,7 +547062,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L94",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_billing_client_test",
@@ -553954,7 +554172,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L81",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554846,7 +555064,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L1128",
+      "source_location": "L1132",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -586807,7 +587025,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L242",
+      "source_location": "L250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593086,7 +593304,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L121",
+      "source_location": "L125",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593096,7 +593314,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L142",
+      "source_location": "L146",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593106,7 +593324,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L149",
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593117,7 +593335,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L187",
+      "source_location": "L191",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593420,7 +593638,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L740",
+      "source_location": "L744",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593896,7 +594114,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L18-L44",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -593907,7 +594125,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L32-L38",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -593918,7 +594136,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L51-L71; L118-L124",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -593929,7 +594147,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L73-L110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -593940,7 +594158,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L98-L124",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -593951,7 +594169,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L126-L148; L170-L182",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -593962,18 +594180,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
-      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L192-L208",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -594303,7 +594510,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L24-L44",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -594314,40 +594521,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
-      "target": "docs_releases_cardless_trial_staging_runbook_failed_activation_settlement_preconditions",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
-      "target": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_cardless_trial_staging_runbook_renewal_and_analytics_unknown_outcome_recovery",
-      "target": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
+      "source_location": "L58-L124",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -594479,28 +594653,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_cardless_trial_staging_runbook_staging_trial_event_secret_provisioning",
-      "target": "docs_environment_and_secrets_matrix_environment_and_secrets_matrix_semantic",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
-      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
@@ -594928,7 +595080,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L207",
+      "source_location": "L215",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594938,7 +595090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L215",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594949,7 +595101,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L237",
+      "source_location": "L245",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594960,7 +595112,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L240",
+      "source_location": "L248",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594971,7 +595123,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L217",
+      "source_location": "L225",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594982,7 +595134,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L219",
+      "source_location": "L227",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594993,7 +595145,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.ts",
-      "source_location": "L225",
+      "source_location": "L233",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596508,7 +596660,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L197",
+      "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596518,7 +596670,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L213",
+      "source_location": "L217",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596528,7 +596680,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L226",
+      "source_location": "L230",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596539,7 +596691,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L257",
+      "source_location": "L261",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596550,7 +596702,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L281",
+      "source_location": "L285",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -597145,6 +597297,403 @@
       "confidence_score": 1.0,
       "source_file": "docs/social-pricing-model.md",
       "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_clockfixture",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L300",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_clockfixture",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_client",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L353",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_cardless_trial_state_test_clockfixture",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-cardless-trial-state.test.ts",
+      "source_location": "L370",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_test_stripe",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_test_invoice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_trial_state_test",
+      "target": "apps_web_lib_anidachi_auth_stripe_trial_state_test_iso",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_stripe_trial_state_test",
+      "target": "apps_web_lib_client_api_api",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/anidachi-auth/stripe-trial-state.test.ts",
+      "source_location": "L244",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_extension_src_source_adapters_netflix_metadata_label",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L1293",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_acceptance_record",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L3-L6",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_staging_environment_targets",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L8-L16",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_isolated_extension_validation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L46-L49",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_renewal_completion_finalizer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L126-L148",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_recurring_service_and_cash_conversion",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L141-L148",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L150-L168",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_original_trial_end_billing_date",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L166-L168",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L170-L182",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_account_deletion_billing_obligations",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L184-L190",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_cardless_trial_staging_runbook",
+      "target": "docs_releases_cardless_trial_staging_runbook_independent_clock_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L205-L208",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_five_migration_flag_off_rollout",
+      "target": "docs_releases_cardless_trial_staging_runbook_staging_environment_targets",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L8-L44",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_five_migration_flag_off_rollout",
+      "target": "docs_releases_cardless_trial_staging_runbook_isolated_extension_validation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L40-L49",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
+      "target": "docs_releases_cardless_trial_staging_runbook_failed_activation_settlement_preconditions",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L82-L117",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_failed_activation_settlement_preconditions",
+      "target": "docs_releases_cardless_trial_staging_runbook_owner_activation_recovery_window",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L118-L124",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_renewal_and_analytics_unknown_outcome_recovery",
+      "target": "docs_releases_cardless_trial_staging_runbook_renewal_completion_finalizer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L126-L139",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_renewal_and_analytics_unknown_outcome_recovery",
+      "target": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L170-L182",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_renewal_completion_finalizer",
+      "target": "docs_releases_cardless_trial_staging_runbook_recurring_service_and_cash_conversion",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L141-L148",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+      "target": "docs_releases_cardless_trial_staging_runbook_recurring_service_and_cash_conversion",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L150-L165",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+      "target": "docs_releases_cardless_trial_staging_runbook_original_trial_end_billing_date",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L162-L168",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+      "target": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L162-L181",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_staging_trial_event_secret_provisioning",
+      "target": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L32-L38; L170-L175",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "target": "docs_releases_cardless_trial_staging_runbook_staging_environment_targets",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L16; L177-L181",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
+      "target": "docs_releases_cardless_trial_staging_runbook_owner_activation_recovery_window",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L192-L203",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
+      "target": "docs_releases_cardless_trial_staging_runbook_renewal_completion_finalizer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L192-L200",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
+      "target": "docs_releases_cardless_trial_staging_runbook_isolated_extension_validation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L197-L203",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
+      "target": "docs_releases_cardless_trial_staging_runbook_independent_clock_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L205-L208",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback",
+      "target": "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L192-L195",
       "weight": 1.0,
       "_origin": "semantic"
     }
@@ -598196,6 +598745,54 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/social-pricing-model.md",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_staging_rollout_gates",
+      "label": "Cardless Trial Staging Rollout Gates",
+      "nodes": [
+        "docs_releases_cardless_trial_staging_runbook_staging_environment_targets",
+        "docs_releases_cardless_trial_staging_runbook_five_migration_flag_off_rollout",
+        "docs_releases_cardless_trial_staging_runbook_staging_trial_event_secret_provisioning",
+        "docs_releases_cardless_trial_staging_runbook_isolated_extension_validation",
+        "docs_releases_cardless_trial_staging_runbook_hosted_acceptance_and_forward_rollback"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L8-L49; L197-L208",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_private_activation_settlement",
+      "label": "Private Activation Settlement Protocol",
+      "nodes": [
+        "docs_releases_cardless_trial_staging_runbook_owner_activation_recovery_window",
+        "docs_releases_cardless_trial_staging_runbook_private_operator_attempt_fence",
+        "docs_releases_cardless_trial_staging_runbook_failed_activation_settlement_preconditions"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L51-L124",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_releases_cardless_trial_staging_runbook_first_invoice_billing_recovery",
+      "label": "First Invoice Billing Recovery Checks",
+      "nodes": [
+        "docs_releases_cardless_trial_staging_runbook_recurring_service_and_cash_conversion",
+        "docs_releases_cardless_trial_staging_runbook_accelerated_first_invoice_reconciliation",
+        "docs_releases_cardless_trial_staging_runbook_original_trial_end_billing_date",
+        "docs_releases_cardless_trial_staging_runbook_analytics_delivery_recovery"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/releases/cardless-trial/staging-runbook.md",
+      "source_location": "L141-L182",
       "_origin": "semantic"
     }
   ],

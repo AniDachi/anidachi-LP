@@ -995,6 +995,7 @@ function SubscriptionFacts({
 	const trial = subscription.trial;
 	const inTrial = trial?.stage === "trial";
 	const cardless = trial?.mode === "cardless";
+	const showTrialDeadline = inTrial || (cardless && trial.stage !== "paid");
 	const price = subscriptionPriceLabel(subscription);
 	const paymentPeriod =
 		subscription.price?.billingPeriod ??
@@ -1014,11 +1015,13 @@ function SubscriptionFacts({
 						{inTrial ? "Trial ends" : subscriptionDateLabel(subscription)}
 					</dt>
 					<dd>
-						{inTrial
+						{showTrialDeadline
 							? formatBillingTime(trial.endsAt)
 							: formatDate(subscription.currentPeriodEnd)}
 					</dd>
-					{inTrial && <dd className="billing-timezone">Your local time</dd>}
+					{showTrialDeadline && (
+						<dd className="billing-timezone">Your local time</dd>
+					)}
 				</div>
 				<div>
 					<dt>{priceTitle}</dt>
