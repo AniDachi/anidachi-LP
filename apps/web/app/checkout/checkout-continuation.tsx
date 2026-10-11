@@ -96,6 +96,8 @@ export function CheckoutContinuation({
 					);
 				} else {
 					if (result.state !== "unavailable") recovery.current = null;
+					// Only a confirmed terminal result retires the old request. Unknown outcomes keep recovery.
+					if (result.state === "ineligible") request.current = null;
 					setStage(
 						result.state === "verification_required"
 							? "verification"

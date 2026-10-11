@@ -188,6 +188,70 @@ test("pending activation resumes the owned operation instead of making a new sta
 	]);
 });
 
+test("a terminal recovery result retires the failed request before a new explicit trial start", async () => {
+	const requestIds: string[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		if (String(url).endsWith("/recover"))
+			return Response.json({ state: "ineligible", ownerUserId: "owner-a" });
+		requestIds.push(JSON.parse(String(init?.body)).requestId);
+		return Response.json(
+			{
+				state: "pending",
+				kind: "activation",
+				operationId: "known-activation",
+				ownerUserId: "owner-a",
+			},
+			{ status: 202 },
+		);
+	};
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Try again/i).click());
+	assert.equal(
+		requestIds.length,
+		1,
+		"a fresh offer still needs explicit confirmation",
+	);
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.equal(requestIds.length, 2);
+	assert.notEqual(requestIds[0], requestIds[1]);
+});
+
+test("an unavailable recovery keeps the owned activation instead of starting a replacement", async () => {
+	const posts: string[] = [];
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		posts.push(String(url));
+		return String(url).endsWith("/start")
+			? Response.json(
+					{
+						state: "pending",
+						kind: "activation",
+						operationId: "known-activation",
+						ownerUserId: "owner-a",
+					},
+					{ status: 202 },
+				)
+			: Response.json(
+					{ state: "unavailable", ownerUserId: "owner-a" },
+					{ status: 503 },
+				);
+	};
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Check trial status/i).click());
+	assert.deepEqual(posts, [
+		"/api/billing/trial/start",
+		"/api/billing/trial/recover",
+		"/api/billing/trial/recover",
+	]);
+});
+
 test("late cardless start response cannot redirect after leaving the page", async () => {
 	const pending = deferred<Response>();
 	globalThis.fetch = async (url) =>
