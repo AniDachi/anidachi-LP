@@ -34,7 +34,15 @@ test("billing preview and its actions cannot contact billing services", async ()
 	const container = document.createElement("div");
 	document.body.append(container);
 	root = createRoot(container);
-	await act(async () => root!.render(createElement(PathnameContext.Provider, { value: "/dev/billing" }, BillingPreviewPage())));
+	await act(async () =>
+		root!.render(
+			createElement(
+				PathnameContext.Provider,
+				{ value: "/dev/billing" },
+				BillingPreviewPage(),
+			),
+		),
+	);
 	assert.match(container.textContent!, /sample subscription/);
 	assert.match(container.textContent!, /76.70/);
 	for (const label of ["Refresh status", "Cancel renewal"]) {
@@ -46,4 +54,35 @@ test("billing preview and its actions cannot contact billing services", async ()
 	}
 	assert.match(container.textContent!, /No subscription changes were made/);
 	assert.equal(requests, 0);
+});
+
+test("cardless preview can review sample renewal without contacting billing", async () => {
+	env.NODE_ENV = "development";
+	globalThis.fetch = async () => {
+		throw new Error("Preview attempted network");
+	};
+	const container = document.createElement("div");
+	document.body.append(container);
+	root = createRoot(container);
+	await act(async () =>
+		root!.render(
+			createElement(
+				PathnameContext.Provider,
+				{ value: "/dev/billing" },
+				BillingPreviewPage(),
+			),
+		),
+	);
+	for (const label of [
+		"Cardless trial",
+		"Review renewal",
+		"Add card & enable renewal",
+	]) {
+		const button = [...container.querySelectorAll("button")].find(
+			(b) => b.textContent === label,
+		);
+		assert.ok(button, label);
+		await act(async () => button.click());
+	}
+	assert.match(container.textContent!, /No subscription changes were made/);
 });

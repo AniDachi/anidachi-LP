@@ -64,6 +64,146 @@ function button(el: HTMLElement, label: RegExp) {
 	return found;
 }
 
+const cardlessOffer = {
+	...offer,
+	trialMode: "cardless",
+	trialOfferRevision: "cardless-3d-v1",
+};
+test("email verification uses a real provider sign-in instead of looping through an existing session", async () => {
+	globalThis.fetch = async (url) =>
+		String(url) === "/api/billing/offer"
+			? Response.json(cardlessOffer)
+			: Response.json(
+					{ state: "verification_required", ownerUserId: "owner-a" },
+					{ status: 409 },
+				);
+	const el = await mount("pro", "monthly");
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.match(el.textContent!, /verified email/i);
+	for (const provider of ["google", "discord"]) {
+		const anchor = el.querySelector<HTMLAnchorElement>(
+			`a[href^="/api/auth/${provider}?"]`,
+		);
+		assert.ok(anchor);
+		assert.equal(
+			new URL(anchor.href).searchParams.get("returnTo"),
+			"/checkout?plan=pro&billing=monthly",
+		);
+	}
+});
+test("cardless selection survives sign-in but only an explicit confirmation starts the trial", async () => {
+	const posts: {
+		url: string;
+		body: Record<string, unknown>;
+		owner: string | null;
+	}[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		posts.push({
+			url: String(url),
+			body: JSON.parse(String(init?.body)),
+			owner: new Headers(init?.headers).get("X-Anidachi-Billing-Owner"),
+		});
+		return Response.json({
+			state: "active",
+			ownerUserId: "owner-a",
+			planCode: "pro",
+			trialEndsAt: "2030-01-04T00:00:00Z",
+		});
+	};
+	const el = await mount("pro", "monthly", true);
+	assert.equal(posts.length, 0);
+	assert.match(el.textContent!, /no card/i);
+	assert.match(el.textContent!, /no automatic charge/i);
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.equal(posts.length, 1);
+	assert.equal(posts[0].url, "/api/billing/trial/start");
+	assert.equal(posts[0].owner, "owner-a");
+	assert.equal(posts[0].body.planCode, "pro");
+	assert.equal(posts[0].body.billingPeriod, "monthly");
+	assert.equal(posts[0].body.offerRevision, cardlessOffer.trialOfferRevision);
+	assert.match(window.location.href, /\/account\/billing/);
+});
+
+test("a changed offer or account never turns cardless consent into a card Checkout", async () => {
+	for (const change of [
+		{ trialMode: "card_required" },
+		{ action: "subscribe" },
+		{ ownerUserId: "owner-b" },
+	]) {
+		let reads = 0,
+			posts = 0;
+		globalThis.fetch = async (url) => {
+			if (String(url) === "/api/billing/offer")
+				return Response.json({
+					...cardlessOffer,
+					...(++reads > 1 ? change : {}),
+				});
+			posts++;
+			return Response.json({ url: "https://checkout.stripe.com/unwanted" });
+		};
+		const el = await mount();
+		await act(async () => button(el, /Start my 3-day trial/i).click());
+		assert.equal(posts, 0);
+		assert.match(el.textContent!, /changed/i);
+		await act(async () => root?.unmount());
+		root = null;
+	}
+});
+
+test("pending activation resumes the owned operation instead of making a new start", async () => {
+	const urls: string[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		urls.push(String(url));
+		if (String(url).endsWith("/start"))
+			return Response.json(
+				{
+					state: "pending",
+					kind: "activation",
+					operationId: "known-activation",
+					ownerUserId: "owner-a",
+				},
+				{ status: 202 },
+			);
+		assert.deepEqual(JSON.parse(String(init?.body)), {
+			operationId: "known-activation",
+		});
+		return Response.json({
+			state: "active",
+			ownerUserId: "owner-a",
+			planCode: "plus",
+			trialEndsAt: "2030-01-04T00:00:00Z",
+		});
+	};
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.match(el.textContent!, /being prepared/i);
+	await act(async () => button(el, /Check trial status/i).click());
+	assert.deepEqual(urls, [
+		"/api/billing/trial/start",
+		"/api/billing/trial/recover",
+	]);
+});
+
+test("late cardless start response cannot redirect after leaving the page", async () => {
+	const pending = deferred<Response>();
+	globalThis.fetch = async (url) =>
+		String(url) === "/api/billing/offer"
+			? Response.json(cardlessOffer)
+			: pending.promise;
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	await act(async () =>
+		pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" })),
+	);
+	assert.doesNotMatch(window.location.href, /\/account\/billing/);
+	assert.match(el.textContent!, /check your account/i);
+});
+
 test("the login context names the selected plan and billing period", () => {
 	const context = getLoginContext("/checkout?plan=pro&billing=monthly");
 	assert.match(context.headline, /Pro/);

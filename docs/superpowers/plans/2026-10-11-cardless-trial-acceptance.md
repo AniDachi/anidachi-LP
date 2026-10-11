@@ -399,3 +399,55 @@ operator recovery remain outside that review.
 
 UI/account integration, analytics, hosted staging verification, operator recovery
 past Stripe's safe replay window and owner acceptance remain Tasks 4–5.
+
+## Task 4: local clients and visible payment terms
+
+Pricing and checkout now distinguish the authoritative offer mode. A cardless
+trial starts only after the signed-in person explicitly confirms the selected
+plan; sign-in itself never starts it. Fresh account/offer checks retire stale
+results and preserve the existing card-required flow. A provider verification
+request uses the actual Google/Discord OAuth entry points; merely reopening the
+login page with an existing session would not obtain a new provider proof.
+Pending activation recovery reuses the owner record, including after flag-off.
+
+Billing shows the original trial end with a timezone, rather than presenting
+the scheduled no-consent cancellation as a canceled subscription. Renewal review
+shows the server's plan, period, full amount and first-charge date before card
+setup. Pending setup exposes its frozen terms and a recovery action; an unknown
+result never promises that future billing is disabled. Expired pending setup
+remains recoverable, but cannot resume card collection or hide behind the old
+subscription history. After a failed first charge, the existing cancellation
+action is retained. A saved card or return URL is not treated as paid access.
+
+Extension paywall copy points to the current website offer without promising
+card-required or cardless behavior from an old strict hosting payload. No shared
+protocol fields, auto-create behavior, Netflix or local redesign were changed.
+Primary/mobile website CTAs remain installation actions. FAQ, pricing and terms
+explain both modes; the SEO content guide records the rollout boundary.
+
+Verification:
+
+- New client/server-view cases were observed RED then GREEN, including account
+  changes, late returns, stale offers, pending cancellation, frozen terms,
+  verification login and declined-payment cancellation.
+- Web TypeScript passed; full web suite **1075 total, 1069 passed, 6 existing
+  skips, 0 failures**. Extension check passed; **143 files / 2210 tests passed**.
+- Actual local Billing components at `127.0.0.1:3032/dev/billing` were inspected
+  at 1440px and 390px. The cardless preview and Pro yearly review show terms
+  without overflow; sample mutation buttons remain inactive. Local Pricing used
+  mocked server offers for guest, eligible Free, trial-used and paid states, each
+  monthly/yearly at both sizes. All expected CTA/copy assertions passed.
+- Screenshots and QA reports are retained locally under
+  `/private/tmp/anidachi-cardless-proof/task4-{desktop,mobile}-{trial,review,pricing}.png`
+  and `task4-{ui,pricing}-qa.log`. Screenshots were visually inspected. No page
+  errors; unauthenticated local header requests to `/api/me` and `/api/auth/refresh`
+  returned the expected 401, not billing action failures. This is local UI proof,
+  not authenticated Supabase/Stripe/staging acceptance.
+- Repository Playwright was used for isolated headless local contexts because
+  the frontend skill's Browser plugin is unavailable. No user browser profile,
+  original extension workspace or production service was altered.
+
+Ruling: hosted desktop/mobile acceptance moves from Task 4 into Task 5 alongside
+the first staging PR/deploy. The requirement remains open until that real browser
+evidence exists; local fixtures do not satisfy it. Analytics, loaded artifact,
+operator recovery and owner staging acceptance also remain Task 5.

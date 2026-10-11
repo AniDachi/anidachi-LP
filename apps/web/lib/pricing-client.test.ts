@@ -71,6 +71,32 @@ test("eligible Free sees card-required trial and cannot mistake Free for hosting
 	assert.match(el.textContent!, /Card required/);
 	assert.doesNotMatch(el.textContent!, /30 min|4 people/);
 });
+
+test("cardless pricing explains no automatic payment and opens explicit trial confirmation", async () => {
+	let posts = 0;
+	globalThis.fetch = async (_url, init) => {
+		if (init?.method === "POST") posts++;
+		return Response.json({ ...offer, trialMode: "cardless", trialOfferRevision: "v1" });
+	};
+	const el = await mount();
+	assert.match(el.textContent!, /No card required/i);
+	assert.match(el.textContent!, /No automatic charge/i);
+	assert.doesNotMatch(el.textContent!, /then .* automatically|Cancel before your trial ends/i);
+	await act(async () => plusButton(el).click());
+	assert.equal(posts, 0);
+	assert.equal(window.location.pathname, "/checkout");
+	assert.equal(window.location.search, "?plan=plus&billing=yearly");
+});
+
+test("a signed-out cardless offer remains conditional on eligibility after login", async () => {
+	globalThis.fetch = async () => Response.json({ ...offer, ownerUserId: null, action: "sign_in", trialMode: "cardless" });
+	const el = await mount();
+	assert.match(el.textContent!, /No card required/i);
+	assert.doesNotMatch(el.textContent!, /automatically/);
+	await act(async () => plusButton(el).click());
+	assert.equal(window.location.pathname, "/login");
+	assert.equal(new URLSearchParams(window.location.search).get("next"), "/checkout?plan=plus&billing=yearly");
+});
 test("used trial and current subscribers get paid or management actions", async () => {
 	for (const action of ["subscribe", "manage"]) {
 		globalThis.fetch = async () =>

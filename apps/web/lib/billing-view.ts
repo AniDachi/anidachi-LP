@@ -9,6 +9,20 @@ export function billingPeriodUnit(period: BillingPeriod): "month" | "year" {
 	return period === "yearly" ? "year" : "month";
 }
 export type BillingTrial = {
+	mode?: "card_required" | "cardless";
+	renewalState?: "not_enabled" | "pending" | "enabled";
+	// Confirmed state stays visible while a newer change is unresolved.
+	renewalEnabled?: boolean;
+	pendingRenewal?: {
+		id: string;
+		action: "enable" | "cancel";
+		setupRequestId?: string;
+		terms?: {
+			planCode: "plus" | "pro";
+			price: BillingPrice;
+			firstChargeAt: string;
+		};
+	};
 	endsAt: string;
 	stage: "trial" | "processing" | "payment_required" | "ended" | "paid";
 	pendingUntil: string;
@@ -21,8 +35,12 @@ export function formatMonthlyPrice(price: MonthlyPrice): string {
 }
 export function formatBillingTime(value: string): string {
 	return new Date(value).toLocaleString("en-US", {
-		dateStyle: "medium",
-		timeStyle: "short",
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
+		timeZoneName: "short",
 	});
 }
 
@@ -73,6 +91,17 @@ export function billingDisplayValidityMs(overview: BillingOverview): number {
 export function subscriptionStatusLabel(
 	subscription: BillingSubscription,
 ): string {
+	if (
+		subscription.trial?.mode === "cardless" &&
+		subscription.trial.stage !== "paid"
+	) {
+		return {
+			trial: "Free trial",
+			ended: "Trial ended",
+			processing: "First payment processing",
+			payment_required: "Payment needs attention",
+		}[subscription.trial.stage];
+	}
 	if (subscription.cancelAtPeriodEnd && subscription.status !== "canceled") {
 		return "Renewal canceled";
 	}
@@ -98,6 +127,11 @@ export function subscriptionStatusLabel(
 export function subscriptionDateLabel(
 	subscription: BillingSubscription,
 ): string {
+	if (
+		subscription.trial?.mode === "cardless" &&
+		subscription.trial.stage !== "paid"
+	)
+		return "Trial ends";
 	if (subscription.cancelAtPeriodEnd) return "Subscription ends";
 	if (subscription.status === "trialing") return "Trial ends";
 	if (subscription.status === "active") return "Renews";

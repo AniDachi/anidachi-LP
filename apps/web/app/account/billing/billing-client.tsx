@@ -24,6 +24,22 @@ import { takeAccountPreload } from "@/lib/account-navigation-preload";
 import { api, ApiError } from "@/lib/client-api";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { checkoutReturnPath } from "@/lib/checkout-selection";
+import {
+	postTrialAction,
+	secureTrialSetupUrl,
+	trialResultMessage,
+} from "@/lib/trial-client";
+import type {
+	RenewalSetupResult,
+	TrialRenewalQuote,
+} from "@/lib/anidachi-auth/trial-renewal";
+import {
+	CardlessTrialControls,
+	type CardlessQuoteView,
+	type CardlessRenewalAction,
+} from "./cardless-trial-controls";
+import type { ReactNode } from "react";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
 
@@ -44,17 +60,29 @@ function formatDate(value: string | null) {
 }
 
 type BillingClientProps = {
-  ownerUserId: string;
-  returnedFromPortal: boolean;
-  initial?: { overview: BillingOverview; remainingMs: number };
+	ownerUserId: string;
+	returnedFromPortal: boolean;
+	initial?: { overview: BillingOverview; remainingMs: number };
+	trialSetupReturn?: { operationId: string; canceled: boolean };
 };
 export function BillingClient(props: BillingClientProps) {
-  return <BillingWorkspace key={props.ownerUserId} {...props} />;
+	return <BillingWorkspace key={props.ownerUserId} {...props} />;
 }
-function BillingWorkspace({ ownerUserId, returnedFromPortal, initial }: BillingClientProps) {
-  const [snapshot] = useState(() => !returnedFromPortal && initial?.overview.ownerUserId === ownerUserId ? initial : undefined);
-  const [overview, setOverview] = useState<BillingOverview | null>(snapshot?.overview ?? null);
-  const [busy, setBusy] = useState(!snapshot);
+function BillingWorkspace({
+	ownerUserId,
+	returnedFromPortal,
+	initial,
+	trialSetupReturn,
+}: BillingClientProps) {
+	const [snapshot] = useState(() =>
+		!returnedFromPortal && initial?.overview.ownerUserId === ownerUserId
+			? initial
+			: undefined,
+	);
+	const [overview, setOverview] = useState<BillingOverview | null>(
+		snapshot?.overview ?? null,
+	);
+	const [busy, setBusy] = useState(!snapshot);
 	const [error, setError] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
 	const version = useRef(0);
@@ -65,34 +93,49 @@ function BillingWorkspace({ ownerUserId, returnedFromPortal, initial }: BillingC
 		requestId: string;
 	} | null>(null);
 	const actionLock = useRef(false);
+	const [renewalQuote, setRenewalQuote] = useState<CardlessQuoteView | null>(
+		null,
+	);
+	const trialAbort = useRef<AbortController | null>(null);
+	const cancelRequestId = useRef<string | null>(null);
 	const displayTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
 		undefined,
 	);
 
 	const load = useCallback(
 		async (refresh: boolean, useNavigationRequest = false) => {
-      const pending = !refresh && useNavigationRequest ? takeAccountPreload(ownerUserId, "/api/billing/subscription") : null;
+			const pending =
+				!refresh && useNavigationRequest
+					? takeAccountPreload(ownerUserId, "/api/billing/subscription")
+					: null;
 			const started = pending?.started ?? Date.now();
 			const current = ++version.current;
 			setBusy(true);
 			if (refresh || Date.now() >= validUntil.current) setOverview(null);
 			setPlanQuote(null);
+			setRenewalQuote(null);
 			setError(null);
 			setNotice(null);
 			try {
-				const result = await (pending ? pending.response as Promise<BillingOverview> : api<BillingOverview>(
-					refresh ? "/api/billing/refresh" : "/api/billing/subscription",
-					{
-						method: refresh ? "POST" : "GET",
-						headers: { [BILLING_OWNER_HEADER]: ownerUserId },
-						...(refresh ? { body: "{}" } : {}),
-						cache: "no-store",
-						signal: AbortSignal.timeout(15_000),
-					},
-				));
+				const result = await (pending
+					? (pending.response as Promise<BillingOverview>)
+					: api<BillingOverview>(
+							refresh ? "/api/billing/refresh" : "/api/billing/subscription",
+							{
+								method: refresh ? "POST" : "GET",
+								headers: { [BILLING_OWNER_HEADER]: ownerUserId },
+								...(refresh ? { body: "{}" } : {}),
+								cache: "no-store",
+								signal: AbortSignal.timeout(15_000),
+							},
+						));
 				if (current !== version.current) return;
 				if (result.ownerUserId !== ownerUserId)
-          throw new ApiError("Your signed-in account changed. Reload this page.", "ACCOUNT_CHANGED", 409);
+					throw new ApiError(
+						"Your signed-in account changed. Reload this page.",
+						"ACCOUNT_CHANGED",
+						409,
+					);
 				const remaining =
 					billingDisplayValidityMs(result) - (Date.now() - started);
 				if (!(remaining > 0))
@@ -108,7 +151,10 @@ function BillingWorkspace({ ownerUserId, returnedFromPortal, initial }: BillingC
 				if (refresh) setNotice("Subscription status updated.");
 			} catch (failure) {
 				if (current !== version.current) return;
-				if (failure instanceof ApiError && [401, 403, 409].includes(failure.status)) {
+				if (
+					failure instanceof ApiError &&
+					[401, 403, 409].includes(failure.status)
+				) {
 					validUntil.current = 0;
 					setOverview(null);
 				}
@@ -125,23 +171,135 @@ function BillingWorkspace({ ownerUserId, returnedFromPortal, initial }: BillingC
 	);
 
 	useEffect(() => {
-    const remaining = snapshot ? serverSnapshotRemainingMs(snapshot.remainingMs) : 0;
-    if (remaining > 0) {
-      validUntil.current = Date.now() + remaining;
-      displayTimer.current = setTimeout(() => {
-        validUntil.current = 0;
-        setOverview(null);
-        void load(false);
-      }, remaining);
-    } else void load(returnedFromPortal, true);
-		const onFocus = () => { if (!actionLock.current) void load(false); };
+		const remaining = snapshot
+			? serverSnapshotRemainingMs(snapshot.remainingMs)
+			: 0;
+		if (remaining > 0) {
+			validUntil.current = Date.now() + remaining;
+			displayTimer.current = setTimeout(() => {
+				validUntil.current = 0;
+				setOverview(null);
+				void load(false);
+			}, remaining);
+		} else void load(returnedFromPortal, true);
+		const onFocus = () => {
+			if (!actionLock.current) void load(false);
+		};
+		const onBlur = () => {
+			++version.current;
+			trialAbort.current?.abort();
+			trialAbort.current = null;
+			actionLock.current = false;
+			setRenewalQuote(null);
+			setPlanQuote(null);
+			setBusy(false);
+			validUntil.current = 0;
+			setOverview(null);
+		};
+		const onVisibility = () => {
+			if (document.visibilityState === "hidden") onBlur();
+		};
 		window.addEventListener("focus", onFocus);
+		window.addEventListener("blur", onBlur);
+		document.addEventListener("visibilitychange", onVisibility);
 		return () => {
 			clearTimeout(displayTimer.current);
 			version.current += 1;
 			window.removeEventListener("focus", onFocus);
+			window.removeEventListener("blur", onBlur);
+			document.removeEventListener("visibilitychange", onVisibility);
+			trialAbort.current?.abort();
+			trialAbort.current = null;
+			actionLock.current = false;
 		};
 	}, [load, returnedFromPortal, snapshot]);
+
+	const trialAction = useCallback(
+		async (action: CardlessRenewalAction, input: Record<string, unknown>) => {
+			if (actionLock.current) return;
+			actionLock.current = true;
+			const current = ++version.current;
+			const abort = new AbortController();
+			trialAbort.current = abort;
+			setBusy(true);
+			setError(null);
+			setNotice(null);
+			try {
+				const body =
+					action === "cancel"
+						? { requestId: (cancelRequestId.current ??= crypto.randomUUID()) }
+						: input;
+				const result = await postTrialAction<
+					RenewalSetupResult | (TrialRenewalQuote & { state: "quoted" })
+				>(`renewal/${action}`, ownerUserId, body, abort.signal);
+				if (current !== version.current || abort.signal.aborted) return;
+				if (result.state === "quoted") {
+					if (
+						!result.id ||
+						!Number.isFinite(result.amount) ||
+						result.amount <= 0 ||
+						!result.currency ||
+						!Number.isFinite(Date.parse(result.firstChargeAt)) ||
+						!Number.isFinite(Date.parse(result.expiresAt))
+					)
+						throw new Error(
+							"Renewal terms could not be confirmed. Please review them again.",
+						);
+					setRenewalQuote({ quote: result, requestId: crypto.randomUUID() });
+				} else if (result.state === "setup") {
+					window.location.assign(secureTrialSetupUrl(result.url));
+				} else {
+					setRenewalQuote(null);
+					if (
+						["canceled", "active", "superseded", "expired"].includes(
+							result.state,
+						)
+					)
+						cancelRequestId.current = null;
+					const refreshedVersion = version.current + 1;
+					await load(true);
+					if (version.current === refreshedVersion && !abort.signal.aborted)
+						setNotice(
+							result.state === "active"
+								? "Renewal is confirmed. Your original trial end stays the same."
+								: result.state === "canceled"
+									? "Renewal is off. Your remaining trial access stays available."
+									: trialResultMessage(result.state),
+						);
+				}
+			} catch (failure) {
+				if (current === version.current && !abort.signal.aborted) {
+					if (action === "quote") setRenewalQuote(null);
+					setError(
+						failure instanceof Error
+							? failure.message
+							: "Could not confirm trial renewal. Refresh its status.",
+					);
+				}
+			} finally {
+				if (trialAbort.current === abort) {
+					trialAbort.current = null;
+					actionLock.current = false;
+					if (current === version.current) setBusy(false);
+				}
+			}
+		},
+		[load, ownerUserId],
+	);
+
+	useEffect(() => {
+		if (!trialSetupReturn) return;
+		let disposed = false;
+		queueMicrotask(() => {
+			if (!disposed)
+				void trialAction("complete", {
+					operationId: trialSetupReturn.operationId,
+				});
+		});
+		return () => {
+			disposed = true;
+		};
+	}, [trialAction, trialSetupReturn?.operationId]);
 
 	async function changeTrial(
 		subscriptionId: string,
@@ -255,6 +413,16 @@ function BillingWorkspace({ ownerUserId, returnedFromPortal, initial }: BillingC
 			changeTrial={changeTrial}
 			openStripe={openStripe}
 			setPlanQuote={setPlanQuote}
+			renderTrialControls={(subscription) => (
+				<CardlessTrialControls
+					key={subscription.id}
+					subscription={subscription}
+					busy={busy}
+					quote={renewalQuote}
+					onAction={trialAction}
+					onDismiss={() => setRenewalQuote(null)}
+				/>
+			)}
 		/>
 	);
 }
@@ -271,6 +439,7 @@ export function BillingView({
 	changeTrial,
 	openStripe,
 	setPlanQuote,
+	renderTrialControls,
 }: {
 	ownerUserId: string;
 	overview: BillingOverview | null;
@@ -294,6 +463,7 @@ export function BillingView({
 		action: "cancel" | "payment" | "restore" | "yearly",
 	) => Promise<void>;
 	setPlanQuote: (quote: null) => void;
+	renderTrialControls?: (subscription: BillingSubscription) => ReactNode;
 }) {
 	const owned = overview?.ownerUserId === ownerUserId ? overview : null;
 	const current =
@@ -335,6 +505,33 @@ export function BillingView({
 			)}
 			{owned && (
 				<>
+					{owned.planCode === "free" &&
+						owned.subscriptions
+							.filter(
+								(s) =>
+									s.trial?.mode === "cardless" &&
+									s.trial.stage === "ended" &&
+									!s.trial.renewalEnabled &&
+									!s.trial.pendingRenewal,
+							)
+							.slice(0, 1)
+							.map((s) => (
+								<section key={s.id} className="ac-notice">
+									<p>
+										Your 3-day trial has ended. Choose a paid plan when you are
+										ready to host again.
+									</p>
+									<Link
+										className="ac-button ac-button-primary"
+										href={checkoutReturnPath({
+											plan: s.planCode === "pro" ? "pro" : "plus",
+											billing: s.price?.billingPeriod ?? "monthly",
+										})}
+									>
+										Continue with {PLAN_NAMES[s.planCode]}
+									</Link>
+								</section>
+							))}
 					{(owned.planCode === "free" || current.length === 0) && (
 						<section className="billing-access" aria-label="Current access">
 							<h2>{PLAN_NAMES[owned.planCode]}</h2>
@@ -430,6 +627,7 @@ export function BillingView({
 								</p>
 							)}
 							<SubscriptionFacts subscription={subscription} />
+							{renderTrialControls?.(subscription)}
 							{(["past_due", "unpaid", "incomplete"].includes(
 								subscription.status,
 							) ||
@@ -573,7 +771,8 @@ export function BillingView({
 										? subscription.trial?.stage === "trial"
 											? "Cancel before your trial ends to avoid a charge. Access stays until then."
 											: subscription.status === "active" &&
-													(!subscription.trial || subscription.trial.stage === "paid")
+													(!subscription.trial ||
+														subscription.trial.stage === "paid")
 												? "Cancel renewal in Stripe. Access stays until the end of your paid period."
 												: "Confirm cancellation in Stripe to stop future renewals."
 										: "Restore renewal in Stripe. Your current end date stays the same."}
@@ -623,6 +822,11 @@ export function BillingView({
 }
 
 function isPastSubscription(subscription: BillingSubscription) {
+	if (
+		subscription.trial?.mode === "cardless" &&
+		subscription.trial.pendingRenewal
+	)
+		return false;
 	return (
 		subscription.status === "canceled" ||
 		subscription.status === "incomplete_expired"
@@ -636,12 +840,16 @@ function SubscriptionFacts({
 }) {
 	const trial = subscription.trial;
 	const inTrial = trial?.stage === "trial";
+	const cardless = trial?.mode === "cardless";
 	const price = subscriptionPriceLabel(subscription);
 	const paymentPeriod =
 		subscription.price?.billingPeriod ??
 		(subscription.monthlyPrice ? "monthly" : "subscription");
 	const priceTitle =
-		inTrial && !subscription.cancelAtPeriodEnd
+		inTrial &&
+		(cardless
+			? trial.renewalState === "enabled"
+			: !subscription.cancelAtPeriodEnd)
 			? `First ${paymentPeriod} payment`
 			: "Plan price";
 	return (
@@ -666,24 +874,28 @@ function SubscriptionFacts({
 			<div className="billing-terms">
 				{inTrial && (
 					<p>
-						{subscription.cancelAtPeriodEnd
-							? "No payment scheduled. Access continues until your trial ends."
-							: "Renews automatically after your trial."}
+						{cardless
+							? trial.renewalState === "pending"
+								? "A renewal change is being confirmed. Check the controls below for its current status."
+								: trial.renewalState === "enabled"
+									? "Renewal is enabled. Your first payment is scheduled for the end of your trial."
+									: "No automatic charge. Access ends after 3 days unless you choose to enable renewal."
+							: subscription.cancelAtPeriodEnd
+								? "No payment scheduled. Access continues until your trial ends."
+								: "Renews automatically after your trial."}
 					</p>
 				)}
-				{!inTrial && subscription.cancelAtPeriodEnd && (
-					<p>Renewal is canceled. Access continues until the date shown.</p>
-				)}
+				{!inTrial &&
+					subscription.cancelAtPeriodEnd &&
+					(!cardless || trial?.stage === "paid") && (
+						<p>Renewal is canceled. Access continues until the date shown.</p>
+					)}
 				{!trial &&
 					subscription.status === "active" &&
-					!subscription.cancelAtPeriodEnd && (
-						<p>Renews automatically.</p>
-					)}
+					!subscription.cancelAtPeriodEnd && <p>Renews automatically.</p>}
 				{trial?.stage === "paid" &&
 					subscription.status === "active" &&
-					!subscription.cancelAtPeriodEnd && (
-						<p>Renews automatically.</p>
-					)}
+					!subscription.cancelAtPeriodEnd && <p>Renews automatically.</p>}
 				{trial?.stage === "processing" && (
 					<p className="billing-warning">
 						Your first payment is being confirmed. This is not yet a paid

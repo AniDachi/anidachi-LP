@@ -55,7 +55,8 @@ describe("hosting offer", () => {
 		expect(container.querySelector('[role="dialog"]')).not.toBeNull();
 		expect(container.textContent).toContain("Join friends’ rooms for free");
 		expect(container.textContent).toContain("3-day free trial");
-		expect(container.textContent).toContain("Card required");
+		expect(container.textContent).toContain("payment terms on the plans page");
+		expect(container.textContent).not.toContain("Card required");
 		const link = container.querySelector("a")!;
 		expect(link.href).toBe("http://localhost:3003/pricing");
 		expect(link.textContent).toContain("Choose a plan");

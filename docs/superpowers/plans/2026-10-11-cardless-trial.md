@@ -17,12 +17,14 @@ Stripe API 2025-08-27.basil, WXT extension, Cloudflare room runtime.
 
 **Spec:** [Проект решения](../specs/2026-10-11-cardless-trial-design.md).
 
-**Статус:** Выполнение согласовано 2026-10-11; Task 0 зафиксирован (`8048e631`),
-хранение/refresh Task 1 зафиксированы (`2962f97c`), серверный запуск Task 2 реализован и проверен локально в отдельной ветке
-`codex/cardless-trial` от `origin/staging` (`60df2876`). Владелец разрешил продолжить
-проверку Subscription Schedule после объяснения отличий. Stripe-примитивы новой
-схемы проверены, включая Checkout/3DS в браузере. Маршрут запуска готов локально; подключение оплаты, интерфейс и
-приемка staging еще впереди; новая модель нигде не включена.
+**Статус:** Выполнение согласовано 2026-10-11. Task 0–3 зафиксированы
+(`8048e631`, `2962f97c`, `f78a024a`, `9a3ce499`) в отдельной ветке
+`codex/cardless-trial` от `origin/staging` (`60df2876`). Stripe-примитивы новой
+схемы проверены, включая Checkout/3DS в браузере; сервер прошел независимый review.
+Task 4 реализован и проверен локально: явный запуск trial, подключение/отмена оплаты,
+состояния Billing и совместимые тексты. Локальные desktop/mobile проверки не
+заменяют приемку staging. Аналитика и hosted-проверки — Task 5; новая модель
+нигде не включена.
 Исходная обычная Subscription отклонена из-за обхода через старый Portal;
 ее результаты сохраняются отдельно и не засчитываются новой схеме.
 [Текущие доказательства и ограничения](2026-10-11-cardless-trial-acceptance.md).
@@ -321,27 +323,32 @@ optional activation ID, без него находит единственную 
 `renewalState: 'not_enabled' | 'pending' | 'enabled'`, `endsAt`;
 права/цены приходят из сервера. Отсутствующий mode означает legacy, не cardless.
 
-- [ ] Добавить RED cases: разные CTA по mode; login сохраняет выбранный тариф,
+- [x] Добавить RED cases: разные CTA по mode; login сохраняет выбранный тариф,
   но не запускает trial без подтверждения; account switch уничтожает чужие
   offer/setup результаты; stale flag off → понятное обновление предложения.
-- [ ] Добавить RED cases: default scheduled cancellation нового trial отображается
+- [x] Добавить RED cases: default scheduled cancellation нового trial отображается
   как «Пробный период до …», а не «Подписка отменена»; время окончания с timezone;
   setup return expired → отдельная кнопка оплаты, не redirect на списание.
-- [ ] Обновить pricing, mobile CTA и checkout continuation. Текст старого карточного
+- [x] Обновить pricing, mobile CTA и checkout continuation. Текст старого карточного
   trial остается правдивым; новый прямо говорит «Без карты» и «Без автоматического
   списания». CTA не обещает 3 дня тому, у кого eligibility уже израсходована.
-- [ ] Обновить billing: конец trial, состояние подключения, цена/период/дата
+- [x] Обновить billing: конец trial, состояние подключения, цена/период/дата
   первого платежа, повтор после ошибки и отмена. Saved card не помечать как paid.
-- [ ] Обновить все потребители card-required copy в paywall и связанных подсказках;
+- [x] Обновить все потребители card-required copy в paywall и связанных подсказках;
   узкий diff без переноса локального onboarding/redesign. Старому расширению
   server rights остаются совместимыми; неизвестный mode не вызывает crash или
   автоматическую подписку. Вернувшись с сайта, refresh прав, без автосоздания комнаты.
-- [ ] Проверить FAQ/help/terms на противоречие новому сценарию; обновить только
+- [x] Проверить FAQ/help/terms на противоречие новому сценарию; обновить только
   затронутые условия, отделить поведение действующих trial с картой.
-- [ ] Запустить web focused tests, web check и extension check/test; осмотреть
-  desktop/mobile, signed-out/Free/trial/paid, оба периода в staging browser.
-  Ожидается GREEN и отсутствие неверного обещания оплаты/доступа.
-- [ ] Commit `feat(billing): show cardless trial and renewal states across clients`.
+- [x] Запустить web focused tests, web check и extension check/test; локально осмотреть
+  desktop/mobile Pricing и Billing, оба периода. Web: 1075 total / 1069 pass /
+  6 existing skips; extension: 2210 pass. Billing — development fixtures, Pricing —
+  mocked offer responses; это проверка UI, не Stripe/auth/staging.
+  Primary/mobile install CTA проверены: платежных действий в них нет.
+- Staging browser матрица signed-out/Free/trial/paid перенесена в Task 5:
+  до PR/deploy настоящего окружения для нового кода нет. Это обязательный gate,
+  не снятая проверка.
+- [x] Commit `feat(billing): show cardless trial and renewal states across clients`.
 
 ## Task 5: Аналитика и полная проверка на staging
 
@@ -371,6 +378,9 @@ publisher; `cardless-trial-acceptance.md`; текущие billing/domain docs.
 - [ ] Через обычный PR в staging проверить новую миграцию и deploy с flag off,
   затем включить только staging. Снять before/after evidence для старых paid,
   отмененных paid, trial с картой и ручного grant: исходные условия сохранены.
+- [ ] Завершить browser gate Task 4 на настоящем staging: desktop/mobile,
+  signed-out/Free/trial/paid, Plus/Pro и оба периода, verification login,
+  начало/окончание trial, setup return и отмена без ложных обещаний доступа/оплаты.
 - [ ] Проверить матрицу: Plus/Pro × month/year, guest/login, новая/старая карта,
   отмена/возврат/3DS/decline, повторная попытка, два таба, отключение сети в create,
   сбой БД после Stripe success, duplicate/out-of-order webhooks, выключение флага.

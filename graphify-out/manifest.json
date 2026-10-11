@@ -1836,9 +1836,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/terms/page.tsx": {
-    "mtime": 1791473521.961891,
-    "seen": 1791473766.329578,
-    "ast_hash": "a1b808b77f035ba8522aa35f1d711d04",
+    "mtime": 1791730366.9619489,
+    "seen": 1791731955.917144,
+    "ast_hash": "d49b4e47ac871672fc6b26b8d339c78c",
     "semantic_hash": ""
   },
   "apps/web/app/timezone-friendly-anime-watch-parties/page.tsx": {
@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1791473521.9646897,
-    "seen": 1791473766.329586,
-    "ast_hash": "33ab7f3c16640fa83f2d557dc53d9bba",
+    "mtime": 1791729911.3757694,
+    "seen": 1791731955.917144,
+    "ast_hash": "c8cc3e242fd23a015dff565184ab7914",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
@@ -2568,9 +2568,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/home-faq.ts": {
-    "mtime": 1791473521.967284,
-    "seen": 1791473766.329591,
-    "ast_hash": "3338e9be05b301db8500c38f12200003",
+    "mtime": 1791730366.9557128,
+    "seen": 1791731955.9171479,
+    "ast_hash": "2d9577643b7ad3eb4f1ebccc51fb57df",
     "semantic_hash": ""
   },
   "apps/web/lib/home-survey.ts": {
@@ -2736,9 +2736,9 @@
     "semantic_hash": "cffb11dc2326bd8d4bc611e389411875"
   },
   "apps/web/lib/pricing-copy.ts": {
-    "mtime": 1790840100.8925793,
-    "seen": 1790844799.913167,
-    "ast_hash": "fd7f92dee218953f17a01277721f7a36",
+    "mtime": 1791730366.9579563,
+    "seen": 1791731955.9171488,
+    "ast_hash": "fed6ca1fcd773283106c3835873dfc9d",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-tiers.ts": {
@@ -3474,10 +3474,10 @@
     "semantic_hash": "6704b202aaa8bfaad7c5f55f20b80d80"
   },
   "apps/web/docs/seo-content-guidelines.md": {
-    "mtime": 1790841102.9089258,
-    "seen": 1790845878.699732,
+    "mtime": 1791731576.4455032,
+    "seen": 1791731955.967935,
     "ast_hash": "684afaca914216664d6d4b161fdad892",
-    "semantic_hash": "7511cdc763140e6300fb16131953fe3d"
+    "semantic_hash": "8f7383c5061fdf5f7793d17f15b99b44"
   },
   "docs/ai-site-development-handoff.md": {
     "mtime": 1789490459.0038908,
@@ -4254,9 +4254,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/pricing/page.tsx": {
-    "mtime": 1791473521.9610698,
-    "seen": 1791473766.3295739,
-    "ast_hash": "150c9516cfc502a97810d8585fceb743",
+    "mtime": 1791730366.9598846,
+    "seen": 1791731955.917143,
+    "ast_hash": "6bc7da818aae7da93af43e6670e51272",
     "semantic_hash": ""
   },
   "apps/web/lib/force-index-urls.ts": {
@@ -7236,15 +7236,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1790819336.9833086,
-    "seen": 1790844799.913069,
-    "ast_hash": "da78d2869c34bae0bdb2f74a886985b5",
+    "mtime": 1791731022.7960927,
+    "seen": 1791731955.91714,
+    "ast_hash": "8e1c37b9fe6e03abb0bfd9dd6e03908e",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
-    "mtime": 1790819229.5566654,
-    "seen": 1790844799.913069,
-    "ast_hash": "b98e9bf70db06661e14c92125bce9b8b",
+    "mtime": 1791731022.7923157,
+    "seen": 1791731955.917142,
+    "ast_hash": "fb83ae9db5643880f28a74abb19db2c6",
     "semantic_hash": ""
   },
   "apps/web/app/account/watch-library/watch-library-capacity.tsx": {
@@ -7290,15 +7290,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.test.ts": {
-    "mtime": 1791727357.1676612,
-    "seen": 1791729394.7507572,
-    "ast_hash": "a4094832add8a39dbefed16ebdf0c2c7",
+    "mtime": 1791731022.7929506,
+    "seen": 1791731955.917145,
+    "ast_hash": "bcc8acbf6412651f0020f54914c13274",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.ts": {
-    "mtime": 1791727357.1673813,
-    "seen": 1791729394.750758,
-    "ast_hash": "cbb34dba087a79b8edae1c6c519b4839",
+    "mtime": 1791731022.7941644,
+    "seen": 1791731955.917145,
+    "ast_hash": "5bfc55dab26196ff12b7a037179275b8",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-capacity.test.ts": {
@@ -7314,15 +7314,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1791484160.1826353,
-    "seen": 1791484224.195888,
-    "ast_hash": "2b62fd51c438e85d610a1d1eea210ca3",
+    "mtime": 1791731022.7922757,
+    "seen": 1791731955.9171462,
+    "ast_hash": "84ae30528c36e54b7d693b2b512ad781",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
-    "mtime": 1790757890.4368923,
-    "seen": 1790844799.913162,
-    "ast_hash": "3d6a7b79aff43984b123370772eda91c",
+    "mtime": 1791731022.7932289,
+    "seen": 1791731955.917147,
+    "ast_hash": "cbcfc70405412eaa47d6ddc7b2517dd3",
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/watch_history_capacity_concurrency_contract.mjs": {
@@ -8814,15 +8814,15 @@
     "semantic_hash": "3c0211586f0db8a7b27d43a072d09617"
   },
   "apps/extension/test/hosting-paywall.test.tsx": {
-    "mtime": 1790584561.8034644,
-    "seen": 1790585719.774094,
-    "ast_hash": "5f006d4269f7fce616a3cb5a7f4335e2",
+    "mtime": 1791730501.4074388,
+    "seen": 1791731955.917139,
+    "ast_hash": "00c880dcddd4d912e7c5156deac4de94",
     "semantic_hash": ""
   },
   "apps/extension/src/hosting-paywall.tsx": {
-    "mtime": 1790584700.481713,
-    "seen": 1790585719.774091,
-    "ast_hash": "d4e85c84f868e0d64b594d700a32d094",
+    "mtime": 1791730366.9643986,
+    "seen": 1791731955.917137,
+    "ast_hash": "cc05467bb423fea8623d8cb215158033",
     "semantic_hash": ""
   },
   "apps/extension/test/hosting-access-client.test.ts": {
@@ -8922,9 +8922,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
-    "mtime": 1790894229.548877,
-    "seen": 1790895793.6195579,
-    "ast_hash": "e93ae6e69314439f8283d528dea1bf22",
+    "mtime": 1791729876.2931614,
+    "seen": 1791731955.9171488,
+    "ast_hash": "7c85302e5a9431fd493e39a175a5aaf1",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
@@ -9054,9 +9054,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/dev/billing/billing-preview.tsx": {
-    "mtime": 1790814794.9419217,
-    "seen": 1790844799.913089,
-    "ast_hash": "a90105ba85696a5c3f0c664dfbc9ee00",
+    "mtime": 1791731022.79235,
+    "seen": 1791731955.917143,
+    "ast_hash": "b4092a7c80ca2f287df9a7fd1fa9e347",
     "semantic_hash": ""
   },
   "apps/web/app/dev/billing/page.tsx": {
@@ -9168,9 +9168,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-preview.test.ts": {
-    "mtime": 1790815617.6854768,
-    "seen": 1790844799.913162,
-    "ast_hash": "b16b8022fb81dadd0269c17f4d9abc56",
+    "mtime": 1791731022.792298,
+    "seen": 1791731955.9171462,
+    "ast_hash": "c927796cfd48a105e21e4614e70e7ef4",
     "semantic_hash": ""
   },
   "apps/web/lib/checkout-success-preview.test.ts": {
@@ -9276,9 +9276,9 @@
     "semantic_hash": "7c15d4424b4e9a87f59d715116e875e7"
   },
   "apps/web/app/checkout/checkout-continuation.tsx": {
-    "mtime": 1790853908.3625574,
-    "seen": 1790854426.0510058,
-    "ast_hash": "d712a05f9b657ba32018e2a9460f4b15",
+    "mtime": 1791731022.7924457,
+    "seen": 1791731955.917142,
+    "ast_hash": "8ef6c6b77a27896b46f2843f5cdf03fe",
     "semantic_hash": ""
   },
   "apps/web/app/checkout/page.tsx": {
@@ -9288,9 +9288,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/checkout-continuation.test.ts": {
-    "mtime": 1790853908.3629222,
-    "seen": 1790854426.0510132,
-    "ast_hash": "7d92ecb5aed4272e41bbdf6447c0a486",
+    "mtime": 1791731022.7956448,
+    "seen": 1791731955.9171479,
+    "ast_hash": "883c0f90ea3b20ee1371a128595cda3a",
     "semantic_hash": ""
   },
   "apps/web/lib/checkout-selection.ts": {
@@ -9762,16 +9762,16 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md": {
-    "mtime": 1791728835.193217,
-    "seen": 1791729394.802603,
+    "mtime": 1791731576.4452057,
+    "seen": 1791731955.967936,
     "ast_hash": "",
-    "semantic_hash": "7edd693319720d11287014e0262f9b7d"
+    "semantic_hash": "d56e4fc82adae99fb0b46c74ed49b56b"
   },
   "docs/superpowers/plans/2026-10-11-cardless-trial.md": {
-    "mtime": 1791728835.192815,
-    "seen": 1791729394.8026052,
+    "mtime": 1791731576.4448192,
+    "seen": 1791731955.967937,
     "ast_hash": "",
-    "semantic_hash": "3e22740859415d768f5aae0f20e20345"
+    "semantic_hash": "f272ed67addbee298a5c571afdc5c9f3"
   },
   "docs/superpowers/specs/2026-10-11-cardless-trial-design.md": {
     "mtime": 1791728738.4040446,
@@ -9951,6 +9951,24 @@
     "mtime": 1791727577.4010465,
     "seen": 1791729394.7507699,
     "ast_hash": "fa9ff361e8149b38c93a9c363019f95e",
+    "semantic_hash": ""
+  },
+  "apps/web/app/account/billing/cardless-trial-controls.tsx": {
+    "mtime": 1791731022.792291,
+    "seen": 1791731955.917141,
+    "ast_hash": "85a4fe507543ebdf450bd4db636fa71d",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/billing-view.test.ts": {
+    "mtime": 1791731022.7928958,
+    "seen": 1791731955.917147,
+    "ast_hash": "e4228533df7f351849ad0c0104907e39",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/trial-client.ts": {
+    "mtime": 1791731022.7922685,
+    "seen": 1791731955.91715,
+    "ast_hash": "9bcee40b5f76df45e7d5816698573b46",
     "semantic_hash": ""
   }
 }

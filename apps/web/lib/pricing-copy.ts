@@ -25,7 +25,7 @@ export const PRICING_HOST_MODEL =
   "Only the host needs Plus or Pro, including during a trial. Friends join on Free accounts, and the host's plan sets the room limits. Recording and editing personal watch progress require each viewer’s own Plus or Pro access. Saved history and Resume remain available on Free. Both Crunchyroll and YouTube are supported.";
 
 export const PRICING_TRIAL_NOTE =
-  "New and existing Free accounts that have not used a trial can try Plus or Pro once for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel renewal before the trial ends.";
+  "Eligible Free accounts can try Plus or Pro once for 3 days. See the plan cards for your current offer. A trial offered without a card ends automatically unless you explicitly add a card and enable renewal. A trial started with a card keeps the renewal terms confirmed at checkout. Changing plans or billing periods does not restart the trial.";
 
 export const PRICING_CANCELLATION_NOTE =
   "Cancel renewal from Account → Subscription. Access continues until your current trial or paid period ends.";

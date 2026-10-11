@@ -17,6 +17,7 @@ import {
 } from "./stripe-env";
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
+import { readTrialRenewal } from "./trial-renewal-server";
 
 export class BillingError extends Error {
 	constructor(
@@ -66,6 +67,7 @@ type BillingDeps = {
 	sync: typeof syncStripeSubscriptionById;
 	mode: typeof resolveStripeMode;
 	readTrial: typeof getSubscriptionTrial;
+	readRenewal: typeof readTrialRenewal;
 	readPrice: typeof readBillingPrice;
 };
 
@@ -77,6 +79,7 @@ const defaultDeps: BillingDeps = {
 	sync: syncStripeSubscriptionById,
 	mode: resolveStripeMode,
 	readTrial: getSubscriptionTrial,
+	readRenewal: readTrialRenewal,
 	readPrice: readBillingPrice,
 };
 
@@ -234,9 +237,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 					.sort((a, b) => b.created_at.localeCompare(a.created_at))
 					.map(async (row) => {
 						const [record, price] = await Promise.all([
-							access.hosting?.trialEndsAt
-								? deps.readTrial(row.stripe_subscription_id)
-								: null,
+							deps.readTrial(row.stripe_subscription_id),
 							deps.readPrice(row.stripe_price_id).catch(() => null),
 						]);
 						let trial: BillingTrial | undefined;
@@ -254,7 +255,68 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 							if (!Number.isFinite(now) || !Number.isFinite(end))
 								throw new BillingError(503, "Trial timing unavailable.");
 							const live = row.status === "active" || row.status === "trialing";
+							const cardless = record.trial_mode === "cardless";
+							const renewalEnabled = !!record.renewal_operation_id;
+							const operation =
+								cardless && record.first_payment_state !== "paid"
+									? await deps.readRenewal(userId)
+									: null;
+							if (
+								operation &&
+								(operation.user_id !== userId ||
+									operation.stripe_subscription_id !==
+										row.stripe_subscription_id)
+							)
+								throw new BillingError(
+									503,
+									"Trial renewal ownership could not be verified.",
+								);
+							const pending =
+								operation &&
+								["setup_pending", "applying"].includes(operation.state)
+									? operation
+									: null;
 							trial = {
+								...(cardless
+									? {
+											mode: "cardless" as const,
+											renewalState: pending
+												? ("pending" as const)
+												: renewalEnabled
+													? ("enabled" as const)
+													: ("not_enabled" as const),
+											renewalEnabled,
+											...(pending
+												? {
+														pendingRenewal: {
+															id: pending.id,
+															action: pending.action,
+															...(pending.action === "enable" &&
+															pending.plan_code &&
+															pending.billing_period &&
+															pending.amount &&
+															pending.currency
+																? {
+																		terms: {
+																			planCode: pending.plan_code,
+																			price: {
+																				unitAmount: pending.amount,
+																				currency: pending.currency,
+																				billingPeriod: pending.billing_period,
+																			},
+																			firstChargeAt: pending.original_trial_end,
+																		},
+																	}
+																: {}),
+															...(pending.state === "setup_pending" &&
+															pending.setup_request_id
+																? { setupRequestId: pending.setup_request_id }
+																: {}),
+														},
+													}
+												: {}),
+										}
+									: {}),
 								endsAt: record.trial_ends_at,
 								pendingUntil: new Date(end + 2 * 3600_000).toISOString(),
 								stage:
@@ -267,30 +329,35 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 													)
 												? "payment_required"
 												: live &&
+														(!cardless || renewalEnabled) &&
 														!row.cancel_at_period_end &&
 														now < end + 2 * 3600_000
 													? "processing"
 													: "ended",
 							};
 						}
+						const cardlessTrial =
+							trial?.mode === "cardless" && trial.stage !== "paid";
 						return {
 							id: row.id,
 							planCode: row.plan_code,
 							status: row.status,
 							currentPeriodEnd: row.current_period_end,
 							cancelAtPeriodEnd: row.cancel_at_period_end,
-							canCancel: canCancelSubscription(
-								row.status,
-								row.cancel_at_period_end,
-							),
-							canRestoreRenewal: canRestoreRenewal(
-								row.status,
-								row.cancel_at_period_end,
-								row.current_period_end,
-								Date.parse(access.history?.serverTime ?? ""),
-							),
+							canCancel:
+								!(cardlessTrial && trial?.stage === "trial") &&
+								canCancelSubscription(row.status, row.cancel_at_period_end),
+							canRestoreRenewal:
+								!cardlessTrial &&
+								canRestoreRenewal(
+									row.status,
+									row.cancel_at_period_end,
+									row.current_period_end,
+									Date.parse(access.history?.serverTime ?? ""),
+								),
 							price,
 							canSwitchToYearly:
+								!cardlessTrial &&
 								price?.billingPeriod === "monthly" &&
 								row.plan_code !== "free" &&
 								!!stripePriceIdForPlanCode(row.plan_code, "yearly") &&
@@ -306,7 +373,9 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 							monthlyPrice: price?.billingPeriod === "monthly" ? price : null,
 							...(trial ? { trial } : {}),
 							canChangeTrialPlan:
-								trial?.stage === "trial" && row.status === "trialing",
+								!cardlessTrial &&
+								trial?.stage === "trial" &&
+								row.status === "trialing",
 						};
 					}),
 			);

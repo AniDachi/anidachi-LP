@@ -674,21 +674,6 @@
         "_origin": "semantic"
       },
       {
-        "id": "install_first_measured_seo_funnel",
-        "label": "Install-first SEO with attribution and truthful conversion evidence",
-        "nodes": [
-          "cursor_agents_anidachi_seo_aeo_pages_conversion_ctas",
-          "apps_web_docs_seo_content_guidelines_official_install_path",
-          "apps_web_docs_conversion_metrics_first_touch_attribution",
-          "apps_web_docs_conversion_metrics_download_dedup_install_boundary"
-        ],
-        "relation": "form",
-        "confidence": "INFERRED",
-        "confidence_score": 0.95,
-        "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-        "_origin": "semantic"
-      },
-      {
         "id": "anidachi_account_owner_generation_fences",
         "label": "Account owner and request-generation isolation",
         "nodes": [
@@ -1042,6 +1027,8 @@
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_3_local_test_results",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+          "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
           "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate"
         ],
@@ -13862,7 +13849,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L60"
+      "source_location": "L61"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_billingerror",
@@ -13874,7 +13861,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L21"
+      "source_location": "L22"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_billingservice",
@@ -13886,7 +13873,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L350"
+      "source_location": "L419"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_subscriptionrow",
@@ -13924,7 +13911,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L44"
+      "source_location": "L62"
     },
     {
       "id": "apps_web_lib_billing_view_billingsubscription",
@@ -13936,7 +13923,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L29"
+      "source_location": "L47"
     },
     {
       "id": "packages_protocol_src_personal_history_resume_personalhistoryresume",
@@ -34272,7 +34259,7 @@
       "community_name": "react",
       "file_type": "code",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L568"
+      "source_location": "L575"
     },
     {
       "id": "apps_web_components_sticky_mobile_checkout_bar_stickymobilecheckoutbar",
@@ -67892,7 +67879,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L51"
+      "source_location": "L68"
     },
     {
       "id": "apps_web_app_account_billing_billing_client_formatdate",
@@ -67903,7 +67890,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L39"
+      "source_location": "L55"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_billingerror_constructor",
@@ -67914,7 +67901,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L22"
+      "source_location": "L23"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_cancancelsubscription",
@@ -67925,7 +67912,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L40"
+      "source_location": "L41"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_createbillingservice",
@@ -67936,7 +67923,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L83"
+      "source_location": "L86"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_createbillingservice_ownedsubscriptions",
@@ -67947,7 +67934,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L84"
+      "source_location": "L87"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_routes_createbillinghandlers",
@@ -68002,7 +67989,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L103"
+      "source_location": "L104"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_listsubscriptionsforuser",
@@ -68025,7 +68012,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L91"
+      "source_location": "L94"
     },
     {
       "id": "apps_web_lib_billing_view_subscriptiondatelabel",
@@ -68036,7 +68023,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L98"
+      "source_location": "L127"
     },
     {
       "id": "apps_web_lib_billing_view_subscriptionstatuslabel",
@@ -68047,7 +68034,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L73"
+      "source_location": "L91"
     },
     {
       "id": "apps_extension_src_watch_history_resume_applypersonalhistoryresume",
@@ -98694,7 +98681,7 @@
       "community_name": "react",
       "file_type": "code",
       "source_file": "apps/web/lib/home-faq.ts",
-      "source_location": "L3"
+      "source_location": "L4"
     },
     {
       "id": "apps_web_lib_install_cta",
@@ -131864,7 +131851,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L28"
+      "source_location": "L44"
     },
     {
       "id": "apps_web_app_api_billing_cancellation_portal_route",
@@ -131983,7 +131970,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L31"
+      "source_location": "L32"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_defaultdeps",
@@ -131993,7 +131980,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L72"
+      "source_location": "L74"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_routes",
@@ -132033,7 +132020,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L38"
+      "source_location": "L39"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_test",
@@ -132053,7 +132040,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L26"
+      "source_location": "L27"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_test_row",
@@ -132063,7 +132050,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L13"
+      "source_location": "L14"
     },
     {
       "id": "apps_web_lib_billing_client_test",
@@ -132083,7 +132070,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L36"
+      "source_location": "L39"
     },
     {
       "id": "apps_web_lib_billing_client_test_testwindow",
@@ -132093,7 +132080,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L15"
+      "source_location": "L18"
     },
     {
       "id": "apps_web_lib_billing_view",
@@ -149900,118 +149887,6 @@
       "source_location": "L13-L14; L26-L35",
       "source_url": null,
       "description": "Paid cards start Checkout with session/error instrumentation; SEO cards are limited to content_above_fold and content_bottom. No marketing content_mid install card.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_internal_linking",
-      "label": "SEO internal linking and independent platform clusters",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 528,
-      "community_name": "Internal Linking Protocol",
-      "contributor": null,
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L63-L69; L75-L95; L105-L108",
-      "source_url": null,
-      "description": "New pages need one parent hub and two contextual inbound links, within three clicks of a pillar. Anime vertical, Crunchyroll and YouTube remain sibling clusters; narrow related tags avoid cluster pollution.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_json_ld_schema",
-      "label": "Visible-content schema in initial HTML",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 530,
-      "community_name": "JSON LD Schema",
-      "contributor": null,
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L99-L108; L135-L139",
-      "source_url": null,
-      "description": "Use shared JSON-LD in initial HTML with FAQ/HowTo parity. No fake SearchAction or promised rich-result boost; Organization sameAs uses public social links.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "label": "Canonical SEO publishing guidelines",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 531,
-      "community_name": "SEO Content Engine",
-      "contributor": null,
-      "file_type": "document",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L1-L8; L38-L71",
-      "source_url": null,
-      "description": "Prefer measured same-URL enrichment during portfolio freeze. Ranking changes require owner approval and GSC evidence; source-backed product truth and honest review dates govern publication.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_sitemap_protocol",
-      "label": "Automatic discovery and crawl-path preservation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 532,
-      "community_name": "Sitemap Protocol",
-      "contributor": null,
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L104-L105; L40-L48",
-      "source_url": null,
-      "description": "Static routes are discovered from app routes; preserve cohort discovery and existing public crawl paths while Coverage recovers, and do not mass-remove URLs.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_template_a_anime_pages",
-      "label": "Programmatic anime page template",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 533,
-      "community_name": "Template A Anime Pages",
-      "contributor": null,
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L89-L95; L116-L121",
-      "source_url": null,
-      "description": "Canonical /watch/{base-slug}-with-friends uses the shared page, anime data and rich-content helper; title-specific meta, opening and FAQs replace boilerplate while visible-content schema may combine types.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_template_b_comparison_pages",
-      "label": "Comparison page template",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 534,
-      "community_name": "Template B Comparison Pages",
-      "contributor": null,
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L123-L127",
-      "source_url": null,
-      "description": "Commercial comparisons answer first, use fair tables and primary competitor sources, and keep only above-fold plus layout-end install cards.",
-      "temporal_status": "documented_contract"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_template_d_listicles",
-      "label": "Guide and listicle template",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 535,
-      "community_name": "Template D Listicles",
-      "contributor": null,
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L123-L127",
-      "source_url": null,
-      "description": "Answer-first guides and listicles keep two install cards maximum; the retained older /pricing destination line conflicts with this file's newer official Store/install-hub conversion contract.",
       "temporal_status": "documented_contract"
     },
     {
@@ -169931,7 +169806,7 @@
       "label": "trialAccess()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -169942,7 +169817,7 @@
       "label": "trialRecord",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast",
       "community": 75,
       "community_name": "billing.ts"
@@ -170093,7 +169968,7 @@
       "label": "billingDisplayValidityMs()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L54",
+      "source_location": "L72",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -170116,7 +169991,7 @@
       "label": "formatBillingTime()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L22",
+      "source_location": "L36",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -170127,7 +170002,7 @@
       "label": "formatMonthlyPrice()",
       "file_type": "code",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L16",
+      "source_location": "L30",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -170684,7 +170559,7 @@
       "label": "canRestoreRenewal()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -170695,7 +170570,7 @@
       "label": "subscriptionPortal()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L95",
+      "source_location": "L98",
       "_callable": true,
       "_origin": "ast",
       "community": 75,
@@ -171026,7 +170901,7 @@
       "label": "deferred()",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L99",
+      "source_location": "L125",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
@@ -171037,7 +170912,7 @@
       "label": "plusButton()",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L106",
+      "source_location": "L132",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
@@ -174250,7 +174125,7 @@
       "label": "subscriptionPriceLabel()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L30",
+      "source_location": "L46",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174259,7 +174134,7 @@
       "label": "BillingClientProps",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L46",
+      "source_location": "L62",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -174269,7 +174144,7 @@
       "label": "BillingWorkspace()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L54",
+      "source_location": "L71",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174278,7 +174153,7 @@
       "label": "changeTrial()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L146",
+      "source_location": "L304",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174287,7 +174162,7 @@
       "label": "openStripe()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L205",
+      "source_location": "L363",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174296,7 +174171,7 @@
       "label": "BillingView()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L263",
+      "source_location": "L431",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174305,7 +174180,7 @@
       "label": "isPastSubscription()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L625",
+      "source_location": "L824",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174314,7 +174189,7 @@
       "label": "SubscriptionFacts()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L632",
+      "source_location": "L836",
       "_callable": true,
       "_origin": "ast"
     },
@@ -174372,7 +174247,7 @@
       "label": "example",
       "file_type": "code",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L9",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -174380,7 +174255,7 @@
       "label": "BillingPreview()",
       "file_type": "code",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L40",
+      "source_location": "L46",
       "_callable": true,
       "_origin": "ast"
     },
@@ -175033,7 +174908,7 @@
       "label": "periodButton()",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L434",
+      "source_location": "L460",
       "_callable": true,
       "_origin": "ast"
     },
@@ -176341,77 +176216,6 @@
       "file_type": "concept",
       "source_file": "apps/web/docs/CONVERSION_METRICS.md",
       "source_location": "L55-L64",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "temporal_status": "documented_contract",
-      "_origin": "semantic"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_current_product_truth",
-      "label": "Current subscription and history product copy",
-      "description": "Live features are synchronized players, on-player chat/reactions, voice/video and personal history on supported desktop Crunchyroll/YouTube. Free joins paid/trial hosts; hosting needs own Plus/Pro (6/15 people including host). History recording/editing needs viewer paid/trial access plus extension recording consent and separate YouTube switch; Free retains saved history, Resume and deletion.",
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L12-L34",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "temporal_status": "documented_contract",
-      "_origin": "semantic"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_one_trial_all_periods",
-      "label": "One account trial across monthly and yearly",
-      "description": "New and existing eligible Free accounts may use one3-day card trial across Plus/Pro and monthly/yearly; automatic renewal follows unless canceled. Switching plan or period creates no new trial. Legacy Free-host quota is compatibility data, not a public offer.",
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L21-L27",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "temporal_status": "documented_contract",
-      "_origin": "semantic"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_planned_async_boundary",
-      "label": "Async and shared progress are planned",
-      "description": "Async catch-up, shared group progress, persistent room context/chat and replayed reactions are future-only, excluded from present instructions and paid benefits. Visible, schema and social/search copy must stay aligned.",
-      "file_type": "rationale",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L25-L27",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "temporal_status": "documented_contract",
-      "rationale": "Avoid selling unavailable behavior.",
-      "_origin": "semantic"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_official_install_path",
-      "label": "Official Store through install hub",
-      "description": "Official Chrome Web Store listing is linked from /extension; install guides use that exact existing listing or hub, never invented item URLs.",
-      "file_type": "concept",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L32-L34",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "temporal_status": "documented_contract",
-      "_origin": "semantic"
-    },
-    {
-      "id": "apps_web_docs_seo_content_guidelines_residual_pricing_destination",
-      "label": "Residual pricing CTA wording",
-      "description": "Lower checklist/template lines still mention /pricing while current primary conversion lines32-34 name /extension and official Store. These retained statements are a documentation conflict; public acquisition intent is resolved by newer install-first guidance.",
-      "file_type": "rationale",
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L107-L127",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -179987,7 +179791,7 @@
       "label": "Stage",
       "file_type": "code",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L18",
+      "source_location": "L22",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -179997,7 +179801,7 @@
       "label": "CheckoutContinuation()",
       "file_type": "code",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L20",
+      "source_location": "L37",
       "_callable": true,
       "_origin": "ast"
     },
@@ -190724,14 +190528,16 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "tasks0_to3_local_server_complete_task4_onward_pending",
-      "description": "Task 0 committed as 8048e631 and Task 1 as 2962f97c. Tasks 2 and 3 server start, consent/setup/finalizer and recovery are implemented locally; Task 3 checkboxes are complete and its linked acceptance records independent server review. All work is on codex/cardless-trial and the model is enabled nowhere. Fourteen Schedule cases plus old-Portal proof remain distinct from rejected ordinary Subscription evidence. UI/account integration, analytics, hosted staging and release remain Tasks 4–6. API 2025-08-27.basil and actual SDK 18.5.0 within ^18.3.0 are unchanged. Production requires separate permission after staging acceptance.",
+      "status": "tasks0_to3_committed_task4_local_clients_complete_task5_acceptance_pending",
+      "description": "Task 0–3 committed as 8048e631, 2962f97c, f78a024a and 9a3ce499 on codex/cardless-trial from origin/staging 60df2876. Stripe primitives and independent server review passed. Task 4 implements explicit trial start, payment connection/cancellation, Billing states and compatible copy, with local desktop/mobile QA. This local proof does not satisfy staging acceptance. Analytics and hosted checks remain Task 5; controlled release remains Task 6 and the model is enabled nowhere. Original ordinary Subscription was rejected due to old Portal bypass and its evidence is retained separately. Original extension design checkout is outside scope; production needs separate permission after staging acceptance.",
       "_origin": "semantic",
       "completed_commits": {
         "task0": "8048e631",
-        "task1": "2962f97c"
+        "task1": "2962f97c",
+        "task2": "f78a024a",
+        "task3": "9a3ce499"
       },
-      "source_note": "The opening status still describes the earlier Task 2 checkpoint and the closing table is explicitly creation-time history; checked Task 3 steps and linked acceptance document current local server completion."
+      "source_note": "The closing table is explicitly creation-time history. Current Task 4 checkboxes document local completion while the hosted browser matrix is transferred intact to Task 5."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_stripe_sandbox_contract_proof",
@@ -190786,7 +190592,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "local_start_and_owner_recovery_reviewed_task4_integration_pending",
+      "status": "local_start_and_owner_recovery_reviewed_local_client_integrated_staging_pending",
       "description": "POST /api/billing/trial/start is behind disabled cardless policy with session-derived owner, Origin/Sec-Fetch-Site/JSON/X-Anidachi-Billing-Owner checks, private/no-store responses and durable account limits. It accepts requestId/planCode/billingPeriod/offerRevision; fresh current-email proof is required before reservation. Active returns 200 after shared fresh Stripe refresh; pending returns 202 with kind activation plus real operationId or kind legacy_checkout without a fabricated activation. Conflicts including verification_required return 409; unavailable returns 503; existing auth/owner failure codes remain. POST /api/billing/trial/recover accepts optional activation ID, otherwise finds the owner only nonfailed activation, and resumes original request/frozen price/stored key without new reservation even after flag off or lost browser request ID. No operation gives no rights and no fresh trial. Legacy pending retries start with retained request/selection; if those are lost, another tab must display an up-to-date offer and obtain explicit confirmation. Canonical stored Schedule key is cardless-trial-v1:<activationId>. Optional trialMode/revision retain the action enum; stale legacy offer receives offer_changed without paid fallback.",
       "_origin": "semantic",
       "references": [
@@ -190813,8 +190619,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "task3_local_server_implemented_and_independently_reviewed",
-      "description": "Task 3 checked complete for server scope. Owner-scoped quote/begin/complete/cancel use quote TTL at most five minutes and no later than original trial_end. Quote authorizes setup start; completion revalidates unchanged terms and active original trial, allowing completion after quote TTL but never automatic resurrection after trial end. Consent is persisted before Stripe and applied only after verified Schedule/Subscription update and result storage. Latest account generation serializes cancel/restore/plan-change/setup; applying or uncertain mutation must reconcile before another gains authority. Superseded returns 409 and rereads current state; old cancel C cannot cancel or report cancellation of newer opt-in B. Canonical allowlisted quote fields ignore JSON order/extras. One Schedule update sets release behavior, owned PM and price with original dates/no prorations; keep attached until trial end. Return/webhook use one idempotent finalizer, pending asks redelivery, and current reads preserve access deadlines and monotonic paid state. Client/hosted acceptance remains pending.",
+      "status": "task3_server_committed_independently_reviewed_local_client_integrated",
+      "description": "Task 3 checked complete for server scope. Owner-scoped quote/begin/complete/cancel use quote TTL at most five minutes and no later than original trial_end. Quote authorizes setup start; completion revalidates unchanged terms and active original trial, allowing completion after quote TTL but never automatic resurrection after trial end. Consent is persisted before Stripe and applied only after verified Schedule/Subscription update and result storage. Latest account generation serializes cancel/restore/plan-change/setup; applying or uncertain mutation must reconcile before another gains authority. Superseded returns 409 and rereads current state; old cancel C cannot cancel or report cancellation of newer opt-in B. Canonical allowlisted quote fields ignore JSON order/extras. One Schedule update sets release behavior, owned PM and price with original dates/no prorations; keep attached until trial end. Return/webhook use one idempotent finalizer, pending asks redelivery, and current reads preserve access deadlines and monotonic paid state. Local client integration is recorded under Task 4; hosted client/server acceptance remains pending.",
       "_origin": "semantic",
       "references": [
         "apps/web/lib/anidachi-auth/trial-renewal.ts",
@@ -190832,9 +190638,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "planned_application_implementation_and_acceptance_pending",
-      "description": "Task 4 proposes optional mode, renewalState and endsAt; missing mode means legacy. Update pricing, mobile CTA, login continuation, billing, extension paywall and FAQ/help/terms to explain cardless trial and explicit future payment. Account changes discard stale owner results; expiry presents separate payment confirmation. Return refreshes rights without creating a room. Verify desktop/mobile, both billing periods and old extension behavior.",
-      "_origin": "semantic"
+      "status": "task4_local_implementation_checks_and_browser_qa_passed_hosted_gate_open",
+      "description": "Task 4 is implemented locally. Authoritative offer mode separates card-required and cardless paths; sign-in preserves selection but only explicit confirmation starts trial. Account/offer changes retire stale results and verification uses actual Google/Discord OAuth entry points. Billing displays original end with timezone, original no-consent trial as trial rather than canceled subscription, and server plan/period/full amount/first-charge date before setup. Pending setup exposes frozen terms and recovery without claiming billing disabled. Card collection cannot resume after expiry; failed first payment retains cancellation. Website/extension copy remains compatible, unknown mode does not auto-subscribe, return refreshes rights without room creation, and install CTAs remain installation only. Web 1075 total/1069 passed/6 existing skips and extension 2210 tests passed. Local fixture/mocked-offer checks at 1440px/390px are UI evidence; signed-out/Free/trial/paid hosted staging matrix remains mandatory in Task 5.",
+      "_origin": "semantic",
+      "contract_note": "Optional mode/renewalState/endsAt describe the intended billing client contract; no shared extension protocol fields were changed by Task 4."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_analytics_and_staging_acceptance",
@@ -190847,7 +190654,7 @@
       "author": null,
       "contributor": null,
       "status": "planned_application_implementation_and_acceptance_pending",
-      "description": "Task 5 proposes server-verified trial_started/trial_renewal_enabled/trial_first_payment_succeeded through existing delivery, stable operation/invoice event IDs and recoverable pending delivery. Shared session requires host plus connected guest. Run SQL, repository, room/runtime and extension checks; inspect loaded/new and old clients. Deploy staging with flag off, then enable only staging and test duplicate/out-of-order events, failures, account changes/deletion, 72-hour expiry and non-resetting room closure. Owner staging acceptance is separate from production permission.",
+      "description": "Task 5 remains pending: server-verified trial_started/trial_renewal_enabled/trial_first_payment_succeeded through existing delivery with stable operation/invoice event IDs and recoverable pending delivery. Shared session requires host plus connected guest. Run SQL, repository, room/runtime and extension checks; build/validate and inspect loaded/new/old clients. Deploy staging with flag off, then enable only staging. Complete the transferred Task 4 hosted desktop/mobile browser gate for signed-out/Free/trial/paid, Plus/Pro, both periods, provider verification, trial start/expiry, setup return and cancellation. Test duplicate/out-of-order events, faults, account changes/deletion, 72-hour expiry and non-resetting room closure. Operator recovery must avoid hand-edited entitlement. Owner staging acceptance remains separate from production permission.",
       "_origin": "semantic"
     },
     {
@@ -191045,10 +190852,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_capabilities_tasks1_to3_local_server_passed_ui_staging_pending",
-      "description": "Acceptance retains rejected ordinary Subscription evidence and fourteen passing Schedule cases plus old-Portal proof. Historical Task 1 has 171 SQL assertions, real reservation race, 30 focused checks and web 994/988/6; Task 2 has 182 SQL, local start/email/limits/legacy recovery, service 11, route 3, offers 52, OAuth 14 and web 1016/1010/6. Current Task 3 server checkpoint adds persisted renewal setup, common return/webhook finalizer, owner recovery, canonical stored Schedule key, explicit pending kinds, canonical quotes and generation supersession. Actual verification: 203 SQL, two real separate-connection races, full web 1053 total/1047 passed/6 skips/0 failures, final four focused suites 46/46 independently rerun and TypeScript/diff checks passed. Sandbox webhook registration was read only; payload API 2025-06-30.basil is separate from fresh application request pin 2025-08-27.basil. UI/account integration, analytics, hosted staging, later operator recovery and owner acceptance remain pending; no rollout.",
+      "status": "stripe_and_tasks1_to4_local_evidence_passed_hosted_staging_and_analytics_pending",
+      "description": "Acceptance preserves rejected ordinary Subscription evidence, fourteen passing Schedule cases plus old-Portal proof, and historical Task 1–3 SQL/server/test checkpoints. Current Task 4 records local pricing/checkout/Billing/extension-copy integration: explicit signed-in confirmation, actual provider OAuth proof, original trial dates, server payment terms, frozen pending recovery and preserved legacy behavior. Web has 1075 total/1069 passed/6 existing skips/0 failures with TypeScript; extension check passes and 143 files/2210 tests pass. Local Billing fixtures and mocked Pricing offers were inspected at desktop/mobile widths; screenshots were viewed and no page errors occurred. This is not authenticated Supabase/Stripe or hosted staging proof. Hosted browser gate, analytics, loaded artifact, operator recovery and owner acceptance remain Task 5; no rollout.",
       "_origin": "semantic",
-      "source_note": "Earlier header, release-state paragraph and Task 1/Task 2 pending lists are historical checkpoints. The explicit later Task 3 section supersedes them for local server readiness and supersedes the historical trial:<id> product Schedule key."
+      "source_note": "The opening header, initial release-state paragraph and earlier pending lists describe historical checkpoints. Later Task 3 and Task 4 sections establish local implementation evidence. Historical trial:<id> Schedule key remains superseded by stored cardless-trial-v1:<id>."
     },
     {
       "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_scripts_only_proof_guard_verification",
@@ -191061,7 +190868,7 @@
       "author": null,
       "contributor": null,
       "status": "task0_historical_tooling_checkpoint_passed",
-      "description": "Task 0 tooling checkpoint reports ten guard/transport tests RED then GREEN and TypeScript covering all three proof scripts. Its baseline web suite was 986 total/980 passed/6 skipped/0 failures; Tasks 1–3 have newer local results recorded separately. Actual SDK is lockfile 18.5.0 within ^18.3.0 and API 2025-08-27.basil, with no upgrade. Proof tooling requires --test/--account and validates response mode/account/version, fixture marker/run ownership, without real-customer enumeration, caller-supplied customer IDs or deletion.",
+      "description": "Task 0 tooling checkpoint reports ten guard/transport tests RED then GREEN and TypeScript covering all three proof scripts. Its baseline web suite was 986 total/980 passed/6 skipped/0 failures; Tasks 1–4 have newer local results recorded separately. Actual SDK is lockfile 18.5.0 within ^18.3.0 and API 2025-08-27.basil, with no upgrade. Proof tooling requires --test/--account and validates response mode/account/version, fixture marker/run ownership, without real-customer enumeration, caller-supplied customer IDs or deletion.",
       "rationale": "Local tests validate guards and transport; separate real Sandbox runs establish only their specifically observed lifecycle behavior.",
       "references": [
         "apps/web/scripts/verify-cardless-trial-sandbox.ts",
@@ -191083,7 +190890,7 @@
         "task0_web_suite_passed": 980,
         "task0_web_suite_skipped": 6,
         "task0_web_suite_failed": 0,
-        "scope": "historical_task0_checkpoint_tasks1_to3_results_recorded_separately"
+        "scope": "historical_task0_checkpoint_tasks1_to4_results_recorded_separately"
       }
     },
     {
@@ -191125,8 +190932,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "schedule_capability_and_tasks1_to3_local_server_gates_passed_staging_pending",
-      "description": "Fourteen selected-Schedule cases and separate old-Portal Schedule check passed, distinct from the rejected ordinary Subscription design. Optional ordinary hosted checkout was not run; hosted setup/3DS and monthly charge were covered. Tasks 1–3 separately establish local database/refresh/start/renewal/recovery contracts, including true concurrency tests and reviewed callback generation fences. Local common finalizer and read-only Sandbox webhook registration do not establish actual hosted callback convergence, UI/analytics correctness or staging acceptance.",
+      "status": "schedule_and_tasks1_to4_local_gates_passed_hosted_acceptance_pending",
+      "description": "Fourteen Schedule cases and separate old-Portal Schedule check passed, distinct from rejected ordinary Subscription evidence. Optional ordinary hosted checkout was not run; hosted setup/3DS and monthly charge were covered. Tasks 1–3 establish local SQL/concurrency, common refresh, start and reviewed renewal/finalizer recovery; Task 4 adds local client behavior and visual fixture evidence. Sandbox webhook registration read-only evidence retains its payload-version distinction. Actual hosted user/account/callback behavior, loaded extension, analytics, later operator recovery and owner staging acceptance remain open.",
       "scenario_evidence": {
         "schedule_named_cases": "14_passed",
         "schedule_old_portal_renew_path": "passed_separately",
@@ -191136,7 +190943,8 @@
         "task2_guarded_start_recovery_and_legacy_compatibility": "local_passed",
         "task3_consent_setup_finalizer_generation_and_recovery": "local_passed_and_reviewed",
         "sandbox_webhook_registration": "read_only_verified_payload_version_distinguished",
-        "hosted_ui_analytics_operator_recovery_and_staging_acceptance": "pending"
+        "task4_local_clients_and_visual_fixtures": "passed",
+        "hosted_browser_matrix_loaded_artifact_analytics_operator_recovery_owner_acceptance": "pending"
       },
       "_origin": "semantic"
     },
@@ -191166,9 +190974,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "stripe_tasks1_to3_local_server_passed_ui_hosted_and_staging_pending",
-      "description": "Stripe feasibility and Tasks 1–3 local storage, refresh, start, consent/setup and recovery checks passed; independent review accepted the local server repairs. Local additive migrations and services exist behind disabled policy. Task 3 changed no hosted migration, billing policy, deployment or customer subscriptions; Sandbox webhook configuration was inspected without edits. UI/account integration, analytics, hosted staging, operator recovery beyond safe replay and owner acceptance remain Tasks 4–5. No Live webhook configuration is established by the Sandbox inspection. Production requires separate authorization.",
-      "rationale": "Local server review, tests and existing Sandbox registration do not prove deployed user flow, real hosted delivery, staging acceptance or production readiness.",
+      "status": "tasks1_to4_local_complete_hosted_acceptance_no_rollout",
+      "description": "Stripe capability and local server/client work passed their stated checks; Task 3 independent review covered server scope, and Task 4 adds local browser fixtures and mocked offers. No hosted cardless rollout is established and policy remains disabled everywhere. Task 4 local desktop/mobile proof does not replace authenticated Supabase/Stripe/staging evidence. Hosted client/account matrix, analytics, loaded extension artifact, operator recovery and owner staging acceptance remain Task 5; production requires separate authorization. Sandbox read-only registration is not proof of Live configuration.",
+      "rationale": "Distinguish local implementation, fixture-based visual proof, actual hosted acceptance and production authorization so completed local work cannot imply deployment readiness.",
       "_origin": "semantic"
     },
     {
@@ -191612,8 +191420,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "tasks1_to3_local_server_complete_task4_to5_hosted_acceptance_pending",
-      "description": "Tasks 1–3 locally prove account serialization/provenance/deadlines, guarded start/legacy recovery and consent/setup/finalizer behavior. Reviewed fixes enforce latest generation, canonical quote fields, canonical stored Schedule key and real activation versus legacy pending contracts. Still required: UI/account integration, analytics classification/deduplication, hosted staging across clients/legacy accounts, actual webhook/return behavior, operator recovery after Stripe safe replay window, end-to-end expiry/room access and owner acceptance. Stripe clocks do not advance Postgres. Local lower-level proof and independent server review do not replace these gates.",
+      "status": "tasks1_to4_local_complete_task5_hosted_and_analytics_gates_pending",
+      "description": "Local storage/start/renewal server and client implementations are complete through Task 4 with historical evidence retained by checkpoint. Still required: real staging desktop/mobile signed-out/Free/trial/paid matrix across Plus/Pro and periods; provider verification, trial start/expiry and setup/cancel outcomes; authenticated webhook/return and account behavior; analytics classification/deduplication; loaded/new/old extension artifacts; operator recovery after safe Stripe replay; room/access expiry and owner acceptance. Hosted browser acceptance was moved from Task 4 to Task 5 rather than waived. Local Billing fixtures and mocked Pricing offers do not satisfy it; Stripe clocks do not advance Postgres.",
       "rationale": "Track each proof layer separately rather than marking remaining integration complete from passing lower-level checks.",
       "_origin": "semantic"
     },
@@ -192210,7 +192018,7 @@
       "author": null,
       "contributor": null,
       "status": "historical_task1_local_sql_refresh_web_and_typescript_passed",
-      "description": "Historical Task 1 checkpoint: snapshot/refresh tests were observed 8 RED then 8 GREEN; focused suites passed 30/30. Full web suite: 994 total, 988 passed, six existing skips, zero failures; TypeScript passed. Fresh-db migration replay/canonical preservation and 171 SQL assertions passed, including Customer reservation/binding correction and real old/new reservation race. This checkpoint proves local storage/common refresh. Newer start and renewal server evidence is recorded separately under Tasks 2 and 3; UI, hosted recovery, analytics and staging remain pending.",
+      "description": "Historical Task 1 checkpoint: snapshot/refresh tests were observed 8 RED then 8 GREEN; focused suites passed 30/30. Full web suite: 994 total, 988 passed, six existing skips, zero failures; TypeScript passed. Fresh-db migration replay/canonical preservation and 171 SQL assertions passed, including Customer reservation/binding correction and real old/new reservation race. This checkpoint proves local storage/common refresh. Newer start and renewal server evidence is recorded separately under Tasks 2 and 3; Task 4 later records local UI; hosted recovery, analytics and staging remain pending.",
       "results": {
         "new_snapshot_refresh_red": 8,
         "new_snapshot_refresh_green": 8,
@@ -192284,7 +192092,7 @@
       "author": null,
       "contributor": null,
       "status": "task2_local_email_proof_persistence_and_start_gate_passed",
-      "description": "Migration 20261011132247_cardless_trial_launch_guards.sql adds private provider-email-proof records. New Google/Discord login persists only boolean provider confirmation. Google login previously did not persist email_verified; an old email or session is not proof and is not backfilled. Missing proof for the current email returns verification_required before fresh reservation. Future UI must request a fresh provider login. Ordinary login and paid rights continue if proof storage fails; recovery of an already-created activation bypasses this fresh-start gate.",
+      "description": "Migration 20261011132247_cardless_trial_launch_guards.sql adds private provider-email-proof records. New Google/Discord login persists only boolean provider confirmation. Google login previously did not persist email_verified; an old email or session is not proof and is not backfilled. Missing proof for the current email returns verification_required before fresh reservation. Task 4 now invokes actual Google/Discord OAuth entry points for fresh provider proof; reopening a login page with an existing session would not obtain it. Ordinary login and paid rights continue if proof storage fails; recovery of an already-created activation bypasses this fresh-start gate.",
       "rationale": "Account email text alone does not establish the provider confirmation required for a new trial.",
       "references": [
         "apps/web/supabase/migrations/20261011132247_cardless_trial_launch_guards.sql",
@@ -192338,7 +192146,7 @@
       "author": null,
       "contributor": null,
       "status": "historical_task2_local_start_guards_oauth_web_and_typescript_passed",
-      "description": "Task 2 completed local server start behind disabled policy. On the same disposable network-none db-v2 container, 182 SQL assertions passed: 57 cardless, 11 launch guards and 114 legacy regressions; real concurrent old/new/plan reservation authority passed. Service tests were observed RED then 11 GREEN; route tests RED then 3 GREEN. Compatibility/offers passed 52/52 and OAuth 14/14. Full web: 1016 total, 1010 passed, six existing skips, zero failures; TypeScript and git diff --check passed. No hosted migration, flag enablement, deployment or Stripe-object changes. At this historical checkpoint setup/renewal and full webhook recovery remained Task 3; that server work is now separately recorded under Task 3, while UI and hosted acceptance remain pending.",
+      "description": "Task 2 completed local server start behind disabled policy. On the same disposable network-none db-v2 container, 182 SQL assertions passed: 57 cardless, 11 launch guards and 114 legacy regressions; real concurrent old/new/plan reservation authority passed. Service tests were observed RED then 11 GREEN; route tests RED then 3 GREEN. Compatibility/offers passed 52/52 and OAuth 14/14. Full web: 1016 total, 1010 passed, six existing skips, zero failures; TypeScript and git diff --check passed. No hosted migration, flag enablement, deployment or Stripe-object changes. At this historical checkpoint setup/renewal and full webhook recovery remained Task 3; that server work is now separately recorded under Task 3, Task 4 subsequently supplies local client evidence while hosted acceptance remains pending.",
       "results": {
         "sql_assertions": 182,
         "sql_cardless": 57,
@@ -192834,8 +192642,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "status": "203_sql_two_races_full_web_and_final46_focused_passed",
-      "description": "After Task 3 repairs, actual full web was 1053 total, 1047 passed, six existing skips, zero failures, with TypeScript and git diff --check passing. Disposable PostgreSQL passed 203 assertions: 57 cardless, 11 launch, 21 renewal and 114 legacy. Two real separate-connection races cover old/new trial creation and setup completion versus cancellation, each one durable external authority. Final pending-contract refinement went RED then GREEN; four focused service/route suites passed 46/46 with TypeScript, and reviewer independently reran 46/46. Coverage includes stale new-request callbacks, lost Stripe update/DB commit/setup creation, foreign owner/PM/Intent, expired quote/trial, changed price, off-session usage, flag-off recovery and preserved dates. UI/hosted/operator acceptance is outside this local checkpoint.",
+      "status": "historical_task3_203_sql_two_races_web_and46_focused_passed",
+      "description": "After Task 3 repairs, actual full web was 1053 total, 1047 passed, six existing skips, zero failures, with TypeScript and git diff --check passing. Disposable PostgreSQL passed 203 assertions: 57 cardless, 11 launch, 21 renewal and 114 legacy. Two real separate-connection races cover old/new trial creation and setup completion versus cancellation, each one durable external authority. Final pending-contract refinement went RED then GREEN; four focused service/route suites passed 46/46 with TypeScript, and reviewer independently reran 46/46. Coverage includes stale new-request callbacks, lost Stripe update/DB commit/setup creation, foreign owner/PM/Intent, expired quote/trial, changed price, off-session usage, flag-off recovery and preserved dates. Local UI is recorded subsequently in Task 4; hosted/operator acceptance remains outside this server checkpoint.",
       "results": {
         "sql_assertions": 203,
         "sql_cardless": 57,
@@ -193591,6 +193399,500 @@
       "file_type": "code",
       "source_file": "apps/web/supabase/tests/cardless_trial_renewal.test.sql",
       "source_location": "L55",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_referenced_cardless_trial_design",
+      "label": "Referenced Cardless Trial Design",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "reference_to_unchanged_source_outside_fragment",
+      "description": "The implementation plan explicitly cites the cardless trial design. The design file is outside this changed-source fragment and is not re-extracted here.",
+      "references": [
+        "docs/superpowers/specs/2026-10-11-cardless-trial-design.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_linked_cardless_trial_design",
+      "label": "Linked Cardless Trial Design",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "reference_to_unchanged_source_outside_fragment",
+      "description": "Acceptance explicitly links the cardless trial design as its contract. The design source is not owned or replaced by this fragment.",
+      "references": [
+        "docs/superpowers/specs/2026-10-11-cardless-trial-design.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_trial_product_constraints",
+      "label": "Cardless Trial Product Constraints",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "approved_contract_local_implementation_hosted_acceptance_pending",
+      "description": "One eligible account trial across Plus/Pro and monthly/yearly periods lasts exactly 72 hours from verified Stripe trial_start. Without confirmed renewal there is no charge and no two-hour first-payment wait. Existing subscriptions, card-required trials, manual rights and source prices retain terms. Source catalog is Plus 7.99/month or 76.70/year USD and Pro 14.99/month or 143.90/year USD; recheck before release and use server Price mapping. Node 22.23.1/pnpm 11.2.2 and Stripe SDK/API remain fixed. Additive migrations do not edit previously applied files. Mutations require auth/CSRF/owner fencing/idempotency/reconciliation; new tables are server-only. Billing release excludes Netflix, extension redesign, pricing changes and new mailings; production requires separate approval.",
+      "rationale": "Remove initial card friction without silently changing existing promises, access deadlines, prices or release scope.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_client_consent_and_recovery",
+      "label": "Cardless Client Consent And Recovery",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task4_local_client_implementation_and_tests_passed",
+      "description": "Pricing and checkout use authoritative server offer mode. Sign-in alone never starts trial; the signed-in person explicitly confirms the selected plan. Fresh account/offer checks retire stale results and preserve card-required flow. Provider verification invokes actual Google/Discord OAuth endpoints instead of merely reopening a session-bearing login page. Pending activation reuses the owner record, including flag-off. Local regression cases cover account changes, late returns, stale offers and verification login; hosted identity acceptance is pending.",
+      "rationale": "A login or stale browser state cannot substitute for current owner consent, selected terms or fresh provider confirmation.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
+      "label": "Cardless Billing Terms And Pending Recovery",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task4_local_billing_implementation_and_tests_passed",
+      "description": "Billing shows original trial end with timezone and avoids labeling default no-consent expiry as an already canceled subscription. Renewal review displays server plan, period, full amount and first-charge date before setup. Pending setup exposes frozen terms and recovery; unknown result never claims future billing disabled. Expired pending setup remains recoverable but cannot resume card collection or disappear behind old subscription history. After first-payment failure the existing cancellation action remains available. Saved card and return URL never grant paid access.",
+      "rationale": "Show verified terms and uncertainty accurately so recovery or cancellation UI cannot falsely promise payment or access state.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_compatible_extension_and_marketing_copy",
+      "label": "Compatible Extension And Marketing Copy",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task4_local_copy_and_install_cta_checks_passed",
+      "description": "Extension paywall directs users to the current website offer without assuming card-required/cardless mode from an old strict hosting payload. Task 4 changed no shared protocol fields, auto-create behavior, Netflix or local redesign. Primary and mobile website CTAs remain install actions with no billing action. FAQ, pricing and terms explain both trial modes; the SEO content guide records the rollout boundary. Local extension checks pass, while a loaded artifact and hosted acceptance remain Task 5.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+      "label": "Task 4 Local Client Test Results",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "1075_web_and2210_extension_tests_passed_local_only",
+      "description": "New client/server-view cases were observed RED then GREEN for account changes, late returns, stale offers, pending cancellation, frozen terms, verification login and declined-payment cancellation. Web TypeScript passed; full suite 1075 total, 1069 passed, six existing skips, zero failures. Extension check passed and 143 files/2210 tests passed. These results establish local checks only; hosted UI/account/Stripe acceptance remains pending.",
+      "results": {
+        "web_total": 1075,
+        "web_passed": 1069,
+        "web_skipped": 6,
+        "web_failed": 0,
+        "web_typescript": "passed",
+        "extension_check": "passed",
+        "extension_files": 143,
+        "extension_tests_passed": 2210
+      },
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_billing_and_pricing_browser_evidence",
+      "label": "Local Billing And Pricing Browser Evidence",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "task4_local_visual_and_assertion_qa_passed_not_hosted_acceptance",
+      "description": "Actual local Billing components at 127.0.0.1:3032/dev/billing were inspected at 1440px and 390px using development fixtures. Cardless preview and Pro yearly review show terms without overflow; sample mutation buttons are inactive. Local Pricing used mocked server offers for guest, eligible Free, trial-used and paid states, monthly/yearly at both sizes; expected CTA/copy assertions passed. Screenshots were visually inspected; there were no page errors. Local unauthenticated /api/me and /api/auth/refresh requests returned expected 401, not billing-action failures. Repository Playwright used isolated headless local contexts because the frontend skill Browser plugin was unavailable. No user browser profile, original extension workspace or production service was changed.",
+      "proof_boundary": "Local component/fixture proof; no authenticated Supabase, Stripe or hosted staging acceptance",
+      "viewport_widths": [
+        1440,
+        390
+      ],
+      "artifact_references": [
+        "/private/tmp/anidachi-cardless-proof/task4-{desktop,mobile}-{trial,review,pricing}.png",
+        "/private/tmp/anidachi-cardless-proof/task4-{ui,pricing}-qa.log"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "label": "Hosted Client Acceptance Gate",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "required_task5_gate_open",
+      "description": "Hosted desktop/mobile acceptance moves from Task 4 to Task 5 alongside first staging PR/deploy because new code has no hosted environment yet. The gate remains open until real browser evidence covers signed-out/Free/trial/paid, Plus/Pro, both periods, provider verification, trial start/expiry, setup return and cancellation. Local fixtures do not satisfy it. Analytics, loaded artifact, operator recovery and owner staging acceptance remain Task 5.",
+      "rationale": "Preserve the original hosted verification requirement while recording local client completion at its actual proof level.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "label": "AniDachi SEO Content Guidelines",
+      "file_type": "document",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "canonical_public_marketing_guidelines_with_gated_cardless_copy",
+      "description": "Single source of truth for public marketing SEO on www.anidachi.app; apex redirects to www. Dated keyword volumes/batch plans live elsewhere and require fresh Keyword Planner before current use. Guidelines cover product truth, URL/freeze safety, publishing gates, clusters, programmatic watch URLs, page/templates/schema, measurement and prepublish evidence. Cardless code existence must not be described as environment enablement. The footer retains last-updated 2026-10-01 while current text includes both trial modes.",
+      "references": [
+        "https://www.anidachi.app",
+        ".cursor/agents/anidachi-seo-aeo-pages.md",
+        "apps/web/docs/seo-portfolio-freeze.md",
+        "https://www.anidachi.app/editorial-policy"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_current_marketing_product_boundaries",
+      "label": "Current Marketing Product Boundaries",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "documented_product_truth_and_planned_feature_boundary",
+      "description": "Market AniDachi as Chrome extension plus web watchrooms for Crunchyroll catalog pages and full desktop youtube.com/watch pages, excluding Shorts, embeds, feeds and native mobile apps. Current features are live player sync, on-player chat/reactions, voice/video and personal history; each person uses own video access. Free joins Plus/Pro/trial hosts; creation requires host Plus/Pro, with 6 total people for Plus and 15 for Pro. Recording/editing history requires each viewer paid/trial access, extension permission for automatic recording and separate YouTube switch. Saved history, Resume and deletion remain on Free. Async catch-up, shared group progress, persistent room/chat and replayed reactions are planned only. Netflix/Disney+/Hulu/Prime sync unsupported; no affiliation with Crunchyroll/Sony/YouTube/Google. Legacy Free hosting/quota protocol data is compatibility data, not current marketing.",
+      "rationale": "Public instructions and benefits must reflect supported platforms, individual access requirements and implemented capabilities.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_trial_mode_aware_marketing_copy",
+      "label": "Trial Mode Aware Marketing Copy",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "required_server_offer_truth_cardless_rollout_gated",
+      "description": "Plus/Pro monthly/yearly have one three-day trial per eligible account, including unused existing Free accounts. Describe current server offer: card-required trial renews automatically unless canceled before end; cardless needs no card and ends without payment unless explicit renewal confirms displayed plan/period/price/first-charge date. Existing card-required terms persist and switching plan/period never creates another trial. Cardless rollout is gated; code presence is not environment enablement. Use lib/pricing-copy.ts and update visible copy, FAQ/HowTo JSON-LD and search/social metadata together.",
+      "rationale": "Keep commercial claims consistent with authoritative offer, existing consent and actual rollout state.",
+      "references": [
+        "apps/web/lib/pricing-copy.ts"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_seo_portfolio_freeze_and_url_stability",
+      "label": "SEO Portfolio Freeze And URL Stability",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "documented_owner_and_evidence_gated_marketing_changes",
+      "description": "Without owner approval plus GSC evidence, forbid new URL batches while frozen, marketing URL redirects/merges/retirement/deletion, ranked slug/path/canonical changes, noindex on previously indexable pages, removing discovery sitemap during Coverage recovery, reduced footer/nav crawl paths and high-traffic pillar H1/intent rewrites. Default to enriching existing URLs with additive reversible changes; while frozen backlog is seo:portfolio Keep/Enrich winners rather than new keyword URL ideas. Evidence order is Google docs, AniDachi GSC/GA4, reproducible tests, third-party studies, then patents/leaks only as hypotheses. Domain age, WHOIS, dwell time, schema and force-index sitemaps are not ranking levers.",
+      "rationale": "Protect ranked URL equity and cohort recovery while grounding publishing decisions in owner-approved evidence.",
+      "references": [
+        "apps/web/docs/seo-portfolio-freeze.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_seo_publishing_gate",
+      "label": "SEO Publishing Gate",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "mandatory_for_new_or_major_seo_urls",
+      "description": "All publishing requirements must hold: prior cohort healthy or owner lifts freeze; unowned target query checked against full route inventory and GSC, using seo:portfolio/seo:keywords; distinct information rather than modifier twin/doorway; parent hub plus two contextual inbound links planned before publish and at most three clicks from pillar; honest dates and 30/60/90-day review recorded; product/pricing/legal-consistent claims and primary sourced/date-verified competitor claims; CTA and seo_landing_path attribution intact. Reject under ten average monthly searches unless clear commercial value and unique intent; another platform twin is insufficient.",
+      "references": [
+        "apps/web/docs/CONVERSION_METRICS.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_seo_information_architecture",
+      "label": "SEO Information Architecture",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "documented_cluster_and_internal_link_contract",
+      "description": "Anime pillar /watch-anime-together owns genre hubs and Crunchyroll-first /watch/{slug}-with-friends. Crunchyroll /watch-crunchyroll-together and YouTube /watch-youtube-together are sibling clusters; do not nest YouTube under anime. YouTube breadcrumbs are Home to YouTube Watch Party to page. Trust routes are /about, /editorial-policy, /contact and /security; product routes /, /pricing and designated install hub serve conversion. Related lists use narrow pillar-watch-youtube or pillar-watch-crunchyroll tags rather than broad watch-party ORs.",
+      "clusters": {
+        "anime": "/watch-anime-together",
+        "crunchyroll": "/watch-crunchyroll-together",
+        "youtube": "/watch-youtube-together",
+        "trust": [
+          "/about",
+          "/editorial-policy",
+          "/contact",
+          "/security"
+        ],
+        "product": [
+          "/",
+          "/pricing"
+        ]
+      },
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_canonical_anime_watch_pages",
+      "label": "Canonical Anime Watch Pages",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "documented_stable_programmatic_url_and_content_contract",
+      "description": "Programmatic anime URL is /watch/{base-slug}-with-friends, implemented through app/watch/[slug]/page.tsx, lib/anime-data.ts and lib/watch-page-rich-content.ts. Do not invent nested /anime paths or mass redirects for appearance. New titles update animeList, MAL IDs and hub/listicle backlinks; dateModified changes only for meaningful content. Prefer enrichment over unbounded catalog growth while frozen.",
+      "references": [
+        "apps/web/app/watch/[slug]/page.tsx",
+        "apps/web/lib/anime-data.ts",
+        "apps/web/lib/watch-page-rich-content.ts"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_seo_page_integration_checklist",
+      "label": "SEO Page Integration Checklist",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "required_for_new_or_substantially_edited_pages",
+      "description": "Provide metadata title/description/canonical/OpenGraph/Twitter; SeoPageLayout or trust layout with breadcrumbs/dates and visible FAQ parity; editorial byline unless equivalent meta exists; components/json-ld.tsx structured data in initial HTML without deferred Script; auto-discovered static sitemap through lib/sitemap-discovery.ts rather than manual list; at least pillar and sibling descriptive links; /pricing or designated install-hub CTA retaining PrimaryCheckoutCta wiring; no Blou/CRM routes in public SEO. Primary conversion is the official Chrome Web Store listing linked from /extension; install guides use listing or hub and never invent a Store item URL.",
+      "references": [
+        "apps/web/components/json-ld.tsx",
+        "apps/web/lib/sitemap-discovery.ts",
+        "/extension",
+        "/pricing"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_intent_specific_seo_templates",
+      "label": "Intent Specific SEO Templates",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "documented_editorial_template_constraints",
+      "description": "Use gold-standard pages named by the operational agent. Programmatic pages need title-specific value, meaningfully different metadata and answer-first openings rather than identical three-sentence boilerplate; centralize generic pricing/platform FAQs on pillars or pricing. Schema may mix HowTo, TVSeries/Movie, Article, Breadcrumb, FAQ and ItemList when visible UI matches. Guides/compare/listicles are answer-first; commercial pages use aboveFoldCta plus layout end card, at most two install cards and no middle PrimaryCheckoutCta; comparison tables are fair and primary-sourced, destination /pricing rather than only /#pricing. Trust pages need no invented founders or checkout hard sell.",
+      "references": [
+        ".cursor/agents/anidachi-seo-aeo-pages.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_seo_schema_honesty",
+      "label": "SEO Schema Honesty",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "documented_visible_content_and_capability_constraints",
+      "description": "FAQ/HowTo markup describes actual on-page content and must not promise rich results. The source notes restricted FAQ/HowTo result availability; this is a recorded guideline, not a live search-feature verification. Do not invent SearchAction/site search before a real endpoint exists. Organization sameAs uses PUBLIC_SOCIAL_LINKS and author/publisher may point to /about. Mixing supported schema types is allowed when corresponding sections are visible.",
+      "rationale": "Structured data must truthfully represent visible content and real product capability rather than fabricated search features or ranking promises.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_content_guidelines_seo_measurement_and_prepublish_evidence",
+      "label": "SEO Measurement And Prepublish Evidence",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "status": "required_measurement_and_release_checklist",
+      "description": "Run web seo:portfolio, seo:links and seo:keywords. Track Coverage cohorts, query cannibalization and impressions to clicks to seo_landing_path to checkout; impressions before clicks are normal for new URLs. Enrich winners instead of more thin spokes. Before publishing verify freeze/gate, stable URL, no owned-query cannibalization, canonical path and FAQ/JSON-LD parity, truthful Crunchyroll/YouTube product limits, sourced competitor/absolute claims, planned inbound links and web check plus build when required. Refresh dated keyword volumes before current decisions.",
+      "validation_commands": [
+        "pnpm --filter @anidachi/web seo:portfolio",
+        "pnpm --filter @anidachi/web seo:links",
+        "pnpm --filter @anidachi/web seo:keywords",
+        "pnpm --filter @anidachi/web check"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_app_account_billing_cardless_trial_controls",
+      "label": "cardless-trial-controls.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalaction",
+      "label": "CardlessRenewalAction",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L13",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_account_billing_cardless_trial_controls_cardlessquoteview",
+      "label": "CardlessQuoteView",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L14",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "label": "CardlessTrialControls()",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L17",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_checkout_checkout_continuation_confirmation",
+      "label": "Confirmation",
+      "file_type": "code",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L30",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_client_test_cardless",
+      "label": "cardless",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L121",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_client_test_trialbutton",
+      "label": "trialButton()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L141",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_client_test_renewalquote",
+      "label": "renewalQuote",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L148",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_billing_view_test",
+      "label": "billing-view.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_checkout_continuation_test_cardlessoffer",
+      "label": "cardlessOffer",
+      "file_type": "code",
+      "source_file": "apps/web/lib/checkout-continuation.test.ts",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_trial_client",
+      "label": "trial-client.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_trial_client_states",
+      "label": "states",
+      "file_type": "code",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_trial_client_posttrialaction",
+      "label": "postTrialAction()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L18",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_trial_client_trialresultmessage",
+      "label": "trialResultMessage()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L48",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_trial_client_securetrialsetupurl",
+      "label": "secureTrialSetupUrl()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L68",
+      "_callable": true,
       "_origin": "ast"
     }
   ],
@@ -233029,7 +233331,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/app/account/billing/page.tsx",
-      "source_location": "L22",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -241620,7 +241922,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L296",
+      "source_location": "L302",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_pricing_pricing",
@@ -243173,7 +243475,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L87",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -243230,7 +243532,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0
     },
     {
@@ -317382,7 +317684,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L8",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -317393,7 +317695,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L9",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -317404,7 +317706,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L9",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -357163,7 +357465,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L8",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -357174,7 +357476,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L9",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -400930,7 +401232,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L28",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -400940,7 +401242,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L39",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -400950,7 +401252,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L51",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -415696,7 +415998,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L568",
+      "source_location": "L575",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_pricing",
@@ -418560,7 +418862,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -418570,7 +418872,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L350",
+      "source_location": "L419",
       "weight": 1.0
     },
     {
@@ -418580,7 +418882,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -418590,7 +418892,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -418600,7 +418902,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -418610,7 +418912,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -418620,7 +418922,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L83",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -418630,7 +418932,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -418640,7 +418942,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L84",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -418670,7 +418972,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -418680,7 +418982,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -426712,7 +427014,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L15",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -426722,7 +427024,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L36",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -426732,7 +427034,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L44",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -426742,7 +427044,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L73",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -426762,7 +427064,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L98",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -426772,7 +427074,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L29",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -427999,7 +428301,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/home-faq.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -468059,7 +468361,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -476670,7 +476972,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L97",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -477930,7 +478232,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L73",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -477942,7 +478244,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L74",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -477954,7 +478256,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -477966,7 +478268,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L76",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -477978,7 +478280,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L77",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -477990,7 +478292,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L78",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -514364,7 +514666,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L93",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -529161,7 +529463,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L3",
@@ -529173,7 +529474,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L3",
@@ -529185,7 +529485,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L8",
       "weight": 1.0
@@ -529196,7 +529495,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L5",
@@ -529208,7 +529506,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L5",
@@ -529220,7 +529517,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L2",
@@ -529232,7 +529528,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L1",
@@ -529461,7 +529756,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L6",
@@ -529474,7 +529768,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L6",
@@ -529486,7 +529779,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L4",
@@ -529498,7 +529790,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L4",
@@ -529510,7 +529801,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L12",
       "weight": 1.0
@@ -529521,7 +529811,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L54",
@@ -529533,7 +529822,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L1",
@@ -529545,7 +529833,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L2",
@@ -529557,7 +529844,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L3",
@@ -529592,8 +529878,7 @@
       "source_location": "L4",
       "weight": 1.0,
       "type_only": true,
-      "_origin": "ast",
-      "confidence_score": 1.0
+      "_origin": "ast"
     },
     {
       "source": "apps_extension_src_hosting_paywall",
@@ -529604,8 +529889,7 @@
       "source_file": "apps/extension/src/hosting-paywall.tsx",
       "source_location": "L4",
       "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0
+      "_origin": "ast"
     },
     {
       "source": "apps_extension_src_overlay_app",
@@ -529861,8 +530145,7 @@
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0
+      "_origin": "ast"
     },
     {
       "source": "apps_extension_test_hosting_paywall_test",
@@ -529873,8 +530156,7 @@
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0
+      "_origin": "ast"
     },
     {
       "source": "apps_extension_test_hosting_paywall_test",
@@ -529884,8 +530166,7 @@
       "source_file": "apps/extension/test/hosting-paywall.test.tsx",
       "source_location": "L27",
       "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0
+      "_origin": "ast"
     },
     {
       "source": "apps_extension_test_hosting_paywall_test_connectedoffer",
@@ -531102,12 +531383,11 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L529",
+      "source_location": "L536",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_pricing_pricing",
-      "target": "apps_web_lib_billing_view_formatmonthlyprice",
-      "confidence_score": 1.0
+      "target": "apps_web_lib_billing_view_formatmonthlyprice"
     },
     {
       "relation": "calls",
@@ -531125,12 +531405,11 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L608",
+      "source_location": "L615",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_pricing_tiercardbody",
-      "target": "apps_web_lib_billing_view_formatmonthlyprice",
-      "confidence_score": 1.0
+      "target": "apps_web_lib_billing_view_formatmonthlyprice"
     },
     {
       "source": "apps_web_lib_anidachi_auth_billing",
@@ -531151,7 +531430,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L80",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -531163,7 +531442,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L79",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -531284,7 +531563,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -531766,7 +532045,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L54",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -531786,7 +532065,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L22",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -531796,7 +532075,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-view.ts",
-      "source_location": "L16",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -531816,7 +532095,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L77",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_pricing_client_test",
@@ -531838,7 +532117,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L115",
+      "source_location": "L141",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 0.85,
@@ -532194,7 +532473,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -532205,7 +532484,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L108",
+      "source_location": "L111",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -532216,7 +532495,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L158",
+      "source_location": "L161",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -532227,7 +532506,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L152",
+      "source_location": "L155",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -532238,7 +532517,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L102",
+      "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -532497,7 +532776,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L99",
+      "source_location": "L125",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_pricing_client_test",
@@ -532507,7 +532786,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L106",
+      "source_location": "L132",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_pricing_client_test",
@@ -544985,7 +545264,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L46",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -544995,7 +545274,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L263",
+      "source_location": "L431",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -545005,7 +545284,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L54",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -545015,7 +545294,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L625",
+      "source_location": "L824",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -545025,7 +545304,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L632",
+      "source_location": "L836",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -545035,7 +545314,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L30",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -545134,7 +545413,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L35",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
@@ -545145,7 +545424,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L35",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
@@ -545155,7 +545434,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L146",
+      "source_location": "L304",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -545165,7 +545444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L205",
+      "source_location": "L363",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -545176,18 +545455,19 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L74",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
-      "target": "apps_web_lib_account_navigation_preload_takeaccountpreload"
+      "target": "apps_web_lib_account_navigation_preload_takeaccountpreload",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L97",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -545198,11 +545478,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L83",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
-      "target": "apps_web_lib_client_api_api"
+      "target": "apps_web_lib_client_api_api",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -545210,7 +545491,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L95",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -545221,18 +545502,19 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L128",
+      "source_location": "L175",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
-      "target": "apps_web_lib_server_snapshot_age_serversnapshotremainingms"
+      "target": "apps_web_lib_server_snapshot_age_serversnapshotremainingms",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L460",
+      "source_location": "L658",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545243,7 +545525,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L444",
+      "source_location": "L642",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545254,7 +545536,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L300",
+      "source_location": "L470",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545265,7 +545547,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L599",
+      "source_location": "L798",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545276,7 +545558,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L503",
+      "source_location": "L701",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545287,7 +545569,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L511",
+      "source_location": "L709",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545298,7 +545580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L502",
+      "source_location": "L700",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545309,7 +545591,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L415",
+      "source_location": "L612",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -545320,7 +545602,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L657",
+      "source_location": "L865",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -545331,7 +545613,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L639",
+      "source_location": "L844",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -545342,7 +545624,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L656",
+      "source_location": "L864",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -545353,7 +545635,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L652",
+      "source_location": "L860",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -545452,7 +545734,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/page.tsx",
-      "source_location": "L30",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_page_billingpage",
@@ -545463,11 +545745,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/page.tsx",
-      "source_location": "L28",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_page_billingpage",
-      "target": "apps_web_lib_anidachi_auth_billing_snapshot_loadbillingsnapshot"
+      "target": "apps_web_lib_anidachi_auth_billing_snapshot_loadbillingsnapshot",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -545475,7 +545758,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/page.tsx",
-      "source_location": "L29",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_page_billingpage",
@@ -546050,7 +546333,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L40",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_dev_billing_billing_preview",
@@ -546060,7 +546343,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_dev_billing_billing_preview",
@@ -548076,7 +548359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L103",
+      "source_location": "L104",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_billing_test",
@@ -548086,7 +548369,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_billing_test",
@@ -548129,7 +548412,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L95",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_anidachi_auth_billing_createbillingservice",
@@ -548633,7 +548916,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L91",
+      "source_location": "L94",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_billing_client_test",
@@ -548888,7 +549171,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L434",
+      "source_location": "L460",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_lib_pricing_client_test",
@@ -555112,7 +555395,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L77",
+      "source_location": "L78",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -555123,7 +555406,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
-      "source_location": "L78",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -555230,7 +555513,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/billing.ts",
-      "source_location": "L344",
+      "source_location": "L413",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -555743,7 +556026,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L78",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -555996,7 +556279,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L94",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -556007,7 +556290,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L126",
+      "source_location": "L152",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -556018,7 +556301,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-client.test.ts",
-      "source_location": "L156",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -556474,17 +556757,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_billing_preview_test",
-      "target": "apps_web_app_dev_billing_page_billingpreviewpage",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/billing-preview.test.ts",
-      "source_location": "L7",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_web_lib_checkout_success_preview_test",
       "target": "apps_web_app_dev_checkout_success_page_checkoutsuccesspreviewpage",
       "relation": "imports",
@@ -556646,7 +556918,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L551",
+      "source_location": "L772",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -557245,127 +557517,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/docs/CTA_AND_CONVERSION_MAP.md",
       "source_location": "L13-L14; L26-L35",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_internal_linking",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L63-L69; L75-L95; L105-L108",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_json_ld_schema",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L99-L108; L135-L139",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_sitemap_protocol",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L104-L105; L40-L48",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_template_a_anime_pages",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L89-L95; L116-L121",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_template_b_comparison_pages",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L123-L127",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_template_d_listicles",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L123-L127",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_current_product_truth",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L12-L34",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_one_trial_all_periods",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L21-L27",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_planned_async_boundary",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L25-L27",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_official_install_path",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L32-L34",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "target": "apps_web_docs_seo_content_guidelines_residual_pricing_destination",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L107-L127",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -558834,34 +558985,12 @@
     },
     {
       "source": "cursor_agents_anidachi_seo_aeo_pages_scope",
-      "target": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-      "source_location": "L1-L13; L72-L76",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "cursor_agents_anidachi_seo_aeo_pages_scope",
       "target": "apps_web_docs_conversion_metrics_ga4_conversion_funnel",
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
       "source_location": "L1-L13; L72-L76",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "cursor_agents_anidachi_seo_aeo_pages_conversion_ctas",
-      "target": "apps_web_docs_seo_content_guidelines_official_install_path",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-      "source_location": "L74-L74; L103-L105; L137-L137; L145-L155; L352-L352; L438-L442",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -558873,17 +559002,6 @@
       "confidence_score": 0.95,
       "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
       "source_location": "L278-L301",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "cursor_agents_anidachi_seo_aeo_pages_evidence_and_url_freeze",
-      "target": "apps_web_docs_seo_content_guidelines_seo_content_engine",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-      "source_location": "L14-L47",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -558910,28 +559028,6 @@
       "_origin": "semantic"
     },
     {
-      "source": "cursor_agents_anidachi_seo_aeo_pages_voice_claims",
-      "target": "apps_web_docs_seo_content_guidelines_current_product_truth",
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-      "source_location": "L74-L76; L305-L312; L433-L436",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "cursor_agents_anidachi_seo_aeo_pages_voice_claims",
-      "target": "apps_web_docs_seo_content_guidelines_planned_async_boundary",
-      "relation": "conceptually_related_to",
-      "confidence": "AMBIGUOUS",
-      "confidence_score": 0.3,
-      "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-      "source_location": "L74-L76; L305-L312; L433-L436",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
       "source": "cursor_agents_anidachi_seo_aeo_pages_schema_and_cta_conflicts",
       "target": "apps_web_docs_cta_and_conversion_map_pricing_checkout_surface",
       "relation": "conceptually_related_to",
@@ -558939,28 +559035,6 @@
       "confidence_score": 0.3,
       "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
       "source_location": "L199-L201; L438-L442",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_residual_pricing_destination",
-      "target": "apps_web_docs_seo_content_guidelines_official_install_path",
-      "relation": "conceptually_related_to",
-      "confidence": "AMBIGUOUS",
-      "confidence_score": 0.3,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L107-L127",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "apps_web_docs_seo_content_guidelines_one_trial_all_periods",
-      "target": "docs_releases_paid_hosting_trial_annual_billing_2026_09_30_single_trial_period_changes",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "apps/web/docs/seo-content-guidelines.md",
-      "source_location": "L21-L27",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -558983,17 +559057,6 @@
       "confidence_score": 1.0,
       "source_file": ".cursor/scratchpad.md",
       "source_location": "L174-L175; L180-L189; L417-L417",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "cursor_scratchpad_async_planned_correction",
-      "target": "apps_web_docs_seo_content_guidelines_planned_async_boundary",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": ".cursor/scratchpad.md",
-      "source_location": "L191-L198; L319-L319",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -559104,17 +559167,6 @@
       "confidence_score": 0.75,
       "source_file": "docs/public-community-count.md",
       "source_location": "L43-L46",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_public_community_count_historical_signup_baseline",
-      "target": "apps_web_docs_seo_content_guidelines_current_product_truth",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "docs/public-community-count.md",
-      "source_location": "L3-L12",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -563999,7 +564051,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564010,7 +564062,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564021,7 +564073,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -564033,7 +564085,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564044,7 +564096,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564055,7 +564107,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564066,7 +564118,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564077,7 +564129,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564087,7 +564139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564097,7 +564149,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L20",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564566,7 +564618,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/checkout-continuation.test.ts",
-      "source_location": "L105",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564577,7 +564629,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/checkout-continuation.test.ts",
-      "source_location": "L132",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564588,7 +564640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/checkout-continuation.test.ts",
-      "source_location": "L201",
+      "source_location": "L192",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564793,9 +564845,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L71",
+      "source_location": "L125",
       "weight": 1.0,
-      "_origin": "ast"
+      "_origin": "ast",
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_app_checkout_page_checkoutpage",
@@ -564826,7 +564879,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L265",
+      "source_location": "L267",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -564838,7 +564891,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L330",
+      "source_location": "L336",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -564885,7 +564938,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L113",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564897,7 +564950,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L114",
+      "source_location": "L243",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -564945,7 +564998,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/checkout-continuation.test.ts",
-      "source_location": "L330",
+      "source_location": "L470",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -569177,7 +569230,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L618",
+      "source_location": "L625",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -590586,17 +590639,6 @@
     },
     {
       "source": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
       "target": "docs_superpowers_plans_2026_10_11_cardless_trial_stripe_sandbox_contract_proof",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -590888,17 +590930,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_cardless_trial_design",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
@@ -591739,28 +591770,6 @@
       "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_subscription_schedule_diagnostic_candidate",
       "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_schedule_and_portal_documentation_references",
       "relation": "cites",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_original_trial_expiry_sandbox_proof",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_stripe_scheduled_cancellation",
-      "relation": "conceptually_related_to",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_old_portal_renewal_consent_bypass",
-      "target": "docs_superpowers_specs_2026_10_11_cardless_trial_design_expiry_and_portal_consent_proof",
-      "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
@@ -598303,6 +598312,1415 @@
       "source_location": "L136",
       "weight": 1.0,
       "_origin": "ast"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_referenced_cardless_trial_design",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_linked_cardless_trial_design",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_three_day_trial_implementation_plan",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_cardless_trial_product_constraints",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_client_consent_and_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_compatible_extension_and_marketing_copy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_billing_and_pricing_browser_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_trial_acceptance_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_client_consent_and_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_compatible_web_and_extension_flow",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_client_consent_and_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_compatible_web_and_extension_flow",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_compatible_extension_and_marketing_copy",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_compatible_web_and_extension_flow",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_compatible_extension_and_marketing_copy",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_compatible_web_and_extension_flow",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_billing_and_pricing_browser_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_compatible_web_and_extension_flow",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_client_consent_and_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_provider_verified_email_proof_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_client_consent_and_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_trial_start_recovery",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_renewal_setup_and_finalizer",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_local_billing_and_pricing_browser_evidence",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_analytics_and_staging_acceptance",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_current_marketing_product_boundaries",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_trial_mode_aware_marketing_copy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_seo_portfolio_freeze_and_url_stability",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_seo_publishing_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_seo_information_architecture",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_canonical_anime_watch_pages",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_seo_page_integration_checklist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_intent_specific_seo_templates",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_seo_schema_honesty",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "target": "apps_web_docs_seo_content_guidelines_seo_measurement_and_prepublish_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_publishing_gate",
+      "target": "apps_web_docs_seo_content_guidelines_seo_portfolio_freeze_and_url_stability",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_publishing_gate",
+      "target": "apps_web_docs_seo_content_guidelines_current_marketing_product_boundaries",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_publishing_gate",
+      "target": "apps_web_docs_seo_content_guidelines_trial_mode_aware_marketing_copy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_canonical_anime_watch_pages",
+      "target": "apps_web_docs_seo_content_guidelines_seo_information_architecture",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_page_integration_checklist",
+      "target": "apps_web_docs_seo_content_guidelines_seo_schema_honesty",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_intent_specific_seo_templates",
+      "target": "apps_web_docs_seo_content_guidelines_seo_schema_honesty",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_measurement_and_prepublish_evidence",
+      "target": "apps_web_docs_seo_content_guidelines_seo_publishing_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_measurement_and_prepublish_evidence",
+      "target": "apps_web_docs_seo_content_guidelines_seo_portfolio_freeze_and_url_stability",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_seo_measurement_and_prepublish_evidence",
+      "target": "apps_web_docs_seo_content_guidelines_seo_page_integration_checklist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_compatible_extension_and_marketing_copy",
+      "target": "apps_web_docs_seo_content_guidelines_anidachi_seo_content_guidelines_semantic",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-10-11-cardless-trial-acceptance.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_content_guidelines_trial_mode_aware_marketing_copy",
+      "target": "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_cardless_billing_terms_and_pending_recovery",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/docs/seo-content-guidelines.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_test_hosting_paywall_test",
+      "target": "apps_extension_test_hosting_paywall_test_mount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/hosting-paywall.test.tsx",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L42",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_checkout_selection",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_checkout_selection_checkoutreturnpath",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_trial_client",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_trial_client_posttrialaction",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_trial_client_securetrialsetupurl",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_trial_client_trialresultmessage",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_renewalsetupresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_trialrenewalquote",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_cardless_trial_controls",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessquoteview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalaction",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_billing_view_billingperiodunit",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_billing_view_formatmonthlyprice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_billing_view_billingperiod",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_billing_view_billingsubscription",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_trialrenewalquote",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalaction",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessquoteview",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_lib_checkout_selection_checkoutreturnpath",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_lib_trial_client",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_lib_trial_client_posttrialaction",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_lib_trial_client_trialresultmessage",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_lib_anidachi_auth_cardless_trial_trialstartresult",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_app_login_login_oauth_buttons",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_app_login_login_oauth_buttons_loginoauthbuttons",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_app_checkout_checkout_continuation_confirmation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_app_account_billing_cardless_trial_controls",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessquoteview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_app_account_billing_cardless_trial_controls_cardlessrenewalaction",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_lib_pricing_tiers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_billing_billing_preview",
+      "target": "apps_web_lib_pricing_tiers_published_pricing",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/billing/billing-preview.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_components_pricing",
+      "target": "apps_web_lib_checkout_selection_checkoutreturnpath",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/pricing.tsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_test",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing_test",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_trialrenewaloperation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.test.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_server_readtrialrenewal",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_cardless",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L121",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_trialbutton",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L141",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_renewalquote",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L148",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_billing_client_test_trialbutton",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L186",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "ref_node_assert",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "apps_web_lib_billing_view_subscriptiondatelabel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "apps_web_lib_billing_view_subscriptionstatuslabel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_view_test",
+      "target": "apps_web_lib_billing_view_billingsubscription",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/billing-view.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_checkout_continuation_test",
+      "target": "apps_web_lib_checkout_continuation_test_cardlessoffer",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/checkout-continuation.test.ts",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_home_faq",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/home-faq.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_home_faq",
+      "target": "apps_web_lib_pricing_copy_pricing_trial_note",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/home-faq.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_client",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_client",
+      "target": "apps_web_lib_billing_view_billing_owner_header",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_client",
+      "target": "apps_web_lib_trial_client_states",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_client",
+      "target": "apps_web_lib_trial_client_posttrialaction",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_client",
+      "target": "apps_web_lib_trial_client_trialresultmessage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_client",
+      "target": "apps_web_lib_trial_client_securetrialsetupurl",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-client.ts",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_billingworkspace",
+      "target": "apps_web_lib_trial_client_securetrialsetupurl",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L250",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_billingworkspace",
+      "target": "apps_web_lib_trial_client_trialresultmessage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L267",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "target": "apps_web_lib_billing_view_formatmonthlyprice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "target": "apps_web_lib_billing_view_billingperiodunit",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_cardless_trial_controls_cardlesstrialcontrols",
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
+      "source_location": "L70",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation_checkoutcontinuation",
+      "target": "apps_web_lib_trial_client_trialresultmessage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L106",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_billingview",
+      "target": "apps_web_lib_checkout_selection_checkoutreturnpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L526",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation_checkoutcontinuation",
+      "target": "apps_web_lib_checkout_selection_checkoutreturnpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L417",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_components_pricing_pricing",
+      "target": "apps_web_lib_checkout_selection_checkoutreturnpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/pricing.tsx",
+      "source_location": "L293",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_billing",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_server_readtrialrenewal",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/anidachi-auth/billing.ts",
+      "source_location": "L82",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_anidachi_auth_trial_renewal_test_fixture_confirm",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L384",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_client_test",
+      "target": "apps_web_lib_checkout_continuation_test_button",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/billing-client.test.ts",
+      "source_location": "L432",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_preview_test",
+      "target": "apps_web_app_dev_billing_page_billingpreviewpage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/billing-preview.test.ts",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_preview_test",
+      "target": "apps_extension_src_source_adapters_netflix_metadata_label",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/billing-preview.test.ts",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_billing_preview_test",
+      "target": "apps_web_lib_checkout_continuation_test_button",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/lib/billing-preview.test.ts",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [
@@ -598977,21 +600395,6 @@
       "_origin": "semantic"
     },
     {
-      "id": "install_first_measured_seo_funnel",
-      "label": "Install-first SEO with attribution and truthful conversion evidence",
-      "nodes": [
-        "cursor_agents_anidachi_seo_aeo_pages_conversion_ctas",
-        "apps_web_docs_seo_content_guidelines_official_install_path",
-        "apps_web_docs_conversion_metrics_first_touch_attribution",
-        "apps_web_docs_conversion_metrics_download_dedup_install_boundary"
-      ],
-      "relation": "form",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": ".cursor/agents/anidachi-seo-aeo-pages.md",
-      "_origin": "semantic"
-    },
-    {
       "id": "anidachi_account_owner_generation_fences",
       "label": "Account owner and request-generation isolation",
       "nodes": [
@@ -599345,6 +600748,8 @@
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_1_local_test_results",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_2_local_test_results",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_3_local_test_results",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_task_4_local_client_test_results",
+        "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_hosted_client_acceptance_gate",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_remaining_application_acceptance_gates",
         "docs_superpowers_plans_2026_10_11_cardless_trial_acceptance_product_and_release_evidence_gate"
       ],
