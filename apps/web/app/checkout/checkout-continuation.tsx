@@ -18,6 +18,7 @@ import { trackConversion } from "@/lib/conversion-events";
 import { postTrialAction, trialResultMessage } from "@/lib/trial-client";
 import type { TrialStartResult } from "@/lib/anidachi-auth/cardless-trial";
 import { LoginOAuthButtons } from "../login/login-oauth-buttons";
+import { TrialStartView } from "./trial-start-view";
 
 type Stage =
 	| "checking"
@@ -354,6 +355,15 @@ export function CheckoutContinuation({
 		};
 	}, [start]);
 
+	if (stage === "trial" && confirmation?.mode === "cardless") {
+		return (
+			<TrialStartView
+				selection={selection}
+				onStart={() => void start(confirmation)}
+			/>
+		);
+	}
+
 	return (
 		<AuthPageShell maxWidth="max-w-md">
 			<div className="text-center">
@@ -396,17 +406,14 @@ export function CheckoutContinuation({
 					<div className="mt-8 border-t border-ani-line pt-6">
 						<p className="text-xl font-medium">3 days of {label}</p>
 						<p className="mt-3 text-sm leading-6 text-ani-muted">
-							{confirmation?.mode === "cardless"
-								? "No card required. No automatic charge. Your trial starts when you confirm and ends 72 hours later. You can choose to add a card and enable renewal from Billing."
-								: `A card is required. After 3 days, ${amount} is charged every ${period} unless you cancel renewal.`}
+							A card is required. After 3 days, {amount} is charged every{" "}
+							{period} unless you cancel renewal.
 						</p>
 						<Button
 							className="mt-6 w-full"
 							onClick={() => void start(confirmation ?? undefined)}
 						>
-							{confirmation?.mode === "cardless"
-								? "Start my 3-day trial"
-								: "Continue to card checkout"}
+							Continue to card checkout
 						</Button>
 					</div>
 				)}

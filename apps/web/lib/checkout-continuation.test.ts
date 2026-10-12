@@ -114,8 +114,14 @@ test("cardless selection survives sign-in but only an explicit confirmation star
 	};
 	const el = await mount("pro", "monthly", true);
 	assert.equal(posts.length, 0);
+	assert.match(el.querySelector("h1")!.textContent!, /Try Pro free.*for 3 days/);
 	assert.match(el.textContent!, /no card/i);
 	assert.match(el.textContent!, /no automatic charge/i);
+	assert.match(el.textContent!, /return to Free unless you choose to subscribe/);
+	assert.equal(
+		el.querySelector<HTMLAnchorElement>('a[href^="/pricing"]')?.getAttribute("href"),
+		"/pricing?plan=pro&billing=monthly",
+	);
 	await act(async () => button(el, /Start my 3-day trial/i).click());
 	assert.equal(posts.length, 1);
 	assert.equal(posts[0].url, "/api/billing/trial/start");

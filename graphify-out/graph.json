@@ -22281,7 +22281,7 @@
       "community_name": "next/link",
       "file_type": "code",
       "source_file": "apps/web/components/conditional-site-chrome.tsx",
-      "source_location": "L49"
+      "source_location": "L50"
     },
     {
       "id": "apps_web_components_conditional_site_chrome_conditionalnav",
@@ -22292,7 +22292,7 @@
       "community_name": "next/link",
       "file_type": "code",
       "source_file": "apps/web/components/conditional-site-chrome.tsx",
-      "source_location": "L32"
+      "source_location": "L33"
     },
     {
       "id": "apps_web_components_conditional_site_chrome_minimalchromeforpath",
@@ -178998,7 +178998,7 @@
       "label": "Stage",
       "file_type": "code",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -179008,7 +179008,7 @@
       "label": "CheckoutContinuation()",
       "file_type": "code",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "_callable": true,
       "_origin": "ast"
     },
@@ -189626,7 +189626,7 @@
       "label": "Confirmation",
       "file_type": "code",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -192218,6 +192218,56 @@
       "description": "Stripe Test Clocks do not advance Postgres or Worker clocks. Report sandbox billing results, local deadline tests and real-time hosted expiry separately. If a real 72-hour observation is still running, record its due time and leave acceptance open without shortening a real trial or claiming the gate passed.",
       "rationale": "An accelerated provider billing result cannot prove real-time database or Worker expiry.",
       "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_app_checkout_trial_start_view",
+      "label": "trial-start-view.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_checkout_trial_start_view_trialstartview",
+      "label": "TrialStartView()",
+      "file_type": "code",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L8",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_dev_trial_start_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_dev_trial_start_page_dynamic",
+      "label": "dynamic",
+      "file_type": "code",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_dev_trial_start_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_dev_trial_start_page_trialstartpreviewpage",
+      "label": "TrialStartPreviewPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L11",
+      "_callable": true,
+      "_origin": "ast"
     }
   ],
   "links": [
@@ -239879,7 +239929,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/conditional-site-chrome.tsx",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -239890,7 +239940,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/conditional-site-chrome.tsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -413511,7 +413561,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/conditional-site-chrome.tsx",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -413521,7 +413571,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/conditional-site-chrome.tsx",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -561754,7 +561804,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -561764,7 +561814,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562255,7 +562305,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/checkout-continuation.test.ts",
-      "source_location": "L256",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562460,7 +562510,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L127",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -562553,7 +562603,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L251",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562565,7 +562615,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L252",
+      "source_location": "L253",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562613,7 +562663,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/checkout-continuation.test.ts",
-      "source_location": "L534",
+      "source_location": "L540",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593172,7 +593222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -593577,7 +593627,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L108",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0
@@ -593602,7 +593652,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
-      "source_location": "L426",
+      "source_location": "L433",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -597696,6 +597746,180 @@
       "source_location": "L192-L195",
       "weight": 1.0,
       "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_app_checkout_trial_start_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_checkout_continuation",
+      "target": "apps_web_app_checkout_trial_start_view_trialstartview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/checkout-continuation.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "ref_lucide_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "apps_web_components_ui_button",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "apps_web_components_ui_button_button",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "apps_web_lib_checkout_selection",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "apps_web_lib_checkout_selection_checkoutselection",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_checkout_trial_start_view",
+      "target": "apps_web_app_checkout_trial_start_view_trialstartview",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/checkout/trial-start-view.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "apps_web_app_checkout_trial_start_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "apps_web_app_checkout_trial_start_view_trialstartview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "apps_web_app_dev_trial_start_page_dynamic",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "apps_web_app_dev_trial_start_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_trial_start_page",
+      "target": "apps_web_app_dev_trial_start_page_trialstartpreviewpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/dev/trial-start/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [
