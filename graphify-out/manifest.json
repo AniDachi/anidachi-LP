@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/conditional-site-chrome.tsx": {
-    "mtime": 1790853268.7460003,
-    "seen": 1790854426.051009,
-    "ast_hash": "3fc14156f50f793890c2bef25ea658ea",
+    "mtime": 1791778353.4467168,
+    "seen": 1791778592.439121,
+    "ast_hash": "3cee53545eb715854ffd4cac9d3c108a",
     "semantic_hash": ""
   },
   "apps/web/components/discord-contact.tsx": {
@@ -9276,9 +9276,9 @@
     "semantic_hash": "7c15d4424b4e9a87f59d715116e875e7"
   },
   "apps/web/app/checkout/checkout-continuation.tsx": {
-    "mtime": 1791736252.982124,
-    "seen": 1791737251.412142,
-    "ast_hash": "c501e98efac772b2f6c7262fa7e16a94",
+    "mtime": 1791778391.318646,
+    "seen": 1791778592.439116,
+    "ast_hash": "99a2eb8f57418e045769a78fb1e712fc",
     "semantic_hash": ""
   },
   "apps/web/app/checkout/page.tsx": {
@@ -9288,9 +9288,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/checkout-continuation.test.ts": {
-    "mtime": 1791736253.638032,
-    "seen": 1791737251.412151,
-    "ast_hash": "21ea22ad6c204c437867739ad19b47bf",
+    "mtime": 1791778353.4674406,
+    "seen": 1791778592.439122,
+    "ast_hash": "7a43101112c45d9373ae3ea7b4e2d56c",
     "semantic_hash": ""
   },
   "apps/web/lib/checkout-selection.ts": {
@@ -10042,5 +10042,17 @@
     "seen": 1791755243.442181,
     "ast_hash": "",
     "semantic_hash": "c0df512d99b8205c1611acee83426941"
+  },
+  "apps/web/app/checkout/trial-start-view.tsx": {
+    "mtime": 1791778583.2940352,
+    "seen": 1791778592.4391181,
+    "ast_hash": "47066de465d9ed41da6e793044a0971e",
+    "semantic_hash": ""
+  },
+  "apps/web/app/dev/trial-start/page.tsx": {
+    "mtime": 1791778353.4251897,
+    "seen": 1791778592.439119,
+    "ast_hash": "7df2df52186d43092ff9365f9932ed19",
+    "semantic_hash": ""
   }
 }
