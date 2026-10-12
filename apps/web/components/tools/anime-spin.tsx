@@ -142,9 +142,10 @@ export function AnimeSpin({ entries, initialSlug }: { entries: SpinEntry[]; init
             key={item.id}
             type="button"
             role="radio"
+            disabled={spinning}
             aria-checked={length === item.id}
             onClick={() => chooseLength(item.id)}
-            className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus ${
+            className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ani-focus ${
               length === item.id
                 ? "bg-ani-primary text-ani-on-primary"
                 : "border border-ani-control-border text-ani-text hover:bg-ani-hover"

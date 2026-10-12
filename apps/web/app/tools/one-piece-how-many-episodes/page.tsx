@@ -11,7 +11,7 @@ import {
   ONE_PIECE_SEASONS,
   watchHours,
 } from "@/lib/tools/one-piece-count";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/one-piece-how-many-episodes";
 const fillerEpisodes = episodesOfKind(FILLER_SERIES["one-piece"].arcs, "filler");
@@ -79,7 +79,7 @@ export default function OnePieceEpisodeCountPage() {
         dateModified="2026-10-11"
         faq={faq}
         headings={headings}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>How many episodes does One Piece have?</SeoGuideTitle>
         <SeoGuideAnswer>

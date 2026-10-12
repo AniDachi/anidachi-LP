@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ToolWebAppJsonLd } from "@/components/tools/tool-json-ld";
 import { WatchOrderBody } from "@/components/tools/watch-order-body";
 import { totalHours, WATCH_ORDERS } from "@/lib/tools/watch-orders";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/monogatari-watch-order";
 const order = WATCH_ORDERS.monogatari;
@@ -72,7 +72,7 @@ export default function MonogatariWatchOrderPage() {
         dateModified="2026-10-12"
         faq={faq}
         headings={headings}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>Monogatari series watch order</SeoGuideTitle>
         <SeoGuideAnswer>

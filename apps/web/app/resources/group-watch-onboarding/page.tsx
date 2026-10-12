@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { PRICING_GROUP_ONBOARDING } from "@/lib/pricing-copy";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
