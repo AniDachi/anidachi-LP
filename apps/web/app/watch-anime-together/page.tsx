@@ -396,6 +396,68 @@ export default function WatchAnimeTogetherPage() {
       </p>
 
       <h2
+        id="tools"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+      >
+        Episode counts, filler lists, and watch orders
+      </h2>
+      <p className="text-foreground/80 leading-relaxed mb-4">
+        Check the length before you start a long show, pick a watch order, see what drops this week, or spin a title from the list on this site.
+      </p>
+      <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link href="/tools/one-piece-how-many-episodes" className="hover:underline font-medium">
+            How many episodes does One Piece have?
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/one-piece-filler-list" className="hover:underline font-medium">
+            One Piece filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/naruto-filler-list" className="hover:underline font-medium">
+            Naruto filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/naruto-shippuden-filler-list" className="hover:underline font-medium">
+            Naruto Shippuden filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/random-anime-generator" className="hover:underline font-medium">
+            Random anime generator
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/bleach-filler-list" className="hover:underline font-medium">
+            Bleach filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/black-clover-filler-list" className="hover:underline font-medium">
+            Black Clover filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/fate-watch-order" className="hover:underline font-medium">
+            Fate watch order
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/monogatari-watch-order" className="hover:underline font-medium">
+            Monogatari series watch order
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/crunchyroll-schedule" className="hover:underline font-medium">
+            Crunchyroll release schedule
+          </Link>
+        </li>
+      </ul>
+
+      <h2
         id="genre-hubs"
         className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >

@@ -15,6 +15,26 @@ const nextConfig: NextConfig = {
         destination: "/watch-party-app",
         permanent: true,
       },
+      {
+        source: "/guides/netflix-teleparty",
+        destination: "/guides/teleparty-netflix",
+        permanent: true,
+      },
+      {
+        source: "/guides/anime-date-night-ideas-long-distance",
+        destination: "/long-distance-anime-date-night-ideas",
+        permanent: true,
+      },
+      {
+        source: "/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll",
+        destination: "/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll",
+        permanent: true,
+      },
+      {
+        source: "/guides/how-to-stream-anime-on-discord",
+        destination: "/guides/how-to-watch-anime-with-friends-on-discord",
+        permanent: true,
+      },
     ];
   },
   images: {

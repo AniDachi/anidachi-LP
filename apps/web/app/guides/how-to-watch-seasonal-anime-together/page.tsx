@@ -208,6 +208,11 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
         </h2>
         <ul className="space-y-2 text-brand-orange mb-8">
           <li>
+            <Link href="/tools/crunchyroll-schedule" className="hover:underline">
+              Crunchyroll release schedule this week
+            </Link>
+          </li>
+          <li>
             <Link href="/guides/how-to-run-an-online-anime-club" className="hover:underline">
               How to run an online anime club
             </Link>

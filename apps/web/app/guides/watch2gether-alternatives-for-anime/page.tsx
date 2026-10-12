@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch2Gether Alternatives for Anime (2026 Ranked) | AniDachi",
+  title: "Watch2Gether Alternatives for Anime (2026 Ranked)",
   description:
     "Ranked Watch2Gether alternatives for anime on Crunchyroll — AniDachi, Crunchyroll Party, Teleparty, and more. Distinct from the 1:1 AniDachi vs Watch2Gether compare page.",
   alternates: { canonical: "/guides/watch2gether-alternatives-for-anime" },

@@ -99,6 +99,13 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
           marathon.
         </strong>
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Ready to host one of these? The{" "}
+        <Link href="/watch-isekai-anime-with-friends" className="text-brand-orange hover:underline">
+          isekai anime watch party guide
+        </Link>{" "}
+        covers setup, pacing, and discussion prompts.
+      </p>
 
       {/* ── SECTION 1 ───────────────────────────────────── */}
       <h2

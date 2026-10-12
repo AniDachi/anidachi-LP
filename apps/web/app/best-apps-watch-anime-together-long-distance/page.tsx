@@ -5,7 +5,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { PRICING_PRICE_TABLE, PRICING_CANCELLATION_NOTE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "7 Best Apps to Watch Anime Together Long Distance (2026) | AniDachi",
+  title: "7 Best Apps to Watch Anime Together Long Distance (2026)",
   description:
     "Best apps to watch anime together long distance: AniDachi (Crunchyroll + YouTube live sync, personal history), Teleparty, Rave, and Discord voice — compared for LDR couples.",
   alternates: { canonical: "/best-apps-watch-anime-together-long-distance" },

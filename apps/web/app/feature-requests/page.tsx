@@ -4,7 +4,7 @@ import { AnidachiLogo } from "@/components/anidachi-logo";
 import { FeatureRequestForm } from "@/components/feature-request-form";
 
 export const metadata: Metadata = {
-  title: "Feature Requests — AniDachi",
+  title: "Feature Requests",
   description:
     "Submit product ideas for AniDachi watchrooms on Crunchyroll and YouTube. We read every request.",
   alternates: { canonical: "/feature-requests" },

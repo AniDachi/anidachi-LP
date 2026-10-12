@@ -22,7 +22,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Free YouTube Watch Party — Free Tier Options (2026) | AniDachi",
+  title: "Free YouTube Watch Party — Free Tier Options (2026)",
   description:
     "Compare free YouTube watch party options. AniDachi guests join free; hosts need Plus or Pro, including an active trial. Compare Teleparty and Watch2Gether.",
   alternates: { canonical: "/guides/youtube-watch-party-free" },

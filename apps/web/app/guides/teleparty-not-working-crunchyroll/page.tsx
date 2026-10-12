@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Teleparty Not Working on Crunchyroll? Fixes (2026) | AniDachi",
+  title: "Teleparty Not Working on Crunchyroll? Fixes (2026)",
   description:
     "Fix Teleparty not working on Crunchyroll: sync drift, extension updates, player detection failures, and when to switch to AniDachi watchrooms.",
   alternates: { canonical: "/guides/teleparty-not-working-crunchyroll" },

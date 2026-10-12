@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Romance Anime With Friends (2026) | AniDachi",
+  title: "Watch Romance Anime With Friends (2026)",
   description:
     "The best romance anime to watch with friends on Crunchyroll — sync tearjerker moments live or catch up at your own pace with AniDachi. Your Lie in April, Toradora, Clannad, and more.",
   alternates: { canonical: "/watch-romance-anime-with-friends" },
@@ -106,6 +106,13 @@ export default function WatchRomanceAnimeWithFriendsPage() {
           reactions for friends who are a few episodes behind.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-romance-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best romance anime to watch with friends
+        </Link>
+        .
       </p>
 
       <h2

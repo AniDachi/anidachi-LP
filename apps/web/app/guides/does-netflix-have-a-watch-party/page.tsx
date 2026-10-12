@@ -115,7 +115,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
         <Link href="/extension">/extension</Link>. The old extension name is
         explained on <Link href="/netflix-party">Netflix Party</Link>. The
         Teleparty wording is on{" "}
-        <Link href="/guides/netflix-teleparty" className="text-brand-orange hover:underline">
+        <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
           Netflix Teleparty
         </Link>
         .

@@ -24,12 +24,14 @@ function normalizeToOrigin(raw: string): string {
 /**
  * Resolved origin for this deployment.
  * - Uses `NEXT_PUBLIC_SITE_URL` when set (trimmed, trailing slashes stripped, protocol added if missing).
- * - Else uses `VERCEL_URL` on Vercel (preview/production hostname).
- * - Else production default `https://www.anidachi.app`.
+ * - Else production default `https://www.anidachi.app` on Vercel production, never the per-deploy hostname.
+ * - Else uses `VERCEL_URL` on Vercel previews.
+ * - Else production default.
  */
 export function getResolvedSiteOrigin(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (explicit) return normalizeToOrigin(explicit);
+  if (process.env.VERCEL_ENV === "production") return DEFAULT_ORIGIN;
 
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {

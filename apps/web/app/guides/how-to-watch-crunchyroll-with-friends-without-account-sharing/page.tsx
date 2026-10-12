@@ -13,7 +13,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch Crunchyroll With Friends Without Account Sharing (2026) | AniDachi",
+  title: "Watch Crunchyroll With Friends Without Account Sharing (2026)",
   description:
     "Legal per-user model for Crunchyroll group watch — no password sharing. Each friend uses their own login while AniDachi syncs playback.",
   alternates: {

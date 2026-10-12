@@ -106,12 +106,8 @@ export default function TelepartyNetflixPage() {
         If you searched the words the other way
       </h2>
       <p className="mb-6 leading-relaxed text-ani-muted">
-        “Netflix Teleparty” is the same pair of names in the other order. That
-        page is{" "}
-        <Link href="/guides/netflix-teleparty" className="text-brand-orange hover:underline">
-          Netflix Teleparty
-        </Link>
-        . The install name is{" "}
+        “Netflix Teleparty” is the same search with the words in the other order,
+        and this page covers both. The install name is{" "}
         <Link
           href="/guides/netflix-party-extension"
           className="text-brand-orange hover:underline"
@@ -131,7 +127,6 @@ export default function TelepartyNetflixPage() {
       </p>
       <SeoGuideRelated
         links={[
-          { href: "/guides/netflix-teleparty", label: "Netflix Teleparty" },
           { href: "/netflix-party", label: "Netflix Party" },
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
         ]}

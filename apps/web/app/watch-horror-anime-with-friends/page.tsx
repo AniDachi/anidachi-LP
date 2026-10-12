@@ -115,6 +115,13 @@ export default function WatchHorrorAnimeWithFriendsPage() {
           Works for {PRICING_ROOM_SIZE_RANGE} — all on Crunchyroll.
         </strong>
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-horror-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best horror anime to watch with friends
+        </Link>
+        .
+      </p>
 
       <h2
         id="why-horror"

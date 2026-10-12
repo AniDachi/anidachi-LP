@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Kast Alternatives for YouTube (2026 Ranked) | AniDachi",
+  title: "Kast Alternatives for YouTube (2026 Ranked)",
   description:
     "Ranked Kast alternatives for YouTube watch parties — AniDachi, Teleparty, Watch2Gether, Discord voice + sync. Distinct from AniDachi vs Kast.",
   alternates: { canonical: "/guides/kast-alternatives-for-youtube" },

@@ -210,6 +210,12 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
             .
           </li>
           <li>Veto power: any member can call a break if energy drops.</li>
+          <li>Set the scope first: an{" "}
+            <Link href="/glossary/anime-marathon" className="text-brand-orange hover:underline">
+              anime marathon
+            </Link>{" "}
+            can mean one long night or a season over several weekends.
+          </li>
         </ul>
 
         <h2

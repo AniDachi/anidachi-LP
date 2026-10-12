@@ -17,7 +17,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Host a YouTube Watch Party (2026 Host Guide) | AniDachi",
+  title: "How to Host a YouTube Watch Party (2026 Host Guide)",
   description:
     "Host a YouTube watch party with Plus or Pro access, including an active trial. Share invites so friends can join on Free accounts.",
   alternates: { canonical: "/guides/how-to-host-a-youtube-watch-party" },

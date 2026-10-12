@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Is Crunchyroll Party Worth It? (2026 Evaluation) | AniDachi",
+  title: "Is Crunchyroll Party Worth It? (2026 Evaluation)",
   description:
     "Compare Crunchyroll Party with AniDachi for live anime nights: sync, chat, cameras, microphones, personal history, and hosting requirements.",
   alternates: { canonical: "/guides/is-crunchyroll-party-worth-it" },

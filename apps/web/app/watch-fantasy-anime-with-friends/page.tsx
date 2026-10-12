@@ -112,6 +112,13 @@ export default function WatchFantasyAnimeWithFriendsPage() {
           {PRICING_ROOM_SIZE_RANGE}, all on Crunchyroll.
         </strong>
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-fantasy-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best fantasy anime to watch with friends
+        </Link>
+        .
+      </p>
 
       <h2
         id="why-fantasy"

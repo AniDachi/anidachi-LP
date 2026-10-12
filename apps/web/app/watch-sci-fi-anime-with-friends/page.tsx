@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Sci-Fi Anime With Friends (2026) | AniDachi",
+  title: "Watch Sci-Fi Anime With Friends (2026)",
   description:
     "Watch sci-fi anime with friends on Crunchyroll — sync mind-bending reveals live or catch up at your own pace with AniDachi. Steins;Gate, Vivy, Ghost in the Shell, and more.",
   alternates: { canonical: "/watch-sci-fi-anime-with-friends" },
@@ -104,6 +104,13 @@ export default function WatchSciFiAnimeWithFriendsPage() {
           mind-bending reveals. Keep theory notes between sessions in your
           separate group chat.
         </strong>
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-sci-fi-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best sci-fi anime to watch with friends
+        </Link>
+        .
       </p>
 
       <h2

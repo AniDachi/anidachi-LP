@@ -2,6 +2,23 @@
 
 Net-new SEO route batches are **frozen** until the current public cohort completes a 30/60/90-day review.
 
+## Owner decisions since the freeze (updated 2026-10-12)
+
+These are explicit owner exceptions. The rest of this document still applies.
+
+- **2026-10-09:** the free tool pages plan (`/tools/*`: filler lists, One Piece episode count, random anime generator, watch orders, Crunchyroll schedule) is approved. It overrides the 2026-09-28 rejection in `.cursor/scratchpad.md`.
+- **2026-10-12, SEO audit (GSC + GA4 + Amplitude):**
+  - **Canonical host is `https://www.anidachi.app`.** Production `NEXT_PUBLIC_SITE_URL` must be www, and `anidachi.app` must 308 to www. Before this, canonicals pointed at the apex while the apex 307-redirected to www, so Google indexed pages on both hosts.
+  - **301 merges of exact twins**, approved:
+    - `/guides/netflix-teleparty` → `/guides/teleparty-netflix`
+    - `/guides/anime-date-night-ideas-long-distance` → `/long-distance-anime-date-night-ideas`
+    - `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll` → `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll`
+    - `/guides/how-to-stream-anime-on-discord` → `/guides/how-to-watch-anime-with-friends-on-discord`
+  - **Bare watch slugs** (`/watch/naruto`) 308 to `/watch/naruto-with-friends`.
+  - **Sitemap:** no `lastmod` (file mtimes reset on every Vercel build), no private or `/dev` routes, and `/extension` is included.
+  - **Watch pages** no longer publish MyAnimeList ratings as `AggregateRating`.
+  - **Until about 2026-11-02**, don't change titles, H1s or URLs on `/`, `/watch-anime-together` or `/guides/best-anime-to-watch-with-friends` while Google moves them from the apex to www.
+
 ## Hard safety constraint
 
 Do **not** risk current ranking, indexation, or core product flows.

@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Rave Alternatives for Anime & Crunchyroll (2026) | AniDachi",
+  title: "Rave Alternatives for Anime & Crunchyroll (2026)",
   description:
     "Rave is built for generic movie nights. For live anime nights on Crunchyroll, compare AniDachi rooms with chat and calling. Ranked options + compare link.",
   alternates: { canonical: "/guides/rave-alternatives-for-anime" },

@@ -19,7 +19,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Does Teleparty Work With Crunchyroll? (2026 Answer) | AniDachi",
+  title: "Does Teleparty Work With Crunchyroll? (2026 Answer)",
   description:
     "Yes — Teleparty can sync Crunchyroll for live watch parties. It does not support async catch-up. Compare Teleparty for Crunchyroll vs AniDachi for anime groups.",
   alternates: { canonical: "/guides/does-teleparty-work-with-crunchyroll" },
