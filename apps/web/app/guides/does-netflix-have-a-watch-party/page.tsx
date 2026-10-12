@@ -7,9 +7,9 @@ import {
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
   title: "Does Netflix Have a Watch Party?",
@@ -115,7 +115,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
         <Link href="/extension">/extension</Link>. The old extension name is
         explained on <Link href="/netflix-party">Netflix Party</Link>. The
         Teleparty wording is on{" "}
-        <Link href="/guides/netflix-teleparty" className="text-brand-orange hover:underline">
+        <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
           Netflix Teleparty
         </Link>
         .

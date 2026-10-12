@@ -6,6 +6,8 @@ export interface AnimeEntry {
   episodes: string;
   genres: string[];
   related: string[];
+  /** True when the title is not on Crunchyroll (e.g. Studio Ghibli films), so its page must not claim it is. */
+  notOnCrunchyroll?: boolean;
 }
 
 /** Returns true for feature-length movies (episodes field is exactly "Movie"). */
@@ -1130,6 +1132,7 @@ export const animeList: AnimeEntry[] = [
   },
   {
     slug: "spirited-away",
+    notOnCrunchyroll: true,
     title: "Spirited Away",
     japaneseTitle: "Sen to Chihiro no Kamikakushi",
     synopsis:
@@ -1140,6 +1143,7 @@ export const animeList: AnimeEntry[] = [
   },
   {
     slug: "howls-moving-castle",
+    notOnCrunchyroll: true,
     title: "Howl's Moving Castle",
     japaneseTitle: "Howl no Ugoku Shiro",
     synopsis:
@@ -1150,6 +1154,7 @@ export const animeList: AnimeEntry[] = [
   },
   {
     slug: "princess-mononoke",
+    notOnCrunchyroll: true,
     title: "Princess Mononoke",
     japaneseTitle: "Mononoke Hime",
     synopsis:
@@ -1810,6 +1815,7 @@ export const animeList: AnimeEntry[] = [
   },
   {
     slug: "my-neighbor-totoro",
+    notOnCrunchyroll: true,
     title: "My Neighbor Totoro",
     japaneseTitle: "Tonari no Totoro",
     synopsis:

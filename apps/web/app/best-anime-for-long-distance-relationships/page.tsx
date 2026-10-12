@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Long Distance Relationships (2026) | AniDachi",
+  title: "Best Anime for Long Distance Relationships (2026)",
   description:
     "15 anime picks curated for LDR couples — series about separation, letters across distance, reunion, and emotional bonds that survive geography.",
   alternates: { canonical: "/best-anime-for-long-distance-relationships" },

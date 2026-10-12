@@ -12,6 +12,11 @@ function has(gs: Set<string>, ...needles: string[]): boolean {
 
 /** Extra "why watch together" copy keyed lightly off genres — still truthful and generic enough for SEO scale. */
 export function extraWhyWatchParagraphs(anime: AnimeEntry): string[] {
+  if (isMovieEntry(anime)) {
+    return [
+      `Save detailed theories and favorite-scene discussions until after the credits of ${anime.title} so first-time viewers can enjoy each reveal. A few notes or timestamps make it easy to return to the moments your group wants to discuss.`,
+    ];
+  }
   const gs = genreSet(anime.genres);
   const paragraphs: string[] = [];
 
@@ -105,6 +110,9 @@ export function pacingLeadParagraph(
   anime: AnimeEntry,
   episodesDisplay: string
 ): string {
+  if (isMovieEntry(anime)) {
+    return `Set aside one evening for ${anime.title}, with a little time after the credits to talk. Check the runtime of your available version and agree on a pause signal before starting.`;
+  }
   const epBlob = `${episodesDisplay} ${anime.episodes}`;
   const long =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
@@ -124,6 +132,9 @@ export function pacingLeadParagraph(
  * each description must differ meaningfully between any two titles of the same genre.
  */
 export function buildWatchPageMetaDescription(anime: AnimeEntry): string {
+  if (anime.notOnCrunchyroll) {
+    return `${anime.title} is not on Crunchyroll. Plan a legal group movie night; AniDachi cannot sync this title. Find discussion tips and alternatives.`;
+  }
   const gs = genreSet(anime.genres);
   const movie = isMovieEntry(anime);
 
@@ -179,6 +190,7 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
   name: string;
   text: string;
 }[] {
+  if (anime.notOnCrunchyroll) return [];
   return [
     {
       name: "Install AniDachi",
@@ -197,8 +209,12 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
       text: `Watch ${anime.title} together in the live room, with synced playback, chat, and reactions.`,
     },
     {
-      name: "Track episodes and spoiler boundaries",
-      text: "Your own Plus/Pro access and recording permission enable personal history. Agree with friends on a safe episode boundary; personal progress is not a shared group record.",
+      name: isMovieEntry(anime)
+        ? "Keep movie discussions spoiler-safe"
+        : "Track episodes and spoiler boundaries",
+      text: isMovieEntry(anime)
+        ? "Save plot discussions until after the credits. Your own Plus/Pro access and recording permission enable personal history; personal progress is not a shared group record."
+        : "Your own Plus/Pro access and recording permission enable personal history. Agree with friends on a safe episode boundary; personal progress is not a shared group record.",
     },
   ];
 }
@@ -222,12 +238,30 @@ export function watchPageResourceItemList(
   ];
 
   const gs = genreSet(genres);
-  const genreHubs: { name: string; url: string }[] = [];
-  if (has(gs, "action")) genreHubs.push({ name: "Watch action anime with friends — genre hub", url: "/watch-action-anime-with-friends" });
-  if (has(gs, "romance")) genreHubs.push({ name: "Watch romance anime with friends — genre hub", url: "/watch-romance-anime-with-friends" });
-  if (has(gs, "comedy")) genreHubs.push({ name: "Watch comedy anime with friends — genre hub", url: "/watch-comedy-anime-with-friends" });
-  if (has(gs, "sports")) genreHubs.push({ name: "Watch sports anime with friends — genre hub", url: "/watch-sports-anime-with-friends" });
-  if (has(gs, "mystery", "psychological")) genreHubs.push({ name: "Watch mystery anime with friends — genre hub", url: "/watch-mystery-anime-with-friends" });
+  // Most specific genres first, so all 15 genre hubs get links from the titles they list.
+  const hubByGenre: [string[], string, string][] = [
+    [["isekai"], "isekai", "Isekai"],
+    [["mecha"], "mecha", "Mecha"],
+    [["horror"], "horror", "Horror"],
+    [["sports"], "sports", "Sports"],
+    [["shoujo", "shojo"], "shoujo", "Shoujo"],
+    [["slice of life"], "slice-of-life", "Slice of life"],
+    [["psychological"], "psychological", "Psychological"],
+    [["mystery", "thriller"], "mystery", "Mystery"],
+    [["romance", "romantic comedy"], "romance", "Romance"],
+    [["sci-fi", "time travel"], "sci-fi", "Sci-fi"],
+    [["supernatural"], "supernatural", "Supernatural"],
+    [["fantasy", "dark fantasy"], "fantasy", "Fantasy"],
+    [["comedy"], "comedy", "Comedy"],
+    [["shonen", "shounen"], "shonen", "Shonen"],
+    [["action"], "action", "Action"],
+  ];
+  const genreHubs = hubByGenre
+    .filter(([needles]) => has(gs, ...needles))
+    .map(([, slug, label]) => ({
+      name: `Watch ${label.toLowerCase()} anime with friends — genre hub`,
+      url: `/watch-${slug}-anime-with-friends`,
+    }));
 
   const extra = genreHubs.slice(0, 2).map((h, i) => ({ ...h, position: base.length + i + 1 }));
   return [...base, ...extra];
@@ -253,6 +287,22 @@ export function buildWatchPageFaq(
   anime: AnimeEntry,
   episodesDisplay: string
 ): { question: string; answer: string }[] {
+  if (anime.notOnCrunchyroll) {
+    return [
+      {
+        question: `Can AniDachi sync ${anime.title}?`,
+        answer: `No. ${anime.title} is not on Crunchyroll, and AniDachi cannot sync this title. AniDachi currently supports Crunchyroll and YouTube.`,
+      },
+      {
+        question: `How can we plan a ${anime.title} movie night?`,
+        answer: `Check which legal service offers ${anime.title} in each viewer's region. Arrange a call, agree on the same version, and count down to start manually. This is separate from an AniDachi room.`,
+      },
+      {
+        question: `How do we avoid ${anime.title} spoilers?`,
+        answer: "Ask everyone to save reviews and plot discussions until after the credits. If someone watches later, keep the discussion in a separate chat.",
+      },
+    ];
+  }
   const gs = genreSet(anime.genres);
   const epClass = classifyEpisodes(anime, episodesDisplay);
 
@@ -279,9 +329,14 @@ export function buildWatchPageFaq(
     };
   }
 
-  // Slot B: async/schedule — genre-aware
+  // Slot B: schedule — film format first, then series genres
   let slotB: { question: string; answer: string };
-  if (has(gs, "sports")) {
+  if (epClass === "movie") {
+    slotB = {
+      question: `How should we plan breaks during ${anime.title}?`,
+      answer: "Agree on a pause signal before starting, leave time to finish the film, and save detailed plot discussions until everyone has watched through the credits.",
+    };
+  } else if (has(gs, "sports")) {
     slotB = {
       question: `What is the best way to watch ${anime.title} match episodes as a group?`,
       answer: `Match-block episodes make natural session boundaries for ${anime.title}. Schedule live watch nights around tournament arcs and allow independent catch-up between meetings.`,
@@ -365,7 +420,9 @@ export function buildWatchPageFaq(
     },
     {
       question: `Can we host a ${anime.title} watch night if we live in different countries?`,
-      answer: `You can use the same watchroom flow as long as each person can stream ${anime.title} legally in their region. Rights and episode availability may differ by territory — if someone is geo-blocked on a specific arc, pause the group plan until everyone can access the same episode legally, then resume with clear episode labels in chat.`,
+      answer: epClass === "movie"
+        ? `Each person must be able to stream the same version of ${anime.title} legally in their region. If the film is unavailable to someone, choose another title everyone can access; AniDachi cannot bypass regional restrictions.`
+        : `You can use the same watchroom flow as long as each person can stream ${anime.title} legally in their region. Rights and episode availability may differ by territory — if someone is geo-blocked on a specific arc, pause the group plan until everyone can access the same episode legally, then resume with clear episode labels in chat.`,
     },
     slotC,
   ];

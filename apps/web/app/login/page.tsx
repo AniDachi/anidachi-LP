@@ -12,7 +12,7 @@ import { LoginOAuthButtons } from "./login-oauth-buttons";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sign in — AniDachi",
+  title: "Sign in",
   robots: { index: false, follow: false },
 };
 

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
@@ -210,6 +210,12 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
             .
           </li>
           <li>Veto power: any member can call a break if energy drops.</li>
+          <li>Set the scope first: an{" "}
+            <Link href="/glossary/anime-marathon" className="text-brand-orange hover:underline">
+              anime marathon
+            </Link>{" "}
+            can mean one long night or a season over several weekends.
+          </li>
         </ul>
 
         <h2

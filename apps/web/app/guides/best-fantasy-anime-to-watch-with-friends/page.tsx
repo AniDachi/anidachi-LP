@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Fantasy Anime to Watch With Friends (2026) | AniDachi",
+  title: "Best Fantasy Anime to Watch With Friends (2026)",
   description:
     "Best fantasy anime for group watch parties on Crunchyroll — isekai epics, dark fantasy, and world-building marathons with synced playback and live chat in AniDachi.",
   alternates: { canonical: "/guides/best-fantasy-anime-to-watch-with-friends" },

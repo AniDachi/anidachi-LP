@@ -8,9 +8,9 @@ import {
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PRICING_PLUS_VS_PRO_ANSWER } from "@/lib/pricing-copy";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
   title: "Anime Tracker — Log Crunchyroll and YouTube Progress",

@@ -38,17 +38,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-d", "listicle", "long-distance", "pillar-watch-anime"],
 	},
 	{
-		href: "/guides/anime-date-night-ideas-long-distance",
-		label: "Anime Date Night Ideas Long Distance",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"long-distance",
-			"async",
-			"pillar-watch-anime",
-		],
-	},
-	{
 		href: "/guides/watch-party-app-for-crunchyroll",
 		label: "Watch Party App for Crunchyroll",
 		tags: [
@@ -924,16 +913,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll",
-		label: "Remove Anime from Continue Watching",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"crunchyroll",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/resume-anime",
 		label: "Resume Anime",
 		tags: [
@@ -947,16 +926,6 @@ export const guideLinks: GuideLinkItem[] = [
 		href: "/guides/discord-go-live",
 		label: "Discord Go Live",
 		tags: ["template-c", "discord", "pillar-discord-watch-party"],
-	},
-	{
-		href: "/guides/how-to-stream-anime-on-discord",
-		label: "How to Stream Anime on Discord",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"discord",
-			"pillar-discord-watch-party",
-		],
 	},
 	{
 		href: "/guides/discord-watch-together-activity",
@@ -1044,11 +1013,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "pillar-netflix"],
 	},
 	{
-		href: "/guides/netflix-teleparty",
-		label: "Netflix Teleparty",
-		tags: ["template-c", "pillar-netflix"],
-	},
-	{
 		href: "/guides/how-to-screen-share-netflix-on-discord",
 		label: "How to Screen Share Netflix on Discord",
 		tags: ["template-c", "how-to-core", "discord", "pillar-netflix"],
@@ -1074,6 +1038,28 @@ export function getGuideLinks({
 		if (!includeTags || includeTags.length === 0) return true;
 		return includeTags.some((tag) => item.tags.includes(tag));
 	});
+	if (typeof limit !== "number") return filtered;
 
-	return typeof limit === "number" ? filtered.slice(0, limit) : filtered;
+	// Most matching tags first. Ties are shuffled with a seed from the calling page, so each page
+	// links a different slice instead of every hub repeating the first entries in this file.
+	const seed = excludeHref ?? (includeTags ?? []).join(",");
+	const score = (item: GuideLinkItem) =>
+		(includeTags ?? []).filter((tag) => item.tags.includes(tag)).length;
+	return [...filtered]
+		.sort(
+			(a, b) =>
+				score(b) - score(a) ||
+				stableHash(seed + a.href) - stableHash(seed + b.href),
+		)
+		.slice(0, limit);
+}
+
+/** Small deterministic string hash (FNV-1a), so server and client pick the same links. */
+function stableHash(value: string): number {
+	let hash = 0x811c9dc5;
+	for (let i = 0; i < value.length; i++) {
+		hash ^= value.charCodeAt(i);
+		hash = Math.imul(hash, 0x01000193);
+	}
+	return hash >>> 0;
 }

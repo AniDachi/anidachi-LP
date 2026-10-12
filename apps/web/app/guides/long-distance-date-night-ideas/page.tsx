@@ -9,9 +9,9 @@ import {
 import { HowToJsonLd } from "@/components/json-ld";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { INSTALL_HOWTO_STEP_TEXT_VIA_HUB } from "@/lib/install-cta";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 const howToSteps = [
   {

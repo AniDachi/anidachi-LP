@@ -8,10 +8,10 @@ import {
 	SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/guides/how-to-clear-watch-history-on-crunchyroll";
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 const howToSteps = [
 	{
@@ -153,7 +153,7 @@ export default function HowToClearCrunchyrollWatchHistoryPage() {
 					</Link>{" "}
 					or the anime-specific steps in{" "}
 					<Link
-						href="/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll"
+						href="/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll"
 						className="text-brand-orange hover:underline"
 					>
 						how to remove anime from Continue Watching

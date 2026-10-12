@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Supernatural Anime With Friends (2026) | AniDachi",
+  title: "Watch Supernatural Anime With Friends (2026)",
   description:
     "Supernatural anime power reveals hit harder together — AniDachi syncs live Crunchyroll rooms for your group. Fullmetal Alchemist, Jujutsu Kaisen, Noragami, and more.",
   alternates: { canonical: "/watch-supernatural-anime-with-friends" },

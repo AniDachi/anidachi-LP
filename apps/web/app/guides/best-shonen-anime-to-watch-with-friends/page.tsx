@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Shonen Anime to Watch With Friends (2026) | AniDachi",
+  title: "Best Shonen Anime to Watch With Friends (2026)",
   description:
     "Best shonen anime to watch with friends — Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter & more. Group watch with synced reactions on AniDachi.",
   alternates: {
@@ -127,6 +127,13 @@ export default function BestShonenAnimeWithFriendsPage() {
         shonen delivers the kind of shared excitement that is genuinely harder to
         experience alone. The picks below are sorted by type: action and battle
         series, sports, and long-run titles for groups ready to commit.
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Ready to host one of these? The{" "}
+        <Link href="/watch-shonen-anime-with-friends" className="text-brand-orange hover:underline">
+          shonen anime watch party guide
+        </Link>{" "}
+        covers setup, pacing, and discussion prompts.
       </p>
 
       {/* ── SECTION 1: ACTION SHONEN ─────────────────────── */}

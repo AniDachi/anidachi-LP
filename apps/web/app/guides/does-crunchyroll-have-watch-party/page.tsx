@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Does Crunchyroll Have a Watch Party? (2026 Answer) | AniDachi",
+  title: "Does Crunchyroll Have a Watch Party? (2026 Answer)",
   description:
     "Does Crunchyroll have a watch party or group watch feature? Short answer: no — but AniDachi adds full watch party functionality to Crunchyroll. Here is what Crunchyroll offers natively and what AniDachi adds.",
   alternates: { canonical: "/guides/does-crunchyroll-have-watch-party" },

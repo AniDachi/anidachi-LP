@@ -3,9 +3,9 @@ import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const ARTICLE_IMAGE = `${SITE_URL}${BRAND_OG_PATH}`;
 
@@ -232,7 +232,7 @@ const sharedPicks = {
 export const listiclePages: Record<string, ListiclePage> = {
 	"best-anime-to-watch-long-distance": {
 		slug: "best-anime-to-watch-long-distance",
-		title: "Best Anime to Watch Long Distance — AniDachi",
+		title: "Best Anime to Watch Long Distance",
 		h1: "8 Best Anime to Watch Long Distance in 2026",
 		description:
 			"Best anime to watch long distance with friends or a partner. Pick shows for live AniDachi watchrooms or independent viewing followed by a conversation.",
@@ -266,7 +266,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 	},
 	"best-anime-to-watch-online-together": {
 		slug: "best-anime-to-watch-online-together",
-		title: "Best Anime to Watch Online Together — AniDachi",
+		title: "Best Anime to Watch Online Together",
 		h1: "8 Best Anime to Watch Online Together in 2026",
 		description:
 			"Best anime to watch online together with friends. Choose shows built for live reactions, synced Crunchyroll rooms, and post-episode discussion.",
@@ -298,7 +298,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 	},
 	"best-anime-to-watch-with-girlfriend": {
 		slug: "best-anime-to-watch-with-girlfriend",
-		title: "Best Anime to Watch With Girlfriend — AniDachi",
+		title: "Best Anime to Watch With Girlfriend",
 		h1: "6 Best Anime to Watch With Girlfriend in 2026",
 		description:
 			"Best anime to watch with girlfriend for cozy dates, romance, comedy, and long-distance watchrooms on Crunchyroll.",
@@ -330,7 +330,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 	},
 	"best-anime-to-watch-with-boyfriend": {
 		slug: "best-anime-to-watch-with-boyfriend",
-		title: "Best Anime to Watch With Boyfriend — AniDachi",
+		title: "Best Anime to Watch With Boyfriend",
 		h1: "6 Best Anime to Watch With Boyfriend in 2026",
 		description:
 			"Best anime to watch with boyfriend for action, romance, comedy, and long-distance Crunchyroll watchrooms.",
@@ -365,7 +365,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 export const guidePages: Record<string, GuidePage> = {
 	"anime-date-night-ideas-long-distance": {
 		slug: "anime-date-night-ideas-long-distance",
-		title: "Anime Date Night Ideas Long Distance — AniDachi",
+		title: "Anime Date Night Ideas Long Distance",
 		h1: "Anime Date Night Ideas Long Distance",
 		description:
 			"Anime date night ideas for long-distance couples. Plan live Crunchyroll watchrooms, cozy themes, or independent viewing followed by a call.",
@@ -448,7 +448,7 @@ export const guidePages: Record<string, GuidePage> = {
 	},
 	"watch-party-app-for-crunchyroll": {
 		slug: "watch-party-app-for-crunchyroll",
-		title: "Watch Party App for Crunchyroll — AniDachi",
+		title: "Watch Party App for Crunchyroll",
 		h1: "Watch Party App for Crunchyroll",
 		description:
 			"Looking for a watch party app for Crunchyroll? Compare AniDachi, Teleparty, Crunchyroll Party, and Discord for anime groups.",
@@ -526,7 +526,7 @@ export const guidePages: Record<string, GuidePage> = {
 	},
 	"crunchyroll-group-watch": {
 		slug: "crunchyroll-group-watch",
-		title: "Crunchyroll Group Watch — AniDachi",
+		title: "Crunchyroll Group Watch",
 		h1: "Crunchyroll Group Watch",
 		description:
 			"Crunchyroll group watch guide: what exists, what Crunchyroll lacks, and how AniDachi creates synced anime watchrooms.",
@@ -594,7 +594,7 @@ export const guidePages: Record<string, GuidePage> = {
 	},
 	"crunchyroll-watch-party-free": {
 		slug: "crunchyroll-watch-party-free",
-		title: "Crunchyroll Watch Party Free — AniDachi",
+		title: "Crunchyroll Watch Party Free",
 		h1: "Crunchyroll Watch Party Free",
 		description:
 			"Crunchyroll watch party free options compared: AniDachi free joining, Crunchyroll Party, Teleparty, and Discord screen share.",
@@ -670,7 +670,7 @@ export const guidePages: Record<string, GuidePage> = {
 	},
 	"how-to-watch-anime-together-without-screen-share": {
 		slug: "how-to-watch-anime-together-without-screen-share",
-		title: "Watch Anime Together Without Screen Share — AniDachi",
+		title: "Watch Anime Together Without Screen Share",
 		h1: "How to Watch Anime Together Without Screen Share",
 		description:
 			"How to watch anime together without screen share: use synced Crunchyroll watchrooms so everyone streams locally in better quality.",
@@ -743,7 +743,7 @@ export const guidePages: Record<string, GuidePage> = {
 	},
 	"anime-watch-party-app": {
 		slug: "anime-watch-party-app",
-		title: "Anime Watch Party App — AniDachi",
+		title: "Anime Watch Party App",
 		h1: "Anime Watch Party App",
 		description:
 			"Looking for an anime watch party app? Compare live sync, chat, calling, Crunchyroll support, and free joining with AniDachi.",

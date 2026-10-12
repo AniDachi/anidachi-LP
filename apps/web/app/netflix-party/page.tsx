@@ -7,9 +7,9 @@ import {
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
   title: "Netflix Party — The Old Name for a Netflix Watch Party",
@@ -120,7 +120,7 @@ export default function NetflixPartyPage() {
           Teleparty Netflix
         </Link>{" "}
         and{" "}
-        <Link href="/guides/netflix-teleparty" className="text-brand-orange hover:underline">
+        <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
           Netflix Teleparty
         </Link>
         . Whether Netflix itself includes a party mode is{" "}

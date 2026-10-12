@@ -3,15 +3,15 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import { PRICING_DISCORD_COMPARE_FAQ } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Crunchyroll Watch Party With Discord — Voice + Sync Guide (2026) | AniDachi",
+  title: "Crunchyroll Watch Party With Discord — Voice + Sync Guide (2026)",
   description:
     "How to watch Crunchyroll with friends on Discord: use Discord voice for reactions and AniDachi for synced playback — not Go Live screen share.",
   alternates: { canonical: "/guides/crunchyroll-watch-party-with-discord" },

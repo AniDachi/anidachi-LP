@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Shoujo Anime With Friends (2026) | AniDachi",
+  title: "Watch Shoujo Anime With Friends (2026)",
   description:
     "Shoujo anime is made for shared emotional moments — sync heartfelt episodes live on Crunchyroll with AniDachi. Fruits Basket, Sailor Moon, Nana, and more.",
   alternates: { canonical: "/watch-shoujo-anime-with-friends" },

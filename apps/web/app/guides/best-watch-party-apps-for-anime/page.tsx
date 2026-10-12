@@ -3,18 +3,18 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_COMPARE_OVERVIEW,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Watch Party Apps for Anime (2026 Ranked) | AniDachi",
+  title: "Best Watch Party Apps for Anime (2026 Ranked)",
   description:
     "Ranked watch party apps for anime: AniDachi, Teleparty, Crunchyroll Party, Discord, Rave — with a comparison table and when to pick each. Deeper than a thin app landing page.",
   alternates: { canonical: "/guides/best-watch-party-apps-for-anime" },

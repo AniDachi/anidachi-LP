@@ -1,6 +1,6 @@
 /**
- * Single source for the public site origin (protocol + host, no path, no trailing slash).
- * Used by metadataBase, sitemap, robots, JSON-LD, and absolute OG/article image URLs.
+ * Deployment origin for runtime consumers, plus a separate public SEO identity.
+ * SEO normalization must not alter OAuth/email callback fallback addresses.
  */
 
 /** Production primary host (Vercel redirects apex → www). */
@@ -39,6 +39,23 @@ export function getResolvedSiteOrigin(): string {
   }
 
   return DEFAULT_ORIGIN;
+}
+
+/**
+ * Search-engine identity only. Keep the existing www primary host even when an
+ * older public env value still names the apex. Runtime consumers retain their
+ * configured origin; staging, previews and local origins remain independent.
+ */
+export function getSeoSiteOrigin(): string {
+  const origin = getResolvedSiteOrigin();
+  if (isRobotsIndexingDisabled()) return origin;
+  if (!process.env.NEXT_PUBLIC_SITE_URL?.trim() && process.env.VERCEL_ENV === "production") {
+    return DEFAULT_ORIGIN;
+  }
+  const hostname = new URL(origin).hostname;
+  return hostname === "anidachi.app" || hostname === "www.anidachi.app"
+    ? DEFAULT_ORIGIN
+    : origin;
 }
 
 /**

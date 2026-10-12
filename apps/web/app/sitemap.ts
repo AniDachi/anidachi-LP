@@ -1,13 +1,11 @@
 import type { MetadataRoute } from "next";
-import fs from "node:fs";
-import path from "node:path";
 import { animeList } from "@/lib/anime-data";
 import {
   discoverStaticSitemapUrlPaths,
   staticPathsToSitemapEntries,
 } from "@/lib/sitemap-discovery";
 import {
-  getResolvedSiteOrigin,
+  getSeoSiteOrigin,
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
 
@@ -19,18 +17,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [];
   }
 
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const staticPaths = discoverStaticSitemapUrlPaths();
   const staticRoutes = staticPathsToSitemapEntries(siteUrl, staticPaths);
-
-  let watchLastModified: Date | undefined;
-  try {
-    watchLastModified = fs.statSync(
-      path.join(process.cwd(), "app/watch/[slug]/page.tsx")
-    ).mtime;
-  } catch {
-    watchLastModified = undefined;
-  }
 
   const TOP_ANIME_SLUGS = new Set([
     "attack-on-titan",
@@ -45,15 +34,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "hunter-x-hunter",
   ]);
 
-  const animeRoutes: MetadataRoute.Sitemap = animeList.map((anime) => {
-    const entry: MetadataRoute.Sitemap[number] = {
-      url: `${siteUrl}/watch/${anime.slug}-with-friends`,
-      changeFrequency: "monthly",
-      priority: TOP_ANIME_SLUGS.has(anime.slug) ? 0.8 : 0.6,
-    };
-    if (watchLastModified) entry.lastModified = watchLastModified;
-    return entry;
-  });
+  const animeRoutes: MetadataRoute.Sitemap = animeList.map((anime) => ({
+    url: `${siteUrl}/watch/${anime.slug}-with-friends`,
+    changeFrequency: "monthly",
+    priority: TOP_ANIME_SLUGS.has(anime.slug) ? 0.8 : 0.6,
+  }));
 
   const combined = [...staticRoutes, ...animeRoutes].sort((a, b) =>
     a.url.localeCompare(b.url)

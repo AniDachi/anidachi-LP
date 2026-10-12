@@ -7,9 +7,9 @@ import {
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
   title: "Netflix Watch Party — Watch the Same Title Together",
@@ -101,7 +101,7 @@ export default function NetflixWatchPartyPage() {
           position: 7,
         },
         { name: "Teleparty Netflix", url: "/guides/teleparty-netflix", position: 8 },
-        { name: "Netflix Teleparty", url: "/guides/netflix-teleparty", position: 9 },
+        { name: "Netflix Teleparty", url: "/guides/teleparty-netflix", position: 9 },
         {
           name: "Screen share Netflix on Discord",
           url: "/guides/how-to-screen-share-netflix-on-discord",
@@ -193,7 +193,7 @@ export default function NetflixWatchPartyPage() {
           Teleparty Netflix
         </Link>
         , and{" "}
-        <Link href="/guides/netflix-teleparty" className="text-brand-orange hover:underline">
+        <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
           Netflix Teleparty
         </Link>
         . Discord is{" "}

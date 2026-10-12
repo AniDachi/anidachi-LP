@@ -6,10 +6,10 @@ import {
 	SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/guides/discord-go-live";
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
 	title: "Discord Go Live for a Watch Party",
@@ -147,7 +147,7 @@ export default function DiscordGoLivePage() {
 						label: "How to screen share on Discord",
 					},
 					{
-						href: "/guides/how-to-stream-anime-on-discord",
+						href: "/guides/how-to-watch-anime-with-friends-on-discord",
 						label: "How to stream anime on Discord",
 					},
 				]}

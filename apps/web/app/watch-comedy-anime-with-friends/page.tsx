@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Comedy Anime With Friends (2026) | AniDachi",
+  title: "Watch Comedy Anime With Friends (2026)",
   description:
     "Laugh louder together — AniDachi live rooms sync Crunchyroll comedy anime with chat, reactions, and voice/video. Spy x Family, KonoSuba, Gintama, and more.",
   alternates: { canonical: "/watch-comedy-anime-with-friends" },
@@ -105,6 +105,13 @@ export default function WatchComedyAnimeWithFriendsPage() {
           and share your reactions through chat, voice, and video.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-comedy-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best comedy anime to watch with friends
+        </Link>
+        .
       </p>
 
       <h2

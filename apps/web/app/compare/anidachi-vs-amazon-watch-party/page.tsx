@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import { PRICING_AMAZON_SUBSCRIPTION_ROW } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Amazon Watch Party for Anime (2026) | AniDachi",
+  title: "AniDachi vs Amazon Watch Party for Anime (2026)",
   description:
     "AniDachi vs Amazon Prime Video Watch Together for anime watch parties — Crunchyroll support, live sync, personal history, and which fits your group.",
   alternates: { canonical: "/compare/anidachi-vs-amazon-watch-party" },

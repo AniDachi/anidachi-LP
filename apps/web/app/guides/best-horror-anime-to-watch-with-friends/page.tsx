@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Horror Anime to Watch With Friends (2026) | AniDachi",
+  title: "Best Horror Anime to Watch With Friends (2026)",
   description:
     "Best horror anime to watch with friends — Parasyte, Berserk, Hell's Paradise & more. Sync Crunchyroll with your friends and react to every terrifying moment together.",
   alternates: {
@@ -127,6 +127,13 @@ export default function BestHorrorAnimeWithFriendsPage() {
         These picks are sorted from most accessible to most intense — match
         the selection to your group&apos;s tolerance and schedule the debrief
         time accordingly.
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Ready to host one of these? The{" "}
+        <Link href="/watch-horror-anime-with-friends" className="text-brand-orange hover:underline">
+          horror anime watch party guide
+        </Link>{" "}
+        covers setup, pacing, and discussion prompts.
       </p>
 
       {/* ── SECTION 1: ACCESSIBLE ────────────────────────── */}

@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { animeList, getAnimeByGenre, type AnimeEntry } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Shonen Anime With Friends (2026) | AniDachi",
+  title: "Watch Shonen Anime With Friends (2026)",
   description:
     "Watch shonen anime with friends on Crunchyroll — Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter, and more. Live rooms with synced playback, chat, and reactions.",
   alternates: { canonical: "/watch-shonen-anime-with-friends" },
@@ -165,7 +165,11 @@ export default function WatchShonenAnimeWithFriendsPage() {
         Shonen anime centers on rivalry, training arcs, and payoff fights that
         land hardest when someone else is watching. Weekly episode drops create
         natural club cadence, and tournament or sports structures give groups
-        prediction games before every match.
+        prediction games before every match. New to the term? Read{" "}
+        <Link href="/glossary/shonen-anime" className="text-brand-orange hover:underline">
+          what shonen anime means
+        </Link>
+        .
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms support live sync for premiere nights. For long-run

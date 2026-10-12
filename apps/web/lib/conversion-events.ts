@@ -51,6 +51,9 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
   if (path.startsWith("/glossary/")) {
     return "glossary";
   }
+  if (path.startsWith("/tools/")) {
+    return "anime";
+  }
   if (
     path === "/watch-anime-together" ||
     path === "/watch-crunchyroll-together" ||

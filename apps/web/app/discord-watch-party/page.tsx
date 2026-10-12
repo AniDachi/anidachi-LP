@@ -7,9 +7,9 @@ import {
 	SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
 	title: "Discord Watch Party — Voice on Discord, Sync on AniDachi",
@@ -196,10 +196,6 @@ export default function DiscordWatchPartyPage() {
 						label: "Watch anime on Discord",
 					},
 					{ href: "/guides/discord-go-live", label: "Discord Go Live" },
-					{
-						href: "/guides/how-to-stream-anime-on-discord",
-						label: "How to stream anime on Discord",
-					},
 					{
 						href: "/guides/discord-watch-together-activity",
 						label: "Discord Watch Together Activity",

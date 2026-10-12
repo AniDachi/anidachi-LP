@@ -241,6 +241,8 @@ export default function WatchCrunchyrollTogetherPage() {
 						how to watch Crunchyroll with friends
 					</Link>
 					. Start from the <Link href="/extension">AniDachi install page</Link>.
+					Friends join free; the host needs Plus or Pro, including a trial.{" "}
+					<Link href="/pricing">Compare plans</Link>.
 				</SeoGuideAnswer>
 
 				<h2 id="quick-answers" className="scroll-mt-24">
@@ -319,7 +321,7 @@ export default function WatchCrunchyrollTogetherPage() {
 						},
 						{
 							name: "Create a watchroom",
-							text: "With active Plus, Pro, or trial access, create a room and share its invite link. Free friends can join.",
+							text: "With active Plus, Pro, or trial access (see /pricing), create a room and share its invite link. Free friends can join.",
 						},
 						{
 							name: "Watch together",
@@ -476,7 +478,7 @@ export default function WatchCrunchyrollTogetherPage() {
 						how to remove shows from Continue Watching on Crunchyroll
 					</Link>
 					. Anime series and leftover seasons are on{" "}
-					<Link href="/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll">
+					<Link href="/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll">
 						how to remove anime from Continue Watching
 					</Link>
 					. The episode list itself is{" "}
@@ -508,6 +510,10 @@ export default function WatchCrunchyrollTogetherPage() {
 						{
 							href: "/watch-anime-together",
 							label: "Watch Anime Together (vertical hub)",
+						},
+						{
+							href: "/tools/crunchyroll-schedule",
+							label: "Crunchyroll release schedule this week",
 						},
 						{
 							href: "/watch-youtube-together",

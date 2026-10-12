@@ -12,18 +12,18 @@ import {
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_FREE_TIER_TABLE,
   PRICING_COMPARE_OVERVIEW,
 } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Teleparty Alternatives for Anime (2026 Ranked) | AniDachi",
+  title: "Best Teleparty Alternatives for Anime (2026 Ranked)",
   description:
     "Ranked Teleparty alternatives for anime: AniDachi for Crunchyroll live rooms, then Crunchyroll Party, Discord, and Syncplay. When to pick each.",
   alternates: { canonical: "/guides/best-teleparty-alternatives-for-anime" },

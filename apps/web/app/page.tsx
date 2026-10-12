@@ -6,6 +6,11 @@ import {
 	HowToJsonLd,
 } from "@/components/json-ld";
 import { homeFAQ } from "@/lib/home-faq";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+	alternates: { canonical: "/" },
+};
 
 export const revalidate = 300;
 

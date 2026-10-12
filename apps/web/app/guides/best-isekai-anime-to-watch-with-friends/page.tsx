@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
@@ -98,6 +98,13 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
           commitment your group needs, from a single weekend to a multi-month
           marathon.
         </strong>
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Ready to host one of these? The{" "}
+        <Link href="/watch-isekai-anime-with-friends" className="text-brand-orange hover:underline">
+          isekai anime watch party guide
+        </Link>{" "}
+        covers setup, pacing, and discussion prompts.
       </p>
 
       {/* ── SECTION 1 ───────────────────────────────────── */}

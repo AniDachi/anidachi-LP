@@ -5,7 +5,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { PRICING_LONG_DISTANCE_SNIPPET } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Anime With Your Long Distance Partner (2026) | AniDachi",
+  title: "Watch Anime With Your Long Distance Partner (2026)",
   description:
     "Watch anime with a long-distance boyfriend or girlfriend: sync Crunchyroll live, plan a weekly date night, and arrange independent catch-up when schedules differ.",
   alternates: { canonical: "/watch-anime-long-distance-boyfriend-girlfriend" },

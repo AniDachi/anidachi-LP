@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import { PRICING_COMPARE_OVERVIEW } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Is Crunchyroll Party Worth It? (2026 Evaluation) | AniDachi",
+  title: "Is Crunchyroll Party Worth It? (2026 Evaluation)",
   description:
     "Compare Crunchyroll Party with AniDachi for live anime nights: sync, chat, cameras, microphones, personal history, and hosting requirements.",
   alternates: { canonical: "/guides/is-crunchyroll-party-worth-it" },

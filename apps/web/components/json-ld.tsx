@@ -1,4 +1,4 @@
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 interface JsonLdProps {
@@ -18,7 +18,7 @@ export function JsonLd({ data }: JsonLdProps) {
 }
 
 export function OrganizationJsonLd() {
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const organizationId = `${siteUrl}/#organization`;
   const websiteId = `${siteUrl}/#website`;
   const sameAs = PUBLIC_SOCIAL_LINKS.map((link) => link.href);
@@ -53,7 +53,7 @@ export function OrganizationJsonLd() {
 }
 
 export function SoftwareApplicationJsonLd() {
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const data = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -61,7 +61,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Chrome, Web",
     description:
-      "Join friends for free on Crunchyroll and YouTube. Host rooms with Plus or Pro, including during a trial, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Netflix and async catch-up are coming soon.",
+      "Join friends for free on Crunchyroll and YouTube. Host rooms with Plus or Pro, including during a trial, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Async catch-up is coming soon.",
     url: siteUrl,
     offers: {
       "@type": "AggregateOffer",
@@ -154,7 +154,7 @@ export function BreadcrumbJsonLd({
 }: {
   items: { name: string; url: string }[];
 }) {
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const data = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -184,7 +184,7 @@ export function ArticleJsonLd({
   /** Absolute URLs preferred (e.g. MAL CDN poster). Helps Article/carousel eligibility in Search. */
   image?: string | string[];
 }) {
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const images =
     image == null
       ? undefined
@@ -250,7 +250,7 @@ function MediaJsonLd({
   sameAs,
   inLanguage,
 }: MediaSchemaProps) {
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": type,
@@ -291,7 +291,7 @@ export function ItemListJsonLd({
   name: string;
   items: { name: string; url: string; position: number }[];
 }) {
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const data = {
     "@context": "https://schema.org",
     "@type": "ItemList",

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
@@ -207,6 +207,11 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
           Related guides
         </h2>
         <ul className="space-y-2 text-brand-orange mb-8">
+          <li>
+            <Link href="/tools/crunchyroll-schedule" className="hover:underline">
+              Crunchyroll release schedule this week
+            </Link>
+          </li>
           <li>
             <Link href="/guides/how-to-run-an-online-anime-club" className="hover:underline">
               How to run an online anime club

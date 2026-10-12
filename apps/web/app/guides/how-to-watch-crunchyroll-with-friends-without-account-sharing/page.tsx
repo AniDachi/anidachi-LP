@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
   PRICING_GROUP_ONBOARDING,
 } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch Crunchyroll With Friends Without Account Sharing (2026) | AniDachi",
+  title: "Watch Crunchyroll With Friends Without Account Sharing (2026)",
   description:
     "Legal per-user model for Crunchyroll group watch — no password sharing. Each friend uses their own login while AniDachi syncs playback.",
   alternates: {

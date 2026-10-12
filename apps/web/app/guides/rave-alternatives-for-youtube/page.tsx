@@ -3,18 +3,18 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_FREE_TIER_TABLE,
   PRICING_RAVE_COMPARE_YOUTUBE_FAQ,
 } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Rave Alternatives for YouTube Watch Parties (2026) | AniDachi",
+  title: "Rave Alternatives for YouTube Watch Parties (2026)",
   description:
     "Looking for Rave alternatives for YouTube? Ranked options: AniDachi watchrooms, Teleparty, Watch2Gether — when to pick each for synced YouTube nights.",
   alternates: { canonical: "/guides/rave-alternatives-for-youtube" },

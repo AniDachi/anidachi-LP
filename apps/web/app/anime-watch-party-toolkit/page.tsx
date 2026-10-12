@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { genreHubItemList } from "@/lib/genre-hub-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
@@ -208,6 +208,58 @@ export default function AnimeWatchPartyToolkitPage() {
         Playbooks &amp; checklists
       </h2>
       <ul className="space-y-2 text-brand-orange mb-4">
+        <li>
+          <Link href="/tools/one-piece-how-many-episodes" className="hover:underline">
+            How many episodes does One Piece have?
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/random-anime-generator" className="hover:underline">
+            Random anime generator
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/one-piece-filler-list" className="hover:underline">
+            One Piece filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/naruto-filler-list" className="hover:underline">
+            Naruto filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/naruto-shippuden-filler-list" className="hover:underline">
+            Naruto Shippuden filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/bleach-filler-list" className="hover:underline">
+            Bleach filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/black-clover-filler-list" className="hover:underline">
+            Black Clover filler list
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/fate-watch-order" className="hover:underline">
+            Fate watch order
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/monogatari-watch-order" className="hover:underline">
+            Monogatari series watch order
+          </Link>
+        </li>
+        <li>
+          <Link href="/tools/crunchyroll-schedule" className="hover:underline">
+            Crunchyroll release schedule
+          </Link>
+        </li>
+      </ul>
+      <ul className="space-y-2 text-brand-orange mb-4">
         {toolkitItemList.slice(2).map((row) => (
           <li key={row.url}>
             <Link href={row.url} className="hover:underline">
@@ -339,6 +391,31 @@ export default function AnimeWatchPartyToolkitPage() {
         <li>
           <Link href="/glossary/crunchyroll-mega-fan" className="hover:underline">
             Crunchyroll Mega Fan tier
+          </Link>
+        </li>
+        <li>
+          <Link href="/glossary/anime-filler" className="hover:underline">
+            What is anime filler?
+          </Link>
+        </li>
+        <li>
+          <Link href="/glossary/ova-meaning" className="hover:underline">
+            What does OVA mean?
+          </Link>
+        </li>
+        <li>
+          <Link href="/glossary/shonen-anime" className="hover:underline">
+            What is shonen anime?
+          </Link>
+        </li>
+        <li>
+          <Link href="/glossary/anime-marathon" className="hover:underline">
+            What is an anime marathon?
+          </Link>
+        </li>
+        <li>
+          <Link href="/glossary/dub-vs-sub-watch-party" className="hover:underline">
+            Dub vs sub for a watch party
           </Link>
         </li>
       </ul>

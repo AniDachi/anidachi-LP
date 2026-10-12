@@ -9,9 +9,9 @@ import {
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const articleImage = `${SITE_URL}/opengraph-image.png`;
 const PAGE_PATH =
 	"/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll";
@@ -293,13 +293,6 @@ export default function HowToRemoveShowsFromContinueWatchingPage() {
 						className="text-brand-orange hover:underline"
 					>
 						resume anime
-					</Link>
-					. Series and season menus are on{" "}
-					<Link
-						href="/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll"
-						className="text-brand-orange hover:underline"
-					>
-						how to remove anime from Continue Watching
 					</Link>
 					.
 				</p>

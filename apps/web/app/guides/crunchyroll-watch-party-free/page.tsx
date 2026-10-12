@@ -11,18 +11,18 @@ import {
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_IS_ANIDACHI_FREE_ANSWER,
   PRICING_PLUS_SHORT,
 } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Free Crunchyroll Watch Party — Free Tier Options (2026) | AniDachi",
+  title: "Free Crunchyroll Watch Party — Free Tier Options (2026)",
   description:
     "Compare free Crunchyroll watch party options. AniDachi guests join free; hosts need Plus or Pro, including an active trial. Compare Crunchyroll Party and Discord.",
   alternates: { canonical: "/guides/crunchyroll-watch-party-free" },

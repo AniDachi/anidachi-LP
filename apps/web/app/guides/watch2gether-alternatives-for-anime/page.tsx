@@ -3,18 +3,18 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_COMPARE_OVERVIEW,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch2Gether Alternatives for Anime (2026 Ranked) | AniDachi",
+  title: "Watch2Gether Alternatives for Anime (2026 Ranked)",
   description:
     "Ranked Watch2Gether alternatives for anime on Crunchyroll — AniDachi, Crunchyroll Party, Teleparty, and more. Distinct from the 1:1 AniDachi vs Watch2Gether compare page.",
   alternates: { canonical: "/guides/watch2gether-alternatives-for-anime" },

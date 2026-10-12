@@ -16,7 +16,7 @@ import {
   ANIDACHI_OG_IMAGE_PATH,
 } from "@/lib/brand";
 import {
-  getResolvedSiteOrigin,
+  getSeoSiteOrigin,
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
 import "./globals.css";
@@ -40,14 +40,14 @@ export const metadata: Metadata = {
     template: "%s | AniDachi",
   },
   description:
-    "AniDachi lets you watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, and chat in real-time. Netflix and async catch-up are coming soon.",
-  metadataBase: new URL(getResolvedSiteOrigin()),
-  alternates: { canonical: "/" },
+    "Watch Crunchyroll and YouTube together with friends. AniDachi syncs playback in desktop Chrome with chat and reactions. Friends join free.",
+  metadataBase: new URL(getSeoSiteOrigin()),
+  // No root canonical: a page without its own `alternates.canonical` must not inherit the homepage URL.
   openGraph: {
     title:
       "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     description:
-      "Create watchrooms for Crunchyroll and YouTube, sync with friends, and chat in real-time. Netflix and async catch-up are coming soon.",
+      "Create watchrooms for Crunchyroll and YouTube, sync playback with friends, and chat in real time.",
     type: "website",
     siteName: "AniDachi",
     images: [
@@ -59,11 +59,9 @@ export const metadata: Metadata = {
       },
     ],
   },
+  // No root twitter title/description: cards fall back to each page's og:title and og:description.
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi – Watch Anime Together",
-    description:
-      "Watchrooms for Crunchyroll and YouTube — live sync and chat in desktop Chrome. Netflix and async catch-up are coming soon.",
     images: [ANIDACHI_OG_IMAGE_PATH],
   },
   robots: {
