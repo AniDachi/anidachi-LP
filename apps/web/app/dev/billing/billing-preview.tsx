@@ -55,34 +55,56 @@ export function BillingPreview() {
 	const isCardless = variant !== "Card trial";
 	const enabled = variant === "Renewal enabled";
 	const ended = variant === "Trial ended";
-	const view: BillingOverview = isCardless
+	const paid = variant === "Paid" || variant === "Renewal off";
+	const view: BillingOverview = paid
 		? {
 				...example,
-				planCode: ended ? "free" : "plus",
 				subscriptions: [
 					{
 						...example.subscriptions[0],
-						status: ended ? "canceled" : "trialing",
-						cancelAtPeriodEnd: !enabled,
-						canCancel: false,
-						canRestoreRenewal: false,
+						trial: undefined,
+						status: "active",
+						currentPeriodEnd: "2030-02-04T16:00:00Z",
 						canChangeTrialPlan: false,
+						canCancel: variant === "Paid",
+						canRestoreRenewal: variant === "Renewal off",
+						canSwitchToYearly: true,
+						cancelAtPeriodEnd: variant === "Renewal off",
 						price: {
 							...PUBLISHED_PRICING.monthly.plus,
 							billingPeriod: "monthly",
 						},
-						trial: {
-							mode: "cardless",
-							stage: ended ? "ended" : "trial",
-							endsAt: "2030-01-04T16:00:00Z",
-							pendingUntil: "2030-01-04T18:00:00Z",
-							renewalState: enabled ? "enabled" : "not_enabled",
-							renewalEnabled: enabled,
-						},
 					},
 				],
 			}
-		: example;
+		: isCardless
+			? {
+					...example,
+					planCode: ended ? "free" : "plus",
+					subscriptions: [
+						{
+							...example.subscriptions[0],
+							status: ended ? "canceled" : "trialing",
+							cancelAtPeriodEnd: !enabled,
+							canCancel: false,
+							canRestoreRenewal: false,
+							canChangeTrialPlan: false,
+							price: {
+								...PUBLISHED_PRICING.monthly.plus,
+								billingPeriod: "monthly",
+							},
+							trial: {
+								mode: "cardless",
+								stage: ended ? "ended" : "trial",
+								endsAt: "2030-01-04T16:00:00Z",
+								pendingUntil: "2030-01-04T18:00:00Z",
+								renewalState: enabled ? "enabled" : "not_enabled",
+								renewalEnabled: enabled,
+							},
+						},
+					],
+				}
+			: example;
 	const previewAction = async () => {
 		setNotice("Preview only. No subscription changes were made.");
 	};
@@ -129,23 +151,28 @@ export function BillingPreview() {
 				className="flex flex-wrap justify-center gap-2 px-4 pb-4"
 				aria-label="Preview state"
 			>
-				{["Card trial", "Cardless trial", "Renewal enabled", "Trial ended"].map(
-					(label) => (
-						<button
-							key={label}
-							type="button"
-							className="ac-button"
-							aria-pressed={variant === label}
-							onClick={() => {
-								setVariant(label);
-								setQuote(null);
-								setNotice(null);
-							}}
-						>
-							{label}
-						</button>
-					),
-				)}
+				{[
+					"Card trial",
+					"Cardless trial",
+					"Renewal enabled",
+					"Trial ended",
+					"Paid",
+					"Renewal off",
+				].map((label) => (
+					<button
+						key={label}
+						type="button"
+						className="ac-button"
+						aria-pressed={variant === label}
+						onClick={() => {
+							setVariant(label);
+							setQuote(null);
+							setNotice(null);
+						}}
+					>
+						{label}
+					</button>
+				))}
 			</div>
 			<div className="account-frame">
 				<aside className="account-sidebar">

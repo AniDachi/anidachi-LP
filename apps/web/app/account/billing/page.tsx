@@ -19,6 +19,7 @@ export default async function BillingPage({
 }: {
 	searchParams: Promise<{
 		billing?: string;
+		manage?: string;
 		trial_setup?: string;
 		trial_setup_cancel?: string;
 	}>;
@@ -58,6 +59,7 @@ export default async function BillingPage({
 			key={session.userId}
 			ownerUserId={session.userId}
 			initial={initial}
+			manageRequested={params.manage === "1"}
 			returnedFromPortal={params.billing === "return"}
 			trialSetupReturn={
 				validSetupId

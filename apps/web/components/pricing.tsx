@@ -260,7 +260,7 @@ export function Pricing({
 				return;
 			}
 			if (currentOffer.action === "manage") {
-				window.location.href = "/account/billing";
+				window.location.href = "/account/billing?manage=1";
 				return;
 			}
 			if (currentOffer.action === "sign_in") {
