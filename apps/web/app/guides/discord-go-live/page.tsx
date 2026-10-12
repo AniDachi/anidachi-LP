@@ -147,7 +147,7 @@ export default function DiscordGoLivePage() {
 						label: "How to screen share on Discord",
 					},
 					{
-						href: "/guides/how-to-stream-anime-on-discord",
+						href: "/guides/how-to-watch-anime-with-friends-on-discord",
 						label: "How to stream anime on Discord",
 					},
 				]}

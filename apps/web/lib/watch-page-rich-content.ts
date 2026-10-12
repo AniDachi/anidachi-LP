@@ -222,12 +222,30 @@ export function watchPageResourceItemList(
   ];
 
   const gs = genreSet(genres);
-  const genreHubs: { name: string; url: string }[] = [];
-  if (has(gs, "action")) genreHubs.push({ name: "Watch action anime with friends — genre hub", url: "/watch-action-anime-with-friends" });
-  if (has(gs, "romance")) genreHubs.push({ name: "Watch romance anime with friends — genre hub", url: "/watch-romance-anime-with-friends" });
-  if (has(gs, "comedy")) genreHubs.push({ name: "Watch comedy anime with friends — genre hub", url: "/watch-comedy-anime-with-friends" });
-  if (has(gs, "sports")) genreHubs.push({ name: "Watch sports anime with friends — genre hub", url: "/watch-sports-anime-with-friends" });
-  if (has(gs, "mystery", "psychological")) genreHubs.push({ name: "Watch mystery anime with friends — genre hub", url: "/watch-mystery-anime-with-friends" });
+  // Most specific genres first, so all 15 genre hubs get links from the titles they list.
+  const hubByGenre: [string[], string, string][] = [
+    [["isekai"], "isekai", "Isekai"],
+    [["mecha"], "mecha", "Mecha"],
+    [["horror"], "horror", "Horror"],
+    [["sports"], "sports", "Sports"],
+    [["shoujo", "shojo"], "shoujo", "Shoujo"],
+    [["slice of life"], "slice-of-life", "Slice of life"],
+    [["psychological"], "psychological", "Psychological"],
+    [["mystery", "thriller"], "mystery", "Mystery"],
+    [["romance", "romantic comedy"], "romance", "Romance"],
+    [["sci-fi", "time travel"], "sci-fi", "Sci-fi"],
+    [["supernatural"], "supernatural", "Supernatural"],
+    [["fantasy", "dark fantasy"], "fantasy", "Fantasy"],
+    [["comedy"], "comedy", "Comedy"],
+    [["shonen", "shounen"], "shonen", "Shonen"],
+    [["action"], "action", "Action"],
+  ];
+  const genreHubs = hubByGenre
+    .filter(([needles]) => has(gs, ...needles))
+    .map(([, slug, label]) => ({
+      name: `Watch ${label.toLowerCase()} anime with friends — genre hub`,
+      url: `/watch-${slug}-anime-with-friends`,
+    }));
 
   const extra = genreHubs.slice(0, 2).map((h, i) => ({ ...h, position: base.length + i + 1 }));
   return [...base, ...extra];

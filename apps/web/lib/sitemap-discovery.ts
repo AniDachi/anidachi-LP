@@ -11,17 +11,23 @@ const EXCLUDED_TOP_LEVEL = new Set<string>(INTERNAL_TOOL_APP_SEGMENTS);
 /** URL paths that must not appear in the sitemap (e.g. `noindex` pages). */
 const EXCLUDED_URL_PATHS = new Set([
   "/success",
-  "/account",
-  "/account/friends",
-  "/account/invites",
-  "/account/watch-library",
+  "/checkout",
   "/login",
   "/join",
   "/join/complete",
   "/friends",
   "/extension/connect",
-  "/extension",
 ]);
+
+/** Private trees: everything under these is noindex, gated, or dev-only (404 in production). */
+const EXCLUDED_URL_PREFIXES = ["/account", "/dev"];
+
+export function isExcludedFromSitemap(urlPath: string): boolean {
+  return (
+    EXCLUDED_URL_PATHS.has(urlPath) ||
+    EXCLUDED_URL_PREFIXES.some((prefix) => urlPath === prefix || urlPath.startsWith(`${prefix}/`))
+  );
+}
 
 function isDynamicSegment(segment: string): boolean {
   return segment.startsWith("[") && segment.endsWith("]");
@@ -190,45 +196,24 @@ export function discoverStaticSitemapUrlPaths(): string[] {
   for (const rel of rels) {
     const urlPath = relPathToUrlPath(rel);
     if (urlPath == null) continue;
-    if (EXCLUDED_URL_PATHS.has(urlPath)) continue;
+    if (isExcludedFromSitemap(urlPath)) continue;
     urls.add(urlPath);
   }
   return [...urls].sort((a, b) => a.localeCompare(b));
-}
-
-function resolvePageModuleAbsPath(urlPath: string): string | null {
-  const baseDir =
-    urlPath === "/"
-      ? APP_DIR
-      : path.join(APP_DIR, ...urlPath.slice(1).split("/").filter(Boolean));
-  for (const name of ["page.tsx", "page.ts", "page.mdx"]) {
-    const abs = path.join(baseDir, name);
-    if (fs.existsSync(abs)) return abs;
-  }
-  return null;
 }
 
 export function staticPathsToSitemapEntries(
   siteUrl: string,
   urlPaths: string[]
 ): MetadataRoute.Sitemap {
+  // No lastModified: file mtimes reset on every Vercel clone, so they would claim every page changed
+  // at each deploy and teach Google to ignore lastmod. Add it back only from real content dates.
   return urlPaths.map((urlPath) => {
-    const absPage = resolvePageModuleAbsPath(urlPath);
     const meta = inferSitemapMeta(urlPath);
-    let lastModified: Date | undefined;
-    if (absPage) {
-      try {
-        lastModified = fs.statSync(absPage).mtime;
-      } catch {
-        lastModified = undefined;
-      }
-    }
-    const entry: MetadataRoute.Sitemap[number] = {
+    return {
       url: `${siteUrl}${urlPath}`,
       changeFrequency: meta.changeFrequency,
       priority: meta.priority,
     };
-    if (lastModified) entry.lastModified = lastModified;
-    return entry;
   });
 }

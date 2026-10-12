@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch in a Watch Party (2026) | AniDachi",
+  title: "Best Anime to Watch in a Watch Party (2026)",
   description:
     "Best anime for watch parties on Crunchyroll — crowd-pleasing picks, premiere-night series, and one-session films. Host with AniDachi synced watchrooms.",
   alternates: { canonical: "/guides/best-anime-to-watch-in-a-watch-party" },

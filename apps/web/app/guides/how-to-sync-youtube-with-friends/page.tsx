@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Sync YouTube With Friends (2026) | AniDachi",
+  title: "How to Sync YouTube With Friends (2026)",
   description:
     "Sync YouTube playback with friends using AniDachi watchrooms — each person streams full quality on their own tab. Setup in minutes.",
   alternates: { canonical: "/guides/how-to-sync-youtube-with-friends" },

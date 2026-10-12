@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Binge With Friends This Weekend (2026) | AniDachi",
+  title: "Best Anime to Binge With Friends This Weekend (2026)",
   description:
     "Best anime to binge with friends this weekend — Death Note, Steins;Gate, Erased, Attack on Titan S1 & more. Complete series under 30 episodes, group-synced.",
   alternates: {

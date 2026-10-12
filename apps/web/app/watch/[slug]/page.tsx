@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { WATCH_ENRICHMENT } from "@/lib/watch-page-enrichment";
 import { animeList, isMovieEntry, type AnimeEntry } from "@/lib/anime-data";
 import { getMalIdForSlug } from "@/lib/anime-mal-ids";
 import {
@@ -75,7 +76,7 @@ export const dynamic = "force-static";
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug: rawSlug } = await params;
   const anime = getAnimeBySlug(rawSlug);
-  if (!anime) return {};
+  if (!anime || !rawSlug.endsWith("-with-friends")) return {};
 
   const malId = getMalIdForSlug(anime.slug);
   const jikanBundle =
@@ -142,6 +143,9 @@ function buildToc(
       label: `Is ${anime.title} good to watch with a group?`,
       level: 2,
     },
+    ...(WATCH_ENRICHMENT[anime.slug]
+      ? [{ id: "group-plan", label: `${anime.title} at a glance`, level: 2 as const }]
+      : []),
     { id: "pacing", label: "Pacing for your crew", level: 2 },
     { id: "discussion-tips", label: "Discussion tips", level: 2 },
     { id: "spoilers", label: "How to avoid spoilers", level: 2 },
@@ -167,6 +171,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
   const { slug: rawSlug } = await params;
   const anime = getAnimeBySlug(rawSlug);
   if (!anime) notFound();
+  // `/watch/naruto` is the same page as `/watch/naruto-with-friends`; keep one URL.
+  if (!rawSlug.endsWith("-with-friends")) permanentRedirect(`/watch/${anime.slug}-with-friends`);
 
   const malId = getMalIdForSlug(anime.slug);
   const jikanBundle =
@@ -195,7 +201,10 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
   const metaDescription = buildWatchPageMetaDescription(anime);
   const howToSteps = buildWatchHowToSteps(anime);
   const resourceItemList = watchPageResourceItemList(anime.genres);
-  const faq = buildWatchPageFaq(anime, episodesDisplay);
+  const enrichment = WATCH_ENRICHMENT[anime.slug];
+  const faq = enrichment
+    ? [...enrichment.faq, ...buildWatchPageFaq(anime, episodesDisplay)]
+    : buildWatchPageFaq(anime, episodesDisplay);
   const dateModified = getPageLastModified();
   const isMovie = isMovieEntry(anime);
 
@@ -228,8 +237,6 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           description={anime.synopsis}
           genres={schemaGenres}
           image={posterUrl}
-          ratingValue={jikan?.score}
-          ratingCount={jikan?.members}
           url={`/watch/${rawSlug}`}
           sameAs={malId != null ? `https://myanimelist.net/anime/${malId}` : null}
           inLanguage="ja"
@@ -242,8 +249,6 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           genres={schemaGenres}
           numberOfEpisodes={jikan?.episodes}
           image={posterUrl}
-          ratingValue={jikan?.score}
-          ratingCount={jikan?.members}
           url={`/watch/${rawSlug}`}
           sameAs={malId != null ? `https://myanimelist.net/anime/${malId}` : null}
           inLanguage="ja"
@@ -277,7 +282,9 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
-          {isMovie
+          {anime.notOnCrunchyroll
+            ? `${anime.title} is not on Crunchyroll, so AniDachi can't sync it today. AniDachi syncs Crunchyroll and YouTube; for a ${isMovie ? "movie" : "group"} night, pick a related title below that is on Crunchyroll.`
+            : isMovie
             ? `Yes — watch ${anime.title} with friends as a live movie night using AniDachi on Crunchyroll. Everyone streams on their own account with synced playback, chat, reactions, and voice/video. Works for ${PRICING_ROOM_SIZE_RANGE}.`
             : (() => {
                 const isLong =
@@ -357,13 +364,15 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
               </div>
               <div>
                 <span className="text-foreground/50">Platform</span>
-                <p className="font-medium text-foreground">Crunchyroll</p>
+                <p className="font-medium text-foreground">
+                  {anime.notOnCrunchyroll ? "Not on Crunchyroll" : "Crunchyroll"}
+                </p>
               </div>
             </div>
             <p className="text-foreground/70 text-xs mt-3">
               Episode count, status, scores, and poster are from MyAnimeList (via
-              the Jikan API) and refresh about once a day. If the service is slow,
-              the site falls back to our written summary.
+              the Jikan API), saved when the site is built. Counts for airing shows can
+              lag behind the latest episode.
             </p>
             <p className="text-foreground/80 leading-relaxed mt-4 text-base">{anime.synopsis}</p>
           </div>
@@ -386,10 +395,10 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       </ol>
       <p className="text-foreground/80 leading-relaxed border-l-4 border-brand-orange/30 pl-4 py-2 mb-8">
         Hosting {anime.title} this week?{" "}
-        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          Check AniDachi pricing
-        </Link>{" "}
-        on the homepage, install the extension, then create your watchroom from the
+        <Link href="/extension" className="text-brand-orange font-medium hover:underline">
+          Install the AniDachi extension
+        </Link>
+        , then create your watchroom from the
         episode your group agreed on — everyone still streams with their own Crunchyroll
         login.
       </p>
@@ -432,6 +441,90 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           {para}
         </p>
       ))}
+      {anime.slug === "one-piece" ? (
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          See{" "}
+          <Link href="/tools/one-piece-how-many-episodes" className="text-brand-orange hover:underline">
+            how many episodes One Piece has
+          </Link>{" "}
+          and the{" "}
+          <Link href="/tools/one-piece-filler-list" className="text-brand-orange hover:underline">
+            One Piece filler list
+          </Link>
+          .
+        </p>
+      ) : null}
+      {anime.slug === "naruto" ? (
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          See the{" "}
+          <Link href="/tools/naruto-filler-list" className="text-brand-orange hover:underline">
+            Naruto filler list
+          </Link>{" "}
+          and the{" "}
+          <Link href="/tools/naruto-shippuden-filler-list" className="text-brand-orange hover:underline">
+            Shippuden filler list
+          </Link>
+          .
+        </p>
+      ) : null}
+      {anime.slug === "bleach" ? (
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          See the{" "}
+          <Link href="/tools/bleach-filler-list" className="text-brand-orange hover:underline">
+            Bleach filler list
+          </Link>
+          .
+        </p>
+      ) : null}
+      {anime.slug === "black-clover" ? (
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          See the{" "}
+          <Link href="/tools/black-clover-filler-list" className="text-brand-orange hover:underline">
+            Black Clover filler list
+          </Link>
+          .
+        </p>
+      ) : null}
+      {anime.slug === "fate-zero" || anime.slug === "fate-stay-night-unlimited-blade-works" ? (
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          See the{" "}
+          <Link href="/tools/fate-watch-order" className="text-brand-orange hover:underline">
+            Fate watch order
+          </Link>{" "}
+          for where this fits on a first watch.
+        </p>
+      ) : null}
+
+      {enrichment ? (
+        <>
+          <h2
+            id="group-plan"
+            className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+          >
+            {anime.title} at a Glance for Your Group
+          </h2>
+          <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
+            {enrichment.facts.map((fact) => (
+              <li key={fact}>{fact}</li>
+            ))}
+          </ul>
+          <p className="text-foreground/80 leading-relaxed mb-4">{enrichment.plan}</p>
+          {enrichment.links?.length ? (
+            <p className="text-foreground/80 leading-relaxed mb-8">
+              See the{" "}
+              {enrichment.links.map((link, i) => (
+                <span key={link.href}>
+                  {i > 0 ? " and the " : null}
+                  <Link href={link.href} className="text-brand-orange hover:underline">
+                    {link.label}
+                  </Link>
+                </span>
+              ))}
+              .
+            </p>
+          ) : null}
+        </>
+      ) : null}
 
       <h2
         id="pacing"

@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "How to Watch Anime for Free With Friends Online (2026) | AniDachi",
+  title: "How to Watch Anime for Free With Friends Online (2026)",
   description:
     "Compare ways to watch anime with friends for free. Check legal episode access and learn how Free guests join an active AniDachi Plus, Pro, or trial host.",
   alternates: { canonical: "/guides/how-to-watch-anime-for-free-with-friends" },

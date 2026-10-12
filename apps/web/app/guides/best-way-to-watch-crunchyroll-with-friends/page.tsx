@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Way to Watch Crunchyroll With Friends (2026 Verdict) | AniDachi",
+  title: "Best Way to Watch Crunchyroll With Friends (2026 Verdict)",
   description:
     "Compare live sync, independent viewing, and screen share for Crunchyroll. AniDachi watchrooms sync each person’s own stream and add live conversation.",
   alternates: {

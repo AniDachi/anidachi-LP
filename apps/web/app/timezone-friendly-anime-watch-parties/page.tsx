@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "Anime Watch Parties Across Time Zones — The Async Guide (2026) | AniDachi",
+  title: "Anime Watch Parties Across Time Zones — The Async Guide (2026)",
   description:
     "Plan anime nights across time zones with live AniDachi rooms or independent catch-up and a separate chat. AniDachi async catch-up is coming soon.",
   alternates: { canonical: "/timezone-friendly-anime-watch-parties" },

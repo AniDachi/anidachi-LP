@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Classic Anime to Watch With Friends (2026) | AniDachi",
+  title: "Best Classic Anime to Watch With Friends (2026)",
   description:
     "Best classic anime to watch with friends — Cowboy Bebop, Neon Genesis Evangelion, Sailor Moon, Ghost in the Shell & more. Revisit the 90s and 2000s together.",
   alternates: {

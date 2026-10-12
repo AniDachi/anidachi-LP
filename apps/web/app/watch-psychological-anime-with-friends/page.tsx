@@ -127,6 +127,13 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
           {PRICING_ROOM_SIZE_RANGE}, all streaming on Crunchyroll.
         </strong>
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-psychological-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best psychological anime to watch with friends
+        </Link>
+        .
+      </p>
 
       <h2
         id="why-psychological"

@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch YouTube Together Without Screen Share — AniDachi",
+  title: "Watch YouTube Together Without Screen Share",
   description:
     "How to watch YouTube together without screen share: synced watchrooms so everyone streams locally in better quality. Keep Discord for voice only.",
   alternates: {

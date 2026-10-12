@@ -294,13 +294,6 @@ export default function HowToRemoveShowsFromContinueWatchingPage() {
 					>
 						resume anime
 					</Link>
-					. Series and season menus are on{" "}
-					<Link
-						href="/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll"
-						className="text-brand-orange hover:underline"
-					>
-						how to remove anime from Continue Watching
-					</Link>
 					.
 				</p>
 

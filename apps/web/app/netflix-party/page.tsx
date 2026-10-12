@@ -120,7 +120,7 @@ export default function NetflixPartyPage() {
           Teleparty Netflix
         </Link>{" "}
         and{" "}
-        <Link href="/guides/netflix-teleparty" className="text-brand-orange hover:underline">
+        <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
           Netflix Teleparty
         </Link>
         . Whether Netflix itself includes a party mode is{" "}

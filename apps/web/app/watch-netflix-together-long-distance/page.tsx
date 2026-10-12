@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "How to Watch Netflix Together Long Distance (2026) | AniDachi",
+  title: "How to Watch Netflix Together Long Distance (2026)",
   description:
     "Short answer: Netflix has no native watch party feature. Long-distance couples use Teleparty or Rave for Netflix sync. AniDachi syncs Crunchyroll and YouTube. Netflix on AniDachi is coming soon.",
   alternates: { canonical: "/watch-netflix-together-long-distance" },

@@ -203,15 +203,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 					that tab with the group. Everyone watches the same encode, which keeps
 					reactions aligned automatically. Downsides: quality depends on the
 					host&apos;s upload bandwidth and Discord&apos;s streaming tier, and
-					the host must stay focused so accidental skips affect everyone. The
-					answer-first version is{" "}
-					<Link
-						href="/guides/how-to-stream-anime-on-discord"
-						className="text-brand-orange hover:underline"
-					>
-						how to stream anime on Discord
-					</Link>
-					.
+					the host must stay focused so accidental skips affect everyone.
 				</p>
 
 				<h2

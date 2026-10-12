@@ -18,7 +18,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch Crunchyroll Without Screen Share — AniDachi",
+  title: "Watch Crunchyroll Without Screen Share",
   description:
     "How to watch Crunchyroll with friends without screen share: synced watchrooms so everyone streams locally in full quality. Keep Discord for voice only.",
   alternates: {

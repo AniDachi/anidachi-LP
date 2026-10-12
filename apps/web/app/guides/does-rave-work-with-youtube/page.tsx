@@ -16,7 +16,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Does Rave Work With YouTube? (2026 Answer) | AniDachi",
+  title: "Does Rave Work With YouTube? (2026 Answer)",
   description:
     "Yes — Rave can sync YouTube for live watch parties. It does not support async catch-up. Compare Rave for YouTube vs AniDachi watchrooms.",
   alternates: { canonical: "/guides/does-rave-work-with-youtube" },

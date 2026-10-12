@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Netflix Watch Party for Anime (2026) | AniDachi",
+  title: "AniDachi vs Netflix Watch Party for Anime (2026)",
   description:
     "AniDachi vs Netflix Teleparty watch parties for anime — Crunchyroll catalog, live sync, personal history, and which tool fits anime friend groups.",
   alternates: { canonical: "/compare/anidachi-vs-netflix-watch-party" },

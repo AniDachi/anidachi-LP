@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Kast Alternatives for Anime (2026 Ranked) | AniDachi",
+  title: "Kast Alternatives for Anime (2026 Ranked)",
   description:
     "Ranked Kast alternatives for anime on Crunchyroll — AniDachi, Discord voice + sync, Teleparty, and more. Distinct from the AniDachi vs Kast compare page.",
   alternates: { canonical: "/guides/kast-alternatives-for-anime" },

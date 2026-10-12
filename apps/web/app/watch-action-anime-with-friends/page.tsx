@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Action Anime With Friends (2026) | AniDachi",
+  title: "Watch Action Anime With Friends (2026)",
   description:
     "Watch action anime with friends on Crunchyroll with AniDachi — synced fight scenes, live chat, and reactions. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
   alternates: { canonical: "/watch-action-anime-with-friends" },
@@ -106,6 +106,13 @@ export default function WatchActionAnimeWithFriendsPage() {
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-action-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best action anime to watch with friends
+        </Link>
+        .
+      </p>
 
       <h2
         id="why-action"
@@ -122,10 +129,10 @@ export default function WatchActionAnimeWithFriendsPage() {
         watch night without committing to a three-hour movie block.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi watchrooms let your group react in real time during live sessions
-        and stack reactions episode-by-episode when schedules diverge. Spoiler
-        boundaries are enforced at the episode level, so the friend who binges
-        ahead can&apos;t ruin the next fight for the one who&apos;s two episodes back.
+        AniDachi watchrooms let your group react in real time during live sessions,
+        with synced playback, chat, and reactions. When schedules diverge, agree on
+        a safe episode boundary so the friend who binges ahead doesn&apos;t ruin the
+        next fight. Built-in async catch-up is coming soon.
       </p>
 
       <h2

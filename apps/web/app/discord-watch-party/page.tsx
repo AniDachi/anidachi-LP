@@ -197,10 +197,6 @@ export default function DiscordWatchPartyPage() {
 					},
 					{ href: "/guides/discord-go-live", label: "Discord Go Live" },
 					{
-						href: "/guides/how-to-stream-anime-on-discord",
-						label: "How to stream anime on Discord",
-					},
-					{
 						href: "/guides/discord-watch-together-activity",
 						label: "Discord Watch Together Activity",
 					},

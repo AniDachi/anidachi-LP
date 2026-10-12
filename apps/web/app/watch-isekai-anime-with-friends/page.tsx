@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Isekai Anime With Friends (2026) | AniDachi",
+  title: "Watch Isekai Anime With Friends (2026)",
   description:
     "Watch isekai anime with friends on Crunchyroll using AniDachi — synced playback, live chat, and reactions. Re:Zero, KonoSuba, Mushoku Tensei, and more.",
   alternates: { canonical: "/watch-isekai-anime-with-friends" },
@@ -110,6 +110,13 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
           each new world rule after everyone has finished the episode.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.
+      </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Want picks instead of a hosting plan? See the{" "}
+        <Link href="/guides/best-isekai-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
+          best isekai anime to watch with friends
+        </Link>
+        .
       </p>
 
       <h2

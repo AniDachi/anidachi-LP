@@ -9,7 +9,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
   title:
-    "Best Short Anime to Watch With Friends (Under 13 Episodes) | AniDachi",
+    "Best Short Anime to Watch With Friends (Under 13 Episodes)",
   description:
     "Best short anime series to watch with friends in one night — Erased, Angel Beats, Cyberpunk: Edgerunners & more. Perfect single-session watch parties.",
   alternates: {

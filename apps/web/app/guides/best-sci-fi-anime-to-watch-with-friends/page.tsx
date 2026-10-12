@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Sci-Fi Anime to Watch With Friends (2026) | AniDachi",
+  title: "Best Sci-Fi Anime to Watch With Friends (2026)",
   description:
     "Best sci-fi anime for group watch parties on Crunchyroll — time travel, mecha, cyberpunk, and space opera. AniDachi watchrooms with synced playback and theory-friendly chat.",
   alternates: { canonical: "/guides/best-sci-fi-anime-to-watch-with-friends" },

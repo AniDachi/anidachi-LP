@@ -153,7 +153,7 @@ export default function HowToClearCrunchyrollWatchHistoryPage() {
 					</Link>{" "}
 					or the anime-specific steps in{" "}
 					<Link
-						href="/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll"
+						href="/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll"
 						className="text-brand-orange hover:underline"
 					>
 						how to remove anime from Continue Watching

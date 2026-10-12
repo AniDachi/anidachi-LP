@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch2Gether Alternatives for YouTube (2026) | AniDachi",
+  title: "Watch2Gether Alternatives for YouTube (2026)",
   description:
     "Best Watch2Gether alternatives for YouTube: AniDachi for live extension watchrooms, Teleparty for multi-platform live sync, Discord for voice. Honest free-tier notes.",
   alternates: {

@@ -241,6 +241,75 @@
   }
 }
 
+@keyframes spin-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Random anime reel: each tick drops in from above, the last one lands with a small overshoot. */
+@keyframes reel-tick {
+  from {
+    opacity: 0.2;
+    transform: translateY(-70%);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes reel-land {
+  0% {
+    opacity: 0.4;
+    transform: translateY(-40%) scale(0.98);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(6%) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cover-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+@keyframes cover-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes reel-glow {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-ani-primary, currentColor) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;

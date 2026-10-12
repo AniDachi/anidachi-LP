@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is Anime Filler? — Anime Watch Party Glossary | AniDachi (2026)",
+  title: "What Is Anime Filler? — Anime Watch Party Glossary (2026)",
   description:
     "Anime filler is content not adapted from the original manga — non-canon episodes added to avoid catching up with the source material. Learn how to skip filler when watching with friends.",
   alternates: { canonical: "/glossary/anime-filler" },
@@ -161,7 +161,18 @@ export default function AnimeFillerGlossaryPage() {
           — ~41% filler (90 of 220 episodes). The Land of Tea arc and the
           Curry of Life arc are the most commonly cited skips. Canon episodes
           are among the best in shonen; filler ranges from tolerable to
-          painful.
+          painful. See the{" "}
+          <Link href="/tools/naruto-filler-list" className="text-brand-orange hover:underline">
+            Naruto filler list
+          </Link>{" "}
+          and the{" "}
+          <Link
+            href="/tools/naruto-shippuden-filler-list"
+            className="text-brand-orange hover:underline"
+          >
+            Shippuden filler list
+          </Link>
+          .
         </li>
         <li>
           <strong>
@@ -175,7 +186,11 @@ export default function AnimeFillerGlossaryPage() {
           — ~45% filler across the original run. The Bount arc (64 episodes) is
           the most commonly skipped; most viewers treat it as non-negotiable
           to bypass. The Fullbring arc is canon but considered the weakest
-          canonical arc.
+          canonical arc. See the{" "}
+          <Link href="/tools/bleach-filler-list" className="text-brand-orange hover:underline">
+            Bleach filler list
+          </Link>
+          .
         </li>
         <li>
           <strong>
@@ -188,7 +203,18 @@ export default function AnimeFillerGlossaryPage() {
           </strong>{" "}
           — ~10% filler across 1,000+ episodes. Lower proportion but absolute
           count is still significant. The G-8 arc is the rare filler arc widely
-          considered worth watching; most others can be safely skipped.
+          considered worth watching; most others can be safely skipped. See the{" "}
+          <Link href="/tools/one-piece-filler-list" className="text-brand-orange hover:underline">
+            One Piece filler list
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/tools/one-piece-how-many-episodes"
+            className="text-brand-orange hover:underline"
+          >
+            how many episodes One Piece has
+          </Link>
+          .
         </li>
         <li>
           <strong>
