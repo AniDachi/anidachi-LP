@@ -1,10 +1,10 @@
 # AniDachi SEO Content Guidelines
 
-**Single source of truth** for public marketing SEO on [www.anidachi.app](https://www.anidachi.app) (apex redirects to www).  
+**Single source of truth** for public marketing SEO on [www.anidachi.app](https://www.anidachi.app). `https://www.anidachi.app` is the canonical host; `anidachi.app` must 308 to it.  
 Dated keyword volumes and batch plans live in separate plan docs — re-pull Keyword Planner before treating any number as current.
 
 Operational agent: [`.cursor/agents/anidachi-seo-aeo-pages.md`](../../../.cursor/agents/anidachi-seo-aeo-pages.md)  
-Portfolio freeze / safety: [`seo-portfolio-freeze.md`](./seo-portfolio-freeze.md)  
+Owner decisions: [Decisions log](#decisions-log) below. The 2026-07-28 portfolio freeze was lifted on 2026-10-12.  
 Editorial standards: [`/editorial-policy`](https://www.anidachi.app/editorial-policy)
 
 ---
@@ -39,7 +39,6 @@ do not invent a different `chromewebstore.google.com` item URL.
 
 Do **not**, without owner approval + GSC evidence:
 
-- Ship net-new SEO URL batches while the publishing freeze is active (`seo-portfolio-freeze.md`)
 - 301 / Merge / Retire / Delete public marketing URLs
 - Change URL structure on ranked pages (slug renames, path moves, canonical retarget to another path)
 - Add `noindex` to previously indexable marketing URLs
@@ -52,7 +51,7 @@ Default: **enrich in place on the same URL**, additive pages, reversible changes
 Evidence order: Google documentation → AniDachi GSC/GA4 → reproducible tests → third-party studies → patents/leaks as hypotheses only.  
 Do **not** treat domain age, WHOIS, dwell time, schema, or “force-index” sitemaps as ranking levers.
 
-While freeze is active, backlog = `seo:portfolio` Keep/Enrich winners (same URLs), not new Keyword Planner URL ideas.
+Default backlog: `seo:portfolio` Keep/Enrich winners on their existing URLs first. A new URL ships only when it passes the publishing gate below.
 
 ---
 
@@ -60,7 +59,7 @@ While freeze is active, backlog = `seo:portfolio` Keep/Enrich winners (same URLs
 
 A page may ship only if **all** are true:
 
-1. Previous cohort is healthy enough (or freeze is lifted by owner).
+1. The owner approved the page or the batch it belongs to.
 2. Target query is not already owned (full route inventory + GSC query data — not top pages only). Run `pnpm --filter @anidachi/web seo:portfolio` / `seo:keywords` with full inventory.
 3. Page adds distinct information (not a modifier twin / doorway).
 4. One parent hub + **two contextual inbound links** planned **before** publish; ≤3 clicks from a relevant pillar.
@@ -92,7 +91,7 @@ Related lists: prefer narrow tags (`pillar-watch-youtube` or `pillar-watch-crunc
 - Implementation: `app/watch/[slug]/page.tsx` + `lib/anime-data.ts` + `lib/watch-page-rich-content.ts`
 - Do **not** invent nested `/anime/...` paths or mass-301 for prettier URLs
 
-When adding titles: update `animeList` + MAL ids, hub/listicle backlinks, bump `dateModified` only when content meaningfully changes. Prefer enriching existing titles over unbounded catalog growth while freeze is active.
+When adding titles: update `animeList` + MAL ids, hub/listicle backlinks, bump `dateModified` only when content meaningfully changes. Prefer enriching existing titles over unbounded catalog growth.
 
 ---
 
@@ -151,11 +150,40 @@ pnpm --filter @anidachi/web seo:keywords
 Track: Coverage cohorts, query cannibalization, impressions → clicks → `seo_landing_path` → checkout.  
 Impressions before clicks is normal for new URLs. Prefer enriching winners over shipping more thin spokes.
 
+`seo:portfolio` and `seo:keywords` need Google Marketing OAuth (Search Console + Analytics), reconnected through the Kreatli CRM. Composio's Search Console, GA4 and Amplitude connections work too. `seo:portfolio` writes a route inventory with GSC pages, query×page pairs, GA4 landing sessions and key events, and a suggested action per URL (Keep / Enrich / Merge/301 / Review). It does not replace:
+
+- GSC **Pages** (indexing) report: Indexed vs Discovered / Crawled – not indexed. Export it from the GSC UI.
+- Manual claim checks and owner approval before any merge, redirect or removal.
+
+Attribution: first-touch `seo_landing_path` is stored in session storage and sent with GA4 and Amplitude conversion events and Stripe Checkout/Subscription metadata. See `docs/CONVERSION_METRICS.md`.
+
+---
+
+## Decisions log
+
+Owner-approved exceptions to the safety rules above, newest first.
+
+- **2026-10-12, SEO audit (GSC + GA4 + Amplitude):**
+  - The 2026-07-28 portfolio freeze is lifted. New URLs still go through the publishing gate.
+  - **Canonical host is `https://www.anidachi.app`.** Production `NEXT_PUBLIC_SITE_URL` must be www, and `anidachi.app` must 308 to www. Before this, canonicals pointed at the apex while the apex 307-redirected to www, so Google indexed pages on both hosts.
+  - **301 merges of exact twins:**
+    - `/guides/netflix-teleparty` → `/guides/teleparty-netflix`
+    - `/guides/anime-date-night-ideas-long-distance` → `/long-distance-anime-date-night-ideas`
+    - `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll` → `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll`
+    - `/guides/how-to-stream-anime-on-discord` → `/guides/how-to-watch-anime-with-friends-on-discord`
+  - **Bare watch slugs** (`/watch/naruto`) 308 to `/watch/naruto-with-friends`.
+  - **Sitemap:** no `lastmod` (file mtimes reset on every Vercel build), no private or `/dev` routes, and `/extension` is included.
+  - **Watch pages** don't publish MyAnimeList ratings as `AggregateRating`.
+  - **Until about 2026-11-02**, don't change titles, H1s or URLs on `/`, `/watch-anime-together` or `/guides/best-anime-to-watch-with-friends` while Google moves them from the apex to www.
+  - Keep `/force-index-sitemap.xml` until the host move settles. It repeats URLs already in `sitemap.xml`; remove it after reviewing GSC Coverage.
+- **2026-10-09:** the free tool pages plan (`/tools/*`: filler lists, One Piece episode count, random anime generator, watch orders, Crunchyroll schedule) is approved. It overrides the 2026-09-28 rejection in `.cursor/scratchpad.md`.
+- **2026-08-11:** `/feature-requests`, a public product feedback form, is approved as an additive page.
+
 ---
 
 ## Pre-publish checklist
 
-- [ ] Freeze / publishing gate passed
+- [ ] Publishing gate passed
 - [ ] URL stability: same path (no slug/redirect/canonical retarget)
 - [ ] No cannibalization of an owned query
 - [ ] Canonical = path; FAQ body ↔ JSON-LD
@@ -164,4 +192,4 @@ Impressions before clicks is normal for new URLs. Prefer enriching winners over 
 - [ ] Inbound links planned
 - [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
-*Last updated: 2026-10-01 (current product and subscription copy)*
+*Last updated: 2026-10-12 (freeze lifted, decisions log, canonical host)*

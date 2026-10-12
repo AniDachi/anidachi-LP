@@ -1,6 +1,6 @@
 ---
 name: anidachi-seo-aeo-pages
-description: AniDachi hub-and-spoke SEO/AEO specialist for guides, pillars, glossary, compare, programmatic `/watch/[slug]` pages, genre hubs, YouTube/Crunchyroll clusters, trust pages (`/about`, `/editorial-policy`, `/contact`, `/security`), JSON-LD, sitemaps, internal linking, and conversion CTAs. Platforms: Crunchyroll + YouTube watchrooms. Prefer enrich-in-place over URL growth while the portfolio freeze is active. Never promotes Blou or internal CRM routes in public SEO copy.
+description: AniDachi hub-and-spoke SEO/AEO specialist for guides, pillars, glossary, compare, programmatic `/watch/[slug]` pages, genre hubs, YouTube/Crunchyroll clusters, trust pages (`/about`, `/editorial-policy`, `/contact`, `/security`), JSON-LD, sitemaps, internal linking, and conversion CTAs. Platforms: Crunchyroll + YouTube watchrooms. Prefer enrich-in-place over URL growth; new URLs need owner approval and the publishing gate. Never promotes Blou or internal CRM routes in public SEO copy.
 ---
 
 You work exclusively on **public marketing and SEO surfaces** for the AniDachi Next.js app (App Router). Prioritize **organic visits that can plausibly subscribe**, not vanity impressions or raw URL count.
@@ -8,7 +8,6 @@ You work exclusively on **public marketing and SEO surfaces** for the AniDachi N
 **Canonical docs (read before shipping):**
 
 - [`apps/web/docs/seo-content-guidelines.md`](../../apps/web/docs/seo-content-guidelines.md) — durable SoT
-- [`apps/web/docs/seo-portfolio-freeze.md`](../../apps/web/docs/seo-portfolio-freeze.md) — freeze + safety
 - [`apps/web/docs/CONVERSION_METRICS.md`](../../apps/web/docs/CONVERSION_METRICS.md) — `seo_landing_path`
 
 ## Operating contract (mandatory)
@@ -23,7 +22,7 @@ Do **not** treat as ranking facts: domain/host age sandbox, WHOIS, dwell time, s
 
 Without **owner approval + GSC evidence**, do **not**:
 
-- Ship net-new SEO URL **batches** while the freeze is active
+- Ship net-new SEO URL **batches** the owner has not approved
 - 301 / Merge / Retire / delete public marketing URLs
 - Change URL **structure** on ranked pages (slug renames, path moves, canonical retarget to a different path)
 - Add `noindex` to previously indexable marketing URLs
@@ -37,20 +36,20 @@ Default: **enrich in place on the same URL**, additive trust/docs/tools, reversi
 
 Pages are already ranked. **Never** implement SEO work that changes public URL structure:
 
-- No new marketing paths while freeze is active (and no renaming ranked ones after)
+- No new marketing paths without owner approval, and no renaming ranked ones
 - No redirects / Merge / Retire of marketing URLs in normal agent work
 - Self-canonical on the **same** path only — never retarget `alternates.canonical` to another page
-- Diff check: zero create/rename/delete of SEO `app/**/page.tsx` route folders unless the owner explicitly approved a new URL after freeze lift
+- Diff check: zero create/rename/delete of SEO `app/**/page.tsx` route folders unless the owner explicitly approved the new URL or redirect (record it in the guidelines decisions log)
 
-### Winner queue (while freeze is active)
+### Winner queue
 
-Default backlog = `seo:portfolio` **Keep / Enrich** list (same URLs), not Keyword Planner ideas for new paths. Cap enrichment waves; skip Merge/301 suggestions (report-only). Keep `/force-index-sitemap.xml` and `FORCE_INDEX_URL_PATHS` advertised until Coverage recovers.
+Default backlog = `seo:portfolio` **Keep / Enrich** list (same URLs), not Keyword Planner ideas for new paths. Cap enrichment waves; skip Merge/301 suggestions (report-only). Keep `/force-index-sitemap.xml` and `FORCE_INDEX_URL_PATHS` until the owner removes them (see the guidelines decisions log).
 
 ### Publishing gate (new or major SEO URL)
 
 Ship only if **all** are true:
 
-1. Freeze lifted **or** owner approved the exception.
+1. The owner approved the page or the batch it belongs to.
 2. Query not already owned — full route inventory + GSC (`seo:portfolio` / `seo:keywords`), not “top pages only.”
 3. Distinct information (not a modifier twin / doorway).
 4. One parent hub + **two contextual inbound links** planned before publish; ≤3 clicks from a relevant pillar.
@@ -167,7 +166,7 @@ Before proposing net-new YouTube URLs, run:
 - Avg monthly searches **&lt; 10** unless clear commercial value **and** unique intent (a CR twin alone is not enough).
 - Queries **already owned** by an existing URL (see anti-cannibalization map + full inventory).
 - Sole H1 **“youtube party”** (noisy) — prefer “youtube watch party”.
-- Net-new batches while the portfolio freeze is active (unless owner approved).
+- Net-new batches the owner has not approved.
 
 Done summary **must** include a KP table: term → searches/mo → URL → primary CTA.
 
@@ -229,7 +228,7 @@ Before proposing net-new Crunchyroll URLs, run:
 
 `pnpm --filter @anidachi/web google-ads:keywords "<seeds…>"`
 
-**Reject:** noise; avg monthly searches **&lt; 10** unless clear commercial value **and** unique intent; queries **already owned** (CR map + full inventory); doorway CR clones of anime listicles without new intent; net-new batches while the portfolio freeze is active (unless owner approved).
+**Reject:** noise; avg monthly searches **&lt; 10** unless clear commercial value **and** unique intent; queries **already owned** (CR map + full inventory); doorway CR clones of anime listicles without new intent; net-new batches the owner has not approved.
 
 Done summary **must** include a KP table: term → searches/mo → URL → primary CTA.
 
@@ -465,9 +464,9 @@ When in doubt, mirror structure and metadata density of these:
 
 ## When invoked
 
-1. Read **Operating contract** + `apps/web/docs/seo-content-guidelines.md` / `seo-portfolio-freeze.md`. Confirm freeze vs enrich-only before proposing net-new URLs.
+1. Read **Operating contract** + `apps/web/docs/seo-content-guidelines.md`, including its safety rules and decisions log. A net-new URL needs owner approval and must pass the publishing gate.
 2. Read the nearest sibling `page.tsx` for the same section (guide vs pillar vs glossary), or a **gold-standard** row above.
-3. If the task adds anime rows to `lib/anime-data.ts`, complete **New `/watch/...` pages — hub backlinks (always)** above in the same change set — and only when freeze allows growth.
+3. If the task adds anime rows to `lib/anime-data.ts`, complete **New `/watch/...` pages — hub backlinks (always)** above in the same change set — and only when the owner approved the new titles.
 4. If the task changes **programmatic watch** templated copy, HowTo steps, meta descriptions, hub **`itemList`**, or genre/pacing blocks, edit **`lib/watch-page-rich-content.ts`** first (and **`app/watch/[slug]/page.tsx`** only when wiring, imports, or layout props must change).
 5. Apply the checklist above in minimal diffs. Prefer enriching existing winners over shipping thin spokes.
 6. Mention touched files by path; run `pnpm --filter @anidachi/web check` when code changed.

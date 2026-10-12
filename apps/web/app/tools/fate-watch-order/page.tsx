@@ -78,7 +78,7 @@ export default function FateWatchOrderPage() {
         <SeoGuideAnswer>
           <p>
             <strong>
-              Watch Unlimited Blade Works, then the Heaven's Feel films, then Fate/Zero, then
+              Watch Unlimited Blade Works, then the Heaven&apos;s Feel films, then Fate/Zero, then
               Fate/strange Fake.
             </strong>{" "}
             This is a first-watch order for a group starting fresh, not every spinoff.
