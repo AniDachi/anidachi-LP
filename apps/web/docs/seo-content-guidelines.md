@@ -165,8 +165,8 @@ Owner-approved exceptions to the safety rules above, newest first.
 
 - **2026-10-12, SEO audit (GSC + GA4 + Amplitude):**
   - The 2026-07-28 portfolio freeze is lifted. New URLs still go through the publishing gate.
-  - **Canonical host is `https://www.anidachi.app`.** Production `NEXT_PUBLIC_SITE_URL` must be www, and `anidachi.app` must 308 to www. Before this, canonicals pointed at the apex while the apex 307-redirected to www, so Google indexed pages on both hosts.
-  - **301 merges of exact twins:**
+  - **Canonical host is `https://www.anidachi.app`.** Public metadata and sitemaps use `getSeoSiteOrigin()` to normalize the known public hosts to www. Keep `NEXT_PUBLIC_SITE_URL` and `getResolvedSiteOrigin()` unchanged for runtime consumers, including Gmail OAuth callback fallbacks; changing the shared env value is not an SEO fix. After separate production authorization, change only the existing Vercel apex-to-www redirect status from 307 to 308, preserving its destination, paths, and queries. See the [selective release contract](../../../docs/releases/seo/2026-10-12-selective-website-release.md).
+  - **Permanent redirects (308) for exact twins:**
     - `/guides/netflix-teleparty` → `/guides/teleparty-netflix`
     - `/guides/anime-date-night-ideas-long-distance` → `/long-distance-anime-date-night-ideas`
     - `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll` → `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll`

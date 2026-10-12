@@ -1980,9 +1980,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch/[slug]/page.tsx": {
-    "mtime": 1791807325.0903711,
-    "seen": 1791807478.757689,
-    "ast_hash": "e55e58c4f637167fa996bc34718e39b0",
+    "mtime": 1791834190.2854958,
+    "seen": 1791834247.146548,
+    "ast_hash": "fcdb6a5d2af1d64fe625603de2b0d533",
     "semantic_hash": ""
   },
   "apps/web/components.json": {
@@ -2856,9 +2856,9 @@
     "semantic_hash": "5a6fd53fdcf2be529e9cc0b718fde352"
   },
   "apps/web/lib/watch-page-rich-content.ts": {
-    "mtime": 1791807045.4873586,
-    "seen": 1791807185.0519922,
-    "ast_hash": "390c91f6fa98ee563fec07b24c5bc234",
+    "mtime": 1791833917.296017,
+    "seen": 1791834247.146556,
+    "ast_hash": "c6d1d15e49a2dd94385fd1d9919410d0",
     "semantic_hash": ""
   },
   "apps/web/lib/watch-season-inference.ts": {
@@ -3468,10 +3468,10 @@
     "semantic_hash": "6704b202aaa8bfaad7c5f55f20b80d80"
   },
   "apps/web/docs/seo-content-guidelines.md": {
-    "mtime": 1791731576.4455032,
-    "seen": 1791731955.967935,
+    "mtime": 1791833935.103234,
+    "seen": 1791834247.442561,
     "ast_hash": "684afaca914216664d6d4b161fdad892",
-    "semantic_hash": "8f7383c5061fdf5f7793d17f15b99b44"
+    "semantic_hash": "56d4d608250f1de7aa8eec474a5fe5c8"
   },
   "docs/ai-site-development-handoff.md": {
     "mtime": 1789490459.0038908,
@@ -4816,12 +4816,6 @@
     "seen": 1791484224.1958919,
     "ast_hash": "3eb2c4f0ca9f2024f733c25dd2fb1177",
     "semantic_hash": ""
-  },
-  "apps/web/docs/seo-portfolio-freeze.md": {
-    "mtime": 1791806604.7388155,
-    "seen": 1791807478.8114188,
-    "ast_hash": "9de2624f8b5d6c9530fe6935f15d9ee9",
-    "semantic_hash": "18bc419dc05cd87a9b5bc3be21dc8ff7"
   },
   "docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md": {
     "mtime": 1790617479.692815,
