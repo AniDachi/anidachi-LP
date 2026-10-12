@@ -827,7 +827,7 @@ test("return from Stripe refreshes status and shows scheduled end without anothe
 	await mount(true);
 	assert.equal(path, "/api/billing/refresh");
 	assert.equal(method, "POST");
-	assert.match(container.textContent ?? "", /Renewal canceled/);
+	assert.match(container.textContent ?? "", /Renewal off/);
 	assert.equal(container.querySelector("dt")?.textContent, "Subscription ends");
 	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
 	assert.doesNotMatch(container.textContent ?? "", /Cancel renewal/);
@@ -1330,3 +1330,120 @@ for (const cancelAtPeriodEnd of [false, true]) {
 		assert.equal(container.querySelector(".billing-timezone"), null);
 	});
 }
+
+test("paid summary opens existing management without creating a payment session", async () => {
+	const calls: string[] = [];
+	globalThis.fetch = async (input) => {
+		calls.push(String(input));
+		return Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					price: {
+						unitAmount: 14390,
+						currency: "usd",
+						billingPeriod: "yearly",
+					},
+					planCode: "pro",
+				},
+			],
+		});
+	};
+	await mount();
+	assert.match(
+		container.querySelector(".billing-summary-card")!.textContent!,
+		/Active subscription.*Pro.*143.90.*year/,
+	);
+	assert.doesNotMatch(
+		container.querySelector(".billing-summary-card")!.textContent!,
+		/Free trial/,
+	);
+	const details = container.querySelector(
+		".billing-summary-management",
+	) as HTMLDetailsElement;
+	assert.equal(details.open, false);
+	const manage = [...container.querySelectorAll("button")].find((b) =>
+		b.textContent?.includes("Manage subscription"),
+	);
+	assert.ok(manage);
+	await act(async () => manage.click());
+	assert.equal(details.open, true);
+	assert.equal(document.activeElement, details.querySelector("summary"));
+	assert.deepEqual(calls, ["/api/billing/subscription"]);
+	assert.match(details.textContent!, /Cancel renewal/);
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.equal(
+		(
+			container.querySelector(
+				".billing-summary-management",
+			) as HTMLDetailsElement
+		).open,
+		true,
+	);
+});
+
+test("cardless summary links to pricing and never promises a paid renewal without consent", async () => {
+	globalThis.fetch = async () => Response.json(cardless);
+	await mount();
+	const card = container.querySelector(".billing-summary-card")!;
+	assert.match(card.textContent!, /Free trial.*No automatic charge/);
+	assert.equal(card.querySelector("a")?.getAttribute("href"), "/pricing");
+	assert.doesNotMatch(card.textContent!, /Renews automatically|Next payment/);
+});
+
+test("canceled paid renewal shows paid-through date rather than a next charge", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...active,
+			subscriptions: [
+				{
+					...active.subscriptions[0],
+					cancelAtPeriodEnd: true,
+					canCancel: false,
+					canRestoreRenewal: true,
+				},
+			],
+		});
+	await mount();
+	const card = container.querySelector(".billing-summary-card")!;
+	assert.match(card.textContent!, /Renewal off.*Paid until/);
+	assert.doesNotMatch(card.textContent!, /Next payment|Renews automatically/);
+});
+
+test("a new pending renewal reopens controls even after the user collapsed them", async () => {
+	let view = cardless;
+	globalThis.fetch = async () => Response.json(view);
+	await mount();
+	let details = container.querySelector(
+		".billing-summary-management",
+	) as HTMLDetailsElement;
+	await act(async () => {
+		details.open = true;
+		details.dispatchEvent(new Event("toggle"));
+	});
+	await act(async () => {
+		details.open = false;
+		details.dispatchEvent(new Event("toggle"));
+	});
+	assert.equal(details.open, false);
+	view = {
+		...cardless,
+		subscriptions: [
+			{
+				...cardless.subscriptions[0],
+				trial: {
+					...cardless.subscriptions[0].trial!,
+					renewalState: "pending",
+					pendingRenewal: { id: "new-operation", action: "enable" },
+				},
+			},
+		],
+	};
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	details = container.querySelector(
+		".billing-summary-management",
+	) as HTMLDetailsElement;
+	assert.equal(details.open, true);
+	assert.match(details.textContent!, /Check renewal status/);
+});

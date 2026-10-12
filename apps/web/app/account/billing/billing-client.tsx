@@ -42,6 +42,11 @@ import {
 } from "./cardless-trial-controls";
 import type { ReactNode } from "react";
 
+import {
+	SubscriptionPresentation,
+	hasSubscriptionSummary,
+} from "./subscription-summary";
+
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
 
 // Retain reviewed terms only while the same verified subscription is unchanged.
@@ -82,6 +87,7 @@ function formatDate(value: string | null) {
 type BillingClientProps = {
 	ownerUserId: string;
 	returnedFromPortal: boolean;
+	manageRequested?: boolean;
 	initial?: { overview: BillingOverview; remainingMs: number };
 	trialSetupReturn?: { operationId: string; canceled: boolean };
 };
@@ -93,6 +99,7 @@ function BillingWorkspace({
 	returnedFromPortal,
 	initial,
 	trialSetupReturn,
+	manageRequested = false,
 }: BillingClientProps) {
 	const [snapshot] = useState(() =>
 		!returnedFromPortal && initial?.overview.ownerUserId === ownerUserId
@@ -522,6 +529,7 @@ function BillingWorkspace({
 	return (
 		<BillingView
 			ownerUserId={ownerUserId}
+			manageRequested={manageRequested}
 			overview={overview}
 			busy={busy}
 			error={error}
@@ -574,7 +582,9 @@ export function BillingView({
 	openStripe,
 	setPlanQuote,
 	renderTrialControls,
+	manageRequested = false,
 }: {
+	manageRequested?: boolean;
 	ownerUserId: string;
 	overview: BillingOverview | null;
 	busy: boolean;
@@ -599,6 +609,7 @@ export function BillingView({
 	setPlanQuote: (quote: null) => void;
 	renderTrialControls?: (subscription: BillingSubscription) => ReactNode;
 }) {
+	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 	const owned = overview?.ownerUserId === ownerUserId ? overview : null;
 	const current =
 		owned?.subscriptions.filter((s) => !isPastSubscription(s)) ?? [];
@@ -752,186 +763,223 @@ export function BillingView({
 					{current.map((subscription) => (
 						<section
 							key={subscription.id}
-							className="billing-subscription"
+							className={
+								hasSubscriptionSummary(subscription)
+									? "billing-subscription billing-subscription-summary"
+									: "billing-subscription"
+							}
 							aria-label={`${PLAN_NAMES[subscription.planCode]} subscription`}
 						>
-							<div className="billing-plan-heading">
-								<div>
-									<div className="billing-plan-title">
-										<h2>
-											{PLAN_NAMES[subscription.planCode]}
-											<span className="sr-only"> subscription</span>
-										</h2>
-										<span className="billing-status">
-											{subscriptionStatusLabel(subscription)}
-										</span>
-									</div>
-									{(subscription.price || subscription.monthlyPrice) && (
-										<p>
-											{subscription.price?.billingPeriod === "yearly"
-												? "Yearly billing"
-												: "Monthly billing"}
-										</p>
-									)}
-								</div>
-							</div>
 							{subscription.planCode !== owned.planCode && (
 								<p className="ac-muted">
 									Current account access: {PLAN_NAMES[owned.planCode]}.
 								</p>
 							)}
-							<SubscriptionFacts subscription={subscription} />
-							{renderTrialControls?.(subscription)}
-							{(["past_due", "unpaid", "incomplete"].includes(
-								subscription.status,
-							) ||
-								subscription.trial?.stage === "payment_required" ||
-								subscription.trial?.stage === "ended") &&
-								!subscription.cancelAtPeriodEnd &&
-								!isPastSubscription(subscription) && (
-									<button
-										type="button"
-										className="ac-button ac-button-primary"
-										disabled={busy}
-										onClick={() => void openStripe(subscription.id, "payment")}
-									>
-										Complete payment in Stripe
-										<ExternalLink size={15} aria-hidden />
-									</button>
-								)}
-							<div className="billing-actions">
-								{subscription.canSwitchToYearly &&
-								subscription.planCode !== "free" ? (
-									<div className="ac-renewal-action">
-										<button
-											className="ac-button"
-											type="button"
-											disabled={busy}
-											onClick={() =>
-												subscription.canChangeTrialPlan
-													? void changeTrial(
-															subscription.id,
-															subscription.planCode as "plus" | "pro",
-															false,
-															"yearly",
-														)
-													: void openStripe(subscription.id, "yearly")
-											}
-										>
-											Switch to yearly billing
-										</button>
-										<p className="ac-muted">
-											{subscription.canChangeTrialPlan
-												? "Keep your remaining trial days. Review the full yearly charge before confirming."
-												: "Starts immediately. Stripe credits unused monthly time and shows the amount due before you confirm."}
-										</p>
-									</div>
-								) : null}
-								{subscription.canChangeTrialPlan ? (
-									<div className="ac-renewal-action">
-										<button
-											className="ac-button"
-											type="button"
-											disabled={busy}
-											onClick={() =>
-												void changeTrial(
-													subscription.id,
-													subscription.planCode === "plus" ? "pro" : "plus",
-												)
-											}
-										>
-											Switch to{" "}
-											{subscription.planCode === "plus" ? "Pro" : "Plus"}
-										</button>
-										{planQuote?.subscriptionId === subscription.id ? (
-											<div
-												className="ac-notice"
-												role="region"
-												aria-label="Review plan change"
-											>
-												<p>
-													{PLAN_NAMES[planQuote.quote.planCode]}:{" "}
-													{formatMonthlyPrice(planQuote.quote)}/
-													{billingPeriodUnit(
-														planQuote.quote.billingPeriod ?? "monthly",
-													)}{" "}
-													after your trial. Taxes, discounts and credits may
-													change the final total.
-												</p>
-												<p>
-													Your trial still ends{" "}
-													{formatBillingTime(planQuote.quote.trialEndsAt)}. No
-													extra trial days.{" "}
-													{planQuote.quote.renewalCanceled
-														? "Your renewal stays canceled."
-														: "Your subscription renews automatically after the trial."}
-												</p>
-												<button
-													type="button"
-													className="ac-button ac-button-primary"
-													disabled={busy}
-													onClick={() =>
-														void changeTrial(
-															subscription.id,
-															planQuote.quote.planCode,
-															true,
-														)
-													}
-												>
-													Confirm plan change
-												</button>
-												<button
-													type="button"
-													className="ac-button"
-													disabled={busy}
-													onClick={() => setPlanQuote(null)}
-												>
-													Keep current plan
-												</button>
+							<SubscriptionPresentation
+								key={subscription.id}
+								subscription={subscription}
+								busy={busy}
+								open={
+									expanded[
+										`${subscription.id}:${subscription.trial?.pendingRenewal?.id ?? ""}`
+									] ??
+									(manageRequested ||
+										Boolean(subscription.trial?.pendingRenewal) ||
+										Boolean(subscription.trial?.renewalEnabled))
+								}
+								onOpenChange={(open) =>
+									setExpanded((previous) =>
+										previous[
+											`${subscription.id}:${subscription.trial?.pendingRenewal?.id ?? ""}`
+										] === open
+											? previous
+											: {
+													...previous,
+													[`${subscription.id}:${subscription.trial?.pendingRenewal?.id ?? ""}`]:
+														open,
+												},
+									)
+								}
+								heading={
+									<div className="billing-plan-heading">
+										<div>
+											<div className="billing-plan-title">
+												<h2>
+													{PLAN_NAMES[subscription.planCode]}
+													<span className="sr-only"> subscription</span>
+												</h2>
+												<span className="billing-status">
+													{subscriptionStatusLabel(subscription)}
+												</span>
 											</div>
-										) : null}
+											{(subscription.price || subscription.monthlyPrice) && (
+												<p>
+													{subscription.price?.billingPeriod === "yearly"
+														? "Yearly billing"
+														: "Monthly billing"}
+												</p>
+											)}
+										</div>
 									</div>
-								) : null}
-								{subscription.canCancel ? (
-									<div className="ac-renewal-action">
+								}
+							>
+								<SubscriptionFacts subscription={subscription} />
+								{renderTrialControls?.(subscription)}
+								{(["past_due", "unpaid", "incomplete"].includes(
+									subscription.status,
+								) ||
+									subscription.trial?.stage === "payment_required" ||
+									subscription.trial?.stage === "ended") &&
+									!subscription.cancelAtPeriodEnd &&
+									!isPastSubscription(subscription) && (
 										<button
 											type="button"
-											disabled={busy}
-											onClick={() => void openStripe(subscription.id, "cancel")}
-											className="ac-button"
-										>
-											Cancel renewal <ExternalLink size={15} aria-hidden />
-										</button>
-									</div>
-								) : null}
-								{subscription.canRestoreRenewal ? (
-									<div className="ac-renewal-action">
-										<button
-											type="button"
-											className="ac-button"
+											className="ac-button ac-button-primary"
 											disabled={busy}
 											onClick={() =>
-												void openStripe(subscription.id, "restore")
+												void openStripe(subscription.id, "payment")
 											}
 										>
-											Restore renewal <ExternalLink size={15} aria-hidden />
+											Complete payment in Stripe
+											<ExternalLink size={15} aria-hidden />
 										</button>
-									</div>
-								) : null}
-							</div>
-							{(subscription.canCancel || subscription.canRestoreRenewal) && (
-								<p className="billing-action-note">
-									{subscription.canCancel
-										? subscription.trial?.stage === "trial"
-											? "Cancel before your trial ends to avoid a charge. Access stays until then."
-											: subscription.status === "active" &&
-													(!subscription.trial ||
-														subscription.trial.stage === "paid")
-												? "Cancel renewal in Stripe. Access stays until the end of your paid period."
-												: "Confirm cancellation in Stripe to stop future renewals."
-										: "Restore renewal in Stripe. Your current end date stays the same."}
-								</p>
-							)}
+									)}
+								<div className="billing-actions">
+									{subscription.canSwitchToYearly &&
+									subscription.planCode !== "free" ? (
+										<div className="ac-renewal-action">
+											<button
+												className="ac-button"
+												type="button"
+												disabled={busy}
+												onClick={() =>
+													subscription.canChangeTrialPlan
+														? void changeTrial(
+																subscription.id,
+																subscription.planCode as "plus" | "pro",
+																false,
+																"yearly",
+															)
+														: void openStripe(subscription.id, "yearly")
+												}
+											>
+												Switch to yearly billing
+											</button>
+											<p className="ac-muted">
+												{subscription.canChangeTrialPlan
+													? "Keep your remaining trial days. Review the full yearly charge before confirming."
+													: "Starts immediately. Stripe credits unused monthly time and shows the amount due before you confirm."}
+											</p>
+										</div>
+									) : null}
+									{subscription.canChangeTrialPlan ? (
+										<div className="ac-renewal-action">
+											<button
+												className="ac-button"
+												type="button"
+												disabled={busy}
+												onClick={() =>
+													void changeTrial(
+														subscription.id,
+														subscription.planCode === "plus" ? "pro" : "plus",
+													)
+												}
+											>
+												Switch to{" "}
+												{subscription.planCode === "plus" ? "Pro" : "Plus"}
+											</button>
+											{planQuote?.subscriptionId === subscription.id ? (
+												<div
+													className="ac-notice"
+													role="region"
+													aria-label="Review plan change"
+												>
+													<p>
+														{PLAN_NAMES[planQuote.quote.planCode]}:{" "}
+														{formatMonthlyPrice(planQuote.quote)}/
+														{billingPeriodUnit(
+															planQuote.quote.billingPeriod ?? "monthly",
+														)}{" "}
+														after your trial. Taxes, discounts and credits may
+														change the final total.
+													</p>
+													<p>
+														Your trial still ends{" "}
+														{formatBillingTime(planQuote.quote.trialEndsAt)}. No
+														extra trial days.{" "}
+														{planQuote.quote.renewalCanceled
+															? "Your renewal stays canceled."
+															: "Your subscription renews automatically after the trial."}
+													</p>
+													<button
+														type="button"
+														className="ac-button ac-button-primary"
+														disabled={busy}
+														onClick={() =>
+															void changeTrial(
+																subscription.id,
+																planQuote.quote.planCode,
+																true,
+															)
+														}
+													>
+														Confirm plan change
+													</button>
+													<button
+														type="button"
+														className="ac-button"
+														disabled={busy}
+														onClick={() => setPlanQuote(null)}
+													>
+														Keep current plan
+													</button>
+												</div>
+											) : null}
+										</div>
+									) : null}
+									{subscription.canCancel ? (
+										<div className="ac-renewal-action">
+											<button
+												type="button"
+												disabled={busy}
+												onClick={() =>
+													void openStripe(subscription.id, "cancel")
+												}
+												className="ac-button"
+											>
+												Cancel renewal <ExternalLink size={15} aria-hidden />
+											</button>
+										</div>
+									) : null}
+									{subscription.canRestoreRenewal ? (
+										<div className="ac-renewal-action">
+											<button
+												type="button"
+												className="ac-button"
+												disabled={busy}
+												onClick={() =>
+													void openStripe(subscription.id, "restore")
+												}
+											>
+												Restore renewal <ExternalLink size={15} aria-hidden />
+											</button>
+										</div>
+									) : null}
+								</div>
+								{(subscription.canCancel || subscription.canRestoreRenewal) && (
+									<p className="billing-action-note">
+										{subscription.canCancel
+											? subscription.trial?.stage === "trial"
+												? "Cancel before your trial ends to avoid a charge. Access stays until then."
+												: subscription.status === "active" &&
+														(!subscription.trial ||
+															subscription.trial.stage === "paid")
+													? "Cancel renewal in Stripe. Access stays until the end of your paid period."
+													: "Confirm cancellation in Stripe to stop future renewals."
+											: "Restore renewal in Stripe. Your current end date stays the same."}
+									</p>
+								)}
+							</SubscriptionPresentation>
 						</section>
 					))}
 					{previous.length > 0 && (

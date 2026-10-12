@@ -563,6 +563,7 @@ test("an existing subscriber can still open account management from yearly prici
 	assert.ok(manage);
 	await act(async () => manage.click());
 	assert.equal(window.location.pathname, "/account/billing");
+	assert.equal(window.location.search, "?manage=1");
 });
 
 test("losing annual availability does not silently submit a monthly checkout", async () => {

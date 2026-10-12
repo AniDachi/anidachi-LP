@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1791729911.3757694,
-    "seen": 1791731955.917144,
-    "ast_hash": "c8cc3e242fd23a015dff565184ab7914",
+    "mtime": 1791788495.3622427,
+    "seen": 1791789032.9503272,
+    "ast_hash": "03dc278ab9304388866447b8e7ce56d7",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
@@ -3582,10 +3582,10 @@
     "semantic_hash": "297535b2a1e217a5aec894d4937eeb74"
   },
   "docs/social-pricing-model.md": {
-    "mtime": 1791746508.9917636,
-    "seen": 1791746954.234352,
+    "mtime": 1791788638.7100172,
+    "seen": 1791789033.003752,
     "ast_hash": "24a8c5405395a7a64e8aec2f8b7dfe11",
-    "semantic_hash": "2c9ae103e38e45bf2ed128e53c7485b9"
+    "semantic_hash": "fccfe3a2e00e9c82a4365cb7ab901fc7"
   },
   "docs/staging-acceptance-checklist.md": {
     "mtime": 1789490459.0094938,
@@ -7236,15 +7236,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1791754860.748507,
-    "seen": 1791755191.531425,
-    "ast_hash": "5eb25d49626731858f88477bcf0c4468",
+    "mtime": 1791788936.8269289,
+    "seen": 1791789032.950321,
+    "ast_hash": "692cda74a302e780648864998bdf5d05",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
-    "mtime": 1791731022.7923157,
-    "seen": 1791731955.917142,
-    "ast_hash": "fb83ae9db5643880f28a74abb19db2c6",
+    "mtime": 1791788495.362164,
+    "seen": 1791789032.950324,
+    "ast_hash": "23b27f47e96ec7a15f1f8801b7a59c3c",
     "semantic_hash": ""
   },
   "apps/web/app/account/watch-library/watch-library-capacity.tsx": {
@@ -7314,9 +7314,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1791754861.2885094,
-    "seen": 1791755191.531431,
-    "ast_hash": "9d34d56a91b3863644b35fe722e54678",
+    "mtime": 1791788936.827274,
+    "seen": 1791789032.950328,
+    "ast_hash": "35a29c06ddc493299cccb862fe18a263",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
@@ -8922,9 +8922,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
-    "mtime": 1791729876.2931614,
-    "seen": 1791731955.9171488,
-    "ast_hash": "7c85302e5a9431fd493e39a175a5aaf1",
+    "mtime": 1791788638.7099636,
+    "seen": 1791789032.950329,
+    "ast_hash": "f4575ed589f0012089460cb72410ac2a",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
@@ -9054,9 +9054,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/dev/billing/billing-preview.tsx": {
-    "mtime": 1791745742.4550352,
-    "seen": 1791745801.6802502,
-    "ast_hash": "66e6f66f5d5297aab694b781b01b555c",
+    "mtime": 1791788639.1355543,
+    "seen": 1791789032.950326,
+    "ast_hash": "8496377ecd1904d6788d5c30cec1a443",
     "semantic_hash": ""
   },
   "apps/web/app/dev/billing/page.tsx": {
@@ -10053,6 +10053,12 @@
     "mtime": 1791778353.4251897,
     "seen": 1791778592.439119,
     "ast_hash": "7df2df52186d43092ff9365f9932ed19",
+    "semantic_hash": ""
+  },
+  "apps/web/app/account/billing/subscription-summary.tsx": {
+    "mtime": 1791788639.1355546,
+    "seen": 1791789032.950325,
+    "ast_hash": "1401a502e5e100750160f8ed83dcf723",
     "semantic_hash": ""
   }
 }
