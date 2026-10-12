@@ -6361,7 +6361,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L261"
+      "source_location": "L270"
     },
     {
       "id": "apps_web_scripts_cache_jikan_posters_jikanapianime",
@@ -37133,7 +37133,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L184"
+      "source_location": "L189"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_buildwatchpagefaq",
@@ -37144,7 +37144,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L277"
+      "source_location": "L286"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_buildwatchpagemetadescription",
@@ -37155,7 +37155,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L129"
+      "source_location": "L134"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_classifyepisodes",
@@ -37166,7 +37166,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L263"
+      "source_location": "L272"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_extrawhywatchparagraphs",
@@ -37188,7 +37188,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L70"
+      "source_location": "L75"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_genreset",
@@ -37221,7 +37221,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L104"
+      "source_location": "L109"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_watchpageresourceitemlist",
@@ -37232,7 +37232,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L217"
+      "source_location": "L226"
     },
     {
       "id": "apps_web_scripts_cache_jikan_posters_entryfromapi",
@@ -190068,7 +190068,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "description": "SEO Trust & Authority plan dated 2026-07-28. The document still describes net-new SEO batches as frozen pending current cohort review. Owner exceptions updated 2026-10-12 do not remove other requirements. Footer says last reviewed 2026-08-12 for owner-approved /feature-requests and prior URL stability, winner queue and exit criteria.",
+      "status": "documented_freeze_with_owner_exceptions"
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_net_new_seo_route_freeze",
@@ -190080,8 +190082,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Net-new SEO route batches remain frozen pending the current public cohort 30/60/90-day review.",
-      "_origin": "semantic"
+      "description": "Net-new SEO route batches are frozen until the current public cohort completes a 30/60/90-day review. The document requires an explicit owner freeze-lift note before lifting.",
+      "_origin": "semantic",
+      "rationale": "Require cohort review before new SEO route batches."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_free_tool_pages_owner_approval",
@@ -190093,7 +190096,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "The October 9 owner exception approves /tools/* filler lists, One Piece episode count, random anime generator, watch orders and Crunchyroll schedule, overriding the September 28 rejection.",
+      "description": "The 2026-10-09 owner approval covers /tools/* filler lists, One Piece episode count, random anime generator, watch orders and Crunchyroll schedule, superseding the 2026-09-28 rejection in .cursor/scratchpad.md.",
       "_origin": "semantic"
     },
     {
@@ -190106,8 +190109,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "The October 12 owner decision specifies https://www.anidachi.app, production NEXT_PUBLIC_SITE_URL set to www, and apex 308 to www.",
-      "rationale": "Previously apex canonicals combined with apex-to-www 307 responses and Google indexed pages on both hosts.",
+      "description": "The 2026-10-12 owner SEO audit using GSC, GA4 and Amplitude approves https://www.anidachi.app as canonical host. Public metadata and sitemaps use getSeoSiteOrigin() to normalize known public hosts to www.",
+      "rationale": "Use the approved www hostname for public SEO output.",
       "_origin": "semantic"
     },
     {
@@ -190120,7 +190123,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "The owner approves four exact-twin consolidations, described in this plan as 301 merges.",
+      "description": "Owner approved four permanent 308 redirects for exact guide twins as exceptions to the freeze.",
       "_origin": "semantic"
     },
     {
@@ -190133,7 +190136,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "/guides/netflix-teleparty -> /guides/teleparty-netflix",
+      "description": "Approved 308: /guides/netflix-teleparty to /guides/teleparty-netflix.",
       "_origin": "semantic"
     },
     {
@@ -190146,7 +190149,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "/guides/anime-date-night-ideas-long-distance -> /long-distance-anime-date-night-ideas",
+      "description": "Approved 308: /guides/anime-date-night-ideas-long-distance to /long-distance-anime-date-night-ideas.",
       "_origin": "semantic"
     },
     {
@@ -190159,7 +190162,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll -> /guides/how-to-remove-shows-from-continue-watching-on-crunchyroll",
+      "description": "Approved 308: /guides/how-to-remove-anime-from-continue-watching-on-crunchyroll to /guides/how-to-remove-shows-from-continue-watching-on-crunchyroll.",
       "_origin": "semantic"
     },
     {
@@ -190172,7 +190175,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "/guides/how-to-stream-anime-on-discord -> /guides/how-to-watch-anime-with-friends-on-discord",
+      "description": "Approved 308: /guides/how-to-stream-anime-on-discord to /guides/how-to-watch-anime-with-friends-on-discord.",
       "_origin": "semantic"
     },
     {
@@ -190185,7 +190188,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Bare /watch/naruto redirects with 308 to /watch/naruto-with-friends.",
+      "description": "Bare watch slugs such as /watch/naruto redirect 308 to /watch/naruto-with-friends.",
       "_origin": "semantic"
     },
     {
@@ -190198,14 +190201,14 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Exclude lastmod, private routes and /dev routes; include /extension.",
-      "rationale": "File modification times reset on each Vercel build and falsely imply freshness.",
+      "description": "Sitemap omits lastmod, excludes private and /dev routes, and includes /extension.",
+      "rationale": "File mtimes reset on every Vercel build and do not prove content freshness.",
       "_origin": "semantic"
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_watch_page_aggregaterating_removal",
       "label": "Watch page AggregateRating removal",
-      "file_type": "rationale",
+      "file_type": "concept",
       "source_file": "apps/web/docs/seo-portfolio-freeze.md",
       "source_location": "apps/web/docs/seo-portfolio-freeze.md:19",
       "source_url": null,
@@ -190225,8 +190228,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Until about 2026-11-02 preserve titles, H1s and URLs on /, /watch-anime-together and /guides/best-anime-to-watch-with-friends.",
-      "rationale": "Allow Google to move those pages from apex to www.",
+      "description": "Until about 2026-11-02 keep titles, H1s and URLs unchanged on /, /watch-anime-together and /guides/best-anime-to-watch-with-friends.",
+      "rationale": "Keep priority pages stable while Google moves them from apex to www.",
       "_origin": "semantic"
     },
     {
@@ -190239,8 +190242,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Do not risk existing ranking, indexation or core product flows.",
-      "_origin": "semantic"
+      "description": "Do not risk current ranking, indexation or core product flows. Allowed changes enrich existing URLs in place; add non-SEO or owner-approved docs/tools/pages; improve analytics attribution and agent rules; and stop false freshness while keeping discovery sitemaps live.",
+      "_origin": "semantic",
+      "rationale": "Protect established rankings, discovery and current product behavior."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_ranked_url_stability",
@@ -190252,8 +190256,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Enrich copy, CTA and schema on the same path; preserve ranked URL paths, slugs, redirects and canonical targets.",
-      "rationale": "Google should not be forced to re-associate existing ranking equity.",
+      "description": "Public marketing URLs are already ranked. Do not change paths, slugs, redirects or canonical targets to another page; enrich copy, CTA and schema on the same path.",
+      "rationale": "Do not force Google to reassociate ranked URL equity.",
       "_origin": "semantic"
     },
     {
@@ -190266,8 +190270,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Explicit owner approval plus GSC evidence is required for Merge/301/Retire, renames, canonical retargets, marketing noindex, discovery-sitemap deletion, crawl-path reduction, high-traffic intent rewrites and core flow changes beyond optional metadata.",
-      "_origin": "semantic"
+      "description": "Without explicit owner approval plus GSC evidence, forbid 301/merge/retire; slug/path renames or canonical retargets; new noindex on marketing URLs; deletion of cohort/force-index sitemap during Coverage recovery; shrinking footer/nav crawl paths; high-traffic H1/intent rewrites; and checkout/auth/room/billing behavior changes beyond optional metadata.",
+      "_origin": "semantic",
+      "rationale": "High-impact URL, indexation and product changes require explicit owner approval and evidence."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_feature_requests_public_feedback_form",
@@ -190279,7 +190284,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "/feature-requests is an owner-approved additive product surface.",
+      "description": "/feature-requests is an owner-approved additive public product feedback form, not SEO growth bait.",
       "_origin": "semantic"
     },
     {
@@ -190292,8 +190297,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Use seo:portfolio Keep/Enrich as the default backlog, enrich winners in place, and treat unapproved Merge/301 rows as report-only while strengthening internal links.",
-      "_origin": "semantic"
+      "description": "While frozen, run seo:portfolio and default to Keep/Enrich. Enrich winners on the same URL with CTR metadata, answer-first copy, mid CTA and product truth. Treat Merge/301 suggestions as report-only; strengthen internal links toward the owner page instead of redirecting. Keep FORCE_INDEX_URL_PATHS and /force-index-sitemap.xml advertised until Coverage recovers.",
+      "_origin": "semantic",
+      "rationale": "Improve existing winners while maintaining stable ranked paths during the freeze."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_force_index_discovery_sitemap",
@@ -190305,8 +190311,13 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Keep FORCE_INDEX_URL_PATHS and /force-index-sitemap.xml advertised until Coverage recovers.",
-      "_origin": "semantic"
+      "description": "Keep FORCE_INDEX_URL_PATHS from apps/web/lib/force-index-urls.ts and /force-index-sitemap.xml advertised until Coverage recovers.",
+      "_origin": "semantic",
+      "rationale": "Preserve discovery for the recovering cohort.",
+      "references": [
+        "apps/web/lib/force-index-urls.ts",
+        "/force-index-sitemap.xml"
+      ]
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_seo_freeze_exit_criteria",
@@ -190318,8 +190329,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Require a documented 30/60/90-day GSC Coverage cohort review, a material drop in Discovered-not-indexed or owner acceptance, continued publishing gates, and an explicit owner freeze-lifted note.",
-      "_origin": "semantic"
+      "description": "All required for lifting: documented 30/60/90-day review of force-index cohort against GSC Coverage; material decrease in Discovered-not-indexed or owner acceptance of residual; publishing gate still applied for every net-new URL without renaming ranked URLs; and an explicit owner freeze-lift note in this document.",
+      "_origin": "semantic",
+      "rationale": "Freeze exit requires cohort evidence, publishing discipline and explicit owner decision."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_net_new_url_publishing_gate",
@@ -190331,8 +190343,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Require owned-query check, a hub plus two inbound links, and reject queries below ten searches per month; never satisfy the gate by renaming ranked URLs.",
-      "_origin": "semantic"
+      "description": "Every net-new URL keeps an owned-query check, parent hub plus two inbound links and rejection below 10 monthly searches. Never satisfy publication by renaming ranked URLs.",
+      "_origin": "semantic",
+      "rationale": "New URLs still require distinct demand and internal discovery after freeze exit."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_gsc_coverage_cohort_review",
@@ -190344,7 +190357,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Review Indexed versus Discovered/Crawled-not-indexed for the force-index cohort. The portfolio audit does not replace Coverage.",
+      "description": "Review force-index cohort at 30/60/90 days using GSC Coverage distinctions Indexed, Discovered-not-indexed and Crawled-not-indexed. Freeze exit requires material reduction in Discovered-not-indexed unless owner accepts residual.",
       "_origin": "semantic"
     },
     {
@@ -190357,8 +190370,12 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "pnpm --filter @anidachi/web seo:portfolio inventories public routes and animeList, GSC page/query-page data, GA4 landing-path sessions and key events, and Keep/Enrich/Merge/301/Review suggestions.",
-      "_origin": "semantic"
+      "description": "Run pnpm --filter @anidachi/web seo:portfolio, optionally with -- --days 28 --out ./tmp/seo-portfolio.json. Report covers complete public route inventory from static discovery and animeList, GSC page and query-by-page cannibalization candidates, GA4 sessions/organic sessions/key events by landing path, and Keep/Enrich/Merge/301/Review suggestions.",
+      "_origin": "semantic",
+      "validation_commands": [
+        "pnpm --filter @anidachi/web seo:portfolio",
+        "pnpm --filter @anidachi/web seo:portfolio -- --days 28 --out ./tmp/seo-portfolio.json"
+      ]
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_google_marketing_oauth",
@@ -190370,7 +190387,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Search Console and Analytics access for the portfolio audit requires Google Marketing OAuth through Kreatli CRM reconnect.",
+      "description": "Portfolio audit requires Google Marketing OAuth for Search Console and Analytics, reconnected through Kreatli CRM.",
       "_origin": "semantic"
     },
     {
@@ -190383,7 +190400,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Capture first-touch seo_landing_path in session storage and attach it to conversion records; invisible to UI and does not change checkout success or failure.",
+      "description": "First-touch seo_landing_path is captured in session storage and attached to GA4 conversion events and Stripe Checkout/Subscription metadata. Invisible to UI and does not change checkout success/failure. See docs/CONVERSION_METRICS.md.",
       "_origin": "semantic"
     },
     {
@@ -190396,7 +190413,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "description": "GA4 conversion events receive first-touch seo_landing_path attribution."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_stripe_checkout_and_subscription_metadata",
@@ -190408,7 +190426,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "description": "Stripe Checkout and Subscription metadata receive first-touch seo_landing_path attribution."
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_conversion_metrics_md_reference",
@@ -190421,7 +190440,10 @@
       "author": null,
       "contributor": null,
       "description": "Referenced attribution documentation: docs/CONVERSION_METRICS.md.",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "references": [
+        "docs/CONVERSION_METRICS.md"
+      ]
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_seo_agent_operating_contract_reference",
@@ -190433,8 +190455,11 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Referenced contract: .cursor/agents/anidachi-seo-aeo-pages.md.",
-      "_origin": "semantic"
+      "description": "SEO agent operating contract and publishing gates are in .cursor/agents/anidachi-seo-aeo-pages.md.",
+      "_origin": "semantic",
+      "references": [
+        ".cursor/agents/anidachi-seo-aeo-pages.md"
+      ]
     },
     {
       "id": "apps_web_docs_seo_portfolio_freeze_seo_content_guidelines_reference",
@@ -190446,8 +190471,11 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Durable source of truth referenced as apps/web/docs/seo-content-guidelines.md.",
-      "_origin": "semantic"
+      "description": "Durable source of truth is apps/web/docs/seo-content-guidelines.md.",
+      "_origin": "semantic",
+      "references": [
+        "apps/web/docs/seo-content-guidelines.md"
+      ]
     },
     {
       "id": "docs_releases_seo_2026_10_12_selective_website_release_october_12_selective_website_release",
@@ -191980,6 +192008,64 @@
       "external": true,
       "source_file": "",
       "_origin": "ast"
+    },
+    {
+      "id": "apps_web_docs_seo_portfolio_freeze_runtime_origin_preservation",
+      "label": "Runtime origin preservation",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Keep NEXT_PUBLIC_SITE_URL and getResolvedSiteOrigin() unchanged for runtime consumers, including Gmail OAuth callback fallbacks; changing the shared environment value is not an SEO fix.",
+      "rationale": "SEO canonical normalization must preserve runtime and OAuth callback behavior.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_portfolio_freeze_vercel_apex_redirect_authorization",
+      "label": "Vercel apex redirect authorization",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "After separate production authorization, change only the existing Vercel apex-to-www redirect status from 307 to 308; preserve destination, paths and queries. This is a scoped approval-dependent operation, not evidence of deployment.",
+      "rationale": "Make the existing host redirect permanent while preserving its routing behavior.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_portfolio_freeze_selective_website_release_contract_reference",
+      "label": "Selective website release contract reference",
+      "file_type": "document",
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Selective release contract referenced at docs/releases/seo/2026-10-12-selective-website-release.md.",
+      "references": [
+        "docs/releases/seo/2026-10-12-selective-website-release.md"
+      ],
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_web_docs_seo_portfolio_freeze_portfolio_audit_limits",
+      "label": "Portfolio audit limits",
+      "file_type": "rationale",
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:66",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Audit does not replace GSC Coverage Indexed/Discovered-not-indexed/Crawled-not-indexed, manual claim verification before Merge/301, owner approval before URL removal/redirect, or URL stability. Merge/301 must not ship without owner approval and evidence; prefer never moving ranked paths.",
+      "rationale": "Audit action suggestions do not authorize redirects or replace indexing evidence.",
+      "_origin": "semantic"
     }
   ],
   "links": [
@@ -239319,7 +239405,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/app/watch/[slug]/page.tsx",
-      "source_location": "L461",
+      "source_location": "L470",
       "weight": 1.0
     },
     {
@@ -239330,7 +239416,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/app/watch/[slug]/page.tsx",
-      "source_location": "L558",
+      "source_location": "L567",
       "weight": 1.0
     },
     {
@@ -239341,7 +239427,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/app/watch/[slug]/page.tsx",
-      "source_location": "L597",
+      "source_location": "L610",
       "weight": 1.0
     },
     {
@@ -255472,7 +255558,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L297",
+      "source_location": "L306",
       "weight": 1.0
     },
     {
@@ -255483,7 +255569,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L298",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -255494,7 +255580,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L325",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -255505,7 +255591,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L405",
+      "source_location": "L419",
       "weight": 1.0,
       "confidence_score": 1.0
     },
@@ -255517,7 +255603,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L133",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -255528,7 +255614,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L161",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -255539,7 +255625,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L15",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -255550,7 +255636,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L18",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -255561,7 +255647,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L71",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -255572,7 +255658,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L74",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -255583,7 +255669,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L231",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -255594,7 +255680,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L251",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -432273,7 +432359,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L104",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -432283,7 +432369,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L129",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -432303,7 +432389,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L184",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -432313,7 +432399,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L217",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -432323,7 +432409,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L261",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -432333,7 +432419,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L263",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -432343,7 +432429,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L277",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -432363,7 +432449,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L70",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -510767,7 +510853,8 @@
       "context": "call",
       "source_file": "apps/web/app/watch/[slug]/page.tsx",
       "source_location": "L209",
-      "weight": 1.0
+      "weight": 1.0,
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_app_watch_slug_page_animewithfriendspage",
@@ -510886,7 +510973,8 @@
       "context": "call",
       "source_file": "apps/web/app/watch/[slug]/page.tsx",
       "source_location": "L52",
-      "weight": 1.0
+      "weight": 1.0,
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_app_watch_slug_page_generatemetadata",
@@ -520615,8 +520703,9 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L134",
-      "weight": 1.0
+      "source_location": "L139",
+      "weight": 1.0,
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_lib_watch_page_rich_content_classifyepisodes",
@@ -520626,8 +520715,9 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L264",
-      "weight": 1.0
+      "source_location": "L273",
+      "weight": 1.0,
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_lib_watch_page_rich_content_has",
@@ -590330,9 +590420,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
-      "source_location": "L108",
+      "source_location": "L113",
       "weight": 1.0,
-      "_origin": "ast"
+      "_origin": "ast",
+      "confidence_score": 1.0
     },
     {
       "source": "apps_web_components_seo_page_layout_seopagelayoutprops",
@@ -590390,6 +590481,306 @@
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/tools/schedule-and-orders.test.ts",
       "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_runtime_origin_preservation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_vercel_apex_redirect_authorization",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_selective_website_release_contract_reference",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_netflix_teleparty_guide_consolidation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:13",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_long_distance_anime_date_guide_consolidation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:14",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_crunchyroll_continue_watching_guide_consolidation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:15",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_discord_anime_guide_consolidation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:16",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_gsc_coverage_cohort_review",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:45",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_net_new_url_publishing_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:47",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_google_marketing_oauth",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:57",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_portfolio_audit_limits",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:66",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_ga4_conversion_events",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:75",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_stripe_checkout_and_subscription_metadata",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:75",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_trust_and_authority_plan",
+      "target": "apps_web_docs_seo_portfolio_freeze_conversion_metrics_md_reference",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:75",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_canonical_www_hostname_policy",
+      "target": "apps_web_docs_seo_portfolio_freeze_runtime_origin_preservation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_canonical_www_hostname_policy",
+      "target": "apps_web_docs_seo_portfolio_freeze_vercel_apex_redirect_authorization",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_canonical_www_hostname_policy",
+      "target": "apps_web_docs_seo_portfolio_freeze_selective_website_release_contract_reference",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_vercel_apex_redirect_authorization",
+      "target": "apps_web_docs_seo_portfolio_freeze_selective_website_release_contract_reference",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_ranking_indexation_and_product_safety",
+      "target": "apps_web_docs_seo_portfolio_freeze_owner_approval_and_gsc_evidence_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:28",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_net_new_seo_route_freeze",
+      "target": "apps_web_docs_seo_portfolio_freeze_seo_freeze_exit_criteria",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:41",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_seo_portfolio_audit",
+      "target": "apps_web_docs_seo_portfolio_freeze_portfolio_audit_limits",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:66",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_portfolio_audit_limits",
+      "target": "apps_web_docs_seo_portfolio_freeze_owner_approval_and_gsc_evidence_gate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:70",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_portfolio_audit_limits",
+      "target": "apps_web_docs_seo_portfolio_freeze_gsc_coverage_cohort_review",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:68",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_docs_seo_portfolio_freeze_priority_page_stability_through_november_2",
+      "target": "apps_web_docs_seo_portfolio_freeze_canonical_www_hostname_policy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/docs/seo-portfolio-freeze.md",
+      "source_location": "apps/web/docs/seo-portfolio-freeze.md:20",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_app_watch_slug_page_buildtoc",
+      "target": "apps_web_lib_anime_data_ismovieentry",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/watch/[slug]/page.tsx",
+      "source_location": "L138",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_watch_page_rich_content_extrawhywatchparagraphs",
+      "target": "apps_web_lib_anime_data_ismovieentry",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/watch-page-rich-content.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_watch_page_rich_content_buildwatchhowtosteps",
+      "target": "apps_web_lib_anime_data_ismovieentry",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/watch-page-rich-content.ts",
+      "source_location": "L212",
       "weight": 1.0,
       "_origin": "ast"
     }

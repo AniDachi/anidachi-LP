@@ -1980,9 +1980,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch/[slug]/page.tsx": {
-    "mtime": 1791807577.5364056,
-    "seen": 1791807727.538687,
-    "ast_hash": "e55e58c4f637167fa996bc34718e39b0",
+    "mtime": 1791834190.285829,
+    "seen": 1791834249.8529742,
+    "ast_hash": "fcdb6a5d2af1d64fe625603de2b0d533",
     "semantic_hash": ""
   },
   "apps/web/components.json": {
@@ -2856,9 +2856,9 @@
     "semantic_hash": "5a6fd53fdcf2be529e9cc0b718fde352"
   },
   "apps/web/lib/watch-page-rich-content.ts": {
-    "mtime": 1791807577.5373695,
-    "seen": 1791807727.5387,
-    "ast_hash": "390c91f6fa98ee563fec07b24c5bc234",
+    "mtime": 1791833919.432701,
+    "seen": 1791834249.852981,
+    "ast_hash": "c6d1d15e49a2dd94385fd1d9919410d0",
     "semantic_hash": ""
   },
   "apps/web/lib/watch-season-inference.ts": {
@@ -4818,10 +4818,10 @@
     "semantic_hash": ""
   },
   "apps/web/docs/seo-portfolio-freeze.md": {
-    "mtime": 1791807576.9824328,
-    "seen": 1791807727.5907252,
+    "mtime": 1791833919.4349115,
+    "seen": 1791834249.997191,
     "ast_hash": "9de2624f8b5d6c9530fe6935f15d9ee9",
-    "semantic_hash": "18bc419dc05cd87a9b5bc3be21dc8ff7"
+    "semantic_hash": "1925fc059bda5cbb69c2e0934f218d59"
   },
   "docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md": {
     "mtime": 1790617479.692815,

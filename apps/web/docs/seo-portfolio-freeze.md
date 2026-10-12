@@ -8,8 +8,8 @@ These are explicit owner exceptions. The rest of this document still applies.
 
 - **2026-10-09:** the free tool pages plan (`/tools/*`: filler lists, One Piece episode count, random anime generator, watch orders, Crunchyroll schedule) is approved. It overrides the 2026-09-28 rejection in `.cursor/scratchpad.md`.
 - **2026-10-12, SEO audit (GSC + GA4 + Amplitude):**
-  - **Canonical host is `https://www.anidachi.app`.** Production `NEXT_PUBLIC_SITE_URL` must be www, and `anidachi.app` must 308 to www. Before this, canonicals pointed at the apex while the apex 307-redirected to www, so Google indexed pages on both hosts.
-  - **301 merges of exact twins**, approved:
+  - **Canonical host is `https://www.anidachi.app`.** Public metadata and sitemaps use `getSeoSiteOrigin()` to normalize the known public hosts to www. Keep `NEXT_PUBLIC_SITE_URL` and `getResolvedSiteOrigin()` unchanged for runtime consumers, including Gmail OAuth callback fallbacks; changing the shared env value is not an SEO fix. After separate production authorization, change only the existing Vercel apex-to-www redirect status from 307 to 308, preserving its destination, paths, and queries. See the [selective release contract](../../../docs/releases/seo/2026-10-12-selective-website-release.md).
+  - **Permanent redirects (308) for exact twins**, approved:
     - `/guides/netflix-teleparty` → `/guides/teleparty-netflix`
     - `/guides/anime-date-night-ideas-long-distance` → `/long-distance-anime-date-night-ideas`
     - `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll` → `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll`
