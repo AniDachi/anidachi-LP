@@ -6,10 +6,10 @@ import {
 	SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/guides/discord-watch-together-activity";
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
 	title: "Discord Watch Together Activity vs a Watchroom",

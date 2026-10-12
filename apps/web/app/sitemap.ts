@@ -5,7 +5,7 @@ import {
   staticPathsToSitemapEntries,
 } from "@/lib/sitemap-discovery";
 import {
-  getResolvedSiteOrigin,
+  getSeoSiteOrigin,
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
 
@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [];
   }
 
-  const siteUrl = getResolvedSiteOrigin();
+  const siteUrl = getSeoSiteOrigin();
   const staticPaths = discoverStaticSitemapUrlPaths();
   const staticRoutes = staticPathsToSitemapEntries(siteUrl, staticPaths);
 

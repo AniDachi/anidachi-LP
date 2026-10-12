@@ -1,5 +1,5 @@
 import { JsonLd } from "@/components/json-ld";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 export function ToolWebAppJsonLd({
   name,
@@ -10,7 +10,7 @@ export function ToolWebAppJsonLd({
   description: string;
   url: string;
 }) {
-  const absolute = `${getResolvedSiteOrigin()}${url}`;
+  const absolute = `${getSeoSiteOrigin()}${url}`;
   return (
     <JsonLd
       data={{

@@ -1,6 +1,6 @@
 import { FORCE_INDEX_URL_PATHS } from "@/lib/force-index-urls";
 import {
-  getResolvedSiteOrigin,
+  getSeoSiteOrigin,
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
 
@@ -26,7 +26,7 @@ export function GET(): Response {
     return new Response("Not Found", { status: 404 });
   }
 
-  const origin = getResolvedSiteOrigin();
+  const origin = getSeoSiteOrigin();
   const urls = FORCE_INDEX_URL_PATHS.map((path) => {
     const loc = escapeXml(`${origin}${path}`);
     return `  <url>\n    <loc>${loc}</loc>\n  </url>`;

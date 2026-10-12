@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { FillerSeriesBody } from "@/components/tools/filler-series-body";
 import { ToolWebAppJsonLd } from "@/components/tools/tool-json-ld";
 import { FILLER_SERIES } from "@/lib/tools/filler-arcs";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/naruto-shippuden-filler-list";
 const series = FILLER_SERIES["naruto-shippuden"];
@@ -71,7 +71,7 @@ export default function ShippudenFillerListPage() {
         dateModified="2026-10-11"
         faq={faq}
         headings={headings}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>Naruto Shippuden filler list</SeoGuideTitle>
         <SeoGuideAnswer>

@@ -105,6 +105,9 @@ export function pacingLeadParagraph(
   anime: AnimeEntry,
   episodesDisplay: string
 ): string {
+  if (anime.notOnCrunchyroll && isMovieEntry(anime)) {
+    return `Set aside one evening for ${anime.title}, with a little time after the credits to talk. Check the runtime of your available version and agree on a pause signal before starting.`;
+  }
   const epBlob = `${episodesDisplay} ${anime.episodes}`;
   const long =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
@@ -124,6 +127,9 @@ export function pacingLeadParagraph(
  * each description must differ meaningfully between any two titles of the same genre.
  */
 export function buildWatchPageMetaDescription(anime: AnimeEntry): string {
+  if (anime.notOnCrunchyroll) {
+    return `${anime.title} is not on Crunchyroll. Plan a legal group movie night; AniDachi cannot sync this title. Find discussion tips and alternatives.`;
+  }
   const gs = genreSet(anime.genres);
   const movie = isMovieEntry(anime);
 
@@ -179,6 +185,7 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
   name: string;
   text: string;
 }[] {
+  if (anime.notOnCrunchyroll) return [];
   return [
     {
       name: "Install AniDachi",
@@ -271,6 +278,22 @@ export function buildWatchPageFaq(
   anime: AnimeEntry,
   episodesDisplay: string
 ): { question: string; answer: string }[] {
+  if (anime.notOnCrunchyroll) {
+    return [
+      {
+        question: `Can AniDachi sync ${anime.title}?`,
+        answer: `No. ${anime.title} is not on Crunchyroll, and AniDachi cannot sync this title. AniDachi currently supports Crunchyroll and YouTube.`,
+      },
+      {
+        question: `How can we plan a ${anime.title} movie night?`,
+        answer: `Check which legal service offers ${anime.title} in each viewer's region. Arrange a call, agree on the same version, and count down to start manually. This is separate from an AniDachi room.`,
+      },
+      {
+        question: `How do we avoid ${anime.title} spoilers?`,
+        answer: "Ask everyone to save reviews and plot discussions until after the credits. If someone watches later, keep the discussion in a separate chat.",
+      },
+    ];
+  }
   const gs = genreSet(anime.genres);
   const epClass = classifyEpisodes(anime, episodesDisplay);
 

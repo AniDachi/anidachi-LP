@@ -26,6 +26,8 @@ export interface SeoPageLayoutProps {
   headings?: TocHeading[];
   itemList?: { name: string; url: string; position: number }[];
   aboveFoldCta?: boolean;
+  /** Hide the room CTA when the article concerns an unsupported title. */
+  bottomCta?: boolean;
   /** Override autodetected template (from `url`) for conversion analytics + CTA copy */
   conversionTemplate?: PageTemplateId;
   /** Primary image URL(s) for Article JSON-LD (absolute URLs preferred). */
@@ -64,6 +66,7 @@ export function SeoPageLayout({
   headings,
   itemList,
   aboveFoldCta,
+  bottomCta = true,
   conversionTemplate,
   articleImage,
   midContentSlot,
@@ -106,13 +109,13 @@ export function SeoPageLayout({
       )}
       {midContentSlot ? <div className="not-prose">{midContentSlot}</div> : null}
       {editorialByline}
-      <div className="not-prose mt-8">
+      {bottomCta && <div className="not-prose mt-8">
         <PrimaryCheckoutCta
           pagePath={url}
           pageTemplate={pageTemplate}
           placement="content_bottom"
         />
-      </div>
+      </div>}
     </div>
   );
 

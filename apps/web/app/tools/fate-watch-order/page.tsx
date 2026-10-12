@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ToolWebAppJsonLd } from "@/components/tools/tool-json-ld";
 import { WatchOrderBody } from "@/components/tools/watch-order-body";
 import { WATCH_ORDERS } from "@/lib/tools/watch-orders";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/fate-watch-order";
 const order = WATCH_ORDERS.fate;
@@ -72,13 +72,13 @@ export default function FateWatchOrderPage() {
         dateModified="2026-10-12"
         faq={faq}
         headings={headings}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>Fate watch order</SeoGuideTitle>
         <SeoGuideAnswer>
           <p>
             <strong>
-              Watch Unlimited Blade Works, then the Heaven's Feel films, then Fate/Zero, then
+              Watch Unlimited Blade Works, then the Heaven&apos;s Feel films, then Fate/Zero, then
               Fate/strange Fake.
             </strong>{" "}
             This is a first-watch order for a group starting fresh, not every spinoff.

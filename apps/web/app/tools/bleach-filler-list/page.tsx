@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { FillerSeriesBody } from "@/components/tools/filler-series-body";
 import { ToolWebAppJsonLd } from "@/components/tools/tool-json-ld";
 import { FILLER_SERIES } from "@/lib/tools/filler-arcs";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/bleach-filler-list";
 const series = FILLER_SERIES.bleach;
@@ -72,7 +72,7 @@ export default function BleachFillerListPage() {
         dateModified="2026-10-12"
         faq={faq}
         headings={headings}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>Bleach filler list</SeoGuideTitle>
         <SeoGuideAnswer>

@@ -7,9 +7,9 @@ import {
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
-const articleImage = `${getResolvedSiteOrigin()}/opengraph-image.png`;
+const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
   title: "Teleparty Netflix — Watch a Netflix Title with Teleparty",

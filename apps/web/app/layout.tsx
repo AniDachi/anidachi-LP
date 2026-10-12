@@ -16,7 +16,7 @@ import {
   ANIDACHI_OG_IMAGE_PATH,
 } from "@/lib/brand";
 import {
-  getResolvedSiteOrigin,
+  getSeoSiteOrigin,
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
 import "./globals.css";
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
   description:
     "Watch Crunchyroll and YouTube together with friends. AniDachi syncs playback in desktop Chrome with chat and reactions. Friends join free.",
-  metadataBase: new URL(getResolvedSiteOrigin()),
+  metadataBase: new URL(getSeoSiteOrigin()),
   // No root canonical: a page without its own `alternates.canonical` must not inherit the homepage URL.
   openGraph: {
     title:
