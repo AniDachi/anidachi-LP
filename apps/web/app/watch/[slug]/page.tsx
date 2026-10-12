@@ -132,7 +132,7 @@ function buildToc(
 ): TocHeading[] {
   const base: TocHeading[] = [
     { id: "series-overview", label: `What is ${anime.title}?`, level: 2 },
-    { id: "setup", label: "Step-by-step setup", level: 2 },
+    { id: "setup", label: anime.notOnCrunchyroll ? "Plan a movie night" : "Step-by-step setup", level: 2 },
     {
       id: "watch-formats",
       label: "Live sessions and independent catch-up",
@@ -225,11 +225,11 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
   return (
     <>
-      <HowToJsonLd
+      {howToSteps.length > 0 && <HowToJsonLd
         name={`How to watch ${anime.title} with friends on Crunchyroll`}
         description={`Use AniDachi watchrooms to sync ${anime.title} and chat with your group live. Personal history is available on Plus or Pro.`}
         steps={howToSteps}
-      />
+      />}
       {isMovie ? (
         <MovieJsonLd
           name={anime.title}
@@ -260,7 +260,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: anime.title, url: `/watch/${rawSlug}` },
       ]}
-      title={`Watch ${anime.title} with Friends — Live Watchrooms`}
+      title={`Watch ${anime.title} with Friends — ${anime.notOnCrunchyroll ? "Group Movie Night" : "Live Watchrooms"}`}
       description={metaDescription}
       url={`/watch/${rawSlug}`}
       articleImage={posterUrl ?? undefined}
@@ -270,7 +270,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       faq={faq}
       headings={buildToc(relatedAnime.length > 0, anime)}
       itemList={resourceItemList}
-      aboveFoldCta
+      aboveFoldCta={!anime.notOnCrunchyroll}
+      bottomCta={!anime.notOnCrunchyroll}
     >
       <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
         Watch {anime.title} with Friends
@@ -283,7 +284,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           {anime.notOnCrunchyroll
-            ? `${anime.title} is not on Crunchyroll, so AniDachi can't sync it today. AniDachi syncs Crunchyroll and YouTube; for a ${isMovie ? "movie" : "group"} night, pick a related title below that is on Crunchyroll.`
+            ? `${anime.title} is not on Crunchyroll, so AniDachi can't sync it today. AniDachi syncs Crunchyroll and YouTube; for a ${isMovie ? "movie" : "group"} night, choose an available Crunchyroll title and check that everyone can stream it in their region.`
             : isMovie
             ? `Yes — watch ${anime.title} with friends as a live movie night using AniDachi on Crunchyroll. Everyone streams on their own account with synced playback, chat, reactions, and voice/video. Works for ${PRICING_ROOM_SIZE_RANGE}.`
             : (() => {
@@ -310,7 +311,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
             <figure className="mx-auto shrink-0 md:mx-0 w-[min(220px,55vw)]">
               <Image
                 src={posterUrl}
-                alt={`${anime.title} anime poster — watch together with friends on Crunchyroll`}
+                alt={`${anime.title} anime poster`}
                 width={220}
                 height={330}
                 className="w-full rounded-lg shadow-md object-cover aspect-[2/3]"
@@ -336,7 +337,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
               )}
               <div>
                 <span className="text-foreground/50">{isMovie ? "Format" : "Episodes"}</span>
-                <p className="font-medium text-foreground">{episodesDisplay}</p>
+                <p className="font-medium text-foreground">{isMovie ? "Feature film" : episodesDisplay}</p>
               </div>
               {statusLine && (
                 <div>
@@ -379,6 +380,16 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         </div>
       </div>
 
+      {anime.notOnCrunchyroll ? (
+        <section id="setup" className="mt-10 mb-8 scroll-mt-24">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Plan a {anime.title} Movie Night</h2>
+          <p className="text-foreground/80 leading-relaxed">
+            AniDachi cannot sync this title. Check legal availability in each viewer&apos;s
+            region, choose the same version, and arrange a call with a manual countdown.
+            For an AniDachi room, choose a title available to everyone on Crunchyroll instead.
+          </p>
+        </section>
+      ) : <>
       <h2
         id="setup"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -403,6 +414,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         login.
       </p>
 
+      </>}
+
       <h2
         id="watch-formats"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -415,6 +428,13 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         hit play. Best when everyone shares at least one overlapping hour — great
         for seasonal drops or finale episodes you want to experience unmuted.
       </p>
+      {anime.notOnCrunchyroll ? (
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          If schedules do not overlap, watch independently on a legal service and meet
+          afterward to discuss the film. AniDachi room sync and personal history do not
+          apply to this title.
+        </p>
+      ) : <>
       <p className="text-foreground/80 leading-relaxed mb-4">
         <strong>Independent catch-up.</strong> When someone misses a session, let them watch {anime.title} separately before the next meeting. Personal history is individual, not shared group progress. Async catch-up with replayed reactions is planned, not available today.
       </p>
@@ -424,6 +444,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         Use AniDachi for the shared timeline — otherwise one streamer&apos;s upload
         becomes the bottleneck for everyone else.
       </p>
+
+      </>}
 
       <h2
         id="why-async"
@@ -611,7 +633,9 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         Accounts, Dub/Sub Choices, and Regional Catalog
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Each viewer streams {anime.title} through their own Crunchyroll session.
+        {anime.notOnCrunchyroll
+          ? `Check a legal provider for ${anime.title} in each viewer's region; this title is not on Crunchyroll.`
+          : `Each viewer streams ${anime.title} through their own Crunchyroll session.`}{" "}
         Dub and subtitle tracks can vary by region and license window — double-check
         that everyone sees the same audio option before you hype a shared line
         reading. If an episode is unavailable in someone&apos;s territory, pause the

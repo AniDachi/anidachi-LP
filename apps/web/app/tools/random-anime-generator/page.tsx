@@ -5,7 +5,7 @@ import { AnimeSpin, type SpinEntry, type SpinLength } from "@/components/tools/a
 import { ToolWebAppJsonLd } from "@/components/tools/tool-json-ld";
 import { animeList, isMovieEntry } from "@/lib/anime-data";
 import { getCachedJikanEntry } from "@/lib/anime-jikan-cache";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/random-anime-generator";
 const headingClass = "mt-12 mb-3 scroll-mt-24 text-2xl font-bold tracking-[-0.02em] text-ani-text";
@@ -91,7 +91,7 @@ export default function RandomAnimeGeneratorPage() {
         dateModified="2026-10-11"
         faq={faq}
         headings={headings}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>Random anime generator</SeoGuideTitle>
         <SeoGuideAnswer>

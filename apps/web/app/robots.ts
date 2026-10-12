@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { INTERNAL_TOOL_ROBOTS_DISALLOW } from "@/lib/internal-tool-routes";
 import {
-  getResolvedSiteOrigin,
+  getSeoSiteOrigin,
   isAiTrainingCrawlerBlockEnabled,
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
@@ -21,7 +21,7 @@ export default function robots(): MetadataRoute.Robots {
     };
   }
 
-  const origin = getResolvedSiteOrigin();
+  const origin = getSeoSiteOrigin();
 
   const rules: MetadataRoute.Robots["rules"] = [
     {

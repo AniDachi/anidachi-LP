@@ -40,7 +40,7 @@ export function ReleaseSchedule({ week }: { week: ScheduleWeek }) {
 
       {next ? (
         <p className="mb-6 rounded-[16px] border border-ani-line bg-ani-panel px-4 py-3 text-sm text-ani-muted sm:px-5">
-          Next up: <strong className="font-medium text-ani-text">{next.slot.title}</strong>
+          Next scheduled: <strong className="font-medium text-ani-text">{next.slot.title}</strong>
           {next.slot.episode ? ` ${next.slot.episode}` : ""}, {next.time}{" "}
           {new Intl.DateTimeFormat("en-US", { timeZone, weekday: "long" }).format(next.at)}.
         </p>
@@ -86,7 +86,7 @@ export function ReleaseSchedule({ week }: { week: ScheduleWeek }) {
                       {row.slot.episode ? (
                         <span className="ml-2 text-sm text-ani-muted">{row.slot.episode}</span>
                       ) : null}
-                      {past ? <span className="ml-2 text-xs text-ani-muted">Out</span> : null}
+                      {past ? <span className="ml-2 text-xs text-ani-muted">Scheduled time passed</span> : null}
                     </span>
                   </li>
                 );

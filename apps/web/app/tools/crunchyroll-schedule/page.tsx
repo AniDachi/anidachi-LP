@@ -6,7 +6,7 @@ import { ReleaseSchedule } from "@/components/tools/release-schedule";
 import { ToolWebAppJsonLd } from "@/components/tools/tool-json-ld";
 import { CRUNCHYROLL_WEEK, ONE_PIECE_STATUS } from "@/lib/tools/crunchyroll-schedule";
 import { slotAnchor, slotInstant } from "@/lib/tools/schedule-time";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const url = "/tools/crunchyroll-schedule";
 const headingClass = "mt-12 mb-3 scroll-mt-24 text-2xl font-bold tracking-[-0.02em] text-ani-text";
@@ -16,19 +16,20 @@ const weekLabel = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
   month: "short",
   day: "numeric",
+  year: "numeric",
 }).formatRange(
   new Date(`${week.weekStart}T00:00:00Z`),
   new Date(new Date(`${week.weekStart}T00:00:00Z`).getTime() + 6 * 86_400_000),
 );
 
 export const metadata: Metadata = {
-  title: "Crunchyroll Release Schedule — This Week, Your Time",
+  title: `Crunchyroll Release Schedule — ${weekLabel}`,
   description:
-    "Crunchyroll release schedule and calendar for this week, converted to your timezone. See the next episode, then watch it together.",
+    `Crunchyroll release schedule for ${weekLabel}, converted to your timezone. Manually checked ${week.checked}; release times may change.`,
   alternates: { canonical: url },
   openGraph: {
     title: "Crunchyroll Release Schedule",
-    description: `${showCount} simulcasts this week, in your timezone.`,
+    description: `${showCount} scheduled simulcasts for ${weekLabel}, in your timezone.`,
     url,
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
@@ -57,7 +58,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
-  { id: "schedule", label: "This week", level: 2 },
+  { id: "schedule", label: weekLabel, level: 2 },
   { id: "one-piece", label: "One Piece release schedule", level: 2 },
   { id: "related", label: "Related", level: 2 },
 ];
@@ -75,7 +76,7 @@ export default function CrunchyrollSchedulePage() {
     <>
       <ToolWebAppJsonLd
         name="Crunchyroll release schedule"
-        description="This week's Crunchyroll simulcasts, converted to your timezone."
+        description={`Crunchyroll simulcasts for ${weekLabel}, converted to your timezone.`}
         url={url}
       />
       <SeoPageLayout
@@ -85,30 +86,30 @@ export default function CrunchyrollSchedulePage() {
           { name: "Crunchyroll release schedule", url },
         ]}
         title="Crunchyroll release schedule"
-        description="This week's Crunchyroll simulcasts, converted to your timezone."
+        description={`Crunchyroll simulcasts for ${weekLabel}, converted to your timezone.`}
         url={url}
         datePublished="2026-10-12"
         dateModified="2026-10-12"
         faq={faq}
         headings={headings}
         itemList={itemList}
-        articleImage={`${getResolvedSiteOrigin()}/opengraph-image.png`}
+        articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
         <SeoGuideTitle>Crunchyroll release schedule</SeoGuideTitle>
         <SeoGuideAnswer>
           <p>
             <strong>
-              {showCount} subtitled simulcasts on Crunchyroll this week, {weekLabel}.
+              {showCount} subtitled simulcasts scheduled for {weekLabel}.
             </strong>{" "}
             Times are in your timezone. Checked {week.checked}.
           </p>
         </SeoGuideAnswer>
 
         <h2 id="schedule" className={headingClass}>
-          Crunchyroll simulcast schedule this week
+          Crunchyroll simulcast schedule: {weekLabel}
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
-          Subtitled releases only, sorted by unlock time. Shows can slip a week, so check the
+          This is a manually maintained schedule, not a live feed. Subtitled releases only, sorted by planned unlock time. Shows can slip a week, so check the
           episode in the app before the group starts.
         </p>
         <div className="mb-10">

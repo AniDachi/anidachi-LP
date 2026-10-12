@@ -10,10 +10,10 @@ import {
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { getSeoSiteOrigin } from "@/lib/site-url";
 import { PRICING_CR_PRICING_SNIPPET } from "@/lib/pricing-copy";
 
-const SITE_URL = getResolvedSiteOrigin();
+const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
