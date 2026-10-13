@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-const state = vi.hoisted(() => ({ data: new Map<string, unknown>() }));
+const state = vi.hoisted(() => ({ data: new Map<string, unknown>(), authWrites: [] as unknown[] }));
 vi.mock("wxt/utils/storage", () => ({
 	storage: {
 		getItem: async (key: string) => state.data.get(key) ?? null,
 		setItem: async (key: string, value: unknown) => {
 			state.data.set(key, structuredClone(value));
+			if (key === "local:authTokens") state.authWrites.push(structuredClone(value));
 		},
 		removeItem: async (key: string) => {
 			state.data.delete(key);
@@ -14,6 +15,7 @@ vi.mock("wxt/utils/storage", () => ({
 vi.mock("../src/diagnostic-log", () => ({ recordDiagnosticEvent: vi.fn() }));
 import {
 	getCurrentExtensionSession,
+	reconcileExtensionSessionAgainstWebsite,
 	handleAuthMessage,
 	requestCurrentExtensionSession,
 	exchangeExtensionAuthCode,
@@ -25,6 +27,7 @@ import {
 	clearStoredAuthTokens,
 	clearStoredAuthTokensIfRefreshToken,
 	getStoredAuthTokens,
+	getBackgroundAuthRevision,
 	setStoredAuthTokens,
 	commitStoredAuthTokensIfCurrent,
 } from "../src/auth-tokens";
@@ -49,6 +52,7 @@ function deferred<T>() {
 }
 beforeEach(() => {
 	state.data.clear();
+	state.authWrites.length = 0;
 });
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -583,5 +587,52 @@ describe("review regressions at the production session boundary", () => {
     await commitStoredAuthTokensIfCurrent(pro, { ...pro, user: { ...pro.user, plan: "plus" } });
     expect((await commitStoredAuthTokensIfCurrent(old, { ...old, user: { ...old.user, plan: "pro" } })).committed).toBe(false);
     expect((await getStoredAuthTokens())?.user.plan).toBe("plus");
+  });
+});
+
+
+describe("bounded exact-family website mismatch cleanup", () => {
+  it("releases held revocation cleanup at the deadline and preserves queued account B after a late completion", async () => {
+    vi.useFakeTimers();
+    await setStoredAuthTokens(tokens);
+    vi.stubGlobal("chrome", {});
+    const accountB = { ...tokens, accessToken: "account-B-access", refreshToken: "account-B-refresh", user: { ...tokens.user, id: "two" } };
+    const remote = deferred<Response>();
+    const paths: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const path = new URL(url).pathname;
+      paths.push(path);
+      if (path.endsWith("/website-session")) return Response.json({ user: accountB.user });
+      if (path.endsWith("/logout")) return remote.promise;
+      return Response.json({ user: accountB.user });
+    }));
+    const reconcile = reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(paths).toEqual(["/api/extension/auth/website-session", "/api/extension/auth/logout"]);
+    let probeDone = false, revisionDone = false, clearDone = false, replacementDone = false;
+    const probe = getCurrentExtensionSession().then(value => { probeDone = true; return value; });
+    const revision = getBackgroundAuthRevision().then(value => { revisionDone = true; return value; });
+    const clear = clearStoredAuthTokens().then(() => { clearDone = true; });
+    const replacement = setStoredAuthTokens(accountB).then(() => { replacementDone = true; });
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect([probeDone, revisionDone, clearDone, replacementDone]).toEqual([false, false, false, false]);
+    expect((await getStoredAuthTokens())?.user.id).toBe("one");
+    await vi.advanceTimersByTimeAsync(1);
+    // Settle remote in finally so RED also releases the real storage authority.
+    try {
+      expect([probeDone, revisionDone, clearDone, replacementDone]).toEqual([true, true, true, true]);
+      expect(await probe).toBeNull();
+      expect(await revision).toEqual(expect.any(String));
+      expect(state.authWrites.slice(1, 3)).toEqual([
+        { authRevision: expect.any(String) },
+        { authRevision: expect.any(String) },
+      ]);
+      expect(await getStoredAuthTokens()).toMatchObject(accountB);
+    } finally {
+      remote.resolve(new Response(null, { status: 200 }));
+      await Promise.all([reconcile, probe, revision, clear, replacement]);
+    }
+    expect(await getStoredAuthTokens()).toMatchObject(accountB);
+    expect(paths).toEqual(["/api/extension/auth/website-session", "/api/extension/auth/logout"]);
   });
 });

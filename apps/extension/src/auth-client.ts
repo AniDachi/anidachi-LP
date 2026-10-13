@@ -759,8 +759,8 @@ async function ensureWebsiteSessionStillMatches(
   const commit = await clearStoredAuthTokensIfCurrentAfter(
     stored,
     async (current) => {
-      await revokeExtensionRefreshToken(current.refreshToken).catch(
-        () => undefined,
+      await runRemoteSignOutStage("refresh-token-revocation", () =>
+        revokeExtensionRefreshToken(current.refreshToken),
       );
     },
   );
