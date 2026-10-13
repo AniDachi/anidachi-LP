@@ -87,7 +87,7 @@ export async function notifyWebRoomEnded(
     throw new Error("Room lifecycle Web callback request failed");
   }
   if (!response.ok) {
-    throw new Error(`Room lifecycle Web callback failed (${response.status})`);
+    throw internalWebCallbackFailure(`Room lifecycle Web callback failed (${response.status})`, response);
   }
 
   const acknowledgement = body as Record<string, unknown> | null;
@@ -140,7 +140,7 @@ export async function notifyWebRoomSource(
     throw new Error("Room source Web callback request failed");
   }
   if (!response.ok) {
-    throw new Error(`Room source Web callback failed (${response.status})`);
+    throw internalWebCallbackFailure(`Room source Web callback failed (${response.status})`, response);
   }
 
 	const acknowledgement =
@@ -397,7 +397,7 @@ export async function notifyWebRoomPolicy(
 		result.roomGeneration !== roomGeneration ||
 		!Array.isArray(result.acknowledged)
 	)
-		throw new Error("Room policy callback failed");
+		throw internalWebCallbackFailure("Room policy callback failed", response);
 	const acknowledged = RoomUsageSummarySchema.array()
 		.max(2)
 		.parse(result.acknowledged);
@@ -409,4 +409,27 @@ export async function notifyWebRoomPolicy(
 	)
 		throw new Error("Room usage not acknowledged");
 	return { acknowledged, policy: result.policy };
+}
+
+// A local error carries HTTP pacing only; no wire acknowledgement contract changes.
+export class InternalWebCallbackError extends Error {
+    constructor(message: string, readonly retryAfterAt?: number) { super(message); }
+}
+function internalWebCallbackFailure(message: string, response: Response): InternalWebCallbackError {
+    let retryAfterAt: number | undefined;
+    if (response.status === 429 || response.status === 503) {
+        const value = response.headers.get("Retry-After")?.trim();
+        if (value && /^\d+$/.test(value)) {
+            const seconds = Number(value);
+            const deadline = Date.now() + seconds * 1000;
+            if (Number.isSafeInteger(seconds) && Number.isSafeInteger(deadline))
+                retryAfterAt = deadline;
+        }
+        else if (value && /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(value)) {
+            const deadline = Date.parse(value);
+            if (Number.isSafeInteger(deadline) && deadline >= 0)
+                retryAfterAt = deadline;
+        }
+    }
+    return new InternalWebCallbackError(message, retryAfterAt);
 }

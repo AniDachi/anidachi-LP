@@ -310,6 +310,7 @@ import { bindWatchHistoryPreferenceListener } from "./watch-history-preference-l
 import {
 	resolveWatchHistoryRuntimeGate,
 	shouldRefreshWatchHistoryAuthority,
+	invalidateWatchHistoryOnAuthStorageChange,
 } from "./watch-history-runtime-policy";
 
 interface OverlayAppProps {
@@ -557,6 +558,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [identityLoaded, setIdentityLoaded] = useState(false);
 	const [authAuthenticated, setAuthAuthenticated] = useState(false);
 	const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
+	const [authRevision, setAuthRevision] = useState<string | null>(null);
 	const [authSessionKey, setAuthSessionKey] = useState<string | null>(null);
 	const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(
 		null,
@@ -849,6 +851,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
 	const watchHistoryRoomSuppressedRef = useRef(true);
 	const watchHistoryAuthContextRef = useRef<{
+		authRevision: string | null;
 		ownerUserId: string | null;
 		accessToken: string | null;
 	} | null>(null);
@@ -1714,8 +1717,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
+		const result = await createCurrentParticipant({ requireVerified: true });
 		setRoomTerminalMessage(null);
-		const result = await createCurrentParticipant();
 		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
 		authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 		authAccessTokenRef.current = result.tokens?.accessToken ?? null;
@@ -1723,6 +1726,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setParticipant(result.participant);
 		setAuthAuthenticated(result.authenticated);
 		setAuthAccessToken(result.tokens?.accessToken ?? null);
+		setAuthRevision(result.tokens?.authRevision ?? null);
 		setAuthSessionKey(result.tokens?.refreshToken ?? null);
 		setAccountUser(result.tokens?.user ?? null);
 		setExtensionContextInvalidated(Boolean(result.requiresPageReload));
@@ -2831,7 +2835,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (retainedRoomAuthority?.roomId === roomIdRef.current) {
 					await controller.setRoomHistoryAuthority(retainedRoomAuthority);
 				}
-				await controller.recover();
+				await controller.recover({ startup: true });
 				await requestWatchHistory(createWatchHistoryContentReconnectMessage());
 				const pending = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "pending-identities", expectedOwnerUserId });
 				if (pending.ok && Array.isArray(pending.data)) for (const value of pending.data) {
@@ -2862,6 +2866,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	useEffect(() => {
 		const next = {
+			authRevision,
 			ownerUserId: participant?.id ?? null,
 			accessToken: authAccessToken,
 		};
@@ -2879,7 +2884,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		void watchHistoryControllerRef.current
 			?.refreshAuthority()
 			.catch(() => undefined);
-	}, [authAccessToken, participant?.id]);
+	}, [authAccessToken, authRevision, participant?.id]);
 
 	useEffect(() => {
 		if (!watchHistoryRuntimeGate.ready) return;
@@ -4456,6 +4461,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setParticipant(result.participant);
 			setAuthAuthenticated(result.authenticated);
 			setAuthAccessToken(result.tokens?.accessToken ?? null);
+			setAuthRevision(result.tokens?.authRevision ?? null);
 			setAuthSessionKey(result.tokens?.refreshToken ?? null);
 			setAccountUser(result.tokens?.user ?? null);
 			setExtensionContextInvalidated(Boolean(result.requiresPageReload));
@@ -4593,7 +4599,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 		};
 
-		const unwatch = storage.watch(AUTH_TOKENS_KEY, () => {
+		const unwatch = storage.watch(AUTH_TOKENS_KEY, (nextValue, previousValue) => {
+			invalidateWatchHistoryOnAuthStorageChange(watchHistoryControllerRef.current, nextValue, previousValue);
 			refreshIdentityFromStorage("auth-storage");
 		});
 		return () => {

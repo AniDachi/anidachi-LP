@@ -13,10 +13,12 @@ import {
   commitStoredAuthTokensIfCurrent,
   type ExtensionAuthTokens,
   getStoredAuthTokens,
+  getBackgroundAuthSession,
+  getBackgroundAuthRevision,
+  replaceStoredAuthTokensIfRevision,
   isSameExtensionAuthSession,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
-  setStoredAuthTokens,
 } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { recordDiagnosticEvent } from "./diagnostic-log";
@@ -64,7 +66,10 @@ export type WebsiteSessionProbe =
   | { status: "browser-flow-required" }
   | { status: "unknown" };
 
-type WebsiteSessionMatchResult = "matches" | "cleared" | "browser-flow-required";
+type WebsiteSessionMatchResult =
+  | "matches"
+  | "cleared"
+  | "browser-flow-required";
 
 export type ExtensionRefreshRequestResult =
   | { kind: "success"; accessToken: string; refreshToken?: string }
@@ -75,6 +80,7 @@ export interface ExtensionSessionRefreshDependencies {
   getStored: () => Promise<ExtensionAuthTokens | null>;
   requestRefresh: (refreshToken: string) => Promise<ExtensionRefreshRequestResult>;
   resolveUser: (accessToken: string) => Promise<AuthenticatedUser | null>;
+  probeUser?: (tokens: ExtensionAuthTokens) => Promise<AuthenticatedUserProbe>;
   commitIfCurrent: (
     expected: ExtensionAuthTokens,
     replacement: ExtensionAuthTokens | null,
@@ -85,6 +91,7 @@ export interface ExtensionSessionRefreshDependencies {
 export interface ExtensionSessionDependencies {
   getStored: () => Promise<ExtensionAuthTokens | null>;
   resolveUser: (accessToken: string) => Promise<AuthenticatedUser | null>;
+  probeUser?: (tokens: ExtensionAuthTokens) => Promise<AuthenticatedUserProbe>;
   commitIfCurrent: (
     expected: ExtensionAuthTokens,
     replacement: ExtensionAuthTokens | null,
@@ -297,8 +304,13 @@ export function normalizeExtensionRefreshResponse(
 
 export async function exchangeExtensionAuthCode(
   request: ExtensionAuthExchangeRequest,
+  expectedRevision?: string | null,
 ): Promise<ExtensionAuthTokens> {
   const parsed = ExtensionAuthExchangeRequestSchema.parse(request);
+  const revision =
+    expectedRevision === undefined
+      ? await getBackgroundAuthRevision()
+      : expectedRevision;
   const response = await fetch(buildWebUrl("/api/extension/auth/exchange"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -312,12 +324,17 @@ export async function exchangeExtensionAuthCode(
 
   const tokens = normalizeExtensionAuthTokens(await response.json());
   if (!tokens) throw new Error("Extension auth exchange returned malformed tokens");
-  await setStoredAuthTokens(tokens);
+  const commit = await replaceStoredAuthTokensIfRevision(revision, tokens);
+  if (!commit.committed || !commit.current) {
+    if (commit.current)
+      throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
+    throw new Error("Extension auth session changed during sign in");
+  }
   recordDiagnosticEvent("auth.exchange", "succeeded", {
     userId: tokens.user.id,
     plan: tokens.user.plan,
   });
-  return tokens;
+  return commit.current;
 }
 
 async function requestExtensionSessionRefresh(
@@ -350,19 +367,23 @@ async function requestExtensionSessionRefresh(
 }
 
 const defaultRefreshDependencies: ExtensionSessionRefreshDependencies = {
-  getStored: getStoredAuthTokens,
+  getStored: getBackgroundAuthSession,
+  probeUser: probeAuthenticatedUser,
   requestRefresh: requestExtensionSessionRefresh,
   resolveUser: fetchAuthenticatedUser,
   commitIfCurrent: commitStoredAuthTokensIfCurrent,
   clearAccountData: clearCachedAccountDataForUser,
 };
 
-let sessionRefreshInFlight: Promise<ExtensionAuthTokens | null> | null = null;
+let sessionRefreshInFlight: {
+  expected: ExtensionAuthTokens;
+  promise: Promise<ExtensionAuthTokens | null>;
+} | null = null;
 
 async function performExtensionSessionRefresh(
   dependencies: ExtensionSessionRefreshDependencies,
+  stored: ExtensionAuthTokens,
 ): Promise<ExtensionAuthTokens | null> {
-  const stored = await dependencies.getStored();
   if (!stored) {
     recordDiagnosticEvent("auth.refresh", "skipped without stored session", undefined, "warn");
     return null;
@@ -377,6 +398,8 @@ async function performExtensionSessionRefresh(
         previousUserId: stored.user.id,
         currentUserId: commit.current?.user.id,
       });
+      if (dependencies.probeUser && commit.current)
+        throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
       return commit.current;
     }
     recordDiagnosticEvent(
@@ -396,6 +419,8 @@ async function performExtensionSessionRefresh(
         previousUserId: stored.user.id,
         currentUserId: current?.user.id,
       });
+      if (dependencies.probeUser && current)
+        throw new ExtensionAuthTemporarilyUnavailableError(current);
       return current;
     }
     recordDiagnosticEvent(
@@ -409,42 +434,83 @@ async function performExtensionSessionRefresh(
 
   const tokens: ExtensionAuthTokens = {
     ...stored,
+    ...(stored.authRevision ? { authRevision: crypto.randomUUID() } : {}),
     accessToken: result.accessToken,
     refreshToken: result.refreshToken ?? stored.refreshToken,
   };
-  const freshUser = await dependencies.resolveUser(tokens.accessToken).catch(() => null);
-  if (freshUser) {
-    tokens.user = freshUser;
-  }
+  // Persist consumed/rotated credentials before profile validation can fail or hang.
   const commit = await dependencies.commitIfCurrent(stored, tokens);
-  if (!commit.committed) {
-    recordDiagnosticEvent("auth.refresh", "discarded after user resolution changed session", {
-      previousUserId: stored.user.id,
-      currentUserId: commit.current?.user.id,
-    });
+  if (!commit.committed || !commit.current) {
+    if (dependencies.probeUser && commit.current)
+      throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
     return commit.current;
   }
+  const committed = commit.current;
+  const probe = dependencies.probeUser
+    ? await dependencies.probeUser(committed)
+    : {
+        kind: "valid" as const,
+        user: await dependencies
+          .resolveUser(committed.accessToken)
+          .catch(() => null),
+      };
+  if (
+    probe.kind !== "valid" ||
+    !probe.user ||
+    probe.user.id !== committed.user.id
+  ) {
+    const current = await dependencies.getStored();
+    if (!current) return null;
+    throw new ExtensionAuthTemporarilyUnavailableError(current);
+  }
+  if (!dependencies.probeUser) return { ...committed, user: probe.user };
+  const metadata = await dependencies.commitIfCurrent(committed, {
+    ...committed,
+    user: probe.user,
+  });
+  if (!metadata.committed) {
+    if (!metadata.current) return null;
+    throw new ExtensionAuthTemporarilyUnavailableError(metadata.current);
+  }
   recordDiagnosticEvent("auth.refresh", "succeeded", {
-    userId: tokens.user.id,
-    plan: tokens.user.plan,
+    userId: committed.user.id,
     rotatedRefreshToken: Boolean(result.refreshToken),
   });
-  return tokens;
+  return metadata.current;
 }
 
-export function refreshExtensionSession(
+export async function refreshExtensionSession(
   dependencies: ExtensionSessionRefreshDependencies = defaultRefreshDependencies,
+  expected?: ExtensionAuthTokens,
 ): Promise<ExtensionAuthTokens | null> {
-  if (sessionRefreshInFlight) {
-    return sessionRefreshInFlight;
+  // Join only the existing refresh for this exact credential generation.
+  if (
+    expected &&
+    sessionRefreshInFlight &&
+    isSameExtensionAuthSession(expected, sessionRefreshInFlight.expected)
+  ) {
+    return sessionRefreshInFlight.promise;
   }
-
-  const operation = performExtensionSessionRefresh(dependencies).finally(() => {
-    if (sessionRefreshInFlight === operation) {
+  const stored = await dependencies.getStored();
+  if (!stored) return null;
+  if (expected && !isSameExtensionAuthSession(expected, stored)) {
+    throw new ExtensionAuthTemporarilyUnavailableError(stored);
+  }
+  if (sessionRefreshInFlight) {
+    if (isSameExtensionAuthSession(stored, sessionRefreshInFlight.expected))
+      return sessionRefreshInFlight.promise;
+    // Keep one refresh authority; a different account cannot inherit its result.
+    await sessionRefreshInFlight.promise.catch(() => undefined);
+    return refreshExtensionSession(dependencies, expected ?? stored);
+  }
+  const operation = performExtensionSessionRefresh(
+    dependencies,
+    stored,
+  ).finally(() => {
+    if (sessionRefreshInFlight?.promise === operation)
       sessionRefreshInFlight = null;
-    }
   });
-  sessionRefreshInFlight = operation;
+  sessionRefreshInFlight = { expected: stored, promise: operation };
   return operation;
 }
 
@@ -472,7 +538,7 @@ async function revokeExtensionRefreshToken(refreshToken: string): Promise<void> 
 }
 
 interface ConditionalSessionClearDependencies {
-  clearIfRefreshToken: (expectedRefreshToken: string) => Promise<AuthSessionMutationResult>;
+  clearIfRefreshToken: (expectedRefreshToken: string, expectedRevision?: string) => Promise<AuthSessionMutationResult>;
   clearAccountData?: (userId: string) => Promise<void>;
 }
 
@@ -484,8 +550,11 @@ const defaultConditionalClearDependencies: ConditionalSessionClearDependencies =
 export async function clearExtensionSessionIfCurrent(
   expectedRefreshToken: string,
   dependencies: ConditionalSessionClearDependencies = defaultConditionalClearDependencies,
+  expectedRevision?: string,
 ): Promise<boolean> {
-  const result = await dependencies.clearIfRefreshToken(expectedRefreshToken);
+  const result = expectedRevision === undefined
+    ? await dependencies.clearIfRefreshToken(expectedRefreshToken)
+    : await dependencies.clearIfRefreshToken(expectedRefreshToken, expectedRevision);
   if (!result.committed || !result.previous) {
     return false;
   }
@@ -501,32 +570,78 @@ async function clearCachedAccountDataForUser(userId: string): Promise<void> {
   ]);
 }
 
+export type AuthenticatedUserProbe =
+  | { kind: "valid"; user: AuthenticatedUser }
+  | { kind: "unauthorized" }
+  | { kind: "unavailable"; status?: number }
+  | { kind: "failure"; status: number };
+
+const pendingProfileProbes = new Map<string, Promise<AuthenticatedUserProbe>>();
+
+async function requestAuthenticatedUser(
+  accessToken: string,
+): Promise<AuthenticatedUserProbe> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const controller = new AbortController();
+  try {
+    const request = fetch(buildWebUrl("/api/me"), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (response.status === 401) return { kind: "unauthorized" } as const;
+        if (response.status === 429 || response.status >= 500)
+          return { kind: "unavailable", status: response.status } as const;
+        if (response.status !== 200)
+          return { kind: "failure", status: response.status } as const;
+        const body = await response.json().catch(() => null);
+        const user = normalizeAuthenticatedUser(body?.user);
+        return user
+          ? ({ kind: "valid", user } as const)
+          : ({ kind: "unavailable" } as const);
+      })
+      .catch(() => ({ kind: "unavailable" }) as const);
+    return await Promise.race([
+      request,
+      new Promise<AuthenticatedUserProbe>((resolve) => {
+        timeout = setTimeout(() => {
+          controller.abort();
+          resolve({ kind: "unavailable" });
+        }, 10_000);
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+}
+
+/** Coalesce pending transport only; no successful-response authorization cache. */
+export function probeAuthenticatedUser(
+  tokens: ExtensionAuthTokens,
+): Promise<AuthenticatedUserProbe> {
+  const key = JSON.stringify([
+    tokens.authRevision,
+    tokens.user.id,
+    tokens.accessToken,
+    tokens.refreshToken,
+    tokens.user.plan,
+  ]);
+  const pending = pendingProfileProbes.get(key);
+  if (pending) return pending;
+  const operation = requestAuthenticatedUser(tokens.accessToken).finally(() => {
+    if (pendingProfileProbes.get(key) === operation)
+      pendingProfileProbes.delete(key);
+  });
+  pendingProfileProbes.set(key, operation);
+  return operation;
+}
+
 export async function fetchAuthenticatedUser(
   accessToken: string,
 ): Promise<AuthenticatedUser | null> {
-  let response: Response;
-  try {
-    response = await fetch(buildWebUrl("/api/me"), {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-  } catch {
-    recordDiagnosticEvent("auth.me", "network error", undefined, "warn");
-    return null;
-  }
-  if (!response.ok) {
-    recordDiagnosticEvent(
-      "auth.me",
-      "failed with bearer token",
-      { status: response.status },
-      "warn",
-    );
-    return null;
-  }
-
-  const body = (await response.json().catch(() => null)) as {
-    user?: unknown;
-  } | null;
-  return normalizeAuthenticatedUser(body?.user);
+  const result = await requestAuthenticatedUser(accessToken);
+  return result.kind === "valid" ? result.user : null;
 }
 
 type WebsiteSessionRequest = (url: string, init?: RequestInit) => Promise<Response>;
@@ -631,8 +746,16 @@ async function ensureWebsiteSessionStillMatches(
     },
     "warn",
   );
-  await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
-  const cleared = await clearExtensionSessionIfCurrent(stored.refreshToken);
+  const commit = await clearStoredAuthTokensIfCurrentAfter(
+    stored,
+    async (current) => {
+      await revokeExtensionRefreshToken(current.refreshToken).catch(
+        () => undefined,
+      );
+    },
+  );
+  const cleared = commit.committed;
+  if (cleared) await clearCachedAccountDataForUser(stored.user.id);
   return !cleared && (await getStoredAuthTokens()) ? "matches" : "cleared";
 }
 
@@ -641,7 +764,8 @@ export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens |
 }
 
 const defaultSessionDependencies: ExtensionSessionDependencies = {
-  getStored: getStoredAuthTokens,
+  getStored: getBackgroundAuthSession,
+  probeUser: probeAuthenticatedUser,
   resolveUser: fetchAuthenticatedUser,
   commitIfCurrent: commitStoredAuthTokensIfCurrent,
   refresh: refreshExtensionSession,
@@ -654,25 +778,49 @@ export async function getCurrentExtensionSession(
   const stored = await dependencies.getStored();
   if (!stored) return null;
 
-  const user = await dependencies.resolveUser(stored.accessToken);
-  if (user) {
+  const probe = dependencies.probeUser
+    ? await dependencies.probeUser(stored)
+    : ((user: AuthenticatedUser | null): AuthenticatedUserProbe =>
+        user ? { kind: "valid", user } : { kind: "unauthorized" })(
+        await dependencies.resolveUser(stored.accessToken),
+      );
+  const current = await dependencies.getStored();
+  if (
+    !isSameExtensionAuthSession(stored, current) ||
+    (dependencies.probeUser && current?.user.plan !== stored.user.plan)
+  ) {
+    if (!current) return null;
+    if (dependencies.probeUser)
+      throw new ExtensionAuthTemporarilyUnavailableError(current);
+    return current;
+  }
+  if (probe.kind === "valid" && probe.user.id === stored.user.id) {
+    const user = probe.user;
     const tokens = { ...stored, user };
     const commit = await dependencies.commitIfCurrent(stored, tokens);
-    return commit.committed ? tokens : commit.current;
+    if (!commit.committed && dependencies.probeUser && commit.current)
+      throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
+    return commit.current;
   }
 
-  const refreshed = await dependencies.refresh();
+  if (probe.kind !== "unauthorized")
+    throw new ExtensionAuthTemporarilyUnavailableError(current!);
+  const refreshed =
+    dependencies === defaultSessionDependencies
+      ? await refreshExtensionSession(defaultRefreshDependencies, stored)
+      : await dependencies.refresh();
   if (refreshed) return refreshed;
   return dependencies.adoptSilently?.() ?? null;
 }
 
-const defaultWebsiteReconciliationDependencies: WebsiteSessionReconciliationDependencies = {
-  getStored: getStoredAuthTokens,
-  ensureMatches: ensureWebsiteSessionStillMatches,
-  signInSilently: signInWithWebsiteSilently,
-  getCurrent: getCurrentExtensionSession,
-  revokeRefreshToken: revokeExtensionRefreshToken,
-};
+const defaultWebsiteReconciliationDependencies: WebsiteSessionReconciliationDependencies =
+  {
+    getStored: getBackgroundAuthSession,
+    ensureMatches: ensureWebsiteSessionStillMatches,
+    signInSilently: signInWithWebsiteSilently,
+    getCurrent: getCurrentExtensionSession,
+    revokeRefreshToken: revokeExtensionRefreshToken,
+  };
 
 type WebsiteSessionReconciliationPass = {
   adoptIfMissing: boolean;
@@ -776,12 +924,15 @@ function finishWebsiteSessionReconciliationPass(
   else pass.reject(outcome.error);
 }
 
-async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTokens | null> {
+async function runWebsiteAuthFlow(
+  interactive: boolean,
+): Promise<ExtensionAuthTokens | null> {
   if (!chrome.identity?.getRedirectURL || !chrome.identity?.launchWebAuthFlow) {
     if (interactive) throw new Error("Chrome Identity API is unavailable");
     return null;
   }
 
+  const expectedRevision = await getBackgroundAuthRevision();
   const redirectUri = chrome.identity.getRedirectURL(AUTH_CALLBACK_PATH);
   const clientId = chrome.runtime.id;
   const transaction = await createExtensionAuthTransaction();
@@ -806,13 +957,16 @@ async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTo
     transaction.state,
     redirectUri,
   );
-  return exchangeExtensionAuthCode({
-    clientId,
-    redirectUri,
-    code: redirect.code,
-    state: redirect.state,
-    codeVerifier: transaction.codeVerifier,
-  });
+  return exchangeExtensionAuthCode(
+    {
+clientId,
+redirectUri,
+code: redirect.code,
+state: redirect.state,
+codeVerifier: transaction.codeVerifier,
+},
+    expectedRevision,
+  );
 }
 
 export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
@@ -1067,9 +1221,13 @@ export async function sendAuthCommand(command: AuthCommand): Promise<AuthMessage
   return chrome.runtime.sendMessage(createAuthMessage(command));
 }
 
-async function requestAuthTokens(command: AuthCommand): Promise<ExtensionAuthTokens | null> {
+async function requestAuthTokens(
+  command: AuthCommand,
+): Promise<ExtensionAuthTokens | null> {
   const response = await sendAuthCommand(command);
   if (!response.ok) {
+    if (response.retryable && response.tokens)
+      throw new ExtensionAuthTemporarilyUnavailableError(response.tokens);
     throw new Error(response.error);
   }
   return response.tokens;

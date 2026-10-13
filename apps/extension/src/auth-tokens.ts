@@ -14,6 +14,8 @@ export interface AuthenticatedUser {
 }
 
 export interface ExtensionAuthTokens {
+  /** Durable credential generation, stored atomically with the credentials. */
+  authRevision?: string;
   accessToken: string;
   refreshToken: string;
   user: AuthenticatedUser;
@@ -22,7 +24,9 @@ export interface ExtensionAuthTokens {
 export interface AuthSessionStorageAdapter {
   get: () => Promise<ExtensionAuthTokens | null>;
   set: (tokens: ExtensionAuthTokens) => Promise<void>;
-  remove: () => Promise<void>;
+  remove: (authRevision?: string) => Promise<void>;
+  durableRevision?: boolean;
+  getRevision?: () => Promise<string | null>;
 }
 
 export type AuthSessionMutationResult = {
@@ -32,6 +36,12 @@ export type AuthSessionMutationResult = {
 };
 
 export interface AuthSessionStorageAuthority {
+  read: () => Promise<ExtensionAuthTokens | null>;
+  readRevision: () => Promise<string | null>;
+  replaceIfRevision: (
+    expectedRevision: string | null,
+    tokens: ExtensionAuthTokens,
+  ) => Promise<AuthSessionMutationResult>;
   replace: (tokens: ExtensionAuthTokens) => Promise<void>;
   clear: () => Promise<void>;
   commitIfCurrent: (
@@ -42,7 +52,7 @@ export interface AuthSessionStorageAuthority {
     expected: ExtensionAuthTokens,
     beforeClear: (current: ExtensionAuthTokens) => Promise<void>,
   ) => Promise<AuthSessionMutationResult>;
-  clearIfRefreshToken: (expectedRefreshToken: string) => Promise<AuthSessionMutationResult>;
+  clearIfRefreshToken: (expectedRefreshToken: string, expectedRevision?: string) => Promise<AuthSessionMutationResult>;
 }
 
 export function isSameExtensionAuthSession(
@@ -51,6 +61,8 @@ export function isSameExtensionAuthSession(
 ): boolean {
   return Boolean(
     current &&
+      current.authRevision === expected.authRevision &&
+      current.accessToken === expected.accessToken &&
       current.refreshToken === expected.refreshToken &&
       current.user.id === expected.user.id,
   );
@@ -92,7 +104,9 @@ export function normalizeAuthenticatedUser(value: unknown): AuthenticatedUser | 
   };
 }
 
-export function normalizeExtensionAuthTokens(value: unknown): ExtensionAuthTokens | null {
+export function normalizeExtensionAuthTokens(
+  value: unknown,
+): ExtensionAuthTokens | null {
   if (!isRecord(value)) return null;
   if (typeof value.accessToken !== "string" || typeof value.refreshToken !== "string") {
     return null;
@@ -102,6 +116,9 @@ export function normalizeExtensionAuthTokens(value: unknown): ExtensionAuthToken
   if (!user) return null;
 
   return {
+    ...(typeof value.authRevision === "string" && value.authRevision
+      ? { authRevision: value.authRevision }
+      : {}),
     accessToken: value.accessToken,
     refreshToken: value.refreshToken,
     user,
@@ -122,23 +139,81 @@ export function createAuthSessionStorageAuthority(
     return result;
   }
 
+  function withRevision(tokens: ExtensionAuthTokens): ExtensionAuthTokens {
+    return adapter.durableRevision
+      ? { ...tokens, authRevision: crypto.randomUUID() }
+      : tokens;
+  }
+
+  async function read(): Promise<ExtensionAuthTokens | null> {
+    const current = await adapter.get();
+    if (!current || current.authRevision || !adapter.durableRevision)
+      return current;
+    const migrated = withRevision(current);
+    await adapter.set(migrated);
+    return migrated;
+  }
+
   return {
+    read() {
+      return runSerialized(read);
+    },
+    readRevision() {
+      return runSerialized(async () => {
+        const current = await read();
+        return current?.authRevision ?? (await adapter.getRevision?.()) ?? null;
+      });
+    },
+    replaceIfRevision(expectedRevision, tokens) {
+      return runSerialized(async () => {
+        const current = await adapter.get();
+        const revision =
+          current?.authRevision ?? (await adapter.getRevision?.()) ?? null;
+        if (revision !== expectedRevision)
+          return { committed: false, current, previous: current };
+        const next = withRevision(tokens);
+        await adapter.set(next);
+        return { committed: true, current: next, previous: current };
+      });
+    },
     replace(tokens) {
-      return runSerialized(() => adapter.set(tokens));
+      return runSerialized(() => adapter.set(withRevision(tokens)));
     },
     clear() {
-      return runSerialized(() => adapter.remove());
+      return runSerialized(() =>
+        adapter.remove(
+          adapter.durableRevision ? crypto.randomUUID() : undefined,
+        ),
+      );
     },
     commitIfCurrent(expected, replacement) {
       return runSerialized(async () => {
         const current = await adapter.get();
-        if (!isSameExtensionAuthSession(expected, current)) {
+        if (!current || !isSameExtensionAuthSession(expected, current)) {
           return { committed: false, current, previous: current };
         }
 
-        if (replacement) await adapter.set(replacement);
-        else await adapter.remove();
-        return { committed: true, current: replacement, previous: current };
+        const credentialsChanged = replacement && (
+          replacement.authRevision !== current.authRevision ||
+          replacement.accessToken !== current.accessToken ||
+          replacement.refreshToken !== current.refreshToken ||
+          replacement.user.id !== current.user.id
+        );
+        if (replacement && current.user.plan !== expected.user.plan) {
+          if (credentialsChanged) {
+            // Retain newer rights metadata while persisting consumed credentials.
+            replacement = { ...replacement, user: current.user };
+          } else if (replacement.user.plan !== current.user.plan) {
+            return { committed: false, current, previous: current };
+          }
+        }
+        const next = replacement && (credentialsChanged
+          ? withRevision(replacement)
+          : { ...replacement, ...(current.authRevision ? { authRevision: current.authRevision } : {}) }
+        );
+        if (next) await adapter.set(next);
+        else await adapter.remove(adapter.durableRevision ? crypto.randomUUID() : undefined);
+        return { committed: true, current: next, previous: current };
       });
     },
     clearIfCurrentAfter(expected, beforeClear) {
@@ -151,19 +226,27 @@ export function createAuthSessionStorageAuthority(
         try {
           await beforeClear(current);
         } finally {
-          await adapter.remove();
+          await adapter.remove(
+            adapter.durableRevision ? crypto.randomUUID() : undefined,
+          );
         }
         return { committed: true, current: null, previous: current };
       });
     },
-    clearIfRefreshToken(expectedRefreshToken) {
+    clearIfRefreshToken(expectedRefreshToken, expectedRevision) {
       return runSerialized(async () => {
         const current = await adapter.get();
-        if (!current || current.refreshToken !== expectedRefreshToken) {
+        if (
+          !current ||
+          current.refreshToken !== expectedRefreshToken ||
+          current.authRevision !== expectedRevision
+        ) {
           return { committed: false, current, previous: current };
         }
 
-        await adapter.remove();
+        await adapter.remove(
+          adapter.durableRevision ? crypto.randomUUID() : undefined,
+        );
         return { committed: true, current: null, previous: current };
       });
     },
@@ -171,6 +254,15 @@ export function createAuthSessionStorageAuthority(
 }
 
 const authSessionStorageAdapter: AuthSessionStorageAdapter = {
+  durableRevision: true,
+  async getRevision() {
+    const stored = await storage.getItem<{ authRevision?: unknown }>(
+      AUTH_TOKENS_KEY,
+    );
+    return typeof stored?.authRevision === "string"
+      ? stored.authRevision
+      : null;
+  },
   async get() {
     const stored = await storage.getItem<unknown>(AUTH_TOKENS_KEY);
     return normalizeExtensionAuthTokens(stored);
@@ -178,14 +270,33 @@ const authSessionStorageAdapter: AuthSessionStorageAdapter = {
   async set(tokens) {
     await storage.setItem(AUTH_TOKENS_KEY, tokens);
   },
-  async remove() {
-    await storage.removeItem(AUTH_TOKENS_KEY);
+  async remove(authRevision) {
+    await storage.setItem(AUTH_TOKENS_KEY, { authRevision });
   },
 };
 
 const authSessionStorageAuthority = createAuthSessionStorageAuthority(
   authSessionStorageAdapter,
 );
+
+export async function getBackgroundAuthRevision(): Promise<string | null> {
+  return authSessionStorageAuthority.readRevision();
+}
+
+export async function replaceStoredAuthTokensIfRevision(
+  expectedRevision: string | null,
+  tokens: ExtensionAuthTokens,
+): Promise<AuthSessionMutationResult> {
+  return authSessionStorageAuthority.replaceIfRevision(
+    expectedRevision,
+    tokens,
+  );
+}
+
+/** Only background auth flows call this migrating, serialized read. Other contexts read without writes. */
+export async function getBackgroundAuthSession(): Promise<ExtensionAuthTokens | null> {
+  return authSessionStorageAuthority.read();
+}
 
 export async function getStoredAuthTokens(): Promise<ExtensionAuthTokens | null> {
   return authSessionStorageAdapter.get();
@@ -213,8 +324,10 @@ export async function clearStoredAuthTokensIfCurrentAfter(
   return authSessionStorageAuthority.clearIfCurrentAfter(expected, beforeClear);
 }
 
+/** Legacy token-only callers cannot clear a revision-bearing session. */
 export async function clearStoredAuthTokensIfRefreshToken(
   expectedRefreshToken: string,
+  expectedRevision?: string,
 ): Promise<AuthSessionMutationResult> {
-  return authSessionStorageAuthority.clearIfRefreshToken(expectedRefreshToken);
+  return authSessionStorageAuthority.clearIfRefreshToken(expectedRefreshToken, expectedRevision);
 }

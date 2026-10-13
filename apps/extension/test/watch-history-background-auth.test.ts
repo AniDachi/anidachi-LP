@@ -170,7 +170,7 @@ describe("watch history background session authority", () => {
       "/api/watch-history/v3/access", "/api/me", "/api/extension/auth/refresh",
     ]);
     expect(h.read().partitions).toEqual({});
-    expect(persisted.get("local:authTokens")).toEqual(session);
+    expect(persisted.get("local:authTokens")).toMatchObject(session);
   });
 
   it.each(["switch", "logout"] as const)("rejects delayed authority after %s without persisting an old-owner lease", async (change) => {

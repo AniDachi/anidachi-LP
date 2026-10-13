@@ -11,6 +11,7 @@ export interface RoomTerminalIntent extends EndRoomCommand {
 	fencedAt: number;
 	finalizedAt: number | null;
 	runtimeFinalized?: boolean;
+	attempts?: number;
 	nextAttemptAt: number;
 	usage?: RoomUsageSummary;
 }
@@ -40,6 +41,7 @@ export function parseRoomTerminalIntent(
 		(record.runtimeFinalized !== undefined &&
 			typeof record.runtimeFinalized !== "boolean") ||
 		(record.runtimeFinalized === true && record.finalizedAt === null) ||
+		(record.attempts !== undefined && !timestamp(record.attempts)) ||
 		(usage && !usage.success)
 	)
 		throw new Error("Invalid durable terminal intent");
@@ -50,6 +52,13 @@ export function parseRoomTerminalIntent(
 		finalizedAt: record.finalizedAt,
 		nextAttemptAt: record.nextAttemptAt,
 		runtimeFinalized: record.runtimeFinalized === true,
+		...(record.attempts !== undefined ? { attempts: record.attempts } : {}),
 		...(usage?.success ? { usage: usage.data } : {}),
 	};
+}
+
+/** Claimed once, before I/O; callers persist the resulting positive-jitter deadline. */
+export function roomTerminalRetryAt(attempts: number, now: number, random = Math.random()): number {
+    const delay = Math.min(300000, ROOM_TERMINAL_RETRY_MS * 2 ** Math.max(0, Math.min(4, attempts - 1)));
+    return Math.min(Number.MAX_SAFE_INTEGER, now + delay + Math.floor(delay * 0.1 * Math.max(0, Math.min(1, random))));
 }
