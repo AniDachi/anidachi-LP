@@ -1,5 +1,26 @@
 # Current Development State
 
+## Request-cost follow-up candidate, October 14, 2026
+
+PR #419 delivered the first request-cost fixes to staging `de27cc98`.
+The approved follow-up on `codex/vercel-request-followup` removes a duplicate
+startup history validation, separates transient profile lookup errors from
+invalid tokens, joins only equivalent in-flight account probes using a durable
+session revision, and persists a backoff deadline for terminal room delivery.
+This section describes candidate behavior, not deployment or browser acceptance.
+
+No completed authorization cache or extended history lease is introduced. Cached
+identity remains suitable for display during temporary errors; privileged actions
+require fresh validation. Logout/account replacement fences late responses.
+Terminal retries retain frozen usage and pending sources, respect Retry-After,
+and never reopen a closed room or acknowledge unconfirmed persistence.
+
+The [follow-up plan](superpowers/plans/2026-10-14-vercel-request-followup.md)
+records tests and delivery gates. Source-specific failed-request reconciliation,
+actual loaded-extension acceptance, measured production savings and the integrated
+UI/onboarding/Netflix/trial release remain separate gates. No production or Store
+publication, schema/env/price/permission change is included.
+
 ## Cardless trial staging delivery, October 11, 2026
 
 [PR #410](https://github.com/AniDachi/anidachi-LP/pull/410) merged as

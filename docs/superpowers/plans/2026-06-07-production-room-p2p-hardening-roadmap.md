@@ -31,6 +31,12 @@
 
 ## Progress Log
 
+- 2026-10-14 — `codex/vercel-request-followup`: approved candidate work adds a
+  durable terminal workflow retry budget and Retry-After handling without changing
+  frozen accounting, source proof or wire ACK schemas. Local and staging results
+  are tracked in the [follow-up plan](2026-10-14-vercel-request-followup.md);
+  production and loaded-client acceptance remain outside this candidate checkpoint.
+
 - 2026-09-29 — `codex/do-write-optimization-design`, `5bed2e55`: removed redundant
   DO meter/policy/alarm/snapshot writes and made denial persistence incremental;
   wake preserves overdue UTC quota before meter rollover. API252unit/96runtime,

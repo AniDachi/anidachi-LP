@@ -3,7 +3,8 @@
 Active integrated release preparation:
 
 1. [Vercel request-cost optimization](2026-10-14-vercel-cost-optimization.md) — approved isolated fixes and staging delivery; production unchanged.
-2. [Combined product release](2026-10-14-integrated-product-release.md) — source inventory, approved UI preservation, Netflix/trial acceptance, coordinated backend and Chrome Store gates.
+2. [Request-cost follow-up](2026-10-14-vercel-request-followup.md) — approved startup/session/finalization corrections; candidate verification and staging delivery.
+3. [Combined product release](2026-10-14-integrated-product-release.md) — source inventory, approved UI preservation, Netflix/trial acceptance, coordinated backend and Chrome Store gates.
 
 Active cardless trial work:
 
