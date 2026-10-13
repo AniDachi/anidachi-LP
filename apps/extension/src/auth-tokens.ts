@@ -16,6 +16,8 @@ export interface AuthenticatedUser {
 export interface ExtensionAuthTokens {
   /** Durable credential generation, stored atomically with the credentials. */
   authRevision?: string;
+  /** Metadata generation; advances independently of the credential family. */
+  profileRevision?: number;
   accessToken: string;
   refreshToken: string;
   user: AuthenticatedUser;
@@ -33,6 +35,8 @@ export type AuthSessionMutationResult = {
   committed: boolean;
   current: ExtensionAuthTokens | null;
   previous: ExtensionAuthTokens | null;
+  /** Exact tombstone written by this mutation, never a later logout tombstone. */
+  clearedRevision?: string;
 };
 
 export interface AuthSessionStorageAuthority {
@@ -66,6 +70,14 @@ export function isSameExtensionAuthSession(
       current.refreshToken === expected.refreshToken &&
       current.user.id === expected.user.id,
   );
+}
+
+export function isSameExtensionAuthProfile(
+  expected: ExtensionAuthTokens,
+  current: ExtensionAuthTokens | null,
+): boolean {
+  return isSameExtensionAuthSession(expected, current) &&
+    current?.profileRevision === expected.profileRevision;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -119,6 +131,8 @@ export function normalizeExtensionAuthTokens(
     ...(typeof value.authRevision === "string" && value.authRevision
       ? { authRevision: value.authRevision }
       : {}),
+    ...(Number.isSafeInteger(value.profileRevision) && (value.profileRevision as number) >= 0
+      ? { profileRevision: value.profileRevision as number } : {}),
     accessToken: value.accessToken,
     refreshToken: value.refreshToken,
     user,
@@ -141,15 +155,17 @@ export function createAuthSessionStorageAuthority(
 
   function withRevision(tokens: ExtensionAuthTokens): ExtensionAuthTokens {
     return adapter.durableRevision
-      ? { ...tokens, authRevision: crypto.randomUUID() }
+      ? { ...tokens, authRevision: crypto.randomUUID(), profileRevision: tokens.profileRevision ?? 0 }
       : tokens;
   }
 
   async function read(): Promise<ExtensionAuthTokens | null> {
     const current = await adapter.get();
-    if (!current || current.authRevision || !adapter.durableRevision)
-      return current;
-    const migrated = withRevision(current);
+    if (!current || !adapter.durableRevision ||
+      (current.authRevision && current.profileRevision !== undefined)) return current;
+    const migrated = current.authRevision
+      ? { ...current, profileRevision: 0 }
+      : withRevision(current);
     await adapter.set(migrated);
     return migrated;
   }
@@ -199,21 +215,33 @@ export function createAuthSessionStorageAuthority(
           replacement.refreshToken !== current.refreshToken ||
           replacement.user.id !== current.user.id
         );
-        if (replacement && current.user.plan !== expected.user.plan) {
-          if (credentialsChanged) {
-            // Retain newer rights metadata while persisting consumed credentials.
-            replacement = { ...replacement, user: current.user };
-          } else if (replacement.user.plan !== current.user.plan) {
+        const profileChanged = !isSameExtensionAuthProfile(expected, current);
+        if (profileChanged) {
+          if (credentialsChanged && replacement) {
+            // A refresh may have consumed credentials; retain the newer profile.
+            replacement = { ...replacement, user: current.user, profileRevision: current.profileRevision };
+          } else {
             return { committed: false, current, previous: current };
           }
         }
-        const next = replacement && (credentialsChanged
-          ? withRevision(replacement)
-          : { ...replacement, ...(current.authRevision ? { authRevision: current.authRevision } : {}) }
+        const userChanged = replacement && (
+          replacement.user.id !== current.user.id ||
+          replacement.user.email !== current.user.email ||
+          replacement.user.displayName !== current.user.displayName ||
+          replacement.user.avatarUrl !== current.user.avatarUrl ||
+          replacement.user.plan !== current.user.plan
         );
+        const profileRevision = (current.profileRevision ?? 0) + (userChanged ? 1 : 0);
+        if (!Number.isSafeInteger(profileRevision)) throw new Error("Auth profile generation exhausted");
+        const next = replacement && {
+          ...(credentialsChanged ? withRevision(replacement) : replacement),
+          ...(current.authRevision && !credentialsChanged ? { authRevision: current.authRevision } : {}),
+          ...(adapter.durableRevision ? { profileRevision } : {}),
+        };
+        const clearedRevision = !next && adapter.durableRevision ? crypto.randomUUID() : undefined;
         if (next) await adapter.set(next);
-        else await adapter.remove(adapter.durableRevision ? crypto.randomUUID() : undefined);
-        return { committed: true, current: next, previous: current };
+        else await adapter.remove(clearedRevision);
+        return { committed: true, current: next, previous: current, ...(clearedRevision ? { clearedRevision } : {}) };
       });
     },
     clearIfCurrentAfter(expected, beforeClear) {

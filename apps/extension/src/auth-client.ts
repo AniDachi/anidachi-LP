@@ -17,6 +17,7 @@ import {
   getBackgroundAuthRevision,
   replaceStoredAuthTokensIfRevision,
   isSameExtensionAuthSession,
+  isSameExtensionAuthProfile,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
 } from "./auth-tokens";
@@ -375,18 +376,20 @@ const defaultRefreshDependencies: ExtensionSessionRefreshDependencies = {
   clearAccountData: clearCachedAccountDataForUser,
 };
 
+type ExtensionRefreshOutcome = { tokens: ExtensionAuthTokens | null; recoveryRevision?: string };
+
 let sessionRefreshInFlight: {
   expected: ExtensionAuthTokens;
-  promise: Promise<ExtensionAuthTokens | null>;
+  promise: Promise<ExtensionRefreshOutcome>;
 } | null = null;
 
 async function performExtensionSessionRefresh(
   dependencies: ExtensionSessionRefreshDependencies,
   stored: ExtensionAuthTokens,
-): Promise<ExtensionAuthTokens | null> {
+): Promise<ExtensionRefreshOutcome> {
   if (!stored) {
     recordDiagnosticEvent("auth.refresh", "skipped without stored session", undefined, "warn");
-    return null;
+    return { tokens: null };
   }
 
   const result = await dependencies.requestRefresh(stored.refreshToken);
@@ -400,7 +403,7 @@ async function performExtensionSessionRefresh(
       });
       if (dependencies.probeUser && commit.current)
         throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
-      return commit.current;
+      return { tokens: commit.current };
     }
     recordDiagnosticEvent(
       "auth.refresh",
@@ -409,7 +412,7 @@ async function performExtensionSessionRefresh(
       "warn",
     );
     await dependencies.clearAccountData?.(stored.user.id);
-    return null;
+    return { tokens: null, ...(commit.clearedRevision ? { recoveryRevision: commit.clearedRevision } : {}) };
   }
 
   if (result.kind === "unavailable") {
@@ -421,7 +424,7 @@ async function performExtensionSessionRefresh(
       });
       if (dependencies.probeUser && current)
         throw new ExtensionAuthTemporarilyUnavailableError(current);
-      return current;
+      return { tokens: current };
     }
     recordDiagnosticEvent(
       "auth.refresh",
@@ -443,7 +446,7 @@ async function performExtensionSessionRefresh(
   if (!commit.committed || !commit.current) {
     if (dependencies.probeUser && commit.current)
       throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
-    return commit.current;
+    return { tokens: commit.current };
   }
   const committed = commit.current;
   const probe = dependencies.probeUser
@@ -460,29 +463,29 @@ async function performExtensionSessionRefresh(
     probe.user.id !== committed.user.id
   ) {
     const current = await dependencies.getStored();
-    if (!current) return null;
+    if (!current) return { tokens: null };
     throw new ExtensionAuthTemporarilyUnavailableError(current);
   }
-  if (!dependencies.probeUser) return { ...committed, user: probe.user };
+  if (!dependencies.probeUser) return { tokens: { ...committed, user: probe.user } };
   const metadata = await dependencies.commitIfCurrent(committed, {
     ...committed,
     user: probe.user,
   });
   if (!metadata.committed) {
-    if (!metadata.current) return null;
+    if (!metadata.current) return { tokens: null };
     throw new ExtensionAuthTemporarilyUnavailableError(metadata.current);
   }
   recordDiagnosticEvent("auth.refresh", "succeeded", {
     userId: committed.user.id,
     rotatedRefreshToken: Boolean(result.refreshToken),
   });
-  return metadata.current;
+  return { tokens: metadata.current };
 }
 
-export async function refreshExtensionSession(
+async function refreshExtensionSessionOutcome(
   dependencies: ExtensionSessionRefreshDependencies = defaultRefreshDependencies,
   expected?: ExtensionAuthTokens,
-): Promise<ExtensionAuthTokens | null> {
+): Promise<ExtensionRefreshOutcome> {
   // Join only the existing refresh for this exact credential generation.
   if (
     expected &&
@@ -492,7 +495,7 @@ export async function refreshExtensionSession(
     return sessionRefreshInFlight.promise;
   }
   const stored = await dependencies.getStored();
-  if (!stored) return null;
+  if (!stored) return { tokens: null };
   if (expected && !isSameExtensionAuthSession(expected, stored)) {
     throw new ExtensionAuthTemporarilyUnavailableError(stored);
   }
@@ -501,7 +504,7 @@ export async function refreshExtensionSession(
       return sessionRefreshInFlight.promise;
     // Keep one refresh authority; a different account cannot inherit its result.
     await sessionRefreshInFlight.promise.catch(() => undefined);
-    return refreshExtensionSession(dependencies, expected ?? stored);
+    return refreshExtensionSessionOutcome(dependencies, expected ?? stored);
   }
   const operation = performExtensionSessionRefresh(
     dependencies,
@@ -512,6 +515,13 @@ export async function refreshExtensionSession(
   });
   sessionRefreshInFlight = { expected: stored, promise: operation };
   return operation;
+}
+
+export async function refreshExtensionSession(
+  dependencies: ExtensionSessionRefreshDependencies = defaultRefreshDependencies,
+  expected?: ExtensionAuthTokens,
+): Promise<ExtensionAuthTokens | null> {
+  return (await refreshExtensionSessionOutcome(dependencies, expected)).tokens;
 }
 
 async function revokeExtensionRefreshToken(refreshToken: string): Promise<void> {
@@ -625,7 +635,7 @@ export function probeAuthenticatedUser(
     tokens.user.id,
     tokens.accessToken,
     tokens.refreshToken,
-    tokens.user.plan,
+    tokens.profileRevision,
   ]);
   const pending = pendingProfileProbes.get(key);
   if (pending) return pending;
@@ -787,7 +797,7 @@ export async function getCurrentExtensionSession(
   const current = await dependencies.getStored();
   if (
     !isSameExtensionAuthSession(stored, current) ||
-    (dependencies.probeUser && current?.user.plan !== stored.user.plan)
+    (dependencies.probeUser && !isSameExtensionAuthProfile(stored, current))
   ) {
     if (!current) return null;
     if (dependencies.probeUser)
@@ -805,10 +815,14 @@ export async function getCurrentExtensionSession(
 
   if (probe.kind !== "unauthorized")
     throw new ExtensionAuthTemporarilyUnavailableError(current!);
-  const refreshed =
-    dependencies === defaultSessionDependencies
-      ? await refreshExtensionSession(defaultRefreshDependencies, stored)
-      : await dependencies.refresh();
+  if (dependencies === defaultSessionDependencies) {
+    const outcome = await refreshExtensionSessionOutcome(defaultRefreshDependencies, stored);
+    if (outcome.tokens) return outcome.tokens;
+    // Only this operation's confirmed invalid-family clear may launch recovery.
+    return outcome.recoveryRevision === undefined
+      ? null : signInWithWebsiteSilently(outcome.recoveryRevision);
+  }
+  const refreshed = await dependencies.refresh();
   if (refreshed) return refreshed;
   return dependencies.adoptSilently?.() ?? null;
 }
@@ -926,13 +940,16 @@ function finishWebsiteSessionReconciliationPass(
 
 async function runWebsiteAuthFlow(
   interactive: boolean,
+  recoveryRevision?: string,
 ): Promise<ExtensionAuthTokens | null> {
   if (!chrome.identity?.getRedirectURL || !chrome.identity?.launchWebAuthFlow) {
     if (interactive) throw new Error("Chrome Identity API is unavailable");
     return null;
   }
 
-  const expectedRevision = await getBackgroundAuthRevision();
+  const currentRevision = await getBackgroundAuthRevision();
+  if (recoveryRevision !== undefined && currentRevision !== recoveryRevision) return null;
+  const expectedRevision = recoveryRevision ?? currentRevision;
   const redirectUri = chrome.identity.getRedirectURL(AUTH_CALLBACK_PATH);
   const clientId = chrome.runtime.id;
   const transaction = await createExtensionAuthTransaction();
@@ -959,12 +976,12 @@ async function runWebsiteAuthFlow(
   );
   return exchangeExtensionAuthCode(
     {
-clientId,
-redirectUri,
-code: redirect.code,
-state: redirect.state,
-codeVerifier: transaction.codeVerifier,
-},
+      clientId,
+      redirectUri,
+      code: redirect.code,
+      state: redirect.state,
+      codeVerifier: transaction.codeVerifier,
+    },
     expectedRevision,
   );
 }
@@ -983,9 +1000,9 @@ export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
  * website session exists, the flow needs interaction and we resolve to null
  * instead of throwing, leaving the overlay signed out.
  */
-export async function signInWithWebsiteSilently(): Promise<ExtensionAuthTokens | null> {
+export async function signInWithWebsiteSilently(recoveryRevision?: string): Promise<ExtensionAuthTokens | null> {
   try {
-    const tokens = await runWebsiteAuthFlow(false);
+    const tokens = await runWebsiteAuthFlow(false, recoveryRevision);
     recordDiagnosticEvent(
       "auth.silent",
       tokens ? "succeeded" : "no website session",

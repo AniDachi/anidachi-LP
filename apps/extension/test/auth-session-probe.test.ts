@@ -14,6 +14,8 @@ vi.mock("wxt/utils/storage", () => ({
 vi.mock("../src/diagnostic-log", () => ({ recordDiagnosticEvent: vi.fn() }));
 import {
 	getCurrentExtensionSession,
+	handleAuthMessage,
+	requestCurrentExtensionSession,
 	exchangeExtensionAuthCode,
 	refreshExtensionSession,
 	ExtensionAuthTemporarilyUnavailableError,
@@ -26,6 +28,7 @@ import {
 	setStoredAuthTokens,
 	commitStoredAuthTokensIfCurrent,
 } from "../src/auth-tokens";
+import { invalidateWatchHistoryOnAuthStorageChange, shouldRefreshWatchHistoryAuthority } from "../src/watch-history-runtime-policy";
 const tokens = {
 	accessToken: "access",
 	refreshToken: "refresh",
@@ -48,6 +51,7 @@ beforeEach(() => {
 	state.data.clear();
 });
 afterEach(() => {
+	vi.restoreAllMocks();
 	vi.useRealTimers();
 	vi.unstubAllGlobals();
 });
@@ -427,4 +431,157 @@ describe("durable session revision", () => {
 			(initialized as any)?.authRevision,
 		);
 	});
+});
+
+describe("review regressions at the production session boundary", () => {
+  function enableWebsiteAdoption() {
+    const clientId = "a".repeat(32);
+    const launch = vi.fn(async ({ url }: { url: string }) => {
+      const state = new URL(url).searchParams.get("state");
+      return `https://${clientId}.chromiumapp.org/auth?code=${"c".repeat(32)}&state=${state}`;
+    });
+    vi.stubGlobal("chrome", {
+      runtime: { id: clientId },
+      identity: {
+        getRedirectURL: () => `https://${clientId}.chromiumapp.org/auth`,
+        launchWebAuthFlow: launch,
+      },
+    });
+    return launch;
+  }
+
+  it.each(["invalid", "success"] as const)(
+    "does not silently reauthenticate logout after a late %s refresh",
+    async (result) => {
+      await setStoredAuthTokens(tokens);
+      const launch = enableWebsiteAdoption();
+      const refresh = deferred<Response>();
+      const paths: string[] = [];
+      vi.stubGlobal("fetch", vi.fn((url: string) => {
+        const path = new URL(url).pathname;
+        paths.push(path);
+        if (path.endsWith("/refresh")) return refresh.promise;
+        if (path.endsWith("/exchange")) return Promise.resolve(Response.json(tokens));
+        return Promise.resolve(new Response(null, { status: 401 }));
+      }));
+      const pending = getCurrentExtensionSession();
+      await vi.waitFor(() => expect(paths).toEqual(["/api/me", "/api/extension/auth/refresh"]));
+      await clearStoredAuthTokens();
+      refresh.resolve(result === "invalid"
+        ? new Response(null, { status: 401 })
+        : Response.json({ accessToken: "next-access", refreshToken: "next-refresh" }));
+      expect(await pending).toBeNull();
+      expect(await getStoredAuthTokens()).toBeNull();
+      expect(launch).not.toHaveBeenCalled();
+      expect(paths).toEqual(["/api/me", "/api/extension/auth/refresh"]);
+    },
+  );
+
+  it("keeps legitimate invalid-family website recovery available", async () => {
+    await setStoredAuthTokens(tokens);
+    const launch = enableWebsiteAdoption();
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => new URL(url).pathname.endsWith("/exchange")
+      ? Response.json(tokens)
+      : new Response(null, { status: 401 })));
+    expect(await getCurrentExtensionSession()).toMatchObject(tokens);
+    expect(launch).toHaveBeenCalledOnce();
+  });
+
+  it.each(["browser", "exchange"] as const)("logout while fallback %s adoption is pending remains signed out", async stage => {
+    await setStoredAuthTokens(tokens);
+    const launch = enableWebsiteAdoption();
+    const browser = deferred<string>();
+    const exchange = deferred<Response>();
+    let callbackUrl = "";
+    if (stage === "browser") launch.mockImplementationOnce(async ({url}) => {
+      callbackUrl = `https://${"a".repeat(32)}.chromiumapp.org/auth?code=${"c".repeat(32)}&state=${new URL(url).searchParams.get("state")}`;
+      return browser.promise;
+    });
+    const paths:string[]=[];
+    vi.stubGlobal("fetch", vi.fn(async (url:string) => {
+      const path = new URL(url).pathname; paths.push(path);
+      return path.endsWith("/exchange") ? exchange.promise : new Response(null,{status:401});
+    }));
+    const pending=getCurrentExtensionSession();
+    await vi.waitFor(() => expect(launch).toHaveBeenCalledOnce());
+    if (stage === "exchange") await vi.waitFor(() => expect(paths).toContain("/api/extension/auth/exchange"));
+    await clearStoredAuthTokens();
+    browser.resolve(callbackUrl); exchange.resolve(Response.json(tokens));
+    expect(await pending).toBeNull(); expect(await getStoredAuthTokens()).toBeNull();
+  });
+
+  it("does not launch fallback adoption if a newer logout supersedes its own invalid-family tombstone", async () => {
+    await setStoredAuthTokens(tokens);
+    const launch=enableWebsiteAdoption();
+    const removed=deferred<void>(); const release=deferred<void>();
+    const {storage} = await import("wxt/utils/storage");
+    const remove = vi.spyOn(storage,"removeItem").mockImplementation(async () => { removed.resolve(); await release.promise; });
+    vi.stubGlobal("fetch",vi.fn(async()=>new Response(null,{status:401})));
+    const pending=getCurrentExtensionSession(); await removed.promise;
+    expect(await getStoredAuthTokens()).toBeNull();
+    await clearStoredAuthTokens(); release.resolve();
+    expect(await pending).toBeNull(); expect(launch).not.toHaveBeenCalled(); remove.mockRestore();
+  });
+
+  it("migrates revision-bearing old records conservatively without changing their credential family", async () => {
+    const old = {...tokens,authRevision:"existing-credential-family"};
+    state.data.set(AUTH_TOKENS_KEY,old);
+    vi.stubGlobal("fetch",vi.fn(async()=>Response.json({user:tokens.user})));
+    const migrated=await getCurrentExtensionSession();
+    expect(migrated?.authRevision).toBe("existing-credential-family");
+    expect(migrated?.profileRevision).toBe(0);
+    expect((await commitStoredAuthTokensIfCurrent(old,{...old,user:{...old.user,plan:"pro"}})).committed).toBe(false);
+  });
+
+  it("profile-only changes keep the history credential authority and propagate through retryable auth messages", async () => {
+    await setStoredAuthTokens(tokens); const before=(await getStoredAuthTokens())!;
+    await commitStoredAuthTokensIfCurrent(before,{...before,user:{...before.user,displayName:"Renamed"}});
+    const after=(await getStoredAuthTokens())!;
+    expect(after.authRevision).toBe(before.authRevision); expect(after.profileRevision).toBe(1);
+    const controller={invalidateCaptureAuthority:vi.fn()};
+    invalidateWatchHistoryOnAuthStorageChange(controller,after,before);
+    expect(controller.invalidateCaptureAuthority).not.toHaveBeenCalled();
+    expect(shouldRefreshWatchHistoryAuthority({previous:{ownerUserId:before.user.id,authRevision:before.authRevision,accessToken:before.accessToken},next:{ownerUserId:after.user.id,authRevision:after.authRevision,accessToken:after.accessToken},controllerAvailable:true})).toBe(false);
+    vi.stubGlobal("fetch",vi.fn(async()=>new Response(null,{status:503})));
+    const response=await handleAuthMessage({type:"ANIDACHI_AUTH",command:"get-session"});
+    expect(response).toMatchObject({ok:false,retryable:true,tokens:{profileRevision:1}});
+    vi.stubGlobal("chrome",{runtime:{sendMessage:async()=>response}});
+    const error=await requestCurrentExtensionSession().catch(error=>error);
+    expect(error).toBeInstanceOf(ExtensionAuthTemporarilyUnavailableError); expect(error.cachedTokens.profileRevision).toBe(1);
+  });
+
+  it("a rights ABA cannot join or publish a profile from before the changes", async () => {
+    await setStoredAuthTokens(tokens);
+    const original = (await getStoredAuthTokens())!;
+    const held = deferred<Response>();
+    const request = vi.fn().mockReturnValueOnce(held.promise).mockResolvedValueOnce(Response.json({ user: tokens.user }));
+    vi.stubGlobal("fetch", request);
+    const pending = getCurrentExtensionSession().catch(error => error);
+    await vi.waitFor(() => expect(request).toHaveBeenCalledOnce());
+    await commitStoredAuthTokensIfCurrent(original, { ...original, user: { ...original.user, plan: "pro" } });
+    const pro = (await getStoredAuthTokens())!;
+    await commitStoredAuthTokensIfCurrent(pro, { ...pro, user: { ...pro.user, plan: "plus" } });
+    const latest = (await getStoredAuthTokens())!;
+    expect(latest.authRevision).toBe(original.authRevision);
+    const current = getCurrentExtensionSession();
+    // Settle the old response before asserting count so RED leaves no leaked promises.
+    held.resolve(Response.json({ user: { ...tokens.user, plan: "pro" } }));
+    const oldOutcome = await pending;
+    const freshOutcome = await current;
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(oldOutcome).toBeInstanceOf(ExtensionAuthTemporarilyUnavailableError);
+    expect(freshOutcome?.user.plan).toBe("plus");
+    expect((await getStoredAuthTokens())?.user.plan).toBe("plus");
+    expect((latest as { profileRevision?: number }).profileRevision).toBe(2);
+  });
+
+  it("rejects stale metadata CAS after plus to pro to plus", async () => {
+    await setStoredAuthTokens(tokens);
+    const old = (await getStoredAuthTokens())!;
+    await commitStoredAuthTokensIfCurrent(old, { ...old, user: { ...old.user, plan: "pro" } });
+    const pro = (await getStoredAuthTokens())!;
+    await commitStoredAuthTokensIfCurrent(pro, { ...pro, user: { ...pro.user, plan: "plus" } });
+    expect((await commitStoredAuthTokensIfCurrent(old, { ...old, user: { ...old.user, plan: "pro" } })).committed).toBe(false);
+    expect((await getStoredAuthTokens())?.user.plan).toBe("plus");
+  });
 });
