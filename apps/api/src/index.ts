@@ -1574,6 +1574,7 @@ export class RoomDurableObject {
 
     this.roomEndInProgress = true;
     try {
+      const firstTerminalAttempt = !this.terminalIntent;
       if (!this.terminalIntent) {
         const fencedAt = Date.now();
         const usage = this.stopRoomUsage(fencedAt);
@@ -1583,14 +1584,28 @@ export class RoomDurableObject {
           ...(usage ? { usage } : {}),
         });
       } else {
-        await this.persistTerminalIntent({ ...this.terminalIntent, nextAttemptAt: Date.now() + ROOM_TERMINAL_RETRY_MS });
+        const now = Date.now();
+        const pendingSource = await readStoredRoomSourcePersistence(this.state.storage);
+        await this.persistTerminalIntent({ ...this.terminalIntent,
+          nextAttemptAt: Math.max(now + ROOM_TERMINAL_RETRY_MS, pendingSource?.nextAttemptAt ?? 0),
+        });
+        if (pendingSource && pendingSource.nextAttemptAt > now) {
+          // Retrying End (or waking for presence) cannot turn the source outbox
+          // backoff into repeated accounting and source network requests.
+          this.closeTerminalSockets();
+          return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
+        }
       }
       this.closeTerminalSockets();
       const intent = this.terminalIntent!;
       if (this.roomPolicy && !(await this.settleRoomUsage())) {
         return Response.json({ error: "ROOM_ACCOUNTING_UNAVAILABLE", ...this.terminalReceipt() }, { status: 503 });
       }
-      if (!(await this.runRoomSourceDeliveryExclusively(true))) {
+      if (!(await this.runRoomSourceDeliveryExclusively(firstTerminalAttempt))) {
+        const pendingSource = await readStoredRoomSourcePersistence(this.state.storage);
+        await this.persistTerminalIntent({ ...this.terminalIntent!,
+          nextAttemptAt: Math.max(Date.now() + ROOM_TERMINAL_RETRY_MS, pendingSource?.nextAttemptAt ?? 0),
+        });
         return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
       }
       await notifyWebRoomEnded(this.env, this.room.roomId, {

@@ -892,6 +892,15 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		});
 
 		allowSourceSuccess = true;
+		const premature = await endRoom(stub, {
+			endedAt: 2_000,
+			reason: "host_ended",
+		});
+		expect(premature.status).toBe(502);
+		await premature.text();
+		expect(callbackOrder).toEqual(["source", "source"]);
+		// User retries cannot bypass the persisted source backoff.
+		vi.spyOn(Date, "now").mockReturnValue(Date.now() + 31_000);
 		const completed = await endRoom(stub, {
 			endedAt: 2_000,
 			reason: "host_ended",
@@ -899,6 +908,66 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		expect(completed.status).toBe(200);
 		expect(callbackOrder).toEqual(["source", "source", "source", "ended"]);
 		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null });
+		host.close();
+	});
+
+	it("bounds terminal source retries over an hour and preserves pending work across restart", async () => {
+		const roomId = `runtime-terminal-source-backoff-${crypto.randomUUID()}`;
+		const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = ns.get(ns.idFromName(roomId));
+		let sourceAttempts = 0;
+		let finalizations = 0;
+		let allowSourceSuccess = false;
+		stubWebFetch(async (input, init) => {
+			if (String(input).endsWith("/source")) {
+				sourceAttempts++;
+				const body = JSON.parse(String(init?.body));
+				return allowSourceSuccess
+					? Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration })
+					: Response.json({ error: "Room has ended", code: "ROOM_ENDED" }, { status: 409 });
+			}
+			if (String(input).endsWith("/ended")) finalizations++;
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-backoff", userId: "host-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/retry-proof";
+		host.send({ type: "HOST_STATE", roomId,
+			state: playbackState("crunchyroll|watch/retry-proof", sourceUrl),
+			source: sourceDescriptor("crunchyroll|watch/retry-proof", "Retry proof", sourceUrl),
+		});
+		await waitForRoomRuntime(stub, value => value.pendingSource?.attempts === 1, "initial pending source");
+		const ended = await endRoom(stub, { endedAt: Date.now(), reason: "host_ended" });
+		expect(ended.status).toBe(502);
+		await ended.text();
+		const initial = await readRoomRuntime(stub);
+		const start = Date.now();
+		const clock = vi.spyOn(Date, "now");
+		for (let step = 1; step <= 120; step++) {
+			clock.mockReturnValue(start + step * 30_000);
+			if (step === 60) await evictDurableObject(stub, { webSockets: "hibernate" });
+			await runInDurableObject(stub, async instance => {
+				await (instance as any).runAlarmExclusive();
+			});
+		}
+		const pending = await readRoomRuntime(stub);
+		expect(sourceAttempts).toBeLessThanOrEqual(18);
+		expect(sourceAttempts).toBeGreaterThan(10);
+		expect(finalizations).toBe(0);
+		expect(pending.pendingSource?.callback).toEqual(initial.pendingSource?.callback);
+		expect(pending.tombstone).toBeNull();
+		expect(pending.alarm).toBe(pending.pendingSource?.nextAttemptAt);
+		allowSourceSuccess = true;
+		clock.mockReturnValue(start + 3_900_000);
+		await runInDurableObject(stub, async instance => { await (instance as any).runAlarmExclusive(); });
+		expect(finalizations).toBe(1);
+		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null, acknowledgedSourceGeneration: 2 });
+		const settledCalls = sourceAttempts;
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		await runInDurableObject(stub, async instance => { await (instance as any).runAlarmExclusive(); });
+		expect(sourceAttempts).toBe(settledCalls);
+		expect(finalizations).toBe(1);
 		host.close();
 	});
 
@@ -3193,6 +3262,7 @@ describe("RoomDurableObject media v2", () => {
 			);
 		let deny = false;
 		let fail = false;
+		let failSource = false;
     let settlementGate: Promise<void> | null = null;
     let releaseSettlement: (()=>void) | null = null;
 		const ledger = new Map<string, number>();
@@ -3201,6 +3271,7 @@ describe("RoomDurableObject media v2", () => {
 				const body = JSON.parse(String(init?.body));
 				calls.push(body);
 				if (String(input).endsWith("/source")) {
+					if (failSource) return Response.json({ code: "ROOM_ENDED" }, { status: 409 });
 					return Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration });
 				}
 				if (body.operation === "room_policy_v2") {
@@ -3277,6 +3348,7 @@ describe("RoomDurableObject media v2", () => {
 			stub,
 			join,
 			calls,
+			setSourceFailure: () => { failSource = true; },
       stallSettlement: () => { settlementGate=new Promise<void>(resolve=>{releaseSettlement=resolve;}); },
       releaseSettlement: () => {releaseSettlement?.();settlementGate=null;},
       ledger,
@@ -3289,6 +3361,44 @@ describe("RoomDurableObject media v2", () => {
 		};
 	}
 
+	it("settles frozen usage before a blocked terminal source without repeating network work before retry", async () => {
+		const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+		const day = new Date(start).toISOString().slice(0, 10);
+		const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+		const f = await fixture("free", 3);
+		const host = await f.join(0);
+		await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "source retry host");
+		const guest = await f.join(1);
+		await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "source retry guest");
+		f.setSourceFailure();
+		const sourceUrl = "https://www.crunchyroll.com/watch/frozen-usage";
+		host.send({ type: "HOST_STATE", roomId: f.roomId,
+			state: playbackState("crunchyroll|watch/frozen-usage", sourceUrl),
+			source: sourceDescriptor("crunchyroll|watch/frozen-usage", "Frozen usage", sourceUrl),
+		});
+		await waitForRoomRuntime(f.stub, value => value.pendingSource?.attempts === 1, "blocked source");
+		clock.mockReturnValue(start + 12_000);
+		const end = () => endRoom(f.stub, { endedAt: start + 12_000, reason: "host_ended" });
+		const initial = await end();
+		expect(initial.status).toBe(502);
+		await initial.text();
+		expect(f.ledger.get(day)).toBe(12);
+		const before = f.calls.length;
+		for (let retry = 0; retry < 3; retry++) {
+			const response = await end();
+			expect(response.status).toBe(502);
+			await response.text();
+		}
+		expect(f.calls).toHaveLength(before);
+		expect(await readRoomRuntime(f.stub)).toMatchObject({ pendingSource: { attempts: 2 }, tombstone: null });
+		clock.mockReturnValue(start + 42_000);
+		const retry = await end();
+		expect(retry.status).toBe(502);
+		await retry.text();
+		expect(f.ledger.get(day)).toBe(12);
+		expect(await readRoomRuntime(f.stub)).toMatchObject({ pendingSource: { attempts: 3 }, tombstone: null });
+		host.close(); guest.close();
+	});
 
   it.each([
     ["free", 1], ["free", 2], ["plus", 2], ["pro", 2],
