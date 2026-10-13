@@ -78,21 +78,37 @@ version/channel/hash and test accounts' roles without tokens or personal data.
   declined/3DS recovery, expiry without charge, paid state; no repeat trial.
 - [ ] Compatibility: existing Store extension and new extension against new backend;
   staging source-equivalent legacy builds are evidence with a clearly stated limit.
+- [ ] Exercise an actual published-version-to-candidate update, not only clean
+  installation. Compare the exact permission sets: Netflix introduces required
+  `https://www.netflix.com/*` access. Verify any permission warning/re-enable path,
+  retained settings/session/tour state, and prepare a short user explanation.
+  Chrome can disable an update until a new warning-bearing permission is accepted
+  ([official guidance](https://developer.chrome.com/docs/extensions/develop/concepts/permission-warnings)).
 - [ ] Closed-room finalization: lost callbacks/restart, durable source/usage,
   no endless fast retry; explicitly resolve unknown pending-newer-source cases.
 - [ ] Review Netflix ad-plan support evidence and align public claims with actual
   supported behavior; do not market unverified support.
 
-## Stage 4: Prepare a reviewable production package (no deployment yet)
+## Stage 4: Prepare a reviewable Store and launch package (no deployment yet)
 
 - [ ] Refresh live production schema/flags/billing/deploy state read-only.
 - [ ] Prepare promotion from the accepted candidate preserving current main SEO.
   Source delta currently lists six additive migrations: 20261007235706,
   20261011124600,20261011132247,20261011135040,20261011153028,20261011161158.
   Recheck against actual migration ledger; never blindly replay.
+- [ ] Define a real schema-before-app gate. A main push starts `db-production.yml`
+  and Vercel independently; one broad merge does not impose deployment order.
+  Prepare a separately authorized dormant-schema promotion or approved pre-apply,
+  verify its completed ledger with activation/trial starts/scheduler off, then
+  promote dependent application code. New billing reads the trial table even
+  when new trial starts are disabled; a flag alone cannot protect missing schema.
 - [ ] Check highest uploaded Store version before choosing the next version.
   Keep ID `gpkolofebdhfpapbbgdkdkmlmjfidgmn`, exact production endpoints/public
   VAPID match, narrow approved provider permissions and licenses; exclude QA pages.
+- [ ] After combined staging acceptance and package authorization, build the
+  production-channel review ZIP from the frozen accepted source without deploying
+  production. Validate and hash it; verify compatibility with current backend as
+  well as the staged new backend, and prepare reviewer access/instructions.
 - [ ] Record privacy/listing changes and release notes; Netflix/onboarding/trial
   descriptions must match accepted behavior.
 - [ ] Prepare rollback per plane: additive schema retained; compatible Web keeps
@@ -102,12 +118,19 @@ version/channel/hash and test accounts' roles without tokens or personal data.
 
 ## Stage 5: Only after explicit production approval
 
-- [ ] Compatible additive schema first, Web billing/callback handlers next, guarded
-  production Worker after exact main SHA readiness. Verify old clients still work.
-- [ ] Build/validate final production-channel extension from frozen source; inspect
-  actual package including onboarding and Netflix. Submit through Store review with
-  publication coordinated after backend readiness, not automatic early activation.
-- [ ] Smoke approved production paths, then release/activate only the agreed flags.
+- [ ] Preserve the existing [owner-directed release order](../../releases/paid-hosting-trial/production-preparation-2026-10-02.md#ordered-production-delivery):
+  submit the exact accepted ZIP with deferred publication, keep current public
+  behavior during review, wait for Store approval, then agree the manual launch
+  window. Store submission and production rollout are separate permissions.
+- [ ] Deliver authorized dormant additive schema first and verify completion;
+  compatible Web billing/callback handlers next; guarded production Worker only
+  after exact main SHA readiness. Record LIVE catalog/Portal/webhook/drain-secret
+  and activation prerequisites without changing existing monthly subscriptions.
+  Verify old clients still create/join/end and retain paid access.
+- [ ] Smoke approved production paths, confirm the accepted Store version is
+  published, then activate only the agreed flags and recorded transition UUID/T.
+  Do not silently rebuild a different ZIP after Store review; source/package
+  changes require renewed verification and review where applicable.
 - [ ] Compare equal-length traffic-normalized cost/error periods. Separate delayed
   old-client adoption from regressions; monitor failures and rollback thresholds.
 
