@@ -1,12 +1,17 @@
 # Plans
 
+Active integrated release preparation:
+
+1. [Vercel request-cost optimization](2026-10-14-vercel-cost-optimization.md) — approved isolated fixes and staging delivery; production unchanged.
+2. [Combined product release](2026-10-14-integrated-product-release.md) — source inventory, approved UI preservation, Netflix/trial acceptance, coordinated backend and Chrome Store gates.
+
 Active cardless trial work:
 
 1. [2026-10-11-cardless-trial.md](2026-10-11-cardless-trial.md) — approved
    staging-first execution; the native Schedule mechanism passed 14 sandbox
-   capability cases plus the already-open Portal check. Product implementation
-   and acceptance are still pending; see the acceptance record for exact proof
-   boundaries. Production rollout is not authorized.
+   capability cases plus the already-open Portal check. Product code and UI are
+   on staging through PRs410–415; the integrated release plan above records newer
+   acceptance receipts and remaining proof boundaries. Production rollout is not authorized.
 
 Files in this folder are historical execution plans and work logs. They are kept
 because they explain why certain migrations and architecture decisions happened.
