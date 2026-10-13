@@ -21,6 +21,7 @@ import type {
 	SubscriptionTrialRecord,
 } from "./stripe-trial-state";
 import {
+  type PersistedRoomSourceProof,
   parseRoomSourcePersistenceRpcResult,
   roomSourceCreationColumns,
   roomSourcePersistenceErrorFromDatabase,
@@ -831,6 +832,17 @@ export async function persistRoomSource(
     result.data,
     callback.sourceGeneration,
   );
+}
+
+export async function getPersistedRoomSourceProof(
+  roomId: string,
+): Promise<PersistedRoomSourceProof | null> {
+  const result = await db().from("rooms")
+    .select("room_id,status,source_provider,source_url,video_fingerprint,source_generation")
+    .eq("room_id", roomId)
+    .maybeSingle();
+  if (result.error) throw new Error("Unable to read persisted room source");
+  return result.data;
 }
 
 export function roomCapabilitiesFromRoom(room: RoomRow): RoomCapabilities {
