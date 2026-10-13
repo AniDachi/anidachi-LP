@@ -19,6 +19,333 @@ import {
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
 
 describe("watch history meaningful-progress controller", () => {
+  it("honors a persisted recording opt-out for an hour without a history partition or reachable bootstrap", async () => {
+    const bootstrap = vi.fn(async () => null);
+    const fixture = createFixture({
+      loadRecordingChoice: async () => ({ ownerUserId: pollingAuthority().ownerUserId, enabled: false }),
+      loadCachedPreferences: async () => null,
+      loadPreferences: bootstrap,
+    });
+    await fixture.controller.start();
+    await fixture.controller.recover();
+    for (let tick = 0; tick < 720; tick++) {
+      fixture.advance(5_000);
+      await fixture.controller.observe("heartbeat");
+    }
+    expect(bootstrap).not.toHaveBeenCalled();
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it("does not poll while the initial local recording choice is still loading", async () => {
+    let complete!: (value: { ownerUserId: string; enabled: boolean }) => void;
+    const bootstrap = vi.fn(async () => null);
+    const fixture = createFixture({
+      loadRecordingChoice: () => new Promise(resolve => { complete = resolve; }),
+      loadPreferences: bootstrap,
+    });
+    const starting = fixture.controller.start();
+    fixture.advance(600_000);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.recover();
+    expect(bootstrap).not.toHaveBeenCalled();
+    complete({ ownerUserId: pollingAuthority().ownerUserId, enabled: false });
+    await starting;
+    expect(bootstrap).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when the initial local recording choice cannot be read", async () => {
+    const bootstrap = vi.fn(async () => null);
+    const fixture = createFixture({
+      loadRecordingChoice: async () => { throw new Error("storage unavailable"); },
+      loadPreferences: bootstrap,
+    });
+    await fixture.controller.start();
+    await fixture.controller.recover();
+    fixture.advance(600_000);
+    await fixture.controller.observe("heartbeat");
+    expect(bootstrap).not.toHaveBeenCalled();
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it("retries an unknown local recording choice on explicit recovery without automatic network polling", async () => {
+    let reads = 0;
+    const bootstrap = vi.fn(async () => pollingAuthority());
+    const fixture = createFixture({
+      loadRecordingChoice: async () => {
+        if (++reads === 1) throw new Error("temporary storage failure");
+        return { ownerUserId: pollingAuthority().ownerUserId, enabled: true };
+      },
+      loadPreferences: bootstrap,
+    });
+    await fixture.controller.start();
+    fixture.advance(1_000);
+    await fixture.controller.observe("heartbeat");
+    expect(bootstrap).not.toHaveBeenCalled();
+    expect(reads).toBe(1);
+    await fixture.controller.recover();
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    fixture.setTime(12); await fixture.controller.observe("pause");
+    expect(reads).toBe(2);
+    expect(bootstrap).toHaveBeenCalledTimes(1);
+    expect(fixture.enqueued.map(event => event.currentTime)).toEqual([12]);
+  });
+
+  it("does not overwrite a recording revocation with a delayed startup choice", async () => {
+    let complete!: (value: { ownerUserId: string; enabled: boolean }) => void;
+    const bootstrap = vi.fn(async () => pollingAuthority());
+    const fixture = createFixture({
+      loadRecordingChoice: () => new Promise(resolve => { complete = resolve; }),
+      loadPreferences: bootstrap,
+    });
+    const starting = fixture.controller.start();
+    fixture.controller.setRecordingEnabled(false);
+    complete({ ownerUserId: pollingAuthority().ownerUserId, enabled: true });
+    await starting;
+    await fixture.controller.recover();
+    fixture.advance(600_000);
+    await fixture.controller.observe("heartbeat");
+    expect(bootstrap).not.toHaveBeenCalled();
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it("preserves a newer explicit recording enable while startup still holds an old opt-out", async () => {
+    let complete!: (value: { ownerUserId: string; enabled: boolean }) => void;
+    const bootstrap = vi.fn(async () => pollingAuthority());
+    const fixture = createFixture({
+      loadRecordingChoice: () => new Promise(resolve => { complete = resolve; }),
+      loadPreferences: bootstrap,
+    });
+    const starting = fixture.controller.start();
+    fixture.controller.setRecordingEnabled(true);
+    await fixture.controller.refreshAuthority();
+    complete({ ownerUserId: pollingAuthority().ownerUserId, enabled: false });
+    await starting;
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    fixture.setTime(12); await fixture.controller.observe("pause");
+    expect(bootstrap).toHaveBeenCalledTimes(1);
+    expect(fixture.enqueued.map(event => event.currentTime)).toEqual([12]);
+  });
+
+  it("ignores an initial recording choice that belongs to a replaced account", async () => {
+    let current = true;
+    let complete!: (value: { ownerUserId: string; enabled: boolean }) => void;
+    const bootstrap = vi.fn(async () => pollingAuthority());
+    const fixture = createFixture({
+      isOwnerCurrent: () => current,
+      loadRecordingChoice: () => new Promise(resolve => { complete = resolve; }),
+      loadPreferences: bootstrap,
+    });
+    const starting = fixture.controller.start();
+    current = false;
+    complete({ ownerUserId: pollingAuthority().ownerUserId, enabled: true });
+    await starting;
+    await fixture.controller.recover();
+    fixture.advance(600_000);
+    await fixture.controller.observe("heartbeat");
+    expect(bootstrap).not.toHaveBeenCalled();
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it("does not restore recording from a storage recovery completed after local revocation", async () => {
+    let complete!: (value: ReturnType<typeof pollingAuthority> & { capturePaused: boolean; recordingEnabled: boolean }) => void;
+    const fixture = createFixture({
+      loadPreferences: async () => ({ ...pollingAuthority(), capturePaused: true, recordingEnabled: true }),
+      recoverCapture: () => new Promise(resolve => { complete = resolve; }),
+    });
+    await fixture.controller.start();
+    const recovering = fixture.controller.recover();
+    await vi.waitFor(() => expect(complete).toBeTypeOf("function"));
+    fixture.controller.setRecordingEnabled(false);
+    complete({ ...pollingAuthority(), capturePaused: false, recordingEnabled: true });
+    await recovering;
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    fixture.setTime(12); await fixture.controller.observe("pause");
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it.each([
+    ["Free", 13],
+    ["recording off", 1],
+    ["YouTube opt-out", 1],
+    ["unavailable", 15],
+  ] as const)("limits a paused %s tab to %i authority requests in one hour", async (state, budget) => {
+    let elapsed = 0;
+    let requests = 0;
+    const fixture = createFixture({
+      isPlaying: () => false,
+      getProvider: () => "youtube",
+      loadPreferences: async () => {
+        requests++;
+        if (state === "unavailable") return null;
+        const authority = { ...pollingAuthority(1_700_000_000_000 + elapsed), recordingEnabled: state !== "recording off" };
+        if (state === "Free") authority.accessLease.access.state = "plan_required";
+        if (state === "YouTube opt-out") authority.preferences.youtubeHistoryEnabled = false;
+        return authority;
+      },
+    });
+    await fixture.controller.start();
+    for (let tick = 0; tick < 720; tick++) {
+      elapsed += 5_000;
+      fixture.advance(5_000);
+      await fixture.controller.observe("heartbeat");
+    }
+    expect(requests).toBe(budget);
+    expect(fixture.local).toHaveLength(0);
+    await fixture.controller.dispose();
+  });
+
+  it("does not revalidate a cached negative lease until expiry", async () => {
+    let requests = 0;
+    const authority = pollingAuthority();
+    authority.accessLease.access.state = "plan_required";
+    const fixture = createFixture({
+      loadCachedPreferences: async () => authority,
+      loadPreferences: async () => { requests++; return authority; },
+    });
+    await fixture.controller.start();
+    fixture.advance(299_999); await fixture.controller.observe("heartbeat");
+    expect(requests).toBe(0);
+    fixture.advance(1); await fixture.controller.observe("heartbeat");
+    expect(requests).toBe(1);
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it("keeps YouTube opt-out local to that provider and refreshes expired authority after switching to Crunchyroll", async () => {
+    let provider: "youtube" | "crunchyroll" = "youtube";
+    let requests = 0;
+    const authority = pollingAuthority();
+    authority.preferences.youtubeHistoryEnabled = false;
+    const fixture = createFixture({
+      getProvider: () => provider,
+      loadPreferences: async () => { requests++; return authority; },
+    });
+    await fixture.controller.start();
+    fixture.advance(600_000); await fixture.controller.observe("heartbeat");
+    expect(requests).toBe(1);
+    provider = "crunchyroll";
+    await fixture.controller.observe("heartbeat");
+    expect(requests).toBe(2);
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it("does not poll or capture for an owner that has been replaced", async () => {
+    let ownerCurrent = true;
+    let requests = 0;
+    const fixture = createFixture({
+      isOwnerCurrent: () => ownerCurrent,
+      loadPreferences: async () => { requests++; return pollingAuthority(); },
+    });
+    await fixture.controller.start();
+    const count = fixture.local.length;
+    ownerCurrent = false;
+    fixture.advance(600_000); await fixture.controller.observe("heartbeat");
+    await fixture.controller.dispose();
+    expect(requests).toBe(1);
+    expect(fixture.local).toHaveLength(count);
+  });
+
+  it("discards an in-flight refresh after a local recording opt-out", async () => {
+    let complete!: (value: ReturnType<typeof pollingAuthority>) => void;
+    const fixture = createFixture({
+      loadCachedPreferences: async () => pollingAuthority(),
+      loadPreferences: () => new Promise(resolve => { complete = resolve; }),
+    });
+    await fixture.controller.start();
+    const count = fixture.local.length;
+    await fixture.controller.applyLocalPreferences({ ...pollingAuthority(), recordingEnabled: false, capturePaused: false });
+    complete(pollingAuthority());
+    await Promise.resolve(); await Promise.resolve();
+    fixture.setTime(11); await fixture.controller.observe("pause");
+    await fixture.controller.dispose();
+    expect(fixture.local).toHaveLength(count);
+  });
+
+  it("keeps a confirmed Free lease until its expiry instead of polling while paused", async () => {
+    let requests = 0;
+    const authority = pollingAuthority();
+    authority.accessLease.access.state = "plan_required";
+    const fixture = createFixture({
+      isPlaying: () => false,
+      loadPreferences: async () => { requests++; return authority; },
+    });
+    await fixture.controller.start();
+    for (let tick = 0; tick < 59; tick++) {
+      fixture.advance(5_000);
+      await fixture.controller.observe("heartbeat");
+    }
+    expect(requests).toBe(1);
+    expect(fixture.local).toHaveLength(0);
+    fixture.advance(5_000);
+    await fixture.controller.observe("heartbeat");
+    expect(requests).toBe(2);
+    expect(fixture.local).toHaveLength(0);
+  });
+
+  it.each(["recording off", "YouTube opt-out", "storage paused"] as const)(
+    "does not poll %s, but still accepts an explicit preference refresh",
+    async reason => {
+      let requests = 0;
+      let authority = { ...pollingAuthority(), recordingEnabled: reason !== "recording off",
+        capturePaused: reason === "storage paused" };
+      if (reason === "YouTube opt-out") authority.preferences.youtubeHistoryEnabled = false;
+      const fixture = createFixture({
+        getProvider: () => "youtube",
+        getObservation: (_preferences, value) => ({ ...value, provider: "youtube" }),
+        loadPreferences: async () => { requests++; return authority; },
+      });
+      await fixture.controller.start();
+      for (let tick = 0; tick < 120; tick++) {
+        fixture.advance(5_000);
+        await fixture.controller.observe("heartbeat");
+      }
+      expect(requests).toBe(1);
+      expect(fixture.local).toHaveLength(0);
+      authority = { ...pollingAuthority(1_700_000_600_000), recordingEnabled: true, capturePaused: false };
+      await fixture.controller.refreshAuthority();
+      fixture.setTime(11); await fixture.controller.observe("heartbeat");
+      fixture.setTime(12); await fixture.controller.observe("pause");
+      expect(requests).toBe(2);
+      expect(fixture.enqueued.map(event => event.currentTime)).toEqual([12]);
+    },
+  );
+
+  it("backs off unavailable authority while failing closed and explicit refresh can recover immediately", async () => {
+    let requests = 0;
+    let authority: ReturnType<typeof pollingAuthority> | null = null;
+    const fixture = createFixture({
+      loadPreferences: async () => { requests++; return authority; },
+    });
+    await fixture.controller.start();
+    for (let tick = 0; tick < 120; tick++) {
+      fixture.advance(5_000);
+      await fixture.controller.observe("heartbeat");
+    }
+    expect(requests).toBeLessThanOrEqual(6);
+    expect(requests).toBeGreaterThan(1);
+    expect(fixture.local).toHaveLength(0);
+    authority = pollingAuthority(1_700_000_600_000);
+    await fixture.controller.refreshAuthority();
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    fixture.setTime(12); await fixture.controller.observe("pause");
+    expect(fixture.enqueued.map(event => event.currentTime)).toEqual([12]);
+  });
+
+  it("stops capture and polling immediately after local recording is disabled", async () => {
+    let requests = 0;
+    const fixture = createFixture({ loadPreferences: async () => { requests++; return pollingAuthority(); } });
+    await fixture.controller.start();
+    fixture.setTime(11); await fixture.controller.observe("heartbeat");
+    const count = fixture.local.length;
+    await fixture.controller.applyLocalPreferences({ ...pollingAuthority(), recordingEnabled: false, capturePaused: false });
+    fixture.advance(600_000);
+    fixture.setTime(17); await fixture.controller.observe("pause");
+    await fixture.controller.observe("ended");
+    await fixture.controller.dispose();
+    expect(requests).toBe(1);
+    expect(fixture.local).toHaveLength(count);
+    expect(fixture.enqueued.map(event => event.currentTime)).toEqual([11]);
+  });
+
   it.each(["expired lease", "confirmed Free"] as const)(
     "stops a paid-room guest's personal recording on %s and never backfills the Free interval",
     async loss => {
@@ -1519,11 +1846,23 @@ function roomAuthority(sourceGeneration = 1, attestation = `proof-${sourceGenera
   };
 }
 
+function pollingAuthority(now = 1_700_000_000_000) {
+  return {
+    ownerUserId: "00000000-0000-4000-8000-000000000001",
+    accountGeneration: 1,
+    accessLease: paidHistoryLease(undefined, now),
+    preferences: { youtubeHistoryEnabled: true },
+  };
+}
+
 function createFixture(options: {
+  isPlaying?: () => boolean;
+  isOwnerCurrent?: (owner: string) => boolean;
   onPersisted?: WatchHistoryControllerDependencies["onPersisted"];
   getProvider?: WatchHistoryControllerDependencies["getProvider"];
   roomActive?: boolean;
   sessionKeys?: string[];
+  loadRecordingChoice?: WatchHistoryControllerDependencies["loadRecordingChoice"];
   loadCachedPreferences?: WatchHistoryControllerDependencies["loadCachedPreferences"];
   loadPreferences?: WatchHistoryControllerDependencies["loadPreferences"];
   recoverCapture?: WatchHistoryControllerDependencies["recoverCapture"];
@@ -1597,12 +1936,14 @@ function createFixture(options: {
     progress: time / 20,
   });
   const dependencies: WatchHistoryControllerDependencies = {
+    isOwnerCurrent: options.isOwnerCurrent,
     onPersisted: options.onPersisted,
     getProvider: options.getProvider,
     getObservation: options.getObservation
       ? (preferences) => options.getObservation?.(preferences, observation()) ?? null
       : observation,
     getRoomActive: () => roomActive,
+    loadRecordingChoice: options.loadRecordingChoice,
     loadCachedPreferences: options.loadCachedPreferences,
     loadPreferences: options.loadPreferences ?? (async () => ({
       ownerUserId: "00000000-0000-4000-8000-000000000001",
@@ -1641,7 +1982,7 @@ function createFixture(options: {
     now: () => now,
     createEventId: () => "11111111-1111-4111-8111-111111111111",
     createSessionKey: () => sessionKeys.shift() ?? "33333333-3333-4333-8333-333333333333",
-    isPlaying: () => true,
+    isPlaying: options.isPlaying ?? (() => true),
     isSeeking: () => false,
   };
   return {

@@ -15,12 +15,66 @@ const OWNER_ID = "00000000-0000-4000-8000-000000000001";
 const OTHER_OWNER_ID = "00000000-0000-4000-8000-000000000002";
 
 describe("watch history preference listener", () => {
+  it("stops retries on recording opt-out even offline and resumes on opt-in", async () => {
+    let now = 1_700_000_000_000;
+    let requests = 0;
+    let enabled = false;
+    let listener!: (changes: Record<string, { newValue?: unknown }>, area: string) => void;
+    const controller = createWatchHistoryController({
+      now: () => now, getProvider: () => "youtube",
+      getObservation: () => null, getRoomActive: () => false,
+      loadPreferences: async () => { requests++; return null; },
+      observeLocally: async () => { throw new Error("capture is forbidden"); },
+      isPlaying: () => false, isSeeking: () => false,
+    });
+    await controller.start();
+    const dispose = bindWatchHistoryPreferenceListener({
+      ownerUserId: OWNER_ID, controller,
+      hasRecordingConsent: async () => enabled,
+      onChanged: { addListener: next => { listener = next; }, removeListener: () => undefined },
+    });
+    listener({ [historyRecordingChoiceKey(OWNER_ID)]: { newValue: { enabled: false } } }, "local");
+    await Promise.resolve(); await Promise.resolve();
+    now += 600_000;
+    await controller.observe("heartbeat");
+    expect(requests).toBe(1);
+    enabled = true;
+    listener({ [historyRecordingChoiceKey(OWNER_ID)]: { newValue: { enabled: true } } }, "local");
+    await vi.waitFor(() => expect(requests).toBe(2));
+    dispose(); await controller.dispose();
+  });
+
+  it("passes local recording opt-out separately without discarding the server lease", async () => {
+    let listener!: (changes: Record<string, { oldValue?: unknown; newValue?: unknown }>, area: string) => void;
+    const applyLocalPreferences = vi.fn(async () => undefined);
+    const dispose = bindWatchHistoryPreferenceListener({
+      ownerUserId: OWNER_ID,
+      controller: { applyLocalPreferences },
+      hasRecordingConsent: async () => false,
+      onChanged: { addListener: next => { listener = next; }, removeListener: () => undefined },
+    });
+    listener({ [WATCH_HISTORY_STORAGE_KEY]: {
+      oldValue: preferenceRoot(OWNER_ID, false, 0),
+      newValue: preferenceRoot(OWNER_ID, true, 1),
+    } }, "local");
+    await vi.waitFor(() => expect(applyLocalPreferences).toHaveBeenCalledWith({
+      ownerUserId: OWNER_ID, accountGeneration: 1,
+      accessLease: paidHistoryLease(OWNER_ID),
+      preferences: { youtubeHistoryEnabled: true },
+      recordingEnabled: false, capturePaused: false,
+    }));
+    dispose();
+  });
+
   it("invalidates immediately and discards an older delayed preference lookup after revocation", async () => {
     let listener!: (changes: Record<string, { oldValue?: unknown; newValue?: unknown }>, area: string) => void;
     let resolveConsent!: (value: boolean) => void;
+    let consentReads = 0;
     const controller = { applyLocalPreferences: vi.fn(async () => undefined), invalidateCaptureAuthority: vi.fn(), refreshAuthority: vi.fn(async () => undefined) };
     const dispose = bindWatchHistoryPreferenceListener({ ownerUserId: OWNER_ID, controller,
-      hasRecordingConsent: () => new Promise((resolve) => { resolveConsent = resolve; }),
+      hasRecordingConsent: () => ++consentReads === 1
+        ? new Promise((resolve) => { resolveConsent = resolve; })
+        : Promise.resolve(false),
       onChanged: { addListener: (next) => { listener = next; }, removeListener: () => undefined },
     });
     listener({ [WATCH_HISTORY_STORAGE_KEY]: { oldValue: preferenceRoot(OWNER_ID, false, 0), newValue: preferenceRoot(OWNER_ID, true, 1) } }, "local");
@@ -28,7 +82,7 @@ describe("watch history preference listener", () => {
     expect(controller.invalidateCaptureAuthority).not.toHaveBeenCalled();
     listener({ [historyRecordingChoiceKey(OWNER_ID)]: { newValue: { enabled: false } } }, "local");
     expect(controller.invalidateCaptureAuthority).toHaveBeenCalledTimes(1);
-    expect(controller.refreshAuthority).toHaveBeenCalledTimes(1);
+    expect(controller.refreshAuthority).not.toHaveBeenCalled();
     resolveConsent(true); await Promise.resolve(); await Promise.resolve();
     expect(controller.applyLocalPreferences).not.toHaveBeenCalled(); dispose();
   });
@@ -65,6 +119,7 @@ describe("watch history preference listener", () => {
         accountGeneration: 1,
         accessLease: paidHistoryLease(OWNER_ID),
         preferences: { youtubeHistoryEnabled: true },
+        recordingEnabled: true,
         capturePaused: false,
       });
     });
