@@ -2072,10 +2072,13 @@ export async function handleWatchHistoryAuthSessionChange(
       if (!cleared.ok) return { ok: false, status: "retryable" };
     }
     if (!next) return { ok: true };
-    const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
+    // Owner/epoch fences need the latest persisted identity, not another /api/me
+    // request. The history endpoint validates the bearer; only a 401 refreshes it.
+    const getCurrentSession = dependencies.getCurrentSession ?? await defaultStoredWatchHistorySession();
+    const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession ?? await defaultRequestWatchHistorySession();
     const current = await getCurrentSession();
     if (!current || !sameSession(next, current)) return { ok: false, status: "retryable" };
-    const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession });
+    const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession, getRequestSession });
     const bootstrapped = await client.handle({ type: WATCH_HISTORY_MESSAGE_TYPE, command: "bootstrap", expectedOwnerUserId: current.user.id });
     if (!bootstrapped.ok) return bootstrapped;
     const reconciled = await client.reconcile(current);
@@ -2089,8 +2092,9 @@ export async function handleWatchHistoryAuthSessionChange(
 export async function flushWatchHistoryInBackground(
   dependencies: WatchHistoryBackgroundDependencies = {},
 ): Promise<void> {
-  const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
-  const client = createWatchHistoryClient({ ...dependencies, getCurrentSession });
+  const getCurrentSession = dependencies.getCurrentSession ?? await defaultStoredWatchHistorySession();
+  const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession ?? await defaultRequestWatchHistorySession();
+  const client = createWatchHistoryClient({ ...dependencies, getCurrentSession, getRequestSession });
   const session = await getCurrentSession();
   if (session) {
     await reconcileWatchHistoryThenDrain(
@@ -2130,7 +2134,7 @@ export async function reconcileWatchHistoryThenDrain(
   await drain();
 }
 
-async function defaultWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
+async function defaultRequestWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
   const { getCurrentExtensionSession } = await import("./auth-client");
   return getCurrentExtensionSession;
 }

@@ -5,6 +5,7 @@ import type {
 } from "@anidachi/protocol";
 import {
 	canCaptureWatchHistory,
+	canReadWatchHistory,
 	historyServerTime,
 	type WatchHistoryLease,
 } from "./watch-history-access";
@@ -18,6 +19,8 @@ import type { WatchHistoryObservationDisplayMode } from "./watch-history-storage
 import type { WatchHistoryLocalEvent } from "./watch-history-outbox";
 
 export const WATCH_HISTORY_HEARTBEAT_MS = 60_000;
+const AUTHORITY_RETRY_INITIAL_MS = 30_000;
+const AUTHORITY_RETRY_MAX_MS = 300_000;
 
 type HistoryEventKind = WatchProgressEvent["kind"];
 
@@ -33,12 +36,14 @@ export type WatchHistoryControllerDependencies = {
 		preferences: WatchHistoryPreferences | null,
 	) => HistoryObservationResult;
 	getRoomActive: () => boolean;
+	loadRecordingChoice?: () => Promise<{ ownerUserId: string; enabled: boolean }>;
 	loadCachedPreferences?: () => Promise<{
 		ownerUserId: string;
 		accountGeneration: number;
 		accessLease?: WatchHistoryLease | null;
 		preferences: WatchHistoryPreferences;
 		capturePaused?: boolean;
+		recordingEnabled?: boolean;
 	} | null>;
 	loadPreferences: () => Promise<{
 		ownerUserId: string;
@@ -46,6 +51,7 @@ export type WatchHistoryControllerDependencies = {
 		accessLease?: WatchHistoryLease | null;
 		preferences: WatchHistoryPreferences;
 		capturePaused?: boolean;
+		recordingEnabled?: boolean;
 	} | null>;
 	recoverCapture?: () => Promise<{
 		ownerUserId: string;
@@ -53,6 +59,7 @@ export type WatchHistoryControllerDependencies = {
 		accessLease?: WatchHistoryLease | null;
 		preferences: WatchHistoryPreferences;
 		capturePaused: boolean;
+		recordingEnabled?: boolean;
 	} | null>;
 	observeLocally: (
 		event: WatchProgressEvent,
@@ -86,12 +93,14 @@ export type WatchHistoryController = {
 		accessLease?: WatchHistoryLease | null;
 		preferences: WatchHistoryPreferences;
 		capturePaused: boolean;
+		recordingEnabled?: boolean;
 	}): Promise<void>;
 	setRoomActive(active: boolean): Promise<void>;
 	setRoomHistoryAuthority(
 		authority: RoomHistoryAuthority | null,
 	): Promise<void>;
 	invalidateCaptureAuthority(): void;
+	setRecordingEnabled(enabled: boolean): void;
 	refreshAuthority(): Promise<void>;
 	recover(): Promise<void>;
 	dispose(): Promise<void>;
@@ -122,6 +131,11 @@ export function createWatchHistoryController(
 	let operations = 0;
 	let refreshFlight: Promise<void> | null = null;
 	let nextRefreshAt = 0;
+	let refreshFailures = 0;
+	// Local opt-out must work even before a history partition or server lease
+	// exists. While storage loads, playback timers and recovery stay paused.
+	let recordingEnabled: boolean | null = dependencies.loadRecordingChoice ? null : true;
+	let recordingChoiceLoading = false;
 	const serial = (operation: () => Promise<void>) => {
 		operations++;
 		const result = tail.then(operation).finally(() => {
@@ -133,6 +147,7 @@ export function createWatchHistoryController(
 	const allowed = () =>
 		!disposed &&
 		!!authority &&
+		recordingEnabled === true &&
 		!authority.capturePaused &&
 		dependencies.isOwnerCurrent?.(authority.ownerUserId) !== false &&
 		(dependencies.getProvider?.() !== "youtube" ||
@@ -158,6 +173,7 @@ export function createWatchHistoryController(
 			return;
 		const old = authority;
 		authority = next;
+		if (next.recordingEnabled !== undefined) recordingEnabled = next.recordingEnabled;
 		const accountChanged = old && (
 			old.ownerUserId !== next.ownerUserId ||
 			old.accountGeneration !== next.accountGeneration ||
@@ -170,7 +186,7 @@ export function createWatchHistoryController(
 		// A refresh request may leave its old lease usable while it awaits a
 		// response. Invalidate samples at semantic application too, including
 		// those queued after that request started but before its authority arrived.
-		if (old && (accountChanged || youtubeChanged || old.capturePaused !== next.capturePaused))
+		if (old && (accountChanged || youtubeChanged || old.capturePaused !== next.capturePaused || old.recordingEnabled !== next.recordingEnabled))
 			++revision;
 		if (
 			old &&
@@ -178,15 +194,56 @@ export function createWatchHistoryController(
 		)
 			reset();
 	}
+	function shouldRefreshAutomatically() {
+		if (disposed || !recordingEnabled || (authority && (
+			authority.recordingEnabled === false || authority.capturePaused ||
+			dependencies.isOwnerCurrent?.(authority.ownerUserId) === false ||
+			(dependencies.getProvider?.() === "youtube" && !authority.preferences.youtubeHistoryEnabled)
+		))) return false;
+		// A negative lease is still a current server answer, never permission to
+		// capture. Recheck only at its original deadline or on an explicit event.
+		if (authority && canReadWatchHistory(authority.accessLease, authority.ownerUserId, now()))
+			return false;
+		return now() >= nextRefreshAt;
+	}
+	async function loadLocalRecordingChoice(token: number) {
+		if (!dependencies.loadRecordingChoice) return true;
+		recordingChoiceLoading = true;
+		try {
+			const choice = await dependencies.loadRecordingChoice().catch(() => null);
+			if (disposed || token !== revision || !choice) return false;
+			if (dependencies.isOwnerCurrent?.(choice.ownerUserId) === false) {
+				recordingEnabled = false;
+				return false;
+			}
+			recordingEnabled = choice.enabled;
+			return true;
+		} finally {
+			recordingChoiceLoading = false;
+		}
+	}
 	function refreshAuthority(): Promise<void> {
+		if (disposed) return Promise.resolve();
+		if (recordingEnabled === null && recordingChoiceLoading) return Promise.resolve();
 		if (refreshFlight) return refreshFlight;
 		const token = ++revision;
 		if (retained?.provider === "youtube" && authority)
 			authority = { ...authority, accessLease: null };
-		nextRefreshAt = now() + 10_000;
 		const flight = (async () => {
+			if (recordingEnabled === null &&
+				(!await loadLocalRecordingChoice(token) || recordingEnabled !== true)) return;
 			const loaded = await dependencies.loadPreferences().catch(() => null);
-			if (!disposed && token === revision && loaded) apply(loaded);
+			if (disposed || token !== revision || (loaded && dependencies.isOwnerCurrent?.(loaded.ownerUserId) === false)) return;
+			if (loaded) apply(loaded);
+			if (loaded?.accessLease && canReadWatchHistory(loaded.accessLease, loaded.ownerUserId, now())) {
+				refreshFailures = 0;
+				nextRefreshAt = loaded.accessLease.expiresAt;
+			} else {
+				// Transport failure or an unusable response cannot extend authority.
+				const delay = Math.min(AUTHORITY_RETRY_MAX_MS, AUTHORITY_RETRY_INITIAL_MS * 2 ** refreshFailures);
+				refreshFailures = Math.min(refreshFailures + 1, 4);
+				nextRefreshAt = now() + delay;
+			}
 		})();
 		refreshFlight = flight;
 		void flight.finally(() => {
@@ -196,13 +253,16 @@ export function createWatchHistoryController(
 	}
 	async function start() {
 		const token = ++revision;
+		if (dependencies.loadRecordingChoice) {
+			if (!await loadLocalRecordingChoice(token) || !recordingEnabled) return;
+		}
 		const cached = dependencies.loadCachedPreferences
 			? await dependencies.loadCachedPreferences().catch(() => null)
 			: null;
 		if (disposed || token !== revision) return;
 		if (cached) apply(cached);
-		if (!allowed()) await refreshAuthority();
-		else void refreshAuthority();
+		if (allowed()) void refreshAuthority();
+		else if (shouldRefreshAutomatically()) await refreshAuthority();
 		await queueCapture("heartbeat");
 	}
 	async function persist(
@@ -302,7 +362,7 @@ export function createWatchHistoryController(
 		if (disposed) return;
 		if (!allowed()) {
 			reset();
-			if (!disposed && now() >= nextRefreshAt) void refreshAuthority();
+			if (shouldRefreshAutomatically()) void refreshAuthority();
 			return;
 		}
 		// The sample conveys no authority: changed account/lease/consent revisions
@@ -353,6 +413,15 @@ export function createWatchHistoryController(
 	return {
 		start,
 		refreshAuthority,
+		setRecordingEnabled: (enabled) => {
+			if (disposed) return;
+			recordingEnabled = enabled;
+			++revision;
+			refreshFlight = null;
+			nextRefreshAt = 0;
+			if (authority) authority = { ...authority, recordingEnabled: enabled, accessLease: null };
+			reset();
+		},
 		invalidateCaptureAuthority: () => {
 			++revision;
 			refreshFlight = null;
@@ -394,10 +463,13 @@ export function createWatchHistoryController(
 		// Technical room source authority belongs to the live room path, never capture.
 		setRoomHistoryAuthority: async () => undefined,
 		recover: async () => {
+			if (disposed || recordingEnabled === false) return;
 			await refreshAuthority();
+			if (disposed || !recordingEnabled) return;
 			if (authority?.capturePaused && dependencies.recoverCapture) {
+				const token = revision;
 				const recovered = await dependencies.recoverCapture();
-				if (recovered) apply(recovered);
+				if (!disposed && token === revision && recordingEnabled && recovered) apply(recovered);
 			}
 		},
 		dispose: async () => {

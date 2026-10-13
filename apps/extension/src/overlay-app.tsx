@@ -1,5 +1,5 @@
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
-import { isHistoryRecordingEnabled } from "./history-recording-choice";
+import { readHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
 import type {
 	ClientEvent,
@@ -2746,6 +2746,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
 			getRoomActive: () =>
 				watchHistoryRoomSuppressedRef.current || Boolean(roomIdRef.current),
+			loadRecordingChoice: async () => ({
+				ownerUserId: expectedOwnerUserId,
+				enabled: await readHistoryRecordingEnabled(expectedOwnerUserId),
+			}),
 			loadCachedPreferences: async () => {
 				const response = await requestWatchHistory({
 					type: "ANIDACHI_WATCH_HISTORY_V3",
@@ -2755,7 +2759,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, recordingEnabled: await readHistoryRecordingEnabled(expectedOwnerUserId) }
 					: null;
 			},
 			loadPreferences: async () => {
@@ -2767,7 +2771,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!response?.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(response.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, recordingEnabled: await readHistoryRecordingEnabled(expectedOwnerUserId) }
 					: null;
 			},
 			recoverCapture: async () => {
@@ -2784,7 +2788,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (!bootstrapped.ok) return null;
 				const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
 				return loaded?.ownerUserId === expectedOwnerUserId
-					? { ...loaded, accessLease: await isHistoryRecordingEnabled(expectedOwnerUserId) ? loaded.accessLease : null }
+					? { ...loaded, recordingEnabled: await readHistoryRecordingEnabled(expectedOwnerUserId) }
 					: null;
 			},
 			observeLocally: async (
