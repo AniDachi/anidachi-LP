@@ -144,6 +144,53 @@ describe("terminal retry restart and budget", () => {
         expect(calls).toBe(15);
         expect(await terminal(f.stub)).toMatchObject({ attempts: 15, finalizedAt: null, nextAttemptAt: start + 3750000 });
     });
+    it("recovers the first forced source delivery after the initial intent flush is uncertain and eviction", async () => {
+        const f = await fixture();
+        const source = {
+            schemaVersion: 1,
+            attempts: 3,
+            nextAttemptAt: Date.now() + 600_000,
+            callback: {
+                roomId: f.roomId,
+                sourceGeneration: 2,
+                source: {
+                    provider: "youtube",
+                    sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                    canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                    videoFingerprint: "youtube|dQw4w9WgXcQ",
+                },
+            },
+        };
+        await runInDurableObject(f.stub, async (_instance, state) => {
+            await state.storage.put("room_source_pending_v1", source);
+            vi.spyOn(state.storage, "sync").mockRejectedValueOnce(new Error("initial intent flush unknown"));
+        });
+        const order: string[] = [];
+        vi.stubGlobal("fetch", async (url: RequestInfo | URL) => {
+            if (String(url).endsWith("/source")) {
+                order.push("source");
+                return Response.json({ ok: true, outcome: "persisted", sourceGeneration: 2 });
+            }
+            order.push("ended");
+            return Response.json({ ok: true, usageFinalized: true });
+        });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        expect(await first.json()).not.toHaveProperty("fencedAt");
+        const persisted = await terminal(f.stub);
+        expect(persisted).toMatchObject({ attempts: 0, finalizedAt: null });
+        expect(order).toEqual([]);
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        const completed = await f.end();
+        expect(completed.status).toBe(200);
+        expect(await completed.json()).toMatchObject({ webFinalized: true, fencedAt: persisted.fencedAt });
+        expect(order).toEqual(["source", "ended"]);
+        expect(await terminal(f.stub)).toMatchObject({ attempts: 1, runtimeFinalized: true });
+        const repeated = await f.end();
+        expect(repeated.status).toBe(200);
+        await repeated.text();
+        expect(order).toEqual(["source", "ended"]);
+    });
     it("keeps a claimed budget across an uncertain flush and eviction without sending early I/O", async () => {
         const f = await fixture();
         let calls = 0;

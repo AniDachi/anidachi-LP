@@ -1593,7 +1593,6 @@ export class RoomDurableObject {
 
     this.roomEndInProgress = true;
     let claimedAttempt: RoomTerminalIntent | null = null;
-    const firstTerminalAttempt = !this.terminalIntent;
     try {
       if (!this.terminalIntent) {
         const fencedAt = Date.now();
@@ -1605,7 +1604,8 @@ export class RoomDurableObject {
         });
       }
       this.closeTerminalSockets();
-      const intent = await this.claimTerminalAttempt();
+      const claim = await this.claimTerminalAttempt();
+      const intent = claim?.intent ?? null;
       claimedAttempt = intent;
       if (!intent) return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
       try {
@@ -1616,7 +1616,7 @@ export class RoomDurableObject {
         await this.deferTerminalAttempt(intent, error);
         return Response.json({ error: "ROOM_ACCOUNTING_UNAVAILABLE", ...this.terminalReceipt() }, { status: 503 });
       }
-      if (!(await this.runRoomSourceDeliveryExclusively(firstTerminalAttempt, true))) {
+      if (!(await this.runRoomSourceDeliveryExclusively(claim!.firstAttempt, true))) {
         await this.deferTerminalAttempt(intent);
         return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
       }
@@ -1645,8 +1645,9 @@ export class RoomDurableObject {
     }
   }
 
-  private async claimTerminalAttempt(): Promise<RoomTerminalIntent | null> {
+  private async claimTerminalAttempt(): Promise<{ intent: RoomTerminalIntent; firstAttempt: boolean } | null> {
     let claimed: RoomTerminalIntent | null = null;
+    let firstAttempt = false;
     this.terminalIntentDurable = false;
     await this.state.storage.transaction(async transaction => {
       const current = parseRoomTerminalIntent(await transaction.get(ROOM_TERMINAL_STORAGE_KEY));
@@ -1655,6 +1656,7 @@ export class RoomDurableObject {
       const now = Date.now();
       const source = await readStoredRoomSourcePersistence(transaction);
       const first = current.attempts === 0;
+      firstAttempt = first;
       const nextAttemptAt = first ? current.nextAttemptAt : Math.max(current.nextAttemptAt, source?.nextAttemptAt ?? 0);
       if (now < nextAttemptAt) {
         if (nextAttemptAt !== current.nextAttemptAt) {
@@ -1671,7 +1673,8 @@ export class RoomDurableObject {
     this.terminalIntentDurable = false;
     await this.state.storage.sync();
     this.terminalIntentDurable = true;
-    return claimed;
+    // First-delivery behavior comes from the persisted pre-claim state, including recovery.
+    return claimed ? { intent: claimed, firstAttempt } : null;
   }
 
   private async deferTerminalAttempt(attempt: RoomTerminalIntent, error?: unknown): Promise<void> {
