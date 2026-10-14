@@ -101,6 +101,10 @@ describe("content adapter lifecycle", () => {
 		window.dispatchEvent(new Event("pagehide"));
 		runtime.dispose();
 
+		expect(mounted.suspend).toHaveBeenCalledTimes(1);
+		expect(vi.mocked(mounted.suspend).mock.invocationCallOrder[0]).toBeLessThan(
+			vi.mocked(mounted.dispose).mock.invocationCallOrder[0],
+		);
 		expect(mounted.dispose).toHaveBeenCalledTimes(1);
 		expect(stopKeyboardGuard).toHaveBeenCalledTimes(1);
 		expect(stopProviderStudy).toHaveBeenCalledTimes(1);

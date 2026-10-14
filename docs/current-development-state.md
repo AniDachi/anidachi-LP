@@ -1,5 +1,27 @@
 # Current Development State
 
+## Player onboarding staging candidate, October 14, 2026
+
+The owner accepted the final six-step local practice tour and authorized its
+selective staging delivery. `codex/onboarding-staging-oct14` starts from staging
+`7140b9d4`, preserving PR419–421 request/camera work, PR422 drawer and hosting
+notices, and PR423 room-end feedback. It imports only the teaching components,
+claim/keyboard integration and icon exports. No Web, Worker, protocol, permissions,
+billing, environment or dependency change is included.
+
+A ready personal video plays for two seconds before the once-per-installation tour
+pauses it. The existing drawer rehearses create/invite/chat/media/settings without
+real room, invite, message, capture or preference writes. Let’s watch rolls the
+existing logo across a 1.2-second wipe, with a short reduced-motion fade instead,
+then resumes only the same foreground video if it was previously playing. Skip,
+Escape and lifecycle interruptions retain their cleanup and ownership checks.
+
+This is a staging candidate, not loaded-extension or production acceptance. The
+[onboarding plan](superpowers/plans/2026-10-10-player-onboarding-local.md) records
+behavior, local evidence, packaging and reset instructions. The exact PR, merged
+SHA and immutable artifact receipt belong in the delivery report. All three
+production guards remain disabled; main/Store release requires separate approval.
+
 ## Request-cost follow-up candidate, October 14, 2026
 
 PR #419 delivered the first request-cost fixes to staging `de27cc98`.

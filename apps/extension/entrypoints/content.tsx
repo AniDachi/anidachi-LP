@@ -17,6 +17,7 @@ import {
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
 import { OverlayApp } from "../src/overlay-app";
+import { installPlayerIntroductionKeyboardGuard } from "../src/player-onboarding-input";
 import {
   getOverlayPageDecision,
   mutationsAffectVideo,
@@ -267,6 +268,9 @@ export function startContentLifecycle(
     window.removeEventListener("pagehide", dispose);
     stopKeyboardGuard();
     stopProviderStudy?.();
+    // Deactivate synchronously before unmount so tutorial cleanup cannot resume
+    // playback while pagehide still reports a visible document.
+    mounted?.suspend();
     manager.dispose();
   };
 
@@ -329,6 +333,10 @@ function providerFromUrl(pageUrl: string): SourceProvider {
 }
 
 function installMessageComposerKeyboardGuard(): () => void {
+  const releaseIntroductionGuard =
+    import.meta.env.WXT_EXTENSION_CHANNEL !== "production"
+      ? installPlayerIntroductionKeyboardGuard()
+      : () => {};
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
   const isNetflixComposer = () => location.hostname === "www.netflix.com" && isComposerOpen();
@@ -404,6 +412,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   window.addEventListener("keypress", handleKeyPress, true);
   window.addEventListener("blur", clearConsumedKeys);
   return () => {
+    releaseIntroductionGuard();
     window.removeEventListener("keydown", handleKeyDown, true);
     window.removeEventListener("keyup", handleKeyUp, true);
     window.removeEventListener("keypress", handleKeyPress, true);

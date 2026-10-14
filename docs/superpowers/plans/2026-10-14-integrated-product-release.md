@@ -28,7 +28,7 @@ Netflix, cardless-trial and player-onboarding plans.
 | Netflix | PR 401/403/404 on staging; additive migration applied there | exact combined artifact, movie/episode/native navigation/fullscreen/history and two-client sync; ad-plan evidence |
 | Cardless trial | PR 410–415 on staging; five migrations, trial/payment/expiry receipts | reconcile stale docs; combined smoke and later production configuration/activation |
 | Drawer/notices | selective candidate `codex/extension-drawer-staging` from staging bc418bf7; [integration record](2026-10-14-extension-drawer-staging.md) | staging CI/deploy and owner loaded-artifact acceptance |
-| Player onboarding | remains in original local design branch; owner explicitly deferred it to the next design task | separate approval/integration, then tour acceptance |
+| Player onboarding | owner accepted the final six-step design and rolling-logo finish; selective staging candidate `codex/onboarding-staging-oct14` from 7140b9d4 | CI/build delivery and loaded-artifact acceptance; production enablement remains separate |
 | Cost fixes | PR419 delivered to staging de27cc98; [approved follow-up](2026-10-14-vercel-request-followup.md) is in preparation | follow-up regressions/review/staging; exact combined loaded artifact and production-normalized counts |
 | Production baseline | main a8aee464 contains selective SEO release | preserve main-only fixes; review complete migration/runtime diff |
 
@@ -59,8 +59,9 @@ final polish: `c62dd1e5535412c49d3741cca6ad8b4916629bb744113350d50f279778b94225`
   Cardless notices use server-confirmed offer terms.
 - [x] Include latest solid media icons, no button dots, click-only 1-second tooltip,
   neutral V key, balanced yellow/green, darker matte drawer and Interface divider removal.
-- [ ] After the separate onboarding design/acceptance task, plan intentional tour
-  enablement for the final release at all three guards: overlay mount,
+- [x] Accept the local onboarding design and prepare its selective staging integration
+  from 7140b9d4 without replacing the approved drawer or request-cost fixes.
+- [ ] Plan intentional tour enablement for the final production release at all three guards: overlay mount,
   content keyboard guard and background claim. Preserve sender validation and cleanup.
 - [ ] Verify fresh install and upgrade: absent `anidachi.playerIntroductionSeen.v3`
   means tour eligible; preserve seen state across patch updates. No surprise replay.

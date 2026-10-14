@@ -47,6 +47,7 @@ import {
 import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
+import { PlayerOnboarding } from "./player-onboarding";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
@@ -613,6 +614,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [participants, setParticipants] = useState<Participant[]>([]);
 	const [status, setStatus] = useState<RoomConnectionStatus>("idle");
 	const [panelOpen, setPanelOpen] = useState(false);
+	const [introductionActive, setIntroductionActive] = useState(false);
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
@@ -801,7 +803,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const hostingDisplay = useHostingAccess({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: authSessionKey,
-		enabled: panelOpen || roomId !== null,
+		enabled: panelOpen || roomId !== null || introductionActive,
 	});
 	const legacyQuotaEnabled = hostingDisplay.state.mode === "legacy";
 	const hostingPolicyModeRef = useRef(hostingDisplay.state.mode);
@@ -6049,12 +6051,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	return (
 		<div
 			className={overlayClassName}
-			onPointerDownCapture={unlockLiveVoicePlayback}
+			data-introduction-active={introductionActive || undefined}
+			onPointerDownCapture={
+				introductionActive ? undefined : unlockLiveVoicePlayback
+			}
 			ref={overlayRootRef}
 			style={overlayCssVariables}
 		>
 			<style>{overlayStyles}</style>
-
+			{import.meta.env.WXT_EXTENSION_CHANNEL !== "production" && (
+				<PlayerOnboarding
+					adapter={adapter}
+					ready={adapterActive && identityLoaded && !extensionContextInvalidated}
+					canStart={() =>
+						roomSessionLoadedForUserId === (participant?.id ?? null) &&
+						!roomIdRef.current && !storedRoomSessionRef.current &&
+						!getRoomIdFromHash() && !personalResumeIntentRef.current &&
+						!panelOpen && !roomCreatePending
+					}
+					roomId={roomId}
+					resource={currentResourceEntry}
+					accountPlan={authAuthenticated ? accountUser?.plan ?? "free" : null}
+					hosting={hostingDisplay.state}
+					onActiveChange={setIntroductionActive}
+				/>
+			)}
 			<div
 				className={[
 					"top-bubble-reveal",

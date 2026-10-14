@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { MicrophoneStatus, VoiceMode } from "./media-types";
 
-function SolidMicrophoneIcon({ size = 16 }: { size?: number }) {
+export function SolidMicrophoneIcon({ size = 16 }: { size?: number }) {
 	return (
 		<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
 			<rect x="8.5" y="2" width="7" height="12" rx="3.5" fill="currentColor" />
@@ -16,7 +16,7 @@ function SolidMicrophoneIcon({ size = 16 }: { size?: number }) {
 	);
 }
 
-function SolidCameraIcon({ enabled }: { enabled: boolean }) {
+export function SolidCameraIcon({ enabled }: { enabled: boolean }) {
 	return (
 		<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
 			{enabled ? (
@@ -44,7 +44,7 @@ function SolidCameraIcon({ enabled }: { enabled: boolean }) {
 	);
 }
 
-/** Controlled header buttons; the live drawer owns device and permission state. */
+/** Controlled UI shared by the live drawer and the isolated practice tour. */
 export function PanelMediaControls({
 	cameraEnabled,
 	voiceMode,
