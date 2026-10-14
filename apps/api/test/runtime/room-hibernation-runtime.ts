@@ -4095,6 +4095,10 @@ it.each([
 		expect((await replacement.waitFor(e => e.type === "ROOM_ENDED", "terminal cause")) as object).not.toHaveProperty("hostingCutover");
 	});
 	it("meters only actual host+guest sockets, preserves acknowledged600s on renewal, and ACKs before quota end", async () => {
+    // This scenario keeps 600 seconds in one UTC day; midnight rollover has dedicated cases below.
+    const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+    const day = new Date(start).toISOString().slice(0, 10);
+    vi.spyOn(Date, "now").mockReturnValue(start);
 		const f = await fixture("free");
 		const host = await f.join(0);
 		await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "solo host");
@@ -4129,6 +4133,8 @@ it.each([
 			};
 		});
 		expect(values.allowed - values.seconds).toBe(1200);
+    expect(values.seconds).toBe(600);
+    expect(f.ledger.get(day)).toBe(600);
     const reconciled = await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.remainingSeconds === 1200, "published ACK-reconciled budget");
     expect(reconciled.type === "ROOM_SNAPSHOT" && reconciled.quota?.metering).toBe(true);
 		await runInDurableObject(f.stub, async (instance) => {
