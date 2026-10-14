@@ -55,7 +55,7 @@ import { ANIDACHI_EMOJI_CATALOG } from "./emoji-catalog";
 import {
 	clearDebugLog,
 	getCompactDebugLogText,
-	getDebugEntries,
+	getDebugEntryCount,
 	getDebugLogText,
 	logDebug,
 	playerOverlayGeometryDebugSnapshot,
@@ -843,7 +843,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		panelOpen,
 	});
 	const [debugEntriesCount, setDebugEntriesCount] = useState(
-		() => getDebugEntries().length,
+		() => getDebugEntryCount(),
 	);
 	const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
 	const [currentResourceEntry, setCurrentResourceEntry] =
@@ -2354,7 +2354,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 	useEffect(() => {
 		const id = window.setInterval(
-			() => setDebugEntriesCount(getDebugEntries().length),
+			() => setDebugEntriesCount(getDebugEntryCount()),
 			1000,
 		);
 		return () => window.clearInterval(id);
@@ -5476,7 +5476,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			};
 			logDebug("debug", "diagnostics save requested", {
 				mode,
-				entries: getDebugEntries().length,
+				entries: getDebugEntryCount(),
 				roomId,
 				status,
 				video: videoDebugSnapshot(adapter.video),
@@ -5505,7 +5505,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			setDebugEntriesCount(getDebugEntries().length);
+			setDebugEntriesCount(getDebugEntryCount());
 			setDiagnosticStatus(
 				`Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`,
 			);
@@ -5522,7 +5522,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		clearDebugLog();
 		await clearDiagnosticsFromPage().catch(() => undefined);
 		setDiagnosticStatus(null);
-		setDebugEntriesCount(getDebugEntries().length);
+		setDebugEntriesCount(getDebugEntryCount());
 		setDiagnosticStatus("Logs cleared");
 	};
 
