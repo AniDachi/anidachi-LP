@@ -51,20 +51,23 @@ export const playerOnboardingStyles = `
 .tour-invite-option strong { color:#ddd2c5; font-weight:500; }
 .tour-settings-ring { border-radius:999px; }
 .player-introduction [data-tour-target="settings"] { padding-inline:9px; }
-.tour-step-settings { --tour-frame-width:min(460px,36cqw,100%); width:min(600px,calc(100cqw - 430px)); }
+/* Reserve the finish action even when a short player constrains the copy.
+   Only the settings list may scroll; the heading and action remain visible. */
+.tour-step-settings { --tour-frame-width:min(460px,36cqw,100%); width:min(600px,calc(100cqw - 430px)); display:flex; flex-direction:column; overflow:visible; }
+.tour-step-settings > h2,.tour-step-settings > .tour-settings-subtitle,.tour-step-settings > .tour-finish { flex:none; }
 .tour-step-settings .tour-eyebrow { display:none; }
 .tour-step-settings h2 { font-size:clamp(32px,min(4.5cqw,7.2cqh),72px); line-height:1.05; margin-bottom:12px; }
 .tour-step-settings .tour-settings-subtitle { font-size:clamp(15px,min(1.6cqw,2.5cqh),23px); color:#e2d9cd; }
-.tour-settings-note { position:relative; width:var(--tour-frame-width); margin-top:24px; padding:clamp(20px,3.5cqh,27px) 29px; }
+.tour-settings-note { display:flex; flex-direction:column; min-height:0; position:relative; width:var(--tour-frame-width); margin-top:clamp(12px,3cqh,24px); padding:clamp(16px,3cqh,27px) 29px; }
 /* The freehand frame follows the existing launcher-hint artwork. */
 .tour-settings-outline { position:absolute; inset:0; width:100%; height:100%; color:#ffcc9a; pointer-events:none; overflow:visible; }
 .tour-settings-outline path { stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
-.tour-settings-overview { display:grid; gap:21px; margin:0; }
+.tour-settings-overview { display:grid; gap:clamp(10px,2.8cqh,21px); margin:0; min-height:0; overflow:auto; }
 .tour-settings-overview > div { position:relative; padding-left:51px; font-size:clamp(14px,min(1.35cqw,2.1cqh),20px); line-height:1.4; }
 .tour-settings-overview dt { color:#f0e7db; font-weight:600; margin-bottom:3px; }
 .tour-settings-overview dt svg { position:absolute; left:0; top:1px; width:33px; height:33px; color:#ffcc9a; stroke-width:1.8; }
 .tour-settings-overview dd { color:#c9c1b8; margin:0; font-size:.9em; }
-.tour-step-settings .tour-finish { display:flex; align-items:center; justify-content:center; gap:14px; width:var(--tour-frame-width); min-height:54px; margin-top:24px; padding:12px 24px; border:1px solid #fff4e3; border-radius:999px; background:#f3eadc; color:#171513; font:600 clamp(16px,1.55cqw,23px)/1.25 Arial,"Helvetica Neue",sans-serif; text-shadow:none; cursor:pointer; transition:background 140ms ease; }
+.tour-step-settings .tour-finish { display:flex; align-items:center; justify-content:center; gap:14px; width:var(--tour-frame-width); min-height:54px; margin-top:clamp(14px,3cqh,24px); padding:12px 24px; border:1px solid #fff4e3; border-radius:999px; background:#f3eadc; color:#171513; font:600 clamp(16px,1.55cqw,23px)/1.25 Arial,"Helvetica Neue",sans-serif; text-shadow:none; cursor:pointer; transition:background 140ms ease; }
 .tour-step-settings .tour-finish svg { width:21px; height:21px; flex:none; }
 .tour-step-settings .tour-finish:hover { background:#fff6e9; }
 .tour-step-settings .tour-finish:active { background:#e3d8c7; }
@@ -112,6 +115,8 @@ export const playerOnboardingStyles = `
 @container(max-height:430px){.tour-tip{max-height:calc(100% - 110px)}.tour-tip h2{font-size:28px;margin-bottom:12px}.tour-tip p{font-size:13px;line-height:1.4}.tour-eyebrow{margin-bottom:12px}.tour-plan-link{min-height:36px;margin-top:12px;padding:8px 16px;font-size:13px}.tour-tip .tour-practice-note{margin-top:12px;font-size:11px}.tour-footer{bottom:14px}}
 @container(max-height:430px){.tour-step-invite .tour-eyebrow{display:none}.tour-step-invite h2{font-size:24px;margin-bottom:10px}.tour-invite-options{gap:10px}.tour-invite-option{gap:10px}.tour-invite-option > svg{width:17px;height:17px}.tour-invite-option h3{font-size:14px;margin-bottom:4px}.tour-step-invite .tour-invite-option p{font-size:12px}.tour-step-invite .tour-practice-note{margin-top:6px;font-size:11px}}
 @container(max-width:949px){.tour-step-settings{--tour-frame-width:100%;width:calc(100cqw - 378px)}.tour-step-settings h2{font-size:clamp(26px,4.3cqw,40px);margin-bottom:10px}.tour-step-settings .tour-settings-subtitle{font-size:13px}.tour-settings-note{margin-top:18px;padding:20px 17px}.tour-settings-overview{gap:14px}.tour-settings-overview > div{padding-left:35px;font-size:14px}.tour-settings-overview dt svg{width:24px;height:24px}.tour-settings-overview dd{font-size:12px}.tour-step-settings .tour-finish{min-height:44px;margin-top:18px;font-size:15px;gap:10px}.tour-step-settings .tour-finish svg{width:17px;height:17px}.tour-footer{gap:12px}.tour-progress{gap:8px;padding-right:12px}.tour-progress li{gap:6px}.tour-progress li + li::before{width:8px}.tour-footer .tour-skip{font-size:12px}}
+/* Embedded players need the space normally reserved below the progress row. */
+@container(max-height:700px){.tour-footer-final{bottom:18px}}
 @container(max-height:520px){.tour-step-settings h2{font-size:28px;margin-bottom:8px}.tour-step-settings .tour-settings-subtitle{font-size:12px;line-height:1.35}.tour-settings-note{margin-top:12px;padding:16px 19px}.tour-settings-overview{gap:10px}.tour-settings-overview > div{padding-left:30px;font-size:12px;line-height:1.3}.tour-settings-overview dt svg{width:21px;height:21px}.tour-settings-overview dt{margin-bottom:2px}.tour-settings-overview dd{font-size:11px}.tour-step-settings .tour-finish{min-height:38px;margin-top:14px;padding:8px 18px;font-size:14px}.tour-step-settings .tour-finish svg{width:16px;height:16px}.tour-footer-final{bottom:18px}}
 @container(max-height:430px){.tour-step-camera .tour-eyebrow{display:none}.tour-step-camera h2,.tour-step-chat h2{font-size:26px;margin-bottom:12px}.tour-media-states{gap:6px;margin-top:12px}.tour-media-states li{font-size:13px;gap:9px}.tour-media-state-icon{width:23px;height:23px;flex-basis:23px}.tour-media-state-icon svg{width:13px;height:13px}.tour-media-states kbd{height:19px;min-width:19px}.tour-step-camera .tour-camera-note{margin-top:10px}}
 @keyframes tour-enter{from{opacity:0}to{opacity:1}}
