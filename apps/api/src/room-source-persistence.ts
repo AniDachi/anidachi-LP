@@ -72,7 +72,7 @@ export function parsePendingRoomSourcePersistence(
 }
 
 export async function readStoredRoomSourcePersistence(
-  storage: DurableObjectStorage,
+  storage: Pick<DurableObjectStorage, "get">,
 ): Promise<PendingRoomSourcePersistence | null> {
   return parsePendingRoomSourcePersistence(
     await storage.get<unknown>(ROOM_SOURCE_PENDING_STORAGE_KEY),

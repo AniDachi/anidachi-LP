@@ -28,7 +28,7 @@ Netflix, cardless-trial and player-onboarding plans.
 | Netflix | PR 401/403/404 on staging; additive migration applied there | exact combined artifact, movie/episode/native navigation/fullscreen/history and two-client sync; ad-plan evidence |
 | Cardless trial | PR 410–415 on staging; five migrations, trial/payment/expiry receipts | reconcile stale docs; combined smoke and later production configuration/activation |
 | Drawer/onboarding | local branch `codex/extension-guided-onboarding` HEAD d857cc6a plus four dirty extension files | safe final-diff import; tour production-channel enablement; loaded artifact |
-| Cost fixes | isolated `codex/vercel-cost-optimization` from staging d6696693 | regressions, review, staging and measured calls |
+| Cost fixes | PR419 delivered to staging de27cc98; [approved follow-up](2026-10-14-vercel-request-followup.md) is in preparation | follow-up regressions/review/staging; exact combined loaded artifact and production-normalized counts |
 | Production baseline | main a8aee464 contains selective SEO release | preserve main-only fixes; review complete migration/runtime diff |
 
 Local design already includes Netflix. Since the common base 60df2876, staging's
@@ -39,8 +39,10 @@ Netflix again. Current promotion PR 402 is conflicting and is not a ready releas
 
 - [x] Preserve binary final UI net patch and separate four-file uncommitted polish
   patch with source SHA/checksums; leave original checkout unchanged.
-- [ ] Complete [cost optimization plan](2026-10-14-vercel-cost-optimization.md) and
-  deliver independently reviewable commits/PR to staging.
+- [x] Deliver first [cost optimization plan](2026-10-14-vercel-cost-optimization.md)
+  through PR419 to staging de27cc98.
+- [ ] Complete [request follow-up](2026-10-14-vercel-request-followup.md), then verify
+  its session/history behavior in the combined loaded extension.
 - [ ] Measure request reductions without promising invoice percentages.
 
 Preservation receipt: original checkout's ignored

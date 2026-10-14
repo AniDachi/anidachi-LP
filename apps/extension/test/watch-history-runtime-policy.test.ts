@@ -61,6 +61,22 @@ describe("watch history runtime hydration gate", () => {
 });
 
 describe("watch history authority refresh policy", () => {
+  it("refreshes same-owner identical credentials when their durable revision changes", () => {
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: { ownerUserId: "owner-a", accessToken: "same-token", authRevision: "revision-1" },
+      next: { ownerUserId: "owner-a", accessToken: "same-token", authRevision: "revision-2" },
+      controllerAvailable: true,
+    })).toBe(true);
+  });
+
+  it("does not refresh unchanged durable credentials after profile metadata changes", () => {
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: { ownerUserId: "owner-a", accessToken: "same-token", authRevision: "revision-1" },
+      next: { ownerUserId: "owner-a", accessToken: "same-token", authRevision: "revision-1" },
+      controllerAvailable: true,
+    })).toBe(false);
+  });
+
   it("refreshes exactly once on the first same-owner token change after hydration installs the controller", () => {
     const beforeHydration = {
       ownerUserId: "owner-a",
