@@ -27,13 +27,15 @@ Netflix, cardless-trial and player-onboarding plans.
 | --- | --- | --- |
 | Netflix | PR 401/403/404 on staging; additive migration applied there | exact combined artifact, movie/episode/native navigation/fullscreen/history and two-client sync; ad-plan evidence |
 | Cardless trial | PR 410–415 on staging; five migrations, trial/payment/expiry receipts | reconcile stale docs; combined smoke and later production configuration/activation |
-| Drawer/onboarding | local branch `codex/extension-guided-onboarding` HEAD d857cc6a plus four dirty extension files | safe final-diff import; tour production-channel enablement; loaded artifact |
+| Drawer/notices | selective candidate `codex/extension-drawer-staging` from staging bc418bf7; [integration record](2026-10-14-extension-drawer-staging.md) | staging CI/deploy and owner loaded-artifact acceptance |
+| Player onboarding | remains in original local design branch; owner explicitly deferred it to the next design task | separate approval/integration, then tour acceptance |
 | Cost fixes | PR419 delivered to staging de27cc98; [approved follow-up](2026-10-14-vercel-request-followup.md) is in preparation | follow-up regressions/review/staging; exact combined loaded artifact and production-normalized counts |
 | Production baseline | main a8aee464 contains selective SEO release | preserve main-only fixes; review complete migration/runtime diff |
 
-Local design already includes Netflix. Since the common base 60df2876, staging's
-extension changes are limited to cardless hosting-paywall files. Do not cherry-pick
-Netflix again. Current promotion PR 402 is conflicting and is not a ready release.
+Local design already includes Netflix. Since the common base 60df2876, staging
+also contains auth/history request optimizations and count-only camera diagnostics.
+The drawer transfer uses a three-way merge that preserves those changes. Do not
+cherry-pick Netflix again. Historical promotion PR 402 is not a ready release.
 
 ## Stage 1: Preserve and optimize
 
@@ -50,14 +52,15 @@ Preservation receipt: original checkout's ignored
 patch SHA-256: `155a3b6856693d23bcba4162cd290b6c0bd4c8da68a5a0c180048c57b1bc4055`;
 final polish: `c62dd1e5535412c49d3741cca6ad8b4916629bb744113350d50f279778b94225`.
 
-## Stage 2: Integrate approved UI and onboarding
+## Stage 2: Integrate approved drawer, then work on onboarding separately
 
-- [ ] Fresh-staging branch `codex/extension-release-ui`; import only approved final
-  `apps/extension` net diff plus relevant plan/evidence, excluding old Graphify churn
-  and unrelated trial docs. Retain new cardless paywall.
-- [ ] Include latest solid media icons, no button dots, click-only 1-second tooltip,
+- [x] Fresh-staging branch `codex/extension-drawer-staging`; selective final UI
+  import excludes old Graphify churn, trial drafts and all onboarding runtime.
+  Cardless notices use server-confirmed offer terms.
+- [x] Include latest solid media icons, no button dots, click-only 1-second tooltip,
   neutral V key, balanced yellow/green, darker matte drawer and Interface divider removal.
-- [ ] Enable tour intentionally in production at all three guards: overlay mount,
+- [ ] After the separate onboarding design/acceptance task, plan intentional tour
+  enablement for the final release at all three guards: overlay mount,
   content keyboard guard and background claim. Preserve sender validation and cleanup.
 - [ ] Verify fresh install and upgrade: absent `anidachi.playerIntroductionSeen.v3`
   means tour eligible; preserve seen state across patch updates. No surprise replay.

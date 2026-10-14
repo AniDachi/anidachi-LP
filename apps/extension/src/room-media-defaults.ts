@@ -35,7 +35,7 @@ export function getDefaultRoomJoinDefaults(): RoomJoinDefaultsV1 {
 	return {
 		version: ROOM_JOIN_DEFAULTS_VERSION,
 		microphoneOnJoin: "last-used",
-		cameraOnJoin: "off",
+		cameraOnJoin: "last-used",
 	};
 }
 

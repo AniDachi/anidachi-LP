@@ -1,6 +1,7 @@
 import {
 	AccountEntitlementsMetadataSchema,
 	HostingAccessSchema,
+	HostingOfferSchema,
 	PlanCodeSchema,
 } from "@anidachi/protocol";
 import { z } from "zod";
@@ -12,6 +13,7 @@ import { WEB_HTTP_BASE } from "./constants";
 const HostingAccountAccessSchema = AccountEntitlementsMetadataSchema.extend({
 	planCode: PlanCodeSchema,
 	hosting: HostingAccessSchema.optional(),
+	hostingOffer: HostingOfferSchema.optional().catch(undefined),
 })
 	.strip()
 	.superRefine((value, ctx) => {
@@ -64,7 +66,7 @@ export async function handleHostingAccessMessage(
 			)
 				return failure;
 			const read = (token: string) =>
-				fetch(new URL("/api/me/entitlements", WEB_HTTP_BASE), {
+				fetch(new URL("/api/me/entitlements?hostingOffer=1", WEB_HTTP_BASE), {
 					headers: {
 						Authorization: `Bearer ${token}`,
 						"x-anidachi-history-owner": message.ownerUserId,

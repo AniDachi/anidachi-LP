@@ -55,7 +55,7 @@ describe("owner-bound hosting access", () => {
 			access,
 		});
 		expect(fetch).toHaveBeenCalledWith(
-			new URL("http://localhost:3003/api/me/entitlements"),
+			new URL("http://localhost:3003/api/me/entitlements?hostingOffer=1"),
 			expect.objectContaining({
 				credentials: "omit",
 				cache: "no-store",
@@ -85,6 +85,13 @@ describe("owner-bound hosting access", () => {
 			ok: true,
 			access: legacy,
 		});
+	});
+	it("accepts optional offer terms but discards malformed presentation metadata without losing access", async () => {
+		const hostingOffer = { trialMode: "cardless", trialDays: 3, policyRevision: 2 };
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({...access, hostingOffer})));
+		expect(await handleHostingAccessMessage(message, dependencies())).toEqual({ok: true, access: {...access, hostingOffer}});
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({...access, hostingOffer: {...hostingOffer, trialDays: 30}})));
+		expect(await handleHostingAccessMessage(message, dependencies())).toEqual({ok: true, access: {...access, hostingOffer: undefined}});
 	});
 	it("does not return another session's answer after logout and login as the same owner", async () => {
 		const deps = dependencies();

@@ -18,7 +18,6 @@ import {
 	Check,
 	CircleHelp,
 	Copy,
-	LogOut,
 	Mic,
 	RefreshCw,
 	SendHorizontal,
@@ -148,13 +147,9 @@ import {
 	shouldConfirmRoomEnd,
 } from "./overlay-room-action-feedback";
 import { RoomDefaultsSettingsPanel } from "./overlay-room-defaults";
-import {
-	PanelCameraControl,
-	RoomPeopleSection,
-} from "./overlay-room-media-controls";
+import { RoomPeopleSection } from "./overlay-room-media-controls";
 import { RoomRail } from "./overlay-room-rail";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
-import { VoiceSettingsPanel } from "./overlay-voice-controls";
 import {
 	createVoiceSessionState,
 	getVoiceIndicatorParticipantIds,
@@ -163,6 +158,7 @@ import {
 	shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "./overlay-voice-session";
 import { PanelAccountTitle } from "./panel-account-title";
+import { PanelMediaControls } from "./panel-media-controls";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
 import { PlaybackSyncController } from "./playback-sync-controller";
 import {
@@ -421,8 +417,6 @@ const LIVE_CHAT_MAX_MESSAGES = OVERLAY_LAYOUT_MAX_MESSAGES;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
-const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
-const SIGN_OUT_CONFIRMATION_DURATION_MS = ROOM_END_CONFIRMATION_DURATION_MS;
 export const TRANSIENT_PANEL_NOTICE_DURATION_MS = 3000;
 const INVITE_NOTICE_DURATION_MS: Readonly<Record<InviteNoticeTone, number>> = {
 	error: 4500,
@@ -548,12 +542,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const transientPanelNoticeTimerRef = useRef<number | null>(null);
 	const inviteNoticeTimerRef = useRef<number | null>(null);
 	const roomEndConfirmationTimerRef = useRef<number | null>(null);
-	const signOutConfirmationTimerRef = useRef<number | null>(null);
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
 	const authGenerationRef = useRef(0);
 	const authSessionKeyRef = useRef<string | null>(null);
-	const suppressSilentSignInUntilRef = useRef(0);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
 	const [authAuthenticated, setAuthAuthenticated] = useState(false);
@@ -623,8 +615,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
-		useState(false);
-	const [signOutConfirmationPending, setSignOutConfirmationPending] =
 		useState(false);
 	const [roomEndPending, setRoomEndPending] = useState(false);
 	const [roomLeavePending, setRoomLeavePending] = useState(false);
@@ -974,14 +964,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setRoomEndConfirmationPending(false);
 	}, []);
 
-	const clearSignOutConfirmation = useCallback(() => {
-		if (signOutConfirmationTimerRef.current !== null) {
-			window.clearTimeout(signOutConfirmationTimerRef.current);
-			signOutConfirmationTimerRef.current = null;
-		}
-		setSignOutConfirmationPending(false);
-	}, []);
-
 	useEffect(
 		() => () => {
 			if (roomActionFeedbackTimerRef.current !== null) {
@@ -995,9 +977,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 			if (roomEndConfirmationTimerRef.current !== null) {
 				window.clearTimeout(roomEndConfirmationTimerRef.current);
-			}
-			if (signOutConfirmationTimerRef.current !== null) {
-				window.clearTimeout(signOutConfirmationTimerRef.current);
 			}
 			for (const timerId of reactionIdentityCueTimersRef.current.values()) {
 				window.clearTimeout(timerId);
@@ -1866,7 +1845,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			: "No media seats";
 	const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
 	const isHost = currentParticipant?.role === "host";
-	const signOutPrivilegedContext = useMemo<PrivilegedOverlayContext>(() => {
+	const accountPrivilegedContext = useMemo<PrivilegedOverlayContext>(() => {
 		const accountUserId = accountUser?.id ?? "";
 		return {
 			accountUserId,
@@ -1877,7 +1856,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	}, [accountUser?.id]);
 
 	const privilegedRoomContext =
-		privilegedRoomAuthority ?? signOutPrivilegedContext;
+		privilegedRoomAuthority ?? accountPrivilegedContext;
 
 	useEffect(() => {
 		if (!roomId || !isHost) {
@@ -4495,7 +4474,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const handleSignIn = useCallback(async () => {
 		setAuthBusy(true);
 		setAuthMessage(null);
-		suppressSilentSignInUntilRef.current = 0;
 		try {
 			applyParticipantIdentity(
 				await signInAndCreateParticipant(),
@@ -4509,75 +4487,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setAuthBusy(false);
 		}
 	}, [applyParticipantIdentity]);
-
-	const handleSignOut = useCallback(
-		async (event: ReactMouseEvent<HTMLButtonElement>) => {
-			if (!isTrustedOverlayActionEvent(event)) {
-				return;
-			}
-			if (!signOutConfirmationPending) {
-				setSignOutConfirmationPending(true);
-				if (signOutConfirmationTimerRef.current !== null) {
-					window.clearTimeout(signOutConfirmationTimerRef.current);
-				}
-				signOutConfirmationTimerRef.current = window.setTimeout(() => {
-					signOutConfirmationTimerRef.current = null;
-					setSignOutConfirmationPending(false);
-				}, SIGN_OUT_CONFIRMATION_DURATION_MS);
-				return;
-			}
-			clearSignOutConfirmation();
-			setAuthBusy(true);
-			setAuthMessage(null);
-			try {
-				await runOverlayPrivilegedAction(
-					event,
-					"sign-out",
-					signOutPrivilegedContext,
-					async () => {
-						suppressSilentSignInUntilRef.current =
-							Date.now() + SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS;
-						roomReconnectSuppressedRef.current = true;
-						clearRoomReconnectTimer();
-						applyParticipantIdentity(
-							await createCurrentParticipant(),
-							"sign-out",
-							false,
-						);
-						clientRef.current.close();
-						releaseRoomTabLock();
-						roomIdRef.current = null;
-						setRoomId(null);
-						setParticipants([]);
-						setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
-						clearRoomQuotaDisplay();
-						setRoomCapabilities(null);
-					},
-				);
-			} catch (error) {
-				setExtensionContextInvalidated(
-					isExtensionContextInvalidatedError(error),
-				);
-				setAuthMessage(authErrorMessage(error, "Sign out failed"));
-			} finally {
-				setAuthBusy(false);
-			}
-		},
-		[
-			applyParticipantIdentity,
-			clearSignOutConfirmation,
-			clearRoomQuotaDisplay,
-			clearRoomReconnectTimer,
-			signOutConfirmationPending,
-			signOutPrivilegedContext,
-		],
-	);
-
-	useEffect(() => {
-		if (!panelOpen || !authAuthenticated) {
-			clearSignOutConfirmation();
-		}
-	}, [authAuthenticated, clearSignOutConfirmation, panelOpen]);
 
 	useEffect(() => {
 		applyParticipantIdentityRef.current = applyParticipantIdentity;
@@ -4624,16 +4533,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (result.authenticated || result.requiresPageReload) {
 				return;
 			}
-			if (Date.now() < suppressSilentSignInUntilRef.current) {
-				logDebug(
-					"identity",
-					"panel-open silent sign-in suppressed after explicit sign-out",
-					{
-						retryAfterMs: suppressSilentSignInUntilRef.current - Date.now(),
-					},
-				);
-				return;
-			}
 
 			const adopted = await adoptWebsiteSessionWithRetry({
 				initialResult: result,
@@ -4641,8 +4540,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				trySilentSignIn,
 				shouldContinue: () =>
 					!cancelled &&
-					document.visibilityState !== "hidden" &&
-					Date.now() >= suppressSilentSignInUntilRef.current,
+					document.visibilityState !== "hidden",
 				onAttempt: (attempt) => {
 					if (
 						attempt.reason === "silent-miss" ||
@@ -4827,16 +4725,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (result.authenticated || result.requiresPageReload) {
 				return;
 			}
-			if (Date.now() < suppressSilentSignInUntilRef.current) {
-				logDebug(
-					"identity",
-					"initial silent sign-in suppressed after explicit sign-out",
-					{
-						retryAfterMs: suppressSilentSignInUntilRef.current - Date.now(),
-					},
-				);
-				return;
-			}
 
 			const adopted = await adoptWebsiteSessionWithRetry({
 				initialResult: result,
@@ -4844,8 +4732,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				trySilentSignIn,
 				shouldContinue: () =>
 					!cancelled &&
-					document.visibilityState !== "hidden" &&
-					Date.now() >= suppressSilentSignInUntilRef.current,
+					document.visibilityState !== "hidden",
 				onAttempt: (attempt) => {
 					if (
 						attempt.reason === "silent-miss" ||
@@ -6163,6 +6050,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			style={overlayCssVariables}
 		>
 			<style>{overlayStyles}</style>
+
 			<div
 				className={[
 					"top-bubble-reveal",
@@ -6247,15 +6135,36 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								</button>
 							) : null}
 							{roomId && currentParticipant ? (
-								<PanelCameraControl
+								<PanelMediaControls
 									cameraEnabled={camsEnabled}
-									disabled={!liveMediaAvailable}
-									disabledReason={cameraControlDisabledReason}
-									onToggle={handleGhostCamToggle}
+									cameraDisabled={!liveMediaAvailable}
+									cameraDisabledReason={cameraControlDisabledReason}
+									onCameraToggle={handleGhostCamToggle}
+									voiceMode={voiceSession.mode}
+									onVoiceModeChange={handleVoiceModeChange}
+									microphoneDisabled={
+											voiceSession.mode !== "open-mic" &&
+											(!localHasMediaSeat || !p2pSessionActive)
+										}
+									microphoneDisabledReason={
+											!p2pSessionActive
+												? "Connecting to room"
+												: localMediaSeatState === "requested"
+													? "Waiting for the host to approve media access"
+													: "Media seat required"
+										}
+									microphoneStatus={ghostCamSession.microphoneStatus}
+									microphoneFeedback={ghostCamSession.voiceMessage}
 								/>
 							) : null}
 						</div>
 					</div>
+
+					{roomId && ghostCamSession.voiceMessage ? (
+						<p className="panel-media-feedback" role="status">
+							{ghostCamSession.voiceMessage}
+						</p>
+					) : null}
 
 					<div className={roomActionsClassName}>
 						<button
@@ -6635,251 +6544,221 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						/>
 					) : null}
 
-					<div className="section-title settings-section-title">
-						<Settings2
-							aria-hidden="true"
-							className="section-title-icon settings-section-title-icon"
-							size={15}
-							strokeWidth={1.8}
-						/>
-						<span className="settings-section-title-label">Settings</span>
-					</div>
-					<div className="settings-shell">
-						<div
-							className={[
-								"settings-category-rail",
-								settingsRailOverflow.left ? "can-scroll-left" : "",
-								settingsRailOverflow.right ? "can-scroll-right" : "",
-								settingsRailDragging ? "dragging" : "",
-							]
-								.filter(Boolean)
-								.join(" ")}
-						>
-							<div
-								aria-label="Settings sections"
-								className="settings-category-scroll"
-								data-active-category={settingsPanelCategory}
-								onClickCapture={handleSettingsCategoryClickCapture}
-								onLostPointerCapture={handleSettingsCategoryPointerEnd}
-								onPointerCancel={handleSettingsCategoryPointerEnd}
-								onPointerDown={handleSettingsCategoryPointerDown}
-								onPointerMove={handleSettingsCategoryPointerMove}
-								onPointerUp={handleSettingsCategoryPointerEnd}
-								onScroll={updateSettingsRailOverflow}
-								onWheel={handleSettingsCategoryWheel}
-								ref={settingsCategoryScrollRef}
-								role="tablist"
-							>
-								{SETTINGS_PANEL_CATEGORIES.map((category) => (
-									<button
-										aria-selected={settingsPanelCategory === category.id}
-										className={`settings-category-tab${
-											settingsPanelCategory === category.id ? " active" : ""
-										}`}
-										key={category.id}
-										onClick={() => setSettingsPanelCategory(category.id)}
-										ref={(node) => {
-											settingsCategoryButtonRefs.current[category.id] = node;
-										}}
-										role="tab"
-										type="button"
-									>
-										{category.label}
-									</button>
-								))}
-							</div>
+					<div className="settings-surface">
+						<div className="section-title settings-section-title">
+							<Settings2
+								aria-hidden="true"
+								className="section-title-icon settings-section-title-icon"
+								size={15}
+								strokeWidth={1.8}
+							/>
+							<span className="settings-section-title-label">Settings</span>
 						</div>
-
-						<div className="settings-panel" role="tabpanel">
-							{settingsPanelCategory === "layout" ? (
-								<OverlayLayoutEditor
-									appliedLayout={appliedOverlayLayout}
-									chatDisplayMode={chatDisplayMode}
-									layoutContext={overlayLayoutRuntimeContext}
-									onApply={handleOverlayLayoutApply}
-									onChatDisplayModeChange={handleChatDisplayModeChange}
-									onPreviewChange={handleOverlayLayoutPreviewChange}
-								/>
-							) : null}
-
-							{settingsPanelCategory === "reactions" ? (
-								<div className="settings-panel-stack reaction-settings-panel">
-									<div className="settings-toggle-row">
-										<div className="settings-toggle-heading">
-											<span className="settings-toggle-switch-label">
-												Quick reactions
-											</span>
-											<span className="settings-help">
-												<button
-													aria-describedby={quickReactionsHelpId}
-													aria-label="About quick reactions"
-													className="settings-help-trigger"
-													type="button"
-												>
-													<CircleHelp
-														aria-hidden="true"
-														size={14}
-														strokeWidth={1.8}
-													/>
-												</button>
-												<span
-													className="settings-help-tooltip"
-													id={quickReactionsHelpId}
-													role="tooltip"
-												>
-													Assign emojis to keys 1–0. Press a number during a
-													room to send a quick reaction.
-												</span>
-											</span>
-										</div>
+						<div className="settings-shell">
+							<div
+								className={[
+									"settings-category-rail",
+									settingsRailOverflow.left ? "can-scroll-left" : "",
+									settingsRailOverflow.right ? "can-scroll-right" : "",
+									settingsRailDragging ? "dragging" : "",
+								]
+									.filter(Boolean)
+									.join(" ")}
+							>
+								<div
+									aria-label="Settings sections"
+									className="settings-category-scroll"
+									data-active-category={settingsPanelCategory}
+									onClickCapture={handleSettingsCategoryClickCapture}
+									onLostPointerCapture={handleSettingsCategoryPointerEnd}
+									onPointerCancel={handleSettingsCategoryPointerEnd}
+									onPointerDown={handleSettingsCategoryPointerDown}
+									onPointerMove={handleSettingsCategoryPointerMove}
+									onPointerUp={handleSettingsCategoryPointerEnd}
+									onScroll={updateSettingsRailOverflow}
+									onWheel={handleSettingsCategoryWheel}
+									ref={settingsCategoryScrollRef}
+									role="tablist"
+								>
+									{SETTINGS_PANEL_CATEGORIES.map((category) => (
 										<button
-											aria-checked={reactionsEnabled}
-											aria-label="Quick reactions"
-											className="settings-toggle-switch"
-											data-state={reactionsEnabled ? "on" : "off"}
-											onClick={handleReactionsEnabledToggle}
-											role="switch"
+											aria-selected={settingsPanelCategory === category.id}
+											className={`settings-category-tab${
+												settingsPanelCategory === category.id ? " active" : ""
+											}`}
+											key={category.id}
+											onClick={() => setSettingsPanelCategory(category.id)}
+											ref={(node) => {
+												settingsCategoryButtonRefs.current[category.id] = node;
+											}}
+											role="tab"
 											type="button"
 										>
-											<span className="settings-toggle-switch-state">
-												<span
-													aria-hidden="true"
-													className="settings-toggle-switch-track"
-												>
-													<span className="settings-toggle-switch-thumb" />
-												</span>
-											</span>
+											{category.label}
 										</button>
-									</div>
-									{reactionsEnabled ? (
-										<>
-											<ReactionShortcutEditor
-												assignments={reactionShortcuts.assignments}
-												onAssign={reactionShortcuts.assign}
-											/>
-											{reactionShortcuts.error ? (
-												<p className="reaction-shortcut-status" role="status">
-													{reactionShortcuts.error}
-												</p>
-											) : null}
-										</>
-									) : null}
+									))}
 								</div>
-							) : null}
+							</div>
 
-							{settingsPanelCategory === "interface" ? (
-								<InterfaceSettingsPanel
-									error={interfacePreferences.error}
-									onChange={interfacePreferences.update}
-									preferences={interfacePreferences.preferences}
-									ready={interfacePreferences.ready}
-									saving={interfacePreferences.saving}
-								/>
-							) : null}
+							<div className="settings-panel" role="tabpanel">
+								{settingsPanelCategory === "layout" ? (
+									<OverlayLayoutEditor
+										appliedLayout={appliedOverlayLayout}
+										chatDisplayMode={chatDisplayMode}
+										layoutContext={overlayLayoutRuntimeContext}
+										onApply={handleOverlayLayoutApply}
+										onChatDisplayModeChange={handleChatDisplayModeChange}
+										onPreviewChange={handleOverlayLayoutPreviewChange}
+									/>
+								) : null}
 
-							{settingsPanelCategory === "voice" ? (
-								<VoiceSettingsPanel
-									feedback={ghostCamSession.voiceMessage}
-									mode={voiceSession.mode}
-									onModeChange={handleVoiceModeChange}
-								/>
-							) : null}
-
-							{settingsPanelCategory === "room" ? (
-								<RoomDefaultsSettingsPanel
-									error={roomJoinDefaults.error}
-									onChange={roomJoinDefaults.update}
-									preferences={roomJoinDefaults.preferences}
-									ready={roomJoinDefaults.ready}
-									saving={roomJoinDefaults.saving}
-								/>
-							) : null}
-
-							{settingsPanelCategory === "debug" ? (
-								<div className="settings-panel-stack">
-									<div className="debug-box">
-										<div className="debug-line">
-											<span>Build</span>
-											<strong>{ANIDACHI_BUILD_ID}</strong>
-										</div>
-										<div className="debug-line">
-											<span>Adapter</span>
-											<strong>{adapter.id}</strong>
-										</div>
-										<div className="debug-line">
-											<span>Media</span>
-											<strong>P2P</strong>
-										</div>
-										<div className="debug-line">
-											<span>Seats</span>
-											<strong>{mediaSeatText}</strong>
-										</div>
-										<div className="debug-line">
-											<span>Logs</span>
-											<strong>{debugEntriesCount}</strong>
-										</div>
-										<div className="debug-actions">
-											<button
-												className="button"
-												type="button"
-												onClick={() => saveDiagnostics("light")}
-											>
-												Save light
-											</button>
-											<button
-												className="button"
-												type="button"
-												onClick={() => saveDiagnostics("full")}
-											>
-												Save full
-											</button>
-											<button
-												className="button"
-												type="button"
-												onClick={clearDebug}
-											>
-												Clear
-											</button>
-										</div>
-										{diagnosticStatus ? (
-											<div className="debug-status" title={diagnosticStatus}>
-												{diagnosticStatus}
+								{settingsPanelCategory === "reactions" ? (
+									<div className="settings-panel-stack reaction-settings-panel">
+										<div className="settings-toggle-row">
+											<div className="settings-toggle-heading">
+												<span className="settings-toggle-switch-label">
+													Quick reactions
+												</span>
+												<span className="settings-help">
+													<button
+														aria-describedby={quickReactionsHelpId}
+														aria-label="About quick reactions"
+														className="settings-help-trigger"
+														type="button"
+													>
+														<CircleHelp
+															aria-hidden="true"
+															size={14}
+															strokeWidth={1.8}
+														/>
+													</button>
+													<span
+														className="settings-help-tooltip"
+														id={quickReactionsHelpId}
+														role="tooltip"
+													>
+														Assign emojis to keys 1–0. Press a number during a
+														room to send a quick reaction.
+													</span>
+												</span>
 											</div>
+											<button
+												aria-checked={reactionsEnabled}
+												aria-label="Quick reactions"
+												className="settings-toggle-switch"
+												data-state={reactionsEnabled ? "on" : "off"}
+												onClick={handleReactionsEnabledToggle}
+												role="switch"
+												type="button"
+											>
+												<span className="settings-toggle-switch-state">
+													<span
+														aria-hidden="true"
+														className="settings-toggle-switch-track"
+													>
+														<span className="settings-toggle-switch-thumb" />
+													</span>
+												</span>
+											</button>
+										</div>
+										{reactionsEnabled ? (
+											<>
+												<ReactionShortcutEditor
+													assignments={reactionShortcuts.assignments}
+													onAssign={reactionShortcuts.assign}
+												/>
+												{reactionShortcuts.error ? (
+													<p className="reaction-shortcut-status" role="status">
+														{reactionShortcuts.error}
+													</p>
+												) : null}
+											</>
 										) : null}
 									</div>
-									<div className="footnote">
-										Debug logging is temporarily always on. Media transport is
-										P2P-only.
+								) : null}
+
+								{settingsPanelCategory === "interface" ? (
+									<InterfaceSettingsPanel
+										error={interfacePreferences.error}
+										onChange={interfacePreferences.update}
+										preferences={interfacePreferences.preferences}
+										ready={interfacePreferences.ready}
+										saving={interfacePreferences.saving}
+									/>
+								) : null}
+
+								{settingsPanelCategory === "room" ? (
+									<RoomDefaultsSettingsPanel
+										error={roomJoinDefaults.error}
+										onChange={roomJoinDefaults.update}
+										preferences={roomJoinDefaults.preferences}
+										ready={roomJoinDefaults.ready}
+										saving={roomJoinDefaults.saving}
+									/>
+								) : null}
+
+								{settingsPanelCategory === "debug" ? (
+									<div className="settings-panel-stack">
+										<div className="debug-box">
+											<div className="debug-line">
+												<span>Build</span>
+												<strong>{ANIDACHI_BUILD_ID}</strong>
+											</div>
+											<div className="debug-line">
+												<span>Adapter</span>
+												<strong>{adapter.id}</strong>
+											</div>
+											<div className="debug-line">
+												<span>Media</span>
+												<strong>P2P</strong>
+											</div>
+											<div className="debug-line">
+												<span>Seats</span>
+												<strong>{mediaSeatText}</strong>
+											</div>
+											<div className="debug-line">
+												<span>Logs</span>
+												<strong>{debugEntriesCount}</strong>
+											</div>
+											<div className="debug-actions">
+												<button
+													className="button"
+													type="button"
+													onClick={() => saveDiagnostics("light")}
+												>
+													Save light
+												</button>
+												<button
+													className="button"
+													type="button"
+													onClick={() => saveDiagnostics("full")}
+												>
+													Save full
+												</button>
+												<button
+													className="button"
+													type="button"
+													onClick={clearDebug}
+												>
+													Clear
+												</button>
+											</div>
+											{diagnosticStatus ? (
+												<div className="debug-status" title={diagnosticStatus}>
+													{diagnosticStatus}
+												</div>
+											) : null}
+										</div>
+										<div className="footnote">
+											Debug logging is temporarily always on. Media transport is
+											P2P-only.
+										</div>
 									</div>
-								</div>
-							) : null}
+								) : null}
+							</div>
 						</div>
 					</div>
 
-					{authAuthenticated ? (
-						<div className="account-footer">
-							<button
-								className={`account-footer-action${signOutConfirmationPending ? " confirming" : ""}`}
-								type="button"
-								onClick={handleSignOut}
-								disabled={authBusy || extensionContextInvalidated}
-							>
-								<LogOut
-									aria-hidden="true"
-									className="account-footer-action-icon"
-									size={14}
-									strokeWidth={1.8}
-								/>
-								<span>
-									{authBusy
-										? "Signing out..."
-										: signOutConfirmationPending
-											? "Press again to sign out"
-											: "Sign out"}
-								</span>
-							</button>
-						</div>
-					) : null}
 				</section>
 			) : null}
 

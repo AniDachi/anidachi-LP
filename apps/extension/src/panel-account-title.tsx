@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import type { AuthenticatedUserPlan } from "./auth-tokens";
+import { loadPanelFont } from "./panel-font";
 
 interface PanelAccountTitleProps {
 	displayName: string;
@@ -21,6 +22,7 @@ export function PanelAccountTitle({
 	const planText = plan ? PLAN_LABELS[plan] : null;
 
 	useLayoutEffect(() => {
+		const fontReady = loadPanelFont(document);
 		const nameElement = nameRef.current;
 		const planElement = planRef.current;
 		if (!nameElement || !planElement || !planText) return;
@@ -54,6 +56,7 @@ export function PanelAccountTitle({
 		};
 
 		alignToLastGlyph();
+		void fontReady.then(alignToLastGlyph);
 		void document.fonts?.ready.then(alignToLastGlyph);
 
 		return () => {

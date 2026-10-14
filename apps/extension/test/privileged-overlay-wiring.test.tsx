@@ -194,7 +194,7 @@ describe("privileged overlay wiring", () => {
 		expect(teardown).toHaveBeenCalledTimes(1);
 	});
 
-	it("does not suppress silent auth recovery after a trusted sign-out request is rejected", async () => {
+	it("recovers the account when its stored session disappears", async () => {
 		let currentSession: ReturnType<typeof sessionFor> | null =
 			sessionFor("user-a");
 		const sendMessage = vi.fn(
@@ -209,9 +209,6 @@ describe("privileged overlay wiring", () => {
 				if (message.type === "ANIDACHI_AUTH") {
 					return { ok: true, tokens: currentSession };
 				}
-				if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
-					return { ok: false, error: "Privileged sign-out rejected" };
-				}
 				throw new Error(
 					`Unexpected runtime message ${message.type}:${message.command}`,
 				);
@@ -221,11 +218,6 @@ describe("privileged overlay wiring", () => {
 		const view = await renderOverlay();
 
 		await click(button(view.container, "Open Anidachi controls"));
-		await trustedClick(button(view.container, "Sign out"));
-		await trustedClick(button(view.container, "Press again to sign out"));
-		expect(button(view.container, "Sign out")).toBeInstanceOf(
-			HTMLButtonElement,
-		);
 
 		currentSession = null;
 		await extensionStorage.storage.removeItem(AUTH_TOKENS_KEY);
@@ -242,100 +234,11 @@ describe("privileged overlay wiring", () => {
 					(message as { command?: string }).command === "sign-in-silent",
 			),
 		).toHaveLength(1);
-		expect(button(view.container, "Sign out")).toBeInstanceOf(
-			HTMLButtonElement,
-		);
+		expect(view.container.querySelector(".panel-account-name")?.textContent).toBe("User");
 		await unmount(view.root);
 	});
 
-	it("requires a second trusted click to sign out and resets the confirmation", async () => {
-		const sendMessage = vi.fn(
-			async (message: { type?: string; command?: string }) => {
-				if (message.type === "ANIDACHI_AUTH")
-					return { ok: true, tokens: sessionFor("user-a") };
-				if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
-					return { ok: false, error: "Privileged sign-out rejected" };
-				}
-				throw new Error(
-					`Unexpected runtime message ${message.type}:${message.command}`,
-				);
-			},
-		);
-		installOverlayRuntime(sendMessage);
-		const setTimeoutSpy = vi.spyOn(window, "setTimeout");
-		const view = await renderOverlay();
-
-		await click(button(view.container, "Open Anidachi controls"));
-		const timerCallCountBeforeConfirmation = setTimeoutSpy.mock.calls.length;
-		const signOut = button(view.container, "Sign out");
-
-		await trustedClick(signOut);
-
-		expect(privilegedInvokes(sendMessage)).toHaveLength(0);
-		expect(button(view.container, "Press again to sign out")).toBe(signOut);
-
-		const confirmationTimer = setTimeoutSpy.mock.calls
-			.slice(timerCallCountBeforeConfirmation)
-			.at(-1)?.[0];
-		if (typeof confirmationTimer !== "function") {
-			throw new Error("Missing sign-out confirmation timer");
-		}
-		await act(async () => {
-			confirmationTimer();
-			await Promise.resolve();
-		});
-
-		expect(button(view.container, "Sign out")).toBe(signOut);
-		await trustedClick(signOut);
-		expect(privilegedInvokes(sendMessage)).toHaveLength(0);
-		expect(button(view.container, "Press again to sign out")).toBe(signOut);
-
-		await trustedClick(signOut);
-		expect(privilegedInvokes(sendMessage)).toHaveLength(1);
-		expect(button(view.container, "Sign out")).toBe(signOut);
-		await unmount(view.root);
-	});
-
-	it("keeps sign out inactive outside its compact button", async () => {
-		const sendMessage = vi.fn(
-			async (message: { type?: string; command?: string }) => {
-				if (message.type === "ANIDACHI_AUTH")
-					return { ok: true, tokens: sessionFor("user-a") };
-				throw new Error(
-					`Unexpected runtime message ${message.type}:${message.command}`,
-				);
-			},
-		);
-		installOverlayRuntime(sendMessage);
-		const view = await renderOverlay();
-
-		await click(button(view.container, "Open Anidachi controls"));
-		const footer = view.container.querySelector(".account-footer");
-		if (!(footer instanceof HTMLDivElement)) {
-			throw new Error("Missing account footer");
-		}
-
-		const footerClick = new MouseEvent("click", {
-			bubbles: true,
-			cancelable: true,
-		});
-		Object.defineProperty(footerClick, "isTrusted", {
-			configurable: true,
-			value: true,
-		});
-		await act(async () => {
-			footer.dispatchEvent(footerClick);
-			await Promise.resolve();
-		});
-
-		expect(privilegedInvokes(sendMessage)).toHaveLength(0);
-		expect(button(view.container, "Sign out")).toBeInstanceOf(
-			HTMLButtonElement,
-		);
-		await unmount(view.root);
-	});
-
-	it("uses scannable icons for settings and sign out without changing their actions", async () => {
+	it("keeps the settings heading without an account sign-out footer", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -358,10 +261,8 @@ describe("privileged overlay wiring", () => {
 				?.textContent,
 		).toBe("Settings");
 
-		const signOut = button(view.container, "Sign out");
-		expect(signOut.querySelector(".account-footer-action-icon")).toBeInstanceOf(
-			SVGElement,
-		);
+		expect(view.container.querySelector(".account-footer")).toBeNull();
+		expect(view.container.textContent).not.toContain("Sign out");
 
 		await unmount(view.root);
 	});
@@ -412,7 +313,7 @@ describe("privileged overlay wiring", () => {
 		} finally { await unmount(reopened.root); }
 	});
 
-	it("dismisses unavailable live-media guidance after a short delay", async () => {
+	it("keeps live microphone controls out of the drawer before joining a room", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH") {
@@ -424,40 +325,17 @@ describe("privileged overlay wiring", () => {
 			},
 		);
 		installOverlayRuntime(sendMessage);
-		const setTimeoutSpy = vi.spyOn(window, "setTimeout");
 		const view = await renderOverlay();
 
 		await click(button(view.container, "Open Anidachi controls"));
-		await click(button(view.container, "Voice"));
-		const timersBeforeAction = setTimeoutSpy.mock.calls.length;
-		await click(button(view.container, "Open mic"));
-
-		const notice = view.container.querySelector(".panel-action-notice");
-		expect(notice?.textContent).toContain(
-			"Join a room before enabling Open mic.",
-		);
-		const dismissTimer = setTimeoutSpy.mock.calls
-			.slice(timersBeforeAction)
-			.find(
-				([, delay]) => delay === overlayApp.TRANSIENT_PANEL_NOTICE_DURATION_MS,
-			)?.[0];
-		if (typeof dismissTimer !== "function") {
-			throw new Error("Missing transient panel notice timer");
-		}
-
-		await act(async () => {
-			dismissTimer();
-			await Promise.resolve();
-		});
-		expect(view.container.querySelector(".panel-action-notice")).toBeNull();
+		expect(view.container.querySelector(".panel-media-mic")).toBeNull();
+		expect([...view.container.querySelectorAll('[role="tab"]')].map(tab => tab.textContent)).not.toContain("Voice");
+		expect(sendMessage.mock.calls.some(([message]) => message.command === "set-voice-mode")).toBe(false);
 
 		await unmount(view.root);
 	});
 
-	it.each([
-		"sign-out",
-		"end-room",
-	] as const)("keeps the mounted room reconnect timer after a trusted %s request is rejected", async (action) => {
+	it("keeps the mounted room reconnect timer after a trusted end-room request is rejected", async () => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH") {
@@ -483,7 +361,7 @@ describe("privileged overlay wiring", () => {
 					if (response) return response;
 				}
 				if (message.type === "ANIDACHI_PRIVILEGED_OVERLAY_INTENT") {
-					return { ok: false, error: `Privileged ${action} rejected` };
+					return { ok: false, error: "Privileged end-room rejected" };
 				}
 				throw new Error(
 					`Unexpected runtime message ${message.type}:${message.command}`,
@@ -523,48 +401,13 @@ describe("privileged overlay wiring", () => {
 		expect(reconnectCallIndex).toBeGreaterThanOrEqual(0);
 		const reconnectTimerId =
 			setTimeoutSpy.mock.results[reconnectCallIndex]?.value;
-		const actionButton =
-			action === "sign-out"
-				? button(view.container, "Sign out")
-				: primaryRoomAction(view.container);
-
-		await trustedClick(actionButton);
-		if (action === "sign-out") {
-			expect(privilegedInvokes(sendMessage)).toHaveLength(0);
-			await trustedClick(button(view.container, "Press again to sign out"));
-		}
+		await trustedClick(primaryRoomAction(view.container));
 
 		expect(privilegedInvokes(sendMessage)).toHaveLength(1);
 		expect(close).not.toHaveBeenCalled();
 		expect(clearTimeoutSpy).not.toHaveBeenCalledWith(reconnectTimerId);
-		expect(button(view.container, "Sign out")).toBeInstanceOf(
-			HTMLButtonElement,
-		);
+		expect(view.container.querySelector(".panel-account-name")?.textContent).toBe("User");
 		expect(primaryRoomAction(view.container)).toBeInstanceOf(HTMLButtonElement);
-		await unmount(view.root);
-	});
-
-	it("keeps the mounted OverlayApp signed in after a synthetic sign-out control click", async () => {
-		const sendMessage = vi.fn(
-			async (message: { type?: string; command?: string }) => {
-				if (message.type === "ANIDACHI_AUTH")
-					return { ok: true, tokens: sessionFor("user-a") };
-				throw new Error(
-					`Unexpected runtime message ${message.type}:${message.command}`,
-				);
-			},
-		);
-		installOverlayRuntime(sendMessage);
-		const view = await renderOverlay();
-		const close = vi.spyOn(RoomClient.prototype, "close");
-
-		await click(button(view.container, "Open Anidachi controls"));
-		const signOut = button(view.container, "Sign out");
-		await click(signOut);
-
-		expect(privilegedInvokes(sendMessage)).toHaveLength(0);
-		expect(close).not.toHaveBeenCalled();
-		expect(button(view.container, "Sign out")).toBe(signOut);
 		await unmount(view.root);
 	});
 
@@ -2143,7 +1986,7 @@ describe("privileged overlay wiring", () => {
         roomUsage:{day:"2026-09-29",seconds:0}, quota:{day:"2026-09-29",remainingSeconds:1800,metering:true,measuredAt:Date.parse("2026-09-29T00:00:01Z")} }));
       expect(view.container.querySelector(".quota-note")).toBeNull();
       expect(view.container.querySelector(".free-quota-notice")).toBeNull();
-      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      expect(view.container.querySelector(".hosting-notice")).toBeNull();
       expect(send.mock.calls.some(([message]) => message.type === "ANIDACHI_ROOM_QUOTA_STATUS" || message.action === "quota-end-room")).toBe(false);
       expect(close).not.toHaveBeenCalled();
     } finally { vi.useRealTimers(); await unmount(view.root); }
@@ -2198,7 +2041,7 @@ describe("privileged overlay wiring", () => {
       expect(close).not.toHaveBeenCalled();
       expect(view.container.querySelector(".quota-note")).toBeNull();
       expect(view.container.querySelector(".free-quota-notice")).toBeNull();
-      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      expect(view.container.querySelector(".hosting-notice")).toBeNull();
       const first = connection;
       await act(async () => first.onStatus("closed"));
       await act(async () => { await vi.waitFor(() => expect(connection).not.toBe(first), { timeout: 5000 }); });
@@ -2207,7 +2050,7 @@ describe("privileged overlay wiring", () => {
       const messages = send.mock.calls.map(([message]: any) => message);
       expect(messages.filter(message => message.type === "ANIDACHI_ROOM_HTTP" && message.command === "connect-room")).toHaveLength(2);
       expect(messages.some(message => message.command === "create-room" || message.type === "ANIDACHI_ROOM_QUOTA_STATUS" || message.action === "quota-end-room")).toBe(false);
-      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      expect(view.container.querySelector(".hosting-notice")).toBeNull();
     } finally { vi.useRealTimers(); await unmount(view.root); }
   });
 
@@ -2239,7 +2082,7 @@ describe("privileged overlay wiring", () => {
       expect(view.container.textContent?.includes(denial.text)).toBe(true);
       expect(location.hash.includes("anidachiRoom")).toBe(false);
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
-      expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+      expect(view.container.querySelector(".hosting-notice")).toBeNull();
       expect(view.container.querySelector(".free-quota-notice")).toBeNull();
       vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] });
       await act(async () => vi.advanceTimersByTimeAsync(120_000));
@@ -2273,7 +2116,7 @@ describe("privileged overlay wiring", () => {
       expect(view.container.textContent).toContain("You can still join rooms for free.");
       expect(close).toHaveBeenCalled();
       expect(location.hash.includes("anidachiRoom")).toBe(false);
-      expect(view.container.querySelector('.hosting-paywall,.quota-note,.free-quota-notice')).toBeNull();
+      expect(view.container.querySelector('.hosting-notice,.quota-note,.free-quota-notice')).toBeNull();
       await act(async () => window.dispatchEvent(new Event("focus")));
       expect(view.container.textContent).toContain(text);
       vi.useFakeTimers({toFake:["setTimeout","clearTimeout","setInterval","clearInterval","Date"]});
@@ -2309,7 +2152,7 @@ describe("privileged overlay wiring", () => {
       expect(close).not.toHaveBeenCalled();
       await click(button(view.container,"Open Anidachi controls"));
       expect(view.container.querySelector('time')?.getAttribute('dateTime')).toBe(new Date(closingAt).toISOString());
-      expect(view.container.querySelector('.hosting-paywall,.free-quota-notice')).toBeNull();
+      expect(view.container.querySelector('.hosting-notice,.free-quota-notice')).toBeNull();
     } finally {vi.useRealTimers(); await unmount(view.root);}
   });
 
@@ -2317,6 +2160,7 @@ describe("privileged overlay wiring", () => {
     installActiveHostRoomRuntime();
     vi.spyOn(hostingAccessClient, "requestHostingAccess").mockResolvedValue({
       entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T01:00:00Z",
+      hostingOffer: { trialMode: "cardless", trialDays: 3, policyRevision: 2 },
       hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
     });
     const original = chrome.runtime.sendMessage;
@@ -2332,12 +2176,12 @@ describe("privileged overlay wiring", () => {
       await click(button(view.container, "Open Anidachi controls"));
       expect(button(view.container, "Create room").disabled).toBe(false);
       await click(button(view.container, "Create room")); await flushRoomActionWork();
-      expect(view.container.querySelector('[role="dialog"]')?.textContent).toContain("Join friends’ rooms for free");
-      expect(view.container.textContent).toContain("3-day free trial");
-      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-paywall a')?.href).toBe("http://localhost:3003/pricing");
+      expect(view.container.querySelector('[role="dialog"]')?.textContent).toContain("You can still join friends for free.");
+      expect(view.container.textContent).toContain("Try 3 days free");
+      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-notice a')?.href).toBe("http://localhost:3003/pricing");
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
       await click(button(view.container, "Close plan offer"));
-      expect(view.container.querySelector('.hosting-paywall')).toBeNull();
+      expect(view.container.querySelector('.hosting-notice')).toBeNull();
       expect(create).toHaveBeenCalledTimes(1);
     } finally { await unmount(view.root); }
   });
@@ -2371,17 +2215,17 @@ describe("privileged overlay wiring", () => {
         request.mockReturnValueOnce(pending.promise);
         await act(async () => window.dispatchEvent(new Event("focus")));
         expect(view.container.querySelector(".plan-badge")).toBeNull();
-        expect(view.container.textContent).not.toContain("Your account can create rooms");
+        expect(view.container.textContent).not.toContain("You’re ready to host");
         await act(async () => pending.resolve({ ...base, planCode: state.plan, serverTime: state.time,
           hosting: { ...base.hosting!, canHost: state.plan !== "free", trialEligibility: "used", trialEndsAt: "2026-10-01T02:00:00Z" } }));
         expect(view.container.querySelector(".plan-badge")?.textContent?.toLowerCase()).toBe(state.plan);
-        expect(view.container.textContent?.includes("Your account can create rooms")).toBe(state.plan !== "free");
-        expect(view.container.textContent).not.toContain("3-day free trial");
+        expect(view.container.textContent?.includes("You’re ready to host")).toBe(state.plan !== "free");
+        expect(view.container.textContent).not.toContain("Try 3 days free");
       }
       request.mockRejectedValueOnce(new Error("offline"));
       await act(async () => window.dispatchEvent(new Event("focus")));
       expect(view.container.querySelector(".plan-badge")).toBeNull();
-      expect(view.container.textContent).toContain("Could not check your current plan");
+      expect(view.container.textContent).toContain("Couldn’t check your access");
       expect(send.mock.calls.filter(([message]: any) => message.command === "create-room")).toHaveLength(1);
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
     } finally { await unmount(view.root); }
@@ -2403,7 +2247,7 @@ describe("privileged overlay wiring", () => {
     try {
       await click(button(view.container, "Open Anidachi controls"));
       await click(button(view.container, "Create room")); await flushRoomActionWork();
-      expect(view.container.querySelector('.hosting-paywall')).not.toBeNull();
+      expect(view.container.querySelector('.hosting-notice')).not.toBeNull();
       currentSession = sessionFor("user-b");
       await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, currentSession));
       await flushMountedWork();
@@ -2411,8 +2255,8 @@ describe("privileged overlay wiring", () => {
         entitlementsVersion: 1, ownerUserId: "user-a", planCode: "free", serverTime: "2026-09-28T01:00:00Z",
         hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
       }));
-      expect(view.container.querySelector('.hosting-paywall')).toBeNull();
-      expect(view.container.textContent).not.toContain("3-day free trial");
+      expect(view.container.querySelector('.hosting-notice')).toBeNull();
+      expect(view.container.textContent).not.toContain("Try 3 days free");
     } finally { await unmount(view.root); }
   });
   it("does not turn an unavailable room service into a subscription offer", async () => {
@@ -2428,7 +2272,7 @@ describe("privileged overlay wiring", () => {
     try {
       await click(button(view.container, "Open Anidachi controls"));
       await click(button(view.container, "Create room")); await flushRoomActionWork();
-      expect(view.container.querySelector('.hosting-paywall')).toBeNull();
+      expect(view.container.querySelector('.hosting-notice')).toBeNull();
       expect(view.container.textContent).toContain("temporarily unavailable");
     } finally { await unmount(view.root); }
   });
@@ -2450,8 +2294,8 @@ describe("privileged overlay wiring", () => {
       await act(async()=>extensionStorage.storage.setItem(AUTH_TOKENS_KEY,currentSession)); await flushMountedWork();
       await act(async()=>old.resolve({entitlementsVersion:1,ownerUserId:"user-a",planCode:"free",serverTime:"2026-09-28T01:00:00Z",
         hosting:{hostingPolicyVersion:2,hostingActivationAt:"2026-09-28T00:00:00Z",canHost:false,trialEligibility:"eligible",trialEndsAt:null}}));
-      expect(view.container.querySelector('.hosting-paywall')?.textContent).not.toContain("3-day free trial");
-      expect(view.container.querySelector('.hosting-paywall')?.textContent).toContain("Could not check your current plan");
+      expect(view.container.querySelector('.hosting-notice')?.textContent).not.toContain("Try 3 days free");
+      expect(view.container.querySelector('.hosting-notice')?.textContent).toContain("Couldn’t check your access");
     } finally {await unmount(view.root);}
   });
   it.each(["HOST_SUBSCRIPTION_REQUIRED", "QUOTA_EXHAUSTED", "ROOM_AUTHORITY_UNAVAILABLE"])(
@@ -2488,7 +2332,7 @@ describe("privileged overlay wiring", () => {
           error: "Previous login refusal", resetAt: "2026-09-29T00:00:00Z",
         }));
         await flushMountedWork();
-        expect(view.container.querySelector(".hosting-paywall")).toBeNull();
+        expect(view.container.querySelector(".hosting-notice")).toBeNull();
         expect(view.container.querySelector(".free-quota-notice")).toBeNull();
         expect(view.container.textContent).not.toContain("Previous login refusal");
         expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
@@ -2580,7 +2424,7 @@ describe("privileged overlay wiring", () => {
       await act(async () => {const ack = {...intent, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 2, state: {...media.participants[0], microphoneGranted: true, microphoneIntentSequence: intent.intentSequence}}; client.media!.consume(ack); options.onEvent(ack);});
       expect(publication.mock.calls.some(([enabled]) => enabled)).toBe(false);
       expect(client.media!.hasSeat()).toBe(true);
-      await click(button(view.container, "Voice")); await click(button(view.container, "Open mic"));
+      await selectQuickMicrophoneMode(view.container, "open-mic");
       const openMic = send.mock.calls.map(([event]) => event).filter(event => event.type === "SET_MEDIA_INTENT" && event.media === "microphone" && event.enabled).at(-1);
       if (openMic?.type !== "SET_MEDIA_INTENT") throw new Error("Missing own Open mic intent");
       await act(async () => {const ack = {...openMic, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 3, state: {...media.participants[0], microphoneGranted: true, microphoneIntentSequence: openMic.intentSequence}}; client.media!.consume(ack); options.onEvent(ack);});
@@ -2663,7 +2507,7 @@ describe("privileged overlay wiring", () => {
       if (intent?.type !== "SET_MEDIA_INTENT") throw new Error("Missing explicit intent");
       expect(client.media?.canCapture("microphone")).toBe(false);
       await act(async()=>{ const ack = { ...intent, type: "MEDIA_INTENT_ACK" as const, snapshotSequence: 2, state: { ...media.participants[0], microphoneGranted: true, microphoneIntentSequence: intent.intentSequence } }; client.media!.consume(ack); options.onEvent(ack); });
-      await click(button(view.container,"Voice")); await click(button(view.container,"Open mic")); await flushMountedWork();
+      await selectQuickMicrophoneMode(view.container, "open-mic"); await flushMountedWork();
       expect(publication).toHaveBeenLastCalledWith(true,"warm","open-mic");
       await act(async()=>{media={...media,snapshotSequence:3,participants:[{...media.participants[0],microphoneRevocationEpoch:1}]};client.media!.consume(media); options.onEvent(media);});
       expect(authority).toHaveBeenLastCalledWith(false,false,expect.any(Object));
@@ -2672,7 +2516,7 @@ describe("privileged overlay wiring", () => {
       vi.stubGlobal("navigator",Object.create(navigator,{mediaDevices:{value:{addEventListener:vi.fn(),removeEventListener:vi.fn(),getUserMedia:vi.fn().mockRejectedValue(new DOMException("denied","NotAllowedError"))}}}));
       for (const kind of ["camera","microphone"] as const) {
         if(kind==="camera") await click(button(view.container,"Turn camera on"));
-        else {await click(button(view.container,"Enable microphone"));await click(button(view.container,"Open mic"));}
+        else {await click(button(view.container,"Enable microphone"));await selectQuickMicrophoneMode(view.container, "open-mic");}
         const request=vi.mocked(RoomClient.prototype.send).mock.calls.map(([e])=>e).filter(e=>e.type==="SET_MEDIA_INTENT"&&e.media===kind&&e.enabled).at(-1);
         if(request?.type!=="SET_MEDIA_INTENT") throw new Error("Missing capture intent");
         await act(async()=>{const ack={...request,type:"MEDIA_INTENT_ACK" as const,snapshotSequence:kind==="camera"?4:5,state:{...media.participants[0],[`${kind}Granted`]:true,[`${kind}IntentSequence`]:request.intentSequence}};client.media!.consume(ack);options.onEvent(ack);});
@@ -2759,11 +2603,10 @@ describe("privileged overlay wiring", () => {
 				await click(button(view.container, "Open Anidachi controls"));
 				await click(button(view.container, "Create room"));
 				await flushMountedWork();
-				await click(button(view.container, "Voice"));
-				await click(button(view.container, "Open mic"));
+				await selectQuickMicrophoneMode(view.container, "open-mic");
 				await flushMountedWork();
 				expect(
-					button(view.container, "Open mic").getAttribute("aria-checked"),
+					quickMicrophone(view.container).getAttribute("aria-pressed"),
 				).toBe("true");
 				expect(publication).toHaveBeenLastCalledWith(true, "warm", "open-mic");
 				publication.mockClear();
@@ -2796,7 +2639,7 @@ describe("privileged overlay wiring", () => {
 				await click(launcher);
 				expect(reveal.classList.contains("bubble-visible")).toBe(true);
 				expect(
-					button(view.container, "Open mic").getAttribute("aria-checked"),
+					quickMicrophone(view.container).getAttribute("aria-pressed"),
 				).toBe("true");
 			} finally {
 				await unmount(view.root);
@@ -2856,8 +2699,7 @@ describe("privileged overlay wiring", () => {
 			await click(button(view.container, "Open Anidachi controls"));
 			await click(button(view.container, "Create room"));
 			await runtime.roomSnapshot(); await runtime.mediaSnapshot();
-			await click(button(view.container, "Voice"));
-			await click(button(view.container, "Open mic"));
+			await selectQuickMicrophoneMode(view.container, "open-mic");
 			await click(button(view.container, "Turn camera on"));
 			await flushMountedWork();
 			expect(runtime.record()).toMatchObject({voiceMode: "open-mic", cameraEnabled: true});
@@ -2868,6 +2710,58 @@ describe("privileged overlay wiring", () => {
 			]));
 		} finally { await unmount(view.root); }
 	});
+
+  it.each([2, 3] as const)("wires the shared header controls to real v%s media intent and independent camera state", async (version) => {
+    const runtime = installRoomDefaultsRuntime(version, {voiceMode: "push-to-talk", cameraEnabled: false});
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      expect(view.container.querySelector(".panel-media-dock")).toBeNull();
+      await click(button(view.container, "Create room"));
+      await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+      expect(runtime.enabledIntents()).toEqual([]);
+      await click(button(view.container, "Microphone: hold V to talk. Switch to always on"));
+      expect(runtime.enabledIntents().map(i => i.media)).toEqual(["microphone"]);
+      expect(runtime.microphone.mock.calls.some(([enabled]) => enabled)).toBe(false);
+      await runtime.ack("microphone");
+      expect(runtime.microphone).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+      expect(quickMicrophone(view.container).getAttribute("aria-pressed")).toBe("true");
+      await click(button(view.container, "Turn camera on"));
+      await runtime.ack("camera");
+      expect(runtime.camera).toHaveBeenLastCalledWith(true);
+      await click(button(view.container, "Microphone: always on. Switch to hold V"));
+      expect(runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+      expect(quickMicrophone(view.container).getAttribute("data-mode")).toBe("push-to-talk");
+      expect(button(view.container, "Turn camera off").getAttribute("aria-checked")).toBe("true");
+      await selectQuickMicrophoneMode(view.container, "open-mic");
+      expect(button(view.container, "Microphone: always on. Switch to hold V").getAttribute("aria-pressed")).toBe("true");
+      await click(button(view.container, "Turn camera off"));
+      expect(runtime.camera.mock.calls.at(-1)?.[0]).toBe(false);
+      expect(button(view.container, "Microphone: always on. Switch to hold V").getAttribute("aria-pressed")).toBe("true");
+      await flushMountedWork();
+      expect(runtime.record()).toMatchObject({voiceMode: "open-mic", cameraEnabled: false});
+    } finally { await unmount(view.root); }
+  });
+  it("keeps the quick microphone usable when cameras are full and disables both after seat loss", async () => {
+    const runtime = installRoomDefaultsRuntime(3, {voiceMode: "push-to-talk", cameraEnabled: false});
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await runtime.roomSnapshot(); await runtime.mediaSnapshot({remoteCameras: 4});
+      expect((button(view.container, "Camera unavailable") as HTMLButtonElement).disabled).toBe(true);
+      await click(button(view.container, "Microphone: hold V to talk. Switch to always on"));
+      await runtime.ack("microphone");
+      expect(runtime.microphone).toHaveBeenLastCalledWith(true, "warm", "open-mic");
+      await runtime.mediaSnapshot({seat: false, seatRevision: 1, epoch: 1});
+      expect(runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+      expect((button(view.container, "Microphone unavailable") as HTMLButtonElement).disabled).toBe(true);
+      expect((button(view.container, "Camera unavailable") as HTMLButtonElement).disabled).toBe(true);
+      await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
+      expect(button(view.container, "Microphone: hold V to talk. Switch to always on").getAttribute("aria-pressed")).toBe("false");
+      expect(runtime.enabledIntents()).toHaveLength(1);
+    } finally { await unmount(view.root); }
+  });
 
 	it.each(["no seat", "cameras full"] as const)("does not queue saved camera defaults when joining with %s", async (limitation) => {
 		const runtime = installRoomDefaultsRuntime(3, {voiceMode: "open-mic", cameraEnabled: true});
@@ -2913,8 +2807,7 @@ describe("privileged overlay wiring", () => {
 			await runtime.mediaSnapshot({seat: true, seatRevision: 2, epoch: 1});
 			expect(runtime.enabledIntents()).toEqual([]);
 			expect(runtime.record()).toMatchObject({voiceMode: "push-to-talk", cameraEnabled: false});
-			await click(button(view.container, "Voice"));
-			await click(button(view.container, "Open mic"));
+			await selectQuickMicrophoneMode(view.container, "open-mic");
 			await click(button(view.container, "Turn camera on"));
 			expect(runtime.enabledIntents().map(intent => intent.media).sort()).toEqual(["camera", "microphone"]);
 		} finally { await unmount(view.root); }
@@ -2992,9 +2885,8 @@ describe("privileged overlay wiring", () => {
 			} else if (interruption === "disconnect") {
 				await runtime.status("closed"); await runtime.status("connected");
 			} else if (interruption === "manual mode") {
-				await click(button(view.container, "Voice"));
-				await click(button(view.container, "Open mic"));
-				await click(button(view.container, "Push to talk"));
+				await selectQuickMicrophoneMode(view.container, "open-mic");
+				await selectQuickMicrophoneMode(view.container, "push-to-talk");
 			} else {
 				await unmount(view.root); mounted = false;
 			}
@@ -3024,7 +2916,7 @@ describe("privileged overlay wiring", () => {
 		} finally { await unmount(view.root); }
 	});
 
-	it("marks a user-selected Voice mode as the preference for future rooms", async () => {
+	it("remembers the quick microphone mode for future rooms", async () => {
 		let storedRoomSession: RoomSessionRecord = confirmedRoomSession();
 		const sendMessage = vi.fn(
 			async (message: {
@@ -3085,8 +2977,8 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
 		await flushMountedWork();
-		await click(button(view.container, "Voice"));
-		await click(button(view.container, "Open mic"));
+		await waitForButton(view.container, "Microphone: hold V to talk. Switch to always on");
+		await selectQuickMicrophoneMode(view.container, "open-mic");
 		await flushMountedWork();
 
 		const preferenceWrite = sendMessage.mock.calls.find(
@@ -3449,9 +3341,8 @@ describe("privileged overlay wiring", () => {
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
-		await click(button(view.container, "Voice"));
-		await click(button(view.container, "Push to talk"));
-		await click(button(view.container, "Open mic"));
+		await selectQuickMicrophoneMode(view.container, "push-to-talk");
+		await selectQuickMicrophoneMode(view.container, "open-mic");
 		await trustedClick(primaryRoomAction(view.container));
 		await waitForText(view.container, "Room closed");
 		const nextVoiceRoomAction = await waitForEnabledPrimaryRoomAction(
@@ -3476,11 +3367,10 @@ describe("privileged overlay wiring", () => {
 			),
 		).toHaveLength(0);
 
-		await click(button(view.container, "Voice"));
 		expect(
-			button(view.container, "Push to talk").getAttribute("aria-checked"),
-		).toBe("true");
-		await click(button(view.container, "Open mic"));
+			quickMicrophone(view.container).getAttribute("data-mode"),
+		).toBe("push-to-talk");
+		await selectQuickMicrophoneMode(view.container, "open-mic");
 		await flushMountedWork();
 
 		expect(
@@ -4260,6 +4150,7 @@ function deferred<T>(): {
 async function renderOverlay(): Promise<{
 	container: HTMLDivElement;
 	root: Root;
+	adapter: VideoAdapter;
 }> {
 	(
 		globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -4273,14 +4164,15 @@ async function renderOverlay(): Promise<{
 	container.append(video);
 	document.body.append(container);
 	const root = createRoot(container);
+	const adapter = createAdapter(container, video);
 	await act(async () => {
 		root.render(
-			<overlayApp.OverlayApp adapter={createAdapter(container, video)} />,
+			<overlayApp.OverlayApp adapter={adapter} />,
 		);
 		await Promise.resolve();
 		await Promise.resolve();
 	});
-	return { container, root };
+	return { container, root, adapter };
 }
 
 async function renderOverlayInClosedShadow(): Promise<{
@@ -4438,4 +4330,20 @@ async function flushRoomActionWork(): Promise<void> {
 			await Promise.resolve();
 		}
 	});
+}
+
+function quickMicrophone(container: HTMLElement): HTMLButtonElement {
+	const control = container.querySelector<HTMLButtonElement>(".panel-media-mic");
+	if (!control) throw new Error("Missing quick microphone control");
+	return control;
+}
+async function selectQuickMicrophoneMode(
+	container: HTMLElement,
+	mode: "push-to-talk" | "open-mic",
+) {
+	for (let attempt = 0; attempt < 24 && !container.querySelector(".panel-media-mic"); attempt += 1) {
+		await flushRoomActionWork();
+	}
+	const control = quickMicrophone(container);
+	if (control.dataset.mode !== mode) await click(control);
 }
