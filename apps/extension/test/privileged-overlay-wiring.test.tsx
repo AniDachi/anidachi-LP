@@ -1936,6 +1936,47 @@ describe("privileged overlay wiring", () => {
       expect(view.container.textContent).toContain("Free time used up");
     } finally {vi.useRealTimers();await unmount(view.root);}
   });
+  it.each([
+    { role: "host", trigger: "event" },
+    { role: "viewer", trigger: "event" },
+    { role: "host", trigger: "socket" },
+    { role: "viewer", trigger: "socket" },
+  ] as const)("expires ordinary room-end feedback inside the button ($role, $trigger)", async ({role, trigger}) => {
+    installActiveHostRoomRuntime();
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+      connection = options;
+      options.onStatus("connected");
+      options.onEvent({type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:1,
+        participants:[{...hostParticipant(),role},{...guestParticipant(),role:role === "viewer" ? "host" : "viewer"}]});
+    });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      vi.useFakeTimers({toFake:["setTimeout","clearTimeout","setInterval","clearInterval","Date"]});
+      await click(button(view.container, "Create room"));
+      await act(async () => vi.advanceTimersByTimeAsync(10));
+      expect(connection).toBeDefined();
+      if (role === "host") {
+        await trustedClick(primaryRoomAction(view.container));
+        expect(primaryRoomAction(view.container).textContent).toBe("Press again to end");
+      }
+      await act(async () => {
+        if (trigger === "event") connection.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"host_ended"});
+        else connection.onTerminalClose?.(4004);
+      });
+      expect(primaryRoomAction(view.container).textContent).toBe("Room closed");
+      expect(view.container.querySelector(".auth-notice")).toBeNull();
+      expect(location.hash.includes("anidachiRoom")).toBe(false);
+      await act(async () => vi.advanceTimersByTimeAsync(1999));
+      expect(primaryRoomAction(view.container).textContent).toBe("Room closed");
+      await act(async () => vi.advanceTimersByTimeAsync(1));
+      expect(primaryRoomAction(view.container).textContent).toBe("Create room");
+      expect(primaryRoomAction(view.container).disabled).toBe(false);
+      expect(view.container.querySelector(".auth-notice")).toBeNull();
+    } finally { await unmount(view.root); vi.useRealTimers(); }
+  });
+
   it("explains the host limit to guests without claiming their own quota was exhausted", async () => {
     installActiveHostRoomRuntime();
     let connection!: Parameters<RoomClient["connect"]>[0];

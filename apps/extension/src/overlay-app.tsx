@@ -184,6 +184,7 @@ import {
 	isHostingSubscriptionRequiredError,
 	isQuotaExhaustedError,
 	isTerminalRoomJoinError,
+	ROOM_ENDED_CLOSE_CODE,
 	ROOM_FULL_CLOSE_CODE,
 	ROOM_SESSION_TAKEN_OVER_CLOSE_CODE,
 	RoomClient,
@@ -3420,7 +3421,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// free-quota expiry, so the overlay settles on a clear message instead of
 	// jittering between connect attempts.
 	const terminateRoomSession = useCallback(
-		(message: string) => {
+		(message: string, feedback?: RoomActionFeedback) => {
 			ghostCamSession.stop();
 			roomReconnectSuppressedRef.current = true;
 			if (roomReconnectTimerRef.current !== null) {
@@ -3446,10 +3447,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			clearRoomHash();
 			setAuthMessage(null);
 			setRoomTerminalMessage(message || null);
+			if (feedback) showRoomActionFeedback(feedback);
 			announcedRoomClosingRef.current = null;
 			setPanelOpen(true);
 		},
-		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop],
+		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop, showRoomActionFeedback],
 	);
 
 	const handleServerEvent = useCallback(
@@ -3506,7 +3508,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						terminateRoomSession(event.hostingCutover
 							? "This Free room closed because creating rooms now requires Plus or Pro. You can still join rooms for free."
 							: "This room closed because the host's room access could not be renewed. You can still join rooms for free.");
-					} else terminateRoomSession("Watch room ended.");
+					} else terminateRoomSession("", "room-closed");
 					return;
 				}
 				case "ROOM_SNAPSHOT": {
@@ -3971,8 +3973,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						?.setRoomHistoryAuthority(authority)
 						.catch(() => undefined);
 				},
-				onTerminalClose: (code) =>
-					terminateRoomSession(roomTerminalCloseMessage(code)),
+				onTerminalClose: (code) => {
+					if (code === ROOM_ENDED_CLOSE_CODE) terminateRoomSession("", "room-closed");
+					else terminateRoomSession(roomTerminalCloseMessage(code));
+				},
 				onTransportReady: setSignalingTransportReady,
 			});
 			return true;
