@@ -1,4 +1,8 @@
 import "../src/zod-csp";
+import {
+  createIntroductionClaim,
+  PLAYER_INTRODUCTION_MESSAGE,
+} from "../src/player-onboarding-storage";
 import { handleHostingAccessMessage, isHostingAccessMessage } from "../src/hosting-access-client";
 import { defineBackground } from "wxt/utils/define-background";
 import { handleRoomQuotaStatusMessage, isRoomQuotaStatusMessage } from "../src/room-quota-status-client";
@@ -261,7 +265,21 @@ async function waitForAdmissionCompletion(
 }
 
 export default defineBackground(() => {
+  const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type === PLAYER_INTRODUCTION_MESSAGE) {
+      // Local/staging review only. Not enabled in production packages.
+      if (
+        import.meta.env.WXT_EXTENSION_CHANNEL === "production" ||
+        sender.id !== chrome.runtime.id ||
+        !Number.isInteger(sender.tab?.id)
+      ) {
+        sendResponse({ allowed: false });
+      } else {
+        void claimIntroduction().then(allowed => sendResponse({ allowed }));
+      }
+      return true;
+    }
     if (handleRoomSessionStorageRuntimeMessage(message, sender, sendResponse)) {
       return true;
     }
