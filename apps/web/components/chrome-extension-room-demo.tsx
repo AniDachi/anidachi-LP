@@ -66,6 +66,151 @@ const EMOJIS = ["😂", "😱", "❤️", "🔥", "😭", "👀", "👏", "🤯"
 
 // Only framing and the guided reveal differ from the installed extension.
 const SCENE_STYLES = `
+  /* Legacy controls belong to this inert marketing demo, not the live drawer. */
+
+  .icon-button.panel-camera-control {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    border: 1px solid var(--ad-border);
+    background: var(--ad-surface);
+    box-shadow: none;
+  }
+
+  .icon-button.panel-camera-control.active {
+    border-color: var(--ad-border);
+    background: var(--ad-surface);
+    box-shadow: none;
+  }
+
+  .icon-button.panel-camera-control.inactive {
+    border-color: var(--ad-border);
+    background: var(--ad-surface);
+  }
+
+  .icon-button.panel-camera-control.unavailable {
+    border-color: var(--ad-border);
+    background: var(--ad-surface);
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
+  .panel-camera-control-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+    transition: transform 170ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .icon-button.panel-camera-control.active .panel-camera-control-thumb {
+    transform: translateX(22px);
+  }
+
+  .panel-camera-control-icon {
+    flex: 0 0 auto;
+  }
+
+  .icon-button.panel-camera-control.active .panel-camera-control-icon {
+    color: rgba(134, 239, 172, 0.98);
+  }
+
+  .icon-button.panel-camera-control.inactive .panel-camera-control-icon {
+    color: rgba(255, 255, 255, 0.56);
+  }
+
+  .icon-button.panel-camera-control.unavailable .panel-camera-control-icon {
+    color: rgba(248, 113, 113, 0.72);
+  }
+
+  .icon-button.panel-camera-control:not(:disabled):hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: var(--ad-surface-strong);
+  }
+
+  .icon-button.panel-camera-control:focus {
+    outline: 0;
+  }
+
+  .icon-button.panel-camera-control:focus-visible {
+    box-shadow: 0 0 0 2px rgba(255, 166, 92, 0.38);
+  }
+
+  .panel-camera-control:not(:disabled):hover {
+    border-color: rgba(255, 138, 61, 0.24);
+    background: rgba(255, 255, 255, 0.075);
+    color: rgba(255, 236, 222, 0.92);
+  }
+
+  .panel-camera-control.active:not(:disabled):hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: var(--ad-surface-strong);
+  }
+
+  .account-footer {
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .account-footer-action {
+    width: auto;
+    min-height: 28px;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #58151c;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    transition:
+      background 160ms ease,
+      color 160ms ease;
+  }
+
+  .account-footer-action:not(:disabled):hover {
+    background: transparent;
+    color: #842029;
+  }
+
+  .account-footer-action.confirming {
+    background: transparent;
+    color: #b02a37;
+  }
+
+  .account-footer-action:focus-visible {
+    outline: 2px solid rgba(220, 53, 69, 0.62);
+    outline-offset: 2px;
+  }
+
+  .account-footer-action-icon {
+    flex: 0 0 auto;
+  }
+
+  .account-footer-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.46;
+  }
   :host { display: block; position: absolute; inset: 0; }
   .anidachi-overlay { --demo-move-time:900ms; --demo-move-ease:cubic-bezier(.45,0,.2,1); z-index: 2; width: calc(100% / var(--demo-scale, 1)); height: calc(100% / var(--demo-scale, 1));
     transform: scale(var(--demo-scale, 1)); transform-origin: top left; }

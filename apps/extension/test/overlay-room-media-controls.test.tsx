@@ -2,16 +2,14 @@ import type { Participant } from "@anidachi/protocol";
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-	PanelCameraControl,
-	RoomPeopleSection,
-} from "../src/overlay-room-media-controls";
+import { RoomPeopleSection } from "../src/overlay-room-media-controls";
+import { PanelMediaControls } from "../src/panel-media-controls";
 
 (
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-describe("PanelCameraControl", () => {
+describe("PanelMediaControls", () => {
 	afterEach(() => {
 		document.body.replaceChildren();
 		vi.restoreAllMocks();
@@ -20,22 +18,24 @@ describe("PanelCameraControl", () => {
 	it("toggles the current user's camera from the panel header", async () => {
 		const onToggle = vi.fn();
 		const view = await render(
-			<PanelCameraControl
+			<PanelMediaControls
+				voiceMode="push-to-talk"
+				onVoiceModeChange={vi.fn()}
 				cameraEnabled
-				disabled={false}
-				disabledReason=""
-				onToggle={onToggle}
+				cameraDisabled={false}
+				cameraDisabledReason=""
+				onCameraToggle={onToggle}
 			/>,
 		);
 
 		const button = getButton(view.container, "Turn camera off");
 		expect(button.getAttribute("role")).toBe("switch");
 		expect(button.getAttribute("aria-checked")).toBe("true");
-		expect(button.classList.contains("active")).toBe(true);
-		expect(button.classList.contains("inactive")).toBe(false);
-		expect(button.classList.contains("unavailable")).toBe(false);
-		expect(button.querySelector("svg")?.getAttribute("width")).toBe("12");
-		expect(button.querySelector(".panel-camera-control-thumb")).not.toBeNull();
+		expect(button.dataset.enabled).toBe("true");
+
+		expect(button.disabled).toBe(false);
+		expect(button.querySelector("svg")?.getAttribute("width")).toBe("16");
+		expect(button.querySelector(".panel-media-cap")).not.toBeNull();
 		expect(button.textContent).toBe("");
 		await click(button);
 		expect(onToggle).toHaveBeenCalledTimes(1);
@@ -45,19 +45,21 @@ describe("PanelCameraControl", () => {
 
 	it("distinguishes an available camera that is turned off", async () => {
 		const view = await render(
-			<PanelCameraControl
+			<PanelMediaControls
+				voiceMode="push-to-talk"
+				onVoiceModeChange={vi.fn()}
 				cameraEnabled={false}
-				disabled={false}
-				disabledReason=""
-				onToggle={vi.fn()}
+				cameraDisabled={false}
+				cameraDisabledReason=""
+				onCameraToggle={vi.fn()}
 			/>,
 		);
 
 		const button = getButton(view.container, "Turn camera on");
 		expect(button.getAttribute("aria-checked")).toBe("false");
-		expect(button.classList.contains("inactive")).toBe(true);
-		expect(button.classList.contains("active")).toBe(false);
-		expect(button.classList.contains("unavailable")).toBe(false);
+		expect(button.dataset.enabled).toBe("false");
+		expect(button.dataset.enabled).toBe("false");
+		expect(button.disabled).toBe(false);
 		expect(button.textContent).toBe("");
 
 		await unmount(view.root);
@@ -66,11 +68,13 @@ describe("PanelCameraControl", () => {
 	it("keeps camera visible but unavailable without a media seat", async () => {
 		const onToggle = vi.fn();
 		const view = await render(
-			<PanelCameraControl
+			<PanelMediaControls
+				voiceMode="push-to-talk"
+				onVoiceModeChange={vi.fn()}
 				cameraEnabled={false}
-				disabled
-				disabledReason="Media seat required"
-				onToggle={onToggle}
+				cameraDisabled
+				cameraDisabledReason="Media seat required"
+				onCameraToggle={onToggle}
 			/>,
 		);
 
@@ -78,7 +82,7 @@ describe("PanelCameraControl", () => {
 		expect(button.disabled).toBe(true);
 		expect(button.getAttribute("aria-checked")).toBe("false");
 		expect(button.title).toBe("Media seat required");
-		expect(button.classList.contains("unavailable")).toBe(true);
+		expect(button.disabled).toBe(true);
 		expect(button.textContent).toBe("");
 
 		await unmount(view.root);
@@ -86,18 +90,68 @@ describe("PanelCameraControl", () => {
 
 	it("never presents a disabled camera as active", async () => {
 		const view = await render(
-			<PanelCameraControl
+			<PanelMediaControls
+				voiceMode="push-to-talk"
+				onVoiceModeChange={vi.fn()}
 				cameraEnabled
-				disabled
-				disabledReason="Media seat required"
-				onToggle={vi.fn()}
+				cameraDisabled
+				cameraDisabledReason="Media seat required"
+				onCameraToggle={vi.fn()}
 			/>,
 		);
 
 		const button = getButton(view.container, "Camera unavailable");
-		expect(button.classList.contains("active")).toBe(false);
-		expect(button.querySelector(".lucide-video-off")).not.toBeNull();
+		expect(button.dataset.enabled).toBe("false");
+		expect(button.getAttribute("aria-checked")).toBe("false");
+		// The filled off icon retains its diagonal stroke.
+		expect(button.querySelector('svg path[stroke="currentColor"]')).not.toBeNull();
 
+		await unmount(view.root);
+	});
+	it("keeps microphone available when only the camera limit is full", async () => {
+		const onVoiceModeChange = vi.fn();
+		const onCameraToggle = vi.fn();
+		const view = await render(
+			<PanelMediaControls
+				cameraEnabled={false}
+				cameraDisabled
+				cameraDisabledReason="All 4 cameras are in use"
+				voiceMode="push-to-talk"
+				onVoiceModeChange={onVoiceModeChange}
+				onCameraToggle={onCameraToggle}
+			/>,
+		);
+		const microphone = getButton(
+			view.container,
+			"Microphone: hold V to talk. Switch to always on",
+		);
+		const camera = getButton(view.container, "Camera unavailable");
+		expect([...view.container.querySelectorAll("button")]).toEqual([
+			microphone,
+			camera,
+		]);
+		await click(microphone);
+		expect(onVoiceModeChange).toHaveBeenCalledWith("open-mic");
+		expect(onCameraToggle).not.toHaveBeenCalled();
+		await unmount(view.root);
+	});
+	it("keeps unavailable microphone inert and explains why", async () => {
+		const onVoiceModeChange = vi.fn();
+		const view = await render(
+			<PanelMediaControls
+				cameraEnabled={false}
+				voiceMode="push-to-talk"
+				microphoneDisabled
+				microphoneDisabledReason="Media seat required"
+				onVoiceModeChange={onVoiceModeChange}
+				onCameraToggle={vi.fn()}
+			/>,
+		);
+		const microphone = getButton(view.container, "Microphone unavailable");
+		expect(microphone.disabled).toBe(true);
+		expect(microphone.title).toBe("Media seat required");
+		await click(microphone);
+		expect(onVoiceModeChange).not.toHaveBeenCalled();
 		await unmount(view.root);
 	});
 });
@@ -148,10 +202,10 @@ describe("RoomPeopleSection", () => {
 		).toBeInstanceOf(SVGElement);
 		expect(
 			view.container.querySelector(".room-people-heading-label")?.textContent,
-		).toBe("People");
+		).toBe("People1/6");
 		expect(
 			view.container.querySelector(".room-people-count")?.textContent,
-		).toBe("1/6 in room");
+		).toBe("1/6");
 
 		await unmount(view.root);
 	});
@@ -200,11 +254,9 @@ describe("RoomPeopleSection", () => {
 		expect(row?.classList.contains("host")).toBe(true);
 		expect(row?.classList.contains("speaking")).toBe(true);
 		expect(row?.querySelector(".room-people-avatar")).not.toBeNull();
-		expect(row?.querySelector(".room-people-seat-status")?.textContent).toBe(
-			"Media seat",
-		);
+		expect(row?.querySelector(".room-people-status")?.textContent).not.toContain("Media seat");
 		expect(
-			row?.querySelector('[aria-label="Camera on"]'),
+			row?.querySelector('.room-people-status-detail .lucide-video'),
 		).not.toBeNull();
 
 		await unmount(view.root);
@@ -224,10 +276,10 @@ describe("RoomPeopleSection", () => {
 		});
 
 		expect(
-			view.container.querySelector(".room-people-seat-status")?.textContent,
-		).toBe("Media seat");
+			view.container.querySelector(".room-people-status")?.textContent,
+		).toBe("Camera off");
 		expect(
-			view.container.querySelector('[aria-label="Camera off"]'),
+			view.container.querySelector('.room-people-status-detail .lucide-video-off'),
 		).not.toBeNull();
 
 		await unmount(view.root);
@@ -403,7 +455,8 @@ describe("independent room media controls", () => {
    capabilities: { mediaProtocolVersion: 2, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMicrophones: 8, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-08T20:00:00Z" },
    participants: [self,host].map((p,i) => ({ participantSessionId: p.participantSessionId, cameraGranted: i===1, microphoneGranted: false, cameraIntentSequence: 1, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 })) };
   const view = await renderPeople({ participants: [self,host], mediaSnapshot, onMicrophoneReadyChange });
-  expect(view.container.textContent).toContain("1/4 cameras · 0/8 microphones");
+  expect(view.container.querySelector('[aria-label="1/4 cameras"]')).not.toBeNull();
+  expect(view.container.querySelector('[aria-label="0/8 microphones"]')).not.toBeNull();
   expect(view.container.textContent).toContain("Reconnecting — places reserved");
   expect(onMicrophoneReadyChange).not.toHaveBeenCalled();
   await click(getButton(view.container,"Enable microphone")); expect(onMicrophoneReadyChange).toHaveBeenCalledWith(true);
@@ -430,7 +483,8 @@ describe("v3 host media-seat controls", () => {
   const onSetMediaSeat = vi.fn();
   const view = await renderPeople({participants, mediaSnapshot: snapshot, currentParticipantId: "host", onSetMediaSeat});
   try {
-   expect(view.container.textContent).toContain("1/4 media seats · 0/4 cameras");
+   expect(view.container.querySelector('[aria-label="1/4 media seats"]')).not.toBeNull();
+   expect(view.container.querySelector('[aria-label="0/4 cameras"]')).not.toBeNull();
    expect(view.container.textContent).not.toMatch(/Enable microphone|Disable microphone|Revoke microphone|Revoke camera/);
    const revoke = getButton(view.container, "Revoke media seat: A host with a long display name");
    expect(revoke.getAttribute("aria-pressed")).toBe("true");
@@ -461,7 +515,7 @@ describe("v3 host media-seat controls", () => {
   const allSeated = {...snapshot, participants: allParticipants.map(p => ({...snapshot.participants[0], participantSessionId: p.participantSessionId, mediaSeatGranted: true}))};
   const view = await renderPeople({participants: allParticipants, mediaSnapshot: allSeated, currentParticipantId: "host"});
   try {
-   expect(view.container.textContent).toContain("4/4 media seats");
+   expect(view.container.querySelector('[aria-label="4/4 media seats"]')).not.toBeNull();
    expect(view.container.textContent).not.toContain("All media seats are in use");
    expect([...view.container.querySelectorAll("button")].every(button => !button.disabled)).toBe(true);
   } finally {await unmount(view.root);}

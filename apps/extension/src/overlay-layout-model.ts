@@ -46,13 +46,13 @@ export interface OverlayLayoutPreferencesV2 {
 }
 
 const DEFAULT_LAYOUT = freezeDefinition({
-	video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
+	video: { anchor: { x: 0, y: 7 }, leaderSide: "left", sizeStep: 2 },
 	chat: {
 		messageTransparency: 0,
-		position: { x: 0, y: 4 },
-		width: 5,
+		position: { x: 0, y: 0 },
+		width: 3,
 		textScale: "normal",
-		maxMessages: 5,
+		maxMessages: "fill",
 	},
 });
 

@@ -280,7 +280,9 @@ describe("OverlayLayoutEditor", () => {
 	});
 
 	it("stores viewport fill as intent instead of a temporary message count", async () => {
-		const editor = await renderEditor();
+		const appliedLayout = getDefaultOverlayLayoutDefinition();
+		appliedLayout.chat.maxMessages = 5;
+		const editor = await renderEditor({ appliedLayout });
 		await click(getButton(editor.container, "Chat"));
 		const messages = getRange(editor.container, "Visible messages");
 
@@ -380,7 +382,7 @@ describe("OverlayLayoutEditor", () => {
 
 		await changeRange(cameraSize, "3");
 
-		expect(appliedLayout.video.sizeStep).toBe(1);
+		expect(appliedLayout.video.sizeStep).toBe(2);
 		expect(editor.onApply).not.toHaveBeenCalled();
 		expect(getButton(editor.container, "Apply").disabled).toBe(false);
 
@@ -394,7 +396,7 @@ describe("OverlayLayoutEditor", () => {
 		await changeRange(cameraSize, "3");
 		await click(getButton(editor.container, "Revert"));
 
-		expect(cameraSize.value).toBe("1");
+		expect(cameraSize.value).toBe("2");
 		expect(getButton(editor.container, "Apply").disabled).toBe(true);
 		expect(getButton(editor.container, "Revert").disabled).toBe(true);
 		expect(editor.onApply).not.toHaveBeenCalled();
@@ -418,10 +420,10 @@ describe("OverlayLayoutEditor", () => {
 
 		expect(editor.onApply).toHaveBeenCalledTimes(1);
 		expect(editor.onApply).toHaveBeenCalledWith({
-			video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 4 },
+			video: { anchor: { x: 0, y: 7 }, leaderSide: "left", sizeStep: 4 },
 			chat: {
 				messageTransparency: 65,
-				position: { x: 0, y: 4 },
+				position: { x: 0, y: 0 },
 				width: 6,
 				textScale: "xlarge",
 				maxMessages: 8,
@@ -456,7 +458,7 @@ describe("OverlayLayoutEditor", () => {
 		);
 
 		await click(getButton(editor.container, "Revert"));
-		expect(cameraSize.value).toBe("1");
+		expect(cameraSize.value).toBe("2");
 		expect(editor.onApply).toHaveBeenCalledTimes(1);
 		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
 			getDefaultOverlayLayoutDefinition(),
@@ -560,7 +562,7 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(first.root);
 
 		const second = await renderEditor({ appliedLayout });
-		expect(getRange(second.container, "Camera size").value).toBe("1");
+		expect(getRange(second.container, "Camera size").value).toBe("2");
 		expect(second.onApply).not.toHaveBeenCalled();
 
 		await unmount(second.root);

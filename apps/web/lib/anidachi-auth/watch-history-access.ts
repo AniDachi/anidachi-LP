@@ -9,6 +9,7 @@ import {
 	type AccountEntitlements,
 } from "./account-entitlements";
 import { getPlanEntitlements } from "./plan-entitlements";
+import { readHostingOffer } from "./hosting-offer";
 
 export { HistoryAccessError } from "./account-entitlements";
 export const HISTORY_PRIVATE_HEADERS = {
@@ -51,6 +52,7 @@ export function createAccountAccessHandlers(
 		getSession?(request: NextRequest): Promise<ApiSession | null>;
 		getCookieSession?: typeof getCookieSession;
 		resolve(userId: string, now: Date): Promise<AccountEntitlements>;
+		readHostingOffer?: typeof readHostingOffer;
 	} = { resolve: resolveAccountEntitlements },
 ) {
 	const handle = async (request: NextRequest, metadata: boolean) => {
@@ -63,6 +65,11 @@ export function createAccountAccessHandlers(
 			if (expectedOwner && expectedOwner !== session.userId)
 				throw new HistoryAccessError("HISTORY_ACCESS_CHANGED", 409);
 			const result = await deps.resolve(session.userId, new Date());
+			// Only the new drawer asks for terms. Ordinary auth/history and older
+			// extensions keep their existing query cost and strict hosting payload.
+			const hostingOffer = metadata && request.nextUrl.searchParams.get("hostingOffer") === "1"
+				? await (deps.readHostingOffer ?? readHostingOffer)(result.hosting, result.history.serverTime)
+				: undefined;
 			const body = metadata
 				? {
 						entitlementsVersion: 1,
@@ -72,6 +79,7 @@ export function createAccountAccessHandlers(
 						entitlements: getPlanEntitlements(result.policy.planCode),
 						policy: result.policy,
 						...(result.hosting ? { hosting: result.hosting } : {}),
+						...(hostingOffer ? { hostingOffer } : {}),
 					}
 				: result.history;
 			return NextResponse.json(body, { headers: HISTORY_PRIVATE_HEADERS });
