@@ -1,3 +1,11 @@
+import { CardlessTrialError } from "./cardless-trial";
+import type { TrialAbuseMarkers } from "./trial-abuse";
+import {
+	createTrialAbuseTokens,
+	trialBrowserCookieName,
+	trialDenialCookieName,
+	TRIAL_DENIAL_MAX_AGE,
+} from "./trial-abuse";
 import { type NextRequest, NextResponse } from "next/server";
 import { BILLING_OWNER_HEADER } from "../billing-view";
 import {
@@ -19,7 +27,11 @@ const PRIVATE_HEADERS = {
 type StartDeps = {
 	getUser?: (request: NextRequest) => Promise<{ id: string } | null>;
 	allowRequest?: (userId: string) => Promise<boolean>;
-	start?: (userId: string, input: TrialStartInput) => Promise<TrialStartResult>;
+	start?: (
+		userId: string,
+		input: TrialStartInput,
+		resolveMarkers?: () => Promise<TrialAbuseMarkers>,
+	) => Promise<TrialStartResult>;
 	recover?: (userId: string, operationId?: string) => Promise<TrialStartResult>;
 };
 export function createCardlessTrialStartHandler(deps: StartDeps = {}) {
@@ -46,9 +58,13 @@ function createCardlessTrialHandler(
 	let service: ReturnType<typeof cardlessTrialService> | undefined;
 	const start =
 		deps.start ??
-		((userId: string, input: TrialStartInput) => {
+		((
+			userId: string,
+			input: TrialStartInput,
+			resolveMarkers?: () => Promise<TrialAbuseMarkers>,
+		) => {
 			if (!service) service = cardlessTrialService();
-			return service.startCardlessTrial(userId, input);
+			return service.startCardlessTrial(userId, input, resolveMarkers);
 		});
 	const recover =
 		deps.recover ??
@@ -108,14 +124,33 @@ function createCardlessTrialHandler(
 				return json({ error: "Please wait a moment and try again." }, 429, {
 					"Retry-After": "60",
 				});
+			let verifiedMarkers: TrialAbuseMarkers | undefined;
 			const result =
 				action === "start"
-					? await start(user.id, body as TrialStartInput)
+					? await start(user.id, body as TrialStartInput, async () => {
+							const tokens = createTrialAbuseTokens(
+								process.env.ANIDACHI_JWT_SECRET ?? "",
+								request.nextUrl.origin,
+							);
+							try {
+								verifiedMarkers = await tokens.markers(
+									request.cookies.get(
+										trialBrowserCookieName(request.nextUrl.origin),
+									)?.value,
+									user.id,
+									(body as TrialStartInput).requestId,
+									(body as Record<string, unknown>).extensionProof,
+								);
+								return verifiedMarkers;
+							} catch {
+								throw new CardlessTrialError("context_required");
+							}
+						})
 					: await recover(
 							user.id,
 							(body as { operationId?: string }).operationId,
 						);
-			return json(
+			const response = json(
 				{ ...result, ownerUserId: user.id },
 				result.state === "active"
 					? 200
@@ -125,6 +160,25 @@ function createCardlessTrialHandler(
 							? 503
 							: 409,
 			);
+			if (result.state === "trial_used" && verifiedMarkers) {
+				const origin = request.nextUrl.origin;
+				const tokens = createTrialAbuseTokens(
+					process.env.ANIDACHI_JWT_SECRET ?? "",
+					origin,
+				);
+				response.cookies.set(
+					trialDenialCookieName(origin),
+					tokens.issueDenial(verifiedMarkers.browser, user.id),
+					{
+						httpOnly: true,
+						secure: request.nextUrl.protocol === "https:",
+						sameSite: "lax",
+						path: "/",
+						maxAge: TRIAL_DENIAL_MAX_AGE,
+					},
+				);
+			}
+			return response;
 		} catch {
 			return json(
 				{

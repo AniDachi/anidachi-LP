@@ -1,3 +1,4 @@
+import { browserTrialDenied } from "@/lib/anidachi-auth/trial-abuse-offer";
 import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -151,9 +152,20 @@ export async function POST(request: NextRequest) {
 		if (seoReferrer) attributionMeta.seoReferrer = seoReferrer;
 		if (seoUtm) attributionMeta.seoUtm = seoUtm;
 
-		const result = await subscriptionCheckoutService(
-			stripe,
-		).prepareSubscriptionCheckout({
+		const withoutTrial = browserTrialDenied(request, authSession.userId);
+		if (
+			withoutTrial &&
+			(body.expectedTrialOffered !== false ||
+				body.expectedPrice === undefined ||
+				body.expectedOwnerUserId !== authSession.userId)
+		)
+			return NextResponse.json(
+				{ error: "Review the subscription price before continuing." },
+				{ status: 409 },
+			);
+		const result = await subscriptionCheckoutService(stripe, {
+			withoutTrial,
+		}).prepareSubscriptionCheckout({
 			userId: authSession.userId,
 			email: authSession.email,
 			planCode,

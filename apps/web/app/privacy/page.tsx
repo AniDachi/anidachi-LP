@@ -74,6 +74,26 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">6. Cookies and your choices</h2>
+              <p>
+						To limit repeated free trials, AniDachi uses a first-party browser
+						cookie and, when the extension is available, a randomly generated
+						installation key. We store pseudonymous hashes of these markers to
+						recognize prior trial use across account changes. The private
+						installation key stays in the extension; the website receives a
+						short-lived signed proof when you request a trial. We do not use
+						hardware fingerprinting for this check. Without an extension
+						connection, we use the account and cookie.
+					</p>
+              <p>
+						The trial browser cookie lasts up to 365 days. Consumed marker
+						records stop restricting new accounts after 365 days and are removed
+						by a daily, bounded cleanup. Unresolved activations stay reserved
+						until their outcome is verified. These security records can survive
+						account deletion; removing the extension clears its local key.
+						People sharing the same browser or installation may not each receive
+						a free trial. A short-lived cookie also preserves the choice of
+						ordinary paid plans after a trial is unavailable here.
+					</p>
               <p>Essential cookies maintain your login and session. Website analytics may use cookies or browser identifiers. Browser privacy controls can restrict these, although blocking essential storage may prevent sign-in. You can separately control history recording, YouTube history, notifications, camera and microphone access. Turning off history recording does not prevent joining or synchronizing a room.</p>
               <p>Depending on applicable law, you may be entitled to access, correct, export or delete personal data. For account deletion or assistance with these requests, email <a href="mailto:anidachi.app@gmail.com" className="text-brand-orange hover:underline">anidachi.app@gmail.com</a>.</p>
             </section>

@@ -28,7 +28,7 @@ Old activations recover without new markers. New server code always uses the
 new reservation; a database flag fences older servers from new unguarded trials.
 
 Marker records survive account deletion. Consumed marker history expires after
-365 days (checked during reservation); pending unknown outcomes never expire
+365 days (checked during reservation; daily bounded PostgreSQL cleanup removes expired hashes); pending unknown outcomes never expire
 merely because time passed. This supplements the existing account trial ledger.
 A different person sharing the same browser/installation can also be denied;
 this is the chosen one-trial-per-marker tradeoff. Clearing both markers plus a
@@ -42,6 +42,10 @@ The final server reservation is authoritative; the display does not grant access
 Used marker: “A free trial has already been used here” and “View plans”.
 Pending other-account marker: retry message, never claim it was already used.
 Infrastructure/invalid proof: retry, never silently discard a supplied bad proof.
+After a verified marker denial, a signed ten-minute HttpOnly receipt bound to
+account and browser changes website offers to ordinary purchase. The dedicated
+server-only purchase RPC never offers a trial. Explicit price/owner/nontrial
+confirmation is required; no denial automatically opens a charge flow.
 Existing paid access, current trial, recovery, login and normal purchase survive.
 
 ## Rollout

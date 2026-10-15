@@ -43,6 +43,19 @@ async function mount(
 	strict = false,
 	confirmTrial?: true,
 ) {
+	const providedFetch = globalThis.fetch;
+	globalThis.fetch = async (url, init) =>
+		String(url) === "/api/billing/trial/context"
+			? Response.json({
+					state: "ready",
+					ownerUserId: new Headers(init?.headers).get(
+						"X-Anidachi-Billing-Owner",
+					),
+					challenge: "a".repeat(180) + "." + "b".repeat(43),
+					extensionId: null,
+				})
+			: providedFetch(url, init);
+
 	const el = document.createElement("div");
 	document.body.append(el);
 	root = createRoot(el);
@@ -121,12 +134,20 @@ test("cardless selection survives sign-in but only an explicit confirmation star
 	};
 	const el = await mount("pro", "monthly", true);
 	assert.equal(posts.length, 0);
-	assert.match(el.querySelector("h1")!.textContent!, /Try Pro free.*for 3 days/);
+	assert.match(
+		el.querySelector("h1")!.textContent!,
+		/Try Pro free.*for 3 days/,
+	);
 	assert.match(el.textContent!, /no card/i);
 	assert.match(el.textContent!, /no automatic charge/i);
-	assert.match(el.textContent!, /return to Free unless you choose to subscribe/);
+	assert.match(
+		el.textContent!,
+		/return to Free unless you choose to subscribe/,
+	);
 	assert.equal(
-		el.querySelector<HTMLAnchorElement>('a[href^="/pricing"]')?.getAttribute("href"),
+		el
+			.querySelector<HTMLAnchorElement>('a[href^="/pricing"]')
+			?.getAttribute("href"),
 		"/pricing?plan=pro&billing=monthly",
 	);
 	await act(async () => button(el, /Start my 3-day trial/i).click());
@@ -604,11 +625,14 @@ test("a new document discovers the persisted activation after cardless starts ar
 	);
 });
 
-
 test("extension Plus trial intent survives login, refresh and OAuth retry", () => {
 	const path = "/checkout?plan=plus&billing=monthly&confirm=trial";
 	const selection = checkoutSelectionFromPath(path);
-	assert.deepEqual(selection, { plan: "plus", billing: "monthly", confirmTrial: true });
+	assert.deepEqual(selection, {
+		plan: "plus",
+		billing: "monthly",
+		confirmTrial: true,
+	});
 	assert.ok(selection);
 	assert.equal(checkoutReturnPath(selection), path);
 	for (const authPath of [
@@ -616,11 +640,24 @@ test("extension Plus trial intent survives login, refresh and OAuth retry", () =
 		checkoutSessionRecoveryPath(selection),
 		checkoutLoginErrorPath("access_denied", path),
 	]) {
-		assert.equal(new URL(authPath, "https://example.test").searchParams.get("next"), path);
+		assert.equal(
+			new URL(authPath, "https://example.test").searchParams.get("next"),
+			path,
+		);
 	}
-	assert.equal(getLoginContext(path).subtitle, "Plus is selected. Review your trial offer after sign-in.");
-	for (const query of ["confirm=trial&confirm=trial", "confirm=skip", "confirm="]) {
-		assert.equal(checkoutSelectionFromPath(`/checkout?plan=plus&billing=monthly&${query}`), null);
+	assert.equal(
+		getLoginContext(path).subtitle,
+		"Plus is selected. Review your trial offer after sign-in.",
+	);
+	for (const query of [
+		"confirm=trial&confirm=trial",
+		"confirm=skip",
+		"confirm=",
+	]) {
+		assert.equal(
+			checkoutSelectionFromPath(`/checkout?plan=plus&billing=monthly&${query}`),
+			null,
+		);
 	}
 });
 
@@ -628,26 +665,81 @@ for (const mode of ["cardless", "card_required"] as const) {
 	test(`extension Plus offer waits for confirmation with ${mode} terms`, async () => {
 		const posts: { url: string; body: Record<string, unknown> }[] = [];
 		globalThis.fetch = async (url, init) => {
-			if (String(url) === "/api/billing/offer") return Response.json({ ...cardlessOffer, trialMode: mode });
+			if (String(url) === "/api/billing/offer")
+				return Response.json({ ...cardlessOffer, trialMode: mode });
 			posts.push({ url: String(url), body: JSON.parse(String(init?.body)) });
-			return Response.json(mode === "cardless"
-				? { state: "active", ownerUserId: "owner-a", planCode: "plus", trialEndsAt: "2030-01-04T00:00:00Z" }
-				: { kind: "checkout", url: "https://checkout.stripe.com/selected" });
+			return Response.json(
+				mode === "cardless"
+					? {
+							state: "active",
+							ownerUserId: "owner-a",
+							planCode: "plus",
+							trialEndsAt: "2030-01-04T00:00:00Z",
+						}
+					: { kind: "checkout", url: "https://checkout.stripe.com/selected" },
+			);
 		};
 		const el = await mount("plus", "monthly", true, true);
-		assert.equal(posts.length, 0, "opening the extension link must not start a trial or Stripe checkout");
+		assert.equal(
+			posts.length,
+			0,
+			"opening the extension link must not start a trial or Stripe checkout",
+		);
 		assert.match(el.querySelector("h1")!.textContent!, /Plus/);
-		assert.match(el.textContent!, mode === "cardless" ? /No card required/ : /A card is required/);
-		await act(async () => button(el, mode === "cardless" ? /Start my 3-day trial/ : /Continue to card checkout/).click());
+		assert.match(
+			el.textContent!,
+			mode === "cardless" ? /No card required/ : /A card is required/,
+		);
+		await act(async () =>
+			button(
+				el,
+				mode === "cardless"
+					? /Start my 3-day trial/
+					: /Continue to card checkout/,
+			).click(),
+		);
 		assert.equal(posts.length, 1);
-		assert.equal(posts[0].url, mode === "cardless" ? "/api/billing/trial/start" : "/api/create-checkout-session");
+		assert.equal(
+			posts[0].url,
+			mode === "cardless"
+				? "/api/billing/trial/start"
+				: "/api/create-checkout-session",
+		);
 		assert.equal(posts[0].body.planCode, "plus");
 		assert.equal(posts[0].body.billingPeriod, "monthly");
 	});
 }
 
 test("expired session retains the extension trial confirmation intent", async () => {
-	globalThis.fetch = async () => Response.json({ action: "sign_in", validForMs: 60000 });
+	globalThis.fetch = async () =>
+		Response.json({ action: "sign_in", validForMs: 60000 });
 	await mount("plus", "monthly", false, true);
-	assert.equal(new URL(window.location.href).searchParams.get("next"), "/checkout?plan=plus&billing=monthly&confirm=trial");
+	assert.equal(
+		new URL(window.location.href).searchParams.get("next"),
+		"/checkout?plan=plus&billing=monthly&confirm=trial",
+	);
+});
+
+test("used browser offers plans without a retry loop or starting paid Checkout", async () => {
+	const calls: string[] = [];
+	globalThis.fetch = async (url) => {
+		calls.push(String(url));
+		return String(url) === "/api/billing/offer"
+			? Response.json(cardlessOffer)
+			: Response.json(
+					{ state: "trial_used", ownerUserId: "owner-a" },
+					{ status: 409 },
+				);
+	};
+	const el = await mount("plus", "monthly");
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.match(el.textContent!, /A free trial has already been used here/);
+	assert.equal(el.querySelector("a")?.textContent?.trim(), "View plans");
+	assert.equal(
+		[...el.querySelectorAll("button")].some((b) =>
+			/Try again/.test(b.textContent ?? ""),
+		),
+		false,
+	);
+	assert.equal(calls.includes("/api/create-checkout-session"), false);
 });

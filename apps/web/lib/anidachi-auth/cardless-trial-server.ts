@@ -35,6 +35,12 @@ export function cardlessTrialService(stripe: Stripe = createStripeClient()) {
 				if (!pending.error && pending.data?.id)
 					throw new CardlessTrialError("unavailable", pending.data.id);
 			}
+			if (error.message.includes("TRIAL_MARKER_USED"))
+				throw new CardlessTrialError("trial_used");
+			if (error.message.includes("TRIAL_MARKER_BUSY"))
+				throw new CardlessTrialError("trial_busy");
+			if (error.message.includes("TRIAL_CONTEXT_REQUIRED"))
+				throw new CardlessTrialError("context_required");
 			if (error.message.includes("TRIAL_INELIGIBLE"))
 				throw new CardlessTrialError("ineligible");
 			if (
@@ -119,8 +125,8 @@ export function cardlessTrialService(stripe: Stripe = createStripeClient()) {
 			};
 		},
 		reconcileLegacy: legacy.retireForCardless,
-		reserve: (userId, input, offer) =>
-			rpc("reserve_cardless_trial_v1", {
+		reserve: (userId, input, offer, markers) =>
+			rpc("reserve_cardless_trial_v2", {
 				p_user_id: userId,
 				p_request_id: input.requestId,
 				p_plan_code: input.planCode,
@@ -128,6 +134,8 @@ export function cardlessTrialService(stripe: Stripe = createStripeClient()) {
 				p_price_id: offer.priceId,
 				p_customer_id: null,
 				p_policy_revision: offer.policyRevision,
+				p_browser_hash: markers?.browser ?? null,
+				p_installation_hash: markers?.installation ?? null,
 			}),
 		bindCustomer: (userId, activationId, customerId) =>
 			rpc("record_cardless_trial_customer_v1", {

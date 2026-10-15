@@ -182,3 +182,41 @@ test("recovery forwards only the optional validated activation ID", async () => 
 	const r = await handler(request({}, { operationId: body.requestId }));
 	assert.equal(r.status, 409);
 });
+
+test("verified marker denial gives only this browser/account a signed ordinary-purchase receipt", async () => {
+	const {
+		createTrialAbuseTokens,
+		trialBrowserCookieName,
+		trialDenialCookieName,
+	} = await import("./trial-abuse");
+	const previous = process.env.ANIDACHI_JWT_SECRET;
+	process.env.ANIDACHI_JWT_SECRET = "test-marker-denial-only";
+	try {
+		const origin = "https://staging.anidachi.app";
+		const tokens = createTrialAbuseTokens(
+				process.env.ANIDACHI_JWT_SECRET,
+				origin,
+			),
+			cookie = tokens.issueCookie();
+		const response = await createCardlessTrialStartHandler({
+			getUser: async () => ({ id: OWNER }),
+			allowRequest: async () => true,
+			start: async (_owner, _input, markers) => {
+				assert.ok(await markers!());
+				return { state: "trial_used" };
+			},
+		})(request({ cookie: trialBrowserCookieName(origin) + "=" + cookie }));
+		assert.equal(response.status, 409);
+		const denial = response.cookies.get(trialDenialCookieName(origin))!;
+		assert.ok(denial.httpOnly);
+		assert.ok(denial.secure);
+		assert.equal(tokens.isDenied(cookie, denial.value, OWNER), true);
+		assert.equal(
+			tokens.isDenied(tokens.issueCookie(), denial.value, OWNER),
+			false,
+		);
+	} finally {
+		if (previous === undefined) delete process.env.ANIDACHI_JWT_SECRET;
+		else process.env.ANIDACHI_JWT_SECRET = previous;
+	}
+});

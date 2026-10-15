@@ -23,16 +23,19 @@ revoke all on anidachi_private.trial_marker_claims from public,anon,authenticate
 
 create function anidachi_private.guard_trial_markers_v1() returns trigger
 language plpgsql security definer set search_path='' set lock_timeout='5s' as $$
-declare m record; prior anidachi_private.trial_marker_claims%rowtype;
+declare m record; prior anidachi_private.trial_marker_claims%rowtype; browser text:=new.browser_hash; installation text:=new.installation_hash;
 begin
- if tg_op='UPDATE' and (new.browser_hash,new.installation_hash) is distinct from (old.browser_hash,old.installation_hash)
- then raise exception 'TRIAL_MARKERS_IMMUTABLE'; end if;
- if new.browser_hash is null then
+ if tg_op='UPDATE' and (new.browser_hash,new.installation_hash) is distinct from (old.browser_hash,old.installation_hash) then
+  if old.state='pending' and new.state in ('created','committed','failed') and new.browser_hash is null and new.installation_hash is null then
+   browser:=old.browser_hash; installation:=old.installation_hash;
+  else raise exception 'TRIAL_MARKERS_IMMUTABLE'; end if;
+ end if;
+ if browser is null then
   if tg_op='INSERT' and (select trial_abuse_enforced from public.hosting_commercial_policy where singleton)
   then raise exception 'TRIAL_CONTEXT_REQUIRED'; end if;
   return new;
  end if;
- for m in select * from (values ('browser',new.browser_hash),('installation',new.installation_hash)) as markers(kind,digest)
+ for m in select * from (values ('browser',browser),('installation',installation)) as markers(kind,digest)
   where digest is not null order by kind,digest loop
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('trial-marker:'||m.kind||':'||m.digest,4311));
   if tg_op='INSERT' then
@@ -56,6 +59,19 @@ begin
  return new;
 end $$;
 revoke all on function anidachi_private.guard_trial_markers_v1() from public,anon,authenticated,service_role;
+-- Pending columns only carry the reservation inputs. After settlement, hashes
+-- live solely in the retention-managed ledger (or are removed on proven failure).
+create function anidachi_private.retire_activation_markers_v1() returns trigger
+language plpgsql set search_path='' as $$
+begin
+ if old.state='pending' and new.state in ('created','committed','failed') then
+  new.browser_hash:=null; new.installation_hash:=null;
+ end if;
+ return new;
+end $$;
+revoke all on function anidachi_private.retire_activation_markers_v1() from public,anon,authenticated,service_role;
+create trigger cardless_trial_retire_marker_inputs before update of state on public.subscription_trial_activations
+ for each row execute function anidachi_private.retire_activation_markers_v1();
 create trigger cardless_trial_marker_guard after insert or update of state,browser_hash,installation_hash
  on public.subscription_trial_activations for each row execute function anidachi_private.guard_trial_markers_v1();
 
@@ -97,3 +113,49 @@ end $$;
 
 revoke all on function public.reserve_cardless_trial_v2(uuid,uuid,text,text,text,text,bigint,text,text) from public,anon,authenticated;
 grant execute on function public.reserve_cardless_trial_v2(uuid,uuid,text,text,text,text,bigint,text,text) to service_role;
+
+-- A denied browser can still explicitly buy a subscription. This RPC never offers a trial.
+create function public.reserve_subscription_purchase_v1(
+ p_user_id uuid,p_plan_code text,p_price_id text,p_origin text,p_request_id uuid,p_attribution jsonb)
+returns jsonb language plpgsql security definer set search_path=''
+set lock_timeout='5s' set statement_timeout='15s' as $$
+declare r public.subscription_checkout_reservations%rowtype; authority jsonb;
+begin
+ if p_plan_code is null or p_plan_code not in ('plus','pro') or p_request_id is null then
+  raise exception 'CHECKOUT_INPUT_INVALID' using errcode='22023';
+ end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_user_id::text,0));
+ authority:=public.resolve_watch_history_access_v1(p_user_id);
+ select * into r from public.subscription_checkout_reservations where user_id=p_user_id for update;
+ if found then
+  if r.state='expired' or (r.state='complete' and exists(
+    select 1 from public.subscriptions where stripe_subscription_id=r.stripe_subscription_id
+     and user_id=p_user_id and status in ('canceled','incomplete_expired')
+  )) then
+   delete from public.subscription_checkout_reservations where user_id=p_user_id and id=r.id;
+  else return to_jsonb(r); end if;
+ end if;
+ insert into public.subscription_checkout_reservations(user_id,request_id,plan_code,price_id,origin,attribution,policy_revision,trial_offered)
+ values(p_user_id,p_request_id,p_plan_code,p_price_id,p_origin,p_attribution,
+   (authority#>>'{hosting,hostingPolicyVersion}')::bigint,
+   false) returning * into r;
+ return to_jsonb(r);
+end $$;
+revoke all on function public.reserve_subscription_purchase_v1(uuid,text,text,text,uuid,jsonb) from public,anon,authenticated;
+grant execute on function public.reserve_subscription_purchase_v1(uuid,text,text,text,uuid,jsonb) to service_role;
+
+
+-- Daily bounded retention cleanup runs inside PostgreSQL, with no Vercel invocation.
+create index trial_marker_claim_expiry on anidachi_private.trial_marker_claims(expires_at) where state='consumed';
+create function anidachi_private.prune_trial_marker_history_v1() returns bigint
+language plpgsql security definer set search_path='' set statement_timeout='5s' as $$
+declare removed bigint;
+begin
+ delete from anidachi_private.trial_marker_claims where (kind,marker_hash) in
+  (select kind,marker_hash from anidachi_private.trial_marker_claims where state='consumed' and expires_at<=clock_timestamp()
+   order by expires_at limit 10000 for update skip locked);
+ get diagnostics removed=row_count;
+ return removed;
+end $$;
+revoke all on function anidachi_private.prune_trial_marker_history_v1() from public,anon,authenticated,service_role;
+select cron.schedule('anidachi-trial-marker-retention','19 3 * * *',$command$select anidachi_private.prune_trial_marker_history_v1();$command$);

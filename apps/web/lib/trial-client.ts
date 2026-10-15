@@ -1,6 +1,10 @@
 import { BILLING_OWNER_HEADER } from "./billing-view";
 
 const states = new Set([
+	"ready",
+	"trial_used",
+	"trial_busy",
+	"context_required",
 	"active",
 	"pending",
 	"ineligible",
@@ -47,6 +51,10 @@ export async function postTrialAction<T extends { state: string }>(
 
 export function trialResultMessage(state: string): string {
 	const messages: Record<string, string> = {
+		trial_used: "A free trial has already been used here",
+		trial_busy:
+			"Another trial is still being confirmed here. Please try again in a moment.",
+		context_required: "Please refresh the trial confirmation and try again.",
 		pending:
 			"Your trial change is still being confirmed. Check its status before trying again.",
 		expired:

@@ -530,3 +530,41 @@ test("failure to persist a successful create never authorizes a second kind of m
 	assert.equal(f.state.customerCreates, 1);
 	assert.equal(f.state.creates, 0);
 });
+
+test("new activation resolves marker context before reservation or Stripe; failure has no side effects", async () => {
+	const f = fixture();
+	let reads = 0;
+	const result = await f.service.startCardlessTrial(USER, input, async () => {
+		reads++;
+		throw Error("cookie missing");
+	});
+	assert.equal(reads, 1);
+	assert.equal(result.state, "unavailable");
+	assert.equal(f.state.reserves, 0);
+	assert.equal(f.state.customerCreates, 0);
+	assert.equal(f.state.creates, 0);
+});
+test("lost Stripe reply resumes the activation without checking new cookie/installation markers", async () => {
+	const f = fixture();
+	f.state.loseCreate = true;
+	let reads = 0;
+	const markers = async () => {
+		reads++;
+		return { browser: "1".repeat(64) };
+	};
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input, markers)).state,
+		"pending",
+	);
+	assert.equal(
+		(
+			await f.service.startCardlessTrial(USER, input, async () => {
+				throw Error("cookie erased");
+			})
+		).state,
+		"active",
+	);
+	assert.equal(reads, 1);
+	assert.equal(f.state.reserves, 1);
+	assert.equal(f.state.creates, 1);
+});
