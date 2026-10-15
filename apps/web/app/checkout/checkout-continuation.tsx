@@ -40,7 +40,7 @@ export function CheckoutContinuation({
 }: {
 	selection: CheckoutSelection;
 }) {
-	const { plan, billing } = selection;
+	const { plan, billing, confirmTrial } = selection;
 	const label = plan === "plus" ? "Plus" : "Pro";
 	const price = PUBLISHED_PRICING[billing][plan];
 	const amount = new Intl.NumberFormat("en-US", {
@@ -125,7 +125,7 @@ export function CheckoutContinuation({
 					throw new Error("Your offer expired. Please try again.");
 				if (offer.action === "sign_in") {
 					window.location.replace(
-						checkoutSessionRecoveryPath({ plan, billing }),
+						checkoutSessionRecoveryPath({ plan, billing, confirmTrial }),
 					);
 					return;
 				}
@@ -204,7 +204,7 @@ export function CheckoutContinuation({
 				if (cardless) reviewedCardless.current = true;
 				if (
 					!confirmed &&
-					(offer.action === "subscribe" || cardless || reviewedCardless.current)
+					(offer.action === "subscribe" || cardless || confirmTrial || reviewedCardless.current)
 				) {
 					setConfirmation({
 						owner: offer.ownerUserId,
@@ -281,7 +281,7 @@ export function CheckoutContinuation({
 				if (!current()) return;
 				if (checkout.status === 401) {
 					window.location.replace(
-						checkoutSessionRecoveryPath({ plan, billing }),
+						checkoutSessionRecoveryPath({ plan, billing, confirmTrial }),
 					);
 					return;
 				}
@@ -324,7 +324,7 @@ export function CheckoutContinuation({
 				if (current()) busy.current = false;
 			}
 		},
-		[plan, billing, price],
+		[plan, billing, confirmTrial, price],
 	);
 
 	useEffect(() => {
@@ -430,7 +430,7 @@ export function CheckoutContinuation({
 							<div className="mt-5">
 								<LoginOAuthButtons
 									safeNext={encodeURIComponent(
-										checkoutReturnPath({ plan, billing }),
+										checkoutReturnPath({ plan, billing, confirmTrial }),
 									)}
 								/>
 							</div>

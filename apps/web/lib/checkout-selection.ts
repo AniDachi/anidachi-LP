@@ -2,9 +2,14 @@ import { AUTH_REFRESH_PATH } from "./anidachi-auth/session-refresh";
 import type { BillingPeriod } from "./billing-view";
 import type { CheckoutTier } from "./pricing-tiers";
 
-export type CheckoutSelection = { plan: CheckoutTier; billing: BillingPeriod };
+export type CheckoutSelection = {
+	plan: CheckoutTier;
+	billing: BillingPeriod;
+	/** An extension trial offer must show website terms before any checkout action. */
+	confirmTrial?: true;
+};
 
-/** Only the plan/period are carried through auth. Price and eligibility stay server-owned. */
+/** Selection and confirmation intent survive auth. Price and eligibility stay server-owned. */
 export function checkoutSelectionFromPath(
 	path: string | null | undefined,
 ): CheckoutSelection | null {
@@ -18,9 +23,12 @@ export function checkoutSelectionFromPath(
 		return null;
 	const plan = url.searchParams.get("plan");
 	const billing = url.searchParams.get("billing");
+	const confirm = url.searchParams.get("confirm");
 	if (
 		url.searchParams.getAll("plan").length !== 1 ||
-		url.searchParams.getAll("billing").length !== 1
+		url.searchParams.getAll("billing").length !== 1 ||
+		url.searchParams.getAll("confirm").length > 1 ||
+		(confirm !== null && confirm !== "trial")
 	)
 		return null;
 	if (
@@ -28,14 +36,15 @@ export function checkoutSelectionFromPath(
 		(billing !== "monthly" && billing !== "yearly")
 	)
 		return null;
-	return { plan, billing };
+	return { plan, billing, ...(confirm === "trial" ? { confirmTrial: true as const } : {}) };
 }
 
 export function checkoutReturnPath({
 	plan,
 	billing,
+	confirmTrial,
 }: CheckoutSelection): string {
-	return `/checkout?plan=${plan}&billing=${billing}`;
+	return `/checkout?plan=${plan}&billing=${billing}${confirmTrial ? "&confirm=trial" : ""}`;
 }
 
 export function checkoutLoginPath(selection: CheckoutSelection): string {

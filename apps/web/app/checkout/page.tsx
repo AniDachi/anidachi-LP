@@ -25,12 +25,16 @@ export default async function CheckoutPage({
 		if (typeof value !== "string") redirect("/pricing");
 		query.set(key, value);
 	}
+	if (params.confirm !== undefined) {
+		if (typeof params.confirm !== "string") redirect("/pricing");
+		query.set("confirm", params.confirm);
+	}
 	const selection = checkoutSelectionFromPath(`/checkout?${query}`);
 	if (!selection) redirect("/pricing");
 	if (!(await getSession())) redirect(checkoutLoginPath(selection));
 	return (
 		<CheckoutContinuation
-			key={`${selection.plan}:${selection.billing}`}
+			key={`${selection.plan}:${selection.billing}:${selection.confirmTrial ? "confirm" : "continue"}`}
 			selection={selection}
 		/>
 	);

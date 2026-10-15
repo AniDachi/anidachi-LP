@@ -50,7 +50,7 @@ describe("hosting offer", () => {
 		document.body.replaceChildren();
 		vi.restoreAllMocks();
 	});
-	it("explains free joining, offers a verified trial, and only links to pricing", async () => {
+	it("offers a verified Plus trial through website confirmation without starting it", async () => {
 		const request = vi.fn().mockResolvedValue(access);
 		const close = await mount(request);
 		expect(container.querySelector('[role="dialog"]')).not.toBeNull();
@@ -59,7 +59,10 @@ describe("hosting offer", () => {
 		expect(container.textContent).toContain("No card required.");
 		expect(container.textContent).not.toContain("Card required");
 		const link = container.querySelector("a")!;
-		expect(link.href).toBe("http://localhost:3003/pricing");
+		expect(link.href).toBe("http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial");
+		expect(link.target).toBe("_blank");
+		expect(link.rel).toBe("noopener noreferrer");
+		expect(container.textContent).toContain("Try Plus free for 3 days.");
 		expect(link.textContent).toContain("Try 3 days free");
 		await act(async () =>
 			container
@@ -83,6 +86,7 @@ describe("hosting offer", () => {
 				}),
 		);
 		expect(container.textContent).not.toContain("Try 3 days free");
+		expect(container.querySelector("a")?.href).toBe("http://localhost:3003/pricing");
 		expect(container.querySelector("a")?.textContent).toContain(
 			"View plans",
 		);
