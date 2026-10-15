@@ -144,7 +144,13 @@ assert.equal(
 	before,
 	"Additive migration preserves existing records exactly",
 );
+if (sql("select to_regprocedure('public.reserve_cardless_trial_v2(uuid,uuid,text,text,text,text,bigint,text,text)') is null;").trim() === "t") {
+ const migration = readdirSync(resolve(base, "migrations")).find(f => f.endsWith("_cardless_trial_abuse_guards.sql"));
+ assert.ok(migration);
+ sql("begin;\n" + readFileSync(resolve(base, "migrations", migration), "utf8") + "\ncommit;");
+}
 for (const name of [
+ "cardless_trial_abuse",
 	"cardless_subscription_trials",
 	"cardless_trial_launch",
 	"cardless_trial_renewal",
@@ -348,5 +354,26 @@ try {
 	);
 } finally {
 	sql(`delete from public.users where id='${guardedUser}';`);
+}
+// Cross-account marker claims must serialize across different HTTP workers.
+for (const shared of ["browser", "installation"]) {
+ const owners = [randomUUID(), randomUUID()];
+ const marker = randomUUID().replaceAll("-", "").repeat(2);
+ try {
+  sql(`insert into public.users(id,email,display_name) values ${owners.map(u => `('${u}','${u}@example.test','Marker race')`).join(",")};
+   update public.hosting_commercial_policy set activation_at=now()-interval '1 day',trials_enabled=true,cardless_trials_enabled=true,trial_abuse_enforced=true;`);
+  const races = await Promise.allSettled(owners.map((u, i) => parallelSql(`begin;set local role service_role;
+   select public.reserve_cardless_trial_v2('${u}','${randomUUID()}','plus','monthly','price_plus',null,${JSON.parse(oldPolicy).revision},
+    '${shared === "browser" ? marker : String(i+7).repeat(64)}',${shared === "installation" ? `'${marker}'` : "null"})->>'id';
+   select pg_sleep(0.15);commit;`)));
+  assert.equal(races.filter(r => r.status === "fulfilled").length, 1, `${shared}: one cross-account reservation`);
+  for (const r of races) if (r.status === "rejected") assert.match(r.reason.message, /TRIAL_MARKER_BUSY/);
+  console.log(`PASS parallel different-account ${shared} claims: one winner`);
+ } finally {
+  // Only these synthetic markers and users; never release real unknown claims.
+  sql(`delete from anidachi_private.trial_marker_claims where activation_id in (select id from public.subscription_trial_activations where user_id in (${owners.map(u => `'${u}'`).join(",")}));
+   delete from public.users where id in (${owners.map(u => `'${u}'`).join(",")});
+   update public.hosting_commercial_policy set trial_abuse_enforced=${JSON.parse(oldPolicy).trial_abuse_enforced ?? false},revision=(p.j->>'revision')::bigint,activation_at=(p.j->>'activation_at')::timestamptz,trials_enabled=(p.j->>'trials_enabled')::boolean,cardless_trials_enabled=(p.j->>'cardless_trials_enabled')::boolean from (select '${oldPolicy.replaceAll("'", "''")}'::jsonb j) p;`);
+ }
 }
 assert.equal(snapshot(), before, "Tests preserve preexisting records");
