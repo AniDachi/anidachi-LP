@@ -124,8 +124,18 @@ used, unavailable or not-yet-confirmed eligibility see View plans. Accounts with
 Plus/Pro or current hosting access see "Your plan includes room creation" and
 no upsell. Account-scoped hosting display data comes from the existing shared
 useHostingAccess hook, enabled while the tour is active; it does not grant access
-or alter a subscription. The link opens the channel's /pricing page in a new tab
-only on explicit click. Actual checkout retains authoritative eligibility checks.
+or alter a subscription. The October 15 follow-up sends Try 3 days free to the
+channel's `/checkout?plan=plus&billing=monthly&confirm=trial` in a new tab on explicit click,
+preselecting Plus on the existing trial confirmation screen. The real drawer's
+verified cardless offer uses the same link and names Plus. Website sign-in retains
+this selection and confirmation intent. Even if the current offer requires a card,
+the website shows its actual terms before opening Stripe. The cardless trial starts only after Start my 3-day trial is
+clicked on the website. Monthly is the initial selection, not renewal consent;
+no payment is enabled by following the link. View plans continues to `/pricing`.
+The website rechecks eligibility: existing access opens billing management, and
+unavailable trials require explicit review before any paid checkout. The optional `confirm=trial` is navigation intent only, never eligibility or
+renewal consent. Existing links without it retain their behavior. No session,
+price, entitlement, trial activation or Stripe lifecycle contract changes.
 Practice Create room is still available without visiting plans or paying.
 Actual camera/microphone capture and a real sign-in/create-room tutorial remain outside the teaching flow. The separately approved live drawer change is described below.
 The chat rehearsal is isolated presentation with no transport callbacks.

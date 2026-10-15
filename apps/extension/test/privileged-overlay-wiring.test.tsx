@@ -2219,7 +2219,7 @@ describe("privileged overlay wiring", () => {
       await click(button(view.container, "Create room")); await flushRoomActionWork();
       expect(view.container.querySelector('[role="dialog"]')?.textContent).toContain("You can still join friends for free.");
       expect(view.container.textContent).toContain("Try 3 days free");
-      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-notice a')?.href).toBe("http://localhost:3003/pricing");
+      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-notice a')?.href).toBe("http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial");
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
       await click(button(view.container, "Close plan offer"));
       expect(view.container.querySelector('.hosting-notice')).toBeNull();

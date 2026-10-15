@@ -625,7 +625,7 @@ it("walks through the same short scenario with the existing panel styling", asyn
 	expect(host.querySelector(".tour-hide-hint")).toBeNull();
 	const offer = host.querySelector<HTMLAnchorElement>(".tour-plan-link");
 	expect(offer?.textContent).toBe("Try 3 days free");
-	expect(offer?.href).toBe("http://localhost:3003/pricing");
+	expect(offer?.href).toBe("http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial");
 	expect(offer?.target).toBe("_blank");
 	expect(offer?.rel).toBe("noopener noreferrer");
 	expect(host.textContent).not.toMatch(
@@ -666,9 +666,16 @@ it("uses confirmed trial eligibility, hides paid offers and updates account copy
 		"Try 3 days free",
 	);
 	if (!hosting.access?.hosting) throw new Error("Hosting fixture missing");
+	expect(host.querySelector<HTMLAnchorElement>(".tour-plan-link")?.href).toBe(
+		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
+	);
+
 	hosting.access.hosting.trialEligibility = "used";
 	await render({ hosting });
 	expect(host.querySelector(".tour-plan-link")?.textContent).toBe("View plans");
+	expect(host.querySelector<HTMLAnchorElement>(".tour-plan-link")?.href).toBe(
+		"http://localhost:3003/pricing",
+	);
 	await render({ accountPlan: "plus", hosting: undefined });
 	expect(host.querySelector(".tour-plan-link")).toBeNull();
 	expect(host.textContent).toContain("Your plan includes room creation.");

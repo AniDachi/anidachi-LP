@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import { ArrowUpRight, Check, CircleAlert, RefreshCw, UsersRound, X } from "lucide-react";
-import { WEB_HTTP_BASE } from "./constants";
+import { getHostingOfferUrl } from "./hosting-offer-link";
 import type { HostingDisplayState } from "./use-hosting-access";
 import { overlayHotkeyBoundaryProps } from "./overlay-interaction-boundary";
 
@@ -75,7 +75,7 @@ export function HostingPaywall({ state: current, onClose, onRefresh }: {
         <h2 id={titleId}>{titles[kind]}</h2>
         <div id={descriptionId} className="hosting-notice-description">
           {kind === "cardless" ? <>
-            <p>Try <strong>Plus</strong> or <strong>Pro</strong> free for 3 days.</p>
+            <p>Try <strong>Plus</strong> free for 3 days.</p>
             <p className="hosting-notice-terms">No card required.<br />No automatic charge.</p>
           </> : kind === "eligible" ? <>
             <p>Explore <strong>Plus</strong> and <strong>Pro</strong> to host your own watch parties.</p>
@@ -95,7 +95,7 @@ export function HostingPaywall({ state: current, onClose, onRefresh }: {
           {retry && <RefreshCw size={16} strokeWidth={1.8} aria-hidden="true" />}
         </button>
       ) : (
-        <a className="hosting-notice-primary" href={new URL("/pricing", WEB_HTTP_BASE).href}
+        <a className="hosting-notice-primary" href={getHostingOfferUrl(kind === "cardless" ? "trial" : "plans")}
           target="_blank" rel="noopener noreferrer">
           <span>{kind === "cardless" ? "Try 3 days free" : "View plans"}</span>
           <ArrowUpRight size={18} strokeWidth={1.8} aria-hidden="true" />

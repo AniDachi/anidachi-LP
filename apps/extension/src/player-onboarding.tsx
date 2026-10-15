@@ -20,7 +20,7 @@ import {
 } from "react";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import type { AuthenticatedUserPlan } from "./auth-tokens";
-import { WEB_HTTP_BASE } from "./constants";
+import { getHostingOfferUrl } from "./hosting-offer-link";
 import type { CurrentResourceDisplay } from "./current-resource-display";
 import {
 	overlayHotkeyBoundaryProps,
@@ -816,7 +816,7 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 									{step === "create" && offer && (
 										<a
 											className="tour-plan-link"
-											href={new URL("/pricing", WEB_HTTP_BASE).href}
+											href={getHostingOfferUrl(offer)}
 											target="_blank"
 											rel="noopener noreferrer"
 										>

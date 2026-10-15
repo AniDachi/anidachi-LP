@@ -5,7 +5,13 @@ import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { CheckoutContinuation } from "../app/checkout/checkout-continuation";
-import { checkoutSelectionFromPath } from "./checkout-selection";
+import {
+	checkoutSelectionFromPath,
+	checkoutReturnPath,
+	checkoutLoginPath,
+	checkoutSessionRecoveryPath,
+	checkoutLoginErrorPath,
+} from "./checkout-selection";
 import { getLoginContext } from "./login-context";
 
 const offer = {
@@ -35,12 +41,13 @@ async function mount(
 	plan: "plus" | "pro" = "plus",
 	billing: "monthly" | "yearly" = "yearly",
 	strict = false,
+	confirmTrial?: true,
 ) {
 	const el = document.createElement("div");
 	document.body.append(el);
 	root = createRoot(el);
 	const child = React.createElement(CheckoutContinuation, {
-		selection: { plan, billing },
+		selection: { plan, billing, confirmTrial },
 	});
 	await act(async () =>
 		root!.render(
@@ -595,4 +602,52 @@ test("a new document discovers the persisted activation after cardless starts ar
 			body: { operationId: "activation-a" },
 		})),
 	);
+});
+
+
+test("extension Plus trial intent survives login, refresh and OAuth retry", () => {
+	const path = "/checkout?plan=plus&billing=monthly&confirm=trial";
+	const selection = checkoutSelectionFromPath(path);
+	assert.deepEqual(selection, { plan: "plus", billing: "monthly", confirmTrial: true });
+	assert.ok(selection);
+	assert.equal(checkoutReturnPath(selection), path);
+	for (const authPath of [
+		checkoutLoginPath(selection),
+		checkoutSessionRecoveryPath(selection),
+		checkoutLoginErrorPath("access_denied", path),
+	]) {
+		assert.equal(new URL(authPath, "https://example.test").searchParams.get("next"), path);
+	}
+	assert.equal(getLoginContext(path).subtitle, "Plus is selected. Review your trial offer after sign-in.");
+	for (const query of ["confirm=trial&confirm=trial", "confirm=skip", "confirm="]) {
+		assert.equal(checkoutSelectionFromPath(`/checkout?plan=plus&billing=monthly&${query}`), null);
+	}
+});
+
+for (const mode of ["cardless", "card_required"] as const) {
+	test(`extension Plus offer waits for confirmation with ${mode} terms`, async () => {
+		const posts: { url: string; body: Record<string, unknown> }[] = [];
+		globalThis.fetch = async (url, init) => {
+			if (String(url) === "/api/billing/offer") return Response.json({ ...cardlessOffer, trialMode: mode });
+			posts.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+			return Response.json(mode === "cardless"
+				? { state: "active", ownerUserId: "owner-a", planCode: "plus", trialEndsAt: "2030-01-04T00:00:00Z" }
+				: { kind: "checkout", url: "https://checkout.stripe.com/selected" });
+		};
+		const el = await mount("plus", "monthly", true, true);
+		assert.equal(posts.length, 0, "opening the extension link must not start a trial or Stripe checkout");
+		assert.match(el.querySelector("h1")!.textContent!, /Plus/);
+		assert.match(el.textContent!, mode === "cardless" ? /No card required/ : /A card is required/);
+		await act(async () => button(el, mode === "cardless" ? /Start my 3-day trial/ : /Continue to card checkout/).click());
+		assert.equal(posts.length, 1);
+		assert.equal(posts[0].url, mode === "cardless" ? "/api/billing/trial/start" : "/api/create-checkout-session");
+		assert.equal(posts[0].body.planCode, "plus");
+		assert.equal(posts[0].body.billingPeriod, "monthly");
+	});
+}
+
+test("expired session retains the extension trial confirmation intent", async () => {
+	globalThis.fetch = async () => Response.json({ action: "sign_in", validForMs: 60000 });
+	await mount("plus", "monthly", false, true);
+	assert.equal(new URL(window.location.href).searchParams.get("next"), "/checkout?plan=plus&billing=monthly&confirm=trial");
 });
