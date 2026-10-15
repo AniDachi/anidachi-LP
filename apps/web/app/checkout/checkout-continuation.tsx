@@ -173,6 +173,30 @@ export function CheckoutContinuation({
 				if (recovery.current) {
 					const pending = recovery.current;
 					setStage("opening");
+					let extensionProof;
+					if (pending.legacy) {
+						// Reconciliation has not reserved an activation yet, so this is still a new grant.
+						const retry = request.current;
+						if (!retry || retry.owner !== offer.ownerUserId)
+							throw new Error("Please review the trial confirmation again.");
+						const context = await prepareTrialBrowserContext(
+							offer.ownerUserId,
+							retry.id,
+							abort.signal,
+						);
+						if (!current()) return;
+						browserContext.current = {
+							owner: offer.ownerUserId,
+							requestId: retry.id,
+							at: Date.now(),
+							value: context,
+						};
+						extensionProof = await requestTrialInstallationProof(
+							context,
+							abort.signal,
+						);
+						if (!current()) return;
+					}
 					const result = await postTrialAction<TrialStartResult>(
 						pending.legacy ? "start" : "recover",
 						offer.ownerUserId,
@@ -182,6 +206,7 @@ export function CheckoutContinuation({
 									planCode: plan,
 									billingPeriod: billing,
 									offerRevision: pending.revision,
+									...(extensionProof ? { extensionProof } : {}),
 								}
 							: pending.operationId
 								? { operationId: pending.operationId }

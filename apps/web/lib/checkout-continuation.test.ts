@@ -42,18 +42,20 @@ async function mount(
 	billing: "monthly" | "yearly" = "yearly",
 	strict = false,
 	confirmTrial?: true,
+	context?: (init?: RequestInit) => Response,
 ) {
 	const providedFetch = globalThis.fetch;
 	globalThis.fetch = async (url, init) =>
 		String(url) === "/api/billing/trial/context"
-			? Response.json({
+			? (context?.(init) ??
+				Response.json({
 					state: "ready",
 					ownerUserId: new Headers(init?.headers).get(
 						"X-Anidachi-Billing-Owner",
 					),
 					challenge: "a".repeat(180) + "." + "b".repeat(43),
 					extensionId: null,
-				})
+				}))
 			: providedFetch(url, init);
 
 	const el = document.createElement("div");
@@ -742,4 +744,77 @@ test("used browser offers plans without a retry loop or starting paid Checkout",
 		false,
 	);
 	assert.equal(calls.includes("/api/create-checkout-session"), false);
+});
+
+test("legacy reconciliation retry reacquires the extension proof before a new reservation", async () => {
+	const extensionId = "a".repeat(32);
+	const runtimeGlobal = globalThis as typeof globalThis & { chrome?: unknown };
+	const previousChrome = runtimeGlobal.chrome;
+	const proofs: Record<string, unknown>[] = [];
+	const starts: Record<string, unknown>[] = [];
+	let contexts = 0;
+	runtimeGlobal.chrome = {
+		runtime: {
+			sendMessage: (
+				id: string,
+				message: { challenge: string },
+				reply: (value: unknown) => void,
+			) => {
+				assert.equal(id, extensionId);
+				const proof = {
+					version: 1,
+					challenge: message.challenge,
+					publicKey: "c".repeat(124),
+					signature: "d".repeat(86),
+				};
+				proofs.push(proof);
+				reply({ proof });
+			},
+		},
+	};
+	try {
+		globalThis.fetch = async (url, init) => {
+			if (String(url) === "/api/billing/offer")
+				return Response.json(cardlessOffer);
+			assert.equal(String(url), "/api/billing/trial/start");
+			starts.push(JSON.parse(String(init?.body)));
+			return Response.json(
+				starts.length === 1
+					? {
+							state: "pending",
+							kind: "legacy_checkout",
+							ownerUserId: "owner-a",
+						}
+					: { state: "trial_used", ownerUserId: "owner-a" },
+				{ status: starts.length === 1 ? 202 : 409 },
+			);
+		};
+		const el = await mount("plus", "monthly", false, true, () =>
+			Response.json({
+				state: "ready",
+				ownerUserId: "owner-a",
+				extensionId,
+				challenge:
+					(++contexts === 1 ? "a" : "e").repeat(180) + "." + "b".repeat(43),
+			}),
+		);
+		await act(async () => button(el, /Start my 3-day trial/i).click());
+		assert.equal(starts.length, 1);
+		assert.deepEqual(starts[0].extensionProof, proofs[0]);
+		await act(async () => button(el, /Check trial status/i).click());
+		assert.equal(starts.length, 2);
+		assert.equal(
+			contexts,
+			2,
+			"legacy retry must refresh the request-bound challenge",
+		);
+		assert.equal(proofs.length, 2);
+		assert.equal(starts[1].requestId, starts[0].requestId);
+		assert.deepEqual(starts[1].extensionProof, proofs[1]);
+		assert.notEqual(proofs[1].challenge, proofs[0].challenge);
+		assert.match(el.textContent!, /A free trial has already been used here/);
+	} finally {
+		if (previousChrome === undefined) delete runtimeGlobal.chrome;
+		else runtimeGlobal.chrome = previousChrome;
+	}
 });
