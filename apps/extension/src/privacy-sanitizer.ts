@@ -1,4 +1,4 @@
-const SECRET_FIELD_RE = /token|secret|cookie|authorization|password|credential|icepwd|attestation/i;
+const SECRET_FIELD_RE = /token|secret|cookie|authorization|password|credential|icepwd|attestation|signature|privateKey|publicKey|challenge|extensionProof/i;
 
 const USER_AUTHORED_CONTENT_FIELDS = new Set([
   "comment",

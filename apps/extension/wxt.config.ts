@@ -129,6 +129,11 @@ export default defineConfig({
       extensionChannel === "production" ? null : "downloads",
     ]),
     host_permissions: hostPermissions,
+    externally_connectable: {
+      matches: unique(channelWebHostPermissions.some(Boolean)
+        ? channelWebHostPermissions : ["http://localhost/*"]),
+      ids: [],
+    },
     icons: extensionIcons,
     web_accessible_resources: [
       {
