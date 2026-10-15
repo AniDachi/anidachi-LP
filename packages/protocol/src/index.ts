@@ -23,3 +23,4 @@ export * from "./maintenance";
 export * from "./room-quota-status";
 export * from "./room-hosting";
 export * from "./netflix-identity";
+export * from "./trial-abuse";

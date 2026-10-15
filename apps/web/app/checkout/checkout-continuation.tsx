@@ -18,6 +18,11 @@ import { trackConversion } from "@/lib/conversion-events";
 import { postTrialAction, trialResultMessage } from "@/lib/trial-client";
 import type { TrialStartResult } from "@/lib/anidachi-auth/cardless-trial";
 import { LoginOAuthButtons } from "../login/login-oauth-buttons";
+import {
+	prepareTrialBrowserContext,
+	requestTrialInstallationProof,
+	type TrialBrowserContext,
+} from "@/lib/trial-abuse-client";
 import { TrialStartView } from "./trial-start-view";
 
 type Stage =
@@ -27,7 +32,8 @@ type Stage =
 	| "trial"
 	| "pending"
 	| "verification"
-	| "error";
+	| "error"
+	| "trial_used";
 type Confirmation = {
 	owner: string;
 	action: PricingOffer["action"];
@@ -61,6 +67,12 @@ export function CheckoutContinuation({
 	const busy = useRef(false);
 	const generation = useRef(0);
 	const controller = useRef<AbortController | null>(null);
+	const browserContext = useRef<{
+		owner: string;
+		requestId: string;
+		at: number;
+		value: TrialBrowserContext;
+	} | null>(null);
 	const request = useRef<{ owner: string; id: string } | null>(null);
 
 	const start = useCallback(
@@ -97,6 +109,15 @@ export function CheckoutContinuation({
 					);
 				} else {
 					if (result.state !== "unavailable") recovery.current = null;
+					if (result.state === "context_required")
+						browserContext.current = null;
+					if (result.state === "trial_used") {
+						request.current = null;
+						browserContext.current = null;
+						setStage("trial_used");
+						setMessage(trialResultMessage(result.state));
+						return;
+					}
 					// Only a confirmed terminal result retires the old request. Unknown outcomes keep recovery.
 					if (result.state === "ineligible") request.current = null;
 					setStage(
@@ -152,6 +173,30 @@ export function CheckoutContinuation({
 				if (recovery.current) {
 					const pending = recovery.current;
 					setStage("opening");
+					let extensionProof;
+					if (pending.legacy) {
+						// Reconciliation has not reserved an activation yet, so this is still a new grant.
+						const retry = request.current;
+						if (!retry || retry.owner !== offer.ownerUserId)
+							throw new Error("Please review the trial confirmation again.");
+						const context = await prepareTrialBrowserContext(
+							offer.ownerUserId,
+							retry.id,
+							abort.signal,
+						);
+						if (!current()) return;
+						browserContext.current = {
+							owner: offer.ownerUserId,
+							requestId: retry.id,
+							at: Date.now(),
+							value: context,
+						};
+						extensionProof = await requestTrialInstallationProof(
+							context,
+							abort.signal,
+						);
+						if (!current()) return;
+					}
 					const result = await postTrialAction<TrialStartResult>(
 						pending.legacy ? "start" : "recover",
 						offer.ownerUserId,
@@ -161,6 +206,7 @@ export function CheckoutContinuation({
 									planCode: plan,
 									billingPeriod: billing,
 									offerRevision: pending.revision,
+									...(extensionProof ? { extensionProof } : {}),
 								}
 							: pending.operationId
 								? { operationId: pending.operationId }
@@ -202,9 +248,38 @@ export function CheckoutContinuation({
 				const cardless =
 					offer.action === "trial" && offer.trialMode === "cardless";
 				if (cardless) reviewedCardless.current = true;
+				if (cardless) {
+					if (request.current?.owner !== offer.ownerUserId)
+						request.current = {
+							owner: offer.ownerUserId,
+							id: crypto.randomUUID(),
+						};
+					if (
+						!browserContext.current ||
+						browserContext.current.owner !== offer.ownerUserId ||
+						browserContext.current.requestId !== request.current.id ||
+						Date.now() - browserContext.current.at > 240_000
+					) {
+						const context = await prepareTrialBrowserContext(
+							offer.ownerUserId,
+							request.current.id,
+							abort.signal,
+						);
+						if (!current()) return;
+						browserContext.current = {
+							owner: offer.ownerUserId,
+							requestId: request.current.id,
+							at: Date.now(),
+							value: context,
+						};
+					}
+				}
 				if (
 					!confirmed &&
-					(offer.action === "subscribe" || cardless || confirmTrial || reviewedCardless.current)
+					(offer.action === "subscribe" ||
+						cardless ||
+						confirmTrial ||
+						reviewedCardless.current)
 				) {
 					setConfirmation({
 						owner: offer.ownerUserId,
@@ -226,6 +301,11 @@ export function CheckoutContinuation({
 						throw new Error(
 							"The offer changed. Review the plans before continuing.",
 						);
+					const extensionProof = await requestTrialInstallationProof(
+						browserContext.current!.value,
+						abort.signal,
+					);
+					if (!current()) return;
 					recovery.current = {
 						owner: offer.ownerUserId,
 						revision: offer.trialOfferRevision,
@@ -238,6 +318,7 @@ export function CheckoutContinuation({
 							planCode: plan,
 							billingPeriod: billing,
 							offerRevision: offer.trialOfferRevision,
+							...(extensionProof ? { extensionProof } : {}),
 						},
 						abort.signal,
 					);
@@ -369,10 +450,20 @@ export function CheckoutContinuation({
 			<div className="text-center">
 				<AnidachiLogo size={48} className="mx-auto" />
 				<h1 className="mt-6 text-3xl font-semibold tracking-tight">
-					Continue with {label}
+					{stage === "trial_used" ? (
+						"A free trial has already been used here"
+					) : (
+						<>Continue with {label}</>
+					)}
 				</h1>
 				<p className="mt-3 text-ani-muted">
-					{billing === "yearly" ? "Yearly" : "Monthly"} · {amount}/{period}
+					{stage === "trial_used" ? (
+						"You can still join friends for free, or choose a plan to host."
+					) : (
+						<>
+							{billing === "yearly" ? "Yearly" : "Monthly"} · {amount}/{period}
+						</>
+					)}
 				</p>
 				{(stage === "checking" || stage === "opening") && (
 					<p
@@ -449,9 +540,13 @@ export function CheckoutContinuation({
 				)}
 				<Link
 					href={`/pricing?plan=${plan}&billing=${billing}`}
-					className="mt-7 inline-block text-sm text-ani-muted underline underline-offset-4 hover:text-ani-text"
+					className={
+						stage === "trial_used"
+							? "mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#f4ecdf] px-6 font-semibold text-[#171512] hover:bg-white"
+							: "mt-7 inline-block text-sm text-ani-muted underline underline-offset-4 hover:text-ani-text"
+					}
 				>
-					Back to plans
+					{stage === "trial_used" ? "View plans" : "Back to plans"}
 				</Link>
 			</div>
 		</AuthPageShell>

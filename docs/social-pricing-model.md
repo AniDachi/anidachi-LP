@@ -174,3 +174,12 @@ Plus/Pro-хоста нет собственного ограничения в 30
 и краткого offline-доступа. Они согласованы пользователем 2026-09-08.
 Публиковать новые возможности можно после согласованной реализации и приемки,
 включая фактическую проверку 15 участников, четырех камер и восьми микрофонов.
+
+## Cardless trial abuse guard candidate, 2026-10-15
+
+New cardless trials also reserve a signed browser-cookie marker and an optional
+installation-key marker. Same-operation recovery continues after cookie loss.
+Used markers deny only a new free trial, not login, guest viewing, active rights
+or explicitly confirmed ordinary purchases. Consumed marker history is retained
+for 365 days; unresolved activations require verified reconciliation. See the
+[approved anti-abuse design](superpowers/specs/2026-10-15-cardless-trial-abuse-design.md).

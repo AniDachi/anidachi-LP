@@ -296,3 +296,16 @@ Current instruction shape:
 ```txt
 Install Anidachi Staging, then open a full YouTube watch page, Crunchyroll episode, or Netflix movie/episode watch page. Netflix requires the matching candidate artifact and the acceptance checks in the Netflix staging verification record. Click the small "A" bubble on the video, sign in through the staging site with Google/Discord. If asked for access, use the provided tester code. Click Create room, Copy invite, and open it in another Chrome profile/device. Controls: A opens menu; Sync now resyncs; keys 1-6 send emoji; hold V for push-to-talk; Alt/Option+C opens text chat; Ghost Cam toggles camera.
 ```
+
+## Trial installation proof (October 15, 2026 candidate)
+
+`externally_connectable.matches` contains only the configured channel website;
+production uses `https://www.anidachi.app/*`, staging uses
+`https://staging.anidachi.app/*`. `ids: []` denies other extensions. The runtime
+checks the exact sender origin, rejects subframes/extension senders, validates a
+bounded v1 request and signs only the purpose-prefixed trial challenge. Local
+storage retains the installation key across sign-out; it is neither synced nor
+included in diagnostics. No new Chrome permissions or provider content scripts.
+The website uses its existing approved extension client ID, never a user-supplied
+ID. Old/missing extensions keep the account + cookie path. This is an abuse
+signal, not hardware attestation. No production/Store release is authorized.

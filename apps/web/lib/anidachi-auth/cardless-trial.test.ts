@@ -5,6 +5,7 @@ import {
 	type CardlessTrialActivation,
 	type CardlessTrialDeps,
 	createCardlessTrialService,
+	CardlessTrialError,
 	type TrialStartInput,
 } from "./cardless-trial";
 
@@ -529,4 +530,71 @@ test("failure to persist a successful create never authorizes a second kind of m
 	);
 	assert.equal(f.state.customerCreates, 1);
 	assert.equal(f.state.creates, 0);
+});
+
+test("new activation resolves marker context before reservation or Stripe; failure has no side effects", async () => {
+	const f = fixture();
+	let reads = 0;
+	const result = await f.service.startCardlessTrial(USER, input, async () => {
+		reads++;
+		throw Error("cookie missing");
+	});
+	assert.equal(reads, 1);
+	assert.equal(result.state, "unavailable");
+	assert.equal(f.state.reserves, 0);
+	assert.equal(f.state.customerCreates, 0);
+	assert.equal(f.state.creates, 0);
+});
+test("lost Stripe reply resumes the activation without checking new cookie/installation markers", async () => {
+	const f = fixture();
+	f.state.loseCreate = true;
+	let reads = 0;
+	const markers = async () => {
+		reads++;
+		return { browser: "1".repeat(64) };
+	};
+	assert.equal(
+		(await f.service.startCardlessTrial(USER, input, markers)).state,
+		"pending",
+	);
+	assert.equal(
+		(
+			await f.service.startCardlessTrial(USER, input, async () => {
+				throw Error("cookie erased");
+			})
+		).state,
+		"active",
+	);
+	assert.equal(reads, 1);
+	assert.equal(f.state.reserves, 1);
+	assert.equal(f.state.creates, 1);
+});
+
+test("legacy reconciliation does not bypass a consumed installation on retry", async () => {
+	const f = fixture();
+	f.state.legacy = "pending";
+	const markers = { browser: "1".repeat(64), installation: "2".repeat(64) };
+	let resolutions = 0;
+	const resolveMarkers = async () => {
+		resolutions++;
+		return markers;
+	};
+	f.deps.reserve = async (_user, _input, _offer, received) => {
+		assert.deepEqual(received, markers);
+		throw new CardlessTrialError("trial_used");
+	};
+	assert.deepEqual(
+		await f.service.startCardlessTrial(USER, input, resolveMarkers),
+		{ state: "pending", kind: "legacy_checkout" },
+	);
+	assert.equal(resolutions, 0);
+	f.state.legacy = "clear";
+	assert.deepEqual(
+		await f.service.startCardlessTrial(USER, input, resolveMarkers),
+		{ state: "trial_used" },
+	);
+	assert.equal(resolutions, 1);
+	assert.equal(f.state.customerCreates, 0);
+	assert.equal(f.state.creates, 0);
+	assert.equal(f.activation(), null);
 });

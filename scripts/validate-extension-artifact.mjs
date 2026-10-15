@@ -120,6 +120,8 @@ const expectedByChannel = {
   },
 };
 const expected = expectedByChannel[channel];
+assertExactAllowlist("external website", manifest.externally_connectable?.matches ?? [], [expected.web]);
+assertExactAllowlist("external extension", manifest.externally_connectable?.ids ?? [], []);
 
 assertExactAllowlist(
   "host permission",

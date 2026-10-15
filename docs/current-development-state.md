@@ -1,5 +1,26 @@
 # Current Development State
 
+## Cardless trial abuse protection candidate, October 15, 2026
+
+The approved candidate adds account + signed browser-cookie checks and an optional
+extension installation-key proof. Web verifies the proof; PostgreSQL reserves
+marker hashes atomically with a new trial activation. Verified creation consumes
+them; unknown Stripe outcomes remain reserved. Existing trials and recovery retain
+their original identity. Missing/old extensions use the cookie-only path.
+
+New routes: POST `/api/billing/trial/context`; additive proof on trial start.
+The extension permits external messages only from its exact channel website.
+A marker rejection shows View plans; a short-lived account/browser-bound receipt
+makes the website offer ordinary purchase with explicit price confirmation.
+No price, automatic renewal, room or Worker entitlement change is introduced.
+Consumed hashes expire after 365 days with daily bounded PostgreSQL cleanup.
+
+Database `trial_abuse_enforced` is initially false for a compatible staged rollout;
+when enabled it rejects new reservations from older unguarded servers. Existing
+activation recovery remains valid. See the [design](superpowers/specs/2026-10-15-cardless-trial-abuse-design.md)
+and [plan](superpowers/plans/2026-10-15-cardless-trial-abuse.md). This paragraph
+records implemented candidate behavior, not deployment or production acceptance.
+
 ## Player onboarding staging candidate, October 14, 2026
 
 The owner accepted the final six-step local practice tour and authorized its

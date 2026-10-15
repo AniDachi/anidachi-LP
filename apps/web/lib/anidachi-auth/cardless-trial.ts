@@ -1,3 +1,4 @@
+import type { TrialAbuseMarkers } from "./trial-abuse";
 import type Stripe from "stripe";
 import type { BillingPeriod } from "../billing-view";
 import type { PaidPlanCode } from "./plan-entitlements";
@@ -18,7 +19,10 @@ export type TrialStartResult =
 				| "ineligible"
 				| "offer_changed"
 				| "unavailable"
-				| "verification_required";
+				| "verification_required"
+				| "trial_used"
+				| "trial_busy"
+				| "context_required";
 	  };
 export type CardlessTrialActivation = CardlessTrialActivationRecord & {
 	request_id: string;
@@ -67,6 +71,7 @@ export type CardlessTrialDeps = {
 		userId: string,
 		input: TrialStartInput,
 		offer: CardlessTrialOffer,
+		markers?: TrialAbuseMarkers,
 	): Promise<CardlessTrialActivation>;
 	bindCustomer(
 		userId: string,
@@ -99,7 +104,13 @@ export type CardlessTrialDeps = {
 };
 export class CardlessTrialError extends Error {
 	constructor(
-		public state: "ineligible" | "offer_changed" | "unavailable",
+		public state:
+			| "ineligible"
+			| "offer_changed"
+			| "unavailable"
+			| "trial_used"
+			| "trial_busy"
+			| "context_required",
 		public operationId?: string,
 	) {
 		super("Trial state requires reconciliation");
@@ -282,6 +293,7 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 		userId: string,
 		input: TrialStartInput,
 		reservedActivation?: CardlessTrialActivation,
+		resolveMarkers?: () => Promise<TrialAbuseMarkers>,
 	): Promise<TrialStartResult> {
 		let a: CardlessTrialActivation | null = null;
 		try {
@@ -313,7 +325,7 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 					return previous === "pending"
 						? { state: "pending", kind: "legacy_checkout" }
 						: { state: "ineligible" };
-				a = await deps.reserve(userId, input, offer);
+				a = await deps.reserve(userId, input, offer, await resolveMarkers?.());
 			}
 			if (
 				a.user_id !== userId ||
@@ -497,13 +509,16 @@ export function createCardlessTrialService(deps: CardlessTrialDeps) {
 		startCardlessTrial(
 			userId: string,
 			input: TrialStartInput,
+			resolveMarkers?: () => Promise<TrialAbuseMarkers>,
 		): Promise<TrialStartResult> {
 			if (!uuid.test(userId) || !validTrialStartInput(input))
 				return Promise.resolve({ state: "offer_changed" });
 			const key = JSON.stringify([userId, input]);
 			const active = inflight.get(key);
 			if (active) return active;
-			const pending = run(userId, input).finally(() => inflight.delete(key));
+			const pending = run(userId, input, undefined, resolveMarkers).finally(
+				() => inflight.delete(key),
+			);
 			inflight.set(key, pending);
 			return pending;
 		},
