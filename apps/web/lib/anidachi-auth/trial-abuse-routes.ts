@@ -59,7 +59,7 @@ export function createTrialContextHandler(deps: Deps = {}) {
 			)
 				return json({ error: "Invalid trial request." }, 400);
 			if (
-				!(await (deps.allowRequest ?? ((u) => allowTrialAction(u, "start")))(
+				!(await (deps.allowRequest ?? ((u) => allowTrialAction(u, "offer")))(
 					user.id,
 				))
 			)
