@@ -46,8 +46,8 @@ export const extensionUsingSteps = [
     text: "Open Settings → Layout. Drag cameras or chat in the preview to reposition them. Under Video, enlarge Camera size, then Apply.",
   },
   {
-    name: "Voice",
-    text: "Open Settings → Voice. Leave Push to talk selected on the left. Hold V to speak. Use Open mic only if you want the mic live without holding a key.",
+    name: "Microphone & camera",
+    text: "Use the two round buttons next to your name. A yellow microphone means hold V to talk. Click it to switch to always on in green; click again to return to push to talk. Click the camera to turn it on or off.",
   },
   {
     name: "Interface",

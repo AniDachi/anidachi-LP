@@ -2,6 +2,7 @@ import type { Viewport } from "next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { extensionPreviewFont } from "@/components/extension-preview-font";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
 import {
@@ -84,7 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth" data-ani-theme="account">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${extensionPreviewFont.variable} antialiased`}
       >
         <a
           href="#main-content"

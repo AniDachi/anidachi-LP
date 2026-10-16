@@ -11,7 +11,7 @@ import {
   OverlayReactionsMock,
   OverlayRoomMock,
   OverlaySeatsMock,
-  OverlayVoiceMock,
+  OverlayMediaMock,
 } from "@/components/overlay-using-mocks";
 import { WatchPlatformLinks } from "@/components/watch-platform-links";
 import {
@@ -152,15 +152,18 @@ export function OverlayUsingGuide({ compact = false }: { compact?: boolean }) {
             <OverlayLayoutMock />
           </div>
         </InstallStep>
-        <InstallStep heading={stepHeading} n={8} title="Voice">
+        <InstallStep heading={stepHeading} n={8} title="Microphone & camera">
+          <span id="using-voice" className="scroll-mt-24" aria-hidden="true" />
           <p className="mt-1 text-sm leading-relaxed text-ani-muted">
-            Open Settings → <span className="text-ani-text">Voice</span>. Leave{" "}
-            <span className="text-ani-text">Push to talk</span> selected on the
-            left. Hold <span className="text-ani-text">V</span> to speak. Use
-            Open mic only if you want the mic live without holding a key.
+            Use the two round buttons next to your name. A yellow microphone
+            means <span className="text-ani-text">hold V to talk</span>.
+            Click it to switch to <span className="text-ani-text">always on</span>
+            {" "}in green; click again to return to push to talk. Click the camera
+            to turn it on or off. You can try both buttons below without
+            using your microphone or camera.
           </p>
           <div className="mt-3">
-            <OverlayVoiceMock />
+            <OverlayMediaMock />
           </div>
         </InstallStep>
         <InstallStep heading={stepHeading} n={9} title="Interface">
