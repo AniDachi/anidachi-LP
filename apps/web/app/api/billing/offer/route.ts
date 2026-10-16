@@ -1,7 +1,3 @@
-import {
-	browserTrialDenied,
-	restrictTrialOffer,
-} from "@/lib/anidachi-auth/trial-abuse-offer";
 import { NextRequest, NextResponse } from "next/server";
 import { REFRESH_TOKEN_COOKIE } from "@/lib/anidachi-auth/cookies";
 import { resolveWebsiteSession } from "@/lib/anidachi-auth/website-session";
@@ -13,15 +9,9 @@ export async function GET(request: NextRequest) {
 		const user = await resolveWebsiteSession(
 			request.cookies.get(REFRESH_TOKEN_COOKIE)?.value,
 		);
-		return NextResponse.json(
-			restrictTrialOffer(
-				await getPricingOffer(user?.id ?? null),
-				user ? browserTrialDenied(request, user.id) : false,
-			),
-			{
-				headers,
-			},
-		);
+		return NextResponse.json(await getPricingOffer(user?.id ?? null), {
+			headers,
+		});
 	} catch {
 		return NextResponse.json(
 			{ error: "We could not load current plans. Please try again." },

@@ -2218,8 +2218,9 @@ describe("privileged overlay wiring", () => {
       expect(button(view.container, "Create room").disabled).toBe(false);
       await click(button(view.container, "Create room")); await flushRoomActionWork();
       expect(view.container.querySelector('[role="dialog"]')?.textContent).toContain("You can still join friends for free.");
-      expect(view.container.textContent).toContain("Try 3 days free");
-      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-notice a')?.href).toBe("http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial");
+      expect(view.container.textContent).toContain("View plans");
+      expect(view.container.textContent).not.toContain("Try 3 days free");
+      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-notice a')?.href).toBe("http://localhost:3003/pricing?plan=plus&billing=monthly");
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
       await click(button(view.container, "Close plan offer"));
       expect(view.container.querySelector('.hosting-notice')).toBeNull();

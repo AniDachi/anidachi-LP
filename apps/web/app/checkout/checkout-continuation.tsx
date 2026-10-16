@@ -21,8 +21,8 @@ import { LoginOAuthButtons } from "../login/login-oauth-buttons";
 import {
 	prepareTrialBrowserContext,
 	requestTrialInstallationProof,
-	type TrialBrowserContext,
 } from "@/lib/trial-abuse-client";
+import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
 import { TrialStartView } from "./trial-start-view";
 
 type Stage =
@@ -32,8 +32,7 @@ type Stage =
 	| "trial"
 	| "pending"
 	| "verification"
-	| "error"
-	| "trial_used";
+	| "error";
 type Confirmation = {
 	owner: string;
 	action: PricingOffer["action"];
@@ -67,12 +66,6 @@ export function CheckoutContinuation({
 	const busy = useRef(false);
 	const generation = useRef(0);
 	const controller = useRef<AbortController | null>(null);
-	const browserContext = useRef<{
-		owner: string;
-		requestId: string;
-		at: number;
-		value: TrialBrowserContext;
-	} | null>(null);
 	const request = useRef<{ owner: string; id: string } | null>(null);
 
 	const start = useCallback(
@@ -109,13 +102,18 @@ export function CheckoutContinuation({
 					);
 				} else {
 					if (result.state !== "unavailable") recovery.current = null;
-					if (result.state === "context_required")
-						browserContext.current = null;
 					if (result.state === "trial_used") {
 						request.current = null;
-						browserContext.current = null;
-						setStage("trial_used");
-						setMessage(trialResultMessage(result.state));
+						setStage("subscribe");
+						setConfirmation({
+							owner,
+							action: "subscribe",
+							mode: "cardless",
+							revision,
+						});
+						setMessage(
+							"The free trial is no longer available. You can choose a subscription below.",
+						);
 						return;
 					}
 					// Only a confirmed terminal result retires the old request. Unknown outcomes keep recovery.
@@ -140,8 +138,9 @@ export function CheckoutContinuation({
 					throw new Error(
 						"We could not check your subscription. Please try again.",
 					);
-				const offer = (await response.json()) as PricingOffer;
+				let offer = (await response.json()) as PricingOffer;
 				if (!current()) return;
+
 				if (!(Math.min(60_000, offer.validForMs) > Date.now() - started))
 					throw new Error("Your offer expired. Please try again.");
 				if (offer.action === "sign_in") {
@@ -185,12 +184,7 @@ export function CheckoutContinuation({
 							abort.signal,
 						);
 						if (!current()) return;
-						browserContext.current = {
-							owner: offer.ownerUserId,
-							requestId: retry.id,
-							at: Date.now(),
-							value: context,
-						};
+
 						extensionProof = await requestTrialInstallationProof(
 							context,
 							abort.signal,
@@ -217,8 +211,32 @@ export function CheckoutContinuation({
 						showTrialResult(result, offer.ownerUserId, pending.revision);
 					return;
 				}
+				if (offer.ownerUserId && request.current?.owner !== offer.ownerUserId) {
+					request.current = {
+						owner: offer.ownerUserId,
+						id: crypto.randomUUID(),
+					};
+				}
+				const checked = await resolveBrowserTrialOffer(
+					offer,
+					abort.signal,
+					request.current?.id,
+				);
+				if (!current()) return;
+				offer = checked.offer;
+				if (!offer.ownerUserId || offer.ownerUserId !== request.current?.owner)
+					throw new Error("Your account changed. Please try again.");
+				if (!(Math.min(60_000, offer.validForMs) > Date.now() - started))
+					throw new Error("Your offer expired. Please try again.");
+				if (offer.action === "manage") {
+					window.location.replace("/account/billing");
+					return;
+				}
+				const becamePaid =
+					confirmed?.action === "trial" && offer.action === "subscribe";
 				if (
 					confirmed &&
+					!becamePaid &&
 					(confirmed.action !== offer.action ||
 						confirmed.mode !== offer.trialMode ||
 						confirmed.revision !== offer.trialOfferRevision)
@@ -226,10 +244,6 @@ export function CheckoutContinuation({
 					throw new Error(
 						"The offer changed. Please review the current terms again.",
 					);
-				if (offer.action === "manage") {
-					window.location.replace("/account/billing");
-					return;
-				}
 				if (offer.action !== "trial" && offer.action !== "subscribe")
 					throw new Error("We could not confirm your subscription options.");
 				const verifiedPrice = (
@@ -244,36 +258,23 @@ export function CheckoutContinuation({
 						"Checkout for this price is temporarily unavailable. Please try again later.",
 					);
 				}
+				if (becamePaid) {
+					setConfirmation({
+						owner: offer.ownerUserId,
+						action: "subscribe",
+						mode: offer.trialMode,
+						revision: offer.trialOfferRevision,
+					});
+					setMessage(
+						"The free trial is no longer available. You can choose a subscription below.",
+					);
+					setStage("subscribe");
+					return;
+				}
 				// The original guest action offered a trial. Never silently replace it with an immediate payment.
 				const cardless =
 					offer.action === "trial" && offer.trialMode === "cardless";
 				if (cardless) reviewedCardless.current = true;
-				if (cardless) {
-					if (request.current?.owner !== offer.ownerUserId)
-						request.current = {
-							owner: offer.ownerUserId,
-							id: crypto.randomUUID(),
-						};
-					if (
-						!browserContext.current ||
-						browserContext.current.owner !== offer.ownerUserId ||
-						browserContext.current.requestId !== request.current.id ||
-						Date.now() - browserContext.current.at > 240_000
-					) {
-						const context = await prepareTrialBrowserContext(
-							offer.ownerUserId,
-							request.current.id,
-							abort.signal,
-						);
-						if (!current()) return;
-						browserContext.current = {
-							owner: offer.ownerUserId,
-							requestId: request.current.id,
-							at: Date.now(),
-							value: context,
-						};
-					}
-				}
 				if (
 					!confirmed &&
 					(offer.action === "subscribe" ||
@@ -301,10 +302,7 @@ export function CheckoutContinuation({
 						throw new Error(
 							"The offer changed. Review the plans before continuing.",
 						);
-					const extensionProof = await requestTrialInstallationProof(
-						browserContext.current!.value,
-						abort.signal,
-					);
+					const extensionProof = checked.extensionProof;
 					if (!current()) return;
 					recovery.current = {
 						owner: offer.ownerUserId,
@@ -436,6 +434,23 @@ export function CheckoutContinuation({
 		};
 	}, [start]);
 
+	if (stage === "checking")
+		return (
+			<AuthPageShell maxWidth="max-w-md">
+				<div
+					role="status"
+					className="flex min-h-48 items-center justify-center"
+				>
+					<Loader2
+						size={24}
+						className="animate-spin text-ani-muted motion-reduce:animate-none"
+						aria-hidden="true"
+					/>
+					<span className="sr-only">Loading plans</span>
+				</div>
+			</AuthPageShell>
+		);
+
 	if (stage === "trial" && confirmation?.mode === "cardless") {
 		return (
 			<TrialStartView
@@ -450,42 +465,32 @@ export function CheckoutContinuation({
 			<div className="text-center">
 				<AnidachiLogo size={48} className="mx-auto" />
 				<h1 className="mt-6 text-3xl font-semibold tracking-tight">
-					{stage === "trial_used" ? (
-						"A free trial has already been used here"
-					) : (
-						<>Continue with {label}</>
-					)}
+					Continue with{" "}
+					<span className="text-[var(--ani-menu-accent)]">{label}</span>
 				</h1>
 				<p className="mt-3 text-ani-muted">
-					{stage === "trial_used" ? (
-						"You can still join friends for free, or choose a plan to host."
-					) : (
-						<>
-							{billing === "yearly" ? "Yearly" : "Monthly"} · {amount}/{period}
-						</>
-					)}
+					{billing === "yearly" ? "Yearly" : "Monthly"} · {amount}/{period}
 				</p>
-				{(stage === "checking" || stage === "opening") && (
+				{stage === "opening" && (
 					<p
 						role="status"
 						className="mt-8 flex items-center justify-center gap-3 text-sm text-ani-muted"
 					>
 						<Loader2 size={18} className="animate-spin" aria-hidden="true" />
-						{stage === "checking"
-							? "Checking your subscription…"
-							: reviewedCardless.current
-								? "Confirming your trial…"
-								: "Opening secure checkout…"}
+						{reviewedCardless.current
+							? "Confirming your trial…"
+							: "Opening secure checkout…"}
 					</p>
 				)}
 				{stage === "subscribe" && (
 					<div className="mt-8 border-t border-ani-line pt-6">
-						<p>This account has no free trial available.</p>
+						<p>{message || "Host watch parties with your friends."}</p>
 						<p className="mt-3 text-sm leading-6 text-ani-muted">
 							{amount} billed now. Renews automatically every {period}. You can
 							cancel renewal from your account.
 						</p>
 						<Button
+							variant="cream"
 							className="mt-6 w-full"
 							onClick={() => void start(confirmation ?? undefined)}
 						>
@@ -540,13 +545,9 @@ export function CheckoutContinuation({
 				)}
 				<Link
 					href={`/pricing?plan=${plan}&billing=${billing}`}
-					className={
-						stage === "trial_used"
-							? "mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#f4ecdf] px-6 font-semibold text-[#171512] hover:bg-white"
-							: "mt-7 inline-block text-sm text-ani-muted underline underline-offset-4 hover:text-ani-text"
-					}
+					className="mt-7 inline-block text-sm text-ani-muted underline underline-offset-4 hover:text-ani-text"
 				>
-					{stage === "trial_used" ? "View plans" : "Back to plans"}
+					Back to plans
 				</Link>
 			</div>
 		</AuthPageShell>

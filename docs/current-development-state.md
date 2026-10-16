@@ -1,5 +1,25 @@
 # Current Development State
 
+## Trial offer preflight candidate, October 16, 2026
+
+The approved follow-up checks account authority plus the signed browser and optional
+installation markers before displaying a cardless trial CTA. A consumed marker
+shows ordinary priced purchase; pending markers or failures show retry. The existing
+atomic activation reservation remains authoritative. Preflight never starts a trial
+or creates Stripe state. Current subscriptions and same-operation recovery take priority.
+
+Pricing and checkout share a bounded preflight; expiry retires the display and
+focus/action refresh it without periodic offer polling. Extension notices and
+onboarding use View plans with Plus/monthly preserved because they cannot read
+the website cookie. Checkout uses a compact accessible loading indicator.
+
+See the [design](superpowers/specs/2026-10-16-trial-offer-preflight-design.md) and
+[plan](superpowers/plans/2026-10-16-trial-offer-preflight.md). This is candidate
+behavior, not production acceptance. Delivery is two ordered staging PRs: additive
+DB first via the normal staging migration workflow, then runtime. No feature-ref
+release, new secret, permission, price or entitlement change. The actual release
+receipt and remaining real-account acceptance belong in the PR/controller report.
+
 ## Cardless trial abuse protection candidate, October 15, 2026
 
 The approved candidate adds account + signed browser-cookie checks and an optional

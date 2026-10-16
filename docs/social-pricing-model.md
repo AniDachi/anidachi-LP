@@ -183,3 +183,18 @@ Used markers deny only a new free trial, not login, guest viewing, active rights
 or explicitly confirmed ordinary purchases. Consumed marker history is retained
 for 365 days; unresolved activations require verified reconciliation. See the
 [approved anti-abuse design](superpowers/specs/2026-10-15-cardless-trial-abuse-design.md).
+
+
+## Trial offer preflight candidate, 2026-10-16
+
+The website now checks the existing account/browser/optional installation ledger
+before a cardless trial CTA. Only confirmed eligibility shows the trial; a used
+marker shows ordinary price and Subscribe, while pending/failed checks allow retry.
+The final atomic start rechecks everything; a race never silently opens paid
+Checkout. Temporary purchase receipts are not the source of trial eligibility.
+Existing active access and recoverable activations take priority over new markers.
+
+Extension/onboarding entry points use View plans and preserve Plus/monthly. Pricing
+retires expired offers without polling and revalidates on focus/action. See the
+[preflight design](superpowers/specs/2026-10-16-trial-offer-preflight-design.md).
+These are staging-candidate changes; prices and production remain unchanged.

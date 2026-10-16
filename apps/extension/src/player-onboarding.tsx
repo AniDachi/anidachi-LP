@@ -60,16 +60,12 @@ export interface PlayerOnboardingProps {
 export function getPlayerIntroductionOffer(
 	accountPlan: AuthenticatedUserPlan | null | undefined,
 	hosting?: HostingDisplayState,
-): "trial" | "plans" | null {
+): "plans" | null {
 	const plan = hosting?.access?.planCode ?? accountPlan;
 	if (plan === "plus" || plan === "pro" || hosting?.access?.hosting?.canHost)
 		return null;
-	if (!accountPlan) return "trial";
-	return !hosting?.busy &&
-		!hosting?.error &&
-		hosting?.access?.hosting?.trialEligibility === "eligible"
-		? "trial"
-		: "plans";
+	// The website also checks its HttpOnly cookie before offering a trial.
+	return "plans";
 }
 const copy = {
 	launcher: {
@@ -820,7 +816,7 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 											target="_blank"
 											rel="noopener noreferrer"
 										>
-											{offer === "trial" ? "Try 3 days free" : "View plans"}
+											View plans
 											<ArrowUpRight size={17} aria-hidden />
 										</a>
 									)}

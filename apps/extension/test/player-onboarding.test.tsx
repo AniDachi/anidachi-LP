@@ -624,15 +624,15 @@ it("walks through the same short scenario with the existing panel styling", asyn
 	expect(host.textContent).toContain("Practice mode");
 	expect(host.querySelector(".tour-hide-hint")).toBeNull();
 	const offer = host.querySelector<HTMLAnchorElement>(".tour-plan-link");
-	expect(offer?.textContent).toBe("Try 3 days free");
-	expect(offer?.href).toBe("http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial");
+	expect(offer?.textContent).toBe("View plans");
+	expect(offer?.href).toBe("http://localhost:3003/pricing?plan=plus&billing=monthly");
 	expect(offer?.target).toBe("_blank");
 	expect(offer?.rel).toBe("noopener noreferrer");
 	expect(host.textContent).not.toMatch(
 		/Sign in|Choose a plan|Pro subscription/,
 	);
 });
-it("uses confirmed trial eligibility, hides paid offers and updates account copy without restarting", async () => {
+it("uses neutral plan navigation, hides paid offers and updates account copy without restarting", async () => {
 	const hosting: HostingDisplayState = {
 		mode: "paid-hosting",
 		busy: false,
@@ -654,6 +654,7 @@ it("uses confirmed trial eligibility, hides paid offers and updates account copy
 	expect(getPlayerIntroductionOffer("plus")).toBeNull();
 	expect(getPlayerIntroductionOffer("pro")).toBeNull();
 	expect(getPlayerIntroductionOffer("free")).toBe("plans");
+	expect(getPlayerIntroductionOffer(null)).toBe("plans");
 	expect(getPlayerIntroductionOffer("free", { ...hosting, busy: true })).toBe(
 		"plans",
 	);
@@ -663,18 +664,18 @@ it("uses confirmed trial eligibility, hides paid offers and updates account copy
 	await render({ accountPlan: "free", hosting });
 	await click("Open AniDachi controls");
 	expect(host.querySelector(".tour-plan-link")?.textContent).toBe(
-		"Try 3 days free",
+		"View plans",
 	);
 	if (!hosting.access?.hosting) throw new Error("Hosting fixture missing");
 	expect(host.querySelector<HTMLAnchorElement>(".tour-plan-link")?.href).toBe(
-		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
+		"http://localhost:3003/pricing?plan=plus&billing=monthly",
 	);
 
 	hosting.access.hosting.trialEligibility = "used";
 	await render({ hosting });
 	expect(host.querySelector(".tour-plan-link")?.textContent).toBe("View plans");
 	expect(host.querySelector<HTMLAnchorElement>(".tour-plan-link")?.href).toBe(
-		"http://localhost:3003/pricing",
+		"http://localhost:3003/pricing?plan=plus&billing=monthly",
 	);
 	await render({ accountPlan: "plus", hosting: undefined });
 	expect(host.querySelector(".tour-plan-link")).toBeNull();

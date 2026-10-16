@@ -4,6 +4,6 @@ import { WEB_HTTP_BASE } from "./constants";
 export function getHostingOfferUrl(offer: "trial" | "plans"): string {
 	const path = offer === "trial"
 		? "/checkout?plan=plus&billing=monthly&confirm=trial"
-		: "/pricing";
+		: "/pricing?plan=plus&billing=monthly";
 	return new URL(path, WEB_HTTP_BASE).href;
 }
