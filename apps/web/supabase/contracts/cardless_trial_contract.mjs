@@ -149,7 +149,13 @@ if (sql("select to_regprocedure('public.reserve_cardless_trial_v2(uuid,uuid,text
  assert.ok(migration);
  sql("begin;\n" + readFileSync(resolve(base, "migrations", migration), "utf8") + "\ncommit;");
 }
+if (sql("select to_regprocedure('public.read_trial_marker_status_v1(uuid,text,text)') is null;").trim() === "t") {
+ const migration = readdirSync(resolve(base, "migrations")).find(f => f.endsWith("_trial_offer_preflight.sql"));
+ assert.ok(migration);
+ sql("begin;\n" + readFileSync(resolve(base, "migrations", migration), "utf8") + "\ncommit;");
+}
 for (const name of [
+ "trial_offer_preflight",
  "cardless_trial_abuse",
 	"cardless_subscription_trials",
 	"cardless_trial_launch",

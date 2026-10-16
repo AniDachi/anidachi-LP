@@ -78,16 +78,19 @@ describe("durable terminal callback pacing", () => {
         expect(claimed.attempts).toBe(1);
         expect(await terminal(f.stub)).toEqual(claimed);
     });
-    it.each(["600", new Date(Date.now() + 600000).toUTCString()])("honors Retry-After %s across eviction and early alarms", async (retryAfter) => {
+    it.each(["seconds", "http-date"])("honors Retry-After %s across eviction and early alarms", async (format) => {
         const f = await fixture();
+        // Build the deadline at execution, not test collection; HTTP dates have second precision.
+        const start = Date.now();
+        const retryAfter = format === "seconds" ? "600" : new Date(start + 600000).toUTCString();
+        const expectedDeadline = format === "seconds" ? start + 600000 : Date.parse(retryAfter);
         let calls = 0;
         vi.stubGlobal("fetch", async () => { calls++; return Response.json({ error: "overload" }, { status: 503, headers: { "Retry-After": retryAfter } }); });
-        const start = Date.now();
         const response = await f.end();
         expect(response.status).toBe(502);
         await response.text();
         const claimed = await terminal(f.stub);
-        expect(claimed.nextAttemptAt).toBeGreaterThanOrEqual(start + 599000);
+        expect(claimed.nextAttemptAt).toBeGreaterThanOrEqual(expectedDeadline);
         await evictDurableObject(f.stub, { webSockets: "hibernate" });
         await runInDurableObject(f.stub, async (instance) => { await (instance as any).runAlarmExclusive(); });
         expect(calls).toBe(1);
