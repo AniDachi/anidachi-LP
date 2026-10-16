@@ -36,17 +36,18 @@ new account can bypass v1. Old trials cannot be attributed retroactively.
 
 ## User experience
 
-Create/refresh browser context when the trial confirmation is shown. Collect
-optional extension proof only for the explicit activation, with a bounded wait.
-The final server reservation is authoritative; the display does not grant access.
-Used marker: “A free trial has already been used here” and “View plans”.
-Pending other-account marker: retry message, never claim it was already used.
-Infrastructure/invalid proof: retry, never silently discard a supplied bad proof.
-After a verified marker denial, a signed ten-minute HttpOnly receipt bound to
-account and browser changes website offers to ordinary purchase. The dedicated
-server-only purchase RPC never offers a trial. Explicit price/owner/nontrial
-confirmation is required; no denial automatically opens a charge flow.
-Existing paid access, current trial, recovery, login and normal purchase survive.
+Amended by the approved [October 16 preflight design](2026-10-16-trial-offer-preflight-design.md).
+Create/refresh browser context and collect optional bounded extension proof before
+showing a cardless trial offer, and again for an explicit activation. The preflight
+only reads marker history; the final atomic reservation remains authoritative.
+Used marker: ordinary priced subscription with explicit Subscribe confirmation.
+Pending other-account marker or infrastructure/invalid proof: retry, never a
+paid-only decision or silent discard of a supplied invalid proof. A race after
+Start explains the changed offer before any new paid confirmation.
+A signed ten-minute account/browser-bound HttpOnly receipt enables the existing
+server-only ordinary purchase RPC; eligibility is rechecked independently of
+receipt expiry. Existing paid access, current trial, recovery, login and guest
+joining survive. Extension/onboarding use neutral View plans until website checks.
 
 ## Rollout
 

@@ -22,25 +22,25 @@
 ### Task 1: Server preflight
 **Files:** additive migration, supabase/tests/trial_offer_preflight.test.sql, lib/anidachi-auth/trial-offer-preflight.ts and .test.ts, app/api/billing/trial/offer/route.ts.
 **Interfaces:** read_trial_marker_status_v1(user,browser,installation) -> available|used|busy|account_changed; POST offer -> owner-bound ready + PricingOffer, or retryable state.
-- [ ] Write route/SQL tests for no claims, account priority, expired/consumed/reserved markers, ACL, invalid proof and failures. Run: pnpm --filter @anidachi/web exec tsx --test lib/anidachi-auth/trial-offer-preflight.test.ts; Expected FAIL missing implementation.
-- [ ] Add service-only read RPC and same-origin owner-bound route reusing marker verifier and purchase denial receipt.
-- [ ] Run route and real PostgreSQL contracts; Expected PASS. Commit server change.
+- [x] Write route/SQL tests for no claims, account priority, expired/consumed/reserved markers, ACL, invalid proof and failures. Run: pnpm --filter @anidachi/web exec tsx --test lib/anidachi-auth/trial-offer-preflight.test.ts; Expected FAIL missing implementation.
+- [x] Add service-only read RPC and same-origin owner-bound route reusing marker verifier and purchase denial receipt.
+- [x] Run route and real PostgreSQL contracts; Expected PASS. Commit server change.
 
 ### Task 2: Shared website flow
 **Files:** lib/trial-offer-client.ts and .test.ts, checkout-continuation.tsx and tests, pricing.tsx and tests, pricing-offer.ts.
 **Interfaces:** resolveBrowserTrialOffer(offer,signal,requestId) -> {offer,context?,extensionProof?}; uses Task 1 endpoint.
-- [ ] Add failing tests for used marker before trial display, pending/error, owner fencing, no automatic purchase and new request/proof reuse. Expected FAIL before implementation.
-- [ ] Integrate preflight, loading indicator and explicit ordinary purchase. Remove recurring pricing polling; retain expiry/focus/action freshness.
-- [ ] Run affected web tests/check; Expected PASS. Commit website change.
+- [x] Add failing tests for used marker before trial display, pending/error, owner fencing, no automatic purchase and new request/proof reuse. Expected FAIL before implementation.
+- [x] Integrate preflight, loading indicator and explicit ordinary purchase. Remove recurring pricing polling; retain expiry/focus/action freshness.
+- [x] Run affected web tests/check; Expected PASS. Commit website change.
 
 ### Task 3: Extension entry points
 **Files:** hosting-paywall.tsx, hosting-offer-link.ts, player-onboarding.tsx and respective tests.
 **Interfaces:** View plans -> /pricing?plan=plus&billing=monthly; website owns full eligibility.
-- [ ] Add failing tests for neutral notice/onboarding and preserved selection. Expected FAIL.
-- [ ] Update entry points, keep current access/error/ended states. Run extension check/tests; Expected PASS. Commit.
+- [x] Add failing tests for neutral notice/onboarding and preserved selection. Expected FAIL.
+- [x] Update entry points, keep current access/error/ended states. Run extension check/tests; Expected PASS. Commit.
 
 ### Task 4: Review and staging
 - [ ] Update current-state/domain docs; perform Graphify update or record precise exception.
 - [ ] Run full web/extension checks/tests, SQL, build/validate staging extension, local UI and dev:check.
 - [ ] Independent whole-branch review; fix Important/Critical findings with regression tests.
-- [ ] PR to staging, wait CI, merge; verify migration/web/artifact/smoke and hand off exact ZIP. No main promotion.
+- [ ] Two ordered PRs to staging (DB, then runtime), wait CI, merge; verify migration/web/artifact/smoke and hand off exact ZIP. No main promotion.
