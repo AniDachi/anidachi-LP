@@ -9,7 +9,7 @@ import {
 	UserPlus,
 } from "lucide-react";
 import type { Participant, RoomMediaV3Snapshot } from "@anidachi/protocol";
-import { VoiceSettingsPanel } from "../../extension/src/overlay-voice-controls";
+import { PanelMediaControls } from "../../extension/src/panel-media-controls";
 import { RoomDefaultsSettingsPanel } from "../../extension/src/overlay-room-defaults";
 import { RoomPeopleSection } from "../../extension/src/overlay-room-media-controls";
 import { ReactionShortcutEditor } from "../../extension/src/reaction-shortcut-editor";
@@ -96,9 +96,12 @@ export function OverlayCreateRoomMock() {
 				<div className="mini-panel">
 					<div className="panel-header">
 						<div className="panel-account">
-							<span className="mini-avatar panel-account-avatar">JD</span>
+							<span className="mini-avatar panel-account-avatar">A</span>
 							<div className="panel-account-copy">
-								<strong className="panel-account-name">John Doe</strong>
+								<div className="panel-account-title-row">
+									<strong className="panel-account-name">Alex</strong>
+									<span className="plan-badge plus">Plus</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -185,7 +188,7 @@ const participants: Participant[] = [
 	{
 		id: "example-host",
 		participantSessionId: "example-host-session",
-		displayName: "Heorhi Talochka",
+		displayName: "Alex",
 		role: "host",
 		cameraEnabled: false,
 		mediaSeat: "none",
@@ -195,7 +198,7 @@ const participants: Participant[] = [
 	{
 		id: "example-guest",
 		participantSessionId: "example-guest-session",
-		displayName: "Alex",
+		displayName: "Emma",
 		role: "viewer",
 		cameraEnabled: false,
 		mediaSeat: "none",
@@ -280,7 +283,7 @@ export function OverlayReactionsMock() {
 		DEFAULT_REACTION_SHORTCUTS,
 	);
 	return (
-		<ExtensionSettingsExample active="Reactions">
+		<ExtensionSettingsExample active="reactions">
 			<div className="settings-panel-stack reaction-settings-panel">
 				<div className="settings-toggle-row">
 					<span className="settings-toggle-switch-label">Quick reactions</span>
@@ -354,24 +357,46 @@ export function OverlayMessageMock() {
 
 export function OverlayLayoutMock() {
 	return (
-		<ExtensionSettingsExample active="Layout">
+		<ExtensionSettingsExample active="layout">
 			<OverlayLayoutShowcase />
 		</ExtensionSettingsExample>
 	);
 }
 
-export function OverlayVoiceMock() {
+/** Real media buttons, controlled only by local example state. No device capture. */
+export function OverlayMediaMock() {
 	const [mode, setMode] = useState<VoiceMode>("push-to-talk");
+	const [cameraEnabled, setCameraEnabled] = useState(false);
 	return (
-		<ExtensionSettingsExample active="Voice">
-			<VoiceSettingsPanel mode={mode} onModeChange={setMode} />
-		</ExtensionSettingsExample>
+		<ExtensionExampleFrame label="Microphone and camera example">
+			<div className="mini-panel example-media-panel">
+				<div className="panel-header">
+					<div className="panel-account">
+						<span className="mini-avatar panel-account-avatar">A</span>
+						<div className="panel-account-copy">
+							<div className="panel-account-title-row">
+								<strong className="panel-account-name">Alex</strong>
+								<span className="plan-badge plus">Plus</span>
+							</div>
+						</div>
+					</div>
+					<div className="panel-header-actions">
+						<PanelMediaControls
+							cameraEnabled={cameraEnabled}
+							voiceMode={mode}
+							onCameraToggle={() => setCameraEnabled((value) => !value)}
+							onVoiceModeChange={setMode}
+						/>
+					</div>
+				</div>
+			</div>
+		</ExtensionExampleFrame>
 	);
 }
 
 export function OverlayInterfaceMock() {
 	return (
-		<ExtensionSettingsExample active="Interface">
+		<ExtensionSettingsExample active="interface">
 			<OverlayInterfaceShowcase />
 		</ExtensionSettingsExample>
 	);
@@ -380,7 +405,7 @@ export function OverlayInterfaceMock() {
 export function OverlayRoomMock() {
 	const [preferences, setPreferences] = useState(getDefaultRoomJoinDefaults);
 	return (
-		<ExtensionSettingsExample active="Room">
+		<ExtensionSettingsExample active="room">
 			<RoomDefaultsSettingsPanel
 				preferences={preferences}
 				ready
