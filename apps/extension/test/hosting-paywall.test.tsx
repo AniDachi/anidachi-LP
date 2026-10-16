@@ -50,20 +50,20 @@ describe("hosting offer", () => {
 		document.body.replaceChildren();
 		vi.restoreAllMocks();
 	});
-	it("offers a verified Plus trial through website confirmation without starting it", async () => {
+	it("opens neutral plans because browser markers are checked on the website", async () => {
 		const request = vi.fn().mockResolvedValue(access);
 		const close = await mount(request);
 		expect(container.querySelector('[role="dialog"]')).not.toBeNull();
 		expect(container.textContent).toContain("You can still join friends for free.");
-		expect(container.textContent).toContain("Try 3 days free");
-		expect(container.textContent).toContain("No card required.");
+		expect(container.textContent).not.toContain("Try 3 days free");
+		expect(container.textContent).not.toContain("No card required.");
 		expect(container.textContent).not.toContain("Card required");
 		const link = container.querySelector("a")!;
-		expect(link.href).toBe("http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial");
+		expect(link.href).toBe("http://localhost:3003/pricing?plan=plus&billing=monthly");
 		expect(link.target).toBe("_blank");
 		expect(link.rel).toBe("noopener noreferrer");
-		expect(container.textContent).toContain("Try Plus free for 3 days.");
-		expect(link.textContent).toContain("Try 3 days free");
+		expect(container.textContent).toContain("Choose Plus or Pro");
+		expect(link.textContent).toContain("View plans");
 		await act(async () =>
 			container
 				.querySelector<HTMLButtonElement>('[aria-label="Close plan offer"]')!
@@ -86,7 +86,7 @@ describe("hosting offer", () => {
 				}),
 		);
 		expect(container.textContent).not.toContain("Try 3 days free");
-		expect(container.querySelector("a")?.href).toBe("http://localhost:3003/pricing");
+		expect(container.querySelector("a")?.href).toBe("http://localhost:3003/pricing?plan=plus&billing=monthly");
 		expect(container.querySelector("a")?.textContent).toContain(
 			"View plans",
 		);
@@ -156,10 +156,10 @@ describe("hosting offer", () => {
 
 describe("truthful hosting copy", () => {
   const state = { mode: "paid-hosting" as const, access, error: false, busy: false };
-  it("requires matching cardless terms and never guesses from eligibility alone", () => {
-    expect(getHostingNoticeKind(state)).toBe("cardless");
+  it("does not infer browser trial eligibility from account-only hosting terms", () => {
+    expect(getHostingNoticeKind(state)).toBe("plans");
     for (const hostingOffer of [undefined, {trialMode: "card_required" as const, trialDays: 3 as const, policyRevision: 2}, {trialMode: "cardless" as const, trialDays: 3 as const, policyRevision: 99}]) {
-      expect(getHostingNoticeKind({...state, access: {...access, hostingOffer}})).toBe("eligible");
+      expect(getHostingNoticeKind({...state, access: {...access, hostingOffer}})).toBe("plans");
     }
   });
   it("uses server time for trial expiry and keeps paid access above an old expired trial", () => {
