@@ -19,6 +19,7 @@ export function hasConfirmedTrialOffer(offer: PricingOffer | null): boolean {
 	return (
 		offer?.action === "trial" ||
 		(offer?.action === "sign_in" &&
+			offer.trialMode !== "cardless" &&
 			offer.paidHostingActive === true &&
 			offer.trialAvailable === true)
 	);

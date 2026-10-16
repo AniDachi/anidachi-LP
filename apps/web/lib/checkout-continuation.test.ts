@@ -43,8 +43,10 @@ async function mount(
 	strict = false,
 	confirmTrial?: true,
 	context?: (init?: RequestInit) => Response,
+	preflight?: (value: typeof cardlessOffer) => Response,
 ) {
 	const providedFetch = globalThis.fetch;
+	let latestOffer = cardlessOffer;
 	globalThis.fetch = async (url, init) =>
 		String(url) === "/api/billing/trial/context"
 			? (context?.(init) ??
@@ -56,7 +58,19 @@ async function mount(
 					challenge: "a".repeat(180) + "." + "b".repeat(43),
 					extensionId: null,
 				}))
-			: providedFetch(url, init);
+			: String(url) === "/api/billing/trial/offer"
+				? (preflight?.(latestOffer) ??
+					Response.json({
+						state: "ready",
+						ownerUserId: latestOffer.ownerUserId,
+						offer: latestOffer,
+					}))
+				: (async () => {
+						const response = await providedFetch(url, init);
+						if (String(url) === "/api/billing/offer" && response.ok)
+							latestOffer = await response.clone().json();
+						return response;
+					})();
 
 	const el = document.createElement("div");
 	document.body.append(el);
@@ -182,7 +196,7 @@ test("a changed offer or account never turns cardless consent into a card Checko
 		const el = await mount();
 		await act(async () => button(el, /Start my 3-day trial/i).click());
 		assert.equal(posts, 0);
-		assert.match(el.textContent!, /changed/i);
+		assert.match(el.textContent!, /changed|no longer available/i);
 		await act(async () => root?.unmount());
 		root = null;
 	}
@@ -366,7 +380,7 @@ test("a used trial waits for an explicit paid confirmation", async () => {
 	};
 	const el = await mount();
 	assert.equal(requests.length, 0);
-	assert.match(el.textContent!, /no free trial/i);
+	assert.ok(button(el, /Subscribe to/));
 	assert.match(el.textContent!, /\$76\.70/);
 	assert.match(el.textContent!, /billed now/i);
 	await act(async () => button(el, /Subscribe to Plus/).click());
@@ -507,7 +521,7 @@ test("if trial eligibility changes on the server, retry requires paid confirmati
 	assert.equal(posts, 1);
 	await act(async () => button(el, /Try again/).click());
 	assert.equal(posts, 1);
-	assert.match(el.textContent!, /no free trial/i);
+	assert.ok(button(el, /Subscribe to/));
 });
 
 test("a failed offer read can retry without starting checkout prematurely", async () => {
@@ -735,8 +749,8 @@ test("used browser offers plans without a retry loop or starting paid Checkout",
 	};
 	const el = await mount("plus", "monthly");
 	await act(async () => button(el, /Start my 3-day trial/i).click());
-	assert.match(el.textContent!, /A free trial has already been used here/);
-	assert.equal(el.querySelector("a")?.textContent?.trim(), "View plans");
+	assert.match(el.textContent!, /free trial is no longer available/);
+	assert.ok(button(el, /Subscribe to Plus/));
 	assert.equal(
 		[...el.querySelectorAll("button")].some((b) =>
 			/Try again/.test(b.textContent ?? ""),
@@ -795,26 +809,113 @@ test("legacy reconciliation retry reacquires the extension proof before a new re
 				ownerUserId: "owner-a",
 				extensionId,
 				challenge:
-					(++contexts === 1 ? "a" : "e").repeat(180) + "." + "b".repeat(43),
+					String.fromCharCode(97 + contexts++).repeat(180) +
+					"." +
+					"b".repeat(43),
 			}),
 		);
 		await act(async () => button(el, /Start my 3-day trial/i).click());
 		assert.equal(starts.length, 1);
-		assert.deepEqual(starts[0].extensionProof, proofs[0]);
+		assert.deepEqual(starts[0].extensionProof, proofs[1]);
 		await act(async () => button(el, /Check trial status/i).click());
 		assert.equal(starts.length, 2);
 		assert.equal(
 			contexts,
-			2,
+			3,
 			"legacy retry must refresh the request-bound challenge",
 		);
-		assert.equal(proofs.length, 2);
+		assert.equal(proofs.length, 3);
 		assert.equal(starts[1].requestId, starts[0].requestId);
-		assert.deepEqual(starts[1].extensionProof, proofs[1]);
-		assert.notEqual(proofs[1].challenge, proofs[0].challenge);
-		assert.match(el.textContent!, /A free trial has already been used here/);
+		assert.deepEqual(starts[1].extensionProof, proofs[2]);
+		assert.notEqual(proofs[2].challenge, proofs[1].challenge);
+		assert.match(el.textContent!, /free trial is no longer available/);
 	} finally {
 		if (previousChrome === undefined) delete runtimeGlobal.chrome;
 		else runtimeGlobal.chrome = previousChrome;
 	}
+});
+
+test("used browser gets ordinary purchase before any trial confirmation or activation", async () => {
+	let starts = 0;
+	globalThis.fetch = async (url) => {
+		if (
+			String(url).endsWith("/start") ||
+			String(url).includes("create-checkout")
+		)
+			starts++;
+		return Response.json(cardlessOffer);
+	};
+	const el = await mount("plus", "monthly", false, true, undefined, (value) =>
+		Response.json({
+			state: "ready",
+			ownerUserId: value.ownerUserId,
+			offer: { ...value, action: "subscribe", trialAvailable: false },
+		}),
+	);
+	assert.doesNotMatch(
+		el.textContent!,
+		/Start my 3-day trial|already been used here|This account has no free trial/,
+	);
+	assert.ok(button(el, /Subscribe to Plus/));
+	assert.equal(starts, 0);
+});
+test("busy marker or outage shows retry, not either purchase or trial", async () => {
+	globalThis.fetch = async () => Response.json(cardlessOffer);
+	const el = await mount("plus", "monthly", false, true, undefined, (value) =>
+		Response.json(
+			{ state: "trial_busy", ownerUserId: value.ownerUserId },
+			{ status: 409 },
+		),
+	);
+	assert.ok(button(el, /Try again/));
+	assert.doesNotMatch(
+		el.textContent!,
+		/Start my 3-day trial|Subscribe to Plus/,
+	);
+});
+test("initial lookup uses a compact accessible loader without subscription copy or premature price", async () => {
+	const lookup = deferred<Response>();
+	globalThis.fetch = () => lookup.promise;
+	const el = await mount("plus", "monthly");
+	assert.ok(el.querySelector('[role="status"]'));
+	assert.doesNotMatch(
+		el.textContent!,
+		/Checking your subscription|Continue with|7.99/,
+	);
+	lookup.resolve(Response.json({ ...offer, action: "subscribe" }));
+	await act(async () => {});
+});
+
+test("unknown activation recovery bypasses new marker checks and keeps its original operation", async () => {
+	let checks = 0,
+		starts = 0,
+		recoveries = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		if (String(url).endsWith("/start")) {
+			starts++;
+			throw Error("response lost");
+		}
+		if (String(url).endsWith("/recover")) {
+			recoveries++;
+			return Response.json({ state: "active", ownerUserId: "owner-a" });
+		}
+		throw Error("unexpected request");
+	};
+	const el = await mount("plus", "monthly", false, true, undefined, (value) => {
+		checks++;
+		return Response.json(
+			checks <= 2
+				? { state: "ready", ownerUserId: value.ownerUserId, offer: value }
+				: { state: "trial_busy", ownerUserId: value.ownerUserId },
+		);
+	});
+	await act(async () => button(el, /Start my 3-day trial/).click());
+	assert.ok(button(el, /Check trial status/));
+	await act(async () => button(el, /Check trial status/).click());
+	assert.equal(checks, 2);
+	assert.equal(starts, 1);
+	assert.equal(recoveries, 1);
+	assert.match(window.location.href, /account\/billing/);
 });

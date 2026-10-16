@@ -21,9 +21,18 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
-import { hasConfirmedTrialOffer, type PricingOffer, type PricingPrices } from "@/lib/pricing-offer";
+import {
+	hasConfirmedTrialOffer,
+	type PricingOffer,
+	type PricingPrices,
+} from "@/lib/pricing-offer";
 import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
-import { checkoutLoginPath, checkoutSessionRecoveryPath, checkoutReturnPath } from "@/lib/checkout-selection";
+import {
+	checkoutLoginPath,
+	checkoutSessionRecoveryPath,
+	checkoutReturnPath,
+} from "@/lib/checkout-selection";
+import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -79,21 +88,10 @@ export function Pricing({
 	}, []);
 
 	useEffect(() => {
-		let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 		let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 		let controller: AbortController | undefined;
 		let pending: Promise<PricingOffer | null> | null = null;
-		function loadOffer(
-			resetAccount = false,
-			purchase = false,
-		): Promise<PricingOffer | null> {
-			clearTimeout(refreshTimer);
-			// A scheduled refresh must not invalidate the explicit purchase already
-			// being checked by the server. Focus/account changes still retire it.
-			if (!resetAccount && !purchase && checkoutLock.current) {
-				refreshTimer = setTimeout(() => void loadOffer(), 1000);
-				return Promise.resolve(null);
-			}
+		function loadOffer(resetAccount = false): Promise<PricingOffer | null> {
 			if (!resetAccount && pending) return pending;
 			const request = fetchOffer(resetAccount).finally(() => {
 				if (pending === request) pending = null;
@@ -106,7 +104,8 @@ export function Pricing({
 		): Promise<PricingOffer | null> {
 			// A bare abort() is reported by the Next.js overlay as a crash.
 			controller?.abort("pricing-offer-replaced");
-			controller = new AbortController();
+			const abort = new AbortController();
+			controller = abort;
 			const started = Date.now();
 			const version = ++offerVersion.current;
 			checkingOfferRef.current = true;
@@ -118,13 +117,17 @@ export function Pricing({
 			try {
 				const response = await fetch("/api/billing/offer", {
 					cache: "no-store",
-					signal: AbortSignal.any([
-						controller.signal,
-						AbortSignal.timeout(15_000),
-					]),
+					signal: AbortSignal.any([abort.signal, AbortSignal.timeout(15_000)]),
 				});
 				if (!response.ok) throw new Error("Plans unavailable");
-				const next = (await response.json()) as PricingOffer;
+				const accountOffer = (await response.json()) as PricingOffer;
+				if (version !== offerVersion.current || abort.signal.aborted)
+					return null;
+				const checked = await resolveBrowserTrialOffer(
+					accountOffer,
+					abort.signal,
+				);
+				const next = checked.offer;
 				if (version !== offerVersion.current) return null;
 				const remaining =
 					Math.min(60_000, next.validForMs) - (Date.now() - started);
@@ -136,12 +139,6 @@ export function Pricing({
 					offerDeadline.current = 0;
 					setOffer(null);
 				}, remaining);
-				// Refresh before expiry. A slow response may retire eligibility, but
-				// it never removes the public prices or changes the card structure.
-				refreshTimer = setTimeout(
-					() => void loadOffer(),
-					Math.max(remaining / 2, remaining - 5000),
-				);
 				return next;
 			} catch {
 				if (version === offerVersion.current) {
@@ -157,12 +154,11 @@ export function Pricing({
 				}
 			}
 		}
-		requestOffer.current = () => loadOffer(false, true);
+		requestOffer.current = () => loadOffer(false);
 		const onFocus = () => void loadOffer(true);
 		void loadOffer(true);
 		window.addEventListener("focus", onFocus);
 		return () => {
-			clearTimeout(refreshTimer);
 			clearTimeout(expiryTimer);
 			// A bare abort() is reported by the Next.js overlay as a crash.
 			controller?.abort("pricing-offer-cancelled");
@@ -264,7 +260,10 @@ export function Pricing({
 				return;
 			}
 			if (currentOffer.action === "sign_in") {
-				window.location.href = checkoutLoginPath({ plan: tier, billing: period });
+				window.location.href = checkoutLoginPath({
+					plan: tier,
+					billing: period,
+				});
 				return;
 			}
 			if (!offer && currentOffer.action === "subscribe") {
@@ -289,8 +288,14 @@ export function Pricing({
 				);
 				return;
 			}
-			if (currentOffer.action === "trial" && currentOffer.trialMode === "cardless") {
-				window.location.href = checkoutReturnPath({ plan: tier, billing: period });
+			if (
+				currentOffer.action === "trial" &&
+				currentOffer.trialMode === "cardless"
+			) {
+				window.location.href = checkoutReturnPath({
+					plan: tier,
+					billing: period,
+				});
 				return;
 			}
 			trackConversion("checkout_session_started", {
@@ -333,7 +338,10 @@ export function Pricing({
 
 			if (!response.ok) {
 				if (response.status === 401) {
-					window.location.href = checkoutSessionRecoveryPath({ plan: tier, billing: period });
+					window.location.href = checkoutSessionRecoveryPath({
+						plan: tier,
+						billing: period,
+					});
 					return;
 				}
 				const message =
@@ -512,8 +520,8 @@ export function Pricing({
 					<p className="pricing-plans__terms">
 						<Lock size={14} aria-hidden="true" />
 						<span>
-							Checkout is secured by Stripe. Final total, taxes and discounts are
-							shown before confirmation.
+							Checkout is secured by Stripe. Final total, taxes and discounts
+							are shown before confirmation.
 						</span>
 					</p>
 				</div>
@@ -611,12 +619,15 @@ function TierCardBody({
 	const yearly = period === "yearly" && !!paidTier;
 	const selectedPrice = paidTier && prices ? prices[paidTier] : null;
 	const annualPrice = yearly ? selectedPrice : null;
-	const yearlySavings = paidTier && annualPrice
-		? formatMonthlyPrice({
-				...annualPrice,
-				unitAmount: PUBLISHED_PRICING.monthly[paidTier].unitAmount * 12 - annualPrice.unitAmount,
-			})
-		: null;
+	const yearlySavings =
+		paidTier && annualPrice
+			? formatMonthlyPrice({
+					...annualPrice,
+					unitAmount:
+						PUBLISHED_PRICING.monthly[paidTier].unitAmount * 12 -
+						annualPrice.unitAmount,
+				})
+			: null;
 	const amount =
 		yearly && annualPrice
 			? { ...annualPrice, unitAmount: annualPrice.unitAmount / 12 }
@@ -642,12 +653,12 @@ function TierCardBody({
 		trialOffered && offer?.trialMode === "cardless"
 			? `3 days free. Continue for ${recurringAmount}/${unit} only if you enable renewal.`
 			: offer?.action === "sign_in" && trialOffered
-			? `Then ${recurringAmount}/${unit} automatically.`
-			: offer?.action === "trial"
-				? `3 days free, then ${recurringAmount}/${unit} automatically.`
-				: offer?.action === "manage"
-					? null
-					: `Renews at ${recurringAmount}/${unit}.`;
+				? `Then ${recurringAmount}/${unit} automatically.`
+				: offer?.action === "trial"
+					? `3 days free, then ${recurringAmount}/${unit} automatically.`
+					: offer?.action === "manage"
+						? null
+						: `Renews at ${recurringAmount}/${unit}.`;
 	const termsDetail =
 		!offer || offer.action === "sign_in" || offer.action === "trial"
 			? null
@@ -657,7 +668,9 @@ function TierCardBody({
 
 	return (
 		<>
-			{highlighted ? <span className="pricing-plans__badge">Recommended</span> : null}
+			{highlighted ? (
+				<span className="pricing-plans__badge">Recommended</span>
+			) : null}
 			<div className="pricing-plans__top">
 				<header className="pricing-plans__card-header">
 					<Heading id={`pricing-${tier.id}-title`}>{tier.label}</Heading>
@@ -681,8 +694,7 @@ function TierCardBody({
 					<p className="pricing-plans__billing">
 						{yearly ? (
 							<>
-								Billed{" "}
-								<strong>{recurringAmount} / year</strong>
+								Billed <strong>{recurringAmount} / year</strong>
 							</>
 						) : paidTier ? (
 							"Billed monthly."
@@ -743,7 +755,10 @@ function TierCardBody({
 					{tier.id === "free" ? (
 						"Everything you need to join"
 					) : (
-						<>Up to <strong>{policy.maxParticipants - 1} friends</strong> join free</>
+						<>
+							Up to <strong>{policy.maxParticipants - 1} friends</strong> join
+							free
+						</>
 					)}
 				</p>
 				<div>

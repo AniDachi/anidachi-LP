@@ -43,10 +43,38 @@ test("an open pricing tab retires pre-cutover hosting at the server deadline", a
 	const el = await mount();
 	assert.match(el.textContent!, /30 min/);
 	await act(async () => t.mock.timers.tick(1000));
-	assert.equal(requests, 2);
+	assert.equal(requests, 1, "expiry retires display without polling");
 	assert.doesNotMatch(el.textContent!, /30 min|4 people/);
 });
-async function mount(props: NonNullable<Parameters<typeof Pricing>[0]> = {}) {
+async function mount(
+	props: NonNullable<Parameters<typeof Pricing>[0]> = {},
+	preflight?: (value: typeof offer) => Response | Promise<Response>,
+) {
+	const providedFetch = globalThis.fetch;
+	let latestOffer = offer;
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/trial/context")
+			return Response.json({
+				state: "ready",
+				ownerUserId: latestOffer.ownerUserId,
+				challenge: "a".repeat(180) + "." + "b".repeat(43),
+				extensionId: null,
+			});
+		if (String(url) === "/api/billing/trial/offer")
+			return (
+				preflight?.(latestOffer) ??
+				Response.json({
+					state: "ready",
+					ownerUserId: latestOffer.ownerUserId,
+					offer: latestOffer,
+				})
+			);
+		const response = await providedFetch(url, init);
+		if (String(url) === "/api/billing/offer" && response.ok)
+			latestOffer = await response.clone().json();
+		return response;
+	};
+
 	const el = document.createElement("div");
 	document.body.append(el);
 	root = createRoot(el);
@@ -76,12 +104,19 @@ test("cardless pricing explains no automatic payment and opens explicit trial co
 	let posts = 0;
 	globalThis.fetch = async (_url, init) => {
 		if (init?.method === "POST") posts++;
-		return Response.json({ ...offer, trialMode: "cardless", trialOfferRevision: "v1" });
+		return Response.json({
+			...offer,
+			trialMode: "cardless",
+			trialOfferRevision: "v1",
+		});
 	};
 	const el = await mount();
 	assert.match(el.textContent!, /No card required/i);
 	assert.match(el.textContent!, /No automatic charge/i);
-	assert.doesNotMatch(el.textContent!, /then .* automatically|Cancel before your trial ends/i);
+	assert.doesNotMatch(
+		el.textContent!,
+		/then .* automatically|Cancel before your trial ends/i,
+	);
 	await act(async () => plusButton(el).click());
 	assert.equal(posts, 0);
 	assert.equal(window.location.pathname, "/checkout");
@@ -89,20 +124,35 @@ test("cardless pricing explains no automatic payment and opens explicit trial co
 });
 
 test("a signed-out cardless offer remains conditional on eligibility after login", async () => {
-	globalThis.fetch = async () => Response.json({ ...offer, ownerUserId: null, action: "sign_in", trialMode: "cardless" });
+	globalThis.fetch = async () =>
+		Response.json({
+			...offer,
+			ownerUserId: null,
+			action: "sign_in",
+			trialMode: "cardless",
+		});
 	const el = await mount();
-	assert.match(el.textContent!, /No card required/i);
+	assert.doesNotMatch(
+		el.textContent!,
+		/No card required|Start 3-day free trial/i,
+	);
 	assert.doesNotMatch(el.textContent!, /automatically/);
 	await act(async () => plusButton(el).click());
 	assert.equal(window.location.pathname, "/login");
-	assert.equal(new URLSearchParams(window.location.search).get("next"), "/checkout?plan=plus&billing=yearly");
+	assert.equal(
+		new URLSearchParams(window.location.search).get("next"),
+		"/checkout?plan=plus&billing=yearly",
+	);
 });
 test("used trial and current subscribers get paid or management actions", async () => {
 	for (const action of ["subscribe", "manage"]) {
 		globalThis.fetch = async () =>
 			Response.json({ ...offer, action, trialAvailable: false });
 		const el = await mount();
-		assert.doesNotMatch(el.textContent!, /Start 3-day free trial|Try 3 days free/);
+		assert.doesNotMatch(
+			el.textContent!,
+			/Start 3-day free trial|Try 3 days free/,
+		);
 		assert.match(
 			el.textContent!,
 			action === "manage" ? /Manage subscription/ : /Subscribe to Plus/,
@@ -116,7 +166,10 @@ test("authority outage does not invent trial eligibility", async () => {
 	globalThis.fetch = async () =>
 		Response.json({ error: "unavailable" }, { status: 503 });
 	const el = await mount();
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial|Try 3 days free|30 min/);
+	assert.doesNotMatch(
+		el.textContent!,
+		/Start 3-day free trial|Try 3 days free|30 min/,
+	);
 	assert.match(plusButton(el).textContent!, /Choose Plus/);
 	assert.equal(plusButton(el).disabled, false);
 	assert.equal(el.querySelector('[role="alert"]'), null);
@@ -143,7 +196,10 @@ test("public monthly and annual plans render without any server catalog", async 
 	assert.match(html, /\$143\.90/);
 	assert.match(html, /Yearly/);
 	assert.match(html, /Choose Plus/);
-	assert.doesNotMatch(html, /Try 3 days free|One trial per account|Card required/);
+	assert.doesNotMatch(
+		html,
+		/Try 3 days free|One trial per account|Card required/,
+	);
 	assert.match(html, /Renews at \$76\.70\/year/);
 	globalThis.fetch = async () => Response.json({}, { status: 503 });
 	const el = await mount();
@@ -158,16 +214,29 @@ test("public monthly and annual plans render without any server catalog", async 
 
 test("guest pricing advertises a trial only while the server offers it", async () => {
 	for (const [paidHostingActive, trialAvailable, available] of [
-		[false, false, false], [false, true, false], [true, false, false],
-		[true, undefined, false], [true, true, true],
+		[false, false, false],
+		[false, true, false],
+		[true, false, false],
+		[true, undefined, false],
+		[true, true, true],
 	] as const) {
-		globalThis.fetch = async () => Response.json({
-			...offer, ownerUserId: null, action: "sign_in", paidHostingActive, trialAvailable,
-		});
+		globalThis.fetch = async () =>
+			Response.json({
+				...offer,
+				ownerUserId: null,
+				action: "sign_in",
+				paidHostingActive,
+				trialAvailable,
+			});
 		const el = await mount();
-		assert.match(plusButton(el).textContent!, available ? /Try 3 days free/ : /Choose Plus/);
+		assert.match(
+			plusButton(el).textContent!,
+			available ? /Try 3 days free/ : /Choose Plus/,
+		);
 		assert.equal(!!el.querySelector("#pricing-trial-terms"), available);
-		for (const id of plusButton(el).getAttribute("aria-describedby")!.split(" ")) {
+		for (const id of plusButton(el)
+			.getAttribute("aria-describedby")!
+			.split(" ")) {
 			assert.ok(el.querySelector(`#${id}`), `Missing terms element: ${id}`);
 		}
 		assert.match(el.textContent!, /\$76\.70/);
@@ -290,7 +359,7 @@ test("a remote price cannot replace or charge a different published amount", asy
 	);
 });
 
-test("a background refresh cannot turn a trial click into a paid subscription", async (t) => {
+test("an expired offer refresh cannot turn a trial click into a paid subscription", async (t) => {
 	t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
 	const refresh = deferred<Response>();
 	let reads = 0;
@@ -302,13 +371,13 @@ test("a background refresh cannot turn a trial click into a paid subscription", 
 		throw Error("unexpected checkout");
 	};
 	const el = await mount();
-	await act(async () => t.mock.timers.tick(55_000));
-	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	await act(async () => t.mock.timers.tick(60_000));
+	assert.doesNotMatch(plusButton(el).textContent!, /Start 3-day free trial/);
 	await act(async () => plusButton(el).click());
 	refresh.resolve(Response.json({ ...offer, action: "subscribe" }));
 	await act(async () => {});
 	assert.equal(checkouts, 0);
-	assert.match(el.textContent!, /Your subscription options changed/);
+	assert.match(el.textContent!, /Review the subscription terms/);
 	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
 });
 
@@ -596,15 +665,96 @@ test("losing annual availability does not silently submit a monthly checkout", a
 	assert.equal(checkout, 0);
 });
 
-
 test("a session that expires after choosing Pro still returns to monthly Pro checkout", async () => {
-  globalThis.fetch = async (url) => String(url) === "/api/billing/offer"
-    ? Response.json(offer)
-    : Response.json({ loginUrl: "/login?next=%2F" }, { status: 401 });
-  const el = await mount();
-  await act(async () => periodButton(el, "Monthly").click());
-  const pro = el.querySelector<HTMLButtonElement>('[aria-describedby^="pricing-pro-terms"]');
-  assert.ok(pro);
-  await act(async () => pro.click());
-  assert.equal(new URL(window.location.href).searchParams.get("next"), "/checkout?plan=pro&billing=monthly");
+	globalThis.fetch = async (url) =>
+		String(url) === "/api/billing/offer"
+			? Response.json(offer)
+			: Response.json({ loginUrl: "/login?next=%2F" }, { status: 401 });
+	const el = await mount();
+	await act(async () => periodButton(el, "Monthly").click());
+	const pro = el.querySelector<HTMLButtonElement>(
+		'[aria-describedby^="pricing-pro-terms"]',
+	);
+	assert.ok(pro);
+	await act(async () => pro.click());
+	assert.equal(
+		new URL(window.location.href).searchParams.get("next"),
+		"/checkout?plan=pro&billing=monthly",
+	);
+});
+
+test("cardless pricing waits for browser verdict, then shows purchase without a failed free-trial click", async () => {
+	const verdict = deferred<Response>();
+	let mutations = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) !== "/api/billing/offer") mutations++;
+		return Response.json({ ...offer, trialMode: "cardless" });
+	};
+	const el = await mount({}, () => verdict.promise);
+	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+	verdict.resolve(
+		Response.json({
+			state: "ready",
+			ownerUserId: "owner",
+			offer: {
+				...offer,
+				action: "subscribe",
+				trialMode: "cardless",
+				trialAvailable: false,
+			},
+		}),
+	);
+	await act(async () => {});
+	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
+	assert.equal(mutations, 0);
+});
+test("cardless pricing cannot turn a marker lookup outage into a paid offer", async () => {
+	globalThis.fetch = async () =>
+		Response.json({ ...offer, trialMode: "cardless" });
+	const el = await mount({}, () =>
+		Response.json(
+			{ state: "unavailable", ownerUserId: "owner" },
+			{ status: 503 },
+		),
+	);
+	assert.doesNotMatch(
+		plusButton(el).textContent!,
+		/Start 3-day free trial|Subscribe to Plus/,
+	);
+	await act(async () => plusButton(el).click());
+	assert.match(el.textContent!, /temporarily unavailable/);
+});
+
+test("a replaced account response cannot start a stale browser preflight", async () => {
+	const old = deferred<Response>();
+	let gets = 0;
+	let preflights = 0;
+	globalThis.fetch = async () =>
+		++gets === 1
+			? old.promise
+			: Response.json({
+					...offer,
+					ownerUserId: "new-owner",
+					action: "subscribe",
+					trialAvailable: false,
+					trialMode: "cardless",
+				});
+	const el = await mount({}, (value) => {
+		preflights++;
+		return Response.json({
+			state: "ready",
+			ownerUserId: value.ownerUserId,
+			offer: value,
+		});
+	});
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	await act(async () =>
+		old.resolve(Response.json({ ...offer, trialMode: "cardless" })),
+	);
+	assert.equal(
+		preflights,
+		0,
+		"retired account must not prepare or check browser markers",
+	);
+	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
 });
