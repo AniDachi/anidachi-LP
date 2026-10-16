@@ -465,7 +465,8 @@ export function CheckoutContinuation({
 			<div className="text-center">
 				<AnidachiLogo size={48} className="mx-auto" />
 				<h1 className="mt-6 text-3xl font-semibold tracking-tight">
-					Continue with <span className="text-ani-accent">{label}</span>
+					Continue with{" "}
+					<span className="text-[var(--ani-menu-accent)]">{label}</span>
 				</h1>
 				<p className="mt-3 text-ani-muted">
 					{billing === "yearly" ? "Yearly" : "Monthly"} · {amount}/{period}

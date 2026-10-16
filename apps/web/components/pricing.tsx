@@ -91,7 +91,9 @@ export function Pricing({
 		let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 		let controller: AbortController | undefined;
 		let pending: Promise<PricingOffer | null> | null = null;
+		let foreground = document.visibilityState !== "hidden";
 		function loadOffer(resetAccount = false): Promise<PricingOffer | null> {
+			if (!foreground) return Promise.resolve(null);
 			if (!resetAccount && pending) return pending;
 			const request = fetchOffer(resetAccount).finally(() => {
 				if (pending === request) pending = null;
@@ -155,9 +157,27 @@ export function Pricing({
 			}
 		}
 		requestOffer.current = () => loadOffer(false);
-		const onFocus = () => void loadOffer(true);
+		const pause = () => {
+			foreground = false;
+			++offerVersion.current;
+			controller?.abort("pricing-offer-hidden");
+			pending = null;
+			clearTimeout(expiryTimer);
+			offerDeadline.current = 0;
+			checkingOfferRef.current = false;
+			setOffer(null);
+		};
+		const onFocus = () => {
+			foreground = document.visibilityState !== "hidden";
+			if (foreground) void loadOffer(true);
+		};
+		const onVisibilityChange = () => {
+			if (document.visibilityState === "hidden") pause();
+		};
 		void loadOffer(true);
 		window.addEventListener("focus", onFocus);
+		window.addEventListener("blur", pause);
+		document.addEventListener("visibilitychange", onVisibilityChange);
 		return () => {
 			clearTimeout(expiryTimer);
 			// A bare abort() is reported by the Next.js overlay as a crash.
@@ -167,6 +187,8 @@ export function Pricing({
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 			++offerVersion.current;
 			window.removeEventListener("focus", onFocus);
+			window.removeEventListener("blur", pause);
+			document.removeEventListener("visibilitychange", onVisibilityChange);
 		};
 	}, [reload]);
 

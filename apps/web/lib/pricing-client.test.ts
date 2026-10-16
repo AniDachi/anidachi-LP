@@ -48,21 +48,31 @@ test("an open pricing tab retires pre-cutover hosting at the server deadline", a
 });
 async function mount(
 	props: NonNullable<Parameters<typeof Pricing>[0]> = {},
-	preflight?: (value: typeof offer) => Response | Promise<Response>,
+	preflight?: (
+		value: typeof offer,
+		init?: RequestInit,
+	) => Response | Promise<Response>,
+	context?: (
+		value: typeof offer,
+		init?: RequestInit,
+	) => Response | Promise<Response>,
 ) {
 	const providedFetch = globalThis.fetch;
 	let latestOffer = offer;
 	globalThis.fetch = async (url, init) => {
 		if (String(url) === "/api/billing/trial/context")
-			return Response.json({
-				state: "ready",
-				ownerUserId: latestOffer.ownerUserId,
-				challenge: "a".repeat(180) + "." + "b".repeat(43),
-				extensionId: null,
-			});
+			return (
+				context?.(latestOffer, init) ??
+				Response.json({
+					state: "ready",
+					ownerUserId: latestOffer.ownerUserId,
+					challenge: "a".repeat(180) + "." + "b".repeat(43),
+					extensionId: null,
+				})
+			);
 		if (String(url) === "/api/billing/trial/offer")
 			return (
-				preflight?.(latestOffer) ??
+				preflight?.(latestOffer, init) ??
 				Response.json({
 					state: "ready",
 					ownerUserId: latestOffer.ownerUserId,
@@ -758,3 +768,95 @@ test("a replaced account response cannot start a stale browser preflight", async
 	);
 	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
 });
+
+for (const phase of ["proof", "response"] as const)
+	test(`hiding pricing during ${phase} retires eligibility and a waiting checkout click`, async () => {
+		const result = deferred<Response>();
+		let requests = 0;
+		let contexts = 0;
+		let signal: AbortSignal | null | undefined;
+		let reply: ((value: unknown) => void) | undefined;
+		const originalChrome = Object.getOwnPropertyDescriptor(
+			globalThis,
+			"chrome",
+		);
+		Object.defineProperty(globalThis, "chrome", {
+			configurable: true,
+			value: {
+				runtime: {
+					sendMessage(
+						_id: string,
+						_message: unknown,
+						callback: (value: unknown) => void,
+					) {
+						reply = callback;
+					},
+				},
+			},
+		});
+		try {
+			const cardless = { ...offer, trialMode: "cardless" };
+			globalThis.fetch = async () => Response.json(cardless);
+			const el = await mount(
+				{},
+				(_value, init) => {
+					requests++;
+					signal = init?.signal;
+					return result.promise;
+				},
+				(_value, init) => {
+					contexts++;
+					signal = init?.signal;
+					return Response.json({
+						state: "ready",
+						ownerUserId: offer.ownerUserId,
+						extensionId: phase === "proof" ? "a".repeat(32) : null,
+						challenge: "a".repeat(180) + "." + "b".repeat(43),
+					});
+				},
+			);
+			assert.equal(contexts, 1);
+			if (phase === "proof") assert.ok(reply);
+			else assert.equal(requests, 1);
+			await act(async () => plusButton(el).click());
+			await act(async () => {
+				if (phase === "proof") window.dispatchEvent(new Event("blur"));
+				else {
+					Object.defineProperty(document, "visibilityState", {
+						configurable: true,
+						value: "hidden",
+					});
+					document.dispatchEvent(new Event("visibilitychange"));
+				}
+			});
+			assert.equal(
+				signal?.aborted,
+				true,
+				"leaving pricing immediately aborts the check",
+			);
+			await act(async () => {
+				reply?.({ unavailable: true });
+				result.resolve(
+					Response.json({
+						state: "ready",
+						ownerUserId: offer.ownerUserId,
+						offer: cardless,
+					}),
+				);
+			});
+			assert.equal(requests, phase === "proof" ? 0 : 1);
+			assert.doesNotMatch(
+				el.textContent!,
+				/Start 3-day free trial|No card required/i,
+			);
+			assert.equal(window.location.pathname, "/pricing");
+			Reflect.deleteProperty(document, "visibilityState");
+			await act(async () => window.dispatchEvent(new Event("focus")));
+			assert.equal(contexts, 2, "returning starts a fresh check");
+		} finally {
+			Reflect.deleteProperty(document, "visibilityState");
+			if (originalChrome)
+				Object.defineProperty(globalThis, "chrome", originalChrome);
+			else Reflect.deleteProperty(globalThis, "chrome");
+		}
+	});
