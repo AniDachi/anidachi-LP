@@ -28,7 +28,7 @@ const howToSteps = [
   },
   {
     name: "Press play together and stop at the end",
-    text: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} AniDachi keeps the picture in step. Hang up when the credits or the episode ends. Netflix is coming soon and is not on the public extension yet.`,
+    text: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} AniDachi keeps the picture in step. Hang up when the credits or the episode ends.`,
   },
 ];
 
@@ -60,7 +60,7 @@ const faq = [
   {
     question: "What should we watch?",
     answer:
-      "A YouTube movie or a Crunchyroll episode, each person on their own account in desktop Chrome. AniDachi keeps playback together. Netflix is coming soon and is not on the public extension yet.",
+      "A YouTube movie or a Crunchyroll episode, each person on their own account in desktop Chrome. AniDachi keeps playback together.",
   },
   {
     question: "Is this the anime date night list?",
@@ -105,7 +105,7 @@ export default function LongDistanceDateNightIdeasPage() {
         description="One evening built around a movie or episode."
         url="/guides/long-distance-date-night-ideas"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}

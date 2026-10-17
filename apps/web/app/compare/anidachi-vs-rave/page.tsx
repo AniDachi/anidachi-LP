@@ -97,7 +97,7 @@ export default function AniDachiVsRavePage() {
       description="Side-by-side comparison for Crunchyroll anime watch parties."
       url="/compare/anidachi-vs-rave"
       datePublished="2026-06-08"
-      dateModified="2026-10-01"
+      dateModified="2026-10-17"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -144,7 +144,7 @@ export default function AniDachiVsRavePage() {
           { feature: "Crunchyroll support", values: { anidachi: "yes", rave: "yes" } },
           {
             feature: "Multi-platform (Netflix, Disney+, etc.)",
-            values: { anidachi: "Netflix coming soon", rave: "yes" },
+            values: { anidachi: "Crunchyroll, YouTube, Netflix", rave: "yes" },
           },
           {
             feature: "Asynchronous watching",

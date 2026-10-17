@@ -5,7 +5,7 @@ export const homeFAQ = [
   {
     question: "What streaming services does AniDachi support?",
     answer:
-      "AniDachi’s Chrome extension supports full watchrooms on Crunchyroll and YouTube — live synced playback and chat on each person’s own stream today. Netflix is coming soon and is not supported yet. Async catch-up is coming soon in a later batch. Shorts, embeds, and homepage feeds are not supported. Disney+ and other services are not supported yet.",
+      "AniDachi’s Chrome extension supports full watchrooms on Crunchyroll, YouTube, and Netflix — live synced playback and chat on each person’s own stream today. Async catch-up is coming soon in a later batch. Shorts, embeds, and homepage feeds are not supported. Disney+ and other services are not supported yet.",
   },
   {
     question: "Does Crunchyroll have a built-in watch party feature?",
@@ -30,7 +30,7 @@ export const homeFAQ = [
   {
     question: "Do all my friends need a Crunchyroll account?",
     answer:
-      "For Crunchyroll anime nights, each person needs their own Crunchyroll account to stream. For YouTube watchrooms, each person uses their own YouTube session. Netflix is coming soon and is not supported yet. AniDachi handles the sync, watchrooms, and chat layer on top of the services that are available today.",
+      "For Crunchyroll anime nights, each person needs their own Crunchyroll account to stream. For YouTube watchrooms, each person uses their own YouTube session. For Netflix, each person needs their own access to the same title. AniDachi handles the sync, watchrooms, and chat layer on top of the services that are available today.",
   },
   {
     question: "Is AniDachi free?",
@@ -50,7 +50,7 @@ export const homeFAQ = [
   {
     question: "How is AniDachi different from Teleparty or Crunchyroll Party?",
     answer:
-      "AniDachi covers Crunchyroll and YouTube watchrooms, auto-detects titles, and tracks personal watch progress on paid plans. Netflix is coming soon and is not supported yet. Unlike Teleparty or Crunchyroll Party, async catch-up is planned for a later batch so friends won’t need to be online at the same time when that ships. Live sync and on-player overlay are available now.",
+      "AniDachi covers Crunchyroll, YouTube, and Netflix watchrooms, auto-detects titles, and tracks personal watch progress on paid plans. Unlike Teleparty or Crunchyroll Party, async catch-up is planned for a later batch so friends won’t need to be online at the same time when that ships. Live sync and on-player overlay are available now.",
   },
   {
     question: "Does AniDachi work on mobile?",

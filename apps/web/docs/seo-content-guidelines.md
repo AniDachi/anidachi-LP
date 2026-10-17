@@ -15,6 +15,11 @@ AniDachi is a Chrome extension + web product for **watchrooms** on:
 
 - **Crunchyroll** (catalog pages, desktop Chrome)
 - **YouTube** (full `youtube.com/watch` pages, desktop Chrome — not Shorts, embeds, feeds, or native mobile apps)
+- **Netflix** (movie and episode watch pages in desktop Chrome; each viewer needs their own access to the same title)
+
+Netflix copy is prepared for the coordinated 0.1.3 launch. Keep it on staging until
+the compatible production services and approved Store update are released. Do not
+promise Netflix ad-plan compatibility without acceptance evidence.
 
 Current features: live synchronized players, on-player chat and reactions, voice/video calls, and personal watch history. Each person uses their own access to the video.
 
@@ -26,8 +31,8 @@ Plus and Pro offer monthly/yearly billing and one 3-day trial per eligible accou
 
 Use `lib/pricing-copy.ts` for shared commercial copy. Legacy Free hosting/quota data in the protocol is compatibility data, not a current marketing offer. Update visible text, FAQ/HowTo JSON-LD and search/social metadata together.
 
-**Not supported:** Netflix, Disney+, Hulu, Amazon Prime Video sync.  
-**Not affiliated** with Crunchyroll, Sony, YouTube, or Google.
+**Not supported:** Disney+, Hulu, Amazon Prime Video sync.
+**Not affiliated** with Crunchyroll, Sony, YouTube, Google, or Netflix.
 
 Primary conversion path: the official Chrome Web Store listing linked from
 **`/extension`**. Install how-tos should link that listing or the install hub;
@@ -187,9 +192,9 @@ Owner-approved exceptions to the safety rules above, newest first.
 - [ ] URL stability: same path (no slug/redirect/canonical retarget)
 - [ ] No cannibalization of an owned query
 - [ ] Canonical = path; FAQ body ↔ JSON-LD
-- [ ] Product claims truthful (CR + YT limits)
+- [ ] Product claims truthful (Crunchyroll + YouTube + Netflix limits)
 - [ ] Sources for competitor / absolute claims
 - [ ] Inbound links planned
 - [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
-*Last updated: 2026-10-12 (freeze lifted, decisions log, canonical host)*
+*Last updated: 2026-10-17 (Netflix launch copy; existing URL/title and canonical safeguards retained)*

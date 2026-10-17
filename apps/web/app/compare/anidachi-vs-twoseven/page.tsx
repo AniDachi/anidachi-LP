@@ -155,7 +155,7 @@ export default function AniDachiVsTwosevenPage() {
           {
             feature: "Multi-platform live sync",
             values: {
-              anidachi: "Crunchyroll & YouTube",
+              anidachi: "Crunchyroll, YouTube, Netflix",
               twoseven: "Many services",
             },
           },

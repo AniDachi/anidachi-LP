@@ -27,7 +27,7 @@ const howToSteps = [
     text: "Ask if the picture is sharp and in sync with your voice. A black window usually means the player blocked the capture.",
   },
   {
-    name: "Switch Crunchyroll or YouTube to a watchroom",
+    name: "Switch Crunchyroll, YouTube, or Netflix to a watchroom",
     text: "For a full episode, stop the share. Each person opens the same Crunchyroll episode or YouTube video and joins an AniDachi watchroom. Leave Discord on for voice.",
   },
 ];
@@ -35,11 +35,11 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "How to Screen Share on Discord (and When to Stop)",
   description:
-    "How to screen share on Discord: join a voice call, share the window, then switch Crunchyroll or YouTube to an AniDachi watchroom when the picture gets soft.",
+    "How to screen share on Discord: join a voice call, share the window, then switch Crunchyroll, YouTube, or Netflix to an AniDachi watchroom when the picture gets soft.",
   alternates: { canonical: "/guides/how-to-screen-share-on-discord" },
   openGraph: {
     title: "How to Screen Share on Discord",
-    description: "The share steps, plus a clearer way to watch Crunchyroll or YouTube.",
+    description: "The share steps, plus a clearer way to watch Crunchyroll, YouTube, or Netflix.",
     url: "/guides/how-to-screen-share-on-discord",
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
@@ -60,12 +60,12 @@ const faq = [
   {
     question: "Why does the shared video look bad?",
     answer:
-      "Discord compresses the capture and can lag behind your voice. Some players also go black when captured. For Crunchyroll and YouTube, a synced watchroom keeps full quality on each person’s own tab.",
+      "Discord compresses the capture and can lag behind your voice. Some players also go black when captured. For Crunchyroll, YouTube, and Netflix, a synced watchroom keeps full quality on each person’s own tab.",
   },
   {
     question: "Can AniDachi replace a Netflix screen share?",
     answer:
-      "Not yet. Netflix is coming soon and is not supported. AniDachi syncs Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome.",
+      "Netflix is supported in desktop Chrome. AniDachi syncs Crunchyroll catalog pages, full YouTube watch pages, and Netflix movie or episode pages in desktop Chrome.",
   },
 ];
 
@@ -81,7 +81,7 @@ export default function HowToScreenShareOnDiscordPage() {
     <>
       <HowToJsonLd
         name="How to screen share on Discord"
-        description="Share a Discord window, then move Crunchyroll or YouTube to a synced watchroom."
+        description="Share a Discord window, then move Crunchyroll, YouTube, or Netflix to a synced watchroom."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -97,7 +97,7 @@ export default function HowToScreenShareOnDiscordPage() {
         description="Discord screen share steps and when to use a watchroom instead."
         url="/guides/how-to-screen-share-on-discord"
         datePublished="2026-09-26"
-        dateModified="2026-09-26"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}

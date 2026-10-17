@@ -1,5 +1,20 @@
 # Current Development State
 
+## Netflix website launch copy, October 17, 2026
+
+The approved website follow-up presents Netflix as supported alongside Crunchyroll
+and YouTube for the coordinated 0.1.3 release. It removes stale coming-soon and
+unsupported claims from public copy, FAQ/HowTo structured data, search/social
+metadata, comparison tables, account help and the privacy provider list. Netflix
+is removed from the future-platform logo strip; the remaining logos stay centered.
+Published URLs, canonical/www behavior, high-traffic homepage title/H1, pricing,
+authorization and the frozen extension ZIP are unchanged.
+
+This copy is prepared for staging and the later coordinated launch, not an early
+production claim. Netflix ad-plan acceptance and Store listing/privacy declarations
+remain separate launch checks. See the [website-copy receipt](releases/netflix-website-copy-2026-10-17.md)
+and [integrated launch runbook](releases/integrated-release-2026-10-17.md).
+
 ## Integrated release preparation, October 17, 2026
 
 The owner authorized preparing a production-channel review ZIP with the accepted

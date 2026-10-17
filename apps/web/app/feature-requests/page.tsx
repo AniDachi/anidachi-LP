@@ -6,7 +6,7 @@ import { FeatureRequestForm } from "@/components/feature-request-form";
 export const metadata: Metadata = {
   title: "Feature Requests",
   description:
-    "Submit product ideas for AniDachi watchrooms on Crunchyroll and YouTube. We read every request.",
+    "Submit product ideas for AniDachi watchrooms on Crunchyroll, YouTube, and Netflix. We read every request.",
   alternates: { canonical: "/feature-requests" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "Feature Requests — AniDachi",
     description:
-      "Tell us what would make your Crunchyroll or YouTube watch parties better.",
+      "Tell us what would make your Crunchyroll, YouTube, or Netflix watch parties better.",
     url: "/feature-requests",
   },
 };
@@ -40,7 +40,7 @@ export default function FeatureRequestsPage() {
           Feature requests
         </h1>
         <p className="mb-10 max-w-xl text-pretty text-lg leading-relaxed text-ani-muted">
-          Tell us what would make Crunchyroll or YouTube watchrooms better for
+          Tell us what would make Crunchyroll, YouTube, or Netflix watchrooms better for
           your group. We read every submission — this is not a support ticket
           queue.
         </p>

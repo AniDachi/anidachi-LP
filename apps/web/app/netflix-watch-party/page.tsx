@@ -14,18 +14,18 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Netflix Watch Party — Watch the Same Title Together",
   description:
-    "A Netflix watch party is the same movie or episode at the same moment, each person on their own Netflix account. AniDachi is adding Netflix in desktop Chrome. It is not on the public extension yet.",
+    "A Netflix watch party is the same movie or episode at the same moment, each person on their own Netflix account. AniDachi syncs Netflix playback in desktop Chrome with chat, reactions, and calls.",
   alternates: { canonical: "/netflix-watch-party" },
   openGraph: {
     title: "Netflix Watch Party",
-    description: "Same Netflix title, own accounts, desktop Chrome. Coming to AniDachi.",
+    description: "Same Netflix title, own accounts, desktop Chrome. Watch together with AniDachi.",
     url: "/netflix-watch-party",
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Netflix Watch Party",
-    description: "Watch Netflix together from your own account. AniDachi support is coming.",
+    description: "Watch Netflix together from your own account with AniDachi in desktop Chrome.",
     images: ["/opengraph-image.png"],
   },
 };
@@ -39,7 +39,7 @@ const faq = [
   {
     question: "Does AniDachi run a Netflix watch party today?",
     answer:
-      "Not yet. AniDachi is adding Netflix watchrooms for desktop Chrome. The public extension currently syncs Crunchyroll and YouTube.",
+      "Yes. AniDachi supports Netflix movies and episodes in desktop Chrome. A Plus, Pro, or trial host creates a room; friends join for free with the extension and their own access to the same title.",
   },
   {
     question: "Is Netflix Party the same as a Netflix watch party?",
@@ -63,10 +63,10 @@ export default function NetflixWatchPartyPage() {
         { name: "Netflix watch party", url: "/netflix-watch-party" },
       ]}
       title="Netflix watch party"
-      description="A Netflix watch party on your own account. AniDachi support is coming."
+      description="Watch Netflix together with AniDachi, each person on their own account."
       url="/netflix-watch-party"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -115,9 +115,7 @@ export default function NetflixWatchPartyPage() {
         <p>
           A Netflix watch party is the same movie or episode at the same
           moment, with each person signed into their own Netflix account.
-          AniDachi is adding that for desktop Chrome. It is not on the public
-          extension yet. Crunchyroll and YouTube watchrooms are available now
-          from <Link href="/extension">/extension</Link>.
+          AniDachi keeps playback together in desktop Chrome and adds chat, reactions, and calls. Install it from <Link href="/extension">/extension</Link>.
         </p>
       </SeoGuideAnswer>
       <h2 id="need" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -135,7 +133,7 @@ export default function NetflixWatchPartyPage() {
           },
           {
             title: "A way to stay in sync",
-            body: "Netflix does not include that control. Extensions fill the gap today. AniDachi’s Netflix rooms are the one coming next.",
+            body: "AniDachi keeps play, pause, and seeking together. A Plus, Pro, or trial host shares a room link; friends join for free.",
           },
         ]}
       />

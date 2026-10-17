@@ -12,7 +12,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
 	title: "AniDachi Pricing — Free Chrome Watch Party for Crunchyroll & YouTube",
 	description:
-		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms, and check your trial availability. Netflix is coming soon.",
+		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms, and check your trial availability.",
 	alternates: { canonical: "/pricing" },
 	openGraph: {
 		images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms.",
 		url: "/pricing",
 	},
 	twitter: {
@@ -52,7 +52,7 @@ const faq = [
 	},
 	{
 		question: "What's the difference between Plus and Pro?",
-		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll and YouTube. Netflix is coming soon and is not supported yet.`,
+		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll, YouTube, and Netflix.`,
 	},
 	{
 		question: "How does the free trial work?",
@@ -65,9 +65,9 @@ const faq = [
 			"Open Account → Subscription and choose Cancel subscription. Trial access lasts until its original end; paid access lasts until the end of the paid period. Canceling renewal prevents the next scheduled charge.",
 	},
 	{
-		question: "Do I still need Crunchyroll or YouTube?",
+		question: "Do I still need Crunchyroll, YouTube, or Netflix?",
 		answer:
-			"Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription. Netflix is coming soon and is not supported yet.",
+			"Yes. Each person streams under their own Crunchyroll, YouTube, or Netflix account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription.",
 	},
 ];
 

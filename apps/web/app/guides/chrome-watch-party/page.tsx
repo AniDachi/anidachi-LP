@@ -50,7 +50,7 @@ const faq = [
 	{
 		question: "Which sites can the room sync?",
 		answer:
-			"Crunchyroll catalog pages and full youtube.com/watch pages. Netflix is coming soon and is not supported yet. Shorts and embeds are not supported.",
+			"Crunchyroll catalog pages, full youtube.com/watch pages, and Netflix movie or episode pages. Shorts and embeds are not supported.",
 	},
 ];
 
@@ -70,10 +70,10 @@ export default function ChromeWatchPartyPage() {
 				{ name: "Chrome watch party", url: PAGE_PATH },
 			]}
 			title="Chrome watch party"
-			description="Desktop Chrome extension for Crunchyroll and YouTube watchrooms."
+			description="Desktop Chrome extension for Crunchyroll, YouTube, and Netflix watchrooms."
 			url={PAGE_PATH}
 			datePublished="2026-10-08"
-			dateModified="2026-10-08"
+			dateModified="2026-10-17"
 			faq={faq}
 			headings={tocHeadings}
 			articleImage={articleImage}

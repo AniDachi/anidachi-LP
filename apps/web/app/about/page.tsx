@@ -6,7 +6,7 @@ import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 export const metadata: Metadata = {
   title: "About AniDachi",
   description:
-    "Who operates AniDachi, what the product does on Crunchyroll and YouTube, and how we stay independent of streaming platforms.",
+    "Who operates AniDachi, what the product does on Crunchyroll, YouTube, and Netflix, and how we stay independent of streaming platforms.",
   alternates: { canonical: "/about" },
   openGraph: {
     images: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
     title: "About AniDachi",
     description:
-      "AniDachi helps friends watch together on Crunchyroll and YouTube with synced watchrooms — built by an independent team. Netflix is coming soon.",
+      "AniDachi helps friends watch together on Crunchyroll, YouTube, and Netflix with synced watchrooms — built by an independent team.",
     url: "/about",
   },
 };
@@ -73,7 +73,7 @@ export default function AboutPage() {
             </h2>
             <p>
               AniDachi is <strong>not affiliated with</strong> Crunchyroll, Sony,
-              YouTube, Google, or any other streaming platform. Product names of
+              YouTube, Google, Netflix, or any other streaming platform. Product names of
               third parties appear only to describe compatibility.
             </p>
           </section>
@@ -92,10 +92,10 @@ export default function AboutPage() {
                 mobile apps.
               </li>
               <li>
-                Rooms stay on one provider per session (Crunchyroll or YouTube).
+                Rooms stay on one provider per session (Crunchyroll, YouTube, or Netflix).
               </li>
               <li>
-                Netflix is coming soon and is not supported yet.
+                Netflix movie and episode watch pages in desktop Chrome.
               </li>
               <li>
                 Disney+, Hulu, and Amazon Prime Video sync are not
