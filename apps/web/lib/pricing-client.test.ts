@@ -121,8 +121,14 @@ test("cardless pricing explains no automatic payment and opens explicit trial co
 		});
 	};
 	const el = await mount();
-	assert.match(el.textContent!, /No card required/i);
-	assert.match(el.textContent!, /No automatic charge/i);
+	for (const tier of ["plus", "pro"]) {
+		const card = el.querySelector(`[aria-labelledby="pricing-${tier}-title"]`)!;
+		assert.match(card.textContent!, /Start 3-day free trial/);
+		const terms = card.querySelector(`#pricing-${tier}-terms`)!;
+		assert.match(terms.textContent!, /No card required/i);
+		assert.match(terms.textContent!, /No automatic charge/i);
+		assert.match(terms.textContent!, /only if you enable renewal/i);
+	}
 	assert.doesNotMatch(
 		el.textContent!,
 		/then .* automatically|Cancel before your trial ends/i,
@@ -161,7 +167,7 @@ test("used trial and current subscribers get paid or management actions", async 
 		const el = await mount();
 		assert.doesNotMatch(
 			el.textContent!,
-			/Start 3-day free trial|Try 3 days free/,
+			/Start 3-day free trial|Try 3 days free|No card required/,
 		);
 		assert.match(
 			el.textContent!,

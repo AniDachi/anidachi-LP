@@ -4,6 +4,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getSeoSiteOrigin } from "@/lib/site-url";
+import { PRICING_TRIAL_NOTE } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -260,7 +261,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 				question:
 					"Do friends need to pay to join a long-distance AniDachi room?",
 				answer:
-					"Friends can join on Free accounts. Creating a room requires the host's own Plus or Pro access, including an active trial. See pricing for the three-day card trial and subscription terms.",
+					`Friends can join on Free accounts. Creating a room requires the host's own Plus or Pro access, including an active trial. ${PRICING_TRIAL_NOTE}`,
 			},
 		],
 	},
@@ -645,7 +646,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "when-upgrade",
 				title: "When free stops being enough",
 				body: [
-					"Free lets you join a friend's active room. To create your own, choose Plus or Pro. Eligible accounts can try either plan for three days with a card; see pricing for renewal and cancellation terms.",
+					`Free lets you join a friend's active room. To create your own, choose Plus or Pro. ${PRICING_TRIAL_NOTE}`,
 				],
 			},
 		],

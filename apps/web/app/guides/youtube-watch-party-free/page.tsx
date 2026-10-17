@@ -15,6 +15,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
   PRICING_PLUS_SHORT,
+  PRICING_TRIAL_NOTE,
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
@@ -63,7 +64,7 @@ const faq = [
   },
   {
     question: "When should the host upgrade from Free?",
-    answer: `Choose Plus (${PRICING_PLUS_SHORT} on monthly billing) or Pro to create your own rooms. Eligible Free accounts can start a three-day card trial once per account. Guests can stay on Free; see pricing for renewal and cancellation terms.`,
+    answer: `Choose Plus (${PRICING_PLUS_SHORT} on monthly billing) or Pro to create your own rooms. ${PRICING_TRIAL_NOTE} Guests can stay on Free; see pricing for renewal and cancellation terms.`,
   },
 ];
 
@@ -164,10 +165,8 @@ export default function YoutubeWatchPartyFreePage() {
         When Hosts Upgrade
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro to host.
-        An eligible account can use one three-day card trial across both plans.
-        The selected monthly or yearly subscription renews automatically; cancel
-        before the trial ends to avoid the first charge. Guests keep Free accounts.
+        Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro to host.{" "}
+        {PRICING_TRIAL_NOTE} Guests keep Free accounts.
         Full plan details:{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
           pricing

@@ -46,13 +46,14 @@ export function CardlessTrialControls({
 	)
 		return null;
 	const pending = trial.pendingRenewal;
+	const enabled = trial.renewalEnabled || trial.renewalState === "enabled";
 	return (
 		<section className="billing-trial-controls" aria-label="Trial renewal">
 			<h3>
-				{trial.renewalState === "enabled"
-					? "Manage trial renewal"
-					: pending
-						? "Confirming your change"
+				{pending
+					? "Confirming your change"
+					: enabled
+						? "Manage trial renewal"
 						: "Keep watching after your trial"}
 			</h3>
 			{pending ? (
@@ -106,8 +107,9 @@ export function CardlessTrialControls({
 			) : (
 				<>
 					<p className="ac-muted">
-						Choose the plan you want after the trial. Review the price and first
-						payment date before adding a card.
+						{enabled
+							? "Renewal is already enabled. Review any changes to your plan or billing period before confirming them."
+							: "Choose the plan you want after the trial. Review the price and first payment date before adding a card."}
 					</p>
 					<div className="billing-trial-selection">
 						<label>
@@ -156,7 +158,7 @@ export function CardlessTrialControls({
 								void onAction("quote", { planCode, billingPeriod })
 							}
 						>
-							Review renewal
+							{enabled ? "Review changes" : "Review renewal"}
 						</button>
 					) : (
 						<div
@@ -176,8 +178,9 @@ export function CardlessTrialControls({
 								<strong>{formatBillingTime(quote.quote.firstChargeAt)}</strong>.
 							</p>
 							<p className="ac-muted">
-								No payment today. By continuing and completing card setup, you
-								enable automatic renewal every{" "}
+								{enabled
+									? "No payment today. Completing card setup confirms your updated renewal terms. Payments repeat every "
+									: "No payment today. By continuing and completing card setup, you enable automatic renewal every "}
 								{billingPeriodUnit(quote.quote.billingPeriod)} from that date.
 								Cancel renewal in Billing before the trial ends to avoid the
 								first charge. Your trial end stays the same.
@@ -197,7 +200,9 @@ export function CardlessTrialControls({
 										})
 									}
 								>
-									Add card &amp; enable renewal
+									{enabled
+										? "Confirm renewal changes"
+										: "Add card & enable renewal"}
 								</button>
 								<button
 									type="button"
@@ -212,7 +217,7 @@ export function CardlessTrialControls({
 					)}
 				</>
 			)}
-			{trial.stage === "trial" && (trial.renewalEnabled || pending) && (
+			{trial.stage === "trial" && (enabled || pending) && (
 				<button
 					type="button"
 					className="ac-button ac-button-quiet"
