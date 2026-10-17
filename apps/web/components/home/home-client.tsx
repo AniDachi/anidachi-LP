@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Pricing } from "@/components/pricing";
+import { PricingSelection } from "@/components/pricing-selection";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
 import { UpcomingPlatforms } from "@/components/upcoming-platforms";
@@ -28,7 +28,7 @@ export function HomeClient() {
 			<UpcomingPlatforms />
 			<CompareTable />
 			<MainAppFeatures />
-			<Pricing />
+			<PricingSelection />
 			<StoreReviews />
 			<HomeFAQ />
 		</main>

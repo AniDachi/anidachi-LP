@@ -22,10 +22,10 @@ export const ASYNC_COMING_SOON =
 
 /** Public copy for the paid-hosting model; legacy quota policy is not a Free offer. */
 export const PRICING_HOST_MODEL =
-  "Only the host needs Plus or Pro, including during a trial. Friends join on Free accounts, and the host's plan sets the room limits. Recording and editing personal watch progress require each viewer’s own Plus or Pro access. Saved history and Resume remain available on Free. Both Crunchyroll and YouTube are supported.";
+  "Only the host needs Plus or Pro, including during a trial. Friends join on Free accounts, and the host's plan sets the room limits. Recording and editing personal watch progress require each viewer’s own Plus or Pro access. Saved history and Resume remain available on Free. Crunchyroll, YouTube, and Netflix are supported.";
 
 export const PRICING_TRIAL_NOTE =
-  "New and existing Free accounts that have not used a trial can try Plus or Pro once for 3 days with a card. After that, your chosen monthly or yearly plan renews automatically unless you cancel renewal before the trial ends.";
+  "Eligible Free accounts can try Plus or Pro free for 3 days, once per account. See the plan cards for your available offer. If your offer says “No card required”, your trial ends without a charge unless you choose to enable renewal. Trials started with a card keep the terms confirmed at checkout. Changing plans or billing periods does not restart the trial.";
 
 export const PRICING_CANCELLATION_NOTE =
   "Cancel renewal from Account → Subscription. Access continues until your current trial or paid period ends.";
@@ -37,20 +37,20 @@ export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
   `No. ${PRICING_HOST_MODEL} Each person still needs their own access to the video on Crunchyroll.`;
 
 export const PRICING_PLUS_VS_PRO_ANSWER =
-  `Plus supports one host and up to ${plusPolicy.maxParticipants - 1} friends, with ${plusPolicy.maxCameras} cameras and ${plusPolicy.maxMicrophones} microphones. Pro supports one host and up to ${proPolicy.maxParticipants - 1} friends, with ${proPolicy.maxCameras} cameras, ${proPolicy.maxMicrophones} microphones and priority support. Friends join for free. Both plans include hosting without a daily time limit and personal watch history on Crunchyroll and YouTube. Monthly and yearly billing are available. ${PRICING_TRIAL_NOTE}`;
+  `Plus supports one host and up to ${plusPolicy.maxParticipants - 1} friends, with ${plusPolicy.maxCameras} cameras and ${plusPolicy.maxMicrophones} microphones. Pro supports one host and up to ${proPolicy.maxParticipants - 1} friends, with ${proPolicy.maxCameras} cameras, ${proPolicy.maxMicrophones} microphones and priority support. Friends join for free. Both plans include hosting without a daily time limit and personal watch history on Crunchyroll, YouTube, and Netflix. Monthly and yearly billing are available. ${PRICING_TRIAL_NOTE}`;
 
 export function pricingWatchPageFaqAnswer(animeTitle: string): string {
   return `You can join a Plus, Pro or trial host's room for free. To create your own room, choose Plus or Pro. ${PRICING_TRIAL_NOTE} Each person still needs their own Crunchyroll access to ${animeTitle}; AniDachi adds sync and chat to each person's stream.`;
 }
 
 export const PRICING_COMPARE_OVERVIEW =
-  `Friends join for free. Hosting your own room and recording personal watch history require Plus or Pro, including during a trial. Both plans support Crunchyroll and YouTube, with monthly and yearly billing. ${ASYNC_COMING_SOON}.`;
+  `Friends join for free. Hosting your own room and recording personal watch history require Plus or Pro, including during a trial. Both plans support Crunchyroll, YouTube, and Netflix, with monthly and yearly billing. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_ASYNC_HOST_SNIPPET =
   `${ASYNC_COMING_SOON}. Today, host a live watchroom with Plus or Pro and invite friends for free. Each viewer needs their own Plus or Pro access to record personal watch progress.`;
 
 export const PRICING_TELEPARTY_COMPARE_FAQ =
-  `Teleparty has a free tier for basic live sync, plus a premium tier. With AniDachi, friends join for free and the host needs Plus or Pro, including during a trial. Both plans support Crunchyroll and YouTube. Personal history recording requires each viewer's own Plus or Pro access. ${ASYNC_COMING_SOON}.`;
+  `Teleparty has a free tier for basic live sync, plus a premium tier. With AniDachi, friends join for free and the host needs Plus or Pro, including during a trial. Both plans support Crunchyroll, YouTube, and Netflix. Personal history recording requires each viewer's own Plus or Pro access. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_RAVE_COMPARE_FAQ =
   `Rave offers a free tier with basic sync and chat. AniDachi lets friends join a Plus, Pro or trial host for free. Plus and Pro include hosting and personal history recording, with monthly and yearly billing. ${ASYNC_COMING_SOON}.`;

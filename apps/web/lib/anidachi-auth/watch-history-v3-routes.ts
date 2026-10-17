@@ -3,6 +3,7 @@ import { applyPersonalWatchProgress } from "./personal-watch-history";
 import { checkPersonalHistoryOperation } from "./personal-history-policy";
 import {
   RoomSessionAdmissionInputSchema,
+  isNetflixHistoryKey,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesUpdateSchema,
   WatchHistoryRoomRecreationResponseSchema,
@@ -64,13 +65,14 @@ export type WatchHistoryV3RouteDependencies = {
   checkLegacyRoomOperation(userId: string): Promise<unknown>;
   getSession(request: NextRequest): Promise<ApiSession | null>;
   listHistory(params: {
+    providerVersion?: 1 | 2;
     userId: string;
     limit: number;
     cursor: WatchHistoryCursor | null;
   }): Promise<WatchHistoryResponse>;
   listTitleEpisodes(params: {
     userId: string;
-    provider: "crunchyroll" | "youtube";
+    provider: "crunchyroll" | "youtube" | "netflix";
     titleKey: string;
     limit: number;
     cursor: string | null;
@@ -129,7 +131,9 @@ export function createWatchHistoryV3RouteHandlers(
         const rawCursor = request.nextUrl.searchParams.get("cursor");
         const cursor = rawCursor ? decodeWatchHistoryCursor(rawCursor) : null;
         return NextResponse.json(
-          await dependencies.listHistory({ userId: session.userId, limit, cursor }),
+          await dependencies.listHistory({ userId: session.userId, limit, cursor,
+            ...(request.nextUrl.searchParams.has("providerVersion") ? { providerVersion: Number(request.nextUrl.searchParams.get("providerVersion")) as 1 | 2 } : {}),
+          }),
         );
       } catch (error) {
         return watchHistoryErrorResponse(error);
@@ -501,7 +505,10 @@ function validateEmptyQuery(searchParams: URLSearchParams): void {
 }
 
 function validateHistoryQuery(searchParams: URLSearchParams): void {
-  const allowed = new Set(["limit", "cursor"]);
+  const allowed = new Set(["limit", "cursor", "providerVersion"]);
+  const version = searchParams.get("providerVersion");
+  if (version !== null && version !== "1" && version !== "2")
+    throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid provider version");
   for (const key of searchParams.keys()) {
     if (!allowed.has(key) || searchParams.getAll(key).length > 1) {
       throw new WatchHistoryV3ApiError(
@@ -514,7 +521,7 @@ function validateHistoryQuery(searchParams: URLSearchParams): void {
 }
 
 function parseTitleEpisodesQuery(searchParams: URLSearchParams): {
-  provider: "crunchyroll" | "youtube";
+  provider: "crunchyroll" | "youtube" | "netflix";
   titleKey: string;
   limit: number;
   cursor: string | null;
@@ -530,11 +537,12 @@ function parseTitleEpisodesQuery(searchParams: URLSearchParams): {
   const rawLimit = searchParams.get("limit");
   const cursor = searchParams.get("cursor");
   if (
-    (provider !== "crunchyroll" && provider !== "youtube") ||
+    (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix") ||
     titleKey === null ||
     titleKey !== titleKey.trim() ||
     titleKey.length < 1 ||
     titleKey.length > 220 ||
+    (provider === "netflix" && !isNetflixHistoryKey(titleKey, "series") && !isNetflixHistoryKey(titleKey, "movie")) ||
     (rawLimit !== null && !/^\d{1,2}$/.test(rawLimit)) ||
     (cursor !== null &&
       (cursor.length < 1 || cursor.length > 2_048 || !/^[A-Za-z0-9_-]+$/.test(cursor)))

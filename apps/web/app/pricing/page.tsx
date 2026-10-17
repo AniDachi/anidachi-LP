@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import Link from "next/link";
-import { Pricing } from "@/components/pricing";
+import { PricingSelection } from "@/components/pricing-selection";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
 import { StoreReviews } from "@/components/store-reviews";
@@ -12,7 +12,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
 	title: "AniDachi Pricing — Free Chrome Watch Party for Crunchyroll & YouTube",
 	description:
-		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms, and check your trial availability. Netflix is coming soon.",
+		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms, and check your trial availability.",
 	alternates: { canonical: "/pricing" },
 	openGraph: {
 		images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms.",
 		url: "/pricing",
 	},
 	twitter: {
@@ -52,12 +52,12 @@ const faq = [
 	},
 	{
 		question: "What's the difference between Plus and Pro?",
-		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll and YouTube. Netflix is coming soon and is not supported yet.`,
+		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll, YouTube, and Netflix.`,
 	},
 	{
 		question: "How does the free trial work?",
 		answer:
-			"If your account is eligible, you can try Plus or Pro once for 3 days with a card. After that, you are charged for your chosen monthly or yearly plan, which renews automatically at the price shown in checkout. Cancel renewal before the trial ends to avoid the first charge. Switching plans during the trial does not restart it.",
+			"If your account is eligible, you can try Plus or Pro once for 3 days. The plan cards show your current offer. A trial without a card ends automatically unless you add a card and explicitly enable renewal in Account → Subscription. You review the plan, price and first payment date before confirming. A trial started with a card keeps its original checkout terms and renews unless canceled. Switching plans does not restart the trial.",
 	},
 	{
 		question: "How do I cancel my subscription?",
@@ -65,9 +65,9 @@ const faq = [
 			"Open Account → Subscription and choose Cancel subscription. Trial access lasts until its original end; paid access lasts until the end of the paid period. Canceling renewal prevents the next scheduled charge.",
 	},
 	{
-		question: "Do I still need Crunchyroll or YouTube?",
+		question: "Do I still need Crunchyroll, YouTube, or Netflix?",
 		answer:
-			"Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription. Netflix is coming soon and is not supported yet.",
+			"Yes. Each person streams under their own Crunchyroll, YouTube, or Netflix account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription.",
 	},
 ];
 
@@ -104,7 +104,7 @@ export default function PricingPage() {
 					</div>
 				</nav>
 
-				<Pricing headingLevel={1} showPlanMatrix />
+				<PricingSelection headingLevel={1} showPlanMatrix />
 				<StoreReviews />
 				<FAQSection title="Pricing FAQ" questions={faq} />
 				<section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-ani-muted">

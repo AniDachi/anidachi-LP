@@ -102,6 +102,11 @@ export type DurableRoomSourceRow = {
 	source_generation: unknown;
 };
 
+export type PersistedRoomSourceProof = DurableRoomSourceRow & {
+	room_id: unknown;
+	status: unknown;
+};
+
 export type DerivedDurableRoomSource = {
 	source: RoomSourceDescriptor;
 	sourceGeneration: number | null;
@@ -277,6 +282,7 @@ export async function handleInternalRoomSourcePost(params: {
 	persist: (
 		callback: RoomSourcePersistenceCallback,
 	) => Promise<RoomSourcePersistenceAcknowledgement>;
+	readPersistedSource?: (roomId: string) => Promise<PersistedRoomSourceProof | null>;
 }): Promise<InternalRoomSourceResponse> {
 	if (
 		!hasValidInternalServiceAuthorization(params.authorization, params.secret)
@@ -310,12 +316,48 @@ export async function handleInternalRoomSourcePost(params: {
 		}
 		return { status: 200, body: result.data };
 	} catch (error) {
+		if (error instanceof RoomSourcePersistenceError && error.kind === "ended" && params.readPersistedSource) {
+			try {
+				const proof = await params.readPersistedSource(callback.data.roomId);
+				const acknowledgement = acknowledgePersistedEndedSource(callback.data, proof);
+				if (acknowledgement) return { status: 200, body: acknowledgement };
+			} catch {
+				return roomSourceErrorResponse(new RoomSourcePersistenceError("unexpected"));
+			}
+		}
 		return roomSourceErrorResponse(
 			error instanceof RoomSourcePersistenceError
 				? error
 				: new RoomSourcePersistenceError("unexpected"),
 		);
 	}
+}
+
+function acknowledgePersistedEndedSource(
+	callback: RoomSourcePersistenceCallback,
+	proof: PersistedRoomSourceProof | null,
+): RoomSourcePersistenceAcknowledgement | null {
+	if (!proof || proof.room_id !== callback.roomId || proof.status !== "ended" ||
+		!Number.isSafeInteger(proof.source_generation) ||
+		(proof.source_generation as number) < callback.sourceGeneration) return null;
+	// Explicit persisted columns are the proof; a legacy URL-derived descriptor
+	// must never acknowledge a generation the database has not actually saved.
+	const source = RoomSourceDescriptorSchema.safeParse({
+		provider: proof.source_provider,
+		sourceUrl: proof.source_url,
+		canonicalUrl: proof.source_url,
+		videoFingerprint: proof.video_fingerprint,
+	});
+	if (!source.success || source.data.provider !== callback.source.provider) return null;
+	if (proof.source_generation === callback.sourceGeneration &&
+		(source.data.sourceUrl !== callback.source.sourceUrl ||
+		 source.data.canonicalUrl !== callback.source.canonicalUrl ||
+		 source.data.videoFingerprint !== callback.source.videoFingerprint)) return null;
+	return {
+		ok: true,
+		outcome: proof.source_generation === callback.sourceGeneration ? "persisted" : "stale",
+		sourceGeneration: callback.sourceGeneration,
+	};
 }
 
 function invalidCallbackResponse(): InternalRoomSourceResponse {

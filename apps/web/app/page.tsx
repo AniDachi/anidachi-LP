@@ -22,7 +22,7 @@ export default function Home() {
 			<FAQPageJsonLd questions={homeFAQ} />
 			<HowToJsonLd
 				name="How to Watch Together with AniDachi"
-				description="Install AniDachi, sign in, and create or join a room to watch YouTube or Crunchyroll together. Netflix is coming soon."
+				description="Install AniDachi, sign in, and create or join a room to watch YouTube, Crunchyroll, or Netflix together."
 				steps={howToSteps}
 			/>
 		</>

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "./limits";
 
-export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube"]);
+export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix"]);
 
 export type RoomSourceProvider = z.infer<typeof RoomSourceProviderSchema>;
 
@@ -78,6 +78,17 @@ export function canonicalizeRoomSourceUrl(
     return { ok: false, code: "PROVIDER_MISMATCH" };
   }
   return { ok: true, source };
+}
+
+/** Host recognition is independent of route, transport, credentials and port.
+ * This is a validation trigger, not an allowlist or a canonical source verdict. */
+export function hasNetflixHostname(value: string): boolean {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
+    return hostname === "netflix.com" || hostname.endsWith(".netflix.com");
+  } catch {
+    return false;
+  }
 }
 
 export function isLegacyRoomSourceFingerprintAlias(
@@ -178,6 +189,15 @@ function canonicalizeProviderUrl(url: URL): CanonicalRoomSource | null {
       videoFingerprint: `crunchyroll|watch/${episodeId}`,
     });
   }
+  if (provider === "netflix") {
+    const match = url.pathname.match(/^\/watch\/([1-9][0-9]{0,19})\/?$/);
+    if (!match) return null;
+    const canonicalUrl = `https://www.netflix.com/watch/${match[1]}`;
+    return boundedCanonicalRoomSource({
+      provider, sourceUrl: canonicalUrl, canonicalUrl,
+      videoFingerprint: `netflix|watch/${match[1]}`,
+    });
+  }
   return null;
 }
 
@@ -194,6 +214,7 @@ function providerForHostname(hostname: string): RoomSourceProvider | null {
   if (normalized === "crunchyroll.com" || normalized === "www.crunchyroll.com") {
     return "crunchyroll";
   }
+  if (normalized === "www.netflix.com") return "netflix";
   return null;
 }
 

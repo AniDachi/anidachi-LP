@@ -36,7 +36,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "Discord Screen Share Black Screen — What to Check",
   description:
-    "A Discord screen share black screen usually means the wrong window or a player that blocks capture. Stop the share for a full Crunchyroll or YouTube episode and sync it with AniDachi.",
+    "A Discord screen share black screen usually means the wrong window or a player that blocks capture. Stop the share for a full Crunchyroll, YouTube, or Netflix episode and sync it with AniDachi.",
   alternates: { canonical: "/guides/discord-screen-share-black-screen" },
   openGraph: {
     title: "Discord Screen Share Black Screen",
@@ -88,7 +88,7 @@ export default function DiscordScreenShareBlackScreenPage() {
     <>
       <HowToJsonLd
         name="Fix a Discord screen share black screen"
-        description="Check the shared window, then move a Crunchyroll or YouTube episode off the share."
+        description="Check the shared window, then move a Crunchyroll, YouTube, or Netflix episode off the share."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -104,7 +104,7 @@ export default function DiscordScreenShareBlackScreenPage() {
         description="A black Discord share, and the watch that does not depend on capture."
         url="/guides/discord-screen-share-black-screen"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -120,7 +120,7 @@ export default function DiscordScreenShareBlackScreenPage() {
             sometimes with the audio still playing. Share the Chrome window that
             has the video. For a whole episode, stop the share and use a{" "}
             <Link href="/discord-watch-party">Discord watch party</Link> so each
-            person plays Crunchyroll or YouTube on their own account.
+            person plays Crunchyroll, YouTube, or Netflix on their own account.
           </p>
         </SeoGuideAnswer>
         <h2 id="steps" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -182,7 +182,7 @@ export default function DiscordScreenShareBlackScreenPage() {
           >
             how to screen share on Discord
           </Link>
-          . Netflix is coming soon and is not on the public extension yet.
+          .
         </p>
         <SeoGuideRelated
           links={[

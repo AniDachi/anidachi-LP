@@ -5,7 +5,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 export const metadata: Metadata = {
   title: "How to Watch Netflix Together Long Distance (2026)",
   description:
-    "Short answer: Netflix has no native watch party feature. Long-distance couples use Teleparty or Rave for Netflix sync. AniDachi syncs Crunchyroll and YouTube. Netflix on AniDachi is coming soon.",
+    "Watch Netflix together long distance with AniDachi in desktop Chrome. Sync the same title on your own accounts with chat, reactions, and calls.",
   alternates: { canonical: "/watch-netflix-together-long-distance" },
   openGraph: {
     images: [
@@ -28,7 +28,7 @@ const faq = [
   {
     question: "How do I watch Netflix together long distance?",
     answer:
-      "AniDachi does not sync Netflix yet. Netflix is coming soon. For Netflix today, both people install the Teleparty Chrome extension, one person opens a Netflix show and creates a Teleparty session, shares the link, and playback syncs with text chat. Rave is a free alternative that adds voice and video calling. AniDachi syncs Crunchyroll and YouTube in desktop Chrome.",
+      "Install AniDachi in desktop Chrome and sign in. Each person opens the same Netflix title using their own access. A Plus, Pro, or trial host creates a room and shares its invite; the other person joins for free. Playback stays in sync with chat, reactions, and calls beside the player.",
   },
   {
     question: "Does Netflix have a built-in watch party feature?",
@@ -57,7 +57,7 @@ const tocHeadings: TocHeading[] = [
   { id: "teleparty", label: "Teleparty for Netflix", level: 2 },
   { id: "rave", label: "Rave — free with video calling", level: 2 },
   { id: "manual", label: "No-app method", level: 2 },
-  { id: "crunchyroll", label: "Also watch anime on Crunchyroll?", level: 2 },
+  { id: "anidachi", label: "Netflix with AniDachi", level: 2 },
   { id: "related", label: "Related", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
@@ -73,7 +73,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
       description="Netflix watch party guide for long-distance couples — Teleparty, Rave, and the no-app fallback."
       url="/watch-netflix-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-10-01"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -95,8 +95,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
           option that includes voice and video calling.
         </strong>{" "}
         Neither supports async watching — both require you online at the
-        same time. AniDachi offers live rooms for Crunchyroll and YouTube.
-        Netflix on AniDachi is coming soon and is not supported yet. Async catch-up is also coming soon.
+        same time. AniDachi also offers live Netflix rooms, alongside Crunchyroll and YouTube, with chat, reactions, and calls. Async catch-up is coming soon.
       </p>
 
       <h2
@@ -158,13 +157,13 @@ export default function WatchNetflixTogetherLongDistancePage() {
       </p>
 
       <h2
-        id="crunchyroll"
+        id="anidachi"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         AniDachi and Netflix
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        AniDachi does not sync Netflix yet. Netflix is coming soon. Today it syncs Crunchyroll and YouTube, with
+        AniDachi syncs Netflix, Crunchyroll, and YouTube, with
         live sync, chat, reactions, and voice/video beside each person’s player.
         A Plus, Pro, or trial host creates the room and Free friends can join.
         Personal history needs your own Plus/Pro access and recording permission.
@@ -175,6 +174,13 @@ export default function WatchNetflixTogetherLongDistancePage() {
           Learn how async anime watching works across time zones.
         </Link>
       </p>
+
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
+        <li>Install AniDachi in desktop Chrome and sign in.</li>
+        <li>Each person opens the same Netflix title with their own Netflix access.</li>
+        <li>A Plus, Pro, or trial host creates a room and shares its invite. Friends join for free.</li>
+        <li>Use live sync, chat, reactions and calls beside your own player. Netflix subscription, household and regional access rules still apply.</li>
+      </ol>
 
       <h2
         id="related"

@@ -570,7 +570,9 @@ export function OverlayLayoutEditor({
 									pointerEvents: "none",
 									position: "absolute",
 								}}
-							/>
+							>
+								<Video aria-hidden="true" className="layout-camera-placeholder-icon" />
+							</div>
 						);
 					}
 
@@ -603,7 +605,9 @@ export function OverlayLayoutEditor({
 							}
 							style={{ ...style, position: "absolute", touchAction: "none" }}
 							tabIndex={0}
-						/>
+						>
+							<Video aria-hidden="true" className="layout-camera-placeholder-icon" />
+						</button>
 					);
 				})}
 

@@ -9,6 +9,22 @@ export function billingPeriodUnit(period: BillingPeriod): "month" | "year" {
 	return period === "yearly" ? "year" : "month";
 }
 export type BillingTrial = {
+	mode?: "card_required" | "cardless";
+	renewalState?: "not_enabled" | "pending" | "enabled";
+	// Confirmed state stays visible while a newer change is unresolved.
+	renewalEnabled?: boolean;
+	// Latest owned, unexpired quote; read-only confirmation for retained UI terms.
+	renewalQuoteId?: string;
+	pendingRenewal?: {
+		id: string;
+		action: "enable" | "cancel";
+		setupRequestId?: string;
+		terms?: {
+			planCode: "plus" | "pro";
+			price: BillingPrice;
+			firstChargeAt: string;
+		};
+	};
 	endsAt: string;
 	stage: "trial" | "processing" | "payment_required" | "ended" | "paid";
 	pendingUntil: string;
@@ -21,8 +37,12 @@ export function formatMonthlyPrice(price: MonthlyPrice): string {
 }
 export function formatBillingTime(value: string): string {
 	return new Date(value).toLocaleString("en-US", {
-		dateStyle: "medium",
-		timeStyle: "short",
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
+		timeZoneName: "short",
 	});
 }
 
@@ -41,7 +61,14 @@ export type BillingSubscription = {
 	canSwitchToYearly?: boolean;
 };
 
+export type PendingTrialActivation = {
+	id: string;
+	planCode: "plus" | "pro";
+	billingPeriod: BillingPeriod;
+};
+
 export type BillingOverview = {
+	pendingTrialActivation?: PendingTrialActivation;
 	ownerUserId: string;
 	planCode: PlanCode;
 	subscriptions: BillingSubscription[];
@@ -51,10 +78,13 @@ export type BillingOverview = {
 };
 
 // A display lease only: expiry requires a server reread, never a local grant.
-export function billingDisplayValidityMs(overview: BillingOverview): number {
+export function billingDisplayValidityMs(
+	overview: BillingOverview,
+	maxAgeMs = 60_000,
+): number {
 	const now = Date.parse(overview.serverTime ?? "");
-	if (!Number.isFinite(now)) return 60_000;
-	const deadlines: number[] = [now + 60_000];
+	if (!Number.isFinite(now)) return Math.min(maxAgeMs, 60_000);
+	const deadlines: number[] = [now + maxAgeMs];
 	const activation = Date.parse(overview.hosting?.hostingActivationAt ?? "");
 	if (activation > now) deadlines.push(activation);
 	if (overview.planCode !== "free" && overview.selectedPlanExpiresAt)
@@ -73,6 +103,17 @@ export function billingDisplayValidityMs(overview: BillingOverview): number {
 export function subscriptionStatusLabel(
 	subscription: BillingSubscription,
 ): string {
+	if (
+		subscription.trial?.mode === "cardless" &&
+		subscription.trial.stage !== "paid"
+	) {
+		return {
+			trial: "Free trial",
+			ended: "Trial ended",
+			processing: "First payment processing",
+			payment_required: "Payment needs attention",
+		}[subscription.trial.stage];
+	}
 	if (subscription.cancelAtPeriodEnd && subscription.status !== "canceled") {
 		return "Renewal canceled";
 	}
@@ -98,6 +139,11 @@ export function subscriptionStatusLabel(
 export function subscriptionDateLabel(
 	subscription: BillingSubscription,
 ): string {
+	if (
+		subscription.trial?.mode === "cardless" &&
+		subscription.trial.stage !== "paid"
+	)
+		return "Trial ends";
 	if (subscription.cancelAtPeriodEnd) return "Subscription ends";
 	if (subscription.status === "trialing") return "Trial ends";
 	if (subscription.status === "active") return "Renews";

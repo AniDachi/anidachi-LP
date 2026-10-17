@@ -1,10 +1,10 @@
 # AniDachi SEO Content Guidelines
 
-**Single source of truth** for public marketing SEO on [www.anidachi.app](https://www.anidachi.app) (apex redirects to www).  
+**Single source of truth** for public marketing SEO on [www.anidachi.app](https://www.anidachi.app). `https://www.anidachi.app` is the canonical host; `anidachi.app` must 308 to it.  
 Dated keyword volumes and batch plans live in separate plan docs — re-pull Keyword Planner before treating any number as current.
 
 Operational agent: [`.cursor/agents/anidachi-seo-aeo-pages.md`](../../../.cursor/agents/anidachi-seo-aeo-pages.md)  
-Portfolio freeze / safety: [`seo-portfolio-freeze.md`](./seo-portfolio-freeze.md)  
+Owner decisions: [Decisions log](#decisions-log) below. The 2026-07-28 portfolio freeze was lifted on 2026-10-12.  
 Editorial standards: [`/editorial-policy`](https://www.anidachi.app/editorial-policy)
 
 ---
@@ -15,19 +15,24 @@ AniDachi is a Chrome extension + web product for **watchrooms** on:
 
 - **Crunchyroll** (catalog pages, desktop Chrome)
 - **YouTube** (full `youtube.com/watch` pages, desktop Chrome — not Shorts, embeds, feeds, or native mobile apps)
+- **Netflix** (movie and episode watch pages in desktop Chrome; each viewer needs their own access to the same title)
+
+Netflix copy is prepared for the coordinated 0.1.3 launch. Keep it on staging until
+the compatible production services and approved Store update are released. Do not
+promise Netflix ad-plan compatibility without acceptance evidence.
 
 Current features: live synchronized players, on-player chat and reactions, voice/video calls, and personal watch history. Each person uses their own access to the video.
 
 Free accounts join Plus/Pro/trial hosts; creating rooms requires the host's own Plus or Pro access. Plus supports 6 people including the host, Pro 15; friends join free. Recording and editing personal history require each viewer's own paid/trial access. Automatic recording additionally requires permission in the extension; YouTube has a separate recording switch. Saved history, Resume and deletion remain available on Free.
 
-Plus and Pro offer monthly/yearly billing and one 3-day card-backed trial per account, for either new or existing Free accounts that have not used it. After the trial, the selected plan renews automatically unless renewal is canceled before the trial ends. Do not promise a new trial for switching plans or billing periods.
+Plus and Pro offer monthly/yearly billing and one 3-day trial per eligible account, including existing Free accounts that have not used it. Describe the current server offer: a card-required trial renews automatically unless renewal is canceled before the end; a cardless trial requires no card and ends without payment unless the user explicitly enables renewal with the displayed plan, period, price and first-charge date. Existing card-required trials retain their original terms. Cardless rollout remains gated; do not claim it is enabled in an environment merely because its code exists. Do not promise a new trial for switching plans or billing periods.
 
 **Planned only:** async catch-up, shared group progress, persistent room context/chat and replayed reactions. Never sell these as current features or paid-plan benefits. Mark future mentions clearly; do not include them among instructions users can follow today.
 
 Use `lib/pricing-copy.ts` for shared commercial copy. Legacy Free hosting/quota data in the protocol is compatibility data, not a current marketing offer. Update visible text, FAQ/HowTo JSON-LD and search/social metadata together.
 
-**Not supported:** Netflix, Disney+, Hulu, Amazon Prime Video sync.  
-**Not affiliated** with Crunchyroll, Sony, YouTube, or Google.
+**Not supported:** Disney+, Hulu, Amazon Prime Video sync.
+**Not affiliated** with Crunchyroll, Sony, YouTube, Google, or Netflix.
 
 Primary conversion path: the official Chrome Web Store listing linked from
 **`/extension`**. Install how-tos should link that listing or the install hub;
@@ -39,7 +44,6 @@ do not invent a different `chromewebstore.google.com` item URL.
 
 Do **not**, without owner approval + GSC evidence:
 
-- Ship net-new SEO URL batches while the publishing freeze is active (`seo-portfolio-freeze.md`)
 - 301 / Merge / Retire / Delete public marketing URLs
 - Change URL structure on ranked pages (slug renames, path moves, canonical retarget to another path)
 - Add `noindex` to previously indexable marketing URLs
@@ -52,7 +56,7 @@ Default: **enrich in place on the same URL**, additive pages, reversible changes
 Evidence order: Google documentation → AniDachi GSC/GA4 → reproducible tests → third-party studies → patents/leaks as hypotheses only.  
 Do **not** treat domain age, WHOIS, dwell time, schema, or “force-index” sitemaps as ranking levers.
 
-While freeze is active, backlog = `seo:portfolio` Keep/Enrich winners (same URLs), not new Keyword Planner URL ideas.
+Default backlog: `seo:portfolio` Keep/Enrich winners on their existing URLs first. A new URL ships only when it passes the publishing gate below.
 
 ---
 
@@ -60,7 +64,7 @@ While freeze is active, backlog = `seo:portfolio` Keep/Enrich winners (same URLs
 
 A page may ship only if **all** are true:
 
-1. Previous cohort is healthy enough (or freeze is lifted by owner).
+1. The owner approved the page or the batch it belongs to.
 2. Target query is not already owned (full route inventory + GSC query data — not top pages only). Run `pnpm --filter @anidachi/web seo:portfolio` / `seo:keywords` with full inventory.
 3. Page adds distinct information (not a modifier twin / doorway).
 4. One parent hub + **two contextual inbound links** planned **before** publish; ≤3 clicks from a relevant pillar.
@@ -92,7 +96,7 @@ Related lists: prefer narrow tags (`pillar-watch-youtube` or `pillar-watch-crunc
 - Implementation: `app/watch/[slug]/page.tsx` + `lib/anime-data.ts` + `lib/watch-page-rich-content.ts`
 - Do **not** invent nested `/anime/...` paths or mass-301 for prettier URLs
 
-When adding titles: update `animeList` + MAL ids, hub/listicle backlinks, bump `dateModified` only when content meaningfully changes. Prefer enriching existing titles over unbounded catalog growth while freeze is active.
+When adding titles: update `animeList` + MAL ids, hub/listicle backlinks, bump `dateModified` only when content meaningfully changes. Prefer enriching existing titles over unbounded catalog growth.
 
 ---
 
@@ -151,17 +155,46 @@ pnpm --filter @anidachi/web seo:keywords
 Track: Coverage cohorts, query cannibalization, impressions → clicks → `seo_landing_path` → checkout.  
 Impressions before clicks is normal for new URLs. Prefer enriching winners over shipping more thin spokes.
 
+`seo:portfolio` and `seo:keywords` need Google Marketing OAuth (Search Console + Analytics), reconnected through the Kreatli CRM. Composio's Search Console, GA4 and Amplitude connections work too. `seo:portfolio` writes a route inventory with GSC pages, query×page pairs, GA4 landing sessions and key events, and a suggested action per URL (Keep / Enrich / Merge/301 / Review). It does not replace:
+
+- GSC **Pages** (indexing) report: Indexed vs Discovered / Crawled – not indexed. Export it from the GSC UI.
+- Manual claim checks and owner approval before any merge, redirect or removal.
+
+Attribution: first-touch `seo_landing_path` is stored in session storage and sent with GA4 and Amplitude conversion events and Stripe Checkout/Subscription metadata. See `docs/CONVERSION_METRICS.md`.
+
+---
+
+## Decisions log
+
+Owner-approved exceptions to the safety rules above, newest first.
+
+- **2026-10-12, SEO audit (GSC + GA4 + Amplitude):**
+  - The 2026-07-28 portfolio freeze is lifted. New URLs still go through the publishing gate.
+  - **Canonical host is `https://www.anidachi.app`.** Public metadata and sitemaps use `getSeoSiteOrigin()` to normalize the known public hosts to www. Keep `NEXT_PUBLIC_SITE_URL` and `getResolvedSiteOrigin()` unchanged for runtime consumers, including Gmail OAuth callback fallbacks; changing the shared env value is not an SEO fix. After separate production authorization, change only the existing Vercel apex-to-www redirect status from 307 to 308, preserving its destination, paths, and queries. See the [selective release contract](../../../docs/releases/seo/2026-10-12-selective-website-release.md).
+  - **Permanent redirects (308) for exact twins:**
+    - `/guides/netflix-teleparty` → `/guides/teleparty-netflix`
+    - `/guides/anime-date-night-ideas-long-distance` → `/long-distance-anime-date-night-ideas`
+    - `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll` → `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll`
+    - `/guides/how-to-stream-anime-on-discord` → `/guides/how-to-watch-anime-with-friends-on-discord`
+  - **Bare watch slugs** (`/watch/naruto`) 308 to `/watch/naruto-with-friends`.
+  - **Sitemap:** no `lastmod` (file mtimes reset on every Vercel build), no private or `/dev` routes, and `/extension` is included.
+  - **Watch pages** don't publish MyAnimeList ratings as `AggregateRating`.
+  - **Until about 2026-11-02**, don't change titles, H1s or URLs on `/`, `/watch-anime-together` or `/guides/best-anime-to-watch-with-friends` while Google moves them from the apex to www.
+  - Keep `/force-index-sitemap.xml` until the host move settles. It repeats URLs already in `sitemap.xml`; remove it after reviewing GSC Coverage.
+- **2026-10-09:** the free tool pages plan (`/tools/*`: filler lists, One Piece episode count, random anime generator, watch orders, Crunchyroll schedule) is approved. It overrides the 2026-09-28 rejection in `.cursor/scratchpad.md`.
+- **2026-08-11:** `/feature-requests`, a public product feedback form, is approved as an additive page.
+
 ---
 
 ## Pre-publish checklist
 
-- [ ] Freeze / publishing gate passed
+- [ ] Publishing gate passed
 - [ ] URL stability: same path (no slug/redirect/canonical retarget)
 - [ ] No cannibalization of an owned query
 - [ ] Canonical = path; FAQ body ↔ JSON-LD
-- [ ] Product claims truthful (CR + YT limits)
+- [ ] Product claims truthful (Crunchyroll + YouTube + Netflix limits)
 - [ ] Sources for competitor / absolute claims
 - [ ] Inbound links planned
 - [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
-*Last updated: 2026-10-01 (current product and subscription copy)*
+*Last updated: 2026-10-17 (Netflix launch copy; existing URL/title and canonical safeguards retained)*

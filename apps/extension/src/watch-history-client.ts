@@ -1,6 +1,6 @@
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
-  WatchHistoryCapacitySchema,
+  WatchHistoryCapacityCompatibleSchema,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -550,9 +550,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "list") return refresh(session, message);
     if (message.command === "capacity") {
       const lease = await readLease(session);
-      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity");
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=2");
       if (!response.ok) return response.error;
-      const parsed = WatchHistoryCapacitySchema.safeParse(response.body);
+      const parsed = WatchHistoryCapacityCompatibleSchema.safeParse(response.body);
       if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
       if (!sameSession(response.session, await dependencies.getCurrentSession())) return { ok: false, status: "rejected" };
       const currentLease = await readLease(response.session);
@@ -667,7 +667,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const startedRoot = await storage.readRoot();
     const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
     const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
-    const query = new URLSearchParams();
+    const query = new URLSearchParams({ providerVersion: "2" });
     if (message.limit !== undefined) query.set("limit", String(message.limit));
     if (message.cursor) query.set("cursor", message.cursor);
     const response = await authenticatedRequest(session, `/api/watch-history/v3${query.size ? `?${query}` : ""}`);
@@ -1886,7 +1886,10 @@ function parseBrowseInput(
         ? WatchHistoryBrowseSessionsQuerySchema
         : WatchHistoryBrowseOptionsQuerySchema;
   const parsed = schema.safeParse(message.input);
-  return parsed.success ? parsed.data : null;
+  if (!parsed.success) return null;
+  return message.command === "browse" || message.command === "browse-sessions" || message.command === "browse-options"
+    ? { ...parsed.data, providerVersion: 2 }
+    : parsed.data;
 }
 
 function browseHardRevision(partition: WatchHistoryAccountPartition): number {
@@ -1903,6 +1906,7 @@ function browsePath(command: BrowseCommand, input: BrowseInput): string {
   const query = new URLSearchParams();
   const values = input as Record<string, unknown>;
   for (const key of [
+    "providerVersion",
     "mode",
     "search",
     "groupId",
@@ -2018,7 +2022,13 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
-  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com"].includes(url.hostname)) return false;
+  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname)) return false;
+  if (url.hostname === "www.netflix.com") {
+    if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
+    // Trust the document origin, not its initial route: Netflix opens players
+    // from /browse without reloading. The adapter/schema validate watch content;
+    // final progress and catalog cleanup can arrive after returning to /browse.
+  }
   return ["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command);
 }
 
@@ -2062,10 +2072,13 @@ export async function handleWatchHistoryAuthSessionChange(
       if (!cleared.ok) return { ok: false, status: "retryable" };
     }
     if (!next) return { ok: true };
-    const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
+    // Owner/epoch fences need the latest persisted identity, not another /api/me
+    // request. The history endpoint validates the bearer; only a 401 refreshes it.
+    const getCurrentSession = dependencies.getCurrentSession ?? await defaultStoredWatchHistorySession();
+    const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession ?? await defaultRequestWatchHistorySession();
     const current = await getCurrentSession();
     if (!current || !sameSession(next, current)) return { ok: false, status: "retryable" };
-    const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession });
+    const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession, getRequestSession });
     const bootstrapped = await client.handle({ type: WATCH_HISTORY_MESSAGE_TYPE, command: "bootstrap", expectedOwnerUserId: current.user.id });
     if (!bootstrapped.ok) return bootstrapped;
     const reconciled = await client.reconcile(current);
@@ -2079,8 +2092,9 @@ export async function handleWatchHistoryAuthSessionChange(
 export async function flushWatchHistoryInBackground(
   dependencies: WatchHistoryBackgroundDependencies = {},
 ): Promise<void> {
-  const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
-  const client = createWatchHistoryClient({ ...dependencies, getCurrentSession });
+  const getCurrentSession = dependencies.getCurrentSession ?? await defaultStoredWatchHistorySession();
+  const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession ?? await defaultRequestWatchHistorySession();
+  const client = createWatchHistoryClient({ ...dependencies, getCurrentSession, getRequestSession });
   const session = await getCurrentSession();
   if (session) {
     await reconcileWatchHistoryThenDrain(
@@ -2120,7 +2134,7 @@ export async function reconcileWatchHistoryThenDrain(
   await drain();
 }
 
-async function defaultWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
+async function defaultRequestWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
   const { getCurrentExtensionSession } = await import("./auth-client");
   return getCurrentExtensionSession;
 }

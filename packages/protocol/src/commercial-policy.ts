@@ -79,6 +79,14 @@ export const HostingAccessSchema = z.strictObject({
 });
 export type HostingAccess = z.infer<typeof HostingAccessSchema>;
 
+/** Optional presentation metadata, outside the legacy strict hosting object. */
+export const HostingOfferSchema = z.strictObject({
+	trialMode: z.enum(["cardless", "card_required"]),
+	trialDays: z.literal(3),
+	policyRevision: z.number().int().positive(),
+});
+export type HostingOffer = z.infer<typeof HostingOfferSchema>;
+
 /** HTTP commercial denial; independent of room/media protocol negotiation. */
 export const HOST_SUBSCRIPTION_REQUIRED = "HOST_SUBSCRIPTION_REQUIRED" as const;
 
@@ -134,7 +142,7 @@ export function isWatchHistoryAccessCurrent(
 		accessEpoch: number;
 		youtubeConsentEpoch: number;
 		now: number;
-		provider: "crunchyroll" | "youtube";
+		provider: "crunchyroll" | "youtube" | "netflix";
 	},
 ): boolean {
 	return (

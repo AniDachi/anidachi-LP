@@ -23,18 +23,18 @@ const howToSteps = [
   },
   {
     name: "Connect the players",
-    text: "Netflix has no built-in party button. A Chrome extension is what keeps play and pause together. Teleparty is the one people use today. AniDachi’s Netflix rooms are not on the public extension yet.",
+    text: "Install AniDachi in desktop Chrome and sign in. A Plus, Pro, or trial host opens the AniDachi capsule, creates a room, and shares the invite. Friends join for free with the extension.",
   },
   {
-    name: "Keep a call open for voices",
-    text: "Use Discord or a phone call for talking. The Netflix tab stays the picture.",
+    name: "Talk while you watch",
+    text: "Use AniDachi’s chat, reactions, microphone, and camera beside the player, or keep your usual call open. Each person streams the title through Netflix.",
   },
 ];
 
 export const metadata: Metadata = {
   title: "How to Watch Netflix Together",
   description:
-    "How to watch Netflix together: each person opens the same title on their own account in desktop Chrome, then a Chrome extension keeps playback together. AniDachi Netflix rooms are coming.",
+    "How to watch Netflix together: each person opens the same title on their own account in desktop Chrome, then a Chrome extension keeps playback together. AniDachi adds live sync, chat, reactions, and calls.",
   alternates: { canonical: "/guides/how-to-watch-netflix-together" },
   openGraph: {
     title: "How to Watch Netflix Together",
@@ -59,7 +59,7 @@ const faq = [
   {
     question: "Can AniDachi do this today?",
     answer:
-      "Not yet. AniDachi syncs Crunchyroll and YouTube now. Netflix watchrooms are being added for desktop Chrome.",
+      "Yes. AniDachi supports Netflix movies and episodes in desktop Chrome. Each viewer needs the extension and their own access to the same title.",
   },
   {
     question: "Do we both need Netflix?",
@@ -96,7 +96,7 @@ export default function HowToWatchNetflixTogetherPage() {
         description="Same Netflix title on each account, then sync playback."
         url="/guides/how-to-watch-netflix-together"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -142,7 +142,7 @@ export default function HowToWatchNetflixTogetherPage() {
           >
             Teleparty Netflix
           </Link>
-          . AniDachi’s public extension still syncs Crunchyroll and YouTube
+          . Install AniDachi for Netflix, Crunchyroll, and YouTube
           from <Link href="/extension">/extension</Link>.
         </p>
         <SeoGuideRelated

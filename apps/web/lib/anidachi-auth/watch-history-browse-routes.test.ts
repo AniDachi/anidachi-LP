@@ -107,3 +107,18 @@ test("browse route requires authenticated owner and disables shared caching", as
 	assert.equal(owner, "11111111-1111-4111-8111-111111111111");
 	assert.match(response.headers.get("cache-control") ?? "", /no-store/);
 });
+
+test("browse provider capability is optional and explicit on titles and options", async () => {
+  const { createWatchHistoryBrowseHandler } = await import("./watch-history-browse-routes");
+  for (const scope of ["titles", "options"] as const) {
+    const handler = createWatchHistoryBrowseHandler(scope, {
+      getSession: async () => ({ userId: "11111111-1111-4111-8111-111111111111", email: "owner@example.test", plan: "free", source: "cookie" }),
+      browse: async ({ input }) => input,
+    });
+    const base = "https://example.test/api/watch-history/v3/browse?mode=shared";
+    assert.equal(Object.hasOwn(await (await handler(new NextRequest(base))).json(), "providerVersion"), false);
+    assert.equal((await (await handler(new NextRequest(base + "&providerVersion=2"))).json()).providerVersion, 2);
+    for (const version of ["0", "3", "02", "2.0", "", "2&providerVersion=2"])
+      assert.equal((await handler(new NextRequest(base + "&providerVersion=" + version))).status, 400);
+  }
+});

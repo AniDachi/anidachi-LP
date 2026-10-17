@@ -126,6 +126,38 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 
 ## Project Status Board
 
+### Nine more niche pages (Executor 2026-10-08)
+
+Owner said ship the rest of the ten-page list. `/anime-tracker` already existed, so Resume shipped instead of a second tracker URL.
+
+- [x] `/crunchyroll-watch-history`
+- [x] `/guides/how-to-clear-watch-history-on-crunchyroll`
+- [x] `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll`
+- [x] `/guides/resume-anime`
+- [x] `/guides/discord-go-live`
+- [x] `/guides/how-to-stream-anime-on-discord`
+- [x] `/guides/discord-watch-together-activity`
+- [x] `/guides/chrome-watch-party`
+- [x] `/virtual-movie-night`
+- [ ] Owner spot-check, then Planner confirms. Review dates: 7 Nov 2026, 7 Dec 2026, 6 Jan 2027.
+
+### Crunchyroll Continue Watching how-to (Executor 2026-10-07)
+
+Owner said execute on the niche-hubs suggestion. One new URL. The other nine candidates stay off the sitemap.
+
+- [x] `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll` — H1 owns the 590 remove query plus history 210/140 and clear 70. Steps from Crunchyroll Help, checked 7 Oct 2026.
+- [x] Inbound links from `/watch-crunchyroll-together` and `/guides/how-to-watch-crunchyroll-with-friends`. Parent is the Crunchyroll pillar.
+- [ ] Owner spot-check the how-to, then Planner confirms. Review dates: 6 Nov 2026, 6 Dec 2026, 5 Jan 2027.
+- [ ] After production deploy: Search Console request indexing for this URL.
+
+### Free tools pillar (Executor 2026-09-28)
+
+Keyword Planner US, 2026-09-28. No widget shipped. No `/tools` hub, generator, or filler list.
+
+- [x] Re-pull seeds. Calculators/planner/timezone/“episodes in 3 hours”/“how long to watch an anime”: no reported volume. Random anime generator: 2,400/mo, entertainment intent, rejected. Anime tracker: 720/mo, list-site intent, already the H1 on `/anime-tracker`.
+- [x] Gate failed for a watch-party planning widget. Title runtime cluster (“how long to watch one piece” 2,400) is not a session planner and `animeList` has no minute data.
+- [x] Generators, filler lists, and a new tools URL left unshipped.
+
 ### SEO rank + expand execute (Executor 2026-09-21)
 
 - [x] 1a CWS truth pass (public HowTo/body/security/terms/agent; hub sideload UI left)
@@ -195,7 +227,6 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 - [x] Pricing-copy: async no longer a paid differentiator; `PRICING_ROOM_SIZE_RANGE` (Free 4 / Plus 6 / Pro 15)
 - [x] Watch slug + 5 genre hubs + anime-club FAQ: room size + async coming soon
 - [ ] Owner smoke: open a room without extension; homepage FAQ async answer; one `/watch/[slug]` lead
-
 
 ### Domain ranking + YouTube heads (Planner 2026-08-20)
 
@@ -306,6 +337,12 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 
 ## Executor's Feedback or Assistance Requests
 
+- **Executor (2026-10-07 sitewide landing language):** Guides, compare, glossary, and watch pages now use the homepage FAQ rows (two columns, plus/minus, “More questions” after six). Trust strip removed from those pages and `/pricing`. SEO titles are semibold; orange link lists in articles are cream. About, Privacy, Terms, Security, and Editorial Policy share one article shell. Room and friend-invite primary actions are cream pills. `pnpm --filter @anidachi/web check` passed. Browser: `/`, `/pricing`, `/extension`, a YouTube guide, Teleparty compare, `/about`, `/privacy`, and a 390px FAQ. Room invite redirects to sign-in, so that screen was not opened while logged out.
+
+- **Executor (2026-10-08 nine pages):** Shipped the rest of the suggested list. `/anime-tracker` was already live, so the tracker slot became `/guides/resume-anime`. Please open the local links and say if this batch is complete.
+
+- **Executor (2026-10-07 Continue Watching how-to):** Shipped one new guide. Discord parent was already live, so it was left alone. `/account/watch-library` stays noindex. Please open the new guide and the Crunchyroll pillar section, then say if this task is complete.
+
 - **Executor (2026-09-21 how-it-works HowTo mismatch):** Confirmed Bug 1. Homepage visible step 1 said “via the install page” while `howToSteps` JSON-LD used `INSTALL_HOWTO_STEP_TEXT` only. Aligned both to `INSTALL_HOWTO_STEP_TEXT_VIA_HUB` + CR/YT session note; UI links `/extension`; `howToSteps` maps from `steps`. `pnpm --filter @anidachi/web check` passed. Please spot-check `/#how-it-works` and view-source HowTo step 1 before commit.
 
 - **Executor (2026-09-21 SEO rank+expand, full pass):** On-site Parts 1a–1d and 2a–2d are in the working tree. 2f paste pack is in `docs/current-development-state.md` (Store title/short description, PH/Edge/directory/pitch instructions). Local Ads customer set to `8078204641`. Did **not** persist the leaked Blob token — rotate it first. 2e new URLs not shipped (freeze). Indexing and 28d re-measure wait on production. Please spot-check then say if I should commit on `staging`.
@@ -344,7 +381,7 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 
 - **Executor (2026-09-13 sitewide brand):** Remaining marketing/product chrome now uses the account language (cream actions, canvas/panel/line, no glow orbs). Shared SEO layout + guide blocks, `/extension` hub, auth shell, contact/feature forms, plan survey, success/join CTAs. `--primary` still orange for CRM/Blou. Overlay demo unchanged. Typecheck passed. Please spot-check `/extension`, a guide, `/about`, `/pricing`, `/login`.
 
-- **Executor (2026-09-13 layout drag):** Layout beat now *shows* drag: cameras slide inward/up, then chat slides toward the top of the grid; dashed ghosts on the player follow. Cameras and chat are also pointer-draggable in the preview (grab cursor). Caption: “Drag cameras and chat on the grid…”. Typecheck passed. Refresh `http://localhost:3003/#demo` and watch the Layout step (or drag the green cameras / blue chat yourself).
+- **Executor (2026-09-13 layout drag):** Layout beat now _shows_ drag: cameras slide inward/up, then chat slides toward the top of the grid; dashed ghosts on the player follow. Cameras and chat are also pointer-draggable in the preview (grab cursor). Caption: “Drag cameras and chat on the grid…”. Typecheck passed. Refresh `http://localhost:3003/#demo` and watch the Layout step (or drag the green cameras / blue chat yourself).
 
 - **Executor (2026-09-13 layout setup):** Layout beat is in the live demo: Settings → Layout shows the 16:9 grid, Video/Chat toggle, camera-size slider, Revert/Apply, and dashed camera/chat ghosts on the player. People list hides while Layout is open so the editor stays on screen; the loop holds that beat ~3.6s. `pnpm --filter @anidachi/web check` passed. Owner will QA locally — do not start the web server. Spot-check `/#demo` Live: step rail includes Layout; after Create room the panel should show the grid editor + ghosts, then Friends join.
 
@@ -519,6 +556,7 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 ### SEO batch — 10 high-leverage pages (2026-06-04)
 
 **5 new watch pages** (high-traffic titles not previously in `animeList`):
+
 - `sailor-moon` — MAL 530 — iconic magical-girl classic, nostalgic marathons
 - `weathering-with-you` — MAL 38826 — Shinkai film, debate-worthy ending
 - `suzume` — MAL 50265 — Shinkai film, grief + road-trip
@@ -526,15 +564,18 @@ Success: first GSC impressions on `youtube watch party` / `watch youtube togethe
 - `pokemon` — MAL 527 — most recognized anime franchise, nostalgic marathon
 
 **3 new listicle guides** (new keyword buckets):
+
 - `app/guides/best-shonen-anime-to-watch-with-friends/page.tsx` — covers action, sports, long-run shonen
 - `app/guides/best-classic-anime-to-watch-with-friends/page.tsx` — 90s–2000s TV series + Ghibli/Shinkai classics
 - `app/guides/best-anime-to-binge-with-friends-this-weekend/page.tsx` — complete/arc-complete series by length
 
 **2 new glossary entries** (topical authority + AEO):
+
 - `app/glossary/anime-filler/page.tsx` — definition, filler percentages per series, skip guide
 - `app/glossary/ova-meaning/page.tsx` — OVA vs TV, OVA types, watch order for groups
 
 **Hub/listicle wiring:**
+
 - `best-anime-to-watch-with-friends` updated to **115+**, `dateModified` → `2026-06-04`
 - `watch-anime-together` `dateModified` → `2026-06-04`
 - `best-anime-to-watch-for-beginners` +1 entry (My Neighbor Totoro), **30**, `dateModified` → `2026-06-04`
@@ -633,28 +674,31 @@ New slugs (high-traffic + Crunchyroll group-watch intent):
 ## GSC SEO Optimisation Batch (2026-06-08)
 
 ### What was done
+
 Live GSC data (Mar 9 – Jun 5 2026) pulled via Composio. Site had ~7,300 impressions / ~370 clicks (5% blended CTR). Key findings and all changes below.
 
 **Technical fix:**
+
 - `apps/web/next.config.ts` — added 301 redirect `anidachi.app/* → www.anidachi.app/*` to consolidate the www/non-www PageRank split (was costing ~33% of homepage authority).
 
 **Content / SEO changes (`dateModified` bumped to 2026-06-08 on all):**
 
-| File | Changes |
-|------|---------|
-| `app/watch-anime-together/page.tsx` | Title → includes "anime watch party"; new H2 "Host an Anime Watch Party Online"; new H2 "Watch Anime Together Long Distance" (59 impressions trapped at pos 9, 0 clicks); 4 new FAQ entries |
-| `app/watch-crunchyroll-together/page.tsx` | Title rewrite; 4 new FAQ entries: "Does Crunchyroll have watch party?", Teleparty, group watch; new "Crunchyroll Group Watch Tips" H2 section |
-| `app/guides/how-to-watch-crunchyroll-with-friends/page.tsx` | Title → "Crunchyroll Watch Party Guide (2026)"; H1 rewrite; 5 new FAQ entries for all "does crunchyroll have…" / "can you…" variants |
-| `app/glossary/ova-meaning/page.tsx` | Title → "What Does OVA Mean in Anime?" (377 imp, 0 clicks hidden gem); new "OVA Full Form" section; "Famous OVAs by Series" section (Haikyuu, AoT, Demon Slayer examples); 5 new FAQ entries |
-| `app/guides/how-to-watch-anime-with-friends-on-discord/page.tsx` | Title → "How to Stream Anime on Discord & Run an Anime Watch Party"; new "Discord Anime Watch Party" section; 2 new FAQ entries |
-| `app/compare/anidachi-vs-kast/page.tsx` | Title → "Best Kast Alternative for Crunchyroll Anime" |
-| `app/compare/anidachi-vs-scener/page.tsx` | Title → "Best Scener Alternative for Anime Watch Parties" |
-| `app/compare/anidachi-vs-syncplay/page.tsx` | Title → "Best Syncplay Alternative for Crunchyroll Anime" |
-| `app/compare/anidachi-vs-discord-screen-share/page.tsx` | Title → "Crunchyroll vs Discord Screen Share" |
+| File                                                             | Changes                                                                                                                                                                                      |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/watch-anime-together/page.tsx`                              | Title → includes "anime watch party"; new H2 "Host an Anime Watch Party Online"; new H2 "Watch Anime Together Long Distance" (59 impressions trapped at pos 9, 0 clicks); 4 new FAQ entries  |
+| `app/watch-crunchyroll-together/page.tsx`                        | Title rewrite; 4 new FAQ entries: "Does Crunchyroll have watch party?", Teleparty, group watch; new "Crunchyroll Group Watch Tips" H2 section                                                |
+| `app/guides/how-to-watch-crunchyroll-with-friends/page.tsx`      | Title → "Crunchyroll Watch Party Guide (2026)"; H1 rewrite; 5 new FAQ entries for all "does crunchyroll have…" / "can you…" variants                                                         |
+| `app/glossary/ova-meaning/page.tsx`                              | Title → "What Does OVA Mean in Anime?" (377 imp, 0 clicks hidden gem); new "OVA Full Form" section; "Famous OVAs by Series" section (Haikyuu, AoT, Demon Slayer examples); 5 new FAQ entries |
+| `app/guides/how-to-watch-anime-with-friends-on-discord/page.tsx` | Title → "How to Stream Anime on Discord & Run an Anime Watch Party"; new "Discord Anime Watch Party" section; 2 new FAQ entries                                                              |
+| `app/compare/anidachi-vs-kast/page.tsx`                          | Title → "Best Kast Alternative for Crunchyroll Anime"                                                                                                                                        |
+| `app/compare/anidachi-vs-scener/page.tsx`                        | Title → "Best Scener Alternative for Anime Watch Parties"                                                                                                                                    |
+| `app/compare/anidachi-vs-syncplay/page.tsx`                      | Title → "Best Syncplay Alternative for Crunchyroll Anime"                                                                                                                                    |
+| `app/compare/anidachi-vs-discord-screen-share/page.tsx`          | Title → "Crunchyroll vs Discord Screen Share"                                                                                                                                                |
 
 **Build:** `npm run build` ✅ (2026-06-08)
 
 **Remaining (Tier 3, not done):**
+
 - `/guides/best-anime-to-watch-with-friends` — ranks pos 18 for own keyword, needs content expansion
 
 ## Executor's Feedback or Assistance Requests
@@ -955,24 +999,29 @@ The survey should do more than “collect answers” — it should:
 ### SEO batch — 10 high-traffic pages (2026-06-08)
 
 **1 new genre hub:**
+
 - `/watch-fantasy-anime-with-friends` — fantasy genre cluster (Frieren, HxH, Ghibli, etc.)
 
 **4 new listicle guides:**
+
 - `/guides/best-sports-anime-to-watch-with-friends` — 9 picks
 - `/guides/best-comedy-anime-to-watch-with-friends` — 12 picks
 - `/guides/best-dubbed-anime-to-watch-with-friends` — 12 picks (dub vs sub friction)
 
 **4 new how-to / troubleshooting guides:**
+
 - `/guides/how-to-watch-seasonal-anime-together` — simulcast weekly workflow
 - `/guides/crunchyroll-watch-party-not-working` — sync/detection troubleshooting
 - `/guides/how-to-run-an-online-anime-club` — Discord + recurring clubs
 - `/guides/how-to-plan-an-anime-marathon-with-friends` — weekend binge planning
 
 **2 new compare pages:**
+
 - `/compare/anidachi-vs-rave` — missing competitor coverage
 - `/compare/crunchyroll-party-vs-teleparty-for-anime` — third-party tool-shopping intent
 
 **Infrastructure:**
+
 - `genre-hub-links.ts` + `sitemap-discovery.ts` updated for fantasy hub
 - `guide-links.ts` updated (new guides + previously missing shonen/classic/weekend binge entries)
 
@@ -1012,6 +1061,7 @@ The survey should do more than “collect answers” — it should:
 **Background:** GSC Coverage Drilldown (`Discovered - currently not indexed`) listed 256 apex URLs. Scope B: temporary force-index sitemap for all **247** public URLs + exclude 9 noindex auth/product routes from the main sitemap.
 
 **High-level tasks**
+
 1. Add `apps/web/lib/force-index-urls.ts` (247 paths from 2026-07-17 GSC Table.csv).
 2. Add production-only `apps/web/app/force-index-sitemap.xml/route.ts` (404 when indexing disabled).
 3. Wire second sitemap in `apps/web/app/robots.ts`.
@@ -1019,11 +1069,13 @@ The survey should do more than “collect answers” — it should:
 5. Allow `/force-index-sitemap.xml` through staging/middleware/session-refresh static-asset bypasses (same as `/sitemap.xml`).
 
 **Success criteria**
+
 - [x] `FORCE_INDEX_URL_PATHS.length === 247` and none of the 9 noindex paths
 - [x] Static discovery leaks none of the 9 noindex paths
 - [x] `pnpm --filter @anidachi/web check` passes (Node 22)
 
 **Post-deploy / GSC ops (human)**
+
 1. Confirm `https://www.anidachi.app/force-index-sitemap.xml` returns 247 `<loc>` entries.
 2. Confirm main `/sitemap.xml` omits `/login`, `/account*`, `/join*`, `/friends`, `/extension/connect`.
 3. Submit `https://www.anidachi.app/force-index-sitemap.xml` in Google Search Console → Sitemaps.
@@ -1032,6 +1084,7 @@ The survey should do more than “collect answers” — it should:
 ### High-converting SEO batch 2 (2026-07-22) — Keyword Planner validated
 
 **Shipped (10 new routes):**
+
 1. `/guides/teleparty-not-working-crunchyroll`
 2. `/guides/does-everyone-need-crunchyroll-premium-for-watch-party`
 3. `/compare/anidachi-vs-metastream`
@@ -1050,6 +1103,7 @@ The survey should do more than “collect answers” — it should:
 ### High-converting SEO batch (2026-07-19) — Keyword Planner validated
 
 **Shipped (10 new routes):**
+
 1. `/pricing` — dedicated pricing + FAQ; footer “Pricing”; schema offer URLs; sitemap priority 0.9
 2. `/guides/best-teleparty-alternatives-for-anime`
 3. `/guides/can-you-screen-share-crunchyroll-on-discord`
@@ -1074,6 +1128,7 @@ The survey should do more than “collect answers” — it should:
 **Truth fixes:** home FAQ, hero, how-it-works, SoftwareApplicationJsonLd; LDR YouTube rewrite; compare matrices → Crunchyroll + YouTube.
 
 **New routes:**
+
 1. `/watch-youtube-together` (pillar)
 2. `/guides/how-to-watch-youtube-with-friends`
 3. `/guides/netflix-party-for-youtube`
@@ -1122,6 +1177,7 @@ The survey should do more than “collect answers” — it should:
 **Scope:** Live animated mock only (Async unchanged). Highest fidelity vs latest extension overlay.
 
 **Changes:**
+
 - `apps/web/components/chrome-extension-demo-overlay.tsx` — green sync dot, account+Plus panel, icon actions, Settings tabs (Reactions/Layout/Voice), live chat column, message composer peek, mint speaking cams, catch-up restyle, emoji set `😂😱❤️🔥😭👀` (room rail peek removed — duplicated cam bubbles)
 - `apps/web/components/chrome-extension-demo.tsx` — Live subcopy → Crunchyroll or YouTube
 

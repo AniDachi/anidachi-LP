@@ -2,6 +2,7 @@ import type { Viewport } from "next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { extensionPreviewFont } from "@/components/extension-preview-font";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
 import {
@@ -40,14 +41,14 @@ export const metadata: Metadata = {
     template: "%s | AniDachi",
   },
   description:
-    "Watch Crunchyroll and YouTube together with friends. AniDachi syncs playback in desktop Chrome with chat and reactions. Friends join free.",
+    "Watch Crunchyroll, YouTube, and Netflix together with friends. AniDachi syncs playback in desktop Chrome with chat and reactions. Friends join free.",
   metadataBase: new URL(getSeoSiteOrigin()),
   // No root canonical: a page without its own `alternates.canonical` must not inherit the homepage URL.
   openGraph: {
     title:
       "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     description:
-      "Create watchrooms for Crunchyroll and YouTube, sync playback with friends, and chat in real time.",
+      "Create watchrooms for Crunchyroll, YouTube, and Netflix, sync playback with friends, and chat in real time.",
     type: "website",
     siteName: "AniDachi",
     images: [
@@ -84,7 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth" data-ani-theme="account">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${extensionPreviewFont.variable} antialiased`}
       >
         <a
           href="#main-content"

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { loadVoiceModePreference, persistVoiceModePreference } from "../src/voice-mode-preference";
 import {
 	cameraEnabledPreferenceStorageKeyForUser,
 	getDefaultRoomJoinDefaults,
@@ -26,11 +27,41 @@ class MemoryStorageArea {
 }
 
 describe("room media defaults", () => {
-	it("uses last microphone choice and a privacy-safe camera-off default", () => {
+	it("uses the last choice for both microphone and camera", () => {
 		expect(getDefaultRoomJoinDefaults()).toEqual({
 			version: 1,
 			microphoneOnJoin: "last-used",
+			cameraOnJoin: "last-used",
+		});
+	});
+
+	it("starts without capture history, then remembers both devices without overriding saved join settings", async () => {
+		const storage = new MemoryStorageArea();
+		const resolveForNewRoom = async () => resolveRoomMediaDefaults({
+			preferences: await loadRoomJoinDefaults(storage, "user-a"),
+			lastCameraEnabled: await loadCameraEnabledPreference(storage, "user-a"),
+			lastVoiceMode: await loadVoiceModePreference(storage, "user-a"),
+		});
+
+		await expect(resolveForNewRoom()).resolves.toEqual({
+			cameraEnabled: false,
+			voiceMode: "push-to-talk",
+		});
+		await persistCameraEnabledPreference(storage, "user-a", true);
+		await persistVoiceModePreference(storage, "user-a", "open-mic");
+		await expect(resolveForNewRoom()).resolves.toEqual({
+			cameraEnabled: true,
+			voiceMode: "open-mic",
+		});
+
+		await persistRoomJoinDefaults(storage, "user-a", {
+			version: 1,
+			microphoneOnJoin: "push-to-talk",
 			cameraOnJoin: "off",
+		});
+		await expect(resolveForNewRoom()).resolves.toEqual({
+			cameraEnabled: false,
+			voiceMode: "push-to-talk",
 		});
 	});
 

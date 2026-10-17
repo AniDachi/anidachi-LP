@@ -26,6 +26,12 @@ jobs:
           # Pin the last staging-verified CLI. `latest` broke `supabase link`
           # when 2.112.0 changed the API-key response schema on 2026-08-07.
           version: 2.111.0
+      - name: Verify staging project target
+        run: |
+          if [ "$SUPABASE_PROJECT_ID" != "cyppqpprkygjloyfvvvj" ]; then
+            echo "Refusing migration: staging project target does not match." >&2
+            exit 1
+          fi
       - name: Link staging project
         run: supabase --workdir apps/web link --project-ref "$SUPABASE_PROJECT_ID"
       - name: Show pending migrations (dry run)

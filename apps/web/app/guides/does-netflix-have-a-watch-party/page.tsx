@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Does Netflix Have a Watch Party?",
   description:
-    "Netflix does not include a watch party button. The old in-house party feature is gone. People use a Chrome extension, and AniDachi is adding Netflix rooms.",
+    "Netflix does not include a watch party button. The old in-house party feature is gone. People use a Chrome extension such as AniDachi to sync Netflix playback.",
   alternates: { canonical: "/guides/does-netflix-have-a-watch-party" },
   openGraph: {
     title: "Does Netflix Have a Watch Party?",
@@ -44,14 +44,14 @@ const faq = [
   {
     question: "Will AniDachi add one?",
     answer:
-      "AniDachi is adding Netflix watchrooms for desktop Chrome. That update is not on the public extension yet.",
+      "AniDachi supports Netflix watchrooms in desktop Chrome. Each person uses their own Netflix access, and a Plus, Pro, or trial host shares the room invite.",
   },
 ];
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
   { id: "instead", label: "What people use instead", level: 2 },
-  { id: "coming", label: "What AniDachi is adding", level: 2 },
+  { id: "coming", label: "Watch with AniDachi", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
@@ -70,7 +70,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
       description="Netflix has no built-in watch party."
       url="/guides/does-netflix-have-a-watch-party"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -109,9 +109,8 @@ export default function DoesNetflixHaveAWatchPartyPage() {
         AniDachi
       </h2>
       <p className="mb-6 leading-relaxed text-ani-muted">
-        AniDachi is adding Netflix watchrooms in desktop Chrome, each person
-        on their own account. That is not on the public extension yet.
-        Crunchyroll and YouTube are, from{" "}
+        AniDachi supports Netflix watchrooms in desktop Chrome, with each person on their own account. It adds live sync, chat, reactions, and calls.
+        Install AniDachi from{" "}
         <Link href="/extension">/extension</Link>. The old extension name is
         explained on <Link href="/netflix-party">Netflix Party</Link>. The
         Teleparty wording is on{" "}

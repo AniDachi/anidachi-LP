@@ -919,3 +919,17 @@ for (const personal of [false, true]) test(`capacity rejection drains installed 
   assert.deepEqual(await response.json(), { error: "History full", code: "STALE_OBSERVATION", reason: "HISTORY_LIMIT_REACHED" });
   assert.equal(response.headers.get("cache-control"), "private, no-store");
 });
+
+test("all-provider history list explicitly negotiates Netflix without changing legacy arguments", async () => {
+  const seen: unknown[] = [];
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({ listHistory: async (params) => {
+    seen.push(params); return dependencies().listHistory(params);
+  } }));
+  assert.equal((await routes.getHistory(request("/api/watch-history/v3"))).status, 200);
+  assert.equal(Object.hasOwn(seen[0] as object, "providerVersion"), false);
+  assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=2"))).status, 200);
+  assert.equal((seen[1] as { providerVersion: number }).providerVersion, 2);
+  for (const version of ["0", "3", "02", "", "2&providerVersion=2"])
+    assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=" + version))).status, 400);
+  assert.equal(seen.length, 2);
+});

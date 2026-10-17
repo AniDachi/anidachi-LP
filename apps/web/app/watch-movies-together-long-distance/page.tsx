@@ -35,12 +35,12 @@ const faq = [
   {
     question: "What is the best app to watch movies together long distance?",
     answer:
-      "Teleparty is the most widely supported option across Netflix, Disney+, Hulu, and Crunchyroll. Rave is a strong free alternative that adds built-in voice and video calling. AniDachi supports Crunchyroll and YouTube live rooms with chat, reactions, and voice/video. Netflix is coming soon and is not supported yet. Async catch-up is coming soon.",
+      "Teleparty is the most widely supported option across Netflix, Disney+, Hulu, and Crunchyroll. Rave is a strong free alternative that adds built-in voice and video calling. AniDachi supports Crunchyroll, YouTube, and Netflix live rooms with chat, reactions, and voice/video. Async catch-up is coming soon.",
   },
   {
     question: "Is there a way to watch movies together long distance for free?",
     answer:
-      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi supports Crunchyroll and YouTube watchrooms with a Free tier to join rooms. Netflix is coming soon and is not supported yet. ${PRICING_COMPARE_OVERVIEW}`,
+      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi supports Crunchyroll, YouTube, and Netflix watchrooms with a Free tier to join rooms. ${PRICING_COMPARE_OVERVIEW}`,
   },
   {
     question: "Does Netflix have a built-in watch party?",
@@ -77,7 +77,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
       description="All methods compared — Teleparty, Rave, Discord, and AniDachi for anime."
       url="/watch-movies-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-10-01"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -119,7 +119,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
         rows={[
           {
             feature: "Netflix",
-            values: { teleparty: "yes", rave: "yes", anidachi: "no", discord: "partial" },
+            values: { teleparty: "yes", rave: "yes", anidachi: "yes", discord: "partial" },
           },
           {
             feature: "Disney+",
@@ -204,7 +204,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
         id="anidachi"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        AniDachi — Live Crunchyroll and YouTube Rooms
+        AniDachi — Live Crunchyroll, YouTube, and Netflix Rooms
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         If your movie nights include anime on Crunchyroll, AniDachi is the
@@ -213,8 +213,8 @@ export default function WatchMoviesTogetherLongDistancePage() {
         Personal history needs each viewer’s own Plus/Pro access and recording permission.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi supports Crunchyroll and YouTube watchrooms.
-        Netflix is coming soon and is not supported yet. Disney+ and other streaming platforms are not supported.
+        AniDachi supports Crunchyroll, YouTube, and Netflix watchrooms.
+        Disney+ and other streaming platforms are not supported.
         Each person needs their own access to the same title.{" "}
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           Learn how async anime watching works across time zones.

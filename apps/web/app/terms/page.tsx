@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <MarketingArticle title="Terms of Service" updated="October 1, 2026">
+    <MarketingArticle title="Terms of Service" updated="October 17, 2026">
       <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
@@ -49,7 +49,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 AniDachi provides watchrooms for synchronized viewing on
-                supported platforms (Crunchyroll and YouTube), with chat,
+                supported platforms (Crunchyroll, YouTube, and Netflix), with chat,
                 reactions, and related social features through a Chrome
                 extension and website. Free accounts can join rooms hosted on
                 Plus or Pro, including rooms hosted during an active trial.
@@ -110,12 +110,18 @@ export default function TermsPage() {
               </p>
               <p className="mt-4">
                 New and existing Free accounts with an unused trial can try
-                Plus or Pro for three days with a card. There is one trial per
-                account across both plans and billing periods. Unless you
-                cancel renewal before the trial ends, Stripe charges your card
-                for the selected monthly or yearly subscription when it ends.
-                Changing plans or billing periods does not restart or extend
-                the trial.
+                Plus or Pro for three days, when offered on the pricing page.
+                There is one trial per account across both plans and billing
+                periods. A trial offered without a card lasts 72 hours and ends
+                without a payment unless you explicitly add a card and enable
+                renewal. Having a saved card alone does not enable renewal.
+                Before enabling it, you review the selected plan, billing period,
+                price and first payment date. Completing that card setup authorizes
+                Stripe to charge for the selected subscription at the original
+                trial end and renew it thereafter unless you cancel renewal.
+                Trials started with a card retain the terms confirmed at checkout:
+                they renew automatically unless canceled before the trial ends.
+                Changing plans or billing periods does not restart or extend a trial.
               </p>
               <p className="mt-4">
                 You can cancel renewal from Account → Subscription. Trial
@@ -166,7 +172,7 @@ export default function TermsPage() {
                 You retain ownership of any content you create (e.g., chat
                 messages). By posting content, you grant us a license to display
                 it within the Service. AniDachi is not affiliated with
-                Crunchyroll, Sony, YouTube, Google, or any streaming platform.
+                Crunchyroll, Sony, YouTube, Google, Netflix, or any streaming platform.
               </p>
             </section>
 

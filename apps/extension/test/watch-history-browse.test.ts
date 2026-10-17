@@ -1,3 +1,6 @@
+import { createRequire } from "node:module";
+import { resolve } from "node:path";
+import { createWatchHistoryGridGet } from "../../web/lib/anidachi-auth/watch-history-grid-routes";
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { createWatchHistoryBrowseCache } from "../src/watch-history-browse-cache";
@@ -741,10 +744,10 @@ describe("watch history query-isolated browsing", () => {
 		).resolves.toEqual({ ok: true, data: optionsResponse() });
 
 		expect(requests).toEqual([
-			`/api/watch-history/v3/browse?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&includeEpisodePreviews=true`,
+			`/api/watch-history/v3/browse?providerVersion=2&mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&includeEpisodePreviews=true`,
 			`/api/watch-history/v3/browse/title-episodes?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&cursor=episode-page-2&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS`,
-			`/api/watch-history/v3/browse/sessions?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS&episodeKey=crunchyroll%3Aepisode%3AE`,
-			"/api/watch-history/v3/browse/options?mode=shared&limit=20&cursor=options-page-2",
+			`/api/watch-history/v3/browse/sessions?providerVersion=2&mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS&episodeKey=crunchyroll%3Aepisode%3AE`,
+			"/api/watch-history/v3/browse/options?providerVersion=2&mode=shared&limit=20&cursor=options-page-2",
 		]);
 		expect(
 			(await storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 4)]
@@ -980,6 +983,31 @@ describe("optional catalog browse command", () => {
 		specialsAggregate: null,
 		nextCursor: null,
 	});
+	it.each(["netflix", "crunchyroll"] as const)("sends %s catalog queries accepted by the real server handler", async provider => {
+    const webRequire = createRequire(resolve(__dirname, "../../web/package.json"));
+    const { NextRequest } = webRequire("next/server");
+    const titleKey = provider === "netflix" ? "netflix:series:900" : input.titleKey;
+    const seasonKey = provider === "netflix" ? "netflix:season:800" : input.seasonKey;
+    const read = vi.fn(async ({ input: query }: { userId: string; input: unknown }) => {
+      expect(query).toEqual({ provider, titleKey, seasonKey, limit: 50 });
+      return { ...response(), provider, titleKey, seasonKey, state: "unavailable" as const };
+    });
+    const handler = createWatchHistoryGridGet({
+      getSession: async () => ({ userId: OWNER, email: "owner@example.invalid", plan: "plus", source: "extension" }),
+      read,
+    });
+    let emittedUrl!: string;
+    const setup = createStoredClient({ fetch: async (url, init) => {
+      emittedUrl = String(url);
+      const result = await handler(new NextRequest(emittedUrl, { headers: init?.headers }));
+      expect(result.status).toBe(200);
+      return result;
+    } });
+    expect(await setup.client.handle({ ...message, input: { provider, titleKey, seasonKey, limit: 50 } })).toMatchObject({ ok: true, data: { provider, titleKey, seasonKey } });
+    expect(new URL(emittedUrl).searchParams.has("providerVersion")).toBe(false);
+    expect(read).toHaveBeenCalledTimes(1);
+  });
+
 	it("validates input, fences exact-query cache and never writes roster data into canonical history", async () => {
 		const fetch = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) => Response.json(response()));
 		const setup = createStoredClient({ fetch });

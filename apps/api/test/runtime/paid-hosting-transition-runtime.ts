@@ -13,6 +13,7 @@ import { endedRoomTombstone } from "../../src/room-lifecycle";
 const terminalKey = "room_terminal_intent_v1";
 const secret = "anidachi-runtime-internal-secret";
 afterEach(async () => {
+	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	await reset();
 });
@@ -57,6 +58,230 @@ const terminal = (stub: DurableObjectStub) =>
 	runInDurableObject(stub, async (_instance, state) =>
 		state.storage.get<any>(terminalKey),
 	);
+describe("durable terminal callback pacing", () => {
+    it("does not spend another attempt or extend the deadline for ten early commands, including eviction", async () => {
+        const f = await fixture();
+        let calls = 0;
+        vi.stubGlobal("fetch", async () => { calls++; return Response.json({ error: "offline" }, { status: 503 }); });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        await first.text();
+        const claimed = await terminal(f.stub);
+        for (let i = 0; i < 10; i++) {
+            if (i === 5)
+                await evictDurableObject(f.stub, { webSockets: "hibernate" });
+            const result = await f.end();
+            expect(result.status).toBe(502);
+            expect(await result.json()).toMatchObject({ webFinalized: false, fencedAt: claimed.fencedAt });
+        }
+        expect(calls).toBe(1);
+        expect(claimed.attempts).toBe(1);
+        expect(await terminal(f.stub)).toEqual(claimed);
+    });
+    it.each(["seconds", "http-date"])("honors Retry-After %s across eviction and early alarms", async (format) => {
+        const f = await fixture();
+        // Build the deadline at execution, not test collection; HTTP dates have second precision.
+        const start = Date.now();
+        const retryAfter = format === "seconds" ? "600" : new Date(start + 600000).toUTCString();
+        const expectedDeadline = format === "seconds" ? start + 600000 : Date.parse(retryAfter);
+        let calls = 0;
+        vi.stubGlobal("fetch", async () => { calls++; return Response.json({ error: "overload" }, { status: 503, headers: { "Retry-After": retryAfter } }); });
+        const response = await f.end();
+        expect(response.status).toBe(502);
+        await response.text();
+        const claimed = await terminal(f.stub);
+        expect(claimed.nextAttemptAt).toBeGreaterThanOrEqual(expectedDeadline);
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        await runInDurableObject(f.stub, async (instance) => { await (instance as any).runAlarmExclusive(); });
+        expect(calls).toBe(1);
+        expect(await terminal(f.stub)).toEqual(claimed);
+    });
+});
+describe("terminal source and presence scheduling", () => {
+    it("retains a source deadline and services presence without spending terminal callback attempts", async () => {
+        const f = await fixture();
+        const start = Date.now();
+        const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+        const source = { schemaVersion: 1, attempts: 3, nextAttemptAt: start + 600000, callback: { roomId: f.roomId, sourceGeneration: 2, source: { provider: "youtube", sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", videoFingerprint: "youtube|dQw4w9WgXcQ" } } };
+        const evidence = { roomId: f.roomId, roomGeneration: 1, observedAt: start, participants: [{ userId: "00000000-0000-4000-8000-000000000001", sessionId: "session-1" }, { userId: "00000000-0000-4000-8000-000000000002", sessionId: "session-2" }] };
+        await runInDurableObject(f.stub, async (_instance, state) => {
+            await state.storage.put(terminalKey, { schemaVersion: 1, fencedAt: start, finalizedAt: null, nextAttemptAt: start + 600000, attempts: 1, endedAt: start, reason: "host_ended", cutover: f.cutover });
+            await state.storage.put("room_source_pending_v1", source);
+            await state.storage.put("room_presence_pending_v1", { schemaVersion: 1, pending: [{ evidence, attempts: 0, nextAttemptAt: start + 10000 }], overflow: 0 });
+        });
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        const urls: string[] = [];
+        vi.stubGlobal("fetch", async (url: RequestInfo | URL) => { urls.push(String(url)); return Response.json({ accepted: true }); });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        await first.text();
+        expect(urls).toHaveLength(0);
+        expect(await terminal(f.stub)).toMatchObject({ attempts: 1, nextAttemptAt: start + 600000 });
+        expect(await runInDurableObject(f.stub, async (_instance, state) => state.storage.getAlarm())).toBe(start + 10000);
+        clock.mockReturnValue(start + 10000);
+        expect(await runDurableObjectAlarm(f.stub)).toBe(true);
+        await vi.waitFor(() => expect(urls).toHaveLength(1));
+        expect(urls[0]).toContain("presence-evidence");
+        expect(await terminal(f.stub)).toMatchObject({ attempts: 1, nextAttemptAt: start + 600000 });
+        expect(await runInDurableObject(f.stub, async (_instance, state) => state.storage.get("room_source_pending_v1"))).toEqual(source);
+        expect(await runInDurableObject(f.stub, async (_instance, state) => state.storage.getAlarm())).toBe(start + 600000);
+    });
+});
+describe("terminal retry restart and budget", () => {
+    it("bounds an hour of 503 delivery to 15 claims under minimum jitter", async () => {
+        const f = await fixture();
+        const start = Date.now();
+        const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+        vi.spyOn(Math, "random").mockReturnValue(0);
+        let calls = 0;
+        vi.stubGlobal("fetch", async () => { calls++; return new Response(null, { status: 503 }); });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        await first.text();
+        for (let step = 1; step <= 120; step++) {
+            clock.mockReturnValue(start + step * 30000);
+            if (step === 60)
+                await evictDurableObject(f.stub, { webSockets: "hibernate" });
+            await runInDurableObject(f.stub, async (instance) => { await (instance as any).runAlarmExclusive(); });
+        }
+        expect(calls).toBe(15);
+        expect(await terminal(f.stub)).toMatchObject({ attempts: 15, finalizedAt: null, nextAttemptAt: start + 3750000 });
+    });
+    it("recovers the first forced source delivery after the initial intent flush is uncertain and eviction", async () => {
+        const f = await fixture();
+        const source = {
+            schemaVersion: 1,
+            attempts: 3,
+            nextAttemptAt: Date.now() + 600_000,
+            callback: {
+                roomId: f.roomId,
+                sourceGeneration: 2,
+                source: {
+                    provider: "youtube",
+                    sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                    canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                    videoFingerprint: "youtube|dQw4w9WgXcQ",
+                },
+            },
+        };
+        await runInDurableObject(f.stub, async (_instance, state) => {
+            await state.storage.put("room_source_pending_v1", source);
+            vi.spyOn(state.storage, "sync").mockRejectedValueOnce(new Error("initial intent flush unknown"));
+        });
+        const order: string[] = [];
+        vi.stubGlobal("fetch", async (url: RequestInfo | URL) => {
+            if (String(url).endsWith("/source")) {
+                order.push("source");
+                return Response.json({ ok: true, outcome: "persisted", sourceGeneration: 2 });
+            }
+            order.push("ended");
+            return Response.json({ ok: true, usageFinalized: true });
+        });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        expect(await first.json()).not.toHaveProperty("fencedAt");
+        const persisted = await terminal(f.stub);
+        expect(persisted).toMatchObject({ attempts: 0, finalizedAt: null });
+        expect(order).toEqual([]);
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        const completed = await f.end();
+        expect(completed.status).toBe(200);
+        expect(await completed.json()).toMatchObject({ webFinalized: true, fencedAt: persisted.fencedAt });
+        expect(order).toEqual(["source", "ended"]);
+        expect(await terminal(f.stub)).toMatchObject({ attempts: 1, runtimeFinalized: true });
+        const repeated = await f.end();
+        expect(repeated.status).toBe(200);
+        await repeated.text();
+        expect(order).toEqual(["source", "ended"]);
+    });
+    it("keeps a claimed budget across an uncertain flush and eviction without sending early I/O", async () => {
+        const f = await fixture();
+        let calls = 0;
+        vi.stubGlobal("fetch", async () => { calls++; return Response.json({ ok: true, usageFinalized: true }); });
+        await runInDurableObject(f.stub, async (_instance, state) => {
+            const sync = state.storage.sync.bind(state.storage);
+            vi.spyOn(state.storage, "sync").mockImplementationOnce(sync).mockRejectedValueOnce(new Error("claim flush unknown"));
+        });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        await first.text();
+        expect(calls).toBe(0);
+        const claimed = await terminal(f.stub);
+        expect(claimed.attempts).toBe(1);
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        const early = await f.end();
+        expect(early.status).toBe(502);
+        await early.text();
+        expect(calls).toBe(0);
+        expect(await terminal(f.stub)).toEqual(claimed);
+        const clock = vi.spyOn(Date, "now").mockReturnValue(claimed.nextAttemptAt);
+        const completed = await f.end();
+        expect(completed.status).toBe(200);
+        await completed.text();
+        expect(calls).toBe(1);
+        clock.mockRestore();
+    });
+    it("keeps a lost Web ACK pending and retries the same frozen callback after its durable deadline", async () => {
+        const f = await fixture();
+        const payloads: unknown[] = [];
+        let valid = false;
+        vi.stubGlobal("fetch", async (_url: RequestInfo | URL, init?: RequestInit) => { payloads.push(JSON.parse(String(init?.body))); return Response.json(valid ? { ok: true, usageFinalized: true } : { ok: true }); });
+        const first = await f.end();
+        expect(first.status).toBe(502);
+        await first.text();
+        const claimed = await terminal(f.stub);
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        valid = true;
+        const early = await f.end();
+        expect(early.status).toBe(502);
+        await early.text();
+        expect(payloads).toHaveLength(1);
+        const clock = vi.spyOn(Date, "now").mockReturnValue(claimed.nextAttemptAt);
+        const completed = await f.end();
+        expect(completed.status).toBe(200);
+        await completed.text();
+        expect(payloads).toHaveLength(2);
+        expect(payloads[1]).toEqual(payloads[0]);
+        clock.mockRestore();
+    });
+    it("does not mark a stale local attempt complete after a newer durable claim", async () => {
+        const f = await fixture();
+        let release!: () => void;
+        let called = false;
+        const gate = new Promise<void>(resolve => release = resolve);
+        vi.stubGlobal("fetch", async () => { called = true; await gate; return Response.json({ ok: true, usageFinalized: true }); });
+        const ending = f.end();
+        await vi.waitFor(() => expect(called).toBe(true));
+        await runInDurableObject(f.stub, async (_instance, state) => { const current = await state.storage.get<any>(terminalKey); await state.storage.put(terminalKey, { ...current, attempts: current.attempts + 1 }); });
+        release();
+        const response = await ending;
+        expect(response.status).toBe(502);
+        await response.text();
+        expect(await terminal(f.stub)).toMatchObject({ attempts: 2, finalizedAt: null });
+    });
+    it("preserves a legacy intent deadline after eviction before upgrading its attempt metadata", async () => {
+        const f = await fixture();
+        const start = Date.now();
+        const original = { schemaVersion: 1, fencedAt: start, finalizedAt: null, nextAttemptAt: start + 600000, endedAt: start, reason: "host_ended" };
+        await runInDurableObject(f.stub, async (_instance, state) => { await state.storage.put(terminalKey, original); await state.storage.setAlarm(original.nextAttemptAt); });
+        await evictDurableObject(f.stub, { webSockets: "hibernate" });
+        let calls = 0;
+        vi.stubGlobal("fetch", async () => { calls++; return new Response(null, { status: 503 }); });
+        const early = await f.end();
+        expect(early.status).toBe(502);
+        await early.text();
+        expect(calls).toBe(0);
+        expect(await terminal(f.stub)).toMatchObject(original);
+        expect(await terminal(f.stub)).not.toHaveProperty("attempts");
+        const clock = vi.spyOn(Date, "now").mockReturnValue(original.nextAttemptAt);
+        const due = await f.end();
+        expect(due.status).toBe(502);
+        await due.text();
+        expect(calls).toBe(1);
+        expect(await terminal(f.stub)).toMatchObject({ fencedAt: start, attempts: 1 });
+        clock.mockRestore();
+    });
+});
 describe("commercial closure in the Workers runtime", () => {
 	it("keeps an unproven legacy tombstone closed without fabricating a cutover receipt", async () => {
 		const f = await fixture();
@@ -362,6 +587,10 @@ describe("commercial closure in the Workers runtime", () => {
 			),
 		).not.toBeNull();
 		unavailable = false;
+    await runInDurableObject(f.stub, async (_instance, state) => {
+      const intent = await state.storage.get<any>(terminalKey);
+      await state.storage.put(terminalKey, { ...intent, nextAttemptAt: Date.now()-1 });
+    });
 		const completed = await f.end();
 		expect(completed.status).toBe(200);
 		expect(await completed.json()).toMatchObject({

@@ -44,7 +44,7 @@ test("published room limits and platform access match the active plan policies",
     assert.equal(hosting[tier], policy.dailyHostSeconds === null
       ? "No daily limit"
       : `${policy.dailyHostSeconds / 60} min/day`);
-    assert.equal(platforms[tier], "Crunchyroll + YouTube");
+    assert.equal(platforms[tier], "Crunchyroll, YouTube, Netflix");
   }
 
   assert.deepEqual(PRICING_TIERS.map(({ id, priceDisplay }) => ({ id, priceDisplay })), [

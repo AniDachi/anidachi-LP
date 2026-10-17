@@ -1,8 +1,8 @@
 import type Stripe from "stripe";
-import { getPricingOffer } from "./pricing-offer";
-import { readBillingPrice } from "./billing-price";
 import { resolveAccountEntitlements } from "./account-entitlements";
+import { readBillingPrice } from "./billing-price";
 import { db, getBillingCustomerByUserId } from "./db";
+import { getPricingOffer } from "./pricing-offer";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 import {
 	createSubscriptionCheckoutService,
@@ -11,9 +11,25 @@ import {
 } from "./subscription-trial";
 
 /** Server adapter; neither Stripe IDs nor trial eligibility come from a browser. */
-export function subscriptionCheckoutService(stripe: Stripe) {
+export function subscriptionCheckoutService(
+	stripe: Stripe,
+	{ withoutTrial = false }: { withoutTrial?: boolean } = {},
+) {
 	return createSubscriptionCheckoutService({
 		stripe,
+		async readReservation(userId) {
+			const { data, error } = await db()
+				.from("subscription_checkout_reservations")
+				.select("*")
+				.eq("user_id", userId)
+				.abortSignal(AbortSignal.timeout(10000))
+				.maybeSingle();
+			if (error)
+				throw new SubscriptionCheckoutError(
+					"Checkout reconciliation unavailable.",
+				);
+			return data ? parseCheckoutReservation(data) : null;
+		},
 		async offer(userId, priceId, billingPeriod) {
 			const [offer, price] = await Promise.all([
 				getPricingOffer(userId),
@@ -21,7 +37,12 @@ export function subscriptionCheckoutService(stripe: Stripe) {
 				// Cached public catalog values only accelerate display.
 				readBillingPrice(priceId, true, billingPeriod),
 			]);
-			return { action: offer.action, price };
+			return {
+				action:
+					withoutTrial && offer.action === "trial" ? "subscribe" : offer.action,
+				price,
+				trialMode: offer.trialMode,
+			};
 		},
 		getCustomer: getBillingCustomerByUserId,
 		async saveCustomer(userId, customerId) {
@@ -42,18 +63,24 @@ export function subscriptionCheckoutService(stripe: Stripe) {
 		},
 		async reserve(input) {
 			const { data, error } = await db()
-				.rpc("reserve_subscription_checkout_v1", {
-					p_user_id: input.userId,
-					p_plan_code: input.planCode,
-					p_price_id: input.priceId,
-					p_origin: input.origin,
-					p_request_id: input.requestId,
-					p_attribution: input.attribution,
-				})
+				.rpc(
+					withoutTrial
+						? "reserve_subscription_purchase_v1"
+						: "reserve_subscription_checkout_v1",
+					{
+						p_user_id: input.userId,
+						p_plan_code: input.planCode,
+						p_price_id: input.priceId,
+						p_origin: input.origin,
+						p_request_id: input.requestId,
+						p_attribution: input.attribution,
+					},
+				)
 				.abortSignal(AbortSignal.timeout(20_000));
 			if (error)
 				throw new SubscriptionCheckoutError(
 					"Checkout reservation unavailable.",
+					error.message.includes("CARDLESS_TRIAL_OFFER_CHANGED") ? 409 : 503,
 				);
 			return parseCheckoutReservation(data);
 		},
@@ -76,7 +103,9 @@ export function subscriptionCheckoutService(stripe: Stripe) {
 			const access = await resolveAccountEntitlements(userId, new Date());
 			if (!access.hosting)
 				throw new SubscriptionCheckoutError("Checkout authority unavailable.");
-			return access.hosting;
+			return withoutTrial && access.hosting.trialEligibility === "eligible"
+				? { ...access.hosting, trialEligibility: "used" }
+				: access.hosting;
 		},
 		async sync(subscriptionId, userId) {
 			const result = await syncStripeSubscriptionById(stripe, subscriptionId, {

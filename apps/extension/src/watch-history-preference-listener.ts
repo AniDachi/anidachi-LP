@@ -16,7 +16,7 @@ type StorageChangedEventLike = {
 
 export function bindWatchHistoryPreferenceListener(options: {
   ownerUserId: string;
-  controller: Pick<WatchHistoryController, "applyLocalPreferences"> & Partial<Pick<WatchHistoryController, "refreshAuthority" | "invalidateCaptureAuthority">>;
+  controller: Pick<WatchHistoryController, "applyLocalPreferences"> & Partial<Pick<WatchHistoryController, "refreshAuthority" | "invalidateCaptureAuthority" | "setRecordingEnabled">>;
   hasRecordingConsent?: (owner: string) => Promise<boolean>;
   onChanged?: StorageChangedEventLike;
 }): () => void {
@@ -27,9 +27,17 @@ export function bindWatchHistoryPreferenceListener(options: {
   const listener: StorageChangeListener = (changes, areaName) => {
     if (areaName !== "local") return;
     if (changes[historyRecordingChoiceKey(options.ownerUserId)]) {
-      ++revision;
+      const request = ++revision;
       options.controller.invalidateCaptureAuthority?.();
-      void options.controller.refreshAuthority?.().catch(() => undefined);
+      // Stop immediately, including when no server authority is available.
+      // The local choice must not depend on a successful network bootstrap.
+      options.controller.setRecordingEnabled?.(false);
+      void (async () => {
+        const enabled = await consent(options.ownerUserId).catch(() => false);
+        if (disposed || request !== revision) return;
+        options.controller.setRecordingEnabled?.(enabled);
+        if (enabled) await options.controller.refreshAuthority?.();
+      })().catch(() => undefined);
     }
     const change = changes[WATCH_HISTORY_STORAGE_KEY];
     if (!change) return;
@@ -40,13 +48,18 @@ export function bindWatchHistoryPreferenceListener(options: {
     void (async () => {
       const allowed = await consent(options.ownerUserId).catch(() => false);
       if (disposed || request !== revision) return;
-      await options.controller.applyLocalPreferences({
+      const input = {
         ownerUserId: next.ownerUserId,
         accountGeneration: next.accountGeneration,
         preferences: next.preferences,
-        accessLease: allowed ? next.accessLease : null,
+        accessLease: next.accessLease,
+        recordingEnabled: allowed,
         capturePaused: next.capturePaused,
-      });
+      };
+      if ((previous === null && next.localRevision === 0 && next.accessLease !== null) ||
+        (previous !== null && semanticSignature(previous) === semanticSignature(next)))
+        await options.controller.applyLocalPreferences(input, { authorityRenewal: true });
+      else await options.controller.applyLocalPreferences(input);
     })().catch(() => undefined);
   };
   onChanged.addListener(listener);
@@ -94,6 +107,18 @@ function localPreferenceAuthority(
     localRevision,
     capturePaused: partition.capturePaused,
   };
+}
+
+// Request/receipt times change on a renewal; rights, consent, generation,
+// storage pause and local preference revision remain semantic invalidations.
+function semanticSignature(authority: LocalPreferenceAuthority): string {
+  return JSON.stringify([
+    authority.ownerUserId, authority.accountGeneration, authority.localRevision,
+    authority.preferences.youtubeHistoryEnabled, authority.capturePaused,
+    authority.accessLease?.access.state, authority.accessLease?.access.accessEpoch,
+    authority.accessLease?.access.youtubeConsentEpoch,
+    authority.accessLease?.access.youtubeHistoryEnabled,
+  ]);
 }
 
 function preferenceSignature(authority: LocalPreferenceAuthority | null): string | null {

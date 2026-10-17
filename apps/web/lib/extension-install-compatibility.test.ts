@@ -102,7 +102,7 @@ test("the Chrome Web Store install link and room return work without querying th
   assert.equal(link.target, "_blank");
   assert.equal(link.rel, "noopener noreferrer");
   assert.ok(container.querySelector('a[href="/room/test-room"]'));
-  assert.match(container.textContent!, /Install from Chrome Web Store/);
+  assert.match(container.textContent!, /Add to Chrome/);
   assert.doesNotMatch(container.textContent!, /Load unpacked/);
   assert.deepEqual(messages, []);
 });
@@ -112,7 +112,7 @@ test("a presence reply cannot replace the guide or hide the Store install link",
   await sendPresenceReply();
   assert.ok(storeLink());
   assert.ok(container.querySelector('a[href="/room/test-room"]'));
-  assert.match(container.textContent!, /Install from Chrome Web Store/);
+  assert.match(container.textContent!, /Add to Chrome/);
   assert.doesNotMatch(container.textContent!, /AniDachi is installed/);
   assert.equal(analytics.some((event) => event[1] === "extension_detected"), false);
 });

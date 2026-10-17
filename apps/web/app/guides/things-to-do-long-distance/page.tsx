@@ -34,7 +34,7 @@ const faq = [
   {
     question: "What are things to do long distance?",
     answer:
-      "Pick one shared activity with a start and an end: a meal, a game, or one episode. Stay on a call for voice. Watch Crunchyroll or YouTube on your own accounts if the activity is a show.",
+      "Pick one shared activity with a start and an end: a meal, a game, or one episode. Stay on a call for voice. Watch Crunchyroll, YouTube, or Netflix on your own accounts if the activity is a show.",
   },
   {
     question: "What are long distance relationship activities?",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "What are long distance activities for couples?",
     answer:
-      "Couples can use the same ideas. A synced episode is one activity, not the only one. AniDachi covers Crunchyroll and YouTube in desktop Chrome. Netflix is coming soon and is not supported yet.",
+      "Couples can use the same ideas. A synced episode is one activity, not the only one. AniDachi covers Crunchyroll, YouTube, and Netflix in desktop Chrome.",
   },
 ];
 
@@ -74,7 +74,7 @@ export default function ThingsToDoLongDistancePage() {
       description="Long distance activities, including one synced episode."
       url="/guides/things-to-do-long-distance"
       datePublished="2026-09-27"
-      dateModified="2026-09-27"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -132,7 +132,7 @@ export default function ThingsToDoLongDistancePage() {
       <p className="mb-6 leading-relaxed text-ani-muted">
         Couples apart need the same constraint: one activity, both time zones,
         a time to stop. Voice stays on FaceTime or Discord. The video, when
-        you choose a video, stays on Crunchyroll or YouTube. Install from{" "}
+        you choose a video, stays on Crunchyroll, YouTube, or Netflix. Install from{" "}
         <Link href="/extension" className="text-brand-orange hover:underline">
           /extension
         </Link>

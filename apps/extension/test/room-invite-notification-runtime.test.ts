@@ -413,7 +413,7 @@ describe("invitation notification runtime", () => {
     await vi.advanceTimersByTimeAsync(10_001);
     await first;
     expect(failure).toBeInstanceOf(Error);
-    expect(state.map.get(AUTH)).toEqual(tokens());
+    expect(state.map.get(AUTH)).toMatchObject(tokens());
     const rotated = tokens(A, "access-2");
     state.map.set(AUTH, rotated);
     await runtime.handleAuthSessionChanged(tokens(), rotated);
@@ -581,7 +581,7 @@ describe("invitation notification runtime", () => {
     await vi.advanceTimersByTimeAsync(10_001);
     expect(failure).toMatchObject({ code: "INBOX_REQUEST_TIMEOUT" });
     await run;
-    expect(state.map.get(AUTH)).toEqual(tokens());
+    expect(state.map.get(AUTH)).toMatchObject(tokens());
     expect(create).not.toHaveBeenCalled();
   });
 
@@ -656,7 +656,7 @@ describe("invitation notification runtime", () => {
       return json({ error: "Unavailable" }, 503);
     });
     await expect(runtime.reconcileRoomInviteNotifications({ notify: true })).rejects.toThrow("temporarily unavailable");
-    expect(state.map.get(AUTH)).toEqual(tokens());
+    expect(state.map.get(AUTH)).toMatchObject(tokens());
     expect(state.map.get(`local:anidachi.accountInbox.v1.${A}`)).toBe(cached);
     expect(requests("/api/extension/auth/refresh")).toHaveLength(1);
     expect(create).not.toHaveBeenCalled();

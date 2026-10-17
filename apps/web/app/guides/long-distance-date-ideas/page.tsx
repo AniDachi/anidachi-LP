@@ -34,7 +34,7 @@ const faq = [
   {
     question: "What is a good long distance date idea?",
     answer:
-      "Pick one episode or movie you can both stream, stay on a voice or video call, and sync playback so you react at the same moment. AniDachi does that for Crunchyroll and YouTube. Netflix is coming soon.",
+      "Pick one episode or movie you can both stream, stay on a voice or video call, and sync playback so you react at the same moment. AniDachi does that for Crunchyroll, YouTube, and Netflix.",
   },
   {
     question: "Do we have to be online at the same time?",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can we watch Netflix together this way?",
     answer:
-      "Yes for Crunchyroll catalog pages and full YouTube watch pages in desktop Chrome. Netflix is coming soon and is not supported yet.",
+      "Yes for Crunchyroll catalog pages, full YouTube watch pages, and Netflix movie or episode pages in desktop Chrome.",
   },
 ];
 
@@ -73,7 +73,7 @@ export default function LongDistanceDateIdeasPage() {
       description="Date ideas built around watching together."
       url="/guides/long-distance-date-ideas"
       datePublished="2026-09-26"
-      dateModified="2026-09-26"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}

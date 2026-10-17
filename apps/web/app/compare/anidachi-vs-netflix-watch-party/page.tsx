@@ -39,12 +39,12 @@ const faq = [
   {
     question: "Can AniDachi sync Netflix anime?",
     answer:
-      "Not yet. Netflix is coming soon and is not supported. AniDachi supports Crunchyroll and YouTube watchrooms in desktop Chrome. Each person plays the same title through their own provider access; AniDachi adds live sync, chat, reactions and calls.",
+      "Yes. AniDachi supports Netflix, Crunchyroll, and YouTube watchrooms in desktop Chrome. Each person plays the same title through their own provider access; AniDachi adds live sync, chat, reactions and calls.",
   },
   {
     question: "Which is better for anime watch parties, AniDachi or Netflix Teleparty?",
     answer:
-      "AniDachi offers live Crunchyroll rooms with anime detection, chat, reactions, and voice/video. Your own Plus/Pro access and recording permission enable personal history. Teleparty on Netflix works when your group's show is Netflix-exclusive and everyone can watch live at the same time. Async catch-up in AniDachi is coming soon.",
+      "AniDachi offers live rooms on Netflix, Crunchyroll, and YouTube with chat, reactions, and voice/video. Your own Plus/Pro access and recording permission enable personal history. Teleparty on Netflix works when your group's show is Netflix-exclusive and everyone can watch live at the same time. Async catch-up in AniDachi is coming soon.",
   },
   {
     question: "What anime is on Netflix vs Crunchyroll?",
@@ -76,7 +76,7 @@ export default function AniDachiVsNetflixWatchPartyPage() {
       description="Side-by-side comparison for anime watch parties on Crunchyroll vs Netflix."
       url="/compare/anidachi-vs-netflix-watch-party"
       datePublished="2026-07-02"
-      dateModified="2026-10-01"
+      dateModified="2026-10-17"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -90,10 +90,7 @@ export default function AniDachiVsNetflixWatchPartyPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
-          AniDachi is built for Crunchyroll — where most popular anime lives.
-          Netflix watch parties (usually via Teleparty) work for Netflix-only
-          titles when everyone can watch live. Pick the tool that matches where
-          your group&apos;s anime actually streams.
+          AniDachi supports Netflix, Crunchyroll, and YouTube in desktop Chrome, with live sync, chat, reactions, and calls. Netflix + Teleparty is another live-sync setup. Choose the room features your group needs, and make sure everyone can access the same title.
         </strong>
       </p>
 
@@ -117,13 +114,13 @@ export default function AniDachiVsNetflixWatchPartyPage() {
         ]}
         rows={[
           { feature: "Crunchyroll support", values: { anidachi: "yes", netflix: "No" } },
-          { feature: "Netflix support", values: { anidachi: "Coming soon", netflix: "yes" } },
+          { feature: "Netflix support", values: { anidachi: "yes", netflix: "yes" } },
           { feature: "Asynchronous watching", values: { anidachi: "Coming soon", netflix: "no" } },
           { feature: "Live synchronized playback", values: { anidachi: "yes", netflix: "yes" } },
           { feature: "Per-user episode progress", values: { anidachi: "Own Plus/Pro + recording permission", netflix: "no" } },
           { feature: "Auto anime detection", values: { anidachi: "yes", netflix: "no" } },
           { feature: "Built-in chat", values: { anidachi: "yes", netflix: "yes" } },
-          { feature: "Requires streaming subscription", values: { anidachi: "Crunchyroll", netflix: "Netflix" } },
+          { feature: "Requires streaming subscription", values: { anidachi: "Own access to the selected platform", netflix: "Netflix" } },
           { feature: "Host cost", values: { anidachi: PRICING_FREE_TIER_TABLE, netflix: "Teleparty free tier" } },
         ]}
       />
@@ -150,7 +147,7 @@ export default function AniDachiVsNetflixWatchPartyPage() {
         When to choose AniDachi
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
-        <li>Your group watches on Crunchyroll — the default for most anime clubs.</li>
+        <li>Your group watches on Netflix, Crunchyroll, or YouTube in desktop Chrome.</li>
         <li>You want live chat, reactions, and voice/video beside the episode.</li>
         <li>You want to save your own episode progress with Plus or Pro.</li>
         <li>You host recurring watchrooms and want anime-specific tooling.</li>

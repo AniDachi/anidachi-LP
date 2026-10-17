@@ -1,3 +1,4 @@
+import { Video } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { PixelRect, ResolvedOverlayLayout } from "./overlay-layout-engine";
 import { OverlayLayoutChatPreview } from "./overlay-layout-chat-preview";
@@ -28,7 +29,9 @@ export function OverlayLayoutGhostPreview({
             data-live-layout-camera-ghost=""
             key={`layout-camera-ghost-${index}`}
             style={getPixelRectStyle(slot)}
-          />
+          >
+            <Video aria-hidden="true" className="layout-camera-placeholder-icon" />
+          </div>
         ),
       )}
       {showChatPlaceholder ? (

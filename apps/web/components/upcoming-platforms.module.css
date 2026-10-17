@@ -27,7 +27,7 @@
 
 .logos {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 24px;
   max-width: 1000px;
@@ -58,4 +58,5 @@
   .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin-top: 24px; }
   .logos li { min-height: 82px; }
   .logo { max-width: 90%; }
+  .logos li:last-child { grid-column: 1 / -1; justify-self: center; width: calc((100% - 16px) / 2); }
 }

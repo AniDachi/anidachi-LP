@@ -17,25 +17,55 @@ export const metadata: Metadata = {
 export default async function BillingPage({
 	searchParams,
 }: {
-	searchParams: Promise<{ billing?: string }>;
+	searchParams: Promise<{
+		billing?: string;
+		manage?: string;
+		trial_setup?: string;
+		trial_setup_cancel?: string;
+	}>;
 }) {
-	const session = await getSession();
-	if (!session) redirect("/login?next=%2Faccount%2Fbilling");
 	const params = await searchParams;
-  // Explicit SPA navigation starts its API read at click time. Direct document
-  // requests get an authenticated SSR snapshot instead of a hydration waterfall.
-  const clientNavigation = (await headers()).get("rsc") === "1";
-  const initial = params.billing === "return" || clientNavigation ? undefined : await loadBillingSnapshot(session.userId, {
-    websiteUser: async () => resolveWebsiteSession((await cookies()).get(REFRESH_TOKEN_COOKIE)?.value),
-    overview: userId => createBillingService().overview(userId),
-  }).catch(() => undefined);
+	const setupId = params.trial_setup ?? params.trial_setup_cancel;
+	const validSetupId =
+		typeof setupId === "string" &&
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+			setupId,
+		)
+			? setupId
+			: undefined;
+	const session = await getSession();
+	if (!session) {
+		const next = validSetupId
+			? `/account/billing?${params.trial_setup ? "trial_setup" : "trial_setup_cancel"}=${validSetupId}`
+			: "/account/billing";
+		redirect(`/login?next=${encodeURIComponent(next)}`);
+	}
+	// Explicit SPA navigation starts its API read at click time. Direct document
+	// requests get an authenticated SSR snapshot instead of a hydration waterfall.
+	const clientNavigation = (await headers()).get("rsc") === "1";
+	const initial =
+		validSetupId || params.billing === "return" || clientNavigation
+			? undefined
+			: await loadBillingSnapshot(session.userId, {
+					websiteUser: async () =>
+						resolveWebsiteSession(
+							(await cookies()).get(REFRESH_TOKEN_COOKIE)?.value,
+						),
+					overview: (userId) => createBillingService().overview(userId),
+				}).catch(() => undefined);
 
 	return (
 		<BillingClient
 			key={session.userId}
 			ownerUserId={session.userId}
-      initial={initial}
+			initial={initial}
+			manageRequested={params.manage === "1"}
 			returnedFromPortal={params.billing === "return"}
+			trialSetupReturn={
+				validSetupId
+					? { operationId: validSetupId, canceled: !params.trial_setup }
+					: undefined
+			}
 		/>
 	);
 }

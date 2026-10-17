@@ -12,27 +12,28 @@ import {
 import { createPortal } from "react-dom";
 import {
 	Check,
-	ChevronRight,
 	CircleHelp,
 	SendHorizontal,
 	SmilePlus,
 	Copy,
-	LogOut,
 	MousePointer2,
 	Mic,
 	MessageCircle,
 	RotateCcw,
 	Video,
-	Radio,
 	RefreshCw,
-	Settings2,
 	UserPlus,
-	UsersRound,
-	VideoOff,
 } from "lucide-react";
 // Presentation only: never import OverlayApp, auth, room clients or device hooks.
 // Shadow DOM keeps the extension's resets/tokens out of the website and Async.
 import { overlayStyles } from "../../extension/src/styles";
+import { PanelMediaControls } from "../../extension/src/panel-media-controls";
+import { CurrentResourcePanel } from "../../extension/src/current-resource-panel";
+import { RoomPeopleSection } from "../../extension/src/overlay-room-media-controls";
+import { GHOST_CAM_SIZE_STEPS } from "../../extension/src/ghost-cam-size";
+import { OverlayLayoutChatPreview } from "../../extension/src/overlay-layout-chat-preview";
+import type { Participant, RoomMediaV3Snapshot } from "@anidachi/protocol";
+import { ExtensionSettingsPreview } from "./extension-settings-preview";
 import {
 	getRoomDemoScene,
 	useDemoTyping,
@@ -62,6 +63,7 @@ const SCENES = {
 	},
 } as const;
 const SCENE_NUMBERS = [1, 2, 3, 4] as const;
+const noop = () => {};
 const EMOJIS = ["😂", "😱", "❤️", "🔥", "😭", "👀", "👏", "🤯", "😮‍💨", "💯"];
 
 // Only framing and the guided reveal differ from the installed extension.
@@ -72,7 +74,7 @@ const SCENE_STYLES = `
   .demo-layout-panel { --mini-panel-top: 48px; }
   .demo-layout-panel[data-applying="true"] { animation:demo-layout-out 200ms 500ms ease both; }
   @keyframes demo-layout-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-5px); } }
-  .demo-layout-panel .demo-settings-preview { margin-top: 0; }
+  .demo-layout-panel .settings-surface { margin-top:-13px; border-radius:inherit; }
   .demo-layout-panel .settings-section-title { margin: 0 0 4px; padding-top: 0; border-top: 0; }
   .demo-layout-panel .settings-category-tab { height: 32px; }
   .demo-layout-panel .settings-category-scroll::before { display: none; }
@@ -81,10 +83,8 @@ const SCENE_STYLES = `
   .demo-layout-panel .layout-preview-v2 { position: relative; height: 144px; overflow: hidden; }
   .demo-layout-panel .layout-grid-preview-v2 { position: absolute; inset: 8px; }
   .demo-layout-panel .layout-video-slot-v2 { position: absolute; transition: left var(--demo-move-time) var(--demo-move-ease), top var(--demo-move-time) var(--demo-move-ease), width 650ms var(--demo-move-ease), height 650ms var(--demo-move-ease); }
-  .demo-layout-panel .layout-chat-preview-v2 { position: absolute; width: 100px; height: 46px; padding: 6px; gap: 3px;
+  .demo-layout-panel .layout-chat-preview-v2 { position: absolute; width:100px; height:58px; padding:4px; --layout-preview-chat-gap:2px; --layout-preview-chat-name-font-size:5px; --layout-preview-chat-padding-x:3px; --layout-preview-chat-padding-y:2px; font-size:5px; line-height:7px;
     transition: left var(--demo-move-time) var(--demo-move-ease), top var(--demo-move-time) var(--demo-move-ease); }
-  .demo-layout-panel .layout-chat-preview-v2 span { height: 3px; width: 78%; border-radius: 2px; background: #aecbed70; }
-  .demo-layout-panel .layout-chat-preview-v2 span:first-child { width: 38%; background: #ffad7280; }
   .demo-layout-panel .layout-controls-v2 { min-height: 86px; }
   .demo-layout-panel .demo-slider { position: relative; height: 18px; display: flex; align-items: center; }
   .demo-slider-track { height: 3px; width: 100%; background: #ffffff24; border-radius: 8px; }
@@ -96,7 +96,7 @@ const SCENE_STYLES = `
   .demo-layout-panel .demo-chat-controls .stepped-setting-slider-endpoints-v2 { display: none; }
   .demo-layout-target { position: absolute; width: 1px; height: 1px; }
 
-  .mini-panel { animation: demo-panel-in 240ms cubic-bezier(.22,1,.36,1) both; }
+  .mini-panel { font-family:var(--font-anidachi-panel, Inter),ui-sans-serif,system-ui,sans-serif; animation: demo-panel-in 240ms cubic-bezier(.22,1,.36,1) both; }
   .demo-room-reveal { animation: demo-panel-in 240ms ease both; }
   .demo-preview-only { pointer-events: none; }
   .demo-cursor { position: absolute; z-index: 60; color: white; filter: drop-shadow(0 2px 3px #0009);
@@ -164,7 +164,7 @@ const SCENE_STYLES = `
   .demo-invite-reveal[data-accepted="true"] { overflow:hidden; animation:demo-invite-dismiss 280ms 920ms ease-in-out forwards; }
   @keyframes demo-invite-dismiss { from { max-height:220px; opacity:1; } to { max-height:0; opacity:0; padding-block:0; margin-top:0; border-width:0; } }
   @keyframes demo-click { from { opacity: .8; transform: scale(.25); } to { opacity: 0; transform: scale(1.5); } }
-  .demo-settings-preview { margin-top: 16px; }
+
   @keyframes demo-panel-in { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes demo-shortcut-in { from { opacity: 0; transform: translate(-50%, -7px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
@@ -187,83 +187,48 @@ function SettingsPreview({
 			inert
 			aria-hidden="true"
 		>
-			<div className="section-title settings-section-title">
-				<Settings2 className="section-title-icon" size={15} />
-				<span>Settings</span>
-			</div>
-			<div className="settings-shell">
-				<div className="settings-category-rail">
-					<div
-						className="settings-category-scroll"
-						data-active-category="reactions"
-					>
-						{["Reactions", "Layout", "Interface", "Voice", "Room"].map(
-							(label, i) => (
+			<ExtensionSettingsPreview
+				active="reactions"
+				layoutTabTarget={layoutTabTarget}
+			>
+				<div className="settings-panel-stack reaction-settings-panel">
+					<div className="settings-toggle-row">
+						<div className="settings-toggle-heading">
+							<span className="settings-toggle-switch-label">
+								Quick reactions
+							</span>
+							<CircleHelp size={14} />
+						</div>
+						<button
+							type="button"
+							className="settings-toggle-switch"
+							data-state="on"
+							tabIndex={-1}
+						>
+							<span className="settings-toggle-switch-state">
+								<span className="settings-toggle-switch-track">
+									<span className="settings-toggle-switch-thumb" />
+								</span>
+							</span>
+						</button>
+					</div>
+					<div className="reaction-shortcut-editor">
+						<div className="reaction-shortcut-grid">
+							{EMOJIS.map((emoji, i) => (
 								<button
 									type="button"
-									className={`settings-category-tab${i === 0 ? " active" : ""}`}
-									data-demo-target={
-										layoutTabTarget && label === "Layout"
-											? "layout-tab"
-											: undefined
-									}
-									key={label}
+									className="reaction-shortcut"
+									key={emoji}
 									tabIndex={-1}
 								>
-									{label}
+									<span className="reaction-shortcut-key">{(i + 1) % 10}</span>
+									<span className="reaction-shortcut-emoji">{emoji}</span>
 								</button>
-							),
-						)}
-					</div>
-				</div>
-				<div className="settings-panel">
-					<div className="settings-panel-stack reaction-settings-panel">
-						<div className="settings-toggle-row">
-							<div className="settings-toggle-heading">
-								<span className="settings-toggle-switch-label">
-									Quick reactions
-								</span>
-								<CircleHelp size={14} />
-							</div>
-							<button
-								type="button"
-								className="settings-toggle-switch"
-								data-state="on"
-								tabIndex={-1}
-							>
-								<span className="settings-toggle-switch-state">
-									<span className="settings-toggle-switch-track">
-										<span className="settings-toggle-switch-thumb" />
-									</span>
-								</span>
-							</button>
-						</div>
-						<div className="reaction-shortcut-editor">
-							<div className="reaction-shortcut-grid">
-								{EMOJIS.map((emoji, i) => (
-									<button
-										type="button"
-										className="reaction-shortcut"
-										key={emoji}
-										tabIndex={-1}
-									>
-										<span className="reaction-shortcut-key">
-											{(i + 1) % 10}
-										</span>
-										<span className="reaction-shortcut-emoji">{emoji}</span>
-									</button>
-								))}
-							</div>
+							))}
 						</div>
 					</div>
 				</div>
-			</div>
-			<div className="account-footer">
-				<button type="button" className="account-footer-action" tabIndex={-1}>
-					<LogOut className="account-footer-action-icon" size={14} />
-					<span>Sign out</span>
-				</button>
-			</div>
+			</ExtensionSettingsPreview>
 		</div>
 	);
 }
@@ -301,7 +266,9 @@ function useDemoCursor(shadowRoot: ShadowRoot | null, phase: RoomDemoPhase) {
 		if (!shadowRoot || !targetName) return;
 		const canvas = shadowRoot.querySelector<HTMLElement>(".anidachi-overlay");
 		const target = shadowRoot.querySelector<HTMLElement>(
-			`[data-demo-target="${targetName}"]`,
+			targetName === "camera"
+				? ".panel-media-camera"
+				: `[data-demo-target="${targetName}"]`,
 		);
 		if (!canvas || !target) return;
 		const measure = () => {
@@ -370,7 +337,18 @@ function InvitationPreview({ phase }: { phase: RoomDemoPhase }) {
 						disabled={sending || sent || accepted}
 						tabIndex={-1}
 					>
-						{accepted ? <><Check size={12} />Joined</> : sending ? "Sending…" : sent ? "Pending" : "Invite"}
+						{accepted ? (
+							<>
+								<Check size={12} />
+								Joined
+							</>
+						) : sending ? (
+							"Sending…"
+						) : sent ? (
+							"Pending"
+						) : (
+							"Invite"
+						)}
 					</button>
 				</div>
 			</section>
@@ -386,58 +364,66 @@ function PeoplePreview({
 	camerasOn: boolean;
 }) {
 	const names = together ? ["Alex", "Emma"] : ["Alex"];
+	const participants: Participant[] = names.map((name, index) => ({
+		id: `demo-${index}`,
+		participantSessionId: `demo-session-${index}`,
+		displayName: name,
+		role: index === 0 ? "host" : "viewer",
+		cameraEnabled: camerasOn,
+		mediaSeat: "none",
+		syncStatus: "synced",
+		lastSeenAt: 1,
+	}));
+	const media: RoomMediaV3Snapshot = {
+		type: "ROOM_MEDIA_SNAPSHOT",
+		roomId: "website-example",
+		roomGeneration: 1,
+		snapshotSequence: 1,
+		closingAt: null,
+		capabilities: {
+			mediaProtocolVersion: 3,
+			hostPlanCode: "plus",
+			maxParticipants: 6,
+			maxMediaSeats: 6,
+			maxCameras: 4,
+			capabilityRevision: 1,
+			capabilitiesValidUntil: "2099-01-01T00:00:00Z",
+		},
+		participants: participants.map((person) => ({
+			participantSessionId: person.participantSessionId!,
+			mediaSeatGranted: true,
+			seatRevision: 0,
+			cameraGranted: camerasOn,
+			microphoneGranted: true,
+			cameraIntentSequence: 0,
+			microphoneIntentSequence: 0,
+			cameraRevocationEpoch: 0,
+			microphoneRevocationEpoch: 0,
+		})),
+	};
 	return (
-		<section
-			className="room-people-section demo-room-reveal"
-			aria-label="Room participants preview"
-		>
-			<div className="section-title room-people-heading">
-				<span className="room-people-heading-label">
-					<UsersRound className="section-title-icon" size={15} />
-					<span>People</span>
-				</span>
-				<span className="room-people-count">{names.length}/6 in room</span>
-			</div>
-			<div className="room-media-grants">
-				<p className="room-people-count">
-					{names.length}/6 media seats · {camerasOn ? 2 : 0}/4 cameras
-				</p>
-			</div>
-			<div className="room-people-list">
-				{names.map((name, index) => (
-					<div
-						className={`room-people-entry${index ? " demo-room-reveal" : ""}`}
-						key={name}
-					>
-						<div
-							className={`room-people-row${index === 0 ? " host self" : ""}`}
-						>
-							<div className="room-people-main">
-								<span className="mini-avatar room-people-avatar">{name[0]}</span>
-								<span className="room-people-copy">
-									<span className="room-people-name-row">
-										<span className="room-people-name">{name}</span>
-										{index === 0 && (
-											<span className="room-people-role">Host</span>
-										)}
-									</span>
-									<span className="room-people-status">Media seat</span>
-								</span>
-							</div>
-							<div className="room-people-side action">
-								<span className="room-media-seat-control active">
-									<Radio size={15} />
-								</span>
-							</div>
-						</div>
-					</div>
-				))}
-			</div>
-		</section>
+		<div className="demo-room-reveal">
+			<RoomPeopleSection
+				expanded={false}
+				onExpandedChange={noop}
+				mediaSnapshot={media}
+				mediaProtocolVersion={3}
+				onSetMediaSeat={noop}
+				currentParticipantId="demo-0"
+				liveVoiceActiveSpeakerIds={[]}
+				maxMediaSeats={6}
+				occupiedMediaSeatCount={names.length}
+				onCancelMediaSeatRequest={noop}
+				onGrantMediaSeat={noop}
+				onRequestMediaSeat={noop}
+				onRevokeMediaSeat={noop}
+				participants={participants}
+				roomPeopleCountText={`${names.length}/6 in room`}
+			/>
+		</div>
 	);
 }
 
-/** Small silent local clips illustrate cameras without accessing any device. */
 function DemoCamera({
 	person,
 	playing,
@@ -520,7 +506,7 @@ function DemoSlider({
 				<span
 					className="demo-layout-target"
 					data-demo-target={target}
-					style={{ left: "65%", top: "50%" }}
+					style={{ left: "75%", top: "50%" }}
 				/>
 			</div>
 			<div className="stepped-setting-slider-endpoints-v2">
@@ -540,144 +526,123 @@ function LayoutPreview({ phase }: { phase: RoomDemoPhase }) {
 			data-applying={phase === "layout-apply"}
 			aria-label="Layout settings preview"
 		>
-			<div className="section-title settings-section-title">
-				<Settings2 size={15} />
-				<span>Settings</span>
-			</div>
-			<div className="settings-shell">
-				<div className="settings-category-rail">
-					<div
-						className="settings-category-scroll"
-						data-active-category="layout"
-					>
-						{["Reactions", "Layout", "Interface", "Voice", "Room"].map(
-							(label) => (
-								<button
-									type="button"
-									tabIndex={-1}
-									key={label}
-									className={`settings-category-tab${label === "Layout" ? " active" : ""}`}
-								>
-									{label}
-								</button>
-							),
-						)}
-					</div>
-				</div>
-				<div className="settings-panel">
-					<div className="layout-editor-v2">
-						<div className="layout-preview-v2">
-							<div className="layout-grid-preview-v2" />
-							{[0, 1].map((index) => (
-								<span
-									key={index}
-									className={`layout-video-slot-v2 ${index ? "is-ghost" : "is-leader"}`}
-									data-selected={!chatSelected}
-									data-demo-target={index === 0 ? "layout-camera" : undefined}
-									style={{
-										left: cameraMoved
-											? 12 + index * (large ? 32 : 26)
-											: `calc(100% - ${12 + (2 - index) * (large ? 27 : 21) + (1 - index) * 5}px)`,
-										top: cameraMoved ? 12 : `calc(100% - ${12 + (large ? 27 : 21)}px)`,
-										width: large ? 27 : 21,
-										height: large ? 27 : 21,
-									}}
-								/>
-							))}
-							<div
-								className="layout-chat-preview-v2"
-								data-selected={chatSelected}
-								data-demo-target="layout-chat"
-								style={{ left: chatMoved ? "calc(100% - 112px)" : 12, top: chatMoved ? "calc(100% - 58px)" : 16 }}
-							>
-								<span />
-								<span />
-								<span />
-							</div>
-							<span
-								className="demo-layout-target"
-								data-demo-target="layout-camera-end"
-								style={{ left: 25, top: 25 }}
-							/>
-							<span
-								className="demo-layout-target"
-								data-demo-target="layout-chat-end"
-								style={{ left: "calc(100% - 62px)", top: "calc(100% - 35px)" }}
-							/>
-						</div>
-						<div className="layout-object-selector-v2">
-							<button type="button" tabIndex={-1} aria-pressed={!chatSelected}>
-								<Video size={15} />
-								Video
-							</button>
-							<button type="button" tabIndex={-1} aria-pressed={chatSelected}>
-								<MessageCircle size={15} />
-								Chat
-							</button>
-						</div>
-						{chatSelected ? (
-							<div className="layout-controls-v2 demo-chat-controls">
-								<div
-									className="layout-chat-mode-segmented-v2"
-									data-state="live"
-								>
-									<button type="button" tabIndex={-1} aria-pressed>
-										Live
-									</button>
-									<button type="button" tabIndex={-1} aria-pressed={false}>
-										History
-									</button>
-								</div>
-								<DemoSlider
-									label="Chat width"
-									value="5 columns"
-									progress={42}
-									start="Narrow"
-									end="Wide"
-								/>
-								<DemoSlider label="Text scale" value="Medium" progress={33} />
-								<DemoSlider
-									label="Visible messages"
-									value="3"
-									progress={33}
-									start="1"
-									end="Fill"
-								/>
-								<DemoSlider
-									label="Text opacity"
-									value="100%"
-									progress={100}
-									start="5%"
-									end="100%"
-								/>
-							</div>
-						) : (
-							<div className="layout-controls-v2">
-								<DemoSlider
-									label="Camera size"
-									value={large ? "Large" : "Medium"}
-									progress={large ? 65 : 33}
-									target="layout-size"
-								/>
-							</div>
-						)}
-						<div className="layout-editor-actions-v2">
-							<button type="button" tabIndex={-1}>
-								<RotateCcw size={15} />
-								Revert
-							</button>
+			<ExtensionSettingsPreview active="layout">
+				<div className="layout-editor-v2">
+					<div className="layout-preview-v2">
+						<div className="layout-grid-preview-v2" />
+						{[0, 1].map((index) => (
 							<button
 								type="button"
 								tabIndex={-1}
-								data-demo-target="layout-apply"
+								key={index}
+								className={`layout-video-slot-v2 ${index ? "is-ghost" : "is-leader"}`}
+								data-selected={!chatSelected}
+								data-demo-target={index === 0 ? "layout-camera" : undefined}
+								style={{
+									left: cameraMoved
+										? 12 + index * (large ? 32 : 26)
+										: `calc(100% - ${12 + (2 - index) * (large ? 27 : 21) + (1 - index) * 5}px)`,
+									top: cameraMoved
+										? 12
+										: `calc(100% - ${12 + (large ? 27 : 21)}px)`,
+									width: large ? 27 : 21,
+									height: large ? 27 : 21,
+								}}
 							>
-								<Check size={16} />
-								Apply
+								<Video
+									className="layout-camera-placeholder-icon"
+									aria-hidden="true"
+								/>
 							</button>
+						))}
+						<div
+							className="layout-chat-preview-v2"
+							data-selected={chatSelected}
+							data-demo-target="layout-chat"
+							style={{
+								left: chatMoved ? "calc(100% - 112px)" : 12,
+								top: chatMoved ? "calc(100% - 70px)" : 16,
+							}}
+						>
+							<OverlayLayoutChatPreview messageCount={3} />
 						</div>
+						<span
+							className="demo-layout-target"
+							data-demo-target="layout-camera-end"
+							style={{ left: 25, top: 25 }}
+						/>
+						<span
+							className="demo-layout-target"
+							data-demo-target="layout-chat-end"
+							style={{ left: "calc(100% - 62px)", top: "calc(100% - 35px)" }}
+						/>
+					</div>
+					<div className="layout-object-selector-v2">
+						<button type="button" tabIndex={-1} aria-pressed={!chatSelected}>
+							<Video size={15} />
+							Video
+						</button>
+						<button type="button" tabIndex={-1} aria-pressed={chatSelected}>
+							<MessageCircle size={15} />
+							Chat
+						</button>
+					</div>
+					{chatSelected ? (
+						<div className="layout-controls-v2 demo-chat-controls">
+							<div className="layout-chat-mode-segmented-v2" data-state="live">
+								<button type="button" tabIndex={-1} aria-pressed>
+									Live
+								</button>
+								<button type="button" tabIndex={-1} aria-pressed={false}>
+									History
+								</button>
+							</div>
+							<DemoSlider
+								label="Chat width"
+								value="3 columns"
+								progress={40}
+								start="Narrow"
+								end="Wide"
+							/>
+							<DemoSlider label="Text scale" value="Medium" progress={33} />
+							<DemoSlider
+								label="Visible messages"
+								value="Fill"
+								progress={100}
+								start="3"
+								end="Fill"
+							/>
+							<DemoSlider
+								label="Text opacity"
+								value="100%"
+								progress={100}
+								start="5%"
+								end="100%"
+							/>
+						</div>
+					) : (
+						<div className="layout-controls-v2">
+							<DemoSlider
+								label="Camera size"
+								value={GHOST_CAM_SIZE_STEPS[large ? 3 : 2].label}
+								progress={large ? 75 : 50}
+								end="XXL"
+								target="layout-size"
+							/>
+						</div>
+					)}
+					<div className="layout-editor-actions-v2">
+						<button type="button" tabIndex={-1}>
+							<RotateCcw size={15} />
+							Revert
+						</button>
+						<button type="button" tabIndex={-1} data-demo-target="layout-apply">
+							<Check size={16} />
+							Apply
+						</button>
 					</div>
 				</div>
-			</div>
+			</ExtensionSettingsPreview>
 		</section>
 	);
 }
@@ -814,7 +779,10 @@ function RoomScene({
 	const roomActive = !["pill", "open", "creating"].includes(phase);
 	const creating = phase === "creating";
 	const layout = getRoomDemoScene(phase) === 4;
-	const together = phase === "accepted" || phase === "together" || getRoomDemoScene(phase) >= 3;
+	const together =
+		phase === "accepted" ||
+		phase === "together" ||
+		getRoomDemoScene(phase) >= 3;
 	const watching = [
 		"watching",
 		"speaking",
@@ -861,7 +829,8 @@ function RoomScene({
 		const settings = panel?.querySelector<HTMLElement>(
 			".demo-settings-preview",
 		);
-		if (panel && settings) panel.scrollTo({ top: settings.offsetTop - 16, behavior: "smooth" });
+		if (panel && settings)
+			panel.scrollTo({ top: settings.offsetTop - 16, behavior: "smooth" });
 	}, [shadowRoot, phase]);
 	return (
 		<div
@@ -878,7 +847,11 @@ function RoomScene({
 							{overlayStyles}
 							{SCENE_STYLES}
 						</style>
-						<div className="anidachi-overlay" data-playing={playing}>
+						<div
+							className="anidachi-overlay"
+							data-playing={playing}
+							data-phase={phase}
+						>
 							<div
 								className={`top-bubble-reveal bubble-visible${panelOpen ? " panel-open" : ""}`}
 							>
@@ -940,35 +913,19 @@ function RoomScene({
 											</span>
 											<div className="panel-account-copy">
 												<div className="panel-account-title-row">
-													<strong className="panel-account-name">
-														Alex
-													</strong>
+													<strong className="panel-account-name">Alex</strong>
 													<span className="plan-badge plus">Plus</span>
 												</div>
 											</div>
 										</div>
 										{roomActive && (
 											<div className="panel-header-actions">
-												<button
-													type="button"
-													className={`icon-button panel-camera-control ${camerasOn ? "active" : "inactive"}`}
-													data-demo-target="camera"
-													tabIndex={-1}
-												>
-													<span className="panel-camera-control-thumb">
-														{camerasOn ? (
-															<Video
-																className="panel-camera-control-icon"
-																size={12}
-															/>
-														) : (
-															<VideoOff
-																className="panel-camera-control-icon"
-																size={12}
-															/>
-														)}
-													</span>
-												</button>
+												<PanelMediaControls
+													cameraEnabled={camerasOn}
+													voiceMode="push-to-talk"
+													onCameraToggle={noop}
+													onVoiceModeChange={noop}
+												/>
 											</div>
 										)}
 									</div>
@@ -1020,23 +977,18 @@ function RoomScene({
 									</div>
 									{invitePanelOpen && <InvitationPreview phase={phase} />}
 									<div className="panel-sync-card">
-										<div className="section-title">Current resource</div>
-										<div className="current-resource-card">
-											<div className="current-resource-topline">
-												<span className="resource-provider-dot crunchyroll" />
-												<span>Crunchyroll</span>
-												<ChevronRight size={12} />
-												<span className="current-resource-time">
-													4:01 / 24:30
-												</span>
-											</div>
-											<div className="current-resource-title">
-												E4 · Start Line
-											</div>
-											<span className="resource-progress">
-												<span style={{ width: "16.4%" }} />
-											</span>
-										</div>
+										<CurrentResourcePanel
+											entry={{
+												provider: "crunchyroll",
+												providerLabel: "Crunchyroll",
+												title: "A Quiet Evening",
+												episodeTitle: "E4 · Start Line",
+												itemKind: "series",
+												currentTime: 241,
+												duration: 1470,
+												progress: 241 / 1470,
+											}}
+										/>
 									</div>
 									{roomActive && (
 										<PeoplePreview together={together} camerasOn={camerasOn} />
@@ -1174,7 +1126,9 @@ export function ChromeExtensionRoomDemo({
 				<SceneNarrative scene={scene} className={styles.narrative} />
 				<RoomScene phase={phase} playing={visible && reducedMotion === false} />
 			</div>
-			<span className={styles.comingSoon} aria-hidden="true">Coming soon</span>
+			<span className={styles.comingSoon} aria-hidden="true">
+				Coming soon
+			</span>
 			<SceneNarrative scene={scene} className={styles.mobileCaption} />
 		</div>
 	);

@@ -65,6 +65,7 @@ const videoHosts = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -119,6 +120,8 @@ const expectedByChannel = {
   },
 };
 const expected = expectedByChannel[channel];
+assertExactAllowlist("external website", manifest.externally_connectable?.matches ?? [], [expected.web]);
+assertExactAllowlist("external extension", manifest.externally_connectable?.ids ?? [], []);
 
 assertExactAllowlist(
   "host permission",

@@ -309,8 +309,13 @@ async function getUsersByIds(userIds: string[]): Promise<Map<string, UserRow>> {
   return new Map(((data as UserRow[] | null) ?? []).map((row) => [row.id, row]));
 }
 
-export async function ensureProfileForUser(userId: string): Promise<ProfileRow | null> {
-  const user = await getUserById(userId);
+export async function ensureProfileForUser(
+  userId: string,
+  // Only a user already read by the server in this request, never request-body data.
+  loadedUser?: Pick<UserRow, "id" | "display_name" | "avatar_url">,
+): Promise<ProfileRow | null> {
+  if (loadedUser && loadedUser.id !== userId) throw new Error("Loaded user ID mismatch");
+  const user = loadedUser ?? await getUserById(userId);
   if (!user) return null;
 
   const { data: existing, error: readError } = await db()
@@ -354,7 +359,7 @@ export async function ensureProfileForUser(userId: string): Promise<ProfileRow |
     if (error.code !== UNIQUE_VIOLATION) {
       throw new Error(`Failed to ensure profile: ${error.message}`);
     }
-    const existingProfile = await ensureProfileForUser(userId);
+    const existingProfile = await ensureProfileForUser(userId, user);
     if (existingProfile) return existingProfile;
   }
 

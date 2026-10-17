@@ -57,6 +57,11 @@ export function removeLegacyPageDebugBufferOnce(): void {
   }
 }
 
+/** Count-only UI reads must not copy and sanitize the diagnostic buffer. */
+export function getDebugEntryCount(): number {
+  return entries.length;
+}
+
 export function getDebugEntries(): DebugEntry[] {
   return entries.map(sanitizeDebugEntry);
 }

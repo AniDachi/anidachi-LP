@@ -1,5 +1,22 @@
 # Plans
 
+Active integrated release preparation:
+
+1. [Vercel request-cost optimization](2026-10-14-vercel-cost-optimization.md) — approved isolated fixes and staging delivery; production unchanged.
+2. [Request-cost follow-up](2026-10-14-vercel-request-followup.md) — approved startup/session/finalization corrections; candidate verification and staging delivery.
+3. [Combined product release](2026-10-14-integrated-product-release.md) — source inventory, approved UI preservation, Netflix/trial acceptance, coordinated backend and Chrome Store gates.
+4. [Approved drawer and hosting notices](2026-10-14-extension-drawer-staging.md) — selective staging integration; drawer delivery completed through PR422; PR423 adds transient room-end feedback.
+
+5. [Approved player onboarding](2026-10-10-player-onboarding-local.md) — October 14 selective staging integration of the accepted six-step practice tour and rolling-logo finish; production excluded.
+
+Active cardless trial work:
+
+1. [2026-10-11-cardless-trial.md](2026-10-11-cardless-trial.md) — approved
+   staging-first execution; the native Schedule mechanism passed 14 sandbox
+   capability cases plus the already-open Portal check. Product code and UI are
+   on staging through PRs410–415; the integrated release plan above records newer
+   acceptance receipts and remaining proof boundaries. Production rollout is not authorized.
+
 Files in this folder are historical execution plans and work logs. They are kept
 because they explain why certain migrations and architecture decisions happened.
 

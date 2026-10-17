@@ -42,7 +42,7 @@ export function RoomInviteHelp({ hasLaunchUrl }: { hasLaunchUrl: boolean }) {
 							: "Join the room and keep this tab open while the host chooses a video."}
 					</li>
 					<li>
-						On the video page, open the AniDachi bubble. If playback is blocked,
+						On the video page, open the AniDachi capsule. If playback is blocked,
 						choose Resume sync.
 					</li>
 				</ol>

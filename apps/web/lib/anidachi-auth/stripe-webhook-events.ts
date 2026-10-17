@@ -9,10 +9,17 @@ export async function processSubscriptionWebhookEvent(
 	deps: {
 		sync: (subscriptionId: string) => Promise<void>;
 		alert: (payload: SubscriptionAlertPayload) => Promise<void>;
+		completeSetup?: (sessionId: string) => Promise<void>;
 	},
 ): Promise<void> {
 	if (event.type === "checkout.session.completed") {
 		const session = event.data.object;
+		if (session.mode === "setup" && session.metadata?.trialRenewalId) {
+			if (!deps.completeSetup)
+				throw new Error("Trial setup finalizer unavailable; retry delivery.");
+			await deps.completeSetup(session.id);
+			return;
+		}
 		if (
 			session.mode !== "subscription" ||
 			!["paid", "no_payment_required"].includes(session.payment_status)

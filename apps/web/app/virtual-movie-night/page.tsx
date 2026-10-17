@@ -14,12 +14,12 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
 	title: "Virtual Movie Night on Crunchyroll or YouTube",
 	description:
-		"Host a virtual movie night on a Crunchyroll film or a full YouTube watch page. Each person uses their own account. Netflix is coming soon.",
+		"Host a virtual movie night on a Netflix movie, a Crunchyroll film, or a full YouTube watch page. Each person uses their own account.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Virtual Movie Night",
 		description:
-			"One film, each person on their own Crunchyroll or YouTube tab.",
+			"One film, each person on their own Crunchyroll, YouTube, or Netflix tab.",
 		url: PAGE_PATH,
 		images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
 	},
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "Virtual Movie Night",
 		description:
-			"Crunchyroll or YouTube. One sitting. Each person presses play locally.",
+			"Crunchyroll, YouTube, or Netflix. One sitting. Each person presses play locally.",
 		images: ["/opengraph-image.png"],
 	},
 };
@@ -41,7 +41,7 @@ const faq = [
 	{
 		question: "Can this sync Netflix?",
 		answer:
-			"Not yet. Netflix is coming soon and is not supported. Disney+, Hulu, and Prime Video are not supported. The film has to be on Crunchyroll or YouTube.",
+			"Netflix is supported in desktop Chrome. Disney+, Hulu, and Prime Video are not supported. The film has to be on Crunchyroll, YouTube, or Netflix.",
 	},
 	{
 		question: "How long should the film be?",
@@ -74,10 +74,10 @@ export default function VirtualMovieNightPage() {
 				{ name: "Virtual movie night", url: PAGE_PATH },
 			]}
 			title="Virtual movie night"
-			description="A Crunchyroll or YouTube film, synced for one sitting."
+			description="A Crunchyroll, YouTube, or Netflix film, synced for one sitting."
 			url={PAGE_PATH}
 			datePublished="2026-10-08"
-			dateModified="2026-10-08"
+			dateModified="2026-10-17"
 			faq={faq}
 			headings={tocHeadings}
 			articleImage={articleImage}
@@ -89,9 +89,8 @@ export default function VirtualMovieNightPage() {
 			</h2>
 			<SeoGuideAnswer>
 				<p>
-					A virtual movie night on AniDachi is one film on Crunchyroll or a full
-					YouTube watch page. Each person opens it in desktop Chrome. The room
-					keeps play aligned. Netflix is coming soon and is not supported yet.
+					A virtual movie night on AniDachi is one film on Netflix or Crunchyroll, or a full YouTube watch page. Each person opens it in desktop Chrome. The room
+					keeps play aligned.
 					Disney+, Hulu, and Prime Video are not synced.
 				</p>
 			</SeoGuideAnswer>

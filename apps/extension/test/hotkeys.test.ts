@@ -168,6 +168,18 @@ describe("Anidachi hotkeys", () => {
     ).toBeNull();
   });
 
+  it.each(["button", "a", "summary", "role-button", "menuitem", "slider", "tab", "switch"])(
+    "leaves Enter activation to a focused %s control, including its child icon",
+    (kind) => {
+      const control = document.createElement(kind.startsWith("role-") ? "div" : ["button", "a", "summary"].includes(kind) ? kind : "div");
+      if (kind === "a") control.setAttribute("href", "#player");
+      if (!["button", "a", "summary"].includes(kind)) control.setAttribute("role", kind.replace("role-", ""));
+      const icon = document.createElement("span");
+      control.append(icon);
+      expect(getHotkeyAction(keyEvent({key: "Enter", code: "Enter", target: icon, composedPath: () => [icon, control, document.body]}), activeState)).toBeNull();
+    },
+  );
+
   it("ignores repeated Enter keydown events", () => {
     expect(
       getHotkeyAction(

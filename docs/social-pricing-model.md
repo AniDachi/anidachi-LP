@@ -1,5 +1,66 @@
 # Тарифы AniDachi для MVP
 
+## Cardless trial: локальный кандидат от 11 октября 2026
+
+Подготовлен один trial выбранного Plus/Pro на 72 часа без карты, за выключенным
+`cardless_trials_enabled`. В Stripe создается трехдневная trial-фаза Schedule с
+окончанием `cancel`. Сохраненная ранее карта не подключает оплату. В Billing
+пользователь отдельно подтверждает тариф, период, полную сумму и первую дату
+списания; проверенный SetupIntent разрешает продление в ту же исходную дату.
+Без этого подтверждения trial заканчивается без попытки списания и без
+двухчасового ожидания первого платежа.
+
+Цены, действующие подписки, старые trial с картой, ручные grants, чтение истории
+и бесплатное присоединение гостя сохраняют прежние правила. Новая модель имеет
+отдельные проверяемые стадии: Stripe, локальные контракты, staging и приемка
+владельцем. Ниже находятся исторические срезы; эта запись не подтверждает rollout.
+[Спецификация](superpowers/specs/2026-10-11-cardless-trial-design.md),
+[фактические проверки](superpowers/plans/2026-10-11-cardless-trial-acceptance.md),
+[восстановление и поставка](releases/cardless-trial/staging-runbook.md).
+
+Обычный счет за следующий период, погашенный балансом Stripe, сохраняет
+оплаченный доступ. Первое денежное списание учитывается отдельно; нулевые
+initial/update invoices не считаются оплатой. Незавершенный запуск доступен
+для восстановления после перезагрузки. Для подтвержденного сбоя предусмотрена
+частная операторская процедура из runbook, без ручной правки прав доступа.
+
+В Billing выбранные тариф и период сохраняются в памяти вкладки для текущего
+аккаунта и подписки при обновлении статуса. Проверенные условия повторно
+показываются только после сверки с `trial.renewalQuoteId` из свежего ответа
+Billing: это идентификатор последнего принадлежащего пользователю, еще
+действительного расчета, без изменения Stripe или прав доступа. Замена расчета
+в другой вкладке, окончание срока или смена подписки требуют нового просмотра
+условий; выбор для той же активной trial-подписки при этом не сбрасывается. Собственный таймер условий
+не прерывает уже отправленный запрос настройки оплаты.
+
+## Экран подписки: кандидат для staging от 12 октября 2026
+
+Активный cardless trial и оплаченная подписка отображаются компактной карточкой:
+тариф, фактическая сумма и период, дата окончания trial или следующего платежа.
+Отключенное продление показывает дату оплаченного доступа. Неоплаченный первый
+счет, ошибки платежа, старые trial с картой и ручной доступ сохраняют отдельные
+состояния: карточка не должна выдавать их за оплаченный тариф.
+
+Для trial без включенного продления кнопка `View plans` открывает `/pricing`.
+При включенном продлении `Manage renewal` раскрывает существующие настройки,
+а при незавершенном изменении `View renewal status` открывает его статус.
+Эти действия сами не создают платежную сессию и не меняют продление.
+Для действующей подписки кнопка
+на тарифах возвращает в `/account/billing?manage=1` с раскрытыми существующими
+настройками. `Manage subscription` в оплаченной карточке также раскрывает эти
+настройки; отмена, восстановление продления и годовой переход используют прежние
+обработчики и подтверждение Stripe. Общий новый Stripe Portal не добавляется.
+
+Настройка cardless-продления сохраняет прежний просмотр тарифа, периода, полной
+суммы и даты первого списания. Незавершенная операция видна в раскрытом блоке.
+Раскрытый пользователем блок сохраняется при обновлении статуса в той же вкладке;
+авторизация, срок актуальности данных и условия оплаты остаются прежними.
+Изменение не требует переменных окружения, миграций или обновления расширения.
+Публикация разрешена только на staging; эта запись сама по себе не подтверждает
+деплой или приемку.
+
+## Исторический срез цен и Free-модели
+
 Локальное дополнение от 30 сентября 2026: подготовлены Plus $76.70/год и
 Pro $143.90/год (20% от двенадцати месячных платежей, округление до цента).
 Один trial на аккаунт действует для обоих периодов. Переход оплаченной месячной
@@ -117,3 +178,27 @@ Plus/Pro-хоста нет собственного ограничения в 30
 и краткого offline-доступа. Они согласованы пользователем 2026-09-08.
 Публиковать новые возможности можно после согласованной реализации и приемки,
 включая фактическую проверку 15 участников, четырех камер и восьми микрофонов.
+
+## Cardless trial abuse guard candidate, 2026-10-15
+
+New cardless trials also reserve a signed browser-cookie marker and an optional
+installation-key marker. Same-operation recovery continues after cookie loss.
+Used markers deny only a new free trial, not login, guest viewing, active rights
+or explicitly confirmed ordinary purchases. Consumed marker history is retained
+for 365 days; unresolved activations require verified reconciliation. See the
+[approved anti-abuse design](superpowers/specs/2026-10-15-cardless-trial-abuse-design.md).
+
+
+## Trial offer preflight candidate, 2026-10-16
+
+The website now checks the existing account/browser/optional installation ledger
+before a cardless trial CTA. Only confirmed eligibility shows the trial; a used
+marker shows ordinary price and Subscribe, while pending/failed checks allow retry.
+The final atomic start rechecks everything; a race never silently opens paid
+Checkout. Temporary purchase receipts are not the source of trial eligibility.
+Existing active access and recoverable activations take priority over new markers.
+
+Extension/onboarding entry points use View plans and preserve Plus/monthly. Pricing
+retires expired offers without polling and revalidates on focus/action. See the
+[preflight design](superpowers/specs/2026-10-16-trial-offer-preflight-design.md).
+These are staging-candidate changes; prices and production remain unchanged.

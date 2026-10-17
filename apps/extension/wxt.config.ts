@@ -19,6 +19,7 @@ const STORE_VIDEO_HOST_PERMISSIONS = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -128,6 +129,11 @@ export default defineConfig({
       extensionChannel === "production" ? null : "downloads",
     ]),
     host_permissions: hostPermissions,
+    externally_connectable: {
+      matches: unique(channelWebHostPermissions.some(Boolean)
+        ? channelWebHostPermissions : ["http://localhost/*"]),
+      ids: [],
+    },
     icons: extensionIcons,
     web_accessible_resources: [
       {

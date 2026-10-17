@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Netflix Group Watch — More Than Two People, Own Accounts",
   description:
-    "A Netflix group watch is three or more people on the same title at the same time. Each person needs Netflix. AniDachi group rooms for Netflix are coming to desktop Chrome.",
+    "A Netflix group watch is three or more people on the same title at the same time. Each person needs Netflix. AniDachi supports Netflix group rooms in desktop Chrome.",
   alternates: { canonical: "/guides/netflix-group-watch" },
   openGraph: {
     title: "Netflix Group Watch",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Is AniDachi ready for a Netflix group?",
     answer:
-      "Not yet. Netflix rooms are being added for desktop Chrome. Crunchyroll and YouTube groups can use the public extension now.",
+      "Yes. A Plus, Pro, or trial host can create a Netflix room in desktop Chrome. Friends join for free with AniDachi and their own Netflix access; the host’s plan sets the room size.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function NetflixGroupWatchPage() {
       description="Three or more people on one Netflix title."
       url="/guides/netflix-group-watch"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -80,7 +80,7 @@ export default function NetflixGroupWatchPage() {
           the same time. It is still a{" "}
           <Link href="/netflix-watch-party">Netflix watch party</Link>. The
           extra people are why the title and the start time have to be settled
-          before the call. AniDachi’s Netflix rooms are not public yet.
+          before the call. AniDachi keeps the players in sync and provides chat, reactions, and calls.
         </p>
       </SeoGuideAnswer>
       <h2 id="size" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
