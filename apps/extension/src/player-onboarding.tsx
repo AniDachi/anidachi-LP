@@ -64,10 +64,14 @@ export interface PlayerOnboardingProps {
 export function getPlayerIntroductionOffer(
 	accountPlan: AuthenticatedUserPlan | null | undefined,
 	hosting?: HostingDisplayState,
-): HostingEntry | null {
+): HostingEntry | "loading" | null {
 	const plan = hosting?.access?.planCode ?? accountPlan;
 	if (plan === "plus" || plan === "pro" || hosting?.access?.hosting?.canHost)
 		return null;
+	// The first render precedes the request's busy state. Wait for its result
+	// without replacing an already resolved offer during background refreshes.
+	if ((accountPlan != null || hosting?.busy) && !hosting?.access && !hosting?.error)
+		return "loading";
 	// The website also checks its HttpOnly cookie before offering a trial.
 	return getHostingEntry(hosting);
 }
@@ -815,7 +819,17 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 													: details.text}
 										</p>
 									)}
-									{step === "create" && offer && (
+									{step === "create" && offer === "loading" ? (
+										<button
+											type="button"
+											className="tour-plan-link"
+											aria-label="Loading plan options"
+											aria-busy="true"
+											disabled
+										>
+											<span className="tour-plan-spinner" aria-hidden="true" />
+										</button>
+									) : step === "create" && offer && offer !== "loading" ? (
 										<a
 											className="tour-plan-link"
 											href={getHostingOfferUrl(offer)}
@@ -829,7 +843,7 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 													: "View plans"}
 											<ArrowUpRight size={17} aria-hidden />
 										</a>
-									)}
+									) : null}
 								</>
 							)}
 						</section>

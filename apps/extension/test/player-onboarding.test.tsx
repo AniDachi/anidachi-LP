@@ -656,7 +656,7 @@ it("opens trial confirmation for eligible accounts, ordinary plans for used tria
 	};
 	expect(getPlayerIntroductionOffer("plus")).toBeNull();
 	expect(getPlayerIntroductionOffer("pro")).toBeNull();
-	expect(getPlayerIntroductionOffer("free")).toBe("check");
+	expect(getPlayerIntroductionOffer("free")).toBe("loading");
 	expect(getPlayerIntroductionOffer(null)).toBe("check");
 	expect(getPlayerIntroductionOffer("free", { ...hosting, busy: true })).toBe(
 		"trial",
@@ -664,11 +664,33 @@ it("opens trial confirmation for eligible accounts, ordinary plans for used tria
 	expect(getPlayerIntroductionOffer("free", { ...hosting, error: true })).toBe(
 		"trial",
 	);
-	await render({ accountPlan: "free", hosting });
+	await render({
+		accountPlan: "free",
+		hosting: { mode: "unknown", busy: false, error: false },
+	});
 	await click("Open AniDachi controls");
+	const pending = host.querySelector<HTMLButtonElement>("button.tour-plan-link");
+	expect(pending?.disabled).toBe(true);
+	expect(pending?.getAttribute("aria-label")).toBe("Loading plan options");
+	expect(host.querySelector("a.tour-plan-link")).toBeNull();
+	expect(host.textContent).not.toMatch(
+		/Continue with Plus|View plans|Try 3 days free/,
+	);
+	await render({ hosting: { mode: "unknown", busy: true, error: false } });
+	expect(host.querySelector("button.tour-plan-link")).toBe(pending);
+	expect(host.querySelector("a.tour-plan-link")).toBeNull();
+	await render({ hosting });
 	expect(host.querySelector(".tour-plan-link")?.textContent).toBe(
 		"Try 3 days free",
 	);
+	expect(host.querySelector("button.tour-plan-link")).toBeNull();
+	const confirmed = host.querySelector("a.tour-plan-link");
+	await render({ hosting: { ...hosting, busy: true } });
+	expect(host.querySelector("a.tour-plan-link")).toBe(confirmed);
+	expect(confirmed?.textContent).toBe("Try 3 days free");
+	await render({ hosting: { ...hosting, error: true } });
+	expect(host.querySelector("a.tour-plan-link")).toBe(confirmed);
+	expect(confirmed?.textContent).toBe("Try 3 days free");
 	if (!hosting.access?.hosting) throw new Error("Hosting fixture missing");
 	expect(host.querySelector<HTMLAnchorElement>(".tour-plan-link")?.href).toBe(
 		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
@@ -685,6 +707,22 @@ it("opens trial confirmation for eligible accounts, ordinary plans for used tria
 	expect(host.textContent).toContain("Your plan includes room creation.");
 	expect(send).toHaveBeenCalledTimes(1);
 	expect(request).not.toHaveBeenCalled();
+});
+it("keeps the website continuation available after an initial offer read fails", async () => {
+	await render({
+		accountPlan: "free",
+		hosting: { mode: "unknown", busy: true, error: false },
+	});
+	await click("Open AniDachi controls");
+	expect(host.querySelector("a.tour-plan-link")).toBeNull();
+	await render({ hosting: { mode: "unknown", busy: false, error: true } });
+	expect(host.querySelector("button.tour-plan-link")).toBeNull();
+	const link = host.querySelector<HTMLAnchorElement>("a.tour-plan-link");
+	expect(link?.textContent).toBe("Continue with Plus");
+	expect(link?.href).toBe(
+		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
+	);
+	expect(host.textContent).not.toContain("Try 3 days free");
 });
 it("allows keyboard activation of the plans link without triggering player keys", async () => {
 	await render();
