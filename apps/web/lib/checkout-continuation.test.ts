@@ -44,6 +44,7 @@ async function mount(
 	confirmTrial?: true,
 	context?: (init?: RequestInit) => Response,
 	preflight?: (value: typeof cardlessOffer) => Response,
+	onboarding?: string,
 ) {
 	const providedFetch = globalThis.fetch;
 	let latestOffer = cardlessOffer;
@@ -76,7 +77,7 @@ async function mount(
 	document.body.append(el);
 	root = createRoot(el);
 	const child = React.createElement(CheckoutContinuation, {
-		selection: { plan, billing, confirmTrial },
+		selection: { plan, billing, confirmTrial, onboarding },
 	});
 	await act(async () =>
 		root!.render(
@@ -105,6 +106,30 @@ const cardlessOffer = {
 	trialMode: "cardless",
 	trialOfferRevision: "cardless-3d-v1",
 };
+test("onboarding return survives checkout login and rejects arbitrary destinations", () => {
+	const token = "cbe6173e-b4fb-4e1c-9df9-8c77e73016b1";
+	const path = `/checkout?plan=plus&billing=monthly&confirm=trial&onboarding=${token}`;
+	const selection = checkoutSelectionFromPath(path)!;
+	assert.equal(checkoutReturnPath(selection), path);
+	assert.equal(checkoutLoginPath(selection), `/login?next=${encodeURIComponent(path)}`);
+	assert.equal(checkoutSelectionFromPath(path + "&onboarding=duplicate"), null);
+	assert.equal(checkoutSelectionFromPath("/checkout?plan=plus&billing=monthly&onboarding=https://evil.example"), null);
+});
+test("onboarding trial stays on confirmation until activated and then offers the return", async () => {
+	const token = "cbe6173e-b4fb-4e1c-9df9-8c77e73016b1";
+	let starts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer") return Response.json(cardlessOffer);
+		starts++; return Response.json({ state: "active", ownerUserId: "owner-a" });
+	};
+	const el = await mount("plus", "monthly", false, true, undefined, undefined, token);
+	assert.equal(starts, 0);
+	assert.equal(el.querySelector<HTMLAnchorElement>('a[href*="/pricing"]')?.href, `http://localhost/pricing?plan=plus&billing=monthly&onboarding=${token}`);
+	await act(async () => button(el, /Start my 3-day trial/).click());
+	assert.equal(starts, 1);
+	assert.match(el.textContent!, /Your free trial has started/);
+	assert.notEqual(window.location.pathname, "/account/billing");
+});
 test("starting trial keeps the confirmation and button stable until the result", async () => {
 	const pending = deferred<Response>();
 	let starts = 0;

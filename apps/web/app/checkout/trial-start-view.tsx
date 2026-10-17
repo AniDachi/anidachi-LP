@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { CheckoutSelection } from "@/lib/checkout-selection";
+import { checkoutPlansPath, type CheckoutSelection } from "@/lib/checkout-selection";
 
 export function TrialStartView({
 	selection,
@@ -78,7 +78,7 @@ export function TrialStartView({
 					</span>
 				</p>
 				<Link
-					href={`/pricing?plan=${selection.plan}&billing=${selection.billing}`}
+					href={checkoutPlansPath(selection)}
 					className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-sm text-sm text-ani-muted underline underline-offset-4 hover:text-ani-text focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ani-focus sm:mt-8"
 				>
 					<ChevronLeft className="size-4" aria-hidden="true" />

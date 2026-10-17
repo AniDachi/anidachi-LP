@@ -11,6 +11,7 @@ import {
 	UserPlus,
 	X,
 } from "lucide-react";
+import { ONBOARDING_CHECKOUT_OPEN, ONBOARDING_RETURN_PROBE } from "@anidachi/protocol";
 import {
 	type CSSProperties,
 	useEffect,
@@ -157,6 +158,34 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 		cue?: CSSProperties;
 	} | null>(null);
 	const active = step !== null;
+	const checkoutReturn = useRef<{ token: string; fingerprint: string } | null>(null);
+	const checkoutOpening = useRef(false);
+	useEffect(() => {
+		if (!active) { checkoutReturn.current = null; return; }
+		const probe = (message: unknown, sender: chrome.runtime.MessageSender, respond: (value: unknown) => void) => {
+			const value = message as { type?: string; token?: string } | null;
+			if (value?.type !== ONBOARDING_RETURN_PROBE || sender.id !== chrome.runtime.id) return false;
+			const pending = checkoutReturn.current;
+			respond({ ready: !!pending && value.token === pending.token &&
+				latest.current.ready && !latest.current.roomId &&
+				latest.current.adapter.getFingerprint() === pending.fingerprint });
+			return false;
+		};
+		chrome.runtime.onMessage?.addListener(probe);
+		return () => chrome.runtime.onMessage?.removeListener(probe);
+	}, [active]);
+	const openCheckout = async (offer: HostingEntry) => {
+		if (checkoutOpening.current) return;
+		checkoutOpening.current = true;
+		const token = crypto.randomUUID();
+		checkoutReturn.current = { token, fingerprint: props.adapter.getFingerprint() };
+		try {
+			const result = await chrome.runtime.sendMessage({ type: ONBOARDING_CHECKOUT_OPEN, token, offer });
+			if (result?.opened !== true) window.open(getHostingOfferUrl(offer), "_blank", "noopener,noreferrer");
+		} catch {
+			window.open(getHostingOfferUrl(offer), "_blank", "noopener,noreferrer");
+		} finally { checkoutOpening.current = false; }
+	};
 	const finish = () => {
 		if (finishing.current || step !== "settings" || !root.current) return;
 		finishing.current = true;
@@ -833,6 +862,7 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 										<a
 											className="tour-plan-link"
 											href={getHostingOfferUrl(offer)}
+											onClick={event => { event.preventDefault(); void openCheckout(offer); }}
 											target="_blank"
 											rel="noopener noreferrer"
 										>

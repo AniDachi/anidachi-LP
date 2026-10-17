@@ -29,6 +29,8 @@ export type CheckoutInput = {
 	attribution: Record<string, string>;
 };
 export type CheckoutResult = {
+	/** Returned only for the concrete Checkout, never for Billing Portal. */
+	sessionId?: string;
 	kind: "checkout" | "manage_subscription";
 	url: string;
 	planCode: PaidPlanCode;
@@ -599,6 +601,7 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				}
 				return {
 					kind: "checkout",
+					sessionId: session.id,
 					url: safeStripeUrl(session.url, "checkout.stripe.com"),
 					planCode: r.plan_code,
 					trialOffered: r.trial_offered,

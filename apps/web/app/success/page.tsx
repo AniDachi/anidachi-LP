@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getUserById } from "@/lib/anidachi-auth/db";
 import { getSession } from "@/lib/anidachi-auth/session";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
 import { SuccessPageFrame, SuccessFooter } from "./success-content";
 import { CheckoutSessionSync } from "./checkout-session-sync";
 
@@ -30,6 +31,7 @@ export default async function SuccessPage({
 				sessionId={sessionId}
 				initialPlanCode={currentPlan}
 				ownerUserId={authSession?.userId}
+				extensionId={readApprovedExtensionClientId()}
 			>
 				<SuccessFooter />
 			</CheckoutSessionSync>

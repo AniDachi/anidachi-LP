@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
 	checkoutSessionRecoveryPath,
 	checkoutReturnPath,
+	checkoutPlansPath,
 	type CheckoutSelection,
 } from "@/lib/checkout-selection";
 import { PUBLISHED_PRICING } from "@/lib/pricing-tiers";
@@ -24,6 +25,8 @@ import {
 } from "@/lib/trial-abuse-client";
 import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
 import { TrialStartView } from "./trial-start-view";
+import { OnboardingReturn } from "@/components/onboarding-return";
+import { rememberOnboardingCheckout } from "@/lib/onboarding-return-client";
 import {
 	BillingOwnerChangedError,
 	guardBillingNavigation,
@@ -46,10 +49,13 @@ type Confirmation = {
 
 export function CheckoutContinuation({
 	selection,
+	extensionId,
 }: {
 	selection: CheckoutSelection;
+	extensionId?: string | null;
 }) {
-	const { plan, billing, confirmTrial } = selection;
+	const { plan, billing, confirmTrial, onboarding } = selection;
+	const [completedOwner, setCompletedOwner] = useState<string | null>(null);
 	const label = plan === "plus" ? "Plus" : "Pro";
 	const price = PUBLISHED_PRICING[billing][plan];
 	const amount = new Intl.NumberFormat("en-US", {
@@ -111,7 +117,8 @@ export function CheckoutContinuation({
 			) => {
 				if (result.state === "active") {
 					recovery.current = null;
-					window.location.replace("/account/billing");
+					if (onboarding) setCompletedOwner(owner);
+					else window.location.replace("/account/billing");
 				} else if (result.state === "pending") {
 					recovery.current = {
 						owner,
@@ -169,7 +176,7 @@ export function CheckoutContinuation({
 					throw new Error("Your offer expired. Please try again.");
 				if (offer.action === "sign_in") {
 					window.location.replace(
-						checkoutSessionRecoveryPath({ plan, billing, confirmTrial }),
+						checkoutSessionRecoveryPath({ plan, billing, confirmTrial, onboarding }),
 					);
 					return;
 				}
@@ -408,6 +415,7 @@ export function CheckoutContinuation({
 				});
 				const data = (await checkout.json()) as {
 					url?: string;
+					sessionId?: string;
 					error?: string;
 					kind?: string;
 				};
@@ -415,7 +423,7 @@ export function CheckoutContinuation({
 				if (!current()) return;
 				if (checkout.status === 401) {
 					window.location.replace(
-						checkoutSessionRecoveryPath({ plan, billing, confirmTrial }),
+						checkoutSessionRecoveryPath({ plan, billing, confirmTrial, onboarding }),
 					);
 					return;
 				}
@@ -443,6 +451,7 @@ export function CheckoutContinuation({
 					placement: "checkout_after_sign_in",
 					plan_tier: plan,
 				});
+				rememberOnboardingCheckout(onboarding, offer.ownerUserId, data.sessionId);
 				window.location.replace(url.href);
 			} catch (error) {
 				if (!current()) return;
@@ -467,7 +476,7 @@ export function CheckoutContinuation({
 				}
 			}
 		},
-		[plan, billing, confirmTrial, price],
+		[plan, billing, confirmTrial, onboarding, price],
 	);
 
 	useEffect(() => {
@@ -491,6 +500,16 @@ export function CheckoutContinuation({
 		};
 	}, [start]);
 
+	if (completedOwner && onboarding) return (
+		<AuthPageShell maxWidth="max-w-md">
+			<div className="text-center">
+				<AnidachiLogo size={48} className="mx-auto" />
+				<h1 className="mt-6 text-3xl font-semibold tracking-tight">Your free trial has started</h1>
+				<OnboardingReturn token={onboarding} owner={completedOwner} extensionId={extensionId} />
+				<Link className="text-sm text-ani-muted underline underline-offset-4" href="/account/billing">Manage subscription</Link>
+			</div>
+		</AuthPageShell>
+	);
 	if (stage === "checking")
 		return (
 			<AuthPageShell maxWidth="max-w-md">
@@ -588,7 +607,7 @@ export function CheckoutContinuation({
 							<div className="mt-5">
 								<LoginOAuthButtons
 									safeNext={encodeURIComponent(
-										checkoutReturnPath({ plan, billing, confirmTrial }),
+										checkoutReturnPath({ plan, billing, confirmTrial, onboarding }),
 									)}
 								/>
 							</div>
@@ -606,7 +625,7 @@ export function CheckoutContinuation({
 					</div>
 				)}
 				<Link
-					href={`/pricing?plan=${plan}&billing=${billing}`}
+					href={checkoutPlansPath(selection)}
 					className="mt-7 inline-block text-sm text-ani-muted underline underline-offset-4 hover:text-ani-text"
 				>
 					Back to plans

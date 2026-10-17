@@ -48,3 +48,46 @@ to bypass an older pending read after admission denial or a real tab return.
 Normal same-session reads still coalesce; completed authority is never cached.
 No shared room payload or Worker changes. Final CI/artifact hashes and unresolved
 real-browser acceptance are recorded in the staging PR and local build receipt.
+
+## Return to onboarding after checkout
+
+The owner approved automatic return from the website after a confirmed cardless
+trial activation or completed paid Checkout. This is a navigation-only follow-up
+on `codex/onboarding-checkout-return`, based on staging `54b3dab4`; production and
+Store publication remain excluded.
+
+- The onboarding CTA opens the existing Plus/monthly trial confirmation (or
+  pricing when unavailable), with a random one-time `onboarding` UUID. The website
+  preserves it through login and plan selection. It is not a URL or entitlement.
+- The extension keeps the originating tab, document, frame and owner in bounded
+  `chrome.storage.session` records for at most one hour, surviving worker sleep.
+  The content script also requires the same video and an active tour. Return
+  resumes that tour without resetting its current step or creating a room.
+- Cardless return follows only a server-confirmed `active` result. Paid return
+  requires the same tab's owner-bound Checkout receipt, the exact session ID,
+  server-confirmed completed/paid (or no-payment-required) Checkout and its own
+  active Plus/Pro subscription. `CheckoutResult.sessionId` and the sync response's
+  `checkoutComplete` are additive; old consumers keep their behavior.
+- The website rechecks the current owner before return. A short external port
+  binds the attempt to the live website document; abort, navigation and unmount
+  disconnect it. The extension validates the exact configured website origin,
+  top frame, owner, source document, current website tab and request deadline.
+  After consuming the token it checks owner and port again before focusing.
+- Missing/closed/reloaded source, closed tour, changed video/account, unavailable
+  extension or blocked storage leaves the website confirmation and a manual
+  return option. Cancelling or failing checkout never triggers an automatic
+  return. A normal website purchase does not acquire a new onboarding target.
+- Existing billing/offer validation, anti-abuse cookie and installation proof,
+  Stripe schedules/idempotency, account/room authority and auth handoff remain.
+  No database migration, permissions, OAuth allowlist, environment variable,
+  Worker change, polling loop or extra Stripe request is introduced.
+
+Verification: owner/document/expiry/replay/abort regressions and web tests for
+confirmed versus failed or unrelated Checkout, plus a loaded-artifact Chrome
+round-trip using offline video and website fixtures. These do not substitute
+for an owner-approved live staging trial/payment acceptance before promotion.
+Record exact checks, artifact hashes and deployment in the PR/build receipt.
+
+Rollback: revert this follow-up and reload the prior extension. Additive response
+fields can remain during mixed-version rollout; older packages use their normal
+Billing/success page, while a missing return bridge falls back on the website.

@@ -4,13 +4,16 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pricing } from "./pricing";
 import { HomeSectionHeader } from "./home-section-header";
+import { OnboardingTokenSchema } from "@anidachi/protocol";
 
 type Props = { headingLevel?: 1 | 2; showPlanMatrix?: boolean };
 
 function SelectedPricing(props: Props) {
 	const search = useSearchParams();
 	const period = search.get("billing") === "monthly" ? "monthly" : "yearly";
-	return <Pricing {...props} key={period} initialPeriod={period} />;
+	const parsed = search.getAll("onboarding").length === 1 ? OnboardingTokenSchema.safeParse(search.get("onboarding")) : null;
+	const onboarding = parsed?.success ? parsed.data : undefined;
+	return <Pricing {...props} key={`${period}:${onboarding ?? ""}`} initialPeriod={period} onboarding={onboarding} />;
 }
 
 /** The public page stays static; no yearly price is painted for a monthly link. */

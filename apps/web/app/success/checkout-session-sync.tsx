@@ -20,12 +20,15 @@ import {
 	billingDisplayValidityMs,
 } from "@/lib/billing-view";
 import { INSTALL_CTA_LABEL } from "@/lib/install-cta";
+import { readOnboardingCheckout } from "@/lib/onboarding-return-client";
+import { OnboardingReturn } from "@/components/onboarding-return";
 
 export type SyncState = {
 	status: "syncing" | "synced" | "error" | "missing" | "inactive";
 	message: string;
 	heading?: string;
 	trialActive?: boolean;
+	onboardingReady?: boolean;
 };
 
 const PLAN_LABELS: Record<string, string> = {
@@ -39,14 +42,20 @@ export function CheckoutSessionSync({
 	initialPlanCode,
 	children,
 	ownerUserId,
+	extensionId,
 }: {
 	sessionId?: string;
 	initialPlanCode: string;
 	children?: ReactNode;
 	ownerUserId?: string;
+	extensionId?: string | null;
 }) {
 	const router = useRouter();
 	const [retry, setRetry] = useState(0);
+	const [returnToken, setReturnToken] = useState<string | null>(null);
+	useEffect(() => {
+		setReturnToken(ownerUserId && sessionId ? readOnboardingCheckout(ownerUserId, sessionId)?.token ?? null : null);
+	}, [ownerUserId, sessionId]);
 	const [state, setState] = useState<SyncState>({
 		status: sessionId ? "syncing" : "missing",
 		message: sessionId
@@ -84,6 +93,7 @@ export function CheckoutSessionSync({
 					error?: string;
 					billing?: BillingOverview;
 					checkoutSubscription?: BillingSubscription;
+					checkoutComplete?: boolean;
 				} | null;
 				if (cancelled) return;
 				if (
@@ -126,6 +136,9 @@ export function CheckoutSessionSync({
 				if (!(remaining > 0)) throw new Error("Subscription status expired");
 				timer = setTimeout(onFocus, remaining);
 				const trial = payload.checkoutSubscription?.trial;
+				const onboardingReady = payload.checkoutComplete === true &&
+					(payload.checkoutSubscription?.status === "active" || payload.checkoutSubscription?.status === "trialing") &&
+					(payload.checkoutSubscription?.planCode === "plus" || payload.checkoutSubscription?.planCode === "pro");
 				if (trial && trial.stage !== "paid") {
 					const headings = {
 						trial: "Your free trial has started",
@@ -137,6 +150,7 @@ export function CheckoutSessionSync({
 						status: trial.stage === "trial" ? "synced" : "inactive",
 						heading: headings[trial.stage],
 						trialActive: trial.stage === "trial",
+						onboardingReady: onboardingReady && trial.stage === "trial",
 						message:
 							trial.stage === "trial"
 								? `Your ${checkoutPlanLabel} trial ends ${formatBillingTime(trial.endsAt)} (your local time).`
@@ -153,6 +167,7 @@ export function CheckoutSessionSync({
 					payload.planCode === "plus" || payload.planCode === "pro";
 				setState({
 					status: hasPaidAccess ? "synced" : "inactive",
+					onboardingReady: onboardingReady && hasPaidAccess,
 					message: hasPaidAccess
 						? `Your AniDachi account is active on ${planLabel}.`
 						: "Your current AniDachi plan is Free. Check Account → Subscription for details.",
@@ -182,6 +197,8 @@ export function CheckoutSessionSync({
 			state={state}
 			onRetry={sessionId ? () => setRetry((n) => n + 1) : undefined}
 		>
+			{state.status === "synced" && state.onboardingReady && returnToken && ownerUserId ?
+				<OnboardingReturn token={returnToken} owner={ownerUserId} extensionId={extensionId} /> : null}
 			{children}
 		</CheckoutSessionStatus>
 	);

@@ -270,6 +270,7 @@ test("eligible Free checkout requires a card and exactly three trial days", asyn
 	const f = fixture();
 	const r = await f.service.prepareSubscriptionCheckout(input);
 	assert.equal(r.kind, "checkout");
+	assert.equal(r.sessionId, "cs_new");
 	assert.equal(r.trialOffered, true);
 	assert.equal(f.params?.subscription_data?.trial_period_days, 3);
 	assert.equal(f.params?.payment_method_collection, "always");

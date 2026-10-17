@@ -43,6 +43,7 @@ beforeEach(() => {
 		runtime: { sendMessage: send, getURL: (p: string) => p },
 	});
 	vi.stubGlobal("fetch", request);
+	vi.spyOn(window, "open").mockReturnValue(null);
 	vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
 	vi.stubGlobal(
 		"ResizeObserver",
@@ -129,6 +130,19 @@ async function createPractice() {
 	await click("Open AniDachi controls");
 	await click("Create room");
 }
+it("opens onboarding checkout with a return token without leaving the current step", async () => {
+	await render();
+	await click("Open AniDachi controls");
+	send.mockResolvedValue({ opened: true });
+	await act(async () => host.querySelector<HTMLAnchorElement>(".tour-plan-link")!.click());
+	expect(send).toHaveBeenCalledWith(expect.objectContaining({
+		type: "ANIDACHI_ONBOARDING_CHECKOUT_OPEN",
+		offer: "check",
+		token: expect.stringMatching(/^[a-f0-9-]{36}$/),
+	}));
+	expect(host.textContent).toContain("starts here.");
+	expect(playing).toBe(false);
+});
 async function press(key: string, init: KeyboardEventInit = {}) {
 	const event = new KeyboardEvent("keydown", {
 		key,
