@@ -6063,23 +6063,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			style={overlayCssVariables}
 		>
 			<style>{overlayStyles}</style>
-			{import.meta.env.WXT_EXTENSION_CHANNEL !== "production" && (
-				<PlayerOnboarding
-					adapter={adapter}
-					ready={adapterActive && identityLoaded && !extensionContextInvalidated}
-					canStart={() =>
-						roomSessionLoadedForUserId === (participant?.id ?? null) &&
-						!roomIdRef.current && !storedRoomSessionRef.current &&
-						!getRoomIdFromHash() && !personalResumeIntentRef.current &&
-						!panelOpen && !roomCreatePending
-					}
-					roomId={roomId}
-					resource={currentResourceEntry}
-					accountPlan={authAuthenticated ? accountUser?.plan ?? "free" : null}
-					hosting={hostingDisplay.state}
-					onActiveChange={setIntroductionActive}
-				/>
-			)}
+			<PlayerOnboarding
+				adapter={adapter}
+				ready={adapterActive && identityLoaded && !extensionContextInvalidated}
+				canStart={() =>
+					roomSessionLoadedForUserId === (participant?.id ?? null) &&
+					!roomIdRef.current && !storedRoomSessionRef.current &&
+					!getRoomIdFromHash() && !personalResumeIntentRef.current &&
+					!panelOpen && !roomCreatePending
+				}
+				roomId={roomId}
+				resource={currentResourceEntry}
+				accountPlan={authAuthenticated ? accountUser?.plan ?? "free" : null}
+				hosting={hostingDisplay.state}
+				onActiveChange={setIntroductionActive}
+			/>
 			<div
 				className={[
 					"top-bubble-reveal",

@@ -46,7 +46,7 @@ beforeEach(() => {
     tabs: { onRemoved: listener("tabRemoved") },
   });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("background invitation retry wiring", () => {
   it("restores saved work on module start and online, without creating new external reconciliation", async () => {
@@ -98,5 +98,42 @@ describe("background invitation retry wiring", () => {
     await flush();
     expect(boundary.restore).toHaveBeenCalledTimes(2);
     expect(boundary.reconcile).toHaveBeenCalledWith({ notify: true });
+  });
+});
+
+
+describe("production introduction claim wiring", () => {
+  it("claims once across concurrent tabs and keeps seen state across a background restart", async () => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
+    const values: Record<string, unknown> = { existingPreference: "preserved" };
+    Object.assign(chrome.runtime, { id: "our-extension" });
+    Object.assign(chrome.storage, { local: {
+      get: async () => ({ ...values }),
+      set: async (next: Record<string, unknown>) => { Object.assign(values, next); },
+    } });
+    await start();
+    const claim = (tabId: number) => new Promise(resolve => {
+      handlers.get("message")!({ type: "ANIDACHI_PLAYER_INTRODUCTION" }, { id: "our-extension", tab: { id: tabId } }, resolve);
+    });
+    expect(await Promise.all([claim(1), claim(2)])).toEqual([{ allowed: true }, { allowed: false }]);
+    await start();
+    expect(await claim(3)).toEqual({ allowed: false });
+    expect(values).toEqual({ existingPreference: "preserved", "anidachi.playerIntroductionSeen.v3": true });
+  });
+
+  it("rejects other extensions and non-tab senders without consuming the introduction", async () => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
+    Object.assign(chrome.runtime, { id: "our-extension" });
+    const get = vi.fn(async () => ({}));
+    const set = vi.fn(async () => {});
+    Object.assign(chrome.storage, { local: { get, set } });
+    await start();
+    for (const sender of [{ id: "other-extension", tab: { id: 1 } }, { id: "our-extension" }]) {
+      const response = vi.fn();
+      handlers.get("message")!({ type: "ANIDACHI_PLAYER_INTRODUCTION" }, sender, response);
+      expect(response).toHaveBeenCalledWith({ allowed: false });
+    }
+    expect(get).not.toHaveBeenCalled();
+    expect(set).not.toHaveBeenCalled();
   });
 });
