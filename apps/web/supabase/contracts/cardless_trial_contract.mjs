@@ -154,7 +154,13 @@ if (sql("select to_regprocedure('public.read_trial_marker_status_v1(uuid,text,te
  assert.ok(migration);
  sql("begin;\n" + readFileSync(resolve(base, "migrations", migration), "utf8") + "\ncommit;");
 }
+if (!sql("select pg_get_functiondef('public.consume_trial_action_rate_limit_v1(uuid,text)'::regprocedure);").includes("'context'")) {
+ const migration = readdirSync(resolve(base, "migrations")).find(f => f.endsWith("_trial_context_rate_limit.sql"));
+ assert.ok(migration);
+ sql("begin;\n" + readFileSync(resolve(base, "migrations", migration), "utf8") + "\ncommit;");
+}
 for (const name of [
+ "trial_context_rate_limit",
  "trial_offer_preflight",
  "cardless_trial_abuse",
 	"cardless_subscription_trials",
