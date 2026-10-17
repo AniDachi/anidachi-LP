@@ -194,7 +194,7 @@ export default function HowToWatchWithFriendsPage() {
 
 				<p className="text-foreground/80 leading-relaxed mb-8">
 					Need pictures of the overlay? The install hub walks the same live
-					controls with pointing mocks — bubble, Create room, Layout, microphone and camera.{" "}
+					controls in your player — the capsule, Create room, Layout, microphone and camera.{" "}
 					<Link
 						href="/extension#using"
 						className="text-brand-orange hover:underline"

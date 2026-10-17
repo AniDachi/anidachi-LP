@@ -66,7 +66,7 @@ export function ExtensionCheck({ initialMobile = false }: { initialMobile?: bool
                 <li>Sign in to Crunchyroll or YouTube with your own account. Netflix is coming soon.</li>
                 <li>Open the same episode the host is watching.</li>
                 <li>
-                  Click the AniDachi bubble. If playback is blocked, click Resume
+                  Click the AniDachi capsule. If playback is blocked, click Resume
                   sync.
                 </li>
               </ol>
