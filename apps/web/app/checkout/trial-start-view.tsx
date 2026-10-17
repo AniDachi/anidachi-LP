@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ChevronLeft } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CheckoutSelection } from "@/lib/checkout-selection";
 
 export function TrialStartView({
 	selection,
 	onStart,
+	busy = false,
 }: {
 	selection: CheckoutSelection;
 	onStart?: () => void;
+	busy?: boolean;
 }) {
 	const label = selection.plan === "plus" ? "Plus" : "Pro";
 
@@ -21,7 +23,8 @@ export function TrialStartView({
 		>
 			<div className="w-full max-w-[490px] text-center">
 				<h1 className="text-[clamp(2.5rem,5vw,3.75rem)] leading-[1.08] font-semibold tracking-[-0.045em]">
-					Try <span className="text-[var(--ani-menu-accent)]">{label}</span> free
+					Try <span className="text-[var(--ani-menu-accent)]">{label}</span>{" "}
+					free
 					<br />
 					for 3 days
 				</h1>
@@ -46,11 +49,24 @@ export function TrialStartView({
 					type="button"
 					variant="cream"
 					onClick={onStart}
+					disabled={busy}
+					aria-busy={busy}
 					aria-describedby="trial-start-terms"
 					className="mt-8 h-auto min-h-[58px] w-full justify-between gap-4 rounded-[10px] px-6 py-4 text-base has-[>svg]:px-6 motion-reduce:transition-none motion-reduce:active:scale-100"
 				>
 					Start my 3-day trial
-					<ArrowRight className="size-5" strokeWidth={1.75} aria-hidden="true" />
+					{busy ? (
+						<Loader2
+							className="size-5 animate-spin motion-reduce:animate-none"
+							aria-hidden="true"
+						/>
+					) : (
+						<ArrowRight
+							className="size-5"
+							strokeWidth={1.75}
+							aria-hidden="true"
+						/>
+					)}
 				</Button>
 				<p
 					id="trial-start-terms"

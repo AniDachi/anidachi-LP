@@ -105,6 +105,68 @@ const cardlessOffer = {
 	trialMode: "cardless",
 	trialOfferRevision: "cardless-3d-v1",
 };
+test("starting trial keeps the confirmation and button stable until the result", async () => {
+	const pending = deferred<Response>();
+	let starts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		starts++;
+		return pending.promise;
+	};
+	const el = await mount();
+	const start = button(el, /Start my 3-day trial/i);
+	await act(async () => {
+		start.click();
+		start.click();
+	});
+	assert.equal(button(el, /Start my 3-day trial/i), start);
+	assert.ok(start.disabled);
+	assert.match(el.textContent!, /No card required/);
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	assert.equal(button(el, /Start my 3-day trial/i), start);
+	assert.equal(starts, 1);
+	pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" }));
+	await act(async () => {});
+});
+test("confirmation reuses fresh same-operation browser proof while activation still reaches the server", async () => {
+	let contexts = 0,
+		verdicts = 0,
+		starts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		starts++;
+		return Response.json({ state: "active", ownerUserId: "owner-a" });
+	};
+	const el = await mount(
+		"plus",
+		"monthly",
+		false,
+		true,
+		() => {
+			contexts++;
+			return Response.json({
+				state: "ready",
+				ownerUserId: "owner-a",
+				challenge: "a".repeat(180) + "." + "b".repeat(43),
+				extensionId: null,
+			});
+		},
+		(value) => {
+			verdicts++;
+			return Response.json({
+				state: "ready",
+				ownerUserId: "owner-a",
+				offer: value,
+			});
+		},
+	);
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.equal(contexts, 1);
+	assert.equal(verdicts, 1);
+	assert.equal(starts, 1);
+});
 test("email verification uses a real provider sign-in instead of looping through an existing session", async () => {
 	globalThis.fetch = async (url) =>
 		String(url) === "/api/billing/offer"
@@ -302,7 +364,7 @@ test("an unavailable recovery keeps the owned activation instead of starting a r
 	]);
 });
 
-test("late cardless start response cannot redirect after leaving the page", async () => {
+test("a harmless window blur keeps the same trial operation and revalidates its owner", async () => {
 	const pending = deferred<Response>();
 	globalThis.fetch = async (url) =>
 		String(url) === "/api/billing/offer"
@@ -314,8 +376,7 @@ test("late cardless start response cannot redirect after leaving the page", asyn
 	await act(async () =>
 		pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" })),
 	);
-	assert.doesNotMatch(window.location.href, /\/account\/billing/);
-	assert.match(el.textContent!, /check your account/i);
+	assert.match(window.location.href, /\/account\/billing/);
 });
 
 test("the login context names the selected plan and billing period", () => {
@@ -472,7 +533,7 @@ test("timeout retry reuses the request id and double clicks cannot duplicate che
 	assert.equal(window.location.href, "https://checkout.stripe.com/reused");
 });
 
-test("returning from another tab retires an old checkout response", async () => {
+test("returning after a blur accepts the same owner's checkout without restarting", async () => {
 	const response = deferred<Response>();
 	globalThis.fetch = async (url) =>
 		String(url) === "/api/billing/offer"
@@ -485,8 +546,8 @@ test("returning from another tab retires an old checkout response", async () => 
 	});
 	response.resolve(Response.json({ url: "https://checkout.stripe.com/stale" }));
 	await act(async () => {});
-	assert.notEqual(window.location.href, "https://checkout.stripe.com/stale");
-	assert.ok(el.querySelector('[role="alert"]'));
+	assert.equal(window.location.href, "https://checkout.stripe.com/stale");
+	assert.equal(el.querySelector('[role="alert"]'), null);
 });
 
 test("an offer that expires while loading cannot open checkout", async () => {
@@ -550,7 +611,11 @@ test("a backgrounded checkout cannot redirect before the user returns", async ()
 			? Response.json(offer)
 			: response.promise;
 	await mount();
-	await act(async () => window.dispatchEvent(new Event("blur")));
+	Object.defineProperty(document, "visibilityState", {
+		configurable: true,
+		value: "hidden",
+	});
+	await act(async () => document.dispatchEvent(new Event("visibilitychange")));
 	response.resolve(
 		Response.json({ url: "https://checkout.stripe.com/background-owner" }),
 	);
@@ -559,6 +624,7 @@ test("a backgrounded checkout cannot redirect before the user returns", async ()
 		window.location.href,
 		"https://checkout.stripe.com/background-owner",
 	);
+	Reflect.deleteProperty(document, "visibilityState");
 });
 
 test("an invalid refresh session requests a real sign-in even if access JWT is still valid", async () => {
@@ -816,18 +882,18 @@ test("legacy reconciliation retry reacquires the extension proof before a new re
 		);
 		await act(async () => button(el, /Start my 3-day trial/i).click());
 		assert.equal(starts.length, 1);
-		assert.deepEqual(starts[0].extensionProof, proofs[1]);
+		assert.deepEqual(starts[0].extensionProof, proofs[0]);
 		await act(async () => button(el, /Check trial status/i).click());
 		assert.equal(starts.length, 2);
 		assert.equal(
 			contexts,
-			3,
+			2,
 			"legacy retry must refresh the request-bound challenge",
 		);
-		assert.equal(proofs.length, 3);
+		assert.equal(proofs.length, 2);
 		assert.equal(starts[1].requestId, starts[0].requestId);
-		assert.deepEqual(starts[1].extensionProof, proofs[2]);
-		assert.notEqual(proofs[2].challenge, proofs[1].challenge);
+		assert.deepEqual(starts[1].extensionProof, proofs[1]);
+		assert.notEqual(proofs[1].challenge, proofs[0].challenge);
 		assert.match(el.textContent!, /free trial is no longer available/);
 	} finally {
 		if (previousChrome === undefined) delete runtimeGlobal.chrome;
@@ -906,7 +972,7 @@ test("unknown activation recovery bypasses new marker checks and keeps its origi
 	const el = await mount("plus", "monthly", false, true, undefined, (value) => {
 		checks++;
 		return Response.json(
-			checks <= 2
+			checks === 1
 				? { state: "ready", ownerUserId: value.ownerUserId, offer: value }
 				: { state: "trial_busy", ownerUserId: value.ownerUserId },
 		);
@@ -914,7 +980,7 @@ test("unknown activation recovery bypasses new marker checks and keeps its origi
 	await act(async () => button(el, /Start my 3-day trial/).click());
 	assert.ok(button(el, /Check trial status/));
 	await act(async () => button(el, /Check trial status/).click());
-	assert.equal(checks, 2);
+	assert.equal(checks, 1);
 	assert.equal(starts, 1);
 	assert.equal(recoveries, 1);
 	assert.match(window.location.href, /account\/billing/);

@@ -78,10 +78,13 @@ export type BillingOverview = {
 };
 
 // A display lease only: expiry requires a server reread, never a local grant.
-export function billingDisplayValidityMs(overview: BillingOverview): number {
+export function billingDisplayValidityMs(
+	overview: BillingOverview,
+	maxAgeMs = 60_000,
+): number {
 	const now = Date.parse(overview.serverTime ?? "");
-	if (!Number.isFinite(now)) return 60_000;
-	const deadlines: number[] = [now + 60_000];
+	if (!Number.isFinite(now)) return Math.min(maxAgeMs, 60_000);
+	const deadlines: number[] = [now + maxAgeMs];
 	const activation = Date.parse(overview.hosting?.hostingActivationAt ?? "");
 	if (activation > now) deadlines.push(activation);
 	if (overview.planCode !== "free" && overview.selectedPlanExpiresAt)

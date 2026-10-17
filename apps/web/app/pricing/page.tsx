@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import Link from "next/link";
-import { Pricing } from "@/components/pricing";
+import { PricingSelection } from "@/components/pricing-selection";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
 import { StoreReviews } from "@/components/store-reviews";
@@ -104,7 +104,7 @@ export default function PricingPage() {
 					</div>
 				</nav>
 
-				<Pricing headingLevel={1} showPlanMatrix />
+				<PricingSelection headingLevel={1} showPlanMatrix />
 				<StoreReviews />
 				<FAQSection title="Pricing FAQ" questions={faq} />
 				<section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-ani-muted">

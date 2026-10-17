@@ -11,7 +11,9 @@ export function AccountNotifications({ ownerUserId }: { ownerUserId: string }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [counts, setCounts] = useState<AccountInboxResponse["counts"] | null>(null);
+	const [counts, setCounts] = useState<AccountInboxResponse["counts"] | null>(
+		null,
+	);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const generation = useRef(0);
@@ -24,28 +26,69 @@ export function AccountNotifications({ ownerUserId }: { ownerUserId: string }) {
   }, []);
   useEffect(() => {
     let disposed = false;
-    const refreshBadge = async () => {
-      if (disposed || visible.current || document.visibilityState === "hidden") return;
+		let pending = false;
+		let queuedChange = false;
+		let refreshedAt = 0;
+		setCounts(null);
+		const refreshBadge = async (force = false) => {
+			if (disposed) return;
+			if (pending) {
+				if (force) {
+					queuedChange = true;
+					++generation.current;
+				}
+				return;
+			}
+			if (
+				visible.current ||
+				document.visibilityState === "hidden" ||
+				(!force && Date.now() - refreshedAt < 10_000)
+			)
+				return;
+			pending = true;
       const request = ++generation.current;
       try {
         const payload = await api<unknown>("/api/account/inbox?limit=1");
         const page = parseOwnedAccountInboxResponse(payload, ownerUserId);
-        if (!disposed && generation.current === request) setCounts(page.counts);
-      } catch { /* A badge refresh must not replace the user's working page. */ }
+				if (!disposed && generation.current === request) {
+					setCounts(page.counts);
+					refreshedAt = Date.now();
+				}
+			} catch {
+				/* A badge refresh must not replace the user's working page. */
+			} finally {
+				pending = false;
+				if (queuedChange) {
+					queuedChange = false;
+					void refreshBadge(true);
+				}
+			}
+		};
+		const resume = () => {
+			void refreshBadge();
     };
     const socialChanged = (event: Event) => {
-      if ((event as CustomEvent<{ ownerUserId: string }>).detail?.ownerUserId === ownerUserId) void refreshBadge();
+			if (
+				(event as CustomEvent<{ ownerUserId: string }>).detail?.ownerUserId ===
+				ownerUserId
+			)
+				void refreshBadge(true);
     };
     void refreshBadge();
-    const timer = window.setInterval(refreshBadge, 60_000);
-    window.addEventListener("focus", refreshBadge);
-    document.addEventListener("visibilitychange", refreshBadge);
+		const timer = window.setInterval(resume, 60_000);
+		window.addEventListener("focus", resume);
+		document.addEventListener("visibilitychange", resume);
     window.addEventListener("anidachi:account-social-changed", socialChanged);
     return () => {
-      disposed = true; ++generation.current; window.clearInterval(timer);
-      window.removeEventListener("focus", refreshBadge);
-      document.removeEventListener("visibilitychange", refreshBadge);
-      window.removeEventListener("anidachi:account-social-changed", socialChanged);
+			disposed = true;
+			++generation.current;
+			window.clearInterval(timer);
+			window.removeEventListener("focus", resume);
+			document.removeEventListener("visibilitychange", resume);
+			window.removeEventListener(
+				"anidachi:account-social-changed",
+				socialChanged,
+			);
     };
   }, [ownerUserId]);
   useEffect(() => {
@@ -60,32 +103,59 @@ export function AccountNotifications({ ownerUserId }: { ownerUserId: string }) {
     trigger.current?.focus();
   };
   const unread = counts?.unseen ?? 0;
-  return <>
+	return (
+		<>
     <button className="account-bell" type="button" ref={trigger}
       aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
       aria-haspopup="dialog" aria-expanded={open}
       onClick={() => { ++generation.current; setJoinError(null); setMounted(true); setOpen(true); }}>
       <Bell size={20} aria-hidden />
-      {unread > 0 && <span className="account-unread" aria-hidden>{unread > 99 ? "99+" : unread}</span>}
+				{unread > 0 && (
+					<span className="account-unread" aria-hidden>
+						{unread > 99 ? "99+" : unread}
+					</span>
+				)}
     </button>
-    {joinError && !open && <div className="account-join-error ac-notice ac-notice-error" role="alert">
+			{joinError && !open && (
+				<div
+					className="account-join-error ac-notice ac-notice-error"
+					role="alert"
+				>
       <p>{joinError}</p>
-      <button type="button" className="ac-text-link" onClick={() => { setJoinError(null); setOpen(true); }}>View invitations</button>
-      <button type="button" className="ac-button ac-button-icon ac-button-quiet" aria-label="Dismiss invitation error" onClick={() => setJoinError(null)}><X size={16} aria-hidden /></button>
-    </div>}
-    {mounted && <dialog ref={dialog} className="account-notifications" aria-labelledby="account-notification-title"
+					<button
+						type="button"
+						className="ac-text-link"
+						onClick={() => {
+							setJoinError(null);
+							setOpen(true);
+						}}
+					>
+						View invitations
+					</button>
+					<button type="button" className="ac-button ac-button-icon ac-button-quiet" aria-label="Dismiss invitation error" onClick={() => setJoinError(null)}>
+						<X size={16} aria-hidden />
+					</button>
+				</div>
+			)}
+			{mounted && (
+				<dialog ref={dialog} className="account-notifications" aria-labelledby="account-notification-title"
       onCancel={event => { event.preventDefault(); close(); }}
       onClose={() => setOpen(false)}
       onClick={event => { if (event.target === event.currentTarget) {
         const bounds = event.currentTarget.getBoundingClientRect();
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close();
       } }}>
-      <div className="account-notification-heading"><h2 id="account-notification-title">Notifications</h2>
-        <button className="ac-button ac-button-icon ac-button-quiet" type="button" aria-label="Close notifications" onClick={close}><X size={19} aria-hidden /></button>
+					<div className="account-notification-heading">
+						<h2 id="account-notification-title">Notifications</h2>
+						<button className="ac-button ac-button-icon ac-button-quiet" type="button" aria-label="Close notifications" onClick={close}>
+							<X size={19} aria-hidden />
+						</button>
       </div>
       <div className="account-notification-content">
         <InvitesClient ownerUserId={ownerUserId} embedded active={open} onCountsChange={updateCounts} onBeforeNavigate={close} onNavigateError={setJoinError} />
       </div>
-    </dialog>}
-  </>;
+				</dialog>
+			)}
+		</>
+	);
 }

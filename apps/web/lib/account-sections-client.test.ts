@@ -9,7 +9,10 @@ import { FriendsClient } from "../app/friends/friends-client";
 import { InvitesClient } from "../app/account/invites/invites-client";
 import { FeatureRequestForm } from "../components/feature-request-form";
 import { AccountNotifications } from "../components/account/account-notifications";
-import { AccountWorkspaceProvider, useAccountViewState } from "../components/account/account-workspace-state";
+import {
+	AccountWorkspaceProvider,
+	useAccountViewState,
+} from "../components/account/account-workspace-state";
 
 (globalThis as { React?: typeof React }).React = React;
 (
@@ -33,8 +36,12 @@ for (const [key, value] of Object.entries({
   });
 }
 const originalFetch = globalThis.fetch;
-dom.HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
-dom.HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); };
+dom.HTMLDialogElement.prototype.showModal = function () {
+	this.setAttribute("open", "");
+};
+dom.HTMLDialogElement.prototype.close = function () {
+	this.removeAttribute("open");
+};
 let root: Root | null = null;
 let container: HTMLDivElement;
 const owner = "11111111-1111-4111-8111-111111111111";
@@ -348,6 +355,70 @@ test("reopening notifications supersedes a pagination request without leaving co
   assert.equal(button("Refresh").disabled,false);
   await act(async()=>resolvePage?.(Response.json({...page,nextCursor:null})));
   assert.equal(button("Load more invitations").disabled,false);
+});
+
+test("notification focus and visibility bursts share one pending badge read", async () => {
+	let reads = 0;
+	let resolve!: (response: Response) => void;
+	globalThis.fetch = async () => {
+		reads++;
+		return new Promise<Response>((r) => {
+			resolve = r;
+		});
+	};
+	await mount(
+		React.createElement(AccountNotifications, { ownerUserId: owner }),
+	);
+	await act(async () => {
+		window.dispatchEvent(new Event("focus"));
+		document.dispatchEvent(new Event("visibilitychange"));
+		window.dispatchEvent(new Event("focus"));
+	});
+	assert.equal(reads, 1);
+	await act(async () =>
+		resolve(
+			Response.json({
+				meta: { ...meta, ownerUserId: owner },
+				items: [],
+				counts: { ...counts, unseen: 2 },
+				nextCursor: null,
+			}),
+		),
+	);
+	assert.ok(button("Notifications, 2 unread"));
+});
+
+test("a social mutation during a pending badge read queues one fresh count", async () => {
+	const completions: ((response: Response) => void)[] = [];
+	globalThis.fetch = async () =>
+		new Promise<Response>((resolve) => completions.push(resolve));
+	await mount(
+		React.createElement(AccountNotifications, { ownerUserId: owner }),
+	);
+	await act(async () => {
+		for (let i = 0; i < 3; i++)
+			window.dispatchEvent(
+				new CustomEvent("anidachi:account-social-changed", {
+					detail: { ownerUserId: owner },
+				}),
+			);
+	});
+	assert.equal(completions.length, 1);
+	const reply = (unseen: number) =>
+		Response.json({
+			meta: { ...meta, ownerUserId: owner },
+			items: [],
+			counts: { ...counts, unseen },
+			nextCursor: null,
+		});
+	await act(async () => completions[0](reply(8)));
+	assert.equal(completions.length, 2);
+	assert.equal(
+		container.querySelector('[aria-label="Notifications, 8 unread"]'),
+		null,
+	);
+	await act(async () => completions[1](reply(2)));
+	assert.ok(button("Notifications, 2 unread"));
 });
 
 test("failed Join reports its error outside the closed notification dialog", async () => {

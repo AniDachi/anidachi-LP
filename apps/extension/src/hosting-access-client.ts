@@ -35,7 +35,7 @@ const HostingAccountAccessSchema = AccountEntitlementsMetadataSchema.extend({
 	});
 export type HostingAccountAccess = z.infer<typeof HostingAccountAccessSchema>;
 const TYPE = "ANIDACHI_HOSTING_ACCESS";
-type Message = { type: typeof TYPE; ownerUserId: string };
+type Message = { type: typeof TYPE; ownerUserId: string; fresh?: boolean };
 export function isHostingAccessMessage(value: unknown): value is Message {
 	if (!value || typeof value !== "object") return false;
 	const message = value as Partial<Message>;
@@ -46,19 +46,58 @@ export function isHostingAccessMessage(value: unknown): value is Message {
 	);
 }
 
+const defaultDependencies = {
+	getSession: getStoredAuthTokens,
+	refresh: refreshExtensionSession,
+};
+const pendingReads = new WeakMap<
+	typeof defaultDependencies,
+	Map<string, Promise<Awaited<ReturnType<typeof loadHostingAccess>>>>
+>();
+
 export async function handleHostingAccessMessage(
 	message: Message,
-	dependencies = {
-		getSession: getStoredAuthTokens,
-		refresh: refreshExtensionSession,
-	},
+	dependencies = defaultDependencies,
+) {
+	const session = await dependencies.getSession().catch(() => null);
+	if (!session || session.user.id !== message.ownerUserId)
+		return { ok: false as const };
+	const key = JSON.stringify([
+		session.authRevision,
+		session.profileRevision,
+		session.user.id,
+		session.accessToken,
+		session.refreshToken,
+	]);
+	let reads = pendingReads.get(dependencies);
+	if (!reads) {
+		reads = new Map();
+		pendingReads.set(dependencies, reads);
+	}
+	let pending = message.fresh ? undefined : reads.get(key);
+	if (!pending) {
+		pending = loadHostingAccess(message, dependencies, session);
+		reads.set(key, pending);
+		const own = pending;
+		void pending.finally(() => {
+			if (reads.get(key) === own) reads.delete(key);
+		});
+	}
+	return pending;
+}
+
+async function loadHostingAccess(
+	message: Message,
+	dependencies: typeof defaultDependencies,
+	initialSession: NonNullable<Awaited<ReturnType<typeof getStoredAuthTokens>>>,
 ) {
 	const failure = { ok: false as const };
 	const controller = new AbortController();
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 	const load = async () => {
 		try {
-			let session = await dependencies.getSession();
+			let session: Awaited<ReturnType<typeof getStoredAuthTokens>> =
+				initialSession;
 			if (
 				!session ||
 				session.user.id !== message.ownerUserId ||
@@ -123,10 +162,12 @@ export async function handleHostingAccessMessage(
 
 export async function requestHostingAccess(
 	ownerUserId: string,
+	fresh = false,
 ): Promise<HostingAccountAccess> {
 	const response = await chrome.runtime.sendMessage({
 		type: TYPE,
 		ownerUserId,
+		...(fresh ? { fresh: true } : {}),
 	});
 	if (!response?.ok) throw new Error("Hosting access unavailable");
 	const access = HostingAccountAccessSchema.parse(response.access);

@@ -20,7 +20,11 @@ import {
 } from "react";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import type { AuthenticatedUserPlan } from "./auth-tokens";
-import { getHostingOfferUrl } from "./hosting-offer-link";
+import {
+	getHostingOfferUrl,
+	getHostingEntry,
+	type HostingEntry,
+} from "./hosting-offer-link";
 import type { CurrentResourceDisplay } from "./current-resource-display";
 import {
 	overlayHotkeyBoundaryProps,
@@ -60,12 +64,12 @@ export interface PlayerOnboardingProps {
 export function getPlayerIntroductionOffer(
 	accountPlan: AuthenticatedUserPlan | null | undefined,
 	hosting?: HostingDisplayState,
-): "plans" | null {
+): HostingEntry | null {
 	const plan = hosting?.access?.planCode ?? accountPlan;
 	if (plan === "plus" || plan === "pro" || hosting?.access?.hosting?.canHost)
 		return null;
 	// The website also checks its HttpOnly cookie before offering a trial.
-	return "plans";
+	return getHostingEntry(hosting);
 }
 const copy = {
 	launcher: {
@@ -806,7 +810,9 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 										<p>
 											{step === "create" && !offer
 												? "Your plan includes room creation.\nYour friends join free."
-												: details.text}
+												: step === "create" && offer === "trial"
+													? "Try Plus free for 3 days. No card required.\nYour friends join free."
+													: details.text}
 										</p>
 									)}
 									{step === "create" && offer && (
@@ -816,7 +822,11 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 											target="_blank"
 											rel="noopener noreferrer"
 										>
-											View plans
+											{offer === "trial"
+												? "Try 3 days free"
+												: offer === "check"
+													? "Continue with Plus"
+													: "View plans"}
 											<ArrowUpRight size={17} aria-hidden />
 										</a>
 									)}

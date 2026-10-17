@@ -20,6 +20,10 @@ import {
 	subscriptionStatusLabel,
 } from "@/lib/billing-view";
 import { serverSnapshotRemainingMs } from "@/lib/server-snapshot-age";
+import {
+	BillingOwnerChangedError,
+	guardBillingNavigation,
+} from "@/lib/billing-navigation";
 import { takeAccountPreload } from "@/lib/account-navigation-preload";
 import { api, ApiError } from "@/lib/client-api";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
@@ -113,6 +117,13 @@ function BillingWorkspace({
 	const [error, setError] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
 	const version = useRef(0);
+	const departures = useRef(0);
+	const lifetime = useRef<AbortController | null>(null);
+	const pendingRead = useRef<{
+		version: number;
+		departure: number;
+		promise: Promise<boolean>;
+	} | null>(null);
 	const validUntil = useRef(0);
 	const [planQuote, setPlanQuote] = useState<{
 		subscriptionId: string;
@@ -140,113 +151,162 @@ function BillingWorkspace({
 	);
 
 	const load = useCallback(
-		async (refresh: boolean, useNavigationRequest = false) => {
-			const pending =
-				!refresh && useNavigationRequest
-					? takeAccountPreload(ownerUserId, "/api/billing/subscription")
-					: null;
-			const started = pending?.started ?? Date.now();
-			const current = ++version.current;
-			setBusy(true);
-			if (refresh || Date.now() >= validUntil.current) setOverview(null);
-			setPlanQuote(null);
-			setError(null);
-			setNotice(null);
-			try {
-				const result = await (pending
-					? (pending.response as Promise<BillingOverview>)
-					: api<BillingOverview>(
-							refresh ? "/api/billing/refresh" : "/api/billing/subscription",
-							{
-								method: refresh ? "POST" : "GET",
-								headers: { [BILLING_OWNER_HEADER]: ownerUserId },
-								...(refresh ? { body: "{}" } : {}),
-								cache: "no-store",
-								signal: AbortSignal.timeout(15_000),
-							},
-						));
-				if (current !== version.current) return;
-				if (result.ownerUserId !== ownerUserId)
-					throw new ApiError(
-						"Your signed-in account changed. Reload this page.",
-						"ACCOUNT_CHANGED",
-						409,
-					);
-				const remaining =
-					billingDisplayValidityMs(result) - (Date.now() - started);
-				if (!(remaining > 0))
-					throw new Error("Subscription status expired. Please refresh.");
-				const receivedAt = Date.now();
-				const serverNow =
-					Date.parse(result.serverTime ?? "") + (receivedAt - started);
-				serverClock.current = { time: serverNow, receivedAt };
-				setRenewalSelections((previous) =>
-					Object.fromEntries(
-						result.subscriptions
-							.filter(
-								(s) =>
-									s.trial?.mode === "cardless" &&
-									s.trial.stage === "trial" &&
-									previous[s.id],
-							)
-							.map((s) => [s.id, previous[s.id]]),
-					),
-				);
-				setRenewalQuote((previous) => {
-					if (!previous) return null;
-					const subscription = result.subscriptions.find(
-						(s) => s.id === previous.subscriptionId,
-					);
-					return subscription?.trial?.mode === "cardless" &&
-						subscription.trial.stage === "trial" &&
-						!subscription.trial.pendingRenewal &&
-						subscription.trial.renewalQuoteId === previous.quote.id &&
-						cardlessRenewalContext(subscription) === previous.context &&
-						Date.parse(previous.quote.expiresAt) > serverNow &&
-						Date.parse(previous.quote.firstChargeAt) ===
-							Date.parse(subscription.trial.endsAt)
-						? {
-								...previous,
-								expiresAtLocal: Math.min(
-									previous.expiresAtLocal,
-									receivedAt + Date.parse(previous.quote.expiresAt) - serverNow,
-								),
-							}
+		(
+			refresh: boolean,
+			useNavigationRequest = false,
+			afterMutation = false,
+		): Promise<boolean> => {
+			if (
+				!refresh &&
+				pendingRead.current?.version === version.current &&
+				pendingRead.current.departure === departures.current
+			)
+				return pendingRead.current.promise;
+			const departure = departures.current;
+			const promise = (async () => {
+				const pending =
+					!refresh && useNavigationRequest
+						? takeAccountPreload(ownerUserId, "/api/billing/subscription")
 						: null;
-				});
-				setOverview(result);
-				validUntil.current = Date.now() + remaining;
-				clearTimeout(displayTimer.current);
-				displayTimer.current = setTimeout(() => {
-					validUntil.current = 0;
-					setOverview(null);
-					if (!trialAbort.current) void load(false);
-				}, remaining);
-				if (refresh) setNotice("Subscription status updated.");
-			} catch (failure) {
-				if (current !== version.current) return;
-				if (
-					failure instanceof ApiError &&
-					[401, 403, 409].includes(failure.status)
-				) {
-					validUntil.current = 0;
-					setOverview(null);
-					setRenewalSelections({});
-					setRenewalQuote(null);
+				const started = pending?.started ?? Date.now();
+				const current = ++version.current;
+				setBusy(true);
+				setPlanQuote(null);
+				setError(null);
+				setNotice(null);
+				try {
+					const result = await (pending
+						? (pending.response as Promise<BillingOverview>)
+						: api<BillingOverview>(
+								refresh ? "/api/billing/refresh" : "/api/billing/subscription",
+								{
+									method: refresh ? "POST" : "GET",
+									headers: { [BILLING_OWNER_HEADER]: ownerUserId },
+									...(refresh ? { body: "{}" } : {}),
+									cache: "no-store",
+									signal: AbortSignal.timeout(15_000),
+								},
+							));
+					if (current !== version.current) return false;
+					if (departure !== departures.current) {
+						if (!actionLock.current) return false;
+						await guardBillingNavigation(
+							ownerUserId,
+							lifetime.current!.signal,
+							true,
+							() => departures.current,
+						);
+						if (current !== version.current) return false;
+					}
+					if (result.ownerUserId !== ownerUserId)
+						throw new ApiError(
+							"Your signed-in account changed. Reload this page.",
+							"ACCOUNT_CHANGED",
+							409,
+						);
+					const remaining =
+						billingDisplayValidityMs(result) - (Date.now() - started);
+					if (!(remaining > 0))
+						throw new Error("Subscription status expired. Please refresh.");
+					const receivedAt = Date.now();
+					const serverNow =
+						Date.parse(result.serverTime ?? "") + (receivedAt - started);
+					serverClock.current = { time: serverNow, receivedAt };
+					setRenewalSelections((previous) =>
+						Object.fromEntries(
+							result.subscriptions
+								.filter(
+									(s) =>
+										s.trial?.mode === "cardless" &&
+										s.trial.stage === "trial" &&
+										previous[s.id],
+								)
+								.map((s) => [s.id, previous[s.id]]),
+						),
+					);
+					setRenewalQuote((previous) => {
+						if (!previous) return null;
+						const subscription = result.subscriptions.find(
+							(s) => s.id === previous.subscriptionId,
+						);
+						return subscription?.trial?.mode === "cardless" &&
+							subscription.trial.stage === "trial" &&
+							!subscription.trial.pendingRenewal &&
+							subscription.trial.renewalQuoteId === previous.quote.id &&
+							cardlessRenewalContext(subscription) === previous.context &&
+							Date.parse(previous.quote.expiresAt) > serverNow &&
+							Date.parse(previous.quote.firstChargeAt) ===
+								Date.parse(subscription.trial.endsAt)
+							? {
+									...previous,
+									expiresAtLocal: Math.min(
+										previous.expiresAtLocal,
+										receivedAt +
+											Date.parse(previous.quote.expiresAt) -
+											serverNow,
+									),
+								}
+							: null;
+					});
+					setOverview(result);
+					validUntil.current = Date.now() + remaining;
+					clearTimeout(displayTimer.current);
+					displayTimer.current = setTimeout(() => {
+						validUntil.current = 0;
+						if (!actionLock.current && document.visibilityState !== "hidden")
+							void load(false);
+					}, remaining);
+					if (refresh) setNotice("Subscription status updated.");
+					return true;
+				} catch (failure) {
+					if (current !== version.current) return false;
+					// An acknowledged mutation invalidates the old summary even when
+					// reconciliation fails. Quiet read failures keep the last good display.
+					if (afterMutation) {
+						validUntil.current = 0;
+						setOverview(null);
+						setRenewalQuote(null);
+					}
+					if (
+						failure instanceof BillingOwnerChangedError ||
+						(failure instanceof ApiError &&
+							[401, 403, 409].includes(failure.status))
+					) {
+						validUntil.current = 0;
+						setOverview(null);
+						setRenewalSelections({});
+						setRenewalQuote(null);
+					}
+					setError(
+						failure instanceof Error
+							? failure.message
+							: "Could not load your subscription. Please try again.",
+					);
+					return false;
+				} finally {
+					if (current === version.current) setBusy(false);
 				}
-				setError(
-					failure instanceof Error
-						? failure.message
-						: "Could not load your subscription. Please try again.",
-				);
-			} finally {
-				if (current === version.current) setBusy(false);
-			}
+			})();
+			const entry = { version: version.current, departure, promise };
+			pendingRead.current = entry;
+			void promise.finally(() => {
+				if (pendingRead.current === entry) pendingRead.current = null;
+			});
+			return promise;
 		},
 		[ownerUserId],
 	);
+	const retireAccountDisplay = useCallback(() => {
+		validUntil.current = 0;
+		setOverview(null);
+		setPlanQuote(null);
+		setRenewalQuote(null);
+		setRenewalSelections({});
+	}, []);
 
 	useEffect(() => {
+		const abort = new AbortController();
+		lifetime.current = abort;
 		const remaining = snapshot
 			? serverSnapshotRemainingMs(snapshot.remainingMs)
 			: 0;
@@ -261,31 +321,26 @@ function BillingWorkspace({
 			validUntil.current = Date.now() + remaining;
 			displayTimer.current = setTimeout(() => {
 				validUntil.current = 0;
-				setOverview(null);
-				if (!trialAbort.current) void load(false);
+				if (!actionLock.current && document.visibilityState !== "hidden")
+					void load(false);
 			}, remaining);
 		} else void load(returnedFromPortal, true);
 		const onFocus = () => {
-			if (!actionLock.current) void load(false);
+			if (!actionLock.current && document.visibilityState !== "hidden")
+				void load(false);
 		};
 		const onBlur = () => {
-			++version.current;
-			trialAbort.current?.abort();
-			trialAbort.current = null;
-			actionLock.current = false;
-			clearTimeout(displayTimer.current);
-			setPlanQuote(null);
-			setBusy(false);
-			validUntil.current = 0;
-			setOverview(null);
+			++departures.current;
 		};
 		const onVisibility = () => {
 			if (document.visibilityState === "hidden") onBlur();
+			else onFocus();
 		};
 		window.addEventListener("focus", onFocus);
 		window.addEventListener("blur", onBlur);
 		document.addEventListener("visibilitychange", onVisibility);
 		return () => {
+			abort.abort();
 			clearTimeout(displayTimer.current);
 			version.current += 1;
 			window.removeEventListener("focus", onFocus);
@@ -296,6 +351,29 @@ function BillingWorkspace({
 			actionLock.current = false;
 		};
 	}, [load, returnedFromPortal, snapshot]);
+
+	useEffect(() => {
+		if (!overview) return;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const checkBoundary = () => {
+			const remaining =
+				billingDisplayValidityMs(overview, Infinity) -
+				(serverClock.current.time +
+					Date.now() -
+					serverClock.current.receivedAt -
+					Date.parse(overview.serverTime ?? ""));
+			if (!Number.isFinite(remaining)) return;
+			if (remaining <= 0) {
+				setOverview(null);
+				setPlanQuote(null);
+				setRenewalQuote(null);
+			} else
+				timer = setTimeout(checkBoundary, Math.min(remaining, 2_147_483_647));
+		};
+		// Real expiry is independent of display TTL; long dates must not overflow timers.
+		checkBoundary();
+		return () => clearTimeout(timer);
+	}, [overview]);
 
 	useEffect(() => {
 		if (!renewalQuote) return;
@@ -322,6 +400,7 @@ function BillingWorkspace({
 			actionLock.current = true;
 			const current = ++version.current;
 			const abort = new AbortController();
+			const departure = departures.current;
 			trialAbort.current = abort;
 			setBusy(true);
 			setError(null);
@@ -331,9 +410,22 @@ function BillingWorkspace({
 					action === "cancel"
 						? { requestId: (cancelRequestId.current ??= crypto.randomUUID()) }
 						: input;
+				await guardBillingNavigation(
+					ownerUserId,
+					abort.signal,
+					departures.current !== departure,
+					() => departures.current,
+				);
+				if (current !== version.current) return;
 				const result = await postTrialAction<
 					RenewalSetupResult | (TrialRenewalQuote & { state: "quoted" })
 				>(`renewal/${action}`, ownerUserId, body, abort.signal);
+				await guardBillingNavigation(
+					ownerUserId,
+					abort.signal,
+					departures.current !== departure,
+					() => departures.current,
+				);
 				if (current !== version.current || abort.signal.aborted) return;
 				if (result.state === "quoted") {
 					if (
@@ -378,8 +470,12 @@ function BillingWorkspace({
 					)
 						cancelRequestId.current = null;
 					const refreshedVersion = version.current + 1;
-					await load(true);
-					if (version.current === refreshedVersion && !abort.signal.aborted)
+					const accepted = await load(true, false, true);
+					if (
+						accepted &&
+						version.current === refreshedVersion &&
+						!abort.signal.aborted
+					)
 						setNotice(
 							result.state === "active"
 								? "Renewal is confirmed. Your original trial end stays the same."
@@ -390,6 +486,8 @@ function BillingWorkspace({
 				}
 			} catch (failure) {
 				if (current === version.current && !abort.signal.aborted) {
+					if (failure instanceof BillingOwnerChangedError)
+						retireAccountDisplay();
 					if (action === "quote") setRenewalQuote(null);
 					setError(
 						failure instanceof Error
@@ -408,7 +506,7 @@ function BillingWorkspace({
 				}
 			}
 		},
-		[load, ownerUserId],
+		[load, ownerUserId, retireAccountDisplay],
 	);
 
 	const trialSetupOperationId = trialSetupReturn?.operationId;
@@ -435,9 +533,17 @@ function BillingWorkspace({
 		if (actionLock.current) return;
 		actionLock.current = true;
 		const current = ++version.current;
+		const departure = departures.current;
 		setBusy(true);
 		setError(null);
 		try {
+			await guardBillingNavigation(
+				ownerUserId,
+				lifetime.current!.signal,
+				departure !== departures.current,
+				() => departures.current,
+			);
+			if (current !== version.current) return;
 			const result = await api<{ ownerUserId: string; quote?: TrialPlanQuote }>(
 				"/api/billing/trial-plan",
 				{
@@ -456,12 +562,18 @@ function BillingWorkspace({
 					}),
 				},
 			);
+			await guardBillingNavigation(
+				ownerUserId,
+				lifetime.current!.signal,
+				departure !== departures.current,
+				() => departures.current,
+			);
 			if (current !== version.current) return;
 			if (result.ownerUserId !== ownerUserId)
-				throw new Error("Your signed-in account changed. Reload this page.");
+				throw new BillingOwnerChangedError();
 			if (confirm) {
 				setPlanQuote(null);
-				await load(true);
+				await load(true, false, true);
 			} else if (result.quote) {
 				setPlanQuote({
 					subscriptionId,
@@ -472,6 +584,7 @@ function BillingWorkspace({
 				throw new Error("Could not review the plan change. Please try again.");
 		} catch (failure) {
 			if (current === version.current) {
+				if (failure instanceof BillingOwnerChangedError) retireAccountDisplay();
 				setPlanQuote(null);
 				setError(
 					failure instanceof Error
@@ -492,6 +605,7 @@ function BillingWorkspace({
 		if (actionLock.current) return;
 		actionLock.current = true;
 		const current = ++version.current;
+		const departure = departures.current;
 		setBusy(true);
 		setError(null);
 		setNotice(null);
@@ -511,10 +625,18 @@ function BillingWorkspace({
 			);
 			if (current !== version.current) return;
 			if (result.ownerUserId !== ownerUserId)
-				throw new Error("Your signed-in account changed. Reload this page.");
+				throw new BillingOwnerChangedError();
+			await guardBillingNavigation(
+				ownerUserId,
+				lifetime.current!.signal,
+				departure !== departures.current,
+				() => departures.current,
+			);
+			if (current !== version.current) return;
 			window.location.assign(result.url);
 		} catch (failure) {
 			if (current !== version.current) return;
+			if (failure instanceof BillingOwnerChangedError) retireAccountDisplay();
 			setError(
 				failure instanceof Error
 					? failure.message
@@ -595,7 +717,7 @@ export function BillingView({
 		quote: TrialPlanQuote;
 		requestId: string;
 	} | null;
-	load: (refresh: boolean) => Promise<void>;
+	load: (refresh: boolean) => Promise<unknown>;
 	changeTrial: (
 		subscriptionId: string,
 		planCode: "plus" | "pro",
