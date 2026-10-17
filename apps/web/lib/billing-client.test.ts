@@ -651,6 +651,9 @@ test("a pending cancellation never claims that an already enabled renewal is off
 		/Renewal remains enabled until cancellation is confirmed/i,
 	);
 	assert.doesNotMatch(container.textContent!, /No automatic charge/i);
+	const card = container.querySelector(".billing-summary-card")!;
+	assert.match(card.textContent!, /Renewal pending|View renewal status/);
+	assert.doesNotMatch(card.textContent!, /View plans|Choose a plan/);
 });
 
 test("an unresolved renewal remains recoverable after trial expiry instead of offering another purchase", async () => {
@@ -1390,6 +1393,56 @@ test("cardless summary links to pricing and never promises a paid renewal withou
 	assert.match(card.textContent!, /Free trial.*No automatic charge/);
 	assert.equal(card.querySelector("a")?.getAttribute("href"), "/pricing");
 	assert.doesNotMatch(card.textContent!, /Renews automatically|Next payment/);
+});
+
+test("enabled cardless renewal opens management without offering another plan or card", async () => {
+	const actions: string[] = [];
+	globalThis.fetch = async (path) => {
+		if (String(path).includes("/trial/renewal/")) {
+			actions.push(String(path));
+			return Response.json(renewalQuote);
+		}
+		return Response.json({
+			...cardless,
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					trial: {
+						...cardless.subscriptions[0].trial!,
+						renewalState: "enabled",
+						renewalEnabled: true,
+					},
+				},
+			],
+		});
+	};
+	await mount();
+	const card = container.querySelector(".billing-summary-card")!;
+	assert.match(card.textContent!, /Renewal is enabled/);
+	assert.doesNotMatch(
+		card.textContent!,
+		/Choose a plan|View plans|No automatic charge/,
+	);
+	const details = container.querySelector<HTMLDetailsElement>(
+		".billing-summary-management",
+	)!;
+	await act(async () => {
+		details.open = false;
+		details.dispatchEvent(new Event("toggle"));
+	});
+	assert.equal(details.open, false);
+	await act(async () => trialButton(/^Manage renewal\s*$/).click());
+	assert.equal(details.open, true);
+	assert.equal(document.activeElement, details.querySelector("summary"));
+	assert.deepEqual(actions, [], "opening management never changes billing");
+	assert.doesNotMatch(details.textContent!, /before adding a card/);
+	await act(async () => trialButton(/^Review changes$/).click());
+	assert.deepEqual(actions, ["/api/billing/trial/renewal/quote"]);
+	assert.ok(trialButton(/^Confirm renewal changes$/));
+	assert.doesNotMatch(details.textContent!, /Add card & enable renewal/);
+	assert.match(details.textContent!, /No payment today/);
+	assert.match(details.textContent!, /First payment/);
+	assert.ok(trialButton(/^Cancel trial renewal$/));
 });
 
 test("canceled paid renewal shows paid-through date rather than a next charge", async () => {

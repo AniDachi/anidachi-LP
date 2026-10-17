@@ -535,7 +535,7 @@ export function Pricing({
 					{showTrialTerms ? (
 						<p id="pricing-trial-terms" className="pricing-plans__trial-terms">
 							{offer?.trialMode === "cardless"
-								? "No card required. No automatic charge. One 3-day trial per eligible account."
+								? "One 3-day trial per eligible account. Changing plans does not restart it."
 								: "Card required. One trial per account. Cancel before your trial ends to avoid a charge."}
 						</p>
 					) : null}
@@ -673,7 +673,7 @@ function TierCardBody({
 	const unit = yearly ? "year" : "month";
 	const termsSummary =
 		trialOffered && offer?.trialMode === "cardless"
-			? `3 days free. Continue for ${recurringAmount}/${unit} only if you enable renewal.`
+			? "No card required. No automatic charge."
 			: offer?.action === "sign_in" && trialOffered
 				? `Then ${recurringAmount}/${unit} automatically.`
 				: offer?.action === "trial"
@@ -682,11 +682,13 @@ function TierCardBody({
 						? null
 						: `Renews at ${recurringAmount}/${unit}.`;
 	const termsDetail =
-		!offer || offer.action === "sign_in" || offer.action === "trial"
-			? null
-			: offer.action === "manage"
-				? "Manage your current plan and renewal in Account → Subscription."
-				: "Cancel renewal in Account → Subscription. No new free trial is included.";
+		trialOffered && offer?.trialMode === "cardless"
+			? `Continue for ${recurringAmount}/${unit} only if you enable renewal.`
+			: !offer || offer.action === "sign_in" || offer.action === "trial"
+				? null
+				: offer.action === "manage"
+					? "Manage your current plan and renewal in Account → Subscription."
+					: "Cancel renewal in Account → Subscription. No new free trial is included.";
 
 	return (
 		<>

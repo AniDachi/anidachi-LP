@@ -46,6 +46,7 @@ export function SubscriptionSummary({
 	const pending =
 		Boolean(trial?.pendingRenewal) || trial?.renewalState === "pending";
 	const enabled = trial?.renewalEnabled || trial?.renewalState === "enabled";
+	const manageTrialRenewal = Boolean(trial && (pending || enabled));
 	return (
 		<div className="billing-summary-card">
 			<div className="billing-summary-details">
@@ -89,13 +90,25 @@ export function SubscriptionSummary({
 				</p>
 			</div>
 			<div className="billing-summary-action">
-				<h3>{trial ? "Keep watching together" : "Manage your plan"}</h3>
+				<h3>
+					{trial
+						? pending
+							? "Renewal pending"
+							: enabled
+								? "Manage your renewal"
+								: "Keep watching together"
+						: "Manage your plan"}
+				</h3>
 				<p>
 					{trial
-						? "Choose a plan to continue after your trial."
+						? pending
+							? "Review the pending change and check its status."
+							: enabled
+								? "Review or cancel your renewal before the trial ends."
+								: "Choose a plan to continue after your trial."
 						: "Manage renewal and billing preferences."}
 				</p>
-				{trial ? (
+				{trial && !manageTrialRenewal ? (
 					<a className="billing-summary-button" href="/pricing">
 						View plans <ArrowRight size={20} aria-hidden />
 					</a>
@@ -106,7 +119,12 @@ export function SubscriptionSummary({
 						disabled={busy}
 						onClick={onManage}
 					>
-						Manage subscription <ArrowRight size={20} aria-hidden />
+						{trial
+							? pending
+								? "View renewal status"
+								: "Manage renewal"
+							: "Manage subscription"}{" "}
+						<ArrowRight size={20} aria-hidden />
 					</button>
 				)}
 			</div>
