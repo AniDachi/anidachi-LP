@@ -1,4 +1,4 @@
-import "./test-helpers/account-client-dom";
+import { dom } from "./test-helpers/account-client-dom";
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import * as React from "react";
@@ -55,6 +55,23 @@ afterEach(async () => {
 	refreshes = 0;
 	window.sessionStorage.clear();
 	delete (globalThis as { chrome?: unknown }).chrome;
+	dom.happyDOM.setURL("http://localhost/success");
+});
+test("a confirmed website purchase continues to getting started, with no onboarding token", async () => {
+  globalThis.fetch = async url => String(url) === "/api/billing/offer"
+    ? Response.json({ ownerUserId: "owner", action: "manage" })
+    : Response.json({ ok: true, planCode: "plus", checkoutComplete: true, checkoutSubscription: { status: "active", planCode: "plus" } });
+  await mount("cs_paid", "free", "owner");
+  await act(async () => new Promise(r => setTimeout(r, 20)));
+  assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
+});
+test("an account change after payment confirmation cannot redirect the replacement account", async () => {
+  globalThis.fetch = async url => String(url) === "/api/billing/offer"
+    ? Response.json({ ownerUserId: "another-owner", action: "manage" })
+    : Response.json({ ok: true, planCode: "plus", checkoutComplete: true, checkoutSubscription: { status: "active", planCode: "plus" } });
+  await mount("cs_paid", "free", "owner");
+  await act(async () => new Promise(r => setTimeout(r, 20)));
+  assert.notEqual(window.location.pathname, "/extension");
 });
 test("paid checkout returns only after its own successful verification", async () => {
 	const token = "cbe6173e-b4fb-4e1c-9df9-8c77e73016b1";

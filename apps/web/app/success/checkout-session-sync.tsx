@@ -22,6 +22,7 @@ import {
 import { INSTALL_CTA_LABEL } from "@/lib/install-cta";
 import { readOnboardingCheckout } from "@/lib/onboarding-return-client";
 import { OnboardingReturn } from "@/components/onboarding-return";
+import { WebsiteCheckoutReturn } from "@/components/website-checkout-return";
 
 export type SyncState = {
 	status: "syncing" | "synced" | "error" | "missing" | "inactive";
@@ -197,8 +198,9 @@ export function CheckoutSessionSync({
 			state={state}
 			onRetry={sessionId ? () => setRetry((n) => n + 1) : undefined}
 		>
-			{state.status === "synced" && state.onboardingReady && returnToken && ownerUserId ?
-				<OnboardingReturn token={returnToken} owner={ownerUserId} extensionId={extensionId} /> : null}
+			{state.status === "synced" && state.onboardingReady && ownerUserId ?
+				returnToken ? <OnboardingReturn key={`${ownerUserId}:${returnToken}`} token={returnToken} owner={ownerUserId} extensionId={extensionId} />
+				: <WebsiteCheckoutReturn key={`${ownerUserId}:${sessionId}`} owner={ownerUserId} /> : null}
 			{children}
 		</CheckoutSessionStatus>
 	);

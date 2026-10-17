@@ -260,7 +260,7 @@ test("cardless selection survives sign-in but only an explicit confirmation star
 	assert.equal(posts[0].body.planCode, "pro");
 	assert.equal(posts[0].body.billingPeriod, "monthly");
 	assert.equal(posts[0].body.offerRevision, cardlessOffer.trialOfferRevision);
-	assert.match(window.location.href, /\/account\/billing/);
+	assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
 });
 
 test("a changed offer or account never turns cardless consent into a card Checkout", async () => {
@@ -401,7 +401,7 @@ test("a harmless window blur keeps the same trial operation and revalidates its 
 	await act(async () =>
 		pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" })),
 	);
-	assert.match(window.location.href, /\/account\/billing/);
+	assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
 });
 
 test("the login context names the selected plan and billing period", () => {
@@ -1008,5 +1008,5 @@ test("unknown activation recovery bypasses new marker checks and keeps its origi
 	assert.equal(checks, 1);
 	assert.equal(starts, 1);
 	assert.equal(recoveries, 1);
-	assert.match(window.location.href, /account\/billing/);
+	assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
 });

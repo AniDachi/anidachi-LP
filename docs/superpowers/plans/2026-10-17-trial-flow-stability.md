@@ -91,3 +91,53 @@ Record exact checks, artifact hashes and deployment in the PR/build receipt.
 Rollback: revert this follow-up and reload the prior extension. Additive response
 fields can remain during mixed-version rollout; older packages use their normal
 Billing/success page, while a missing return bridge falls back on the website.
+
+## Website activation to getting started
+
+The owner approved this follow-up on October 18, based on staging `2be70005`,
+on `codex/website-trial-get-started`. Delivery is staging-only; production, main
+and Store publication remain excluded.
+
+- A normal website cardless activation redirects only after the existing server
+  result is `active`, to `/extension?welcome=1`. An exact completed paid Checkout
+  with its own active subscription uses the same destination after rechecking
+  the current owner. Leaving the page while that check is pending invalidates
+  the old owner read. Errors, pending activation, denial and cancellation retain
+  their existing paths. The extension onboarding token path remains unchanged.
+- The welcome query requests a presentation, never access. The server validates
+  the live website session and current-owner billing snapshot, and distinguishes
+  an actual active paid subscription, active trial, inactive access, missing
+  session and failed verification. Only a cardless trial without enabled or
+  pending renewal says `No card needed. No automatic charge.`
+- A one-shot timer follows the real trial/access end, accounting for server
+  lookup latency, initial document age and subsequent refresh request age.
+  Visible returns coalesce into one refresh; no recurring polling is added.
+  Loading/errors never create or retry a trial mutation, nor change a CTA into
+  paid consent.
+- An optional `anidachi:website-presence:v1` external message returns only
+  `{ type, installed: true }` to the exact configured channel website's top
+  frame. It does not read/write an installation key, sign an anti-abuse proof,
+  receive an account, or change auth/tour state. The website uses its existing
+  approved extension ID and a bounded one-second probe. Missing/old/disabled
+  extensions retain installation and manual platform choices.
+- Desktop offers YouTube, Crunchyroll and Netflix plus a short capsule hint.
+  Mobile offers a desktop link. The existing instruction content remains below.
+  Completed onboarding is never reset. Welcome variants are noindex; ordinary
+  `/extension` and its canonical stay intact. `/dev/extension-welcome` contains
+  sample data only and returns 404 outside development.
+- Existing anti-abuse cookies, installation proof, atomic claims, account trial
+  history, Stripe schedules and idempotency remain authoritative and unchanged.
+  No schema migration, secret/env variable, host permission, auth allowlist,
+  Worker or room event change is required.
+
+Verification: regression coverage for active/ended/pending/denied states,
+owner changes during deferred return, delayed hydration and refreshed snapshot
+expiry, malformed/late/aborted presence responses, mobile and focus coalescing.
+Inspect desktop/mobile fixtures and the exact loaded staging artifact; fixture
+evidence does not replace a real staging account trial/payment acceptance.
+Record CI, deployment, graph status and artifact hashes in the delivery PR.
+
+Rollback: revert this follow-up on staging and reload the previous extension.
+Trial and billing data are untouched. New and old packages remain compatible:
+missing presence detection is a manual installation/platform-choice fallback,
+and the previous website retains its Billing/success destination.

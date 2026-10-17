@@ -14,10 +14,19 @@ import {
 import { extensionInstallFaq } from "@/lib/extension-install-faq";
 import { extensionUsingSteps } from "@/lib/extension-using-guide";
 import { INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { cookies } from "next/headers";
+import { getSession } from "@/lib/anidachi-auth/session";
+import { REFRESH_TOKEN_COOKIE } from "@/lib/anidachi-auth/cookies";
+import { resolveWebsiteSession } from "@/lib/anidachi-auth/website-session";
+import { createBillingService } from "@/lib/anidachi-auth/billing";
+import { loadBillingSnapshot } from "@/lib/anidachi-auth/billing-snapshot";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
+import { resolveExtensionWelcome, type ExtensionWelcome } from "@/lib/extension-welcome";
+import { billingDisplayValidityMs } from "@/lib/billing-view";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: "Install AniDachi Chrome Extension",
   description:
     "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll, YouTube, and Netflix watchrooms.",
@@ -62,8 +71,32 @@ const howToSteps = [
   },
 ];
 
-export default function ExtensionInstallPage() {
+type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  return (await searchParams)?.welcome === "1"
+    ? { ...metadata, robots: { index: false, follow: false } }
+    : metadata;
+}
+
+export default async function ExtensionInstallPage({ searchParams }: PageProps) {
   const artifact = toPublicExtensionArtifact(getExtensionArtifact());
+  let welcome: ExtensionWelcome | undefined;
+  let owner: string | undefined;
+  if ((await searchParams)?.welcome === "1") {
+    try {
+      const session = await getSession();
+      owner = session?.userId;
+      if (!session) welcome = { kind: "sign_in" };
+      else {
+        const snapshot = await loadBillingSnapshot(session.userId, {
+          websiteUser: async () => resolveWebsiteSession((await cookies()).get(REFRESH_TOKEN_COOKIE)?.value),
+          overview: userId => createBillingService().overview(userId),
+        });
+        welcome = snapshot ? resolveExtensionWelcome(snapshot.overview,
+          billingDisplayValidityMs(snapshot.overview) - snapshot.remainingMs) : { kind: "error" };
+      }
+    } catch { welcome = { kind: "error" }; }
+  }
 
   return (
     <>
@@ -111,7 +144,8 @@ export default function ExtensionInstallPage() {
               </div>
             }
           >
-            <ExtensionInstallHub artifact={artifact} />
+            <ExtensionInstallHub key={owner ?? "public"} artifact={artifact} welcome={welcome}
+              extensionId={welcome ? readApprovedExtensionClientId() : null} />
           </Suspense>
         </div>
       </main>
