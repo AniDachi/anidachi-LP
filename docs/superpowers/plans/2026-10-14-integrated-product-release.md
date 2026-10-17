@@ -21,7 +21,16 @@ Netflix, cardless-trial and player-onboarding plans.
 - English extension copy; preserve approved opaque matte UI and working media behavior.
 - Staging stays password gated/noindex; analytics stays disabled there per owner.
 
-## Current inventory (2026-10-14)
+## October 17 release-preparation checkpoint
+
+The owner authorized a production-channel 0.1.3 review ZIP with onboarding enabled,
+then deferred Store publication and a separately authorized production launch.
+See the [coordinated launch runbook](../../releases/integrated-release-2026-10-17.md)
+for the refreshed production baseline and remaining manual acceptance gates.
+Two-fresh-account abuse acceptance is owner-deferred. The inventory below is
+historical; it is not the final accepted artifact manifest.
+
+## Historical inventory (2026-10-14)
 
 | Part | State | Remaining gate |
 | --- | --- | --- |
@@ -61,7 +70,7 @@ final polish: `c62dd1e5535412c49d3741cca6ad8b4916629bb744113350d50f279778b94225`
   neutral V key, balanced yellow/green, darker matte drawer and Interface divider removal.
 - [x] Accept the local onboarding design and prepare its selective staging integration
   from 7140b9d4 without replacing the approved drawer or request-cost fixes.
-- [ ] Plan intentional tour enablement for the final production release at all three guards: overlay mount,
+- [x] Plan intentional tour enablement for the final production release at all three guards: overlay mount,
   content keyboard guard and background claim. Preserve sender validation and cleanup.
 - [ ] Verify fresh install and upgrade: absent `anidachi.playerIntroductionSeen.v3`
   means tour eligible; preserve seen state across patch updates. No surprise replay.
@@ -99,13 +108,14 @@ version/channel/hash and test accounts' roles without tokens or personal data.
 
 - [ ] Refresh live production schema/flags/billing/deploy state read-only.
 - [ ] Prepare promotion from the accepted candidate preserving current main SEO.
-  Source delta currently lists six additive migrations: 20261007235706,
-  20261011124600,20261011132247,20261011135040,20261011153028,20261011161158.
-  Recheck against actual migration ledger; never blindly replay.
+  October 17 read-only ledger comparison finds eight pending migrations, including
+  abuse guards and offer preflight; exact versions are in the launch runbook.
+  Recheck against the live ledger; never blindly replay.
 - [ ] Define a real schema-before-app gate. A main push starts `db-production.yml`
   and Vercel independently; one broad merge does not impose deployment order.
   Prepare a separately authorized dormant-schema promotion or approved pre-apply,
-  verify its completed ledger with activation/trial starts/scheduler off, then
+  verify its completed ledger with new cardless starts/enforcement/delivery off
+  and existing paid-hosting policy preserved, then
   promote dependent application code. New billing reads the trial table even
   when new trial starts are disabled; a flag alone cannot protect missing schema.
 - [ ] Check highest uploaded Store version before choosing the next version.
@@ -113,8 +123,10 @@ version/channel/hash and test accounts' roles without tokens or personal data.
   VAPID match, narrow approved provider permissions and licenses; exclude QA pages.
 - [ ] After combined staging acceptance and package authorization, build the
   production-channel review ZIP from the frozen accepted source without deploying
-  production. Validate and hash it; verify compatibility with current backend as
-  well as the staged new backend, and prepare reviewer access/instructions.
+  production. Validate and hash it against the staged new backend and prepare
+  truthful reviewer access/instructions. As in the prior owner-directed release,
+  full new-client flows against the old backend are not required for review ZIP
+  preparation; old clients against the new backend remain mandatory.
 - [ ] Record privacy/listing changes and release notes; Netflix/onboarding/trial
   descriptions must match accepted behavior.
 - [ ] Prepare rollback per plane: additive schema retained; compatible Web keeps
@@ -134,7 +146,8 @@ version/channel/hash and test accounts' roles without tokens or personal data.
   and activation prerequisites without changing existing monthly subscriptions.
   Verify old clients still create/join/end and retain paid access.
 - [ ] Smoke approved production paths, confirm the accepted Store version is
-  published, then activate only the agreed flags and recorded transition UUID/T.
+  published, with only the separately agreed new-mode flags activated. Preserve
+  the already-applied October 3 hosting transition; never replay its UUID/T.
   Do not silently rebuild a different ZIP after Store review; source/package
   changes require renewed verification and review where applicable.
 - [ ] Compare equal-length traffic-normalized cost/error periods. Separate delayed
@@ -145,6 +158,6 @@ version/channel/hash and test accounts' roles without tokens or personal data.
 Cardless receipts already include accelerated expiry/no-charge, payment decline,
 3DS and recovery; do not repeat all historic tests unless final changes touch them.
 Crunchyroll cardless legacy check was deferred. Real Netflix ad-plan acceptance is
-not established. Staging analytics off is intentional. No production or Store-ready
-claim follows from unit tests alone. The immediate implementation is cost reduction;
-UI transfer and final combined acceptance follow in their own reviewed block.
+not established. Staging analytics off is intentional. No production-ready claim follows from unit tests alone. Final production
+onboarding, package verification and launch preparation are now authorized;
+manual combined acceptance remains recorded separately in the launch runbook.

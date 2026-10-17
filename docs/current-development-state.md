@@ -13,7 +13,10 @@ server, database policy or Store publication is changed by this preparation.
 The integrated release plan remains the acceptance checklist; actual fresh-account
 abuse acceptance, two-client provider checks and Store update permission handling
 must not be inferred from passing unit tests. Exact source/artifact identities and
-remaining gates belong to the release receipt.
+remaining gates belong to the release receipt and the
+[coordinated launch runbook](releases/integrated-release-2026-10-17.md). Production
+read-only preflight confirms hosting is already active from October 3, with eight
+pending additive migrations; the old hosting cutover must not be replayed.
 
 ## Player input and camera-state candidate, October 17, 2026
 
