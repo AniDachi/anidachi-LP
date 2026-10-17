@@ -82,11 +82,46 @@ describe("privileged overlay wiring", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
 		vi.unstubAllGlobals();
+		vi.unstubAllEnvs();
 		document.body.replaceChildren();
 		extensionStorage.values.clear();
 		vi.mocked(listInviteTargets).mockReset();
 		vi.mocked(listRoomInvites).mockReset();
 		vi.mocked(createRoomInvite).mockReset();
+	});
+
+	it("shows the first-run tour in the production overlay without creating a room or capturing media", async () => {
+		vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
+		vi.useFakeTimers();
+		vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+		vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, left: 0, top: 0, right: 1280, bottom: 720, width: 1280, height: 720, toJSON() {} });
+		const capture = vi.fn();
+		vi.stubGlobal("navigator", Object.assign(Object.create(navigator), { mediaDevices: { getUserMedia: capture } }));
+		const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
+			if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: null };
+			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") return { ok: true, record: null, legacyPrefix: null };
+			if (message.type === "ANIDACHI_PLAYER_INTRODUCTION") return { allowed: true };
+			return { ok: false };
+		});
+		installOverlayRuntime(sendMessage);
+		Object.assign(chrome.runtime, { getURL: (path: string) => `chrome-extension://test/${path}` });
+		const view = await renderOverlay(adapter => {
+			Object.defineProperty(adapter.video, "readyState", { value: 4 });
+			vi.spyOn(adapter, "getPlaybackSnapshot").mockReturnValue({ phase: "content", playing: true } as ReturnType<VideoAdapter["getPlaybackSnapshot"]>);
+		});
+		document.body.append(view.adapter.video);
+		try {
+			for (let tick = 0; tick < 6; tick++) {
+				await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+			}
+			expect(view.container.querySelector(".player-introduction [data-tour-target='launcher']")).not.toBeNull();
+			expect(sendMessage.mock.calls.filter(([message]) => message.type === "ANIDACHI_PLAYER_INTRODUCTION")).toHaveLength(1);
+			expect(privilegedInvokes(sendMessage)).toHaveLength(0);
+			expect(capture).not.toHaveBeenCalled();
+		} finally {
+			await unmount(view.root);
+			vi.useRealTimers();
+		}
 	});
 
 	it("keeps normal leave exact and does not expose broad room recovery", () => {
@@ -4294,7 +4329,7 @@ function deferred<T>(): {
 	return { promise, resolve };
 }
 
-async function renderOverlay(): Promise<{
+async function renderOverlay(prepare?: (adapter: VideoAdapter) => void): Promise<{
 	container: HTMLDivElement;
 	root: Root;
 	adapter: VideoAdapter;
@@ -4312,6 +4347,7 @@ async function renderOverlay(): Promise<{
 	document.body.append(container);
 	const root = createRoot(container);
 	const adapter = createAdapter(container, video);
+	prepare?.(adapter);
 	await act(async () => {
 		root.render(
 			<overlayApp.OverlayApp adapter={adapter} />,

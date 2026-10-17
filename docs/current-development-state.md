@@ -1,5 +1,23 @@
 # Current Development State
 
+## Integrated release preparation, October 17, 2026
+
+The owner authorized preparing a production-channel review ZIP with the accepted
+onboarding enabled, followed by deferred Store publication and a separately
+authorized production launch after approval. `codex/integrated-release-candidate`
+starts from staging `847e9d16`. The overlay mount, document-start keyboard guard
+and background claim now use the same behavior in every channel. The existing
+installation-local seen key and sender validation are preserved. No production
+server, database policy or Store publication is changed by this preparation.
+
+The integrated release plan remains the acceptance checklist; actual fresh-account
+abuse acceptance, two-client provider checks and Store update permission handling
+must not be inferred from passing unit tests. Exact source/artifact identities and
+remaining gates belong to the release receipt and the
+[coordinated launch runbook](releases/integrated-release-2026-10-17.md). Production
+read-only preflight confirms hosting is already active from October 3, with eight
+pending additive migrations; the old hosting cutover must not be replayed.
+
 ## Player input and camera-state candidate, October 17, 2026
 
 The [four-finding repair plan](superpowers/plans/2026-10-17-netflix-input-media-fixes.md)
@@ -74,8 +92,9 @@ Escape and lifecycle interruptions retain their cleanup and ownership checks.
 This is a staging candidate, not loaded-extension or production acceptance. The
 [onboarding plan](superpowers/plans/2026-10-10-player-onboarding-local.md) records
 behavior, local evidence, packaging and reset instructions. The exact PR, merged
-SHA and immutable artifact receipt belong in the delivery report. All three
-production guards remain disabled; main/Store release requires separate approval.
+SHA and immutable artifact receipt belong in the delivery report. At that October 14 checkpoint all three production guards were disabled.
+The October 17 release preparation above enables them; deployment/publication
+remain separate gates.
 
 ## Request-cost follow-up candidate, October 14, 2026
 

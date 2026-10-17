@@ -270,9 +270,8 @@ export default defineBackground(() => {
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === PLAYER_INTRODUCTION_MESSAGE) {
-      // Local/staging review only. Not enabled in production packages.
+      // Every release channel shares the same installation-local claim.
       if (
-        import.meta.env.WXT_EXTENSION_CHANNEL === "production" ||
         sender.id !== chrome.runtime.id ||
         !Number.isInteger(sender.tab?.id)
       ) {

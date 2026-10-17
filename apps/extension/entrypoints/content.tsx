@@ -334,10 +334,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
 }
 
 function installMessageComposerKeyboardGuard(): () => void {
-  const releaseIntroductionGuard =
-    import.meta.env.WXT_EXTENSION_CHANNEL !== "production"
-      ? installPlayerIntroductionKeyboardGuard()
-      : () => {};
+  const releaseIntroductionGuard = installPlayerIntroductionKeyboardGuard();
   const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
