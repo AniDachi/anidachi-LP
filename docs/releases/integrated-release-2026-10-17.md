@@ -67,10 +67,12 @@ analytics delivery default off. The marker cleanup cron is bounded in Postgres.
 Never infer schema readiness from a Web build or a disabled trial flag: new
 billing code reads the new tables even while trial starts are disabled.
 
-## Ordered delivery after Store approval and owner authorization
+## Ordered delivery from review preparation to authorized launch
 
-1. **Freeze and review.** Complete the acceptance table below. Owner submits the
-   exact ZIP with deferred publication (automatic publication disabled). Keep
+1. **Freeze and review.** Record every acceptance item below as passed, deferred
+   or pending; post-deployment checks happen at their designated launch stages.
+   Owner-deferred account tests are not required to prepare the review archive.
+   Owner submits the exact ZIP with deferred publication (automatic publication disabled). Keep
    the current production serving during review. Record approval/package hash;
    agree a launch window. Do not replace the submitted artifact silently.
 2. **Refresh configuration read-only.** Verify live schema, existing policy,
