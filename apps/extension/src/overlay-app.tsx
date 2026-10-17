@@ -79,6 +79,7 @@ import {
 	shouldCaptureReactionShortcutEvent,
 	shouldStopVoiceTalkOnWindowBlur,
 } from "./hotkeys";
+import { registerOverlayKeyboardHandlers } from "./overlay-keyboard-router";
 import { attachAndPlayVideoElement } from "./media-element-playback";
 import type {
 	IncomingP2PSignal,
@@ -5664,13 +5665,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 
+		if (pushToTalkHeldRef.current) stopPushToTalk();
 		setPanelOpen(false);
 		setMessageComposerOpen(true);
 		setMessageComposerEmojiOpen(false);
 		window.requestAnimationFrame(() => {
 			messageComposerInputRef.current?.focus({ preventScroll: true });
 		});
-	}, [activateMessageComposerGuard, deactivateMessageComposerGuard, roomId]);
+	}, [activateMessageComposerGuard, deactivateMessageComposerGuard, roomId, stopPushToTalk]);
 
 	const blurMessageComposerInput = useCallback(() => {
 		const input = messageComposerInputRef.current;
@@ -5841,6 +5843,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		});
 
 		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.isComposing || event.keyCode === 229) return;
 			if (isWithinOverlayHotkeyBoundary(event)) {
 				return;
 			}
@@ -5980,14 +5983,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 		};
 
-		window.addEventListener("keydown", handleKeyDown, true);
-		window.addEventListener("keyup", handleKeyUp, true);
+		const releaseKeyboardHandlers = registerOverlayKeyboardHandlers({
+			keydown: handleKeyDown,
+			keyup: handleKeyUp,
+		});
 		window.addEventListener("blur", handleBlur);
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 
 		return () => {
-			window.removeEventListener("keydown", handleKeyDown, true);
-			window.removeEventListener("keyup", handleKeyUp, true);
+			releaseKeyboardHandlers();
 			window.removeEventListener("blur", handleBlur);
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};

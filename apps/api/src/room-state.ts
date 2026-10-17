@@ -845,6 +845,22 @@ export class RoomState {
   }
 
   private normalizePersistedParticipant(participant: Participant): Participant {
+    if (this.media) {
+      const grant = this.media.participants.find(
+        state => state.participantSessionId === participant.participantSessionId,
+      );
+      // v2/v3 participants intentionally have no legacy mediaSeat. Preserve a
+      // reported publication across hibernation only for its authorized session;
+      // a grant by itself never means that the camera actually started.
+      return {
+        ...participant,
+        cameraEnabled: participant.cameraEnabled && participant.connected !== false &&
+          grant?.cameraGranted === true &&
+          (this.media.capabilities.mediaProtocolVersion === 2 || ("mediaSeatGranted" in grant && grant.mediaSeatGranted)),
+        mediaSeat: "none",
+        mediaSeatSource: undefined,
+      };
+    }
     if (participant.mediaSeat === "joined") {
       return {
         ...participant,

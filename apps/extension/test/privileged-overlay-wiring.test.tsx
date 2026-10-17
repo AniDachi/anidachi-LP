@@ -2690,6 +2690,111 @@ describe("privileged overlay wiring", () => {
 		},
 	);
 
+  describe.each(["www.netflix.com", "www.youtube.com", "www.crunchyroll.com"])("player keyboard isolation on %s", (hostname) => {
+    async function setup(nativeBeforeOverlay = false) {
+      const previousLocation = Object.getOwnPropertyDescriptor(window, "location")!;
+      Object.defineProperty(window, "location", {configurable: true, value: new URL(`https://${hostname}/watch/123`)});
+      const lifecycle = startContentLifecycle({detect: () => ({status: "none"}), ensureStyles: () => {}, startProviderStudy: () => null});
+      const native = vi.fn();
+      const listen = () => { for (const type of ["keydown", "keyup", "keypress"]) window.addEventListener(type, native, true); };
+      if (nativeBeforeOverlay) listen();
+      const runtime = installRoomDefaultsRuntime(3, {voiceMode: "push-to-talk", cameraEnabled: false});
+      const view = await renderOverlay();
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+      if (!nativeBeforeOverlay) listen();
+      const key = async (type: string, init: KeyboardEventInit = {}, target: EventTarget = window) => {
+        const event = new KeyboardEvent(type, {key: "v", code: "KeyV", bubbles: true, cancelable: true, ...init});
+        await act(async () => { target.dispatchEvent(event); });
+        return event;
+      };
+      return {runtime, view, native, key, async dispose() {
+        await unmount(view.root); lifecycle.dispose();
+        for (const type of ["keydown", "keyup", "keypress"]) window.removeEventListener(type, native, true);
+        Object.defineProperty(window, "location", previousLocation);
+      }};
+    }
+    it("stops held voice when chat opens, before a release can be swallowed", async () => {
+      const f = await setup();
+      try {
+        await f.key("keydown"); await f.runtime.ack("microphone");
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(true);
+        await f.key("keydown", {key: "c", code: "KeyC", altKey: true});
+        expect(f.view.container.querySelector(".message-composer input")).not.toBeNull();
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+        await f.key("keyup", {shiftKey: true});
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+      } finally { await f.dispose(); }
+    });
+    it("captures held V repeats without starting another publication or leaking player keys", async () => {
+      const f = await setup();
+      try {
+        await f.key("keydown"); await f.runtime.ack("microphone");
+        f.runtime.microphone.mockClear(); f.native.mockClear();
+        expect((await f.key("keydown", {repeat: true})).defaultPrevented).toBe(true);
+        await f.key("keypress", {repeat: true});
+        expect(f.runtime.microphone).not.toHaveBeenCalled();
+        await f.key("keyup");
+        expect(f.native).not.toHaveBeenCalled();
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+      } finally { await f.dispose(); }
+    });
+    it("keeps room shortcuts ahead of provider handlers installed before React mounts", async () => {
+      const f = await setup(true);
+      try {
+        await f.key("keydown"); await f.runtime.ack("microphone"); await f.key("keyup");
+        expect(f.native).not.toHaveBeenCalled();
+        await f.key("keydown", {key: "ArrowRight", code: "ArrowRight"});
+        expect(f.native).toHaveBeenCalledOnce();
+      } finally { await f.dispose(); }
+    });
+    it("leaves typing, IME and modified V to the page without requesting the microphone", async () => {
+      const f = await setup(true);
+      const input = document.createElement("input"); document.body.append(input);
+      try {
+        for (const init of [{ctrlKey: true}, {metaKey: true}, {altKey: true}, {shiftKey: true}, {isComposing: true}, {keyCode: 229}]) {
+          expect((await f.key("keydown", init)).defaultPrevented).toBe(false);
+        }
+        expect((await f.key("keydown", {}, input)).defaultPrevented).toBe(false);
+        expect(f.runtime.enabledIntents()).toEqual([]);
+        await selectQuickMicrophoneMode(f.view.container, "open-mic");
+        await f.runtime.ack("microphone");
+        f.native.mockClear();
+        expect((await f.key("keydown")).defaultPrevented).toBe(false);
+        await f.key("keyup");
+        expect(f.native).toHaveBeenCalledTimes(2);
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(true);
+      } finally { input.remove(); await f.dispose(); }
+    });
+    it.each(["blur", "hidden"])("stops held voice on %s and does not restart on repeated V", async (reason) => {
+      const f = await setup();
+      try {
+        await f.key("keydown"); await f.runtime.ack("microphone");
+        await act(async () => {
+          if (reason === "blur") window.dispatchEvent(new Event("blur"));
+          else {
+            Object.defineProperty(document, "visibilityState", {configurable: true, value: "hidden"});
+            document.dispatchEvent(new Event("visibilitychange"));
+          }
+        });
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+        await f.key("keydown", {repeat: true});
+        expect(f.runtime.microphone.mock.calls.at(-1)?.[0]).toBe(false);
+        await f.key("keyup");
+      } finally { Reflect.deleteProperty(document, "visibilityState"); await f.dispose(); }
+    });
+    it("leaves Enter on a native player button to that button", async () => {
+      const f = await setup(true);
+      const control = document.createElement("button"); document.body.append(control);
+      try {
+        const event = await f.key("keydown", {key: "Enter", code: "Enter"}, control);
+        expect(event.defaultPrevented).toBe(false);
+        expect(f.view.container.querySelector(".message-composer input")).toBeNull();
+      } finally { control.remove(); await f.dispose(); }
+    });
+  });
+
 	it("dismisses media rejection feedback without replaying it on room snapshots", async () => {
 		const runtime = installRoomDefaultsRuntime(3, {cameraEnabled: true});
 		const timers = vi.spyOn(window, "setTimeout");

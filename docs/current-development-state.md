@@ -1,5 +1,19 @@
 # Current Development State
 
+## Player input and camera-state candidate, October 17, 2026
+
+The [four-finding repair plan](superpowers/plans/2026-10-17-netflix-input-media-fixes.md)
+adds stable document-start routing for room hotkeys, releases held push-to-talk
+when opening chat, preserves Enter activation on native player controls, and
+restores reported camera state from the matching v2/v3 media grant after Worker
+hibernation. It preserves YouTube/Crunchyroll paths, legacy rooms, open-mic choice,
+onboarding priority, protocol shapes and request-cost optimizations.
+
+This is a staging-only candidate. Exact tests, CI, Worker deployment and extension
+artifact identity belong to its PR. Loaded-artifact and two-client acceptance
+remain distinct from local integration/runtime tests; production and Store are
+not part of this delivery.
+
 ## Trial offer preflight candidate, October 16, 2026
 
 The approved follow-up checks account authority plus the signed browser and optional
