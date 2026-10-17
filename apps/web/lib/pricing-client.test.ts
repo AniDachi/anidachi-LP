@@ -211,12 +211,12 @@ test("public monthly and annual plans render without any server catalog", async 
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
 	assert.match(html, /Yearly/);
-	assert.match(html, /Choose Plus/);
+	assert.match(html, /Loading options for Plus/);
 	assert.doesNotMatch(
 		html,
 		/Try 3 days free|One trial per account|Card required/,
 	);
-	assert.match(html, /Renews at \$76\.70\/year/);
+	assert.doesNotMatch(html, /Renews at/);
 	globalThis.fetch = async () => Response.json({}, { status: 503 });
 	const el = await mount();
 	assert.equal(el.querySelector('[role="alert"]'), null);
@@ -225,7 +225,7 @@ test("public monthly and annual plans render without any server catalog", async 
 	assert.match(el.textContent!, /\$7\.99/);
 	assert.match(el.textContent!, /\$14\.99/);
 	assert.match(el.textContent!, /Choose Plus/);
-	assert.match(el.textContent!, /Renews at \$7\.99\/month/);
+	assert.doesNotMatch(el.textContent!, /Renews at/);
 });
 
 test("guest pricing advertises a trial only while the server offers it", async () => {
@@ -263,7 +263,7 @@ test("guest pricing advertises a trial only while the server offers it", async (
 	}
 });
 
-test("a public trial click cannot silently start a paid subscription for an ineligible account", async () => {
+test("initial unknown availability cannot accept a trial or paid choice until the terms are known", async () => {
 	const lookup = deferred<Response>();
 	let checkouts = 0;
 	const requests: Record<string, unknown>[] = [];
@@ -276,17 +276,15 @@ test("a public trial click cannot silently start a paid subscription for an inel
 		});
 	};
 	const el = await mount();
-	assert.match(plusButton(el).textContent!, /Choose Plus/);
+	assert.match(plusButton(el).textContent!, /Loading options for Plus/);
+	assert.equal(plusButton(el).disabled, true);
 	await act(async () => plusButton(el).click());
 	lookup.resolve(
 		Response.json({ ...offer, action: "subscribe", trialAvailable: false }),
 	);
 	await act(async () => {});
 	assert.equal(checkouts, 0);
-	assert.match(
-		el.textContent!,
-		/A free trial is not available for this account/,
-	);
+	assert.equal(el.querySelector('[role="alert"]'), null);
 	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
 	assert.doesNotMatch(el.textContent!, /Try 3 days free/);
 	await act(async () => plusButton(el).click());
@@ -322,7 +320,7 @@ test("availability errors appear only after purchase intent and can be retried",
 	assert.equal(window.location.href, "https://checkout.stripe.com/recovered");
 });
 
-test("a click during a slow account lookup keeps prices and shares one lookup", async () => {
+test("slow initial availability keeps prices and one neutral pending button until explicit confirmation", async () => {
 	const lookup = deferred<Response>();
 	const urls: string[] = [];
 	globalThis.fetch = async (url) => {
@@ -333,7 +331,7 @@ test("a click during a slow account lookup keeps prices and shares one lookup", 
 	};
 	const el = await mount();
 	assert.match(el.textContent!, /\$76\.70/);
-	assert.equal(plusButton(el).disabled, false);
+	assert.equal(plusButton(el).disabled, true);
 	await act(async () => {
 		plusButton(el).click();
 		plusButton(el).click();
@@ -342,6 +340,8 @@ test("a click during a slow account lookup keeps prices and shares one lookup", 
 	assert.ok(plusButton(el).disabled);
 	lookup.resolve(Response.json({ ...offer, yearlyPrices }));
 	await act(async () => {});
+	assert.deepEqual(urls, ["/api/billing/offer"]);
+	await act(async () => plusButton(el).click());
 	assert.deepEqual(urls, [
 		"/api/billing/offer",
 		"/api/create-checkout-session",
@@ -388,7 +388,7 @@ test("an expired offer refresh cannot turn a trial click into a paid subscriptio
 	};
 	const el = await mount();
 	await act(async () => t.mock.timers.tick(60_000));
-	assert.doesNotMatch(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
 	await act(async () => plusButton(el).click());
 	refresh.resolve(Response.json({ ...offer, action: "subscribe" }));
 	await act(async () => {});
@@ -406,7 +406,7 @@ test("server-rendered pricing shows published prices before the account request"
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Choose Plus/);
+	assert.match(html, /Loading options for Plus/);
 	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
 	assert.match(html, /Yearly|Save 20%/);
 });
@@ -420,7 +420,7 @@ test("published yearly pricing is present in server HTML before account availabi
 	);
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
-	assert.match(html, /Choose Plus/);
+	assert.match(html, /Loading options for Plus/);
 	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
 });
 
@@ -430,16 +430,139 @@ test("returning to the tab keeps prices visible while account availability is re
 	globalThis.fetch = async () =>
 		++reads === 1 ? Response.json(offer) : refresh.promise;
 	const el = await mount();
+	await act(async () => window.dispatchEvent(new Event("blur")));
 	await act(async () => window.dispatchEvent(new Event("focus")));
 	assert.match(el.textContent!, /\$76\.70/);
 	assert.match(el.textContent!, /\$143\.90/);
-	assert.doesNotMatch(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
 	assert.equal(plusButton(el).disabled, false);
 	refresh.resolve(
 		Response.json({ ...offer, ownerUserId: "other", action: "subscribe" }),
 	);
 	await act(async () => {});
 	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
+});
+
+test("a sent checkout survives backgrounding, keeps its label and rechecks owner before redirect", async () => {
+	const checkout = deferred<Response>();
+	let reads = 0,
+		posts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer") {
+			reads++;
+			return Response.json(offer);
+		}
+		posts++;
+		return checkout.promise;
+	};
+	const el = await mount();
+	const label = plusButton(el).textContent;
+	await act(async () => plusButton(el).click());
+	Object.defineProperty(document, "visibilityState", {
+		configurable: true,
+		value: "hidden",
+	});
+	try {
+		await act(async () =>
+			document.dispatchEvent(new Event("visibilitychange")),
+		);
+		await act(async () =>
+			checkout.resolve(
+				Response.json({ url: "https://checkout.stripe.com/preserved" }),
+			),
+		);
+		assert.notEqual(
+			window.location.href,
+			"https://checkout.stripe.com/preserved",
+		);
+		assert.equal(plusButton(el).textContent, label);
+		assert.equal(plusButton(el).disabled, true);
+		Reflect.deleteProperty(document, "visibilityState");
+		await act(async () => {
+			document.dispatchEvent(new Event("visibilitychange"));
+			window.dispatchEvent(new Event("focus"));
+		});
+		assert.equal(window.location.href, "https://checkout.stripe.com/preserved");
+		assert.equal(posts, 1);
+		assert.equal(reads, 2);
+	} finally {
+		Reflect.deleteProperty(document, "visibilityState");
+	}
+});
+
+test("a known replacement owner clears the old trial display even if its marker check fails", async () => {
+	let owner = "owner";
+	globalThis.fetch = async () =>
+		Response.json({ ...offer, trialMode: "cardless", ownerUserId: owner });
+	const el = await mount({}, (value) =>
+		value.ownerUserId === "owner"
+			? Response.json({ state: "ready", ownerUserId: owner, offer: value })
+			: Response.json(
+					{ state: "unavailable", ownerUserId: owner },
+					{ status: 503 },
+				),
+	);
+	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	owner = "other";
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.doesNotMatch(plusButton(el).textContent!, /trial/);
+	assert.doesNotMatch(el.textContent!, /No automatic charge/);
+});
+
+test("a clicked pending offer check survives blur and focus for the same owner", async () => {
+	const lookup = deferred<Response>();
+	let reads = 0,
+		posts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return ++reads === 2 ? lookup.promise : Response.json(offer);
+		posts++;
+		return Response.json({
+			url: "https://checkout.stripe.com/retained-choice",
+		});
+	};
+	const el = await mount();
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	await act(async () => plusButton(el).click());
+	await act(async () => {
+		window.dispatchEvent(new Event("blur"));
+		window.dispatchEvent(new Event("focus"));
+	});
+	await act(async () => lookup.resolve(Response.json(offer)));
+	assert.equal(
+		window.location.href,
+		"https://checkout.stripe.com/retained-choice",
+	);
+	assert.equal(posts, 1);
+	assert.equal(el.querySelector('[role="alert"]'), null);
+});
+
+test("monthly selection is present in the initial pricing render without annual prices", () => {
+	const html = renderToStaticMarkup(
+		React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(Pricing, {
+			initialPeriod: "monthly",
+		}),
+	);
+	assert.match(html, /\$7\.99/);
+	assert.doesNotMatch(html, /\$76\.70|Billed.*year/);
+});
+
+test("returning after an account change supersedes the initial pending lookup", async () => {
+	const old = deferred<Response>();
+	let reads = 0;
+	globalThis.fetch = async () =>
+		++reads === 1
+			? old.promise
+			: Response.json({ ...offer, ownerUserId: "other", action: "subscribe" });
+	const el = await mount();
+	await act(async () => {
+		window.dispatchEvent(new Event("blur"));
+		window.dispatchEvent(new Event("focus"));
+	});
+	await act(async () => old.resolve(Response.json(offer)));
+	assert.equal(reads, 2);
+	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
+	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
 });
 
 test("expired availability disables stale trial and hosting promises without erasing prices", async (t) => {
@@ -453,7 +576,8 @@ test("expired availability disables stale trial and hosting promises without era
 	assert.match(el.textContent!, /30 min/);
 	await act(async () => t.mock.timers.tick(1000));
 	assert.match(el.textContent!, /\$76\.70/);
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial|30 min/);
+	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.doesNotMatch(el.textContent!, /30 min/);
 	assert.equal(plusButton(el).disabled, false);
 });
 
@@ -763,7 +887,15 @@ test("a replaced account response cannot start a stale browser preflight", async
 			offer: value,
 		});
 	});
-	await act(async () => window.dispatchEvent(new Event("focus")));
+	await act(async () => {
+		Object.defineProperty(document, "visibilityState", {
+			configurable: true,
+			value: "hidden",
+		});
+		document.dispatchEvent(new Event("visibilitychange"));
+		Reflect.deleteProperty(document, "visibilityState");
+		window.dispatchEvent(new Event("focus"));
+	});
 	await act(async () =>
 		old.resolve(Response.json({ ...offer, trialMode: "cardless" })),
 	);
@@ -826,8 +958,7 @@ for (const phase of ["proof", "response"] as const)
 			else assert.equal(requests, 1);
 			await act(async () => plusButton(el).click());
 			await act(async () => {
-				if (phase === "proof") window.dispatchEvent(new Event("blur"));
-				else {
+				{
 					Object.defineProperty(document, "visibilityState", {
 						configurable: true,
 						value: "hidden",

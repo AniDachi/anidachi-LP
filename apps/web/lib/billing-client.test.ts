@@ -163,6 +163,78 @@ const renewalQuote = {
 	termsRevision: "cardless-renewal-v1",
 };
 
+for (const outcome of [
+	"same-owner",
+	"replacement-owner",
+	"refresh-failed",
+] as const) {
+	test(`renewal cancellation reconciles a deferred refresh safely: ${outcome}`, async () => {
+		const enabled: BillingOverview = {
+			...cardless,
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					trial: {
+						...cardless.subscriptions[0].trial!,
+						renewalState: "enabled",
+						renewalEnabled: true,
+					},
+				},
+			],
+		};
+		let resolveRefresh!: (response: Response) => void;
+		let cancelPosts = 0;
+		globalThis.fetch = async (path) => {
+			if (String(path).endsWith("/renewal/cancel")) {
+				cancelPosts++;
+				return Response.json({ state: "canceled", ownerUserId: "owner" });
+			}
+			if (String(path).endsWith("/billing/refresh"))
+				return new Promise<Response>((resolve) => {
+					resolveRefresh = resolve;
+				});
+			if (String(path).endsWith("/billing/offer"))
+				return Response.json({
+					ownerUserId: outcome === "replacement-owner" ? "other" : "owner",
+					action: "trial",
+				});
+			return Response.json(enabled);
+		};
+		await mount();
+		await act(async () => trialButton(/^Cancel trial renewal$/).click());
+		assert.equal(cancelPosts, 1);
+		assert.ok(resolveRefresh);
+		await act(async () => {
+			window.dispatchEvent(new Event("blur"));
+			window.dispatchEvent(new Event("focus"));
+		});
+		await act(async () =>
+			resolveRefresh(
+				outcome === "refresh-failed"
+					? Response.json({ error: "Refresh unavailable" }, { status: 503 })
+					: Response.json(cardless),
+			),
+		);
+		assert.equal(cancelPosts, 1);
+		assert.doesNotMatch(container.textContent!, /Renewal is enabled/);
+		assert.ok(
+			![...container.querySelectorAll("button")].some((button) =>
+				/^Cancel trial renewal$/.test(button.textContent ?? ""),
+			),
+		);
+		if (outcome === "same-owner") {
+			assert.match(container.textContent!, /Renewal is off/);
+			assert.ok(!container.querySelector('[role="alert"]'));
+		} else {
+			assert.doesNotMatch(
+				container.textContent!,
+				/Renewal is off\. Your remaining/,
+			);
+			assert.ok(container.querySelector('[role="alert"]'));
+		}
+	});
+}
+
 test("cardless billing reviews exact renewal terms before explicitly opening card setup", async () => {
 	const actions: string[] = [];
 	globalThis.fetch = async (path, init) => {
@@ -272,10 +344,7 @@ for (const trigger of ["timer", "tab", "refresh"] as const) {
 					window.dispatchEvent(new Event("focus"));
 				} else trialButton(/^Refresh status$/).click();
 			});
-			assert.equal(
-				container.querySelector('[aria-label="Review renewal terms"]'),
-				null,
-			);
+			assert.ok(container.querySelector('[aria-label="Review renewal terms"]'));
 			assert.ok(finishRead);
 			await act(async () =>
 				finishRead!(
@@ -321,9 +390,11 @@ for (const action of ["quote", "setup"] as const) {
 			if (action === "setup")
 				await act(async () => trialButton(/Add card.*enable renewal/i).click());
 			await act(async () => t.mock.timers.tick(60_000));
-			assert.doesNotMatch(
-				container.textContent!,
-				/Free trial|Add card.*enable renewal/i,
+			assert.match(container.textContent!, /Free trial/i);
+			assert.ok(
+				trialButton(
+					action === "setup" ? /Add card.*enable renewal/i : /^Review renewal$/,
+				).disabled,
 			);
 			assert.equal(
 				reads,
@@ -617,6 +688,11 @@ test("foreign renewal quote and a late setup URL are retired before they can red
 	await act(async () => trialButton(/^Review renewal$/).click());
 	await act(async () => trialButton(/Add card.*enable renewal/i).click());
 	await act(async () => window.dispatchEvent(new Event("blur")));
+	const previousFetch = globalThis.fetch;
+	globalThis.fetch = async (path, init) =>
+		String(path) === "/api/billing/offer"
+			? Response.json({ ownerUserId: "replacement", action: "subscribe" })
+			: previousFetch(path, init);
 	await act(async () =>
 		resolveSetup(
 			Response.json({
@@ -1196,10 +1272,41 @@ test("quiet focus refresh keeps the valid subscription visible and does not reco
 				});
 	};
 	await mount();
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	assert.match(container.textContent!, /Plus/);
 	await act(async () => window.dispatchEvent(new Event("focus")));
 	assert.match(container.textContent!, /Plus/);
 	assert.equal(paths[1], "/api/billing/subscription");
 	await act(async () => finish(Response.json(active)));
+});
+
+test("a pending billing read from before an account switch cannot revive its subscription", async () => {
+	let resolve!: (response: Response) => void;
+	let reads = 0;
+	globalThis.fetch = async () =>
+		++reads === 1
+			? new Promise<Response>((r) => {
+					resolve = r;
+				})
+			: Response.json(
+					{
+						error: "Your signed-in account changed. Reload this page.",
+						code: "ACCOUNT_CHANGED",
+					},
+					{ status: 409 },
+				);
+	await mount();
+	await act(async () => {
+		window.dispatchEvent(new Event("blur"));
+		window.dispatchEvent(new Event("focus"));
+	});
+	await act(async () => resolve(Response.json(active)));
+	assert.equal(reads, 2);
+	assert.equal(
+		container.querySelector('[aria-label="Plus subscription"]'),
+		null,
+	);
+	assert.match(container.textContent!, /account changed/);
 });
 
 test("server billing data is shown without an immediate duplicate request", async () => {

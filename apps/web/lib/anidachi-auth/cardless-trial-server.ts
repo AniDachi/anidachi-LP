@@ -166,7 +166,14 @@ export function cardlessTrialService(stripe: Stripe = createStripeClient()) {
 
 export async function allowTrialAction(
 	userId: string,
-	action: "start" | "quote" | "setup" | "complete" | "cancel" | "offer",
+	action:
+		| "start"
+		| "quote"
+		| "setup"
+		| "complete"
+		| "cancel"
+		| "offer"
+		| "context",
 ): Promise<boolean> {
 	const { data, error } = await db()
 		.rpc("consume_trial_action_rate_limit_v1", {

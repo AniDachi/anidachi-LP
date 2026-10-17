@@ -24,6 +24,10 @@ import {
 } from "@/lib/trial-abuse-client";
 import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
 import { TrialStartView } from "./trial-start-view";
+import {
+	BillingOwnerChangedError,
+	guardBillingNavigation,
+} from "@/lib/billing-navigation";
 
 type Stage =
 	| "checking"
@@ -64,22 +68,42 @@ export function CheckoutContinuation({
 		revision: string;
 	} | null>(null);
 	const busy = useRef(false);
+	const [working, setWorking] = useState(false);
+	const departures = useRef(0);
 	const generation = useRef(0);
 	const controller = useRef<AbortController | null>(null);
 	const request = useRef<{ owner: string; id: string } | null>(null);
+	const prepared = useRef<{
+		requestId: string;
+		signature: string;
+		deadline: number;
+		departure: number;
+		checked: Awaited<ReturnType<typeof resolveBrowserTrialOffer>>;
+	} | null>(null);
 
 	const start = useCallback(
 		async (confirmed?: Confirmation) => {
 			if (busy.current) return;
 			busy.current = true;
+			setWorking(true);
 			const version = ++generation.current;
 			const abort = new AbortController();
 			controller.current = abort;
 			const current = () =>
 				version === generation.current && !abort.signal.aborted;
-			setStage("checking");
+			let checkedDeparture = departures.current;
+			const guard = async (owner: string) => {
+				await guardBillingNavigation(
+					owner,
+					abort.signal,
+					departures.current !== checkedDeparture,
+					() => departures.current,
+				);
+				checkedDeparture = departures.current;
+			};
+			if (!confirmed) setStage("checking");
 			setMessage("");
-			setConfirmation(null);
+			if (!confirmed) setConfirmation(null);
 			const showTrialResult = (
 				result: TrialStartResult,
 				owner: string,
@@ -172,6 +196,8 @@ export function CheckoutContinuation({
 				if (recovery.current) {
 					const pending = recovery.current;
 					setStage("opening");
+					await guard(offer.ownerUserId);
+					if (!current()) return;
 					let extensionProof;
 					if (pending.legacy) {
 						// Reconciliation has not reserved an activation yet, so this is still a new grant.
@@ -191,6 +217,8 @@ export function CheckoutContinuation({
 						);
 						if (!current()) return;
 					}
+					await guard(offer.ownerUserId);
+					if (!current()) return;
 					const result = await postTrialAction<TrialStartResult>(
 						pending.legacy ? "start" : "recover",
 						offer.ownerUserId,
@@ -207,6 +235,7 @@ export function CheckoutContinuation({
 								: {},
 						abort.signal,
 					);
+					await guard(offer.ownerUserId);
 					if (current())
 						showTrialResult(result, offer.ownerUserId, pending.revision);
 					return;
@@ -217,18 +246,40 @@ export function CheckoutContinuation({
 						id: crypto.randomUUID(),
 					};
 				}
-				const checked = await resolveBrowserTrialOffer(
-					offer,
-					abort.signal,
-					request.current?.id,
-				);
+				const signature = JSON.stringify({ ...offer, validForMs: undefined });
+				const previous = prepared.current;
+				const reuse =
+					previous &&
+					previous.requestId === request.current?.id &&
+					previous.signature === signature &&
+					previous.deadline > Date.now() &&
+					previous.departure === departures.current;
+				const checked = reuse
+					? previous.checked
+					: await resolveBrowserTrialOffer(
+							offer,
+							abort.signal,
+							request.current?.id,
+						);
 				if (!current()) return;
+				if (!reuse && request.current)
+					prepared.current = {
+						requestId: request.current.id,
+						signature,
+						checked,
+						deadline:
+							started +
+							Math.min(60_000, offer.validForMs, checked.offer.validForMs),
+						departure: checkedDeparture,
+					};
 				offer = checked.offer;
 				if (!offer.ownerUserId || offer.ownerUserId !== request.current?.owner)
 					throw new Error("Your account changed. Please try again.");
 				if (!(Math.min(60_000, offer.validForMs) > Date.now() - started))
 					throw new Error("Your offer expired. Please try again.");
 				if (offer.action === "manage") {
+					await guard(offer.ownerUserId);
+					if (!current()) return;
 					window.location.replace("/account/billing");
 					return;
 				}
@@ -296,7 +347,9 @@ export function CheckoutContinuation({
 						owner: offer.ownerUserId,
 						id: crypto.randomUUID(),
 					};
-				setStage("opening");
+				if (!confirmed) setStage("opening");
+				await guard(offer.ownerUserId);
+				if (!current()) return;
 				if (cardless) {
 					if (!offer.trialOfferRevision)
 						throw new Error(
@@ -320,6 +373,7 @@ export function CheckoutContinuation({
 						},
 						abort.signal,
 					);
+					await guard(offer.ownerUserId);
 					if (current())
 						showTrialResult(
 							result,
@@ -357,6 +411,7 @@ export function CheckoutContinuation({
 					error?: string;
 					kind?: string;
 				};
+				await guard(offer.ownerUserId);
 				if (!current()) return;
 				if (checkout.status === 401) {
 					window.location.replace(
@@ -391,6 +446,12 @@ export function CheckoutContinuation({
 				window.location.replace(url.href);
 			} catch (error) {
 				if (!current()) return;
+				if (error instanceof BillingOwnerChangedError) {
+					setConfirmation(null);
+					prepared.current = null;
+					request.current = null;
+					recovery.current = null;
+				}
 				setMessage(
 					error instanceof Error &&
 						error.name !== "TypeError" &&
@@ -400,7 +461,10 @@ export function CheckoutContinuation({
 				);
 				setStage(recovery.current ? "pending" : "error");
 			} finally {
-				if (current()) busy.current = false;
+				if (current()) {
+					busy.current = false;
+					setWorking(false);
+				}
 			}
 		},
 		[plan, billing, confirmTrial, price],
@@ -408,19 +472,12 @@ export function CheckoutContinuation({
 
 	useEffect(() => {
 		const pause = () => {
-			// Retire immediately: a late response must not redirect a background tab.
-			++generation.current;
-			controller.current?.abort();
-			busy.current = false;
-			setConfirmation(null);
-			setStage("error");
-			setMessage("Please check your account again to continue checkout.");
+			++departures.current;
 		};
 		const onVisibilityChange = () => {
 			if (document.visibilityState === "hidden") pause();
 		};
-		if (document.visibilityState === "hidden") pause();
-		else void start();
+		void start();
 		window.addEventListener("blur", pause);
 		document.addEventListener("visibilitychange", onVisibilityChange);
 		return () => {
@@ -455,6 +512,7 @@ export function CheckoutContinuation({
 		return (
 			<TrialStartView
 				selection={selection}
+				busy={working}
 				onStart={() => void start(confirmation)}
 			/>
 		);
@@ -491,6 +549,8 @@ export function CheckoutContinuation({
 						</p>
 						<Button
 							variant="cream"
+							disabled={working}
+							aria-busy={working}
 							className="mt-6 w-full"
 							onClick={() => void start(confirmation ?? undefined)}
 						>
@@ -507,6 +567,8 @@ export function CheckoutContinuation({
 						</p>
 						<Button
 							className="mt-6 w-full"
+							disabled={working}
+							aria-busy={working}
 							onClick={() => void start(confirmation ?? undefined)}
 						>
 							Continue to card checkout

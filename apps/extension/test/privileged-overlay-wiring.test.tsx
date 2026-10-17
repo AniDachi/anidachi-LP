@@ -4,7 +4,11 @@ import { RoomMediaSnapshotSchema } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mountOverlay, startContentLifecycle, type OverlayRenderer } from "../entrypoints/content";
+import {
+	mountOverlay,
+	startContentLifecycle,
+	type OverlayRenderer,
+} from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
@@ -96,7 +100,12 @@ describe("privileged overlay wiring", () => {
 		vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
 		vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, left: 0, top: 0, right: 1280, bottom: 720, width: 1280, height: 720, toJSON() {} });
 		const capture = vi.fn();
-		vi.stubGlobal("navigator", Object.assign(Object.create(navigator), { mediaDevices: { getUserMedia: capture } }));
+		vi.stubGlobal(
+			"navigator",
+			Object.assign(Object.create(navigator), {
+				mediaDevices: { getUserMedia: capture },
+			}),
+		);
 		const sendMessage = vi.fn(async (message: { type?: string; command?: string }) => {
 			if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: null };
 			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") return { ok: true, record: null, legacyPrefix: null };
@@ -104,7 +113,9 @@ describe("privileged overlay wiring", () => {
 			return { ok: false };
 		});
 		installOverlayRuntime(sendMessage);
-		Object.assign(chrome.runtime, { getURL: (path: string) => `chrome-extension://test/${path}` });
+		Object.assign(chrome.runtime, {
+			getURL: (path: string) => `chrome-extension://test/${path}`,
+		});
 		const view = await renderOverlay(adapter => {
 			Object.defineProperty(adapter.video, "readyState", { value: 4 });
 			vi.spyOn(adapter, "getPlaybackSnapshot").mockReturnValue({ phase: "content", playing: true } as ReturnType<VideoAdapter["getPlaybackSnapshot"]>);
@@ -1856,7 +1867,6 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
-
   it("preserves legacy quota subtraction, reanchoring and exhaustion with a real media helper lifecycle", async () => {
     installActiveHostRoomRuntime();
     let client!: RoomClient;
@@ -2251,16 +2261,30 @@ describe("privileged overlay wiring", () => {
     try {
       await click(button(view.container, "Open Anidachi controls"));
       expect(button(view.container, "Create room").disabled).toBe(false);
-      await click(button(view.container, "Create room")); await flushRoomActionWork();
-      expect(view.container.querySelector('[role="dialog"]')?.textContent).toContain("You can still join friends for free.");
-      expect(view.container.textContent).toContain("View plans");
-      expect(view.container.textContent).not.toContain("Try 3 days free");
-      expect(view.container.querySelector<HTMLAnchorElement>('.hosting-notice a')?.href).toBe("http://localhost:3003/pricing?plan=plus&billing=monthly");
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			expect(
+				view.container.querySelector('[role="dialog"]')?.textContent,
+			).toContain("You can still join friends for free.");
+			expect(
+				view.container.querySelector(".hosting-notice")?.textContent,
+			).toContain("Try 3 days free");
+			expect(
+				view.container.querySelector(".hosting-notice")?.textContent,
+			).toContain("No card required");
+			expect(
+				view.container.querySelector<HTMLAnchorElement>(".hosting-notice a")
+					?.href,
+			).toBe(
+				"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
+			);
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
       await click(button(view.container, "Close plan offer"));
-      expect(view.container.querySelector('.hosting-notice')).toBeNull();
+			expect(view.container.querySelector(".hosting-notice")).toBeNull();
       expect(create).toHaveBeenCalledTimes(1);
-    } finally { await unmount(view.root); }
+		} finally {
+			await unmount(view.root);
+		}
   });
   it("keeps the account badge and offer on the server's effective plan across subscription changes", async () => {
     installActiveHostRoomRuntime(); // The auth profile deliberately remains Free.
@@ -2270,14 +2294,16 @@ describe("privileged overlay wiring", () => {
       hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-09-28T00:00:00Z", canHost: false, trialEligibility: "eligible", trialEndsAt: null },
     };
     request.mockResolvedValue(base);
-    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+		const send = vi.mocked(chrome.runtime.sendMessage),
+			original = send.getMockImplementation()!;
     send.mockImplementation(async (...args: any[]) => args[0].command === "create-room"
       ? { ok: false, status: 403, code: "HOST_SUBSCRIPTION_REQUIRED", error: "Choose a plan" }
       : (original as any)(...args));
     const view = await renderOverlay();
     try {
       await click(button(view.container, "Open Anidachi controls"));
-      await click(button(view.container, "Create room")); await flushRoomActionWork();
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
       // These are the effective server outputs, not client-side billing decisions.
       for (const state of [
         { plan: "plus", time: "2026-09-28T02:00:00Z" }, // trial starts
@@ -2290,22 +2316,45 @@ describe("privileged overlay wiring", () => {
       ] as const) {
         const pending = deferred<hostingAccessClient.HostingAccountAccess>();
         request.mockReturnValueOnce(pending.promise);
-        await act(async () => window.dispatchEvent(new Event("focus")));
-        expect(view.container.querySelector(".plan-badge")).toBeNull();
-        expect(view.container.textContent).not.toContain("You’re ready to host");
+				const previous =
+					view.container.querySelector(".plan-badge")?.textContent;
+				await act(async () => {
+					window.dispatchEvent(new Event("blur"));
+					window.dispatchEvent(new Event("focus"));
+				});
+				expect(view.container.querySelector(".plan-badge")?.textContent).toBe(
+					previous,
+				);
         await act(async () => pending.resolve({ ...base, planCode: state.plan, serverTime: state.time,
           hosting: { ...base.hosting!, canHost: state.plan !== "free", trialEligibility: "used", trialEndsAt: "2026-10-01T02:00:00Z" } }));
-        expect(view.container.querySelector(".plan-badge")?.textContent?.toLowerCase()).toBe(state.plan);
-        expect(view.container.textContent?.includes("You’re ready to host")).toBe(state.plan !== "free");
+				expect(
+					view.container
+						.querySelector(".plan-badge")
+						?.textContent?.toLowerCase(),
+				).toBe(state.plan);
+				expect(
+					view.container.textContent?.includes("You’re ready to host"),
+				).toBe(state.plan !== "free");
         expect(view.container.textContent).not.toContain("Try 3 days free");
       }
       request.mockRejectedValueOnce(new Error("offline"));
-      await act(async () => window.dispatchEvent(new Event("focus")));
-      expect(view.container.querySelector(".plan-badge")).toBeNull();
-      expect(view.container.textContent).toContain("Couldn’t check your access");
-      expect(send.mock.calls.filter(([message]: any) => message.command === "create-room")).toHaveLength(1);
+			await act(async () => {
+				window.dispatchEvent(new Event("blur"));
+				window.dispatchEvent(new Event("focus"));
+			});
+			expect(
+				view.container.querySelector(".plan-badge")?.textContent?.toLowerCase(),
+			).toBe("pro");
+			expect(view.container.textContent).toContain("You’re ready to host");
+			expect(
+				send.mock.calls.filter(
+					([message]: any) => message.command === "create-room",
+				),
+			).toHaveLength(1);
       expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
-    } finally { await unmount(view.root); }
+		} finally {
+			await unmount(view.root);
+		}
   });
 
   it("clears the hosting offer when the active account changes", async () => {
@@ -2607,8 +2656,14 @@ describe("privileged overlay wiring", () => {
   });
 	it("does not flash Always visible while loading a saved Auto hide preference", async () => {
 		const read = deferred<unknown>();
-		const originalRead = extensionStorage.storage.getItem.bind(extensionStorage.storage);
-		vi.spyOn(extensionStorage.storage, "getItem").mockImplementation((key) => key === INTERFACE_PREFERENCES_STORAGE_KEY ? read.promise as Promise<never> : originalRead(key));
+		const originalRead = extensionStorage.storage.getItem.bind(
+			extensionStorage.storage,
+		);
+		vi.spyOn(extensionStorage.storage, "getItem").mockImplementation((key) =>
+			key === INTERFACE_PREFERENCES_STORAGE_KEY
+				? (read.promise as Promise<never>)
+				: originalRead(key),
+		);
 		installActiveHostRoomRuntime();
 		const view = await renderOverlay();
 		try {
@@ -2725,19 +2780,33 @@ describe("privileged overlay wiring", () => {
 		},
 	);
 
-  describe.each(["www.netflix.com", "www.youtube.com", "www.crunchyroll.com"])("player keyboard isolation on %s", (hostname) => {
+	describe.each([
+		"www.netflix.com",
+		"www.youtube.com",
+		"www.crunchyroll.com",
+	])("player keyboard isolation on %s", (hostname) => {
     async function setup(nativeBeforeOverlay = false) {
-      const previousLocation = Object.getOwnPropertyDescriptor(window, "location")!;
-      Object.defineProperty(window, "location", {configurable: true, value: new URL(`https://${hostname}/watch/123`)});
+			const previousLocation = Object.getOwnPropertyDescriptor(
+				window,
+				"location",
+			)!;
+			Object.defineProperty(window, "location", {
+				configurable: true,
+				value: new URL(`https://${hostname}/watch/123`),
+			});
       const lifecycle = startContentLifecycle({detect: () => ({status: "none"}), ensureStyles: () => {}, startProviderStudy: () => null});
       const native = vi.fn();
       const listen = () => { for (const type of ["keydown", "keyup", "keypress"]) window.addEventListener(type, native, true); };
       if (nativeBeforeOverlay) listen();
-      const runtime = installRoomDefaultsRuntime(3, {voiceMode: "push-to-talk", cameraEnabled: false});
+			const runtime = installRoomDefaultsRuntime(3, {
+				voiceMode: "push-to-talk",
+				cameraEnabled: false,
+			});
       const view = await renderOverlay();
       await click(button(view.container, "Open Anidachi controls"));
       await click(button(view.container, "Create room"));
-      await runtime.roomSnapshot(); await runtime.mediaSnapshot();
+			await runtime.roomSnapshot();
+			await runtime.mediaSnapshot();
       if (!nativeBeforeOverlay) listen();
       const key = async (type: string, init: KeyboardEventInit = {}, target: EventTarget = window) => {
         const event = new KeyboardEvent(type, {key: "v", code: "KeyV", bubbles: true, cancelable: true, ...init});

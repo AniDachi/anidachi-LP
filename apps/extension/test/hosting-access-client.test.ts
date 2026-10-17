@@ -39,6 +39,57 @@ const dependencies = () => ({
 });
 
 describe("owner-bound hosting access", () => {
+	it("a server denial invalidation starts a newer read and old completion cannot remove it", async () => {
+		const responses: ((response: Response) => void)[] = [];
+		const fetch = vi
+			.fn()
+			.mockImplementation(
+				() => new Promise<Response>((resolve) => responses.push(resolve)),
+			);
+		vi.stubGlobal("fetch", fetch);
+		const deps = dependencies();
+		const old = handleHostingAccessMessage(message, deps);
+		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+		const freshMessage = { ...message, fresh: true };
+		const fresh = handleHostingAccessMessage(freshMessage, deps);
+		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+		responses[0](
+			Response.json({
+				...access,
+				planCode: "plus",
+				hosting: { ...access.hosting, canHost: true, trialEligibility: "used" },
+			}),
+		);
+		await old;
+		const shared = handleHostingAccessMessage(message, deps);
+		await Promise.resolve();
+		expect(fetch).toHaveBeenCalledTimes(2);
+		responses[1](Response.json(access));
+		expect(await fresh).toEqual({ ok: true, access });
+		expect(await shared).toEqual({ ok: true, access });
+	});
+	it("coalesces simultaneous same-session reads but never caches completed authority", async () => {
+		let resolve!: (value: Response) => void;
+		const fetch = vi.fn().mockImplementation(
+			() =>
+				new Promise<Response>((r) => {
+					resolve = r;
+				}),
+		);
+		vi.stubGlobal("fetch", fetch);
+		const deps = dependencies();
+		const requests = Array.from({ length: 20 }, () =>
+			handleHostingAccessMessage(message, deps),
+		);
+		await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+		resolve(Response.json(access));
+		expect((await Promise.all(requests)).every((result) => result.ok)).toBe(
+			true,
+		);
+		fetch.mockResolvedValue(Response.json(access));
+		await handleHostingAccessMessage(message, deps);
+		expect(fetch).toHaveBeenCalledTimes(2);
+	});
 	afterEach(() => {
 		vi.unstubAllGlobals();
 		vi.useRealTimers();
@@ -87,11 +138,34 @@ describe("owner-bound hosting access", () => {
 		});
 	});
 	it("accepts optional offer terms but discards malformed presentation metadata without losing access", async () => {
-		const hostingOffer = { trialMode: "cardless", trialDays: 3, policyRevision: 2 };
-		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({...access, hostingOffer})));
-		expect(await handleHostingAccessMessage(message, dependencies())).toEqual({ok: true, access: {...access, hostingOffer}});
-		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({...access, hostingOffer: {...hostingOffer, trialDays: 30}})));
-		expect(await handleHostingAccessMessage(message, dependencies())).toEqual({ok: true, access: {...access, hostingOffer: undefined}});
+		const hostingOffer = {
+			trialMode: "cardless",
+			trialDays: 3,
+			policyRevision: 2,
+		};
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(Response.json({ ...access, hostingOffer })),
+		);
+		expect(await handleHostingAccessMessage(message, dependencies())).toEqual({
+			ok: true,
+			access: { ...access, hostingOffer },
+		});
+		vi.stubGlobal(
+			"fetch",
+			vi
+				.fn()
+				.mockResolvedValue(
+					Response.json({
+						...access,
+						hostingOffer: { ...hostingOffer, trialDays: 30 },
+					}),
+				),
+		);
+		expect(await handleHostingAccessMessage(message, dependencies())).toEqual({
+			ok: true,
+			access: { ...access, hostingOffer: undefined },
+		});
 	});
 	it("does not return another session's answer after logout and login as the same owner", async () => {
 		const deps = dependencies();
@@ -125,13 +199,11 @@ describe("owner-bound hosting access", () => {
 		vi.useFakeTimers();
 		vi.stubGlobal(
 			"fetch",
-			vi
-				.fn()
-				.mockResolvedValue({
-					ok: true,
-					status: 200,
-					json: () => new Promise(() => {}),
-				}),
+			vi.fn().mockResolvedValue({
+				ok: true,
+				status: 200,
+				json: () => new Promise(() => {}),
+			}),
 		);
 		const pending = handleHostingAccessMessage(message, dependencies());
 		await vi.advanceTimersByTimeAsync(10_000);

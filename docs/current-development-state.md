@@ -1,5 +1,32 @@
 # Current Development State
 
+## Trial flow stability, October 17, 2026
+
+The [stability follow-up](superpowers/plans/2026-10-17-trial-flow-stability.md)
+separates presentation from freshness and authorization. Same-owner pricing,
+subscription cards and extension badges remain visible during ordinary revalidation.
+Initial unknown actions use a neutral loader; confirmed owner changes and explicit
+server admission denials retire stale data. Pending reads are coalesced only within
+the current owner/session and departure epoch. Sent billing operations keep their
+locks and request IDs across blur/backgrounding, then verify the owner before a
+deferred redirect. Actual trial/quote expiry remains independent of display TTL.
+
+Account-eligible extension entries open Plus/monthly trial confirmation directly;
+known used accounts go to ordinary plans, unknown accounts use Continue with Plus.
+The website checks its HttpOnly browser cookie and optional installation proof
+before showing trial terms. A used marker produces explicit paid terms; outages
+remain retryable. Final atomic reservation, anti-abuse and Stripe lifecycle are
+unchanged. Checkout reuses a proof only for its same owner-bound operation and
+unchanged offer/departure, for at most 60 seconds. Context and offer have separate
+20/minute buckets after additive migration `20261017130802` (staging PR #436).
+
+Query-selected pricing uses a small Suspense boundary to avoid painting yearly
+prices for monthly links without making public pages dynamic. Notification reads
+coalesce focus bursts and queue a fresh read for a mutation that overlaps a read.
+No Worker/provider/media changes, permissions, secrets, price or renewal changes.
+This delivery is staging-only; updated 0.1.3 channel ZIPs supersede the earlier
+candidate, while production promotion and real-account acceptance stay separate.
+
 ## Netflix website launch copy, October 17, 2026
 
 The approved website follow-up presents Netflix as supported alongside Crunchyroll
@@ -55,10 +82,10 @@ shows ordinary priced purchase; pending markers or failures show retry. The exis
 atomic activation reservation remains authoritative. Preflight never starts a trial
 or creates Stripe state. Current subscriptions and same-operation recovery take priority.
 
-Pricing and checkout share a bounded preflight; expiry retires the display and
-focus/action refresh it without periodic offer polling. Extension notices and
-onboarding use View plans with Plus/monthly preserved because they cannot read
-the website cookie. Checkout uses a compact accessible loading indicator.
+Pricing and checkout share a bounded preflight without periodic offer polling.
+The October 17 stability follow-up above supersedes the original display-expiry
+and neutral View plans entry behavior. Checkout retains a compact accessible
+initial loader; the final atomic marker check remains authoritative.
 
 See the [design](superpowers/specs/2026-10-16-trial-offer-preflight-design.md) and
 [plan](superpowers/plans/2026-10-16-trial-offer-preflight.md). This is candidate
