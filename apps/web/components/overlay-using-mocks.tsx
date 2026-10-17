@@ -68,7 +68,7 @@ function RoomActions({ highlight }: { highlight: "copy" | "friends" }) {
 
 export function OverlayBubbleMock() {
 	return (
-		<ExtensionExampleFrame label="Player bubble example">
+		<ExtensionExampleFrame label="Player capsule example">
 			<div className="example-stage example-static" inert aria-hidden="true">
 				<div className="top-bubble-reveal bubble-visible">
 					<button type="button" className="top-bubble example-highlight">

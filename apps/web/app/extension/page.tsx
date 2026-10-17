@@ -49,12 +49,16 @@ export const metadata: Metadata = {
 
 const howToSteps = [
   {
-    name: "Install from the Chrome Web Store",
-    text: "Open the official AniDachi Chrome Web Store listing and choose Add to Chrome.",
+    name: "Add the extension",
+    text: "On the Chrome Web Store page, choose Add to Chrome, then Add extension.",
   },
   {
-    name: "Pin and open Crunchyroll or YouTube",
-    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode or a full YouTube watch page and sign in when asked. Netflix is coming soon and is not supported yet. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
+    name: "Pin AniDachi",
+    text: "Open the puzzle-piece menu in Chrome’s toolbar. Find AniDachi and click the pin.",
+  },
+  {
+    name: "Open a video & sign in",
+    text: "Open a supported video page, click the AniDachi capsule in the player, and sign in.",
   },
 ];
 
@@ -97,12 +101,12 @@ export default function ExtensionInstallPage() {
             </ol>
           </div>
         </nav>
-        <div className="container mx-auto px-4 py-12 lg:py-16">
+        <div className="mx-auto max-w-[1200px] px-5 pb-16 sm:px-8">
           <Suspense
             fallback={
-              <div className="mx-auto max-w-3xl">
+              <div className="mx-auto max-w-4xl py-16 text-center">
                 <h1 className="text-4xl font-semibold tracking-[-0.035em] text-ani-text">
-                  Install AniDachi on Chrome
+                  Add AniDachi to Chrome
                 </h1>
               </div>
             }
