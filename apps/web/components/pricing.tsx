@@ -37,6 +37,7 @@ import {
 	checkoutReturnPath,
 } from "@/lib/checkout-selection";
 import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
+import { readOnboardingCheckout, rememberOnboardingCheckout } from "@/lib/onboarding-return-client";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -56,12 +57,14 @@ export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
 	initialPeriod = "yearly",
+	onboarding,
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */
 	headingLevel?: 1 | 2;
 	/** Full plan-limits table — keep on `/pricing`, omit from homepage `#pricing`. */
 	showPlanMatrix?: boolean;
 	initialPeriod?: BillingPeriod;
+	onboarding?: string;
 } = {}) {
 	const [period, setPeriod] = useState<BillingPeriod>(initialPeriod);
 	const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -330,6 +333,10 @@ export function Pricing({
 			}
 			if (currentOffer.ownerUserId) await guard(currentOffer.ownerUserId);
 			if (version !== offerVersion.current) return;
+			// A Stripe cancellation returns to pricing in this tab. Retain only its
+			// short-lived, same-owner navigation receipt; it never alters the offer.
+			const returnToken = onboarding ?? (currentOffer.ownerUserId
+				? readOnboardingCheckout(currentOffer.ownerUserId)?.token : undefined);
 			if (currentOffer.action === "manage") {
 				window.location.href = "/account/billing?manage=1";
 				return;
@@ -338,6 +345,7 @@ export function Pricing({
 				window.location.href = checkoutLoginPath({
 					plan: tier,
 					billing: period,
+					onboarding: returnToken,
 				});
 				return;
 			}
@@ -370,6 +378,7 @@ export function Pricing({
 				window.location.href = checkoutReturnPath({
 					plan: tier,
 					billing: period,
+					onboarding: returnToken,
 				});
 				return;
 			}
@@ -400,6 +409,7 @@ export function Pricing({
 
 			const data = (await response.json()) as {
 				url?: string;
+				sessionId?: string;
 				error?: string;
 				loginUrl?: string;
 				kind?: "checkout" | "manage_subscription";
@@ -417,6 +427,7 @@ export function Pricing({
 					window.location.href = checkoutSessionRecoveryPath({
 						plan: tier,
 						billing: period,
+						onboarding: returnToken,
 					});
 					return;
 				}
@@ -457,6 +468,8 @@ export function Pricing({
 				plan_tier: tier,
 			});
 
+			if (data.kind !== "manage_subscription" && currentOffer.ownerUserId)
+				rememberOnboardingCheckout(returnToken, currentOffer.ownerUserId, data.sessionId);
 			window.location.href =
 				data.kind === "manage_subscription" ? "/account/billing" : data.url;
 		} catch (error) {

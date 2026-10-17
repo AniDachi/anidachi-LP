@@ -1,4 +1,5 @@
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
+import { registerOnboardingCheckoutBridge } from "../src/onboarding-checkout-bridge";
 import "../src/zod-csp";
 import {
   createIntroductionClaim,
@@ -267,6 +268,7 @@ async function waitForAdmissionCompletion(
 
 export default defineBackground(() => {
   registerTrialInstallationBridge();
+  registerOnboardingCheckoutBridge();
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === PLAYER_INTRODUCTION_MESSAGE) {

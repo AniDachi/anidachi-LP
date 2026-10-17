@@ -1,12 +1,14 @@
 import { AUTH_REFRESH_PATH } from "./anidachi-auth/session-refresh";
 import type { BillingPeriod } from "./billing-view";
 import type { CheckoutTier } from "./pricing-tiers";
+import { OnboardingTokenSchema } from "@anidachi/protocol";
 
 export type CheckoutSelection = {
 	plan: CheckoutTier;
 	billing: BillingPeriod;
 	/** An extension trial offer must show website terms before any checkout action. */
 	confirmTrial?: true;
+	onboarding?: string;
 };
 
 /** Selection and confirmation intent survive auth. Price and eligibility stay server-owned. */
@@ -24,10 +26,13 @@ export function checkoutSelectionFromPath(
 	const plan = url.searchParams.get("plan");
 	const billing = url.searchParams.get("billing");
 	const confirm = url.searchParams.get("confirm");
+	const onboarding = url.searchParams.get("onboarding");
 	if (
 		url.searchParams.getAll("plan").length !== 1 ||
 		url.searchParams.getAll("billing").length !== 1 ||
 		url.searchParams.getAll("confirm").length > 1 ||
+		url.searchParams.getAll("onboarding").length > 1 ||
+		(onboarding !== null && !OnboardingTokenSchema.safeParse(onboarding).success) ||
 		(confirm !== null && confirm !== "trial")
 	)
 		return null;
@@ -36,15 +41,24 @@ export function checkoutSelectionFromPath(
 		(billing !== "monthly" && billing !== "yearly")
 	)
 		return null;
-	return { plan, billing, ...(confirm === "trial" ? { confirmTrial: true as const } : {}) };
+	return { plan, billing, ...(confirm === "trial" ? { confirmTrial: true as const } : {}), ...(onboarding ? { onboarding } : {}) };
 }
 
 export function checkoutReturnPath({
 	plan,
 	billing,
 	confirmTrial,
+	onboarding,
 }: CheckoutSelection): string {
-	return `/checkout?plan=${plan}&billing=${billing}${confirmTrial ? "&confirm=trial" : ""}`;
+	return `/checkout?plan=${plan}&billing=${billing}${confirmTrial ? "&confirm=trial" : ""}${onboardingQuery(onboarding)}`;
+}
+
+export function onboardingQuery(token?: string): string {
+	return token && OnboardingTokenSchema.safeParse(token).success ? `&onboarding=${token}` : "";
+}
+
+export function checkoutPlansPath(selection: CheckoutSelection): string {
+	return `/pricing?plan=${selection.plan}&billing=${selection.billing}${onboardingQuery(selection.onboarding)}`;
 }
 
 export function checkoutLoginPath(selection: CheckoutSelection): string {
