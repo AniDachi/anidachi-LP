@@ -31,6 +31,8 @@
 
 ## Progress Log
 
+- **2026-10-17, `codex/netflix-input-media-fixes`:** the [player input/media repair](2026-10-17-netflix-input-media-fixes.md) preserves reported v2/v3 camera publication across hibernation without treating a grant as capture, and routes held-key releases before composer/provider handlers. Regression evidence includes real forced-wake Worker snapshots and all-provider overlay keyboard fixtures. Exact full-suite/CI/staging results are recorded in the PR; loaded-artifact and cross-network media acceptance are still separate release gates.
+
 - 2026-10-14 — `codex/vercel-request-followup`: approved candidate work adds a
   durable terminal workflow retry budget and Retry-After handling without changing
   frozen accounting, source proof or wire ACK schemas. Local and staging results

@@ -17,6 +17,7 @@ import {
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
 import { OverlayApp } from "../src/overlay-app";
+import { installOverlayKeyboardRouter } from "../src/overlay-keyboard-router";
 import { installPlayerIntroductionKeyboardGuard } from "../src/player-onboarding-input";
 import {
   getOverlayPageDecision,
@@ -337,6 +338,7 @@ function installMessageComposerKeyboardGuard(): () => void {
     import.meta.env.WXT_EXTENSION_CHANNEL !== "production"
       ? installPlayerIntroductionKeyboardGuard()
       : () => {};
+  const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
   const isNetflixComposer = () => location.hostname === "www.netflix.com" && isComposerOpen();
@@ -413,6 +415,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   window.addEventListener("blur", clearConsumedKeys);
   return () => {
     releaseIntroductionGuard();
+    releaseKeyboardRouter();
     window.removeEventListener("keydown", handleKeyDown, true);
     window.removeEventListener("keyup", handleKeyUp, true);
     window.removeEventListener("keypress", handleKeyPress, true);

@@ -3709,6 +3709,32 @@ it("v3 durably fences revocation, receiver-only sessions and two grants for the 
  expect(await runInDurableObject(f.stub,async(_i,state)=>state.storage.sql.exec("SELECT user_id FROM room_media_seat_denials").toArray())).toEqual([]);
 
 });
+it.each([2, 3] as const)("keeps reported v%s cameras on after hibernation and microphone changes", async (version) => {
+  const f = await fixture("plus", version);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "media admitted");
+  const cameraIntent = {type: "SET_MEDIA_INTENT", roomId: f.roomId, roomGeneration: 1,
+    participantSessionId: "v2-session-0", media: "camera", enabled: true,
+    requestId: "camera-before-wake", intentSequence: 1, revocationEpoch: 0};
+  host.send(cameraIntent);
+  await host.waitFor(e => e.type === "MEDIA_INTENT_ACK" && e.requestId === "camera-before-wake", "camera granted");
+  host.send({type: "CAMERA_ON", roomId: f.roomId, userId: hostId});
+  await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.participants.some(p => p.id === hostId && p.cameraEnabled), "camera reported");
+  const receiver = await f.join(1);
+  await receiver.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.participants.length === 2, "receiver joined");
+  for (const [enabled, sequence] of [[true, 1], [false, 2]] as const) {
+    await evictDurableObject(f.stub, {webSockets: "hibernate"});
+    const requestId = `microphone-${sequence}`;
+    host.send({...cameraIntent, media: "microphone", enabled, intentSequence: sequence, requestId});
+    const ack = await host.waitFor(e => e.type === "MEDIA_INTENT_ACK" && e.requestId === requestId, "microphone after wake");
+    expect(ack).toMatchObject({state: {cameraGranted: true, microphoneGranted: enabled}});
+    const snapshot = await receiver.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.serverSeq === (ack as Extract<ServerEvent, {type: "MEDIA_INTENT_ACK"}>).snapshotSequence, "receiver sees media change");
+    expect(snapshot).toMatchObject({participants: expect.arrayContaining([expect.objectContaining({id: hostId, cameraEnabled: true})])});
+  }
+  host.send({type: "CAMERA_OFF", roomId: f.roomId, userId: hostId});
+  await receiver.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.participants.some(p => p.id === hostId && !p.cameraEnabled), "camera really stopped");
+});
+
 it.each([
 	"before-write",
 	"after-write",
