@@ -136,7 +136,7 @@ instructions when required, never credentials inside the package or repository.
 | Browser/installation abuse | Server tests and staging migrations passed; owner deferred two fresh accounts in the same browser without clearing cookies. Verify denial shows ordinary priced purchase, no duplicate Stripe trial, and cookie-only path without extension. |
 | Trial billing | Preserve existing accelerated no-charge expiry, renewal/decline/3DS/recovery receipts. Re-run only affected cases; clocks do not advance DB/Worker time. |
 | Store update | Compare exact 0.1.2/0.1.3 permissions; Netflix adds `https://www.netflix.com/*`. Actual Store permission acceptance/re-enable and settings/session/seen-state preservation are not proven by unpacked reload. |
-| Public copy/privacy | Before public launch, reconcile remaining Netflix coming-soon/unsupported copy, supported surfaces, privacy/history wording and Store declarations. Do not imply ad-plan acceptance without evidence or change SEO routes/H1s to perform this cleanup. |
+| Public copy/privacy | The [website-copy follow-up](netflix-website-copy-2026-10-17.md) removes stale Netflix availability claims and adds Netflix to the existing privacy provider list for the coordinated launch. Verify its staging delivery and review Store listing/privacy declarations before publication. Do not imply ad-plan acceptance without evidence or change SEO routes/H1s to perform this cleanup. |
 | Production readiness | Schema/flags/LIVE integration/configuration are read-only preflight only; real post-deploy auth/push and legacy-client smoke still required. |
 
 ## Store submission notes

@@ -284,7 +284,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           {anime.notOnCrunchyroll
-            ? `${anime.title} is not on Crunchyroll, so AniDachi can't sync it today. AniDachi syncs Crunchyroll and YouTube; for a ${isMovie ? "movie" : "group"} night, choose an available Crunchyroll title and check that everyone can stream it in their region.`
+            ? `${anime.title} is not on Crunchyroll. AniDachi supports Crunchyroll, YouTube, and Netflix; check whether everyone can access this title on Netflix or YouTube in their region before planning a room.`
             : isMovie
             ? `Yes — watch ${anime.title} with friends as a live movie night using AniDachi on Crunchyroll. Everyone streams on their own account with synced playback, chat, reactions, and voice/video. Works for ${PRICING_ROOM_SIZE_RANGE}.`
             : (() => {
@@ -384,9 +384,10 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         <section id="setup" className="mt-10 mb-8 scroll-mt-24">
           <h2 className="text-2xl font-bold text-foreground mb-4">Plan a {anime.title} Movie Night</h2>
           <p className="text-foreground/80 leading-relaxed">
-            AniDachi cannot sync this title. Check legal availability in each viewer&apos;s
-            region, choose the same version, and arrange a call with a manual countdown.
-            For an AniDachi room, choose a title available to everyone on Crunchyroll instead.
+            Check legal availability in each viewer&apos;s region. If everyone can access
+            the same version on Netflix or YouTube, you can use an AniDachi room.
+            Otherwise, arrange a call with a manual countdown on another legal service.
+            This catalog does not confirm Netflix or YouTube availability for this title.
           </p>
         </section>
       ) : <>

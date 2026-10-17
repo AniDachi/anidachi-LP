@@ -35,7 +35,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "Discord Screen Share Not Working — Button and Permissions",
   description:
-    "If Discord screen share is not working, join a voice call, allow screen recording, and test a direct call. For a full Crunchyroll or YouTube episode, sync it with AniDachi instead.",
+    "If Discord screen share is not working, join a voice call, allow screen recording, and test a direct call. For a full Crunchyroll, YouTube, or Netflix episode, sync it with AniDachi instead.",
   alternates: { canonical: "/guides/discord-screen-share-not-working" },
   openGraph: {
     title: "Discord Screen Share Not Working",
@@ -102,7 +102,7 @@ export default function DiscordScreenShareNotWorkingPage() {
         description="Share button and permission failures, then a watch that does not need the share."
         url="/guides/discord-screen-share-not-working"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -150,7 +150,7 @@ export default function DiscordScreenShareNotWorkingPage() {
           <Link href="/extension" className="text-brand-orange hover:underline">
             /extension
           </Link>
-          . Netflix is coming soon and is not on the public extension yet.
+          .
         </p>
         <SeoGuideRelated
           links={[

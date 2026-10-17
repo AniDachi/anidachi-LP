@@ -28,7 +28,7 @@ const howToSteps = [
   },
   {
     name: "Leave Discord for talking",
-    text: "A full movie should play on each person’s own Netflix account. A sync extension is what people use today. AniDachi’s Netflix rooms are not on the public extension yet.",
+    text: "A full movie should play on each person’s own Netflix account. AniDachi syncs those players in desktop Chrome; a Plus, Pro, or trial host shares an invite and friends join for free.",
   },
 ];
 
@@ -97,7 +97,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
         description="Discord voice plus a Netflix window, and when to stop the share."
         url="/guides/how-to-screen-share-netflix-on-discord"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -127,10 +127,10 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
           <Link href="/guides/how-to-screen-share-on-discord">
             how to screen share on Discord
           </Link>
-          . AniDachi does not sync Netflix on the public extension yet. The
-          extension people use in the meantime is{" "}
+          . AniDachi supports Netflix watchrooms in desktop Chrome. The
+          Teleparty alternative is covered in{" "}
           <Link href="/guides/teleparty-netflix">Teleparty Netflix</Link>.
-          Crunchyroll and YouTube can use AniDachi now from{" "}
+          Install AniDachi for Netflix, Crunchyroll, and YouTube from{" "}
           <Link href="/extension">/extension</Link>.
         </SeoGuideNote>
         <SeoGuideRelated

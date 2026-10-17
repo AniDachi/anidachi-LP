@@ -149,7 +149,7 @@ export default function AniDachiVsMetastreamPage() {
           },
           {
             feature: "Multi-site live sync",
-            values: { anidachi: "Crunchyroll & YouTube", metastream: "Many sites" },
+            values: { anidachi: "Crunchyroll, YouTube, Netflix", metastream: "Many sites" },
           },
           {
             feature: "Free tier",

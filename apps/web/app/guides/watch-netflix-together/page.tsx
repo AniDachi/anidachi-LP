@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Watch Netflix Together — Same Title, Own Accounts",
   description:
-    "Watch Netflix together from two computers: the same movie or episode, each person signed into Netflix. AniDachi is adding this for desktop Chrome. It is not on the public extension yet.",
+    "Watch Netflix together from two computers: the same movie or episode, each person signed into Netflix. AniDachi keeps playback together in desktop Chrome, with chat, reactions, and calls.",
   alternates: { canonical: "/guides/watch-netflix-together" },
   openGraph: {
     title: "Watch Netflix Together",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Does long distance change it?",
     answer:
-      "The accounts are the same. The existing long-distance page is watch Netflix together long distance. AniDachi Netflix rooms are still coming.",
+      "The accounts are the same. The existing long-distance page is watch Netflix together long distance. AniDachi supports Netflix rooms in desktop Chrome, wherever both viewers can access the same title.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function WatchNetflixTogetherPage() {
       description="Watch the same Netflix title from two accounts."
       url="/guides/watch-netflix-together"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -79,8 +79,7 @@ export default function WatchNetflixTogetherPage() {
           Watch Netflix together means both of you are on the same movie or
           episode at the same time, each signed into Netflix. A{" "}
           <Link href="/netflix-watch-party">Netflix watch party</Link> is that
-          night. AniDachi’s version for desktop Chrome is not on the public
-          extension yet.
+          night. AniDachi keeps the players in sync in desktop Chrome, with chat, reactions, and calls.
         </p>
       </SeoGuideAnswer>
       <h2 id="setup" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">

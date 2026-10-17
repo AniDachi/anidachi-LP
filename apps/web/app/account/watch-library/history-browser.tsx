@@ -96,7 +96,7 @@ function LibraryFirstWatch({ canEdit }: { canEdit: boolean }) {
     ? [
         "Install AniDachi in desktop Chrome and sign in.",
         "Open AniDachi from Chrome’s toolbar. In Settings, choose Allow recording. For YouTube, turn on Track YouTube history too.",
-        "Watch a Crunchyroll title or a full youtube.com/watch page, alone or in a room. Netflix is coming soon.",
+        "Watch a Crunchyroll title, a Netflix movie or episode, or a full youtube.com/watch page, alone or in a room.",
       ]
     : [
         "Install AniDachi in desktop Chrome and sign in.",

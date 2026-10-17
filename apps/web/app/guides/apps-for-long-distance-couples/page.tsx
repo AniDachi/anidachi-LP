@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Apps for Long Distance Couples — Watch Together Included",
   description:
-    "Apps for long distance couples: a call for voice, and AniDachi when you want to watch Crunchyroll or YouTube in sync.",
+    "Apps for long distance couples: a call for voice, and AniDachi when you want to watch Crunchyroll, YouTube, or Netflix in sync.",
   alternates: { canonical: "/guides/apps-for-long-distance-couples" },
   openGraph: {
     title: "Apps for Long Distance Couples",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Does one subscription cover both people?",
     answer:
-      "No. AniDachi does not share a Crunchyroll or YouTube login. Plus or Pro on AniDachi is for the person who wants to record their own watch progress.",
+      "No. AniDachi does not share a Crunchyroll, YouTube, or Netflix login. Plus or Pro on AniDachi is for the person who wants to record their own watch progress.",
   },
 ];
 
@@ -70,10 +70,10 @@ export default function AppsForLongDistanceCouplesPage() {
         },
       ]}
       title="Apps for long distance couples"
-      description="A call plus a synced Crunchyroll or YouTube room."
+      description="A call plus a synced Crunchyroll, YouTube, or Netflix room."
       url="/guides/apps-for-long-distance-couples"
       datePublished="2026-09-26"
-      dateModified="2026-09-26"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -130,8 +130,8 @@ export default function AppsForLongDistanceCouplesPage() {
       </h2>
       <p className="mb-6 leading-relaxed text-ani-muted">
         That phrase is the same list: a call app plus a way to watch. AniDachi
-        is the watch half for Crunchyroll and YouTube. It does not replace your
-        messages. Netflix is coming soon and is not supported yet.
+        is the watch half for Crunchyroll, YouTube, and Netflix. It does not replace your
+        messages.
       </p>
       <SeoGuideRelated
         links={[

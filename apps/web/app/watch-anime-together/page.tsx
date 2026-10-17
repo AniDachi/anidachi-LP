@@ -104,7 +104,7 @@ const faq = [
   {
     question: "What does 'anime together' mean?",
     answer:
-      "People searching 'anime together' usually want a way to watch anime together online — live sync on Crunchyroll or YouTube, not a new streaming catalog. AniDachi is the Chrome Web Store watch party for those two platforms.",
+      "People searching 'anime together' usually want a way to watch anime together online — live sync on Crunchyroll or YouTube, not a new streaming catalog. AniDachi supports both platforms and Netflix in desktop Chrome.",
   },
 ];
 

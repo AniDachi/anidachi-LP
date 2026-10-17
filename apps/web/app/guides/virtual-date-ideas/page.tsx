@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can AniDachi be the virtual date night?",
     answer:
-      "Yes for Crunchyroll and full YouTube watch pages in desktop Chrome. Stay on your usual call for voice. Netflix is coming soon and is not supported yet. Disney+, Hulu and Prime are not supported.",
+      "Yes for Crunchyroll, full YouTube watch pages, and Netflix movie or episode pages in desktop Chrome. Stay on your usual call for voice. Disney+, Hulu and Prime are not supported.",
   },
 ];
 
@@ -71,7 +71,7 @@ export default function VirtualDateIdeasPage() {
       description="Virtual dates for a long distance relationship, including a synced watch."
       url="/guides/virtual-date-ideas"
       datePublished="2026-09-27"
-      dateModified="2026-09-27"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}

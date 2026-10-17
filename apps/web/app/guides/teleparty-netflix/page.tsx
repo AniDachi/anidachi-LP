@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Teleparty Netflix — Watch a Netflix Title with Teleparty",
   description:
-    "Teleparty on Netflix is the Chrome extension, formerly Netflix Party, syncing a Netflix title. Each person needs Netflix. AniDachi’s own Netflix rooms are not public yet.",
+    "Teleparty on Netflix is the Chrome extension, formerly Netflix Party, syncing a Netflix title. Each person needs Netflix. AniDachi is a separate extension that also supports Netflix rooms.",
   alternates: { canonical: "/guides/teleparty-netflix" },
   openGraph: {
     title: "Teleparty Netflix",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Does AniDachi include Teleparty?",
     answer:
-      "No. They are different extensions. AniDachi is adding Netflix watchrooms separately, and they are not on the public extension yet.",
+      "No. They are different extensions. AniDachi has its own Netflix watchrooms with live sync, chat, reactions, and calls.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function TelepartyNetflixPage() {
       description="Teleparty on a Netflix title."
       url="/guides/teleparty-netflix"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -114,8 +114,7 @@ export default function TelepartyNetflixPage() {
         >
           Netflix Party extension
         </Link>
-        . AniDachi does not wrap Teleparty. Its own Netflix rooms are coming,
-        and Crunchyroll plus YouTube are on{" "}
+        . AniDachi does not wrap Teleparty. Its own Netflix, Crunchyroll, and YouTube rooms work in desktop Chrome. Install AniDachi from{" "}
         <Link href="/extension">/extension</Link> now. The side-by-side page is{" "}
         <Link
           href="/compare/anidachi-vs-teleparty"

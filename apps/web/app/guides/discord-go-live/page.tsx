@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
 	title: "Discord Go Live for a Watch Party",
 	description:
-		"Discord Go Live is screen share inside a voice call. Crunchyroll often goes black. Keep the call, and sync each person's own Crunchyroll or YouTube tab.",
+		"Discord Go Live is screen share inside a voice call. Crunchyroll often goes black. Keep the call, and sync each person's own Crunchyroll, YouTube, or Netflix tab.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Discord Go Live for a Watch Party",
@@ -73,7 +73,7 @@ export default function DiscordGoLivePage() {
 			description="Screen share inside a Discord voice call, and when to stop it."
 			url={PAGE_PATH}
 			datePublished="2026-10-08"
-			dateModified="2026-10-08"
+			dateModified="2026-10-17"
 			faq={faq}
 			headings={tocHeadings}
 			articleImage={articleImage}
@@ -129,7 +129,7 @@ export default function DiscordGoLivePage() {
 				<Link href="/extension" className="text-brand-orange hover:underline">
 					the install page
 				</Link>
-				. Netflix is coming soon and is not supported yet. Discord&apos;s built-in YouTube activity is a
+				. Discord&apos;s built-in YouTube activity is a
 				different feature:{" "}
 				<Link
 					href="/guides/discord-watch-together-activity"

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <MarketingArticle title="Terms of Service" updated="October 1, 2026">
+    <MarketingArticle title="Terms of Service" updated="October 17, 2026">
       <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
@@ -49,7 +49,7 @@ export default function TermsPage() {
               </h2>
               <p>
                 AniDachi provides watchrooms for synchronized viewing on
-                supported platforms (Crunchyroll and YouTube), with chat,
+                supported platforms (Crunchyroll, YouTube, and Netflix), with chat,
                 reactions, and related social features through a Chrome
                 extension and website. Free accounts can join rooms hosted on
                 Plus or Pro, including rooms hosted during an active trial.

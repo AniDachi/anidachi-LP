@@ -7,7 +7,7 @@ export const extensionInstallFaq = [
   {
     question: "How do I finish setup after installing?",
     answer:
-      "Open Chrome’s extensions menu, pin AniDachi, then open a Crunchyroll episode or full YouTube watch page and sign in when asked. Join a friend for free, or create your own room with Plus or Pro, including during a trial.",
+      "Open Chrome’s extensions menu, pin AniDachi, then open a Crunchyroll episode, full YouTube watch page, or Netflix title and sign in when asked. Join a friend for free, or create your own room with Plus or Pro, including during a trial.",
   },
   {
     question: "How do I confirm the installation in Chrome?",
@@ -17,16 +17,16 @@ export const extensionInstallFaq = [
   {
     question: "Which browsers work?",
     answer:
-      "Desktop Google Chrome 121 or newer, and Chromium Microsoft Edge. Safari, Firefox, Chrome on iOS/Android, and YouTube/Crunchyroll mobile apps cannot load this extension.",
+      "Desktop Google Chrome 121 or newer, and Chromium Microsoft Edge. Safari, Firefox, Chrome on iOS/Android, and YouTube, Crunchyroll, or Netflix mobile apps cannot load this extension.",
   },
   {
     question: "Will the extension update itself?",
     answer:
-      "Chrome Web Store installations receive updates automatically. Refresh any open YouTube or Crunchyroll video pages after an update if needed. Your AniDachi account stays the same.",
+      "Chrome Web Store installations receive updates automatically. Refresh any open YouTube, Crunchyroll, or Netflix video pages after an update if needed. Your AniDachi account stays the same.",
   },
   {
     question: "What permissions does AniDachi ask for?",
     answer:
-      "Narrow hosts only: YouTube, Crunchyroll, AniDachi, and our API. The extension does not request access to every website. See /security for the full permission list.",
+      "Narrow hosts only: YouTube, Crunchyroll, Netflix, AniDachi, and our API. The extension does not request access to every website. See /security for the full permission list.",
   },
 ];

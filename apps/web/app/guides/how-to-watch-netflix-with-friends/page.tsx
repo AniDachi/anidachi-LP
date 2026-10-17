@@ -26,15 +26,15 @@ const howToSteps = [
     text: "Every person uses their own Netflix account in desktop Chrome and opens that same title.",
   },
   {
-    name: "Sync play, and talk somewhere else",
-    text: "Netflix will not sync the group. A Chrome extension does that today. Voice can stay on Discord. AniDachi Netflix rooms are not public yet.",
+    name: "Sync playback and talk together",
+    text: "Everyone installs AniDachi in desktop Chrome and signs in. A Plus, Pro, or trial host creates a room and shares the invite; friends join for free. Use AniDachi’s microphone or your usual call for voice.",
   },
 ];
 
 export const metadata: Metadata = {
   title: "How to Watch Netflix with Friends",
   description:
-    "How to watch Netflix with friends: agree on one title, a start time, and own Netflix accounts in desktop Chrome. AniDachi group rooms for Netflix are coming.",
+    "How to watch Netflix with friends: agree on one title, a start time, and own Netflix accounts in desktop Chrome. AniDachi keeps the group in sync with chat, reactions, and calls.",
   alternates: { canonical: "/guides/how-to-watch-netflix-with-friends" },
   openGraph: {
     title: "How to Watch Netflix with Friends",
@@ -96,7 +96,7 @@ export default function HowToWatchNetflixWithFriendsPage() {
         description="A friend group on one Netflix title."
         url="/guides/how-to-watch-netflix-with-friends"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -109,8 +109,7 @@ export default function HowToWatchNetflixWithFriendsPage() {
             time, then having every friend open it on their own account.
             Netflix will not keep the group in sync. A{" "}
             <Link href="/guides/netflix-group-watch">Netflix group watch</Link>{" "}
-            is the name for that larger night. AniDachi’s Netflix rooms are
-            still coming.
+            is the name for that larger night. AniDachi supports Netflix group rooms in desktop Chrome.
           </p>
         </SeoGuideAnswer>
         <h2 id="steps" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -133,7 +132,7 @@ export default function HowToWatchNetflixWithFriendsPage() {
           <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
             Netflix watch party
           </Link>
-          . Crunchyroll and YouTube groups can install AniDachi now from{" "}
+          . Install AniDachi for Netflix, Crunchyroll, and YouTube from{" "}
           <Link href="/extension">/extension</Link>.
         </p>
         <SeoGuideRelated

@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Netflix Movie Night — One Film, One Start Time",
   description:
-    "A Netflix movie night is one film, a start time, and everyone on their own Netflix account. AniDachi is adding Netflix movie rooms for desktop Chrome. They are not public yet.",
+    "A Netflix movie night is one film, a start time, and everyone on their own Netflix account. AniDachi keeps Netflix playback in sync in desktop Chrome, with chat and calls beside the movie.",
   alternates: { canonical: "/guides/netflix-movie-night" },
   openGraph: {
     title: "Netflix Movie Night",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Can AniDachi host it?",
     answer:
-      "Not on Netflix yet. Those rooms are being added. The public extension hosts Crunchyroll and YouTube.",
+      "Yes. With Plus or Pro, including during a trial, open a Netflix movie in desktop Chrome and create an AniDachi room. Friends join for free with the extension and their own Netflix access.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function NetflixMovieNightPage() {
       description="One Netflix film and a start time."
       url="/guides/netflix-movie-night"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -79,7 +79,7 @@ export default function NetflixMovieNightPage() {
           A Netflix movie night is one film and a time everyone starts. It is
           a <Link href="/netflix-watch-party">Netflix watch party</Link> with
           an ending. Each person opens that film on their own Netflix account.
-          AniDachi’s Netflix rooms are not on the public extension yet.
+          AniDachi keeps the movie in sync and adds chat, reactions, and calls.
         </p>
       </SeoGuideAnswer>
       <h2 id="plan" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -126,7 +126,7 @@ export default function NetflixMovieNightPage() {
         >
           how to watch Netflix together
         </Link>
-        . Install AniDachi for Crunchyroll and YouTube from{" "}
+        . Install AniDachi for Netflix, Crunchyroll, and YouTube from{" "}
         <Link href="/extension">/extension</Link>.
       </p>
       <SeoGuideRelated

@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Netflix Party — The Old Name for a Netflix Watch Party",
   description:
-    "Netflix Party was a Chrome extension for watching Netflix together. It was renamed Teleparty. People still use the old name for a Netflix watch party. AniDachi Netflix rooms are coming.",
+    "Netflix Party was a Chrome extension for watching Netflix together. It was renamed Teleparty. People still use the old name for a Netflix watch party. AniDachi also supports Netflix watchrooms in desktop Chrome.",
   alternates: { canonical: "/netflix-party" },
   openGraph: {
     title: "Netflix Party",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Netflix Party",
-    description: "Netflix Party is now Teleparty. AniDachi is adding Netflix separately.",
+    description: "Netflix Party is now Teleparty. AniDachi is a separate extension with Netflix watchrooms.",
     images: ["/opengraph-image.png"],
   },
 };
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Is AniDachi Netflix Party?",
     answer:
-      "No. AniDachi is a separate Chrome extension. Netflix watchrooms are being added and are not on the public extension yet.",
+      "No. AniDachi is a separate Chrome extension. It supports Netflix, Crunchyroll, and YouTube watchrooms in desktop Chrome.",
   },
 ];
 
@@ -67,7 +67,7 @@ export default function NetflixPartyPage() {
       description="Netflix Party was renamed Teleparty. The search still means a watch party."
       url="/netflix-party"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -81,8 +81,7 @@ export default function NetflixPartyPage() {
           together. That extension is now called Teleparty. People still
           search the old name when they want a{" "}
           <Link href="/netflix-watch-party">Netflix watch party</Link>.
-          AniDachi is adding its own Netflix rooms. They are not on the public
-          extension yet.
+          AniDachi offers its own Netflix watchrooms with live sync, chat, reactions, and calls.
         </p>
       </SeoGuideAnswer>
       <h2 id="name" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -100,7 +99,7 @@ export default function NetflixPartyPage() {
           },
           {
             title: "AniDachi is separate",
-            body: "Crunchyroll and YouTube work in AniDachi today. Netflix is the platform being added.",
+            body: "AniDachi supports Netflix, Crunchyroll, and YouTube. Everyone watches through their own provider access.",
           },
         ]}
       />

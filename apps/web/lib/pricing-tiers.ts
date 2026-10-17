@@ -72,9 +72,9 @@ export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
   {
     feature: "Platforms",
     values: {
-      free: "Crunchyroll + YouTube",
-      plus: "Crunchyroll + YouTube",
-      pro: "Crunchyroll + YouTube",
+      free: "Crunchyroll, YouTube, Netflix",
+      plus: "Crunchyroll, YouTube, Netflix",
+      pro: "Crunchyroll, YouTube, Netflix",
     },
   },
   {
@@ -113,8 +113,8 @@ export const PRICING_PLAN_MATRIX_ROWS: CompareTableRow[] = [
     feature: "Record & edit progress",
     values: {
       free: "no",
-      plus: "Yes — both platforms",
-      pro: "Yes — both platforms",
+      plus: "Yes — all three platforms",
+      pro: "Yes — all three platforms",
     },
   },
   {
@@ -166,9 +166,9 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: "$0",
     priceSuffix: "/month",
     audience: "Try AniDachi and join friends in their rooms",
-    summary: "Crunchyroll + YouTube — join free, host with a daily limit",
+    summary: "Crunchyroll, YouTube, Netflix — join free, host with a daily limit",
     features: [
-      "Crunchyroll + YouTube",
+      "Crunchyroll, YouTube, Netflix",
       `Host your own room: ${freeHostMins} min/day`,
       `Up to ${freePolicy.maxParticipants} people (incl. host)`,
       `Up to ${freePolicy.maxCameras} cameras & ${freePolicy.maxMicrophones} mics`,
@@ -185,13 +185,13 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     priceDisplay: PRICING_PLUS_LABEL,
     priceSuffix: "/month",
     audience: "Your room. Your favorite people.",
-    summary: "No daily host limit — record progress on both platforms",
+    summary: "No daily host limit — record progress on all three platforms",
     features: [
-      "Crunchyroll + YouTube",
+      "Crunchyroll, YouTube, Netflix",
       "Host your own room: no daily limit",
       `Up to ${plusPolicy.maxParticipants} people (incl. host)`,
       `Up to ${plusPolicy.maxCameras} cameras & ${plusPolicy.maxMicrophones} mics`,
-      "Record & edit progress on both platforms",
+      "Record & edit progress on all three platforms",
       "Resume from saved spot",
       "Join friends' rooms",
       "Sync, chat & reactions",

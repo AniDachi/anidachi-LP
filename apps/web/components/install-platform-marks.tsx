@@ -2,7 +2,7 @@ import { ProviderLogo } from "../../extension/src/provider-logo";
 import styles from "./extension-install.module.css";
 
 // YouTube and Netflix artwork: https://github.com/pheralb/svgl (static/library).
-/** Passive marks for the upcoming integrated release; these are not links. */
+/** Passive supported-platform marks; these are not links. */
 export function InstallPlatformMarks() {
   return (
     <ul className={styles.platforms} aria-label="Watch together on these platforms">

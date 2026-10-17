@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Netflix Party Extension — Now Called Teleparty",
   description:
-    "The Netflix Party extension was renamed Teleparty. Install Teleparty from the Chrome Web Store if you want that tool. AniDachi’s Netflix support is a separate update and is not public yet.",
+    "The Netflix Party extension was renamed Teleparty. Install Teleparty from the Chrome Web Store if you want that tool. AniDachi is a separate extension that also supports Netflix watchrooms.",
   alternates: { canonical: "/guides/netflix-party-extension" },
   openGraph: {
     title: "Netflix Party Extension",
@@ -44,7 +44,7 @@ const faq = [
   {
     question: "Is AniDachi the Netflix Party extension?",
     answer:
-      "No. AniDachi is a different Chrome extension. It syncs Crunchyroll and YouTube now. Netflix rooms are being added and are not on the public build yet.",
+      "No. AniDachi is a different Chrome extension. It syncs Netflix, Crunchyroll, and YouTube in desktop Chrome, with chat, reactions, and calls.",
   },
 ];
 
@@ -70,7 +70,7 @@ export default function NetflixPartyExtensionPage() {
       description="The Netflix Party Chrome extension is now Teleparty."
       url="/guides/netflix-party-extension"
       datePublished="2026-10-08"
-      dateModified="2026-10-08"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -110,8 +110,7 @@ export default function NetflixPartyExtensionPage() {
       </h2>
       <p className="mb-6 leading-relaxed text-ani-muted">
         Install AniDachi from <Link href="/extension">/extension</Link> for
-        Crunchyroll and YouTube. Netflix rooms are being added for desktop
-        Chrome and are not in that public build yet. Using Teleparty on a
+        Netflix, Crunchyroll, and YouTube watchrooms in desktop Chrome. Using Teleparty on a
         Netflix title is{" "}
         <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
           Teleparty Netflix

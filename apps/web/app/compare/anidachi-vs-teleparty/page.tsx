@@ -53,7 +53,7 @@ const faq = [
   {
     question: "Is there a Teleparty for Crunchyroll — can you Teleparty Crunchyroll?",
     answer:
-      "Yes. Teleparty (formerly Netflix Party) lists Crunchyroll among supported platforms for live rooms. Consider AniDachi for Crunchyroll and YouTube live rooms with personal history; keep Teleparty when you also need Netflix/Disney+ in one live tool. AniDachi's async catch-up is coming soon.",
+      "Yes. Teleparty (formerly Netflix Party) lists Crunchyroll among supported platforms for live rooms. Consider AniDachi for Netflix, Crunchyroll, and YouTube live rooms with personal history. Disney+ is not supported by AniDachi. AniDachi's async catch-up is coming soon.",
   },
   {
     question: "Can I switch from Teleparty to AniDachi?",
@@ -73,7 +73,7 @@ const faq = [
   {
     question: "Is AniDachi a Teleparty alternative / watch party app?",
     answer:
-      "Yes. AniDachi is a Chrome Web Store watch-party extension for Crunchyroll and YouTube — a Teleparty alternative when you do not need Netflix or Disney+. Friends join from /extension with Add to Chrome.",
+      "Yes. AniDachi is a Chrome Web Store watch-party extension for Crunchyroll and YouTube — a Teleparty alternative that also supports Netflix. Friends join from /extension with Add to Chrome.",
   },
 ];
 
@@ -105,7 +105,7 @@ export default function AniDachiVsTelepartyPage() {
       description="Side-by-side comparison for anime watch parties."
       url="/compare/anidachi-vs-teleparty"
       datePublished="2026-04-23"
-        dateModified="2026-10-01"
+        dateModified="2026-10-17"
       faq={faq}
       headings={headings}
     >
@@ -153,7 +153,7 @@ export default function AniDachiVsTelepartyPage() {
           { feature: "YouTube support", values: { anidachi: "yes", teleparty: "yes" } },
           {
             feature: "Netflix / Disney+ / HBO",
-            values: { anidachi: "Netflix coming soon", teleparty: "yes" },
+            values: { anidachi: "Netflix only", teleparty: "yes" },
           },
           {
             feature: "Asynchronous watching",

@@ -64,7 +64,7 @@ const faq = [
   {
     question: "What about YouTube in the same call?",
     answer:
-      "The same pattern works for a full YouTube watch page. Shorts, embeds, and the YouTube mobile app are not supported. Netflix is coming soon and is not supported yet.",
+      "The same pattern works for a full YouTube watch page. Shorts, embeds, and the YouTube mobile app are not supported.",
   },
 ];
 
@@ -96,7 +96,7 @@ export default function CanYouStreamCrunchyrollOnDiscordPage() {
       description="Watch Crunchyroll during a Discord call without a compressed share."
       url="/guides/can-you-stream-crunchyroll-on-discord"
       datePublished="2026-09-27"
-      dateModified="2026-09-27"
+      dateModified="2026-10-17"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -151,7 +151,7 @@ export default function CanYouStreamCrunchyrollOnDiscordPage() {
         >
           Discord watch together
         </Link>
-        . Netflix is coming soon and is not supported yet.
+        .
       </p>
       <SeoGuideRelated
         links={[
