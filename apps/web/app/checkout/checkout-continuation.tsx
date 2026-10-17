@@ -1,4 +1,5 @@
 "use client";
+import { EXTENSION_WELCOME_PATH } from "@/lib/extension-welcome";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -118,7 +119,7 @@ export function CheckoutContinuation({
 				if (result.state === "active") {
 					recovery.current = null;
 					if (onboarding) setCompletedOwner(owner);
-					else window.location.replace("/account/billing");
+					else window.location.replace(EXTENSION_WELCOME_PATH);
 				} else if (result.state === "pending") {
 					recovery.current = {
 						owner,

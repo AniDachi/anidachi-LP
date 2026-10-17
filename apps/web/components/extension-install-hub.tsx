@@ -35,6 +35,8 @@ import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { InstallPlatformMarks } from "./install-platform-marks";
 import styles from "./extension-install.module.css";
+import { ExtensionWelcomeHero } from "./extension-welcome-hero";
+import type { ExtensionWelcome } from "@/lib/extension-welcome";
 
 type BrowserKind = "chrome" | "edge" | "other";
 
@@ -121,8 +123,12 @@ function ChromePinMock() {
 
 export function ExtensionInstallHub({
   artifact,
+  welcome,
+  extensionId,
 }: {
   artifact: PublicExtensionArtifact;
+  welcome?: ExtensionWelcome;
+  extensionId?: string | null;
 }) {
   const searchParams = useSearchParams();
   const nextPath = isSafeInstallNextPath(searchParams.get("next"));
@@ -243,7 +249,7 @@ export function ExtensionInstallHub({
 
   return (
     <div className={styles.hub}>
-      <section className={styles.hero} aria-labelledby="install-title">
+      {welcome ? <ExtensionWelcomeHero welcome={welcome} extensionId={extensionId} /> : <section className={styles.hero} aria-labelledby="install-title">
         <div className={styles.brand}>
           <AnidachiLogo size={44} priority aria-hidden />
           <span>AniDachi</span>
@@ -292,7 +298,7 @@ export function ExtensionInstallHub({
         <span className="sr-only" role="status" aria-live="polite">
           {linkStatus === "shared" ? "Install link shared" : linkStatus === "copied" ? "Install link copied" : ""}
         </span>
-      </section>
+      </section>}
 
       {nextPath && !isMobile ? (
         <aside className={styles.returnNotice} aria-label="Return to your invitation">
@@ -303,7 +309,7 @@ export function ExtensionInstallHub({
 
       {EXTENSION_INSTALL_MODE === "cws" ? (
         <OverlayUsingGuide
-          setup={
+          setup={welcome ? undefined :
             <ol className={styles.setupSteps} aria-label="Install AniDachi">
               <li>
                 <span className={styles.setupNumber} aria-hidden="true">1</span>
