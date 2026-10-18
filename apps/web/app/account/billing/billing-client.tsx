@@ -49,6 +49,7 @@ import type { ReactNode } from "react";
 import {
 	SubscriptionPresentation,
 	hasSubscriptionSummary,
+	EndedTrialSummary,
 } from "./subscription-summary";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
@@ -661,10 +662,12 @@ function BillingWorkspace({
 			changeTrial={changeTrial}
 			openStripe={openStripe}
 			setPlanQuote={setPlanQuote}
-			renderTrialControls={(subscription) => (
+			renderTrialControls={(subscription, active, onBack) => (
 				<CardlessTrialControls
 					key={subscription.id}
 					subscription={subscription}
+					active={active}
+					onBack={onBack}
 					busy={busy}
 					selection={
 						renewalSelections[subscription.id] ?? {
@@ -729,16 +732,47 @@ export function BillingView({
 		action: "cancel" | "payment" | "restore" | "yearly",
 	) => Promise<void>;
 	setPlanQuote: (quote: null) => void;
-	renderTrialControls?: (subscription: BillingSubscription) => ReactNode;
+	renderTrialControls?: (
+		subscription: BillingSubscription,
+		active: boolean,
+		onBack: () => void,
+	) => ReactNode;
 }) {
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 	const owned = overview?.ownerUserId === ownerUserId ? overview : null;
 	const current =
 		owned?.subscriptions.filter((s) => !isPastSubscription(s)) ?? [];
 	const previous = owned?.subscriptions.filter(isPastSubscription) ?? [];
+	const endedTrial =
+		owned?.planCode === "free" &&
+		current.length === 0 &&
+		!owned.pendingTrialActivation
+			? previous.find(
+					(s) =>
+						s.trial?.mode === "cardless" &&
+						s.trial.stage === "ended" &&
+						!s.trial.renewalEnabled &&
+						!s.trial.pendingRenewal,
+				)
+			: undefined;
+	const expansionKey = (s: BillingSubscription) =>
+		`${s.id}:${s.trial?.pendingRenewal?.id ?? ""}`;
+	const isExpanded = (s: BillingSubscription) =>
+		expanded[expansionKey(s)] ??
+		(manageRequested || Boolean(s.trial?.pendingRenewal));
+	const setExpandedFor = (s: BillingSubscription, open: boolean) =>
+		setExpanded((previous) =>
+			previous[expansionKey(s)] === open
+				? previous
+				: { ...previous, [expansionKey(s)]: open },
+		);
+	const editing = current.some(
+		(s) => hasSubscriptionSummary(s) && isExpanded(s),
+	);
 	return (
 		<div className="ac-page ac-billing ac-billing-clean" aria-busy={busy}>
-			<header className="billing-header">
+			{editing && <h1 className="sr-only">Subscription</h1>}
+			<header className="billing-header" hidden={editing}>
 				<h1>Subscription</h1>
 				<button
 					type="button"
@@ -790,98 +824,73 @@ export function BillingView({
 							</Link>
 						</section>
 					)}
-					{owned.planCode === "free" &&
-						owned.subscriptions
-							.filter(
-								(s) =>
-									s.trial?.mode === "cardless" &&
-									s.trial.stage === "ended" &&
-									!s.trial.renewalEnabled &&
-									!s.trial.pendingRenewal,
-							)
-							.slice(0, 1)
-							.map((s) => (
-								<section key={s.id} className="ac-notice">
-									<p>
-										Your 3-day trial has ended. Choose a paid plan when you are
-										ready to host again.
-									</p>
-									<Link
-										className="ac-button ac-button-primary"
-										href={checkoutReturnPath({
-											plan: s.planCode === "pro" ? "pro" : "plus",
-											billing: s.price?.billingPeriod ?? "monthly",
-										})}
-									>
-										Continue with {PLAN_NAMES[s.planCode]}
-									</Link>
-								</section>
-							))}
-					{(owned.planCode === "free" || current.length === 0) && (
-						<section className="billing-access" aria-label="Current access">
-							<h2>{PLAN_NAMES[owned.planCode]}</h2>
-							{owned.planCode === "free" ? (
-								<>
-									<div className="billing-actions">
-										<Link
-											href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
-											className="ac-button"
-										>
-											{INSTALL_CTA_LABEL}
-										</Link>
-										{!owned.pendingTrialActivation && (
+					{endedTrial && <EndedTrialSummary subscription={endedTrial} />}
+					{!endedTrial &&
+						(owned.planCode === "free" || current.length === 0) && (
+							<section className="billing-access" aria-label="Current access">
+								<h2>{PLAN_NAMES[owned.planCode]}</h2>
+								{owned.planCode === "free" ? (
+									<>
+										<div className="billing-actions">
 											<Link
-												href="/pricing"
-												className="ac-button ac-button-primary"
+												href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
+												className="ac-button"
 											>
-												View plans
-												<ArrowRight size={16} aria-hidden />
+												{INSTALL_CTA_LABEL}
 											</Link>
-										)}
-									</div>
-									<ul className="ac-plan-limits">
-										{owned.hosting &&
-										owned.serverTime &&
-										owned.hosting.hostingActivationAt &&
-										Date.parse(owned.hosting.hostingActivationAt) <=
-											Date.parse(owned.serverTime) ? (
-											<li>
-												Join a Plus, Pro or trial host for free. Creating your
-												own room needs Plus or Pro.
-											</li>
-										) : owned.hosting && owned.serverTime ? (
-											<>
+											{!owned.pendingTrialActivation && (
+												<Link
+													href="/pricing"
+													className="ac-button ac-button-primary"
+												>
+													View plans
+													<ArrowRight size={16} aria-hidden />
+												</Link>
+											)}
+										</div>
+										<ul className="ac-plan-limits">
+											{owned.hosting &&
+											owned.serverTime &&
+											owned.hosting.hostingActivationAt &&
+											Date.parse(owned.hosting.hostingActivationAt) <=
+												Date.parse(owned.serverTime) ? (
 												<li>
-													Host for 30 minutes a day once a guest joins. Waiting
-													alone does not use that time, and pausing the video
-													does not stop it. A warning appears with five minutes
-													left.
+													Join a Plus, Pro or trial host for free. Creating your
+													own room needs Plus or Pro.
 												</li>
-												<li>Up to 4 people in a room, including you.</li>
-											</>
-										) : (
+											) : owned.hosting && owned.serverTime ? (
+												<>
+													<li>
+														Host for 30 minutes a day once a guest joins.
+														Waiting alone does not use that time, and pausing
+														the video does not stop it. A warning appears with
+														five minutes left.
+													</li>
+													<li>Up to 4 people in a room, including you.</li>
+												</>
+											) : (
+												<li>
+													Join friends for free. Refresh to check your current
+													hosting access.
+												</li>
+											)}
 											<li>
-												Join friends for free. Refresh to check your current
-												hosting access.
+												No new watch history. You can still view and delete
+												anything already saved.
 											</li>
-										)}
-										<li>
-											No new watch history. You can still view and delete
-											anything already saved.
-										</li>
-										<li>
-											Invite by link. Push invites, room names, and more than
-											one group need Plus or Pro.
-										</li>
-									</ul>
-								</>
-							) : (
-								<p className="ac-muted">
-									No recurring subscription is linked to this account.
-								</p>
-							)}
-						</section>
-					)}
+											<li>
+												Invite by link. Push invites, room names, and more than
+												one group need Plus or Pro.
+											</li>
+										</ul>
+									</>
+								) : (
+									<p className="ac-muted">
+										No recurring subscription is linked to this account.
+									</p>
+								)}
+							</section>
+						)}
 					{current.map((subscription) => (
 						<section
 							key={subscription.id}
@@ -901,27 +910,8 @@ export function BillingView({
 								key={subscription.id}
 								subscription={subscription}
 								busy={busy}
-								open={
-									expanded[
-										`${subscription.id}:${subscription.trial?.pendingRenewal?.id ?? ""}`
-									] ??
-									(manageRequested ||
-										Boolean(subscription.trial?.pendingRenewal) ||
-										Boolean(subscription.trial?.renewalEnabled))
-								}
-								onOpenChange={(open) =>
-									setExpanded((previous) =>
-										previous[
-											`${subscription.id}:${subscription.trial?.pendingRenewal?.id ?? ""}`
-										] === open
-											? previous
-											: {
-													...previous,
-													[`${subscription.id}:${subscription.trial?.pendingRenewal?.id ?? ""}`]:
-														open,
-												},
-									)
-								}
+								open={isExpanded(subscription)}
+								onOpenChange={(open) => setExpandedFor(subscription, open)}
 								heading={
 									<div className="billing-plan-heading">
 										<div>
@@ -945,8 +935,15 @@ export function BillingView({
 									</div>
 								}
 							>
-								<SubscriptionFacts subscription={subscription} />
-								{renderTrialControls?.(subscription)}
+								{!(
+									subscription.trial?.mode === "cardless" &&
+									subscription.trial.stage === "trial"
+								) && <SubscriptionFacts subscription={subscription} />}
+								{renderTrialControls?.(
+									subscription,
+									isExpanded(subscription),
+									() => setExpandedFor(subscription, false),
+								)}
 								{(["past_due", "unpaid", "incomplete"].includes(
 									subscription.status,
 								) ||
@@ -1130,6 +1127,17 @@ export function BillingView({
 						</details>
 					)}
 					<footer className="billing-footer">
+						{editing && (
+							<button
+								type="button"
+								className="ac-button ac-button-quiet"
+								onClick={() => void load(true)}
+								disabled={busy}
+							>
+								<RefreshCw size={15} aria-hidden />
+								Refresh status
+							</button>
+						)}
 						<Link href="/pricing">
 							Compare plans
 							<ArrowRight size={15} aria-hidden />

@@ -46,7 +46,7 @@ const example: BillingOverview = {
 };
 export function BillingPreview() {
 	const [notice, setNotice] = useState<string | null>(null);
-	const [variant, setVariant] = useState("Card trial");
+	const [variant, setVariant] = useState("Cardless trial");
 	const [quote, setQuote] = useState<CardlessQuoteView | null>(null);
 	const [selection, setSelection] = useState<CardlessRenewalSelection>({
 		planCode: "plus",
@@ -55,7 +55,10 @@ export function BillingPreview() {
 	const isCardless = variant !== "Card trial";
 	const enabled = variant === "Renewal enabled";
 	const ended = variant === "Trial ended";
-	const paid = variant === "Paid" || variant === "Renewal off";
+	const paid = ["Paid", "Paid yearly", "Renewal off"].includes(variant);
+	const pending = variant === "Setup pending";
+	const processing = variant === "Payment processing";
+	const paymentRequired = variant === "Payment failed";
 	const view: BillingOverview = paid
 		? {
 				...example,
@@ -66,13 +69,15 @@ export function BillingPreview() {
 						status: "active",
 						currentPeriodEnd: "2030-02-04T16:00:00Z",
 						canChangeTrialPlan: false,
-						canCancel: variant === "Paid",
+						canCancel: variant !== "Renewal off",
 						canRestoreRenewal: variant === "Renewal off",
-						canSwitchToYearly: true,
+						canSwitchToYearly: variant !== "Paid yearly",
 						cancelAtPeriodEnd: variant === "Renewal off",
 						price: {
-							...PUBLISHED_PRICING.monthly.plus,
-							billingPeriod: "monthly",
+							...PUBLISHED_PRICING[
+								variant === "Paid yearly" ? "yearly" : "monthly"
+							].plus,
+							billingPeriod: variant === "Paid yearly" ? "yearly" : "monthly",
 						},
 					},
 				],
@@ -80,12 +85,18 @@ export function BillingPreview() {
 		: isCardless
 			? {
 					...example,
-					planCode: ended ? "free" : "plus",
+					planCode: ended || paymentRequired ? "free" : "plus",
 					subscriptions: [
 						{
 							...example.subscriptions[0],
-							status: ended ? "canceled" : "trialing",
-							cancelAtPeriodEnd: !enabled,
+							status: ended
+								? "canceled"
+								: paymentRequired
+									? "past_due"
+									: processing
+										? "active"
+										: "trialing",
+							cancelAtPeriodEnd: !(enabled || processing || paymentRequired),
 							canCancel: false,
 							canRestoreRenewal: false,
 							canChangeTrialPlan: false,
@@ -95,11 +106,36 @@ export function BillingPreview() {
 							},
 							trial: {
 								mode: "cardless",
-								stage: ended ? "ended" : "trial",
+								stage: ended
+									? "ended"
+									: processing
+										? "processing"
+										: paymentRequired
+											? "payment_required"
+											: "trial",
 								endsAt: "2030-01-04T16:00:00Z",
 								pendingUntil: "2030-01-04T18:00:00Z",
-								renewalState: enabled ? "enabled" : "not_enabled",
+								renewalState: pending
+									? "pending"
+									: enabled
+										? "enabled"
+										: "not_enabled",
 								renewalEnabled: enabled,
+								pendingRenewal: pending
+									? {
+											id: "sample-pending",
+											action: "enable",
+											setupRequestId: "sample-request",
+											terms: {
+												planCode: "plus",
+												price: {
+													...PUBLISHED_PRICING.monthly.plus,
+													billingPeriod: "monthly",
+												},
+												firstChargeAt: "2030-01-04T16:00:00Z",
+											},
+										}
+									: undefined,
 							},
 						},
 					],
@@ -140,46 +176,57 @@ export function BillingPreview() {
 			<header className="account-header">
 				<AnidachiLogoLink size={28} />
 				<div className="account-identity">
-					<span className="account-plan">Plus</span>
+					<span className="account-plan">{view.planCode}</span>
 					<span>Alex · Preview</span>
 				</div>
 			</header>
-			<p className="px-4 py-4 text-center text-xs text-ani-muted">
-				Local preview · sample subscription · payment actions are inactive
-			</p>
-			<div
-				className="flex flex-wrap justify-center gap-2 px-4 pb-4"
-				aria-label="Preview state"
-			>
-				{[
-					"Card trial",
-					"Cardless trial",
-					"Renewal enabled",
-					"Trial ended",
-					"Paid",
-					"Renewal off",
-				].map((label) => (
-					<button
-						key={label}
-						type="button"
-						className="ac-button"
-						aria-pressed={variant === label}
-						onClick={() => {
-							setVariant(label);
-							setQuote(null);
-							setNotice(null);
-						}}
-					>
-						{label}
-					</button>
-				))}
-			</div>
+			<details className="billing-preview-switcher">
+				<summary className="px-4 py-3 text-center text-xs text-ani-muted">
+					Local preview · sample subscription · {variant} · change state
+				</summary>
+				<p className="px-4 pb-3 text-center text-xs text-ani-muted">
+					Payment actions are inactive.
+				</p>
+				<div
+					className="flex flex-wrap justify-center gap-2 px-4 pb-4"
+					aria-label="Preview state"
+				>
+					{[
+						"Card trial",
+						"Cardless trial",
+						"Renewal enabled",
+						"Trial ended",
+						"Paid",
+						"Renewal off",
+						"Paid yearly",
+						"Setup pending",
+						"Payment processing",
+						"Payment failed",
+					].map((label) => (
+						<button
+							key={label}
+							type="button"
+							className="ac-button"
+							aria-pressed={variant === label}
+							onClick={() => {
+								setVariant(label);
+								setQuote(null);
+								setNotice(null);
+								setSelection({ planCode: "plus", billingPeriod: "monthly" });
+							}}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			</details>
 			<div className="account-frame">
 				<aside className="account-sidebar">
 					<AccountNav />
 				</aside>
 				<section className="account-content min-w-0">
 					<BillingView
+						key={variant}
 						ownerUserId="local-preview"
 						overview={view}
 						busy={false}
@@ -190,10 +237,12 @@ export function BillingPreview() {
 						changeTrial={previewAction}
 						openStripe={previewAction}
 						setPlanQuote={() => {}}
-						renderTrialControls={(s) => (
+						renderTrialControls={(s, active, onBack) => (
 							<CardlessTrialControls
 								key={variant}
 								subscription={s}
+								active={active}
+								onBack={onBack}
 								busy={false}
 								quote={quote}
 								selection={selection}

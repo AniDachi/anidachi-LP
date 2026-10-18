@@ -99,6 +99,7 @@ async function mount(
 	returnedFromPortal = false,
 	initial?: { overview: BillingOverview; remainingMs: number },
 	trialSetupReturn?: { operationId: string; canceled: boolean },
+	manageRequested = false,
 ) {
 	container = document.createElement("div");
 	document.body.appendChild(container);
@@ -110,6 +111,7 @@ async function mount(
 				returnedFromPortal,
 				initial,
 				trialSetupReturn,
+				manageRequested,
 			}),
 		);
 	});
@@ -262,7 +264,7 @@ test("cardless billing reviews exact renewal terms before explicitly opening car
 	);
 	await act(async () => trialButton(/^Review renewal$/).click());
 	assert.deepEqual(actions, ["/api/billing/trial/renewal/quote"]);
-	assert.match(container.textContent!, /\$7.99\/month/);
+	assert.match(container.textContent!, /\$7.99\s*\/\s*month/);
 	assert.match(container.textContent!, /First payment/);
 	assert.match(container.textContent!, /No payment today/);
 	await act(async () => trialButton(/Add card.*enable renewal/i).click());
@@ -272,29 +274,28 @@ test("cardless billing reviews exact renewal terms before explicitly opening car
 
 async function selectProYearly() {
 	await act(async () => {
-		const plan = container.querySelector<HTMLSelectElement>(
-			'[aria-label="Renewal plan"]',
+		const plan = container.querySelector<HTMLInputElement>(
+			'[aria-label="Renewal plan"] input[value="pro"]',
 		)!;
-		plan.value = "pro";
-		plan.dispatchEvent(new Event("change", { bubbles: true }));
+		plan.click();
 	});
 	await act(async () => {
-		const period = container.querySelector<HTMLSelectElement>(
-			'[aria-label="Renewal billing period"]',
+		const period = container.querySelector<HTMLInputElement>(
+			'[aria-label="Renewal billing period"] input[value="yearly"]',
 		)!;
-		period.value = "yearly";
-		period.dispatchEvent(new Event("change", { bubbles: true }));
+		period.click();
 	});
 }
 function assertProYearlySelection() {
 	assert.equal(
-		container.querySelector<HTMLSelectElement>('[aria-label="Renewal plan"]')
-			?.value,
+		container.querySelector<HTMLInputElement>(
+			'[aria-label="Renewal plan"] input:checked',
+		)?.value,
 		"pro",
 	);
 	assert.equal(
-		container.querySelector<HTMLSelectElement>(
-			'[aria-label="Renewal billing period"]',
+		container.querySelector<HTMLInputElement>(
+			'[aria-label="Renewal billing period"] input:checked',
 		)?.value,
 		"yearly",
 	);
@@ -335,7 +336,7 @@ for (const trigger of ["timer", "tab", "refresh"] as const) {
 			assert.match(
 				container.querySelector('[aria-label="Review renewal terms"]')
 					?.textContent ?? "",
-				/143\.90\/year/,
+				/143\.90\s*\/\s*year/,
 			);
 			await act(async () => {
 				if (trigger === "timer") t.mock.timers.tick(60_000);
@@ -355,7 +356,7 @@ for (const trigger of ["timer", "tab", "refresh"] as const) {
 			assert.match(
 				container.querySelector('[aria-label="Review renewal terms"]')
 					?.textContent ?? "",
-				/143\.90\/year/,
+				/143\.90\s*\/\s*year/,
 			);
 		},
 	);
@@ -424,7 +425,7 @@ for (const action of ["quote", "setup"] as const) {
 				assert.match(
 					container.querySelector('[aria-label="Review renewal terms"]')
 						?.textContent ?? "",
-					/143\.90\/year/,
+					/143\.90\s*\/\s*year/,
 				);
 			}
 		},
@@ -479,8 +480,8 @@ for (const reason of [
 		if (reason === "quote expired") assertProYearlySelection();
 		if (reason === "different subscription")
 			assert.equal(
-				container.querySelector<HTMLSelectElement>(
-					'[aria-label="Renewal plan"]',
+				container.querySelector<HTMLInputElement>(
+					'[aria-label="Renewal plan"] input:checked',
 				)?.value,
 				"plus",
 			);
@@ -614,8 +615,9 @@ test("an account mismatch clears the renewal draft before any later same-owner r
 	readOwner = "owner";
 	await act(async () => window.dispatchEvent(new Event("focus")));
 	assert.equal(
-		container.querySelector<HTMLSelectElement>('[aria-label="Renewal plan"]')
-			?.value,
+		container.querySelector<HTMLInputElement>(
+			'[aria-label="Renewal plan"] input:checked',
+		)?.value,
 		"plus",
 	);
 	assert.equal(
@@ -657,8 +659,8 @@ test("a card setup return after expiry offers an explicit paid path without open
 	assert.ok(
 		[...container.querySelectorAll("a")].some(
 			(a) =>
-				/Continue with Plus/.test(a.textContent ?? "") &&
-				a.getAttribute("href") === "/checkout?plan=plus&billing=monthly",
+				/Choose a plan/.test(a.textContent ?? "") &&
+				a.getAttribute("href") === "/pricing",
 		),
 	);
 	assert.equal(window.location.pathname, "/account/billing");
@@ -1493,12 +1495,13 @@ test("paid summary opens existing management without creating a payment session"
 	);
 });
 
-test("cardless summary links to pricing and never promises a paid renewal without consent", async () => {
+test("cardless summary opens renewal setup and never promises a paid renewal without consent", async () => {
 	globalThis.fetch = async () => Response.json(cardless);
 	await mount();
 	const card = container.querySelector(".billing-summary-card")!;
 	assert.match(card.textContent!, /Free trial.*No automatic charge/);
-	assert.equal(card.querySelector("a")?.getAttribute("href"), "/pricing");
+	assert.equal(card.querySelector("a"), null);
+	assert.match(card.querySelector("button")!.textContent!, /Set up renewal/);
 	assert.doesNotMatch(card.textContent!, /Renews automatically|Next payment/);
 });
 
@@ -1606,4 +1609,154 @@ test("a new pending renewal reopens controls even after the user collapsed them"
 	) as HTMLDetailsElement;
 	assert.equal(details.open, true);
 	assert.match(details.textContent!, /Check renewal status/);
+});
+
+test("opening legacy card-required trial management never requests cardless renewal terms", async () => {
+	const requests: string[] = [];
+	globalThis.fetch = async (path) => {
+		requests.push(String(path));
+		return Response.json({
+			...cardless,
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					trial: { ...cardless.subscriptions[0].trial!, mode: "card_required" },
+				},
+			],
+		});
+	};
+	await mount(false, undefined, undefined, true);
+	assert.ok(requests.length > 0);
+	assert.equal(requests.filter((path) => path.includes("/renewal/")).length, 0);
+	assert.equal(container.querySelector('[aria-label="Trial renewal"]'), null);
+});
+
+test("opening renewal setup reviews once, preserves terms on reopen, and never enables renewal", async () => {
+	const actions: string[] = [];
+	globalThis.fetch = async (path, init) => {
+		if (String(path).endsWith("/quote")) {
+			actions.push(String(path));
+			const selection = JSON.parse(String(init?.body));
+			return Response.json({
+				...renewalQuote,
+				...selection,
+				amount: selection.billingPeriod === "yearly" ? 7670 : 799,
+			});
+		}
+		return Response.json(cardless);
+	};
+	await mount();
+	assert.equal(actions.length, 0, "the overview performs no quote request");
+	await act(async () => trialButton(/^Set up renewal/).click());
+	const details = container.querySelector<HTMLDetailsElement>(
+		".billing-summary-management",
+	)!;
+	assert.equal(details.open, true);
+	assert.ok(
+		container.querySelector<HTMLElement>(".billing-summary-card")!.hidden,
+	);
+	assert.equal(actions.length, 1);
+	assert.ok(trialButton(/^Add card & enable renewal$/));
+	await act(async () => trialButton(/^Not now$/).click());
+	assert.equal(details.open, false);
+	assert.equal(document.activeElement, trialButton(/^Set up renewal/));
+	await act(async () => trialButton(/^Set up renewal/).click());
+	assert.equal(actions.length, 1, "reopening retains the current quote");
+	await act(async () =>
+		container
+			.querySelector<HTMLInputElement>(
+				'[aria-label="Renewal billing period"] input[value="yearly"]',
+			)!
+			.click(),
+	);
+	assert.equal(actions.length, 2, "a new selection reviews exactly once");
+	assert.match(
+		container.querySelector('[aria-label="Review renewal terms"]')!
+			.textContent!,
+		/76.70.*year/,
+	);
+	assert.doesNotMatch(
+		container.querySelector('[aria-label="Review renewal terms"]')!
+			.textContent!,
+		/7.99/,
+	);
+	assert.equal(window.location.pathname, "/account/billing");
+});
+
+test("a failed automatic renewal review offers a retry without a loop or a setup button", async () => {
+	let requests = 0;
+	globalThis.fetch = async (path) => {
+		if (String(path).endsWith("/quote")) {
+			requests++;
+			return Response.json({ error: "Terms unavailable" }, { status: 503 });
+		}
+		return Response.json(cardless);
+	};
+	await mount();
+	await act(async () => trialButton(/^Set up renewal/).click());
+	assert.equal(requests, 1);
+	assert.ok(container.querySelector('[role="alert"]'));
+	assert.equal(
+		[...container.querySelectorAll("button")].some((b) =>
+			/Add card/.test(b.textContent ?? ""),
+		),
+		false,
+	);
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.equal(requests, 1);
+	await act(async () => trialButton(/^Review renewal$/).click());
+	assert.equal(requests, 2);
+});
+
+test("expired open renewal terms require a fresh explicit review without auto-retrying", async (t) => {
+	t.mock.timers.enable({
+		apis: ["setTimeout", "Date"],
+		now: Date.parse(cardless.serverTime!),
+	});
+	let quotes = 0;
+	globalThis.fetch = async (path) => {
+		if (String(path).endsWith("/quote")) {
+			quotes++;
+			return Response.json({
+				...renewalQuote,
+				expiresAt: "2030-01-01T00:00:01Z",
+			});
+		}
+		return Response.json(cardless);
+	};
+	await mount();
+	await act(async () => trialButton(/^Set up renewal/).click());
+	assert.ok(trialButton(/^Add card & enable renewal$/));
+	await act(async () => t.mock.timers.tick(1000));
+	assert.equal(quotes, 1);
+	assert.equal(
+		container.querySelector('[aria-label="Review renewal terms"]'),
+		null,
+	);
+	assert.ok(trialButton(/^Review renewal$/));
+});
+
+test("expired trial overview offers paid plans without duplicate Free controls or a repeat trial", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...cardless,
+			planCode: "free",
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					status: "canceled",
+					trial: { ...cardless.subscriptions[0].trial!, stage: "ended" },
+				},
+			],
+		});
+	await mount();
+	const card = container.querySelector('[aria-label="Trial ended"]')!;
+	assert.match(card.textContent!, /Free.*Join friends for free/);
+	assert.equal(card.querySelector("a")!.getAttribute("href"), "/pricing");
+	assert.equal(container.querySelector('[aria-label="Current access"]'), null);
+	assert.doesNotMatch(
+		container.textContent!,
+		/Try 3 days|Set up renewal|No charges were made/,
+	);
+	assert.ok(container.querySelector(".billing-history"));
 });
