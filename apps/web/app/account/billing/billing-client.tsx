@@ -827,7 +827,7 @@ export function BillingView({
 							</Link>
 						</section>
 					)}
-					{endedTrial && <EndedTrialSummary subscription={endedTrial} />}
+					{endedTrial && <EndedTrialSummary />}
 					{!endedTrial &&
 						(owned.planCode === "free" || current.length === 0) && (
 							<section className="billing-access" aria-label="Current access">
@@ -1129,27 +1129,29 @@ export function BillingView({
 							</div>
 						</details>
 					)}
-					<footer className="billing-footer">
-						{editing && (
-							<button
-								type="button"
-								className="ac-button ac-button-quiet"
-								onClick={() => void load(true)}
-								disabled={busy}
-							>
-								<RefreshCw size={15} aria-hidden />
-								Refresh status
-							</button>
-						)}
-						<Link href="/pricing">
-							Compare plans
-							<ArrowRight size={15} aria-hidden />
-						</Link>
-						<a href="mailto:anidachi.app@gmail.com">
-							Contact support
-							<ArrowRight size={15} aria-hidden />
-						</a>
-					</footer>
+					{!endedTrial && (
+						<footer className="billing-footer">
+							{editing && (
+								<button
+									type="button"
+									className="ac-button ac-button-quiet"
+									onClick={() => void load(true)}
+									disabled={busy}
+								>
+									<RefreshCw size={15} aria-hidden />
+									Refresh status
+								</button>
+							)}
+							<Link href="/pricing">
+								Compare plans
+								<ArrowRight size={15} aria-hidden />
+							</Link>
+							<a href="mailto:anidachi.app@gmail.com">
+								Contact support
+								<ArrowRight size={15} aria-hidden />
+							</a>
+						</footer>
+					)}
 				</>
 			)}
 		</div>

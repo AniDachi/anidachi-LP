@@ -1752,7 +1752,8 @@ test("expired trial overview offers paid plans without duplicate Free controls o
 		});
 	await mount();
 	const card = container.querySelector('[aria-label="Trial ended"]')!;
-	assert.match(card.textContent!, /Free.*Join friends for free/);
+	assert.match(card.textContent!, /Your trial has ended/);
+	assert.match(card.textContent!, /Current planFreeYou can still join friends for free/);
 	assert.equal(card.querySelector("a")!.getAttribute("href"), "/pricing");
 	assert.equal(container.querySelector('[aria-label="Current access"]'), null);
 	assert.doesNotMatch(
@@ -1811,7 +1812,9 @@ for (const state of ["trial", "paid", "ended", "processing"] as const) {
 			assert.equal(reads, 0, "local date hydration must not refetch billing");
 			assert.match(
 				container.textContent!,
-				state === "processing" ? /Jan 3, 2030/ : /January 3, 2030/,
+				state === "ended"
+					? /Your trial has ended/
+					: state === "processing" ? /Jan 3, 2030/ : /January 3, 2030/,
 			);
 		} finally {
 			if (previousZone === undefined) delete process.env.TZ;
