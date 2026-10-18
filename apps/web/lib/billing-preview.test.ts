@@ -44,6 +44,12 @@ test("billing preview and its actions cannot contact billing services", async ()
 		),
 	);
 	assert.match(container.textContent!, /sample subscription/);
+	assert.match(container.textContent!, /Set up renewal/);
+	const legacyState = [...container.querySelectorAll("button")].find(
+		(button) => button.textContent === "Card trial",
+	);
+	assert.ok(legacyState);
+	await act(async () => legacyState.click());
 	assert.match(container.textContent!, /76.70/);
 	for (const label of ["Refresh status", "Cancel renewal"]) {
 		const button = [...container.querySelectorAll("button")].find((b) =>
@@ -74,12 +80,11 @@ test("cardless preview can review sample renewal without contacting billing", as
 		),
 	);
 	for (const label of [
-		"Cardless trial",
-		"Review renewal",
+		"Set up renewal",
 		"Add card & enable renewal",
 	]) {
 		const button = [...container.querySelectorAll("button")].find(
-			(b) => b.textContent === label,
+			(b) => b.textContent?.trim() === label,
 		);
 		assert.ok(button, label);
 		await act(async () => button.click());
