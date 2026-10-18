@@ -20,7 +20,7 @@ export function getHostingNoticeKind(current: HostingDisplayState) {
   if (current.mode !== "paid-hosting") return "unverified";
   if (hosting.trialEligibility === "used" && hosting.trialEndsAt &&
     Date.parse(hosting.trialEndsAt) <= Date.parse(serverTime)) return "ended";
-  return "plans";
+  return getHostingEntry(current) === "check" ? "unverified" : "plans";
 }
 
 const titles = {
@@ -135,9 +135,7 @@ export function HostingPaywall({
 					<span>
 						{entry === "trial"
 							? "Try 3 days free"
-							: entry === "check"
-								? "Continue with Plus"
-								: "View plans"}
+							: "View plans"}
 					</span>
           <ArrowUpRight size={18} strokeWidth={1.8} aria-hidden="true" />
         </a>

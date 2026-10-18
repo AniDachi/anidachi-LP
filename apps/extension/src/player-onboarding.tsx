@@ -6,6 +6,7 @@ import {
 	EyeOff,
 	PanelsTopLeft,
 	Play,
+	RefreshCw,
 	SlidersHorizontal,
 	Smile,
 	UserPlus,
@@ -58,6 +59,7 @@ export interface PlayerOnboardingProps {
 	resource: CurrentResourceDisplay | null;
 	accountPlan?: AuthenticatedUserPlan | null;
 	hosting?: HostingDisplayState;
+	onRefreshHosting: () => void;
 	onActiveChange: (active: boolean) => void;
 }
 
@@ -65,17 +67,20 @@ export interface PlayerOnboardingProps {
 export function getPlayerIntroductionOffer(
 	accountPlan: AuthenticatedUserPlan | null | undefined,
 	hosting?: HostingDisplayState,
-): HostingEntry | "loading" | null {
+): Exclude<HostingEntry, "check"> | "sign-in" | "loading" | "retry" | null {
 	const plan = hosting?.access?.planCode ?? accountPlan;
 	if (plan === "plus" || plan === "pro" || hosting?.access?.hosting?.canHost)
 		return null;
-	// The first render precedes the request's busy state. Wait for its result
-	// without replacing an already resolved offer during background refreshes.
-	if ((accountPlan != null || hosting?.busy) && !hosting?.access && !hosting?.error)
-		return "loading";
-	// The website also checks its HttpOnly cookie before offering a trial.
-	return getHostingEntry(hosting);
+	const entry = getHostingEntry(hosting);
+	// Keep a confirmed same-owner offer during background revalidation.
+	if (entry !== "check") return entry;
+	// null is confirmed signed-out; undefined is identity still loading.
+	if (accountPlan === null && !hosting?.access && !hosting?.busy) return "sign-in";
+	if (hosting?.busy || (!hosting?.access && !hosting?.error)) return "loading";
+	// Missing/failed terms are retryable, never a temporary purchase offer.
+	return "retry";
 }
+
 const copy = {
 	launcher: {
 		number: 1,
@@ -858,18 +863,33 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 										>
 											<span className="tour-plan-spinner" aria-hidden="true" />
 										</button>
-									) : step === "create" && offer && offer !== "loading" ? (
+									) : step === "create" && offer === "retry" ? (
+										<button
+											type="button"
+											className="tour-plan-link"
+											onClick={props.onRefreshHosting}
+										>
+											Try again
+											<RefreshCw size={17} aria-hidden />
+										</button>
+									) : step === "create" &&
+										offer && offer !== "loading" && offer !== "retry" ? (
 										<a
 											className="tour-plan-link"
-											href={getHostingOfferUrl(offer)}
-											onClick={event => { event.preventDefault(); void openCheckout(offer); }}
+											href={getHostingOfferUrl(
+												offer === "sign-in" ? "check" : offer,
+											)}
+											onClick={(event) => {
+												event.preventDefault();
+												void openCheckout(offer === "sign-in" ? "check" : offer);
+											}}
 											target="_blank"
 											rel="noopener noreferrer"
 										>
 											{offer === "trial"
 												? "Try 3 days free"
-												: offer === "check"
-													? "Continue with Plus"
+												: offer === "sign-in"
+													? "Sign in"
 													: "View plans"}
 											<ArrowUpRight size={17} aria-hidden />
 										</a>
