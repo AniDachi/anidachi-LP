@@ -4,6 +4,7 @@ import test from "node:test";
 import type Stripe from "stripe";
 import {
 	createTrialRenewalService,
+	TrialRenewalError,
 	type TrialRenewalDeps,
 	type TrialRenewalOperation,
 } from "./trial-renewal";
@@ -720,7 +721,8 @@ test("a second tab cannot supersede consented card setup by requesting a quote",
 			planCode: "pro",
 			billingPeriod: "yearly",
 		}),
-		(error: any) => error.state === "pending",
+		(error: unknown) =>
+			error instanceof TrialRenewalError && error.state === "pending",
 	);
 	f.confirm(quote.id);
 	assert.equal(

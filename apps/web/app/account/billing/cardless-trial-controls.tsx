@@ -133,7 +133,16 @@ export function CardlessTrialControls({
 		return () => {
 			disposed = true;
 		};
-	}, [active, previewContext, retry]);
+	}, [
+		active,
+		previewContext,
+		retry,
+		pending,
+		trial?.endsAt,
+		trial?.mode,
+		trial?.renewalState,
+		trial?.stage,
+	]);
 	useEffect(() => {
 		if (!preview) return;
 		const timer = setTimeout(
@@ -169,6 +178,7 @@ export function CardlessTrialControls({
 			disposed = true;
 		};
 	}, [
+		onPreview,
 		active,
 		busy,
 		pending,
