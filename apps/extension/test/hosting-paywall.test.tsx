@@ -128,6 +128,22 @@ describe("hosting offer", () => {
 		);
 		expect(container.textContent).not.toContain("Try 3 days free");
 	});
+	it("does not turn missing offer terms into a purchase fallback", async () => {
+		const request = vi.fn().mockResolvedValue({ ...access, hostingOffer: undefined });
+		await mount(request);
+		expect(container.querySelector("a")).toBeNull();
+		expect(container.textContent).toContain("Try again");
+		expect(container.textContent).not.toContain("Continue with Plus");
+	});
+	it("keeps ordinary plans available on a confirmed card-required server", async () => {
+		await mount(vi.fn().mockResolvedValue({ ...access,
+			hostingOffer: { ...access.hostingOffer, trialMode: "card_required" } }));
+		expect(container.querySelector("a")?.textContent).toContain("View plans");
+		expect(container.querySelector("a")?.href).toBe(
+			"http://localhost:3003/pricing?plan=plus&billing=monthly",
+		);
+		expect(container.textContent).not.toMatch(/Continue with Plus|Try 3 days free|No card required/);
+	});
 	it("refreshes after returning from checkout and never creates a room automatically", async () => {
 		const request = vi.fn().mockResolvedValue(access);
 		const close = await mount(request);
@@ -200,7 +216,7 @@ describe("truthful hosting copy", () => {
 		]) {
 			expect(
 				getHostingNoticeKind({ ...state, access: { ...access, hostingOffer } }),
-			).toBe("plans");
+			).toBe(hostingOffer ? "plans" : "unverified");
 		}
 	});
 	it("uses server time for trial expiry and keeps paid access above an old expired trial", () => {

@@ -6074,8 +6074,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				roomId={roomId}
 				resource={currentResourceEntry}
-				accountPlan={authAuthenticated ? accountUser?.plan ?? "free" : null}
+				accountPlan={
+					!identityLoaded ? undefined : authAuthenticated ? accountUser?.plan ?? "free" : null
+				}
 				hosting={hostingDisplay.state}
+				onRefreshHosting={hostingDisplay.refresh}
 				onActiveChange={setIntroductionActive}
 			/>
 			<div
