@@ -27,10 +27,12 @@ The owner authorized a production-channel 0.1.3 review ZIP with onboarding enabl
 then deferred Store publication and a separately authorized production launch.
 See the [coordinated launch runbook](../../releases/integrated-release-2026-10-17.md)
 for the refreshed production baseline and remaining manual acceptance gates.
-The October 18 refresh freezes runtime `85236137`, includes the website-presence
-bridge in the production ZIP, and updates the nine-migration launch sequence.
-Extension typecheck/2,435 tests and exact-package offline onboarding/return checks
-pass. Two owner-named accounts were reset in staging/Sandbox for abuse acceptance;
+The October 18 refresh freezes runtime `9b99ba0e` after #444, includes the
+website-presence bridge in both channel ZIPs, and updates the nine-migration launch
+sequence. It supersedes the earlier `85236137` package, which retained an onboarding
+purchase fallback during unresolved access. Extension typecheck/2,438 tests,
+seven exact-package offer scenarios per channel and offline onboarding/return
+checks pass. Two owner-named accounts were reset in staging/Sandbox for abuse acceptance;
 the owner chose to test later, so that gate remains pending. The inventory below
 is historical; the runbook and ignored receipt identify the frozen artifacts.
 
