@@ -13,7 +13,8 @@ import {
 	PLAYER_INTRODUCTION_MESSAGE,
 } from "../src/player-onboarding-storage";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
-import type { HostingDisplayState } from "../src/use-hosting-access";
+import { useHostingAccess, type HostingDisplayState } from "../src/use-hosting-access";
+import type { HostingAccountAccess } from "../src/hosting-access-client";
 
 (
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -89,6 +90,8 @@ beforeEach(() => {
 		roomId: null,
 		onActiveChange: changed,
 		resource: null,
+		accountPlan: null,
+		onRefreshHosting: vi.fn(),
 	} as React.ComponentProps<typeof PlayerOnboarding>;
 	release = installPlayerIntroductionKeyboardGuard();
 });
@@ -638,14 +641,14 @@ it("walks through the same short scenario with the existing panel styling", asyn
 	expect(host.textContent).toContain("Practice mode");
 	expect(host.querySelector(".tour-hide-hint")).toBeNull();
 	const offer = host.querySelector<HTMLAnchorElement>(".tour-plan-link");
-	expect(offer?.textContent).toBe("Continue with Plus");
+	expect(offer?.textContent).toBe("Sign in");
 	expect(offer?.href).toBe(
 		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
 	);
 	expect(offer?.target).toBe("_blank");
 	expect(offer?.rel).toBe("noopener noreferrer");
 	expect(host.textContent).not.toMatch(
-		/Sign in|Choose a plan|Pro subscription/,
+		/Choose a plan|Pro subscription/,
 	);
 });
 it("opens trial confirmation for eligible accounts, ordinary plans for used trials and hides paid offers", async () => {
@@ -671,7 +674,8 @@ it("opens trial confirmation for eligible accounts, ordinary plans for used tria
 	expect(getPlayerIntroductionOffer("plus")).toBeNull();
 	expect(getPlayerIntroductionOffer("pro")).toBeNull();
 	expect(getPlayerIntroductionOffer("free")).toBe("loading");
-	expect(getPlayerIntroductionOffer(null)).toBe("check");
+	expect(getPlayerIntroductionOffer(null)).toBe("sign-in");
+	expect(getPlayerIntroductionOffer(undefined)).toBe("loading");
 	expect(getPlayerIntroductionOffer("free", { ...hosting, busy: true })).toBe(
 		"trial",
 	);
@@ -722,21 +726,54 @@ it("opens trial confirmation for eligible accounts, ordinary plans for used tria
 	expect(send).toHaveBeenCalledTimes(1);
 	expect(request).not.toHaveBeenCalled();
 });
-it("keeps the website continuation available after an initial offer read fails", async () => {
-	await render({
-		accountPlan: "free",
-		hosting: { mode: "unknown", busy: true, error: false },
-	});
+it("retries a failed offer read without offering purchase or navigating away", async () => {
+	const trialAccess: HostingAccountAccess = {
+		ownerUserId: "11111111-1111-4111-8111-111111111111",
+		serverTime: "2026-10-18T00:00:00Z",
+		entitlementsVersion: 1,
+		planCode: "free",
+		hostingOffer: { trialMode: "cardless", trialDays: 3, policyRevision: 3 },
+		hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-10-01T00:00:00Z",
+			canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+	};
+	let resolve!: (access: HostingAccountAccess) => void;
+	let reads = 0;
+	const load = () => {
+		reads += 1;
+		return reads === 1 ? Promise.reject(new Error("offline"))
+			: new Promise<HostingAccountAccess>(done => { resolve = done; });
+	};
+	function ConnectedTour() {
+		const display = useHostingAccess({ ownerUserId: trialAccess.ownerUserId,
+			sessionKey: "same-session", enabled: true, request: load });
+		return <PlayerOnboarding {...props} accountPlan="free" hosting={display.state}
+			onRefreshHosting={display.refresh} />;
+	}
+	await act(async () => root.render(<ConnectedTour />));
+	await advance(2_000);
 	await click("Open AniDachi controls");
 	expect(host.querySelector("a.tour-plan-link")).toBeNull();
-	await render({ hosting: { mode: "unknown", busy: false, error: true } });
-	expect(host.querySelector("button.tour-plan-link")).toBeNull();
-	const link = host.querySelector<HTMLAnchorElement>("a.tour-plan-link");
-	expect(link?.textContent).toBe("Continue with Plus");
-	expect(link?.href).toBe(
+	expect(host.textContent).not.toMatch(/Continue with Plus|View plans|Try 3 days free/);
+	await click("Try again");
+	expect(host.querySelector("button.tour-plan-link")?.getAttribute("aria-busy")).toBe("true");
+	await click("Loading plan options");
+	expect(reads).toBe(2);
+	await act(async () => resolve(trialAccess));
+	expect(host.querySelector("a.tour-plan-link")?.textContent).toBe("Try 3 days free");
+	expect(host.querySelector<HTMLAnchorElement>("a.tour-plan-link")?.href).toBe(
 		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
 	);
-	expect(host.textContent).not.toContain("Try 3 days free");
+	expect(window.open).not.toHaveBeenCalled();
+	expect(host.textContent).toContain("No card required.");
+});
+it("keeps unresolved identity neutral before the account offer loads", async () => {
+	await render({ accountPlan: undefined });
+	await click("Open AniDachi controls");
+	expect(host.querySelector("a.tour-plan-link")).toBeNull();
+	expect(host.querySelector("button.tour-plan-link")?.getAttribute("aria-busy")).toBe("true");
+	await render({ accountPlan: "free", hosting: { mode: "unknown", busy: false, error: false } });
+	expect(host.querySelector("a.tour-plan-link")).toBeNull();
+	expect(host.textContent).not.toMatch(/Continue with Plus|View plans|Try 3 days free|Sign in/);
 });
 it("allows keyboard activation of the plans link without triggering player keys", async () => {
 	await render();

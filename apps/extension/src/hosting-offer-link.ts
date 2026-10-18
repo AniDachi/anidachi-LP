@@ -10,6 +10,7 @@ export function getHostingEntry(state?: HostingDisplayState): HostingEntry {
 		access.hostingOffer?.trialMode === "cardless"
 	)
 		return "trial";
+	if (access?.hostingOffer?.trialMode === "card_required") return "plans";
 	if (
 		access?.hosting &&
 		["used", "existing_account", "unavailable"].includes(
