@@ -1545,7 +1545,7 @@ it("changing title asks Save/Discard/Stay and does not silently lose the draft",
     await unmount(view.root);
   }
 });
-it("deletion refreshes server capacity and retains privacy actions on Free", async () => {
+it("Free retains privacy controls until its last title is deleted, then shows setup", async () => {
   const server = installServer({ plan: "plan_required" });
   testWindow.confirm = () => true;
   const view = await renderClient(
@@ -1554,20 +1554,19 @@ it("deletion refreshes server capacity and retains privacy actions on Free", asy
     "plan_required",
   );
   try {
+    assert.equal(buttonByText(view.container, "Clear all history").disabled, false);
     await openTitle(view.container);
     await click(buttonByText(view.container, "Remove from history"));
     await waitFor(() =>
-      assert.match(view.container.textContent ?? "", /199 \/ 200/),
+      assert.match(view.container.textContent ?? "", /Your watch library/),
     );
     assert.doesNotMatch(view.container.textContent ?? "", /Series One/);
     assert.equal(
       server.calls.filter((call) => call.path.endsWith("/delete")).length,
       1,
     );
-    assert.equal(
-      buttonByText(view.container, "Clear all history").disabled,
-      false,
-    );
+    assert.equal(view.container.querySelector('[aria-label="Library options"]'), null);
+    assert.equal(view.container.querySelector('[aria-label="History storage"]'), null);
   } finally {
     await unmount(view.root);
   }
@@ -1987,5 +1986,44 @@ it("legacy capacity shows Netflix unavailable rather than manufacturing zero usa
     await click(buttonByLabel(view.container, "Netflix"));
     assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /^Netflix storage unavailable$/);
     assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=2"));
+  } finally { await unmount(view.root); }
+});
+
+for (const access of ["plan_required", "allowed"] as const) {
+  it(`empty library offers setup appropriate to ${access} without dead filters`, () => {
+    const html = renderToStaticMarkup(<WatchLibraryClient
+      initialHistory={{ ...historyFixture(), items: [], totalTitleCount: 0 }}
+      initialPreferences={preferencesFixture} initialAccess={access} />);
+    assert.match(html, /Your watch library/);
+    assert.match(html, /Install AniDachi/);
+    assert.match(html, /href="\/extension"/);
+    assert.doesNotMatch(html, /Search your library|Filter by progress|Filter by platform|Clear all history/);
+    assert.doesNotMatch(html, /Your saved history stays here|Start a Watchroom/);
+    if (access === "allowed") {
+      assert.match(html, /Turn on Allow recording/);
+      assert.doesNotMatch(html, /View plans|Saving progress requires/);
+    } else {
+      assert.match(html, /Saving progress requires Plus or Pro/);
+      assert.equal((html.match(/View plans/g) ?? []).length, 1);
+    }
+  });
+}
+it("an incomplete empty page retains browsing controls instead of first-visit setup", () => {
+  const html = renderToStaticMarkup(<WatchLibraryClient
+    initialHistory={{ ...historyFixture(), items: [], totalTitleCount: 2, nextCursor: "next-page" }}
+    initialPreferences={preferencesFixture} initialAccess="plan_required" />);
+  assert.match(html, /Search your library/);
+  assert.match(html, /Load more titles/);
+  assert.doesNotMatch(html, /Your watch library|Install AniDachi/);
+});
+
+it("an empty platform filter keeps the switcher and does not show installation", async () => {
+  installServer();
+  const view = await renderClient();
+  try {
+    await click(view.container.querySelector<HTMLButtonElement>('[aria-label="Netflix"]')!);
+    await waitFor(() => assert.match(view.container.textContent ?? "", /No titles match these filters/));
+    assert.ok(view.container.querySelector('[aria-label="Filter by platform"]'));
+    assert.doesNotMatch(view.container.textContent ?? "", /Your watch library|Install AniDachi/);
   } finally { await unmount(view.root); }
 });

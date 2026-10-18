@@ -395,3 +395,25 @@ body:has(.account-notifications:modal) { overflow: hidden; }
  .billing-summary-note, .billing-summary-action > p { font-size: 16px; }
  .billing-summary-button { padding: 14px 16px; font-size: 17px; }
 }
+
+/* Trial ended: a clear next step alongside the retained Free access. */
+.billing-ended { font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif; display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(200px, 1fr); align-items: center; gap: clamp(32px, 4vw, 72px); padding: 64px 0 48px; }
+.billing-ended-message { min-width: 0; }
+.billing-ended-message h2 { font-size: clamp(32px, 4.2vw, 60px); font-weight: 600; line-height: 1.15; letter-spacing: -.045em; text-wrap: balance; }
+.billing-ended-message h2 span { color: #ff994f; }
+.billing-ended-message > p { margin-top: 20px; font-size: clamp(18px, 2.15vw, 30px); line-height: 1.5; letter-spacing: -.025em; text-wrap: pretty; }
+.billing-ended-button { margin-top: 34px; width: fit-content; min-width: 240px; min-height: 64px; padding: 18px 26px; gap: 24px; font-size: 22px; border-radius: 12px; }
+.billing-ended-access { align-self: stretch; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid var(--account-line); padding: 16px 0 16px clamp(28px, 4vw, 60px); }
+.billing-ended-label { color: var(--account-muted); font-size: 16px; line-height: 1.5; }
+.billing-ended-access h3 { margin-top: 16px; font-size: 38px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; }
+.billing-ended-note { margin-top: 14px; max-width: 17ch; color: var(--account-muted); font-size: 20px; line-height: 1.55; }
+@media (max-width: 760px) {
+  .billing-ended { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 24px 0 8px; }
+  .billing-ended-message h2 { font-size: clamp(32px, 6vw, 42px); }
+  .billing-ended-message > p { margin-top: 16px; font-size: 18px; max-width: 34ch; }
+  .billing-ended-button { width: 100%; min-width: 0; min-height: 56px; margin-top: 28px; font-size: 17px; padding: 16px 20px; }
+  .billing-ended-access { border-left: 0; border-top: 1px solid var(--account-line); padding: 28px 0 0; }
+  .billing-ended-label { font-size: 14px; }
+  .billing-ended-access h3 { margin-top: 10px; font-size: 30px; }
+  .billing-ended-note { margin-top: 10px; max-width: none; font-size: 16px; }
+}

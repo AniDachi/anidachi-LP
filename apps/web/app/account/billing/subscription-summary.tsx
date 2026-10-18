@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useBillingTimeZone } from "./use-billing-time-zone";
 import { useEffect, useRef, type ReactNode } from "react";
 import {
@@ -198,38 +199,25 @@ export function SubscriptionPresentation({
 }
 
 /** Shown only when the account is Free and has no unresolved subscription. */
-export function EndedTrialSummary({
-	subscription,
-}: {
-	subscription: BillingSubscription;
-}) {
-	const timeZone = useBillingTimeZone();
-	const date = subscription.trial?.endsAt;
-	const ended =
-		date && Number.isFinite(Date.parse(date))
-			? new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone }).format(
-					new Date(date),
-				)
-			: null;
+export function EndedTrialSummary() {
 	return (
-		<section className="billing-summary-card" aria-label="Trial ended">
-			<div className="billing-summary-details">
-				<p className="billing-summary-status">Trial ended</p>
-				<h2 className="billing-summary-plan billing-summary-plan-free">Free</h2>
-				<p className="billing-summary-primary">Join friends for free</p>
-				{ended && (
-					<p className="billing-summary-secondary">
-						Your trial ended on {ended}.
-					</p>
-				)}
-				<p className="billing-summary-note">No automatic renewal.</p>
+		<section className="billing-ended" aria-label="Trial ended">
+			<div className="billing-ended-message">
+				<h2>
+					Your <span>trial</span> has ended.
+				</h2>
+				<p>Choose Plus or Pro to create rooms again.</p>
+				<Link
+					className="billing-summary-button billing-ended-button"
+					href="/pricing"
+				>
+					Choose a plan <ArrowRight size={22} aria-hidden />
+				</Link>
 			</div>
-			<div className="billing-summary-action">
-				<h3>Host your own room</h3>
-				<p>Choose Plus or Pro to start hosting.</p>
-				<a className="billing-summary-button" href="/pricing">
-					Choose a plan <ArrowRight size={20} aria-hidden />
-				</a>
+			<div className="billing-ended-access">
+				<p className="billing-ended-label">Current plan</p>
+				<h3>Free</h3>
+				<p className="billing-ended-note">You can still join friends for free.</p>
 			</div>
 		</section>
 	);

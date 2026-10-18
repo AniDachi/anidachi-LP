@@ -34,7 +34,7 @@ export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
   const pathname = usePathname();
   if (process.env.NODE_ENV === "development" && pathname === "/dev/mobile-install") return null;
   if (pathname === "/account" || pathname.startsWith("/account/") ||
-      (process.env.NODE_ENV === "development" && pathname === "/dev/billing")) return null;
+      (process.env.NODE_ENV === "development" && ["/dev/billing", "/dev/watch-library"].includes(pathname))) return null;
   const minimal = minimalChromeForPath(pathname);
   if (minimal) {
     return (
@@ -52,7 +52,7 @@ export function ConditionalFooter({ marketingFooter }: { marketingFooter: ReactN
   const pathname = usePathname();
   if (process.env.NODE_ENV === "development" && pathname === "/dev/mobile-install") return null;
   if (pathname === "/account" || pathname.startsWith("/account/") ||
-      (process.env.NODE_ENV === "development" && pathname === "/dev/billing")) return null;
+      (process.env.NODE_ENV === "development" && ["/dev/billing", "/dev/watch-library"].includes(pathname))) return null;
   if (minimalChromeForPath(pathname)) {
     return null;
   }
