@@ -248,6 +248,24 @@ export function BillingPreview() {
 								selection={selection}
 								onSelectionChange={setSelection}
 								onAction={previewRenewal}
+								onPreview={async () => ({
+									serverTime: new Date().toISOString(),
+									expiresAt: new Date(Date.now() + 300000).toISOString(),
+									firstChargeAt: s.trial!.endsAt,
+									savedCard: enabled
+										? { sourceId: "preview-card", brand: "visa", last4: "4242" }
+										: null,
+									options: (["plus", "pro"] as const).flatMap((planCode) =>
+										(["monthly", "yearly"] as const).map((billingPeriod) => ({
+											planCode,
+											billingPeriod,
+											amount:
+												PUBLISHED_PRICING[billingPeriod][planCode].unitAmount,
+											currency:
+												PUBLISHED_PRICING[billingPeriod][planCode].currency,
+										})),
+									),
+								})}
 								onDismiss={() => setQuote(null)}
 							/>
 						)}

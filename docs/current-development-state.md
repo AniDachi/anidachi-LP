@@ -1,5 +1,18 @@
 # Current Development State
 
+## Trial renewal clarity candidate, October 19, 2026
+
+The isolated `codex/trial-renewal-clarity` candidate replaces per-selection renewal
+reservations with one owner-bound, read-only price/card preview. Confirmation still
+checks live Stripe terms, explicit consent and the original trial deadline. A saved
+card can be reused only with fresh consent and verified same-subscription provenance.
+Migration `20261018223354` prevents a new quote from superseding consented setup and
+adds service-only saved-card consent. Apply the additive migration before the web
+candidate; it does not change trial eligibility or require an extension rebuild.
+Local web and disposable database verification are recorded in the
+[implementation record](superpowers/plans/2026-10-19-trial-renewal-clarity.md).
+This is not evidence of a staging deployment or production acceptance.
+
 ## Mobile installation handoff, October 18, 2026
 
 The accepted mobile install panel opens only after an Install action. Marketing,

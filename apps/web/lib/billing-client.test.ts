@@ -166,6 +166,165 @@ const renewalQuote = {
 	termsRevision: "cardless-renewal-v1",
 };
 
+const renewalPreview = {
+	state: "preview",
+	ownerUserId: "owner",
+	serverTime: cardless.serverTime,
+	expiresAt: renewalQuote.expiresAt,
+	firstChargeAt: renewalQuote.firstChargeAt,
+	savedCard: null,
+	options: [
+		{
+			planCode: "plus",
+			billingPeriod: "monthly",
+			amount: 799,
+			currency: "usd",
+		},
+		{
+			planCode: "plus",
+			billingPeriod: "yearly",
+			amount: 7670,
+			currency: "usd",
+		},
+		{
+			planCode: "pro",
+			billingPeriod: "monthly",
+			amount: 1499,
+			currency: "usd",
+		},
+		{
+			planCode: "pro",
+			billingPeriod: "yearly",
+			amount: 14390,
+			currency: "usd",
+		},
+	],
+};
+test("renewal selection is immediate and never reserves a quote or enables renewal", async () => {
+	const actions: string[] = [];
+	globalThis.fetch = async (path) => {
+		if (String(path).includes("/trial/renewal/")) {
+			actions.push(String(path));
+			return Response.json(renewalPreview);
+		}
+		return Response.json(cardless);
+	};
+	await mount(false, undefined, undefined, true);
+	await selectProYearly();
+	assertProYearlySelection();
+	assert.deepEqual(actions, ["/api/billing/trial/renewal/preview"]);
+	assert.match(container.textContent!, /143.90/);
+	assert.equal(trialButton(/Add card.*enable renewal/i).disabled, false);
+});
+
+test("changed price requires another explicit confirmation before card setup", async () => {
+	const actions: string[] = [];
+	globalThis.fetch = async (path) => {
+		const url = String(path);
+		if (url.includes("/trial/renewal/")) actions.push(url);
+		if (url.endsWith("/preview")) return Response.json(renewalPreview);
+		if (url.endsWith("/quote"))
+			return Response.json({ ...renewalQuote, amount: 899 });
+		if (url.endsWith("/setup"))
+			return Response.json({
+				state: "setup",
+				ownerUserId: "owner",
+				url: "https://checkout.stripe.com/setup-card",
+			});
+		return Response.json(cardless);
+	};
+	await mount(false, undefined, undefined, true);
+	await act(async () => trialButton(/Add card.*enable renewal/i).click());
+	assert.deepEqual(actions, [
+		"/api/billing/trial/renewal/preview",
+		"/api/billing/trial/renewal/quote",
+	]);
+	assert.match(container.textContent!, /terms changed/);
+	assert.match(container.textContent!, /8.99/);
+	assert.equal(window.location.pathname, "/account/billing");
+	await act(async () => trialButton(/Add card.*enable renewal/i).click());
+	assert.equal(actions.at(-1), "/api/billing/trial/renewal/setup");
+	assert.equal(window.location.href, "https://checkout.stripe.com/setup-card");
+});
+
+for (const newCard of [false, true])
+	test(`explicit confirmation ${newCard ? "replaces" : "uses"} the saved card`, async () => {
+		const setupBodies: Record<string, unknown>[] = [];
+		globalThis.fetch = async (path, init) => {
+			const url = String(path);
+			if (url.endsWith("/preview"))
+				return Response.json({
+					...renewalPreview,
+					savedCard: { sourceId: "saved-source", brand: "visa", last4: "4242" },
+				});
+			if (url.endsWith("/quote")) return Response.json(proYearlyQuote);
+			if (url.endsWith("/setup")) {
+				setupBodies.push(JSON.parse(String(init?.body)));
+				return Response.json({ state: "active", ownerUserId: "owner" });
+			}
+			return Response.json(cardless);
+		};
+		await mount(false, undefined, undefined, true);
+		await selectProYearly();
+		assert.equal(setupBodies.length, 0);
+		await act(async () =>
+			trialButton(
+				newCard ? /^Use a different card$/ : /^Enable renewal$/,
+			).click(),
+		);
+		assert.equal(
+			setupBodies[0]?.savedCardSourceId,
+			newCard ? undefined : "saved-source",
+		);
+		assert.equal(setupBodies[0]?.quoteId, renewalQuote.id);
+		assert.equal(window.location.pathname, "/account/billing");
+	});
+
+test("a confirmed renewal refreshes card provenance before another change", async () => {
+	let source = "source-1",
+		previews = 0;
+	const used: string[] = [];
+	globalThis.fetch = async (path, init) => {
+		const url = String(path);
+		if (url.endsWith("/preview")) {
+			previews++;
+			return Response.json({
+				...renewalPreview,
+				savedCard: { sourceId: source, brand: "visa", last4: "4242" },
+			});
+		}
+		if (url.endsWith("/quote")) return Response.json(proYearlyQuote);
+		if (url.endsWith("/setup")) {
+			used.push(JSON.parse(String(init?.body)).savedCardSourceId);
+			source = "source-2";
+			return Response.json({ state: "active", ownerUserId: "owner" });
+		}
+		return Response.json({
+			...cardless,
+			subscriptions: [
+				{
+					...cardless.subscriptions[0],
+					trial: {
+						...cardless.subscriptions[0].trial!,
+						renewalEnabled: true,
+						renewalState: "enabled",
+					},
+				},
+			],
+		});
+	};
+	await mount(false, undefined, undefined, true);
+	await selectProYearly();
+	await act(async () => trialButton(/^Save changes$/).click());
+	assert.equal(
+		previews,
+		2,
+		"same-status refresh must invalidate the previous consent source",
+	);
+	await act(async () => trialButton(/^Save changes$/).click());
+	assert.deepEqual(used, ["source-1", "source-2"]);
+});
+
 for (const outcome of [
 	"same-owner",
 	"replacement-owner",
@@ -1511,7 +1670,14 @@ test("enabled cardless renewal opens management without offering another plan or
 	globalThis.fetch = async (path) => {
 		if (String(path).includes("/trial/renewal/")) {
 			actions.push(String(path));
-			return Response.json(renewalQuote);
+			return Response.json({
+				...renewalPreview,
+				savedCard: {
+					sourceId: "saved-operation",
+					brand: "visa",
+					last4: "4242",
+				},
+			});
 		}
 		return Response.json({
 			...cardless,
@@ -1545,11 +1711,16 @@ test("enabled cardless renewal opens management without offering another plan or
 	await act(async () => trialButton(/^Manage renewal\s*$/).click());
 	assert.equal(details.open, true);
 	assert.equal(document.activeElement, details.querySelector("summary"));
-	assert.deepEqual(actions, [], "opening management never changes billing");
+	assert.deepEqual(
+		actions,
+		["/api/billing/trial/renewal/preview"],
+		"opening management only reads prices and card",
+	);
 	assert.doesNotMatch(details.textContent!, /before adding a card/);
-	await act(async () => trialButton(/^Review changes$/).click());
-	assert.deepEqual(actions, ["/api/billing/trial/renewal/quote"]);
-	assert.ok(trialButton(/^Confirm renewal changes$/));
+	assert.equal(trialButton(/^Renewal is enabled$/).disabled, true);
+	await selectProYearly();
+	assert.ok(trialButton(/^Save changes$/));
+	assert.match(details.textContent!, /VISA.*4242/);
 	assert.doesNotMatch(details.textContent!, /Add card & enable renewal/);
 	assert.match(details.textContent!, /No payment today/);
 	assert.match(details.textContent!, /First payment/);
@@ -1634,15 +1805,10 @@ test("opening legacy card-required trial management never requests cardless rene
 
 test("opening renewal setup reviews once, preserves terms on reopen, and never enables renewal", async () => {
 	const actions: string[] = [];
-	globalThis.fetch = async (path, init) => {
-		if (String(path).endsWith("/quote")) {
+	globalThis.fetch = async (path) => {
+		if (String(path).endsWith("/preview")) {
 			actions.push(String(path));
-			const selection = JSON.parse(String(init?.body));
-			return Response.json({
-				...renewalQuote,
-				...selection,
-				amount: selection.billingPeriod === "yearly" ? 7670 : 799,
-			});
+			return Response.json(renewalPreview);
 		}
 		return Response.json(cardless);
 	};
@@ -1670,7 +1836,7 @@ test("opening renewal setup reviews once, preserves terms on reopen, and never e
 			)!
 			.click(),
 	);
-	assert.equal(actions.length, 2, "a new selection reviews exactly once");
+	assert.equal(actions.length, 1, "a new selection uses the loaded prices");
 	assert.match(
 		container.querySelector('[aria-label="Review renewal terms"]')!
 			.textContent!,
@@ -1687,7 +1853,7 @@ test("opening renewal setup reviews once, preserves terms on reopen, and never e
 test("a failed automatic renewal review offers a retry without a loop or a setup button", async () => {
 	let requests = 0;
 	globalThis.fetch = async (path) => {
-		if (String(path).endsWith("/quote")) {
+		if (String(path).endsWith("/preview")) {
 			requests++;
 			return Response.json({ error: "Terms unavailable" }, { status: 503 });
 		}
@@ -1716,10 +1882,10 @@ test("expired open renewal terms require a fresh explicit review without auto-re
 	});
 	let quotes = 0;
 	globalThis.fetch = async (path) => {
-		if (String(path).endsWith("/quote")) {
+		if (String(path).endsWith("/preview")) {
 			quotes++;
 			return Response.json({
-				...renewalQuote,
+				...renewalPreview,
 				expiresAt: "2030-01-01T00:00:01Z",
 			});
 		}
@@ -1753,7 +1919,10 @@ test("expired trial overview offers paid plans without duplicate Free controls o
 	await mount();
 	const card = container.querySelector('[aria-label="Trial ended"]')!;
 	assert.match(card.textContent!, /Your trial has ended/);
-	assert.match(card.textContent!, /Current planFreeYou can still join friends for free/);
+	assert.match(
+		card.textContent!,
+		/Current planFreeYou can still join friends for free/,
+	);
 	assert.equal(card.querySelector("a")!.getAttribute("href"), "/pricing");
 	assert.equal(container.querySelector('[aria-label="Current access"]'), null);
 	assert.doesNotMatch(
@@ -1814,7 +1983,9 @@ for (const state of ["trial", "paid", "ended", "processing"] as const) {
 				container.textContent!,
 				state === "ended"
 					? /Your trial has ended/
-					: state === "processing" ? /Jan 3, 2030/ : /January 3, 2030/,
+					: state === "processing"
+						? /Jan 3, 2030/
+						: /January 3, 2030/,
 			);
 		} finally {
 			if (previousZone === undefined) delete process.env.TZ;

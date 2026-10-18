@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBillingTimeZone } from "./use-billing-time-zone";
 import {
 	billingPeriodUnit,
@@ -9,9 +9,17 @@ import {
 	type BillingPeriod,
 	type BillingSubscription,
 } from "@/lib/billing-view";
-import type { TrialRenewalQuote } from "@/lib/anidachi-auth/trial-renewal";
+import type {
+	TrialRenewalQuote,
+	TrialRenewalPreview,
+} from "@/lib/anidachi-auth/trial-renewal";
 
-export type CardlessRenewalAction = "quote" | "setup" | "complete" | "cancel";
+export type CardlessRenewalAction =
+	| "confirm"
+	| "quote"
+	| "setup"
+	| "complete"
+	| "cancel";
 export type CardlessQuoteView = { quote: TrialRenewalQuote; requestId: string };
 export type CardlessRenewalSelection = {
 	planCode: "plus" | "pro";
@@ -29,6 +37,8 @@ export function CardlessTrialControls({
 	onDismiss,
 	active = false,
 	onBack,
+	onPreview,
+	previewRevision = 0,
 }: {
 	subscription: BillingSubscription;
 	selection: CardlessRenewalSelection;
@@ -42,6 +52,8 @@ export function CardlessTrialControls({
 	onDismiss: () => void;
 	active?: boolean;
 	onBack?: () => void;
+	onPreview?: () => Promise<TrialRenewalPreview>;
+	previewRevision?: number;
 }) {
 	const timeZone = useBillingTimeZone();
 	const { planCode, billingPeriod } = selection;
@@ -49,10 +61,92 @@ export function CardlessTrialControls({
 	const pending = trial?.pendingRenewal;
 	const enabled = trial?.renewalEnabled || trial?.renewalState === "enabled";
 	const automaticReview = useRef<string | null>(null);
+	const [preview, setPreview] = useState<TrialRenewalPreview | null>(null);
+	const [previewError, setPreviewError] = useState<string | null>(null);
+	const [previewLoading, setPreviewLoading] = useState(false);
+	const previewReader = useRef(onPreview);
+	previewReader.current = onPreview;
+	const previewContext = JSON.stringify([
+		subscription.id,
+		subscription.planCode,
+		subscription.price?.billingPeriod,
+		subscription.price?.unitAmount,
+		trial?.endsAt,
+		trial?.renewalState,
+		trial?.renewalEnabled,
+		pending?.id,
+		previewRevision,
+	]);
+	const [retry, setRetry] = useState(0);
+	const previewCache = useRef<{ key: string; until: number } | null>(null);
+	useEffect(() => {
+		if (
+			!active ||
+			!previewReader.current ||
+			pending ||
+			trial?.mode !== "cardless" ||
+			trial.stage !== "trial" ||
+			trial.renewalState === "pending"
+		)
+			return;
+		const key = `${previewContext}:${retry}`;
+		if (
+			previewCache.current?.key === key &&
+			previewCache.current.until > Date.now()
+		)
+			return;
+		let disposed = false;
+		setPreviewLoading(true);
+		setPreviewError(null);
+		setPreview(null);
+		void previewReader
+			.current()
+			.then((value) => {
+				if (!disposed) {
+					if (Date.parse(value.firstChargeAt) !== Date.parse(trial.endsAt))
+						throw new Error(
+							"Your trial changed. Refresh subscription status before continuing.",
+						);
+					previewCache.current = {
+						key,
+						until:
+							Date.now() +
+							Math.max(
+								0,
+								Date.parse(value.expiresAt) - Date.parse(value.serverTime),
+							),
+					};
+					setPreview(value);
+				}
+			})
+			.catch((e: unknown) => {
+				if (!disposed)
+					setPreviewError(
+						e instanceof Error
+							? e.message
+							: "Renewal terms unavailable. Please try again.",
+					);
+			})
+			.finally(() => {
+				if (!disposed) setPreviewLoading(false);
+			});
+		return () => {
+			disposed = true;
+		};
+	}, [active, previewContext, retry]);
+	useEffect(() => {
+		if (!preview) return;
+		const timer = setTimeout(
+			() => setPreview(null),
+			Math.max(0, (previewCache.current?.until ?? 0) - Date.now()),
+		);
+		return () => clearTimeout(timer);
+	}, [preview]);
 	// Fetch once when the user opens setup or changes a selection. No polling,
 	// automatic error retries, or quote recreation after its expiry.
 	useEffect(() => {
 		if (
+			onPreview ||
 			!active ||
 			busy ||
 			pending ||
@@ -106,6 +200,32 @@ export function CardlessTrialControls({
 		quote.quote.billingPeriod === billingPeriod
 			? quote
 			: null;
+	const currentPreview =
+		previewCache.current?.key === `${previewContext}:${retry}` ? preview : null;
+	const option = currentPreview?.options.find(
+		(o) => o.planCode === planCode && o.billingPeriod === billingPeriod,
+	);
+	const displayed =
+		validQuote?.quote ??
+		(option && currentPreview
+			? { ...option, firstChargeAt: currentPreview.firstChargeAt }
+			: null);
+	const card = currentPreview?.savedCard;
+	const unchanged =
+		enabled &&
+		subscription.planCode === planCode &&
+		subscription.price?.billingPeriod === billingPeriod;
+	const confirm = (useSavedCard = true) => {
+		if (!displayed) return;
+		return onAction("confirm", {
+			planCode,
+			billingPeriod,
+			amount: displayed.amount,
+			currency: displayed.currency,
+			firstChargeAt: displayed.firstChargeAt,
+			...(useSavedCard && card ? { savedCardSourceId: card.sourceId } : {}),
+		});
+	};
 	return (
 		<section className="billing-trial-controls" aria-label="Trial renewal">
 			<header className="billing-renewal-heading">
@@ -225,19 +345,22 @@ export function CardlessTrialControls({
 							</div>
 						</fieldset>
 					</div>
-					{!validQuote ? (
+					{!displayed ? (
 						<div className="billing-renewal-unquoted">
 							<p className="ac-muted" role="status">
-								{busy
+								{previewLoading || busy
 									? "Loading renewal terms…"
 									: "Review the price and first payment date before continuing."}
 							</p>
+							{previewError && <p role="alert">{previewError}</p>}
 							<button
 								type="button"
 								className="ac-button ac-button-primary"
-								disabled={busy}
+								disabled={busy || previewLoading}
 								onClick={() =>
-									void onAction("quote", { planCode, billingPeriod })
+									onPreview && active
+										? setRetry((n) => n + 1)
+										: void onAction("quote", { planCode, billingPeriod })
 								}
 							>
 								{enabled ? "Review changes" : "Review renewal"}
@@ -254,7 +377,7 @@ export function CardlessTrialControls({
 									<p className="billing-timeline-amount">
 										{new Intl.NumberFormat("en-US", {
 											style: "currency",
-											currency: validQuote.quote.currency,
+											currency: displayed.currency,
 											maximumFractionDigits: 0,
 										}).format(0)}
 									</p>
@@ -264,31 +387,29 @@ export function CardlessTrialControls({
 									<p className="billing-timeline-label">First payment</p>
 									<p className="billing-timeline-amount">
 										{formatMonthlyPrice({
-											unitAmount: validQuote.quote.amount,
-											currency: validQuote.quote.currency,
+											unitAmount: displayed.amount,
+											currency: displayed.currency,
 										})}
-										<span>
-											{" "}
-											/ {billingPeriodUnit(validQuote.quote.billingPeriod)}
-										</span>
+										<span> / {billingPeriodUnit(displayed.billingPeriod)}</span>
 									</p>
 									<p className="ac-muted">
-										{formatBillingTime(
-											validQuote.quote.firstChargeAt,
-											timeZone,
-										)}
+										{formatBillingTime(displayed.firstChargeAt, timeZone)}
 									</p>
 								</div>
 							</div>
 							<p className="ac-muted">
-								{enabled
-									? "No payment today. Confirming these changes sets "
+								{card
+									? "No payment today. Confirming enables "
 									: "No payment today. Completing card setup enables "}
-								{validQuote.quote.billingPeriod} automatic renewal after your
-								trial.
+								{displayed.billingPeriod} automatic renewal after your trial.
 								<br />
 								Cancel before the first payment to avoid a charge.
 							</p>
+							{card && (
+								<p className="ac-muted">
+									Card: {card.brand.toUpperCase()} •••• {card.last4}
+								</p>
+							)}
 							<p className="billing-tax-note">
 								Taxes, discounts and credits may change the final total.
 							</p>
@@ -296,18 +417,39 @@ export function CardlessTrialControls({
 								<button
 									type="button"
 									className="ac-button ac-button-primary"
-									disabled={busy}
+									disabled={busy || (Boolean(preview) && unchanged)}
 									onClick={() =>
-										void onAction("setup", {
-											quoteId: validQuote.quote.id,
-											requestId: validQuote.requestId,
-										})
+										preview
+											? void confirm()
+											: validQuote &&
+												void onAction("setup", {
+													quoteId: validQuote.quote.id,
+													requestId: validQuote.requestId,
+												})
 									}
 								>
-									{enabled
-										? "Confirm renewal changes"
-										: "Add card & enable renewal"}
+									{preview
+										? card
+											? unchanged
+												? "Renewal is enabled"
+												: enabled
+													? "Save changes"
+													: "Enable renewal"
+											: "Add card & enable renewal"
+										: enabled
+											? "Confirm renewal changes"
+											: "Add card & enable renewal"}
 								</button>
+								{card && (
+									<button
+										type="button"
+										className="ac-button ac-button-quiet"
+										disabled={busy}
+										onClick={() => void confirm(false)}
+									>
+										Use a different card
+									</button>
+								)}
 							</div>
 						</div>
 					)}

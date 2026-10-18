@@ -38,6 +38,7 @@ import {
 import type {
 	RenewalSetupResult,
 	TrialRenewalQuote,
+	TrialRenewalPreview,
 } from "@/lib/anidachi-auth/trial-renewal";
 import {
 	CardlessTrialControls,
@@ -118,6 +119,8 @@ function BillingWorkspace({
 		snapshot?.overview ?? null,
 	);
 	const [busy, setBusy] = useState(!snapshot);
+	const [trialBusy, setTrialBusy] = useState(false);
+	const [renewalPreviewRevision, setRenewalPreviewRevision] = useState(0);
 	const [error, setError] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
 	const version = useRef(0);
@@ -309,7 +312,10 @@ function BillingWorkspace({
 	}, []);
 
 	useEffect(() => {
-		const abort = new AbortController();
+		const abort =
+			lifetime.current && !lifetime.current.signal.aborted
+				? lifetime.current
+				: new AbortController();
 		lifetime.current = abort;
 		const remaining = snapshot
 			? serverSnapshotRemainingMs(snapshot.remainingMs)
@@ -406,6 +412,7 @@ function BillingWorkspace({
 			const abort = new AbortController();
 			const departure = departures.current;
 			trialAbort.current = abort;
+			setTrialBusy(true);
 			setBusy(true);
 			setError(null);
 			setNotice(null);
@@ -421,9 +428,14 @@ function BillingWorkspace({
 					() => departures.current,
 				);
 				if (current !== version.current) return;
-				const result = await postTrialAction<
+				let result = await postTrialAction<
 					RenewalSetupResult | (TrialRenewalQuote & { state: "quoted" })
-				>(`renewal/${action}`, ownerUserId, body, abort.signal);
+				>(
+					`renewal/${action === "confirm" ? "quote" : action}`,
+					ownerUserId,
+					body,
+					abort.signal,
+				);
 				await guardBillingNavigation(
 					ownerUserId,
 					abort.signal,
@@ -463,7 +475,39 @@ function BillingWorkspace({
 						subscriptionId: subscription.id,
 						context: cardlessRenewalContext(subscription),
 					});
-				} else if (result.state === "setup") {
+					if (action !== "confirm") return;
+					if (
+						result.amount !== input.amount ||
+						result.currency !== input.currency ||
+						Date.parse(result.firstChargeAt) !==
+							Date.parse(String(input.firstChargeAt))
+					) {
+						setNotice(
+							"The renewal terms changed. Review the updated price and date, then confirm again.",
+						);
+						return;
+					}
+					result = await postTrialAction<RenewalSetupResult>(
+						"renewal/setup",
+						ownerUserId,
+						{
+							quoteId: result.id,
+							requestId: crypto.randomUUID(),
+							...(input.savedCardSourceId
+								? { savedCardSourceId: input.savedCardSourceId }
+								: {}),
+						},
+						abort.signal,
+					);
+					await guardBillingNavigation(
+						ownerUserId,
+						abort.signal,
+						departures.current !== departure,
+						() => departures.current,
+					);
+					if (current !== version.current || abort.signal.aborted) return;
+				}
+				if (result.state === "setup") {
 					window.location.assign(secureTrialSetupUrl(result.url));
 				} else {
 					setRenewalQuote(null);
@@ -479,7 +523,8 @@ function BillingWorkspace({
 						accepted &&
 						version.current === refreshedVersion &&
 						!abort.signal.aborted
-					)
+					) {
+						setRenewalPreviewRevision((n) => n + 1);
 						setNotice(
 							result.state === "active"
 								? "Renewal is confirmed. Your original trial end stays the same."
@@ -487,6 +532,7 @@ function BillingWorkspace({
 									? "Renewal is off. Your remaining trial access stays available."
 									: trialResultMessage(result.state),
 						);
+					}
 				}
 			} catch (failure) {
 				if (current === version.current && !abort.signal.aborted) {
@@ -501,6 +547,7 @@ function BillingWorkspace({
 				}
 			} finally {
 				if (trialAbort.current === abort) {
+					setTrialBusy(false);
 					trialAbort.current = null;
 					actionLock.current = false;
 					if (current === version.current) {
@@ -512,6 +559,39 @@ function BillingWorkspace({
 		},
 		[load, ownerUserId, retireAccountDisplay],
 	);
+	const previewRenewal = useCallback(async () => {
+		const signal = (lifetime.current ??= new AbortController()).signal;
+		const departure = departures.current;
+		try {
+			const result = await postTrialAction<
+				(TrialRenewalPreview & { state: "preview" }) | RenewalSetupResult
+			>("renewal/preview", ownerUserId, {}, signal);
+			await guardBillingNavigation(
+				ownerUserId,
+				signal,
+				departures.current !== departure,
+				() => departures.current,
+			);
+			if (result.state !== "preview")
+				throw new Error(trialResultMessage(result.state));
+			if (
+				result.options.length !== 4 ||
+				result.options.some(
+					(o) =>
+						!Number.isSafeInteger(o.amount) ||
+						o.amount <= 0 ||
+						o.currency !== "usd",
+				) ||
+				!Number.isFinite(Date.parse(result.firstChargeAt)) ||
+				!Number.isFinite(Date.parse(result.serverTime))
+			)
+				throw new Error("Renewal terms unavailable. Please try again.");
+			return result;
+		} catch (e) {
+			if (e instanceof BillingOwnerChangedError) retireAccountDisplay();
+			throw e;
+		}
+	}, [ownerUserId, retireAccountDisplay]);
 
 	const trialSetupOperationId = trialSetupReturn?.operationId;
 	useEffect(() => {
@@ -671,7 +751,9 @@ function BillingWorkspace({
 					subscription={subscription}
 					active={active}
 					onBack={onBack}
-					busy={busy}
+					busy={trialBusy}
+					onPreview={previewRenewal}
+					previewRevision={renewalPreviewRevision}
 					selection={
 						renewalSelections[subscription.id] ?? {
 							planCode: subscription.planCode === "pro" ? "pro" : "plus",

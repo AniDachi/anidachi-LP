@@ -19,6 +19,8 @@ create function pg_temp.begin_setup(origin text default 'https://staging.anidach
 select is(pg_temp.begin_setup()->>'state','setup_pending','consent stored before creating Session');
 select ok((pg_temp.begin_setup()->>'consented_at') is not null,'consent has server timestamp');
 select is(pg_temp.begin_setup()->>'setup_origin','https://staging.anidachi.app','stable origin preserved for retry');
+select throws_ok($$select public.reserve_trial_renewal_v1('b1000000-0000-4000-8000-000000000001',gen_random_uuid(),'sub_renewal','enable','{"planCode":"plus","billingPeriod":"monthly","priceId":"price_plus","amount":799,"currency":"usd","termsRevision":"v1","quoteRevision":"q2"}')$$,
+ 'P0001','TRIAL_SETUP_PENDING','another tab cannot cancel consented setup by reserving a quote');
 select throws_ok($$select pg_temp.begin_setup('https://other.example')$$,'P0001','TRIAL_SETUP_REQUEST_MISMATCH','origin cannot change on idempotent retry');
 create function pg_temp.save_setup(session_id text) returns jsonb language sql as $$
  select public.record_trial_setup_session_v1('b1000000-0000-4000-8000-000000000001',(select (value->>'id')::uuid from proof where name='op'),(select (value->>'generation')::bigint from proof where name='op'),session_id) $$;
@@ -34,6 +36,20 @@ select throws_ok($$select public.settle_expired_trial_renewal_v1('b1000000-0000-
 select public.commit_trial_renewal_v2('b1000000-0000-4000-8000-000000000001',(select (value->>'id')::uuid from proof where name='op'),1,'applying','applied',
  jsonb_build_object('scheduleId','sched_renewal','subscriptionId','sub_renewal','customerId','cus_renewal','trialEndsAt',now()+interval '72 hours','endBehavior','release','priceId','price_plus','paymentMethodId','pm_test'));
 select is(pg_temp.save_setup('cs_renewal')->>'state','applied','late same Session write does not regress committed state');
+insert into proof values('saved',public.reserve_trial_renewal_v1('b1000000-0000-4000-8000-000000000001',gen_random_uuid(),'sub_renewal','enable','{"planCode":"pro","billingPeriod":"yearly","priceId":"price_pro_year","amount":14390,"currency":"usd","termsRevision":"v1","quoteRevision":"q3"}'));
+create function pg_temp.confirm_saved(method text default 'pm_test', source_id uuid default null) returns jsonb language sql as $$
+ select public.begin_trial_saved_renewal_v1('b1000000-0000-4000-8000-000000000001',
+ (select (value->>'id')::uuid from proof where name='saved'),2,'b2000000-0000-4000-8000-000000000003','https://staging.anidachi.app',
+ coalesce(source_id,(select (value->>'id')::uuid from proof where name='op')),method) $$;
+select throws_ok($$select pg_temp.confirm_saved('pm_foreign')$$,'P0001','TRIAL_SETUP_UNVERIFIED','a different card cannot reuse existing consent proof');
+select throws_ok($$select pg_temp.confirm_saved('pm_test','b4000000-0000-4000-8000-000000000099')$$,'P0001','TRIAL_SETUP_UNVERIFIED','source must be an applied operation of this owner and subscription');
+select is(pg_temp.confirm_saved()->>'state','applying','new explicit consent permits saved-card changes');
+select is(pg_temp.confirm_saved()->>'state','applying','saved-card consent retry is idempotent');
+select ok((pg_temp.confirm_saved()->>'setup_session_id') is null,'reuse does not invent or duplicate a Checkout Session');
+select is((pg_temp.confirm_saved()->>'original_trial_end')::timestamptz,now()+interval '72 hours','saved-card changes keep the original trial deadline');
+select public.commit_trial_renewal_v2('b1000000-0000-4000-8000-000000000001',(select (value->>'id')::uuid from proof where name='saved'),2,'applying','applied',
+ jsonb_build_object('scheduleId','sched_renewal','subscriptionId','sub_renewal','customerId','cus_renewal','trialEndsAt',now()+interval '72 hours','endBehavior','release','priceId','price_pro_year','paymentMethodId','pm_test'));
+select is(pg_temp.confirm_saved()->>'state','applied','duplicate saved-card confirmation preserves completion');
 select public.reserve_trial_renewal_v1('b1000000-0000-4000-8000-000000000001',gen_random_uuid(),'sub_renewal','cancel','{}');
 select throws_ok($$select pg_temp.save_setup('cs_renewal')$$,'P0001','TRIAL_RENEWAL_STALE','later cancel fences late setup persistence');
 select throws_ok($$select pg_temp.begin_setup()$$,'P0001','TRIAL_RENEWAL_STALE','later cancel fences stale consent');
@@ -64,6 +80,7 @@ reset role;
 set local role authenticated;
 select throws_ok($$select * from public.subscription_trial_renewals$$,'42501',null,'renewal and consent records are private');
 select throws_ok($$select pg_temp.begin_setup()$$,'42501',null,'client cannot call setup RPC');
+select throws_ok($$select pg_temp.confirm_saved()$$,'42501',null,'client cannot authorize saved-card renewal directly');
 reset role;
 select * from finish();
 rollback;
