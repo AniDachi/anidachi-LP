@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import {
@@ -128,7 +128,7 @@ export function PrimaryCheckoutCta({
           className="w-full shrink-0 sm:w-auto"
           asChild
         >
-          <Link
+          <InstallLink
             href={INSTALL_HUB_PATH}
             onClick={() => {
               trackConversion("cta_click", {
@@ -141,7 +141,7 @@ export function PrimaryCheckoutCta({
           >
             {INSTALL_CTA_LABEL}
             <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-          </Link>
+          </InstallLink>
         </Button>
       </div>
     </div>

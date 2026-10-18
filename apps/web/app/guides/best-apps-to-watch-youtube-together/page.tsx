@@ -10,6 +10,7 @@ import {
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { InstallLink } from "@/components/install-link";
 
 const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -205,9 +206,9 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>#1 AniDachi</strong> — YouTube + Crunchyroll live watchrooms.
-          <Link href={INSTALL_HUB_PATH} className="text-brand-orange hover:underline ml-1">
+          <InstallLink href={INSTALL_HUB_PATH} className="text-brand-orange hover:underline ml-1">
             {INSTALL_CTA_LABEL}
-          </Link>
+          </InstallLink>
           .
         </li>
         <li>

@@ -28,6 +28,7 @@ import { takeAccountPreload } from "@/lib/account-navigation-preload";
 import { api, ApiError } from "@/lib/client-api";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { InstallLink } from "@/components/install-link";
 import { checkoutReturnPath } from "@/lib/checkout-selection";
 import {
 	postTrialAction,
@@ -834,12 +835,12 @@ export function BillingView({
 								{owned.planCode === "free" ? (
 									<>
 										<div className="billing-actions">
-											<Link
+											<InstallLink
 												href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
 												className="ac-button"
 											>
 												{INSTALL_CTA_LABEL}
-											</Link>
+											</InstallLink>
 											{!owned.pendingTrialActivation && (
 												<Link
 													href="/pricing"

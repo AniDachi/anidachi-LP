@@ -30,7 +30,8 @@ import {
 import { InstallStep, OverlayUsingGuide } from "@/components/overlay-using-guide";
 import { WatchPlatformLinks } from "@/components/watch-platform-links";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
-import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { isMobileInstallDevice } from "@/lib/mobile-install";
+import { InstallLink } from "@/components/install-link";
 import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { InstallPlatformMarks } from "./install-platform-marks";
@@ -146,7 +147,7 @@ export function ExtensionInstallHub({
 
   useEffect(() => {
     const ua = navigator.userAgent;
-    setIsMobile(isMobileUserAgent(ua));
+    setIsMobile(isMobileInstallDevice(navigator));
     setBrowser(detectBrowser(ua));
   }, []);
 
@@ -263,20 +264,20 @@ export function ExtensionInstallHub({
           </p>
         ) : null}
         <div className={styles.action}>
-          {isMobile ? (
+          {EXTENSION_INSTALL_MODE === "cws" ? (
+            <Button asChild size="control" variant="cream" className={styles.installButton}>
+              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={desktopInstallUrl} target="_blank" rel="noopener noreferrer" onClick={onStoreClick}>
+                <Chrome className="size-6" aria-hidden="true" />
+                {isMobile ? "Install AniDachi" : "Add to Chrome"}
+                <span className="sr-only"> — Chrome Web Store</span>
+              </InstallLink>
+            </Button>
+          ) : isMobile ? (
             <Button type="button" size="control" variant="cream"
               className={styles.installButton} onClick={() => void copyDesktopLink()}>
               <Copy className="size-5" aria-hidden="true" />
               {linkStatus === "shared" ? "Shared" : linkStatus === "copied"
                 ? "Link copied" : "Copy desktop install link"}
-            </Button>
-          ) : EXTENSION_INSTALL_MODE === "cws" ? (
-            <Button asChild size="control" variant="cream" className={styles.installButton}>
-              <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer" onClick={onStoreClick}>
-                <Chrome className="size-6" aria-hidden="true" />
-                Add to Chrome
-                <span className="sr-only"> — Chrome Web Store, opens in a new tab</span>
-              </a>
             </Button>
           ) : artifact.available ? (
             <Button asChild size="control" variant="cream" className={styles.installButton}>

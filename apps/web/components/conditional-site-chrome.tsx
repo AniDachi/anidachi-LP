@@ -32,6 +32,7 @@ function minimalChromeForPath(pathname: string): MinimalChromeConfig | null {
 
 export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
   const pathname = usePathname();
+  if (process.env.NODE_ENV === "development" && pathname === "/dev/mobile-install") return null;
   if (pathname === "/account" || pathname.startsWith("/account/") ||
       (process.env.NODE_ENV === "development" && pathname === "/dev/billing")) return null;
   const minimal = minimalChromeForPath(pathname);
@@ -49,6 +50,7 @@ export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
 
 export function ConditionalFooter({ marketingFooter }: { marketingFooter: ReactNode }) {
   const pathname = usePathname();
+  if (process.env.NODE_ENV === "development" && pathname === "/dev/mobile-install") return null;
   if (pathname === "/account" || pathname.startsWith("/account/") ||
       (process.env.NODE_ENV === "development" && pathname === "/dev/billing")) return null;
   if (minimalChromeForPath(pathname)) {
