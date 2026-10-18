@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -849,10 +849,10 @@ function TierCardBody({
 						size="control"
 						className="pricing-plans__button"
 					>
-						<Link href={INSTALL_HUB_PATH}>
+						<InstallLink href={INSTALL_HUB_PATH}>
 							{INSTALL_CTA_LABEL}
 							<ArrowRight size={17} aria-hidden="true" />
-						</Link>
+						</InstallLink>
 					</Button>
 				)}
 				<p

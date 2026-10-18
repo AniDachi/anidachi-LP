@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import {
   inferPageTemplateFromPath,
   trackConversion,
@@ -9,11 +9,13 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 export function NavPricingLink({
   className = "text-ani-muted transition-colors hover:text-ani-text",
+  label = INSTALL_CTA_LABEL,
 }: {
   className?: string;
+  label?: string;
 }) {
   return (
-    <Link
+    <InstallLink
       href={INSTALL_HUB_PATH}
       className={className}
       onClick={() => {
@@ -27,7 +29,7 @@ export function NavPricingLink({
         });
       }}
     >
-      {INSTALL_CTA_LABEL}
-    </Link>
+      {label}
+    </InstallLink>
   );
 }

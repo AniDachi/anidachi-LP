@@ -110,3 +110,12 @@
 @media (prefers-reduced-motion: reduce) {
   .installButton { transition: none; }
 }
+
+.platforms.compactPlatforms { margin: 0; justify-content: center; gap: 20px; }
+.compactPlatforms .youtube { width: 75px; height: 20px; }
+.compactPlatforms .netflix { width: 58px; height: 18px; }
+.compactPlatforms .crunchyroll { font-size: 16px; gap: 4px; }
+.compactPlatforms .crunchyroll svg { width: 20px; height: 20px; }
+@media (max-width: 359px) {
+  .platforms.compactPlatforms { gap: 12px; }
+}

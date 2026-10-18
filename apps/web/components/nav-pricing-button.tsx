@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import {
   inferPageTemplateFromPath,
   trackConversion,
@@ -11,7 +11,7 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 export function NavPricingButton() {
   return (
     <Button asChild variant="cream" size="control">
-      <Link
+      <InstallLink
         href={INSTALL_HUB_PATH}
         onClick={() => {
           if (typeof window === "undefined") return;
@@ -25,7 +25,7 @@ export function NavPricingButton() {
         }}
       >
         {INSTALL_CTA_LABEL}
-      </Link>
+      </InstallLink>
     </Button>
   );
 }

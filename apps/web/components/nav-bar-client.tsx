@@ -458,7 +458,7 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           {/* Mobile and tablet share one drawer and one breakpoint. */}
           <div className="flex items-center gap-1 xl:hidden">
             <span className="inline-flex min-h-11 min-w-11 items-center justify-center">
-              <NavPricingLink className="inline-flex min-h-11 items-center rounded-full border border-ani-control-border px-3 text-sm font-semibold text-ani-text transition-colors hover:bg-ani-hover" />
+              <NavPricingLink label="Install" className="inline-flex min-h-11 items-center rounded-full border border-ani-control-border px-3 text-sm font-semibold text-ani-text transition-colors hover:bg-ani-hover" />
             </span>
             {!user && (
               <Link href="/login" className="inline-flex min-h-11 items-center rounded-full border border-ani-line px-3 text-xs font-semibold text-ani-text transition-colors hover:border-ani-control-border-hover hover:text-ani-text">

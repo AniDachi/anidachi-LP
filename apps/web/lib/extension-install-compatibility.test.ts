@@ -6,6 +6,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { ExtensionInstallHub } from "../components/extension-install-hub";
+import { MobileInstallProvider } from "../components/mobile-install-panel";
 import { ExtensionCheck } from "../app/room/[roomId]/extension-check";
 import type { PublicExtensionArtifact } from "./extension-artifact";
 import { CHROME_WEB_STORE_URL } from "./install-cta";
@@ -59,7 +60,7 @@ async function renderHub(value = artifact, next = "/room/test-room") {
   await act(async () => root!.render(React.createElement(
     SearchParamsContext.Provider,
     { value: new URLSearchParams({ next }) },
-    React.createElement(ExtensionInstallHub, { artifact: value }),
+    React.createElement(MobileInstallProvider, null, React.createElement(ExtensionInstallHub, { artifact: value })),
   )));
 }
 
@@ -80,10 +81,13 @@ test("mobile installation shares a room return link without collecting an email 
   window.history.replaceState(null, "", "/extension?next=%2Froom%2Ftest-room");
   try {
     await renderHub();
-    const button = [...container.querySelectorAll("button")].find(
-      (item) => item.textContent?.includes("Copy desktop install link"),
-    );
-    assert.ok(button);
+    assert.equal(container.querySelector("dialog[open]"), null, "no panel before the user taps Install");
+    await act(async () => storeLink()!.click());
+    const panel = container.querySelector("dialog[open]");
+    assert.ok(panel);
+    assert.match(panel.textContent!, /Continue onyour computer/);
+    assert.match(panel.textContent!, /Add to Desktop/);
+    const button = [...panel.querySelectorAll("button")].find((item) => item.textContent?.includes("Share link"))!;
     await act(async () => button.click());
     assert.deepEqual(copied, ["http://localhost/extension?next=%2Froom%2Ftest-room"]);
     assert.match(button.textContent!, /Link copied/);
@@ -93,6 +97,83 @@ test("mobile installation shares a room return link without collecting an email 
   } finally {
     window.history.replaceState(null, "", "/room/test-room");
   }
+});
+
+test("mobile install can be dismissed and reopened, without remembering a copied status", async () => {
+  Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Android Mobile" });
+  await renderHub();
+  await act(async () => storeLink()!.click());
+  const share = [...container.querySelectorAll("dialog button")].find((button) => button.textContent?.includes("Share link"))!;
+  await act(async () => (share as HTMLButtonElement).click());
+  assert.match(container.querySelector("dialog")!.textContent!, /Link copied/);
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close install panel"]')!.click());
+  assert.equal(container.querySelector("dialog[open]"), null);
+  await act(async () => storeLink()!.click());
+  assert.ok(container.querySelector("dialog[open]"));
+  assert.doesNotMatch(container.querySelector("dialog")!.textContent!, /Link copied/);
+  await act(async () => container.querySelector("dialog")!.dispatchEvent(new dom.Event("cancel", { cancelable: true }) as unknown as Event));
+  assert.equal(container.querySelector("dialog[open]"), null);
+});
+
+test("cancelling native sharing does not copy or claim success", async () => {
+  Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Android Mobile" });
+  Object.defineProperty(navigator, "share", { configurable: true, value: async () => { throw Object.assign(new Error("Cancelled"), { name: "AbortError" }); } });
+  await renderHub();
+  await act(async () => storeLink()!.click());
+  const share = [...container.querySelectorAll<HTMLButtonElement>("dialog button")].find((button) => button.textContent?.includes("Share link"))!;
+  await act(async () => share.click());
+  assert.deepEqual(copied, []);
+  assert.equal(share.disabled, false);
+  assert.equal(container.querySelector("dialog input"), null);
+  assert.doesNotMatch(container.querySelector("dialog")!.textContent!, /Link copied/);
+});
+
+test("a late clipboard result cannot update a newly reopened install panel", async () => {
+  Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Android Mobile" });
+  let finish!: () => void;
+  let writes = 0;
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: {
+    writeText: () => { writes++; return new Promise<void>(resolve => { finish = resolve; }); },
+  } });
+  await renderHub();
+  await act(async () => storeLink()!.click());
+  const share = [...container.querySelectorAll<HTMLButtonElement>("dialog button")].find((button) => button.textContent?.includes("Share link"))!;
+  await act(async () => { share.click(); share.click(); });
+  assert.equal(writes, 1, "rapid taps coalesce into a single clipboard operation");
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close install panel"]')!.click());
+  await act(async () => storeLink()!.click());
+  await act(async () => finish());
+  assert.ok(container.querySelector("dialog[open]"));
+  assert.doesNotMatch(container.querySelector("dialog")!.textContent!, /Link copied/);
+  assert.equal(share.disabled, false);
+});
+
+test("unavailable sharing and clipboard leave a selectable safe install link", async () => {
+  Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Android Mobile" });
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+  window.history.replaceState(null, "", "/extension?next=https%3A%2F%2Funtrusted.example");
+  try {
+    await renderHub(artifact, "https://untrusted.example");
+    await act(async () => storeLink()!.click());
+    const share = [...container.querySelectorAll<HTMLButtonElement>("dialog button")].find((button) => button.textContent?.includes("Share link"))!;
+    await act(async () => share.click());
+    assert.equal(container.querySelector<HTMLInputElement>("dialog input")!.value, "http://localhost/extension");
+    assert.equal(share.disabled, false);
+  } finally { window.history.replaceState(null, "", "/room/test-room"); }
+});
+
+test("desktop and modified install clicks retain native navigation", async () => {
+  await renderHub();
+  // Prevent actual navigation in HappyDOM, after React receives the event.
+  const prevent = (event: Event) => event.preventDefault();
+  document.addEventListener("click", prevent);
+  try {
+    await act(async () => storeLink()!.click());
+    assert.equal(container.querySelector("dialog[open]"), null);
+    Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Android Mobile" });
+    await act(async () => storeLink()!.dispatchEvent(new dom.MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }) as unknown as MouseEvent));
+    assert.equal(container.querySelector("dialog[open]"), null);
+  } finally { document.removeEventListener("click", prevent); }
 });
 
 test("the Chrome Web Store install link and room return work without querying the installed extension", async () => {

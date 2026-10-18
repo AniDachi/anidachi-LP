@@ -13,6 +13,7 @@ import { WATCH_HISTORY_OWNER_HEADER } from "@/lib/watch-history-owner";
 import { useAccountScrollRestoration, useAccountViewState } from "@/components/account/account-workspace-state";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { InstallLink } from "@/components/install-link";
 
 export type HistoryPlatform = "all" | WatchHistoryItem["provider"];
 type Props = {
@@ -119,9 +120,9 @@ function LibraryFirstWatch({ canEdit }: { canEdit: boolean }) {
         ))}
       </ol>
       <div className="wh-start-actions">
-        <Link className="wh-primary" href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}>
+        <InstallLink className="wh-primary" href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}>
           {INSTALL_CTA_LABEL}
-        </Link>
+        </InstallLink>
         {!canEdit && (
           <Link className="wh-button" href="/pricing">
             View plans

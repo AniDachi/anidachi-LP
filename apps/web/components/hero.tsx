@@ -9,7 +9,7 @@ import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { WatchingTogetherCount } from "@/components/watching-together-count";
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 
 export function Hero() {
   useEffect(() => {
@@ -48,7 +48,7 @@ export function Hero() {
               className="px-8 text-sm sm:w-auto"
               asChild
             >
-              <Link
+              <InstallLink
                 href={INSTALL_HUB_PATH}
                 onClick={() => {
                   trackConversion("cta_click", {
@@ -60,7 +60,7 @@ export function Hero() {
                 }}
               >
                 {INSTALL_CTA_LABEL}
-              </Link>
+              </InstallLink>
             </Button>
             <Button
               asChild

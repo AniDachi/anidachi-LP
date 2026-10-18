@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, Chrome, Copy, Loader2, ArrowUpRight } from "lucide-react";
+import { Check, Chrome, Loader2, ArrowUpRight } from "lucide-react";
 import { AnidachiLogo } from "./anidachi-logo";
 import { Button } from "./ui/button";
 import { ProviderLogo } from "../../extension/src/provider-logo";
 import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 import { EXTENSION_WELCOME_PATH, type ExtensionWelcome } from "@/lib/extension-welcome";
 import { requestExtensionPresence } from "@/lib/extension-presence-client";
-import { isMobileUserAgent } from "@/lib/mobile-user-agent";
-import { shareOrCopyUrl } from "@/lib/use-mobile-device";
+import { isMobileInstallDevice } from "@/lib/mobile-install";
+import { InstallLink } from "./install-link";
 import styles from "./extension-install.module.css";
 
 export function ExtensionWelcomeHero({ welcome, extensionId }: {
@@ -20,7 +20,6 @@ export function ExtensionWelcomeHero({ welcome, extensionId }: {
   const router = useRouter();
   const [present, setPresent] = useState<boolean | null>(null);
   const [mobile, setMobile] = useState<boolean | null>(null);
-  const [copied, setCopied] = useState(false);
   const [expired, setExpired] = useState(false);
   // Initial SSR uses document age; later snapshots use the refresh request age.
   // Both clocks are monotonic and independent of the user's wall-clock setting.
@@ -53,7 +52,7 @@ export function ExtensionWelcomeHero({ welcome, extensionId }: {
   }, [welcome, expiresInMs, refresh]);
 
   useEffect(() => {
-    const isMobile = isMobileUserAgent(navigator.userAgent);
+    const isMobile = isMobileInstallDevice(navigator);
     setMobile(isMobile);
     let abort = new AbortController();
     let focusTimer: ReturnType<typeof setTimeout> | undefined;
@@ -102,13 +101,14 @@ export function ExtensionWelcomeHero({ welcome, extensionId }: {
             <Loader2 size={20} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /><span className="sr-only">Preparing your next step</span>
           </div> : mobile ? <>
             <p>Open AniDachi in Chrome on your computer.</p>
-            <Button variant="cream" size="control" onClick={() => {
-              void shareOrCopyUrl(new URL(EXTENSION_WELCOME_PATH, window.location.origin).href, { title: "Start watching with AniDachi" })
-                .then(() => setCopied(true), () => setCopied(false));
-            }}><Copy size={18} aria-hidden="true" />{copied ? "Link ready" : "Copy desktop link"}</Button>
+            <Button asChild variant="cream" size="control" className={styles.installButton}>
+              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={EXTENSION_WELCOME_PATH} target="_blank" rel="noopener noreferrer">
+                <Chrome size={22} aria-hidden="true" />Install AniDachi
+              </InstallLink>
+            </Button>
           </> : present ? <span className={styles.welcomeReady}><Check size={17} aria-hidden="true" />Extension ready</span> : <>
             <Button asChild variant="cream" size="control" className={styles.installButton}>
-              <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer"><Chrome size={22} aria-hidden="true" />Install AniDachi<span className="sr-only">, opens in a new tab</span></a>
+              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={EXTENSION_WELCOME_PATH} target="_blank" rel="noopener noreferrer"><Chrome size={22} aria-hidden="true" />Install AniDachi<span className="sr-only">, opens in a new tab</span></InstallLink>
             </Button>
             <p>Install the extension, then open a video. Already installed? Choose a platform below.</p>
           </>}

@@ -53,12 +53,15 @@ test("optional proof binds installation ownership to account, cookie, origin and
 	const proof = { version: 1, challenge, publicKey, signature };
 	const m = await t.markers(cookie, owner, requestId, proof);
 	assert.match(m.installation!, /^[a-f0-9]{64}$/);
+	const forgedSignature = Buffer.from(signature, "base64url");
+	// Always change signed bytes; replacing a random suffix can leave it unchanged.
+	forgedSignature[0] ^= 1;
 	for (const args of [
 		[
 			cookie,
 			owner,
 			requestId,
-			{ ...proof, signature: signature.slice(0, -2) + "AA" },
+			{ ...proof, signature: forgedSignature.toString("base64url") },
 		],
 		[cookie, owner, requestId, { ...proof, extra: true }],
 		[cookie, owner, requestId, null],

@@ -3,9 +3,9 @@ import styles from "./extension-install.module.css";
 
 // YouTube and Netflix artwork: https://github.com/pheralb/svgl (static/library).
 /** Passive supported-platform marks; these are not links. */
-export function InstallPlatformMarks() {
+export function InstallPlatformMarks({ compact = false }: { compact?: boolean }) {
   return (
-    <ul className={styles.platforms} aria-label="Watch together on these platforms">
+    <ul className={`${styles.platforms}${compact ? ` ${styles.compactPlatforms}` : ""}`} aria-label="Watch together on these platforms">
       <li><span className={styles.youtube} role="img" aria-label="YouTube" /></li>
       <li className={styles.crunchyroll}>
         <ProviderLogo provider="crunchyroll" label="Crunchyroll" />

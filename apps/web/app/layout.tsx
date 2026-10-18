@@ -11,6 +11,7 @@ import {
 } from "@/components/conditional-site-chrome";
 import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
+import { MobileInstallProvider } from "@/components/mobile-install-panel";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
 import {
   ANIDACHI_OG_IMAGE_ALT,
@@ -105,9 +106,11 @@ export default function RootLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
-        <ConditionalNav marketingNav={<NavBar />} />
-        {children}
-        <ConditionalFooter marketingFooter={<Footer />} />
+        <MobileInstallProvider>
+          <ConditionalNav marketingNav={<NavBar />} />
+          {children}
+          <ConditionalFooter marketingFooter={<Footer />} />
+        </MobileInstallProvider>
         <OrganizationJsonLd />
         <AnalyticsEvents />
       </body>

@@ -6,6 +6,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { ExtensionWelcomeHero } from "../components/extension-welcome-hero";
+import { MobileInstallProvider } from "../components/mobile-install-panel";
 import type { ExtensionWelcome } from "./extension-welcome";
 
 let root: Root | undefined;
@@ -20,7 +21,8 @@ async function mount(welcome: ExtensionWelcome) {
   el = document.createElement("div"); document.body.append(el); root = createRoot(el);
   globalThis.fetch = async () => { throw Error("Welcome must not start trials or poll APIs"); };
   await act(async () => root!.render(React.createElement(AppRouterContext.Provider, { value: router },
-    React.createElement(ExtensionWelcomeHero, { welcome, extensionId: "a".repeat(32) }))));
+    React.createElement(MobileInstallProvider, null,
+      React.createElement(ExtensionWelcomeHero, { welcome, extensionId: "a".repeat(32) })))));
 }
 afterEach(async () => {
   await act(async () => root?.unmount()); root = undefined; document.body.innerHTML = "";
@@ -97,12 +99,28 @@ test("focus and visibility events coalesce and keep the last installation presen
   assert.equal(refreshes, 1);
 });
 
-test("mobile offers a desktop handoff instead of unsupported installation or platform links", async () => {
+test("mobile opens the install panel without starting another trial or exposing player links", async () => {
   Object.defineProperty(navigator, "userAgent", { value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) Mobile", configurable: true });
   await mount(trial);
-  assert.match(el.textContent!, /Copy desktop link/);
-  assert.equal(el.querySelector('a[href*="chromewebstore"]'), null);
+  assert.match(el.textContent!, /Install AniDachi/);
+  assert.equal(el.querySelector("dialog[open]"), null);
+  await act(async () => el.querySelector<HTMLAnchorElement>('a[href*="chromewebstore"]')!.click());
+  assert.ok(el.querySelector("dialog[open]"));
   assert.equal(el.querySelector('a[href="https://www.netflix.com"]'), null);
+  assert.match(el.textContent!, /3-day trial is active/);
+  const originalShare = navigator.share;
+  const originalClipboard = navigator.clipboard;
+  const copied: string[] = [];
+  Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (url: string) => { copied.push(url); } } });
+  try {
+    const button = [...el.querySelectorAll<HTMLButtonElement>("dialog button")].find(item => item.textContent?.includes("Share link"))!;
+    await act(async () => button.click());
+    assert.deepEqual(copied, ["http://localhost/extension?welcome=1"]);
+  } finally {
+    Object.defineProperty(navigator, "share", { configurable: true, value: originalShare });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: originalClipboard });
+  }
 });
 
 test("delayed hydration cannot extend a trial that has already ended", async t => {
@@ -121,7 +139,8 @@ test("refreshed snapshots age from their request, not the original document", as
   await act(async () => { window.dispatchEvent(new Event("focus")); t.mock.timers.tick(150); });
   now += 200;
   await act(async () => root!.render(React.createElement(AppRouterContext.Provider, { value: router },
-    React.createElement(ExtensionWelcomeHero, { welcome: { ...trial, expiresInMs: 1000 } as ExtensionWelcome, extensionId: "a".repeat(32) }))));
+    React.createElement(MobileInstallProvider, null,
+      React.createElement(ExtensionWelcomeHero, { welcome: { ...trial, expiresInMs: 1000 } as ExtensionWelcome, extensionId: "a".repeat(32) })))));
   assert.match(el.textContent!, /3-day trial is active/);
   assert.equal(refreshes, 1);
   now += 800;

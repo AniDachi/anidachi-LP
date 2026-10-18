@@ -1,5 +1,20 @@
 # Current Development State
 
+## Mobile installation handoff, October 18, 2026
+
+The accepted mobile install panel opens only after an Install action. Marketing,
+Free-plan, account and active trial/paid welcome entry points share the same panel;
+desktop and modified clicks retain their original destinations. The panel links to
+the canonical Chrome Web Store listing and offers native sharing, clipboard copy,
+or a selectable fallback URL. Shared links retain only validated installation
+context on the current environment. No account, trial, payment or extension
+contract changes are included, and the existing Store ZIP does not need rebuilding.
+
+Local browser and web checks passed; staging delivery is authorized, while real
+phone Add to Desktop acceptance and production promotion remain separate.
+See the [delivery record](releases/mobile-install-panel-2026-10-18.md) for scope,
+verification, the Graphify tooling limitation and rollback.
+
 ## Trial flow stability, October 17, 2026
 
 The [stability follow-up](superpowers/plans/2026-10-17-trial-flow-stability.md)
