@@ -128,7 +128,9 @@ version/channel/hash and test accounts' roles without tokens or personal data.
 - [x] Build and validate the authorized production-channel review ZIP from the
   frozen staging runtime without deploying production; hash/extract the exact
   artifact and retain the matching staging-channel ZIP. October 18 evidence is
-  in the runbook and ignored build receipt. This completes package preparation,
+  in the runbook and ignored build receipt. #444 supersedes the first October 18
+  archives with matching channel builds from `9b99ba0e`; unresolved onboarding
+  offers no longer show the removed purchase fallback. This completes package preparation,
   not combined staging acceptance or Store submission. Truthful reviewer access,
   old-client compatibility and the manual gates remain required; full new-client
   flows against the old backend are not required to prepare a review archive.

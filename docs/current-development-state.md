@@ -13,8 +13,12 @@ deferred redirect. Actual trial/quote expiry remains independent of display TTL.
 
 Account-eligible extension entries open Plus/monthly trial confirmation directly;
 known used accounts go to ordinary plans. Onboarding unknown actions now use a
-compact loader, with retry on failure; the removed Continue with Plus fallback
-must not flash before the trial CTA (follow-up #438).
+compact loader. Follow-up #444 removes the remaining Continue with Plus paths
+left after #438: initial errors/incomplete terms offer a real retry, unresolved
+identity stays neutral and confirmed signed-out users sign in to the selected
+Plus confirmation. The same-owner verified offer persists during revalidation.
+The hosting notice follows the same unknown-versus-confirmed rule; a confirmed
+card-required server retains ordinary pricing navigation.
 The website checks its HttpOnly browser cookie and optional installation proof
 before showing trial terms. A used marker produces explicit paid terms; outages
 remain retryable. Final atomic reservation, anti-abuse and Stripe lifecycle are
@@ -63,12 +67,14 @@ read-only October 18 preflight confirms hosting is already active from October 3
 with nine pending additive migrations, including `20261017130802` rate buckets;
 the old hosting cutover must not be replayed.
 
-The refreshed 0.1.3 Store review ZIP freezes staging runtime `85236137` and includes
+The refreshed 0.1.3 Store review ZIP freezes runtime `9b99ba0e` from #444 and includes
 website presence / welcome routing from #440 plus the already approved onboarding,
 trial stability, provider and request optimizations. Subscription screens #441/#442
 are Web-only. Both channel artifact identities and exact CI/deployment evidence
-are in the runbook; the production ZIP's 2,435 tests and offline Chrome fixtures
-pass. Two requested test accounts were reset only in staging/Sandbox; the owner
+are in the runbook; the production ZIP's 2,438 tests and offline Chrome fixtures
+pass. Both channel ZIPs were rebuilt after #444; the older October 18 archives
+are superseded. Seven packaged offer states per channel and the existing
+onboarding/return fixtures pass without real account or payment operations. Two requested test accounts were reset only in staging/Sandbox; the owner
 will run the fresh-account anti-abuse flow later. Actual Store update, combined
 provider acceptance and LIVE Stripe preflight remain open. Production is unchanged.
 

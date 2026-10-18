@@ -9,10 +9,10 @@ only where evidence below says so; reset accounts are not acceptance evidence.
 
 ## Candidate identity and evidence
 
-- Frozen runtime source: `85236137d7e50dbfbddea348f71c394d853c5c4c` (staging, October 18).
+- Frozen runtime source: `9b99ba0ec10855984bad3724c76b60ad6deb142b` (PR #444, October 18).
 - Original October 17 preparation started at `847e9d16394b9c91d7045376e89c9d4ce15d2342`.
 - Production baseline: `a8aee4641ab74bd8b7992217fdcc4302543b7d54`.
-- Documentation refresh branch: `codex/release-package-refresh-oct18`. No runtime changes.
+- Documentation refresh branch: `codex/release-package-refresh-oct18`; records the extension-only fix from #444.
 - Previous actual Store package: 0.1.2, SHA-256
   `90d2b981c17198cfa0472b5bf40d061f5aca84fd7a16ed767e1735f0be459375`.
   Its archived build receipt and production GitHub version variable confirm
@@ -30,7 +30,7 @@ claim are enabled together. Sender validation and the installation-local
 an installation eligible; an existing seen value prevents replay. The practice
 tour does not create a room, capture camera/mic, send chat or change preferences.
 
-October 18 extension typecheck and all **2,435 tests in 150 files** pass on the
+October 18 extension typecheck and all **2,438 tests in 150 files** pass on the
 frozen source. The exact unpacked production ZIP also passes an offline Chrome
 fixture: popup/logo, all six tour steps, real HTML5 pause/resume, keyboard cleanup
 and persisted seen state after browser restart. Five checkout-return scenarios
@@ -40,27 +40,37 @@ fixtures, not real-provider, real-billing, Store-update or two-person acceptance
 
 ### Frozen artifact receipt (October 18)
 
-Local ignored bundle: `artifacts/chrome-web-store-0.1.3-final-20261018/`.
+Local ignored bundle: `artifacts/onboarding-offer-fix-20261018/`.
 
 | Artifact | Identity |
 | --- | --- |
 | Store review ZIP | `AniDachi-0.1.3-Chrome-Web-Store.zip` |
-| SHA-256 | `831a03b24702d118fd32c5183f3f4b8221b66faa404bd2b710754aef39278f17` |
-| Build ID | `85236137-production-final-20261018` |
+| SHA-256 | `67e07e54afe740556f1c98effdba2b92c47ea6fa87bdb93f791edfba4a458c02` |
+| Build ID | `9b99ba0e-production-offer-fix-20261018` |
 | Staging test ZIP | `AniDachi-0.1.3-Staging-Test.zip` |
-| Staging SHA-256 | `ae9cfc60de9e1c68001954ed7a5941abaf62c0eb88f2fd2e5c5523f9fcb1bce4` |
-| Staging build source | `c78c4dcd9dc05d6a758c805fe3825084d657b7eb` |
+| Staging SHA-256 | `cd676c300152c7ad5c4c80955629237af0a38c95751c99d06239460451be9edb` |
+| Staging build source | `9b99ba0ec10855984bad3724c76b60ad6deb142b` |
 
-The staging ZIP is a byte-for-byte copy of the already validated website-welcome
-build. Its extension/protocol/build inputs and lockfile have no diff to the frozen
-runtime; later commits change Web subscription screens only. Channel endpoints,
-IDs and push configuration intentionally differ. The Store ZIP now also includes
-`anidachi:website-presence:v1`, missing from the previous onboarding-return archive.
-This read-only hint does not grant trial eligibility or create an installation key.
-The existing production public VAPID key and Store ID are preserved. Both channel
-validators pass. Upload only the Store ZIP, not the containing evidence folder.
+Both channel ZIPs are rebuilt from the same frozen source. They replace the
+previous October 18 package: the old fallback text remained in signed-out and
+failed-read paths despite the earlier loading-only fix. #444 removes it completely,
+keeps unresolved access neutral, wires retry to the existing coalesced read and
+preserves ordinary pricing on a confirmed card-required server. Confirmed trial
+and paid-account behavior, website preflight, atomic anti-abuse and Stripe are
+unchanged. Seven exact-package Chrome scenarios pass per channel: delayed read,
+error/retry, used trial, paid subscription, signed-out, card-required server and
+incomplete terms. The delayed read and retry both resolve to eligible. Each normal signed-in case uses one
+read; retry adds one explicit read; signed-out uses none. This is offline fixture
+evidence, not live account acceptance.
 
-Runtime CI on `85236137`: `39095465827` and `39095472951`; Rooms E2E
+Both ZIPs retain `anidachi:website-presence:v1`, the existing production public
+VAPID key, channel IDs and unchanged narrow manifests. Channel endpoints and push
+configuration intentionally differ. Validators, ZIP CRC/extracted-byte comparisons
+and removed-text scans pass. Upload only the Store ZIP, not the evidence folder.
+Old archives are retained for history and must not be uploaded.
+
+#444 CI `39100605137` and preview smoke `39100693757` passed.
+Baseline server/room CI on `85236137`: `39095465827` and `39095472951`; Rooms E2E
 `39095473013`; P2P E2E `39095473010`; staging smoke `39095644776` — passed.
 Staging Web deployment: `dpl_FBwrTt2yB5qe8EKZNvYHu2Y5PsKN`, READY at that SHA.
 Worker deployment run `39080161026` used `9f66ee73b669ffb452c8e9dd59bbde461c4851ed`;
@@ -167,7 +177,7 @@ instructions when required, never credentials inside the package or repository.
 
 | Check | Current evidence / next action |
 | --- | --- |
-| Exact ZIP and source | October 18 production build/validator, CRC/unpacked equality and 2,435 tests pass; staging ZIP inputs match the freeze. Artifact receipt records channels, hashes and scans. No archive was uploaded or published. |
+| Exact ZIP and source | October 18 production build/validator, CRC/unpacked equality and 2,438 tests pass; both channel ZIPs use the same frozen source; seven packaged offer scenarios pass per channel. Artifact receipt records channels, hashes and scans. No archive was uploaded or published. |
 | Fresh onboarding | Exact production ZIP passes all six steps/finish, video/input cleanup, restart/no replay and five checkout-return cases in offline Chrome. Actual provider/installed-update behavior remains a separate gate. |
 | Multi-provider rooms | Prior provider/input tests and staging repairs passed; final combined two-person Netflix plus YouTube/Crunchyroll smoke remains separate. Include V/repeat/keyup/chat, native controls/fullscreen/navigation, real mic/camera and room end. |
 | Browser/installation abuse | Server tests and staging migrations passed. Two owner-named staging accounts were reset October 18: Free/eligible, old Sandbox schedules canceled without invoice/proration, only their trial/marker records cleared; enforcement remains on. Owner will test later. Still verify first activation, second-account paid-only denial without clearing cookies, no duplicate Stripe trial, and cookie-only path without extension. |
