@@ -35,7 +35,7 @@ export function formatMonthlyPrice(price: MonthlyPrice): string {
 		currency: price.currency,
 	}).format(price.unitAmount / 100);
 }
-export function formatBillingTime(value: string): string {
+export function formatBillingTime(value: string, timeZone?: string): string {
 	return new Date(value).toLocaleString("en-US", {
 		year: "numeric",
 		month: "short",
@@ -43,6 +43,7 @@ export function formatBillingTime(value: string): string {
 		hour: "numeric",
 		minute: "2-digit",
 		timeZoneName: "short",
+		timeZone,
 	});
 }
 

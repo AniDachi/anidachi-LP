@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useBillingTimeZone } from "./use-billing-time-zone";
 import { useEffect, useRef, type ReactNode } from "react";
 import {
 	billingPeriodUnit,
@@ -27,6 +28,7 @@ export function SubscriptionSummary({
 	onManage: () => void;
 	hidden?: boolean;
 }) {
+	const timeZone = useBillingTimeZone();
 	const trial = s.trial?.stage === "trial" ? s.trial : undefined;
 	const off = s.cancelAtPeriodEnd;
 	const plan =
@@ -35,13 +37,16 @@ export function SubscriptionSummary({
 	const date =
 		rawDate && Number.isFinite(Date.parse(rawDate)) ? new Date(rawDate) : null;
 	const dateText = date
-		? new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(date)
+		? new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone }).format(
+				date,
+			)
 		: "Date unavailable";
 	const time = date
 		? new Intl.DateTimeFormat("en", {
 				hour: "numeric",
 				minute: "2-digit",
 				timeZoneName: "short",
+				timeZone,
 			}).format(date)
 		: "";
 	const price = s.price ?? s.monthlyPrice;
@@ -198,10 +203,11 @@ export function EndedTrialSummary({
 }: {
 	subscription: BillingSubscription;
 }) {
+	const timeZone = useBillingTimeZone();
 	const date = subscription.trial?.endsAt;
 	const ended =
 		date && Number.isFinite(Date.parse(date))
-			? new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(
+			? new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone }).format(
 					new Date(date),
 				)
 			: null;

@@ -52,6 +52,8 @@ import {
 	EndedTrialSummary,
 } from "./subscription-summary";
 
+import { useBillingTimeZone } from "./use-billing-time-zone";
+
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
 
 // Retain reviewed terms only while the same verified subscription is unchanged.
@@ -82,9 +84,9 @@ function subscriptionPriceLabel(
 		: null;
 }
 
-function formatDate(value: string | null) {
+function formatDate(value: string | null, timeZone: string) {
 	if (!value || !Number.isFinite(Date.parse(value))) return "Date unavailable";
-	return new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(
+	return new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone }).format(
 		new Date(value),
 	);
 }
@@ -1170,6 +1172,7 @@ function SubscriptionFacts({
 }: {
 	subscription: BillingSubscription;
 }) {
+	const timeZone = useBillingTimeZone();
 	const trial = subscription.trial;
 	const inTrial = trial?.stage === "trial";
 	const cardless = trial?.mode === "cardless";
@@ -1194,8 +1197,8 @@ function SubscriptionFacts({
 					</dt>
 					<dd>
 						{showTrialDeadline
-							? formatBillingTime(trial.endsAt)
-							: formatDate(subscription.currentPeriodEnd)}
+							? formatBillingTime(trial.endsAt, timeZone)
+							: formatDate(subscription.currentPeriodEnd, timeZone)}
 					</dd>
 					{showTrialDeadline && (
 						<dd className="billing-timezone">Your local time</dd>
@@ -1235,7 +1238,7 @@ function SubscriptionFacts({
 					<p className="billing-warning">
 						Your first payment is being confirmed. This is not yet a paid
 						period. Temporary access lasts at most until{" "}
-						{formatBillingTime(trial.pendingUntil)} (your local time).
+						{formatBillingTime(trial.pendingUntil, timeZone)} (your local time).
 					</p>
 				)}
 				{trial?.stage === "payment_required" && (
