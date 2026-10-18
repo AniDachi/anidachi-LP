@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
 	billingPeriodUnit,
 	formatBillingTime,
@@ -25,6 +26,8 @@ export function CardlessTrialControls({
 	quote,
 	onAction,
 	onDismiss,
+	active = false,
+	onBack,
 }: {
 	subscription: BillingSubscription;
 	selection: CardlessRenewalSelection;
@@ -36,26 +39,94 @@ export function CardlessTrialControls({
 		body: Record<string, unknown>,
 	) => Promise<void>;
 	onDismiss: () => void;
+	active?: boolean;
+	onBack?: () => void;
 }) {
 	const { planCode, billingPeriod } = selection;
 	const trial = subscription.trial;
+	const pending = trial?.pendingRenewal;
+	const enabled = trial?.renewalEnabled || trial?.renewalState === "enabled";
+	const automaticReview = useRef<string | null>(null);
+	// Fetch once when the user opens setup or changes a selection. No polling,
+	// automatic error retries, or quote recreation after its expiry.
+	useEffect(() => {
+		if (
+			!active ||
+			busy ||
+			pending ||
+			enabled ||
+			quote ||
+			trial?.mode !== "cardless" ||
+			trial?.stage !== "trial" ||
+			trial.renewalState === "pending"
+		)
+			return;
+		const key = `${subscription.id}:${planCode}:${billingPeriod}`;
+		if (automaticReview.current === key) return;
+		let disposed = false;
+		queueMicrotask(() => {
+			if (disposed) return;
+			automaticReview.current = key;
+			void onAction("quote", { planCode, billingPeriod });
+		});
+		return () => {
+			disposed = true;
+		};
+	}, [
+		active,
+		busy,
+		pending,
+		enabled,
+		quote,
+		trial?.mode,
+		trial?.stage,
+		trial?.renewalState,
+		subscription.id,
+		planCode,
+		billingPeriod,
+		onAction,
+	]);
 	if (
 		!trial ||
 		trial.mode !== "cardless" ||
 		(trial.stage !== "trial" && !trial.pendingRenewal)
 	)
 		return null;
-	const pending = trial.pendingRenewal;
-	const enabled = trial.renewalEnabled || trial.renewalState === "enabled";
+	if (trial.renewalState === "pending" && !pending)
+		return (
+			<section className="billing-trial-controls" aria-label="Trial renewal">
+				<h2>Confirming your renewal</h2>
+				<p>Refresh status to check this change before continuing.</p>
+			</section>
+		);
+	const validQuote =
+		quote?.quote.planCode === planCode &&
+		quote.quote.billingPeriod === billingPeriod
+			? quote
+			: null;
 	return (
 		<section className="billing-trial-controls" aria-label="Trial renewal">
-			<h3>
-				{pending
-					? "Confirming your change"
-					: enabled
-						? "Manage trial renewal"
-						: "Keep watching after your trial"}
-			</h3>
+			<header className="billing-renewal-heading">
+				<h2>
+					{pending ? (
+						"Confirming your change"
+					) : enabled ? (
+						"Manage trial renewal"
+					) : (
+						<>
+							Keep <span>{planCode === "pro" ? "Pro" : "Plus"}</span> after your
+							trial
+						</>
+					)}
+				</h2>
+				{!pending && (
+					<p>
+						{enabled
+							? "Your trial is active. Renewal is enabled."
+							: "Your trial is active. Renewal is off."}
+					</p>
+				)}
+			</header>
 			{pending ? (
 				<>
 					<p className="ac-muted">
@@ -106,84 +177,111 @@ export function CardlessTrialControls({
 				</>
 			) : (
 				<>
-					<p className="ac-muted">
-						{enabled
-							? "Renewal is already enabled. Review any changes to your plan or billing period before confirming them."
-							: "Choose the plan you want after the trial. Review the price and first payment date before adding a card."}
-					</p>
 					<div className="billing-trial-selection">
-						<label>
-							Plan
-							<select
-								aria-label="Renewal plan"
-								value={planCode}
-								disabled={busy}
-								onChange={(e) => {
-									onSelectionChange({
-										...selection,
-										planCode: e.target.value === "pro" ? "pro" : "plus",
-									});
-									onDismiss();
-								}}
-							>
-								<option value="plus">Plus</option>
-								<option value="pro">Pro</option>
-							</select>
-						</label>
-						<label>
-							Billing
-							<select
-								aria-label="Renewal billing period"
-								value={billingPeriod}
-								disabled={busy}
-								onChange={(e) => {
-									onSelectionChange({
-										...selection,
-										billingPeriod: e.target.value as BillingPeriod,
-									});
-									onDismiss();
-								}}
-							>
-								<option value="monthly">Monthly</option>
-								<option value="yearly">Yearly</option>
-							</select>
-						</label>
+						<fieldset disabled={busy} aria-label="Renewal plan">
+							<legend>Plan</legend>
+							<div className="billing-segments">
+								{(["plus", "pro"] as const).map((value) => (
+									<label key={value}>
+										<input
+											type="radio"
+											name={`renewal-plan-${subscription.id}`}
+											value={value}
+											checked={planCode === value}
+											onChange={() => {
+												onSelectionChange({ ...selection, planCode: value });
+												onDismiss();
+											}}
+										/>
+										<span>{value === "plus" ? "Plus" : "Pro"}</span>
+									</label>
+								))}
+							</div>
+						</fieldset>
+						<fieldset disabled={busy} aria-label="Renewal billing period">
+							<legend>Billing</legend>
+							<div className="billing-segments">
+								{(["monthly", "yearly"] as const).map((value) => (
+									<label key={value}>
+										<input
+											type="radio"
+											name={`renewal-period-${subscription.id}`}
+											value={value}
+											checked={billingPeriod === value}
+											onChange={() => {
+												onSelectionChange({
+													...selection,
+													billingPeriod: value,
+												});
+												onDismiss();
+											}}
+										/>
+										<span>{value === "monthly" ? "Monthly" : "Yearly"}</span>
+									</label>
+								))}
+							</div>
+						</fieldset>
 					</div>
-					{!quote ? (
-						<button
-							type="button"
-							className="ac-button ac-button-primary"
-							disabled={busy}
-							onClick={() =>
-								void onAction("quote", { planCode, billingPeriod })
-							}
-						>
-							{enabled ? "Review changes" : "Review renewal"}
-						</button>
+					{!validQuote ? (
+						<div className="billing-renewal-unquoted">
+							<p className="ac-muted" role="status">
+								{busy
+									? "Loading renewal terms…"
+									: "Review the price and first payment date before continuing."}
+							</p>
+							<button
+								type="button"
+								className="ac-button ac-button-primary"
+								disabled={busy}
+								onClick={() =>
+									void onAction("quote", { planCode, billingPeriod })
+								}
+							>
+								{enabled ? "Review changes" : "Review renewal"}
+							</button>
+						</div>
 					) : (
 						<div
 							className="billing-trial-review"
 							aria-label="Review renewal terms"
 						>
-							<p className="billing-trial-review-price">
-								{quote.quote.planCode === "pro" ? "Pro" : "Plus"} ·{" "}
-								{formatMonthlyPrice({
-									unitAmount: quote.quote.amount,
-									currency: quote.quote.currency,
-								})}
-								/{billingPeriodUnit(quote.quote.billingPeriod)}
-							</p>
-							<p>
-								First payment:{" "}
-								<strong>{formatBillingTime(quote.quote.firstChargeAt)}</strong>.
-							</p>
+							<div className="billing-renewal-timeline">
+								<div>
+									<p className="billing-timeline-label">Today</p>
+									<p className="billing-timeline-amount">
+										{new Intl.NumberFormat("en-US", {
+											style: "currency",
+											currency: validQuote.quote.currency,
+											maximumFractionDigits: 0,
+										}).format(0)}
+									</p>
+									<p className="ac-muted">Your trial continues</p>
+								</div>
+								<div>
+									<p className="billing-timeline-label">First payment</p>
+									<p className="billing-timeline-amount">
+										{formatMonthlyPrice({
+											unitAmount: validQuote.quote.amount,
+											currency: validQuote.quote.currency,
+										})}
+										<span>
+											{" "}
+											/ {billingPeriodUnit(validQuote.quote.billingPeriod)}
+										</span>
+									</p>
+									<p className="ac-muted">
+										{formatBillingTime(validQuote.quote.firstChargeAt)}
+									</p>
+								</div>
+							</div>
 							<p className="ac-muted">
 								{enabled
-									? "No payment today. Completing card setup confirms your updated renewal terms. Payments repeat every "
-									: "No payment today. By continuing and completing card setup, you enable automatic renewal every "}
-								{billingPeriodUnit(quote.quote.billingPeriod)} from that date.
-								Cancel renewal in Billing before the trial ends to avoid the
-								first charge. Your trial end stays the same.
+									? "No payment today. Confirming these changes sets "
+									: "No payment today. Completing card setup enables "}
+								{validQuote.quote.billingPeriod} automatic renewal after your
+								trial.
+								<br />
+								Cancel before the first payment to avoid a charge.
 							</p>
 							<p className="billing-tax-note">
 								Taxes, discounts and credits may change the final total.
@@ -195,22 +293,14 @@ export function CardlessTrialControls({
 									disabled={busy}
 									onClick={() =>
 										void onAction("setup", {
-											quoteId: quote.quote.id,
-											requestId: quote.requestId,
+											quoteId: validQuote.quote.id,
+											requestId: validQuote.requestId,
 										})
 									}
 								>
 									{enabled
 										? "Confirm renewal changes"
 										: "Add card & enable renewal"}
-								</button>
-								<button
-									type="button"
-									className="ac-button ac-button-quiet"
-									disabled={busy}
-									onClick={onDismiss}
-								>
-									Back
 								</button>
 							</div>
 						</div>
@@ -227,6 +317,16 @@ export function CardlessTrialControls({
 					{pending && !trial.renewalEnabled
 						? "Cancel renewal setup"
 						: "Cancel trial renewal"}
+				</button>
+			)}
+			{onBack && (
+				<button
+					type="button"
+					className="ac-button ac-button-quiet billing-renewal-back"
+					disabled={busy}
+					onClick={onBack}
+				>
+					Not now
 				</button>
 			)}
 		</section>

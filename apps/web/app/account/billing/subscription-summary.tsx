@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
-import { useRef, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useEffect, useRef, type ReactNode } from "react";
 import {
 	billingPeriodUnit,
 	formatMonthlyPrice,
@@ -20,10 +20,12 @@ export function SubscriptionSummary({
 	subscription: s,
 	busy,
 	onManage,
+	hidden = false,
 }: {
 	subscription: BillingSubscription;
 	busy: boolean;
 	onManage: () => void;
+	hidden?: boolean;
 }) {
 	const trial = s.trial?.stage === "trial" ? s.trial : undefined;
 	const off = s.cancelAtPeriodEnd;
@@ -46,9 +48,8 @@ export function SubscriptionSummary({
 	const pending =
 		Boolean(trial?.pendingRenewal) || trial?.renewalState === "pending";
 	const enabled = trial?.renewalEnabled || trial?.renewalState === "enabled";
-	const manageTrialRenewal = Boolean(trial && (pending || enabled));
 	return (
-		<div className="billing-summary-card">
+		<div className="billing-summary-card" hidden={hidden}>
 			<div className="billing-summary-details">
 				<p className="billing-summary-status">
 					{trial ? "Free trial" : off ? "Renewal off" : "Active subscription"}
@@ -83,10 +84,10 @@ export function SubscriptionSummary({
 							? "A renewal change is being confirmed. Check its status below."
 							: enabled
 								? "Renewal is enabled. Your first payment is scheduled for the end of your trial."
-								: "No automatic charge. This trial ends on the date shown."
+								: "No automatic charges."
 						: off
 							? `No further renewal payments. ${plan} stays active until this date.`
-							: "Renews automatically. You can cancel anytime."}
+							: "Renews automatically. Cancel anytime."}
 				</p>
 			</div>
 			<div className="billing-summary-action">
@@ -105,28 +106,24 @@ export function SubscriptionSummary({
 							? "Review the pending change and check its status."
 							: enabled
 								? "Review or cancel your renewal before the trial ends."
-								: "Choose a plan to continue after your trial."
+								: `Keep ${plan} after your trial.`
 						: "Manage renewal and billing preferences."}
 				</p>
-				{trial && !manageTrialRenewal ? (
-					<a className="billing-summary-button" href="/pricing">
-						View plans <ArrowRight size={20} aria-hidden />
-					</a>
-				) : (
-					<button
-						className="billing-summary-button"
-						type="button"
-						disabled={busy}
-						onClick={onManage}
-					>
-						{trial
-							? pending
-								? "View renewal status"
-								: "Manage renewal"
-							: "Manage subscription"}{" "}
-						<ArrowRight size={20} aria-hidden />
-					</button>
-				)}
+				<button
+					className="billing-summary-button"
+					type="button"
+					disabled={busy}
+					onClick={onManage}
+				>
+					{trial
+						? pending
+							? "View renewal status"
+							: enabled
+								? "Manage renewal"
+								: "Set up renewal"
+						: "Manage subscription"}{" "}
+					<ArrowRight size={20} aria-hidden />
+				</button>
 			</div>
 		</div>
 	);
@@ -149,6 +146,13 @@ export function SubscriptionPresentation({
 	heading: ReactNode;
 }) {
 	const details = useRef<HTMLDetailsElement>(null);
+	const wasOpen = useRef(open);
+	useEffect(() => {
+		if (open) details.current?.querySelector("summary")?.focus();
+		else if (wasOpen.current)
+			details.current?.previousElementSibling?.querySelector("button")?.focus();
+		wasOpen.current = open;
+	}, [open]);
 	if (!hasSubscriptionSummary(subscription))
 		return (
 			<>
@@ -162,10 +166,10 @@ export function SubscriptionPresentation({
 			<SubscriptionSummary
 				subscription={subscription}
 				busy={busy}
+				hidden={open}
 				onManage={() => {
 					if (!details.current) return;
 					onOpenChange(true);
-					details.current.querySelector("summary")?.focus();
 				}}
 			/>
 			<details
@@ -175,10 +179,52 @@ export function SubscriptionPresentation({
 				onToggle={(event) => onOpenChange(event.currentTarget.open)}
 			>
 				<summary>
-					{trial ? "Manage trial renewal" : "Subscription options"}
+					<ArrowLeft size={18} aria-hidden /> Subscription
 				</summary>
-				<div className="billing-summary-management-body">{children}</div>
+				<div
+					className={`billing-summary-management-body${trial ? "" : " billing-paid-management"}`}
+				>
+					{!trial && <h2>Manage your subscription</h2>}
+					{children}
+				</div>
 			</details>
 		</>
+	);
+}
+
+/** Shown only when the account is Free and has no unresolved subscription. */
+export function EndedTrialSummary({
+	subscription,
+}: {
+	subscription: BillingSubscription;
+}) {
+	const date = subscription.trial?.endsAt;
+	const ended =
+		date && Number.isFinite(Date.parse(date))
+			? new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(
+					new Date(date),
+				)
+			: null;
+	return (
+		<section className="billing-summary-card" aria-label="Trial ended">
+			<div className="billing-summary-details">
+				<p className="billing-summary-status">Trial ended</p>
+				<h2 className="billing-summary-plan billing-summary-plan-free">Free</h2>
+				<p className="billing-summary-primary">Join friends for free</p>
+				{ended && (
+					<p className="billing-summary-secondary">
+						Your trial ended on {ended}.
+					</p>
+				)}
+				<p className="billing-summary-note">No automatic renewal.</p>
+			</div>
+			<div className="billing-summary-action">
+				<h3>Host your own room</h3>
+				<p>Choose Plus or Pro to start hosting.</p>
+				<a className="billing-summary-button" href="/pricing">
+					Choose a plan <ArrowRight size={20} aria-hidden />
+				</a>
+			</div>
+		</section>
 	);
 }
