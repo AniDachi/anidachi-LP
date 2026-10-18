@@ -78,3 +78,29 @@ database continues rejecting destructive quote/setup races.
   Semantic extraction is handled separately; no stale sources are stamped and
   no graph artifacts are included without successful publication.
 - No production or live subscription mutation is part of this verification.
+
+## Unified subscription screens (local follow-up)
+
+The user approved extending the account design to all billing states. The same
+summary shell now covers cardless and legacy card-required trials, active monthly
+and yearly subscriptions, canceled renewal, first-payment processing, payment
+required, overdue/unpaid/incomplete payments, paused/unknown statuses, Free and
+pending trial activation. The approved trial-ended layout is retained. Initial
+loading and unavailable status stay neutral and do not imply Free or trial denial.
+
+Only presentation changes: the current account plan remains authoritative, and
+unresolved subscriptions no longer duplicate a full Free block above the affected
+plan. Their summary states actual account access and exposes the existing payment
+recovery handler directly only when the original guard allows it. Processing
+shows the bounded temporary-access deadline, never an active paid-period claim.
+Expanded management retains plan, status and current access; cancellation,
+restoration, yearly conversion, trial-plan change and cardless renewal handlers
+are unchanged. Free-plan detail text is collapsible; “How to watch” keeps the
+original installation-guide URL. Trial eligibility and anti-abuse are unchanged.
+
+Local preview `/dev/billing` now includes 21 selectable scenarios with inactive
+payment actions. Verification includes the presentation/account regression suite,
+full web checks, browser inspection of the 21 states, and a 390px iframe viewport
+for the real page. A focused independent review caught missing plan/access context
+in expanded management; that issue was fixed with a regression test. This local
+follow-up does not apply a migration, publish an extension or deploy staging/prod.

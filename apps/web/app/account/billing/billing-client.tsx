@@ -27,7 +27,7 @@ import {
 import { takeAccountPreload } from "@/lib/account-navigation-preload";
 import { api, ApiError } from "@/lib/client-api";
 import { EXTENSION_USING_HASH } from "@/lib/extension-using-guide";
-import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { InstallLink } from "@/components/install-link";
 import { checkoutReturnPath } from "@/lib/checkout-selection";
 import {
@@ -50,7 +50,7 @@ import type { ReactNode } from "react";
 
 import {
 	SubscriptionPresentation,
-	hasSubscriptionSummary,
+	BillingSummaryCard,
 	EndedTrialSummary,
 } from "./subscription-summary";
 
@@ -851,9 +851,7 @@ export function BillingView({
 				? previous
 				: { ...previous, [expansionKey(s)]: open },
 		);
-	const editing = current.some(
-		(s) => hasSubscriptionSummary(s) && isExpanded(s),
-	);
+	const editing = current.some(isExpanded);
 	return (
 		<div className="ac-page ac-billing ac-billing-clean" aria-busy={busy}>
 			{editing && <h1 className="sr-only">Subscription</h1>}
@@ -873,7 +871,7 @@ export function BillingView({
 					Refresh status
 				</button>
 			</header>
-			{error && (
+			{error && owned && (
 				<div role="alert" className="ac-notice ac-notice-error">
 					<p>{error}</p>
 					<a href="mailto:anidachi.app@gmail.com">Contact support</a>
@@ -884,55 +882,96 @@ export function BillingView({
 					{notice}
 				</p>
 			)}
-			{busy && !overview && (
-				<p role="status" className="ac-loading">
-					Loading your subscription…
-				</p>
+			{!owned && (
+				<section
+					className="billing-summary-card billing-unavailable"
+					role={error ? "alert" : "status"}
+				>
+					<h2>
+						{error
+							? "Subscription status unavailable"
+							: "Loading your subscription…"}
+					</h2>
+					<p>{error ?? "Your plan and billing details will appear here."}</p>
+					{error && (
+						<a
+							className="billing-summary-secondary-action"
+							href="mailto:anidachi.app@gmail.com"
+						>
+							Contact support <ArrowRight size={16} aria-hidden />
+						</a>
+					)}
+				</section>
 			)}
 			{owned && (
 				<>
 					{owned.pendingTrialActivation && (
-						<section className="ac-notice" aria-label="Trial request status">
-							<p>
-								Your {PLAN_NAMES[owned.pendingTrialActivation.planCode]} trial
-								is being prepared. Check this request before starting another
-								checkout.
-							</p>
-							<Link
-								className="ac-button ac-button-primary"
-								href={checkoutReturnPath({
-									plan: owned.pendingTrialActivation.planCode,
-									billing: owned.pendingTrialActivation.billingPeriod,
-								})}
+						<section aria-label="Trial request status">
+							<BillingSummaryCard
+								status="Trial setup pending"
+								plan={PLAN_NAMES[owned.pendingTrialActivation.planCode]}
+								primary="Your trial is being prepared"
+								secondary={`Current account access: ${PLAN_NAMES[owned.planCode]}.`}
+								actionTitle="Check your trial"
+								actionDescription={`Your ${PLAN_NAMES[owned.pendingTrialActivation.planCode]} trial is being prepared. Check this request before starting another checkout.`}
 							>
-								Check trial status
-							</Link>
+								<Link
+									className="billing-summary-button"
+									href={checkoutReturnPath({
+										plan: owned.pendingTrialActivation.planCode,
+										billing: owned.pendingTrialActivation.billingPeriod,
+									})}
+								>
+									Check trial status <ArrowRight size={20} aria-hidden />
+								</Link>
+							</BillingSummaryCard>
 						</section>
 					)}
 					{endedTrial && <EndedTrialSummary />}
 					{!endedTrial &&
-						(owned.planCode === "free" || current.length === 0) && (
+						!owned.pendingTrialActivation &&
+						current.length === 0 && (
 							<section className="billing-access" aria-label="Current access">
-								<h2>{PLAN_NAMES[owned.planCode]}</h2>
-								{owned.planCode === "free" ? (
-									<>
-										<div className="billing-actions">
-											<InstallLink
-												href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
-												className="ac-button"
-											>
-												{INSTALL_CTA_LABEL}
-											</InstallLink>
-											{!owned.pendingTrialActivation && (
-												<Link
-													href="/pricing"
-													className="ac-button ac-button-primary"
-												>
-													View plans
-													<ArrowRight size={16} aria-hidden />
-												</Link>
-											)}
-										</div>
+								<BillingSummaryCard
+									status="Current plan"
+									plan={PLAN_NAMES[owned.planCode]}
+									primary={
+										owned.planCode === "free"
+											? "Join friends for free"
+											: "Your account access"
+									}
+									note={
+										owned.planCode === "free"
+											? "Your saved history stays available."
+											: "No recurring subscription is linked to this account."
+									}
+									actionTitle={
+										owned.planCode === "free"
+											? "Watch together"
+											: "Explore your plans"
+									}
+									actionDescription={
+										owned.planCode === "free"
+											? "Explore Plus and Pro for your own rooms and more."
+											: "See available subscription options."
+									}
+								>
+									<Link href="/pricing" className="billing-summary-button">
+										View plans <ArrowRight size={20} aria-hidden />
+									</Link>
+									<InstallLink
+										href={`${INSTALL_HUB_PATH}#${EXTENSION_USING_HASH}`}
+										className="billing-summary-secondary-action"
+									>
+										How to watch <ArrowRight size={16} aria-hidden />
+									</InstallLink>
+								</BillingSummaryCard>
+								{owned.planCode === "free" && (
+									<details className="billing-access-details">
+										<summary>
+											What’s included with Free{" "}
+											<ChevronDown size={16} aria-hidden />
+										</summary>
 										<ul className="ac-plan-limits">
 											{owned.hosting &&
 											owned.serverTime &&
@@ -968,56 +1007,28 @@ export function BillingView({
 												one group need Plus or Pro.
 											</li>
 										</ul>
-									</>
-								) : (
-									<p className="ac-muted">
-										No recurring subscription is linked to this account.
-									</p>
+									</details>
 								)}
 							</section>
 						)}
 					{current.map((subscription) => (
 						<section
 							key={subscription.id}
-							className={
-								hasSubscriptionSummary(subscription)
-									? "billing-subscription billing-subscription-summary"
-									: "billing-subscription"
-							}
+							className="billing-subscription billing-subscription-summary"
 							aria-label={`${PLAN_NAMES[subscription.planCode]} subscription`}
 						>
-							{subscription.planCode !== owned.planCode && (
-								<p className="ac-muted">
-									Current account access: {PLAN_NAMES[owned.planCode]}.
-								</p>
-							)}
 							<SubscriptionPresentation
 								key={subscription.id}
 								subscription={subscription}
 								busy={busy}
 								open={isExpanded(subscription)}
 								onOpenChange={(open) => setExpandedFor(subscription, open)}
-								heading={
-									<div className="billing-plan-heading">
-										<div>
-											<div className="billing-plan-title">
-												<h2>
-													{PLAN_NAMES[subscription.planCode]}
-													<span className="sr-only"> subscription</span>
-												</h2>
-												<span className="billing-status">
-													{subscriptionStatusLabel(subscription)}
-												</span>
-											</div>
-											{(subscription.price || subscription.monthlyPrice) && (
-												<p>
-													{subscription.price?.billingPeriod === "yearly"
-														? "Yearly billing"
-														: "Monthly billing"}
-												</p>
-											)}
-										</div>
-									</div>
+								accountPlan={owned.planCode}
+								onRefresh={() => void load(true)}
+								onPayment={
+									canRecoverPayment(subscription)
+										? () => void openStripe(subscription.id, "payment")
+										: undefined
 								}
 							>
 								{!(
@@ -1029,25 +1040,17 @@ export function BillingView({
 									isExpanded(subscription),
 									() => setExpandedFor(subscription, false),
 								)}
-								{(["past_due", "unpaid", "incomplete"].includes(
-									subscription.status,
-								) ||
-									subscription.trial?.stage === "payment_required" ||
-									subscription.trial?.stage === "ended") &&
-									!subscription.cancelAtPeriodEnd &&
-									!isPastSubscription(subscription) && (
-										<button
-											type="button"
-											className="ac-button ac-button-primary"
-											disabled={busy}
-											onClick={() =>
-												void openStripe(subscription.id, "payment")
-											}
-										>
-											Complete payment in Stripe
-											<ExternalLink size={15} aria-hidden />
-										</button>
-									)}
+								{canRecoverPayment(subscription) && (
+									<button
+										type="button"
+										className="ac-button ac-button-primary"
+										disabled={busy}
+										onClick={() => void openStripe(subscription.id, "payment")}
+									>
+										Complete payment in Stripe
+										<ExternalLink size={15} aria-hidden />
+									</button>
+								)}
 								<div className="billing-actions">
 									{subscription.canSwitchToYearly &&
 									subscription.planCode !== "free" ? (
@@ -1252,6 +1255,16 @@ function isPastSubscription(subscription: BillingSubscription) {
 	);
 }
 
+function canRecoverPayment(subscription: BillingSubscription) {
+	return (
+		(["past_due", "unpaid", "incomplete"].includes(subscription.status) ||
+			subscription.trial?.stage === "payment_required" ||
+			subscription.trial?.stage === "ended") &&
+		!subscription.cancelAtPeriodEnd &&
+		!isPastSubscription(subscription)
+	);
+}
+
 function SubscriptionFacts({
 	subscription,
 }: {
@@ -1278,7 +1291,11 @@ function SubscriptionFacts({
 			<dl className="billing-facts">
 				<div>
 					<dt>
-						{inTrial ? "Trial ends" : subscriptionDateLabel(subscription)}
+						{showTrialDeadline
+							? inTrial
+								? "Trial ends"
+								: "Trial ended"
+							: subscriptionDateLabel(subscription)}
 					</dt>
 					<dd>
 						{showTrialDeadline
@@ -1321,15 +1338,15 @@ function SubscriptionFacts({
 					!subscription.cancelAtPeriodEnd && <p>Renews automatically.</p>}
 				{trial?.stage === "processing" && (
 					<p className="billing-warning">
-						Your first payment is being confirmed. This is not yet a paid
-						period. Temporary access lasts at most until{" "}
-						{formatBillingTime(trial.pendingUntil, timeZone)} (your local time).
+						Your payment is being confirmed. Temporary access lasts at most
+						until {formatBillingTime(trial.pendingUntil, timeZone)} (your local
+						time).
 					</p>
 				)}
 				{trial?.stage === "payment_required" && (
 					<p className="billing-warning">
-						Your first payment needs attention. Complete payment to restore this
-						subscription’s paid access.
+						Your first payment needs attention. Complete payment in Stripe to
+						activate this subscription.
 					</p>
 				)}
 				{trial?.stage === "ended" && (

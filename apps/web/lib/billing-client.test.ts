@@ -1088,7 +1088,7 @@ test("Free account without billing has no cancellation action", async () => {
 	assert.match(container.textContent ?? "", /Up to 4 people/);
 	assert.equal(
 		container.querySelector('a[href="/extension#using"]')?.textContent?.trim(),
-		"Start a Watchroom",
+		"How to watch",
 	);
 	assert.equal(
 		container.querySelector('a[href="/pricing"]')?.textContent?.trim(),
@@ -1363,7 +1363,8 @@ test("current trial is separate from collapsed canceled subscription history", a
 			],
 		});
 	await mount();
-	const history = container.querySelector("details");
+	const history =
+		container.querySelector<HTMLDetailsElement>(".billing-history");
 	assert.ok(history);
 	assert.equal(history.open, false);
 	assert.match(history.textContent!, /Subscription history/);
@@ -1398,7 +1399,7 @@ test("canceling renewal keeps the trial visible and does not promise a charge", 
 			],
 		});
 	await mount();
-	assert.equal(container.querySelectorAll("details").length, 0);
+	assert.equal(container.querySelectorAll(".billing-history").length, 0);
 	assert.match(container.textContent!, /No payment scheduled/);
 	assert.doesNotMatch(
 		container.textContent!,
@@ -1415,7 +1416,7 @@ for (const status of ["past_due", "unpaid", "incomplete", "paused"]) {
 				subscriptions: [{ ...active.subscriptions[0], status }],
 			});
 		await mount();
-		assert.equal(container.querySelectorAll("details").length, 0);
+		assert.equal(container.querySelectorAll(".billing-history").length, 0);
 		assert.ok(container.querySelector('[aria-label="Plus subscription"]'));
 		if (status !== "paused")
 			assert.match(container.textContent!, /Complete payment in Stripe/);
@@ -1528,7 +1529,7 @@ test("billing exposes persisted activation recovery before any subscription exis
 	await mount();
 	assert.match(container.textContent!, /Your Pro trial is being prepared/);
 	const recovery = [...container.querySelectorAll("a")].find(
-		(a) => a.textContent === "Check trial status",
+		(a) => a.textContent?.trim() === "Check trial status",
 	);
 	assert.ok(recovery);
 	assert.equal(
@@ -1544,7 +1545,7 @@ test("billing exposes persisted activation recovery before any subscription exis
 });
 
 for (const stage of ["processing", "payment_required", "ended"] as const) {
-	test(`cardless ${stage} displays the original trial deadline instead of the next billing period`, async () => {
+	test(`cardless ${stage} details identify the original trial as ended, not the next billing period`, async () => {
 		const trial = { ...cardless.subscriptions[0].trial!, stage };
 		globalThis.fetch = async () =>
 			Response.json({
@@ -1560,7 +1561,7 @@ for (const stage of ["processing", "payment_required", "ended"] as const) {
 			});
 		await mount();
 		const label = [...container.querySelectorAll("dt")].find(
-			(dt) => dt.textContent === "Trial ends",
+			(dt) => dt.textContent === "Trial ended",
 		);
 		assert.ok(label);
 		assert.equal(

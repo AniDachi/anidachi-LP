@@ -386,7 +386,7 @@ body:has(.account-notifications:modal) { overflow: hidden; }
 .billing-summary-management > summary:focus-visible { outline: 2px solid #ffad6e; outline-offset: 4px; }
 .billing-summary-management-body { padding-top: 28px; }
 .billing-paid-management { padding: 32px; margin-top: 20px; border: 1px solid var(--account-line); border-radius: 18px; background: #ffffff03; }
-.billing-paid-management > h2 { font-size: 28px; font-weight: 600; letter-spacing: -.035em; }
+.billing-management-heading h2 { font-size: 28px; font-weight: 600; letter-spacing: -.035em; }
 @media (max-width: 600px) { .billing-paid-management { padding: 24px; } }
 @media (min-width: 761px) and (max-width: 1023px) {
  .billing-summary-card { padding: 28px; }
@@ -417,3 +417,25 @@ body:has(.account-notifications:modal) { overflow: hidden; }
   .billing-ended-access h3 { margin-top: 10px; font-size: 30px; }
   .billing-ended-note { margin-top: 10px; max-width: none; font-size: 16px; }
 }
+
+/* Shared billing states: one summary, a clear next action, details on demand. */
+.billing-summary-access { display: block; margin-top: 10px; }
+.billing-summary-secondary-action { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 14px; padding: 6px 0; color: var(--summary-muted); font-size: 15px; line-height: 1.5; text-decoration: none; cursor: pointer; }
+.billing-summary-secondary-action:hover { color: var(--summary-text); }
+.billing-summary-secondary-action:focus-visible, .billing-access-details > summary:focus-visible { outline: 2px solid #ffad6e; outline-offset: 4px; }
+.billing-summary-secondary-action:disabled { opacity: .6; cursor: wait; }
+.billing-summary-secondary-action svg { flex-shrink: 0; }
+.billing-access-details { margin-top: 20px; color: var(--account-muted); }
+.billing-access-details > summary { display: flex; align-items: center; gap: 10px; width: fit-content; min-height: 44px; font-size: 15px; cursor: pointer; list-style: none; }
+.billing-access-details > summary::-webkit-details-marker { display: none; }
+.billing-access-details[open] > summary svg { transform: rotate(180deg); }
+.billing-access-details .ac-plan-limits { margin-top: 12px; padding: 16px 0 0; }
+.billing-summary-card.billing-unavailable { display: block; min-height: 260px; }
+.billing-unavailable h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 600; letter-spacing: -.035em; line-height: 1.3; }
+.billing-unavailable p { margin-top: 14px; max-width: 56ch; color: var(--summary-muted); font-size: 17px; line-height: 1.6; }
+.billing-paid-management .billing-actions:empty { display: none; }
+
+.billing-management-heading h2 { margin-top: 8px; }
+.billing-management-access { margin-top: 16px; color: var(--account-muted); font-size: 16px; line-height: 1.6; }
+.billing-summary-management-body > .ac-button { margin-top: 24px; }
+.billing-paid-management .ac-button { min-height: 48px; padding: 12px 18px; border-radius: 10px; font-size: 16px; }
