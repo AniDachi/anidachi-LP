@@ -21,14 +21,18 @@ Netflix, cardless-trial and player-onboarding plans.
 - English extension copy; preserve approved opaque matte UI and working media behavior.
 - Staging stays password gated/noindex; analytics stays disabled there per owner.
 
-## October 17 release-preparation checkpoint
+## October 18 release-preparation checkpoint
 
 The owner authorized a production-channel 0.1.3 review ZIP with onboarding enabled,
 then deferred Store publication and a separately authorized production launch.
 See the [coordinated launch runbook](../../releases/integrated-release-2026-10-17.md)
 for the refreshed production baseline and remaining manual acceptance gates.
-Two-fresh-account abuse acceptance is owner-deferred. The inventory below is
-historical; it is not the final accepted artifact manifest.
+The October 18 refresh freezes runtime `85236137`, includes the website-presence
+bridge in the production ZIP, and updates the nine-migration launch sequence.
+Extension typecheck/2,435 tests and exact-package offline onboarding/return checks
+pass. Two owner-named accounts were reset in staging/Sandbox for abuse acceptance;
+the owner chose to test later, so that gate remains pending. The inventory below
+is historical; the runbook and ignored receipt identify the frozen artifacts.
 
 ## Historical inventory (2026-10-14)
 
@@ -108,8 +112,8 @@ version/channel/hash and test accounts' roles without tokens or personal data.
 
 - [ ] Refresh live production schema/flags/billing/deploy state read-only.
 - [ ] Prepare promotion from the accepted candidate preserving current main SEO.
-  October 17 read-only ledger comparison finds eight pending migrations, including
-  abuse guards and offer preflight; exact versions are in the launch runbook.
+  October 18 read-only ledger comparison finds nine pending migrations, including
+  abuse guards, offer preflight and separate trial-context rate buckets; exact versions are in the launch runbook.
   Recheck against the live ledger; never blindly replay.
 - [ ] Define a real schema-before-app gate. A main push starts `db-production.yml`
   and Vercel independently; one broad merge does not impose deployment order.
@@ -121,12 +125,13 @@ version/channel/hash and test accounts' roles without tokens or personal data.
 - [ ] Check highest uploaded Store version before choosing the next version.
   Keep ID `gpkolofebdhfpapbbgdkdkmlmjfidgmn`, exact production endpoints/public
   VAPID match, narrow approved provider permissions and licenses; exclude QA pages.
-- [ ] After combined staging acceptance and package authorization, build the
-  production-channel review ZIP from the frozen accepted source without deploying
-  production. Validate and hash it against the staged new backend and prepare
-  truthful reviewer access/instructions. As in the prior owner-directed release,
-  full new-client flows against the old backend are not required for review ZIP
-  preparation; old clients against the new backend remain mandatory.
+- [x] Build and validate the authorized production-channel review ZIP from the
+  frozen staging runtime without deploying production; hash/extract the exact
+  artifact and retain the matching staging-channel ZIP. October 18 evidence is
+  in the runbook and ignored build receipt. This completes package preparation,
+  not combined staging acceptance or Store submission. Truthful reviewer access,
+  old-client compatibility and the manual gates remain required; full new-client
+  flows against the old backend are not required to prepare a review archive.
 - [ ] Record privacy/listing changes and release notes; Netflix/onboarding/trial
   descriptions must match accepted behavior.
 - [ ] Prepare rollback per plane: additive schema retained; compatible Web keeps

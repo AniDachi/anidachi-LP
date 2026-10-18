@@ -1,15 +1,18 @@
 # AniDachi 0.1.3 — Store review and coordinated launch
 
-Status: release preparation authorized October 17, 2026. Production changes and
-Store publication are NOT authorized by this document. The owner uploads the
-review ZIP, waits for approval, then authorizes the launch window. Fresh-account
-abuse acceptance is explicitly deferred by the owner, not marked passed.
+Status: package and runbook refresh authorized October 18, 2026. Production/main
+changes and Store publication are NOT authorized. The owner uploads the review
+ZIP with deferred publication, waits for approval, then authorizes the launch
+window. On October 18 the owner requested two existing staging test accounts be
+reset for abuse acceptance and chose to test them later. Preparation is complete
+only where evidence below says so; reset accounts are not acceptance evidence.
 
 ## Candidate identity and evidence
 
-- Starting staging source: `847e9d16394b9c91d7045376e89c9d4ce15d2342`.
+- Frozen runtime source: `85236137d7e50dbfbddea348f71c394d853c5c4c` (staging, October 18).
+- Original October 17 preparation started at `847e9d16394b9c91d7045376e89c9d4ce15d2342`.
 - Production baseline: `a8aee4641ab74bd8b7992217fdcc4302543b7d54`.
-- Branch: `codex/integrated-release-candidate`.
+- Documentation refresh branch: `codex/release-package-refresh-oct18`. No runtime changes.
 - Previous actual Store package: 0.1.2, SHA-256
   `90d2b981c17198cfa0472b5bf40d061f5aca84fd7a16ed767e1735f0be459375`.
   Its archived build receipt and production GitHub version variable confirm
@@ -27,9 +30,42 @@ claim are enabled together. Sender validation and the installation-local
 an installation eligible; an existing seen value prevents replay. The practice
 tour does not create a room, capture camera/mic, send chat or change preferences.
 
-Local extension typecheck and all **2,415 tests in 148 files** passed after the
-production-channel regressions were observed failing and fixed. This proves
-source behavior, not fresh-install, Store-update or two-person acceptance.
+October 18 extension typecheck and all **2,435 tests in 150 files** pass on the
+frozen source. The exact unpacked production ZIP also passes an offline Chrome
+fixture: popup/logo, all six tour steps, real HTML5 pause/resume, keyboard cleanup
+and persisted seen state after browser restart. Five checkout-return scenarios
+pass: success returns to the same tour step; closed tour, changed video, closed
+tab and changed account do not reclaim focus; replay is rejected. These are local
+fixtures, not real-provider, real-billing, Store-update or two-person acceptance.
+
+### Frozen artifact receipt (October 18)
+
+Local ignored bundle: `artifacts/chrome-web-store-0.1.3-final-20261018/`.
+
+| Artifact | Identity |
+| --- | --- |
+| Store review ZIP | `AniDachi-0.1.3-Chrome-Web-Store.zip` |
+| SHA-256 | `831a03b24702d118fd32c5183f3f4b8221b66faa404bd2b710754aef39278f17` |
+| Build ID | `85236137-production-final-20261018` |
+| Staging test ZIP | `AniDachi-0.1.3-Staging-Test.zip` |
+| Staging SHA-256 | `ae9cfc60de9e1c68001954ed7a5941abaf62c0eb88f2fd2e5c5523f9fcb1bce4` |
+| Staging build source | `c78c4dcd9dc05d6a758c805fe3825084d657b7eb` |
+
+The staging ZIP is a byte-for-byte copy of the already validated website-welcome
+build. Its extension/protocol/build inputs and lockfile have no diff to the frozen
+runtime; later commits change Web subscription screens only. Channel endpoints,
+IDs and push configuration intentionally differ. The Store ZIP now also includes
+`anidachi:website-presence:v1`, missing from the previous onboarding-return archive.
+This read-only hint does not grant trial eligibility or create an installation key.
+The existing production public VAPID key and Store ID are preserved. Both channel
+validators pass. Upload only the Store ZIP, not the containing evidence folder.
+
+Runtime CI on `85236137`: `39095465827` and `39095472951`; Rooms E2E
+`39095473013`; P2P E2E `39095473010`; staging smoke `39095644776` — passed.
+Staging Web deployment: `dpl_FBwrTt2yB5qe8EKZNvYHu2Y5PsKN`, READY at that SHA.
+Worker deployment run `39080161026` used `9f66ee73b669ffb452c8e9dd59bbde461c4851ed`;
+Worker/protocol/lockfile diff to the frozen runtime is empty. Documentation-only
+staging commits do not replace this runtime or ZIP identity.
 
 The main ancestry merge has no source-tree difference from the pre-merge
 candidate. Keep that merge commit when delivering to staging: squash would lose
@@ -39,7 +75,7 @@ promotion authorization; review the complete eventual main diff afresh.
 
 ## Production baseline: do not repeat the old cutover
 
-Read-only October 17 inspection found 69 applied migrations, latest
+Read-only October 18 inspection found 69 applied migrations, latest
 `20260928083738`. Hosting policy is already active: revision 2,
 `activation_at=2026-10-03T16:44:10.213666+00:00`, `trials_enabled=true`.
 Cardless activation and abuse-marker tables are not present yet. Existing paid,
@@ -50,7 +86,7 @@ disable all trials, cancel old subscriptions or alter existing Stripe prices.**
 This release adds a new trial mode to an already operating paid-hosting product.
 Refresh this snapshot before launch; it is evidence at a point in time.
 
-Eight source migrations are pending against that ledger, in this order:
+Nine source migrations are pending against that ledger, in this order:
 
 1. `20261007235706_netflix_history_and_room_sources.sql`
 2. `20261011124600_cardless_subscription_trials.sql`
@@ -60,6 +96,7 @@ Eight source migrations are pending against that ledger, in this order:
 6. `20261011161158_cardless_trial_review_guards.sql`
 7. `20261015072640_cardless_trial_abuse_guards.sql`
 8. `20261016092853_trial_offer_preflight.sql`
+9. `20261017130802_trial_context_rate_limit.sql`
 
 Record file hashes and compare them with the live migration ledger immediately
 before applying. Migrations are additive; new cardless/enforcement flags and
@@ -130,14 +167,33 @@ instructions when required, never credentials inside the package or repository.
 
 | Check | Current evidence / next action |
 | --- | --- |
-| Exact ZIP and source | Build/validate both channels from frozen source; hash/extract the ZIP; no QA pages, secrets, source maps or cross-channel endpoints. |
-| Fresh onboarding | Automated production tests pass; verify fresh install, all six steps/finish/skip, foreground ownership, reduced motion and no replay. |
+| Exact ZIP and source | October 18 production build/validator, CRC/unpacked equality and 2,435 tests pass; staging ZIP inputs match the freeze. Artifact receipt records channels, hashes and scans. No archive was uploaded or published. |
+| Fresh onboarding | Exact production ZIP passes all six steps/finish, video/input cleanup, restart/no replay and five checkout-return cases in offline Chrome. Actual provider/installed-update behavior remains a separate gate. |
 | Multi-provider rooms | Prior provider/input tests and staging repairs passed; final combined two-person Netflix plus YouTube/Crunchyroll smoke remains separate. Include V/repeat/keyup/chat, native controls/fullscreen/navigation, real mic/camera and room end. |
-| Browser/installation abuse | Server tests and staging migrations passed; owner deferred two fresh accounts in the same browser without clearing cookies. Verify denial shows ordinary priced purchase, no duplicate Stripe trial, and cookie-only path without extension. |
-| Trial billing | Preserve existing accelerated no-charge expiry, renewal/decline/3DS/recovery receipts. Re-run only affected cases; clocks do not advance DB/Worker time. |
+| Browser/installation abuse | Server tests and staging migrations passed. Two owner-named staging accounts were reset October 18: Free/eligible, old Sandbox schedules canceled without invoice/proration, only their trial/marker records cleared; enforcement remains on. Owner will test later. Still verify first activation, second-account paid-only denial without clearing cookies, no duplicate Stripe trial, and cookie-only path without extension. |
+| Trial billing | Preserve accelerated no-charge expiry, renewal/decline/3DS/recovery receipts. Ten local subscription UI states and authenticated staging trial overview/quote were checked after the SSR date fix (#442); that is not a new paid transaction. Re-run affected cases only; clocks do not advance DB/Worker time. |
 | Store update | Compare exact 0.1.2/0.1.3 permissions; Netflix adds `https://www.netflix.com/*`. Actual Store permission acceptance/re-enable and settings/session/seen-state preservation are not proven by unpacked reload. |
 | Public copy/privacy | The [website-copy follow-up](netflix-website-copy-2026-10-17.md) removes stale Netflix availability claims and adds Netflix to the existing privacy provider list for the coordinated launch. Verify its staging delivery and review Store listing/privacy declarations before publication. Do not imply ad-plan acceptance without evidence or change SEO routes/H1s to perform this cleanup. |
-| Production readiness | Schema/flags/LIVE integration/configuration are read-only preflight only; real post-deploy auth/push and legacy-client smoke still required. |
+| Production readiness | October 18 read-only schema/policy/deployment baseline is recorded. The current Stripe connector exposes Sandbox only, so LIVE catalog/Portal/webhook readiness is still open. Real post-deploy auth/push and legacy-client smoke remain required. |
+
+## Next acceptance steps, one at a time
+
+1. In one connected test Chrome profile, reload staging as the first reset account.
+   Keep cookies and the extension installation. Confirm `Try 3 days free` and
+   `No card required`, Plus/monthly selected, then activate once. Verify the
+   original 72-hour end time, hosting access and one matching Sandbox schedule.
+2. Sign out and sign into the second reset account in the same profile without
+   clearing cookies/reinstalling. Expect ordinary priced purchase, no free-trial
+   claim and no second Sandbox trial. Do not reset markers between these steps.
+   Then test the cookie-only denial with the extension disabled, using a direct
+   website visit; re-enable the same extension afterwards.
+3. With the same staged candidate, close the combined provider/host+guest and
+   account/history gates above. Preserve earlier billing receipts; repeat only
+   cases changed by the final candidate or cases without evidence.
+4. Check the highest version in Store Package, including draft/review uploads,
+   and review listing/privacy/reviewer notes. After owner acceptance, submit the
+   exact hashed ZIP with automatic publication off. Approval is not permission
+   to change main or production; use the ordered launch stages above.
 
 ## Store submission notes
 
