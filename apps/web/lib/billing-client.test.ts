@@ -3,7 +3,8 @@ import { afterEach, test } from "node:test";
 import { Window } from "happy-dom";
 import * as React from "react";
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { createRoot, hydrateRoot, type Root } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import {
 	preloadAccountNavigation,
 	clearAccountPreloads,
@@ -1760,3 +1761,61 @@ test("expired trial overview offers paid plans without duplicate Free controls o
 	);
 	assert.ok(container.querySelector(".billing-history"));
 });
+
+// A server in UTC and a browser west of UTC can display different calendar days.
+// Recovering by replacing the whole billing tree can reset draft controls.
+for (const state of ["trial", "paid", "ended", "processing"] as const) {
+	test(`SSR ${state} billing hydrates across time zones without replacing its controls`, async () => {
+		const previousZone = process.env.TZ;
+		let reads = 0;
+		const subscription = {
+			...cardless.subscriptions[0],
+			status:
+				state === "paid"
+					? "active"
+					: state === "ended"
+						? "canceled"
+						: "trialing",
+			currentPeriodEnd: "2030-01-04T00:00:00Z",
+			trial: { ...cardless.subscriptions[0].trial!, stage: state },
+		};
+		const overview: BillingOverview = {
+			...cardless,
+			planCode: state === "ended" ? "free" : "plus",
+			subscriptions: [subscription],
+		};
+		globalThis.fetch = async () => {
+			reads++;
+			return Response.json(overview);
+		};
+		const view = React.createElement(BillingClient, {
+			ownerUserId: "owner",
+			returnedFromPortal: false,
+			initial: { overview, remainingMs: 60_000 },
+		});
+		try {
+			process.env.TZ = "UTC";
+			container = document.createElement("div");
+			container.innerHTML = renderToString(view);
+			document.body.appendChild(container);
+			const serverTree = container.firstElementChild;
+			process.env.TZ = "America/Los_Angeles";
+			const recoveries: unknown[] = [];
+			await act(async () => {
+				root = hydrateRoot(container, view, {
+					onRecoverableError: (error) => recoveries.push(error),
+				});
+			});
+			assert.deepEqual(recoveries.map(String), []);
+			assert.equal(container.firstElementChild, serverTree);
+			assert.equal(reads, 0, "local date hydration must not refetch billing");
+			assert.match(
+				container.textContent!,
+				state === "processing" ? /Jan 3, 2030/ : /January 3, 2030/,
+			);
+		} finally {
+			if (previousZone === undefined) delete process.env.TZ;
+			else process.env.TZ = previousZone;
+		}
+	});
+}

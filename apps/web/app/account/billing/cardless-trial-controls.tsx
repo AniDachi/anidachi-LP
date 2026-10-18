@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useBillingTimeZone } from "./use-billing-time-zone";
 import {
 	billingPeriodUnit,
 	formatBillingTime,
@@ -42,6 +43,7 @@ export function CardlessTrialControls({
 	active?: boolean;
 	onBack?: () => void;
 }) {
+	const timeZone = useBillingTimeZone();
 	const { planCode, billingPeriod } = selection;
 	const trial = subscription.trial;
 	const pending = trial?.pendingRenewal;
@@ -141,7 +143,8 @@ export function CardlessTrialControls({
 							{pending.terms.planCode === "pro" ? "Pro" : "Plus"} ·{" "}
 							{formatMonthlyPrice(pending.terms.price)}/
 							{billingPeriodUnit(pending.terms.price.billingPeriod)}. First
-							payment: {formatBillingTime(pending.terms.firstChargeAt)}.
+							payment:{" "}
+							{formatBillingTime(pending.terms.firstChargeAt, timeZone)}.
 							Completing setup enables automatic renewal from that date.
 						</p>
 					)}
@@ -270,7 +273,10 @@ export function CardlessTrialControls({
 										</span>
 									</p>
 									<p className="ac-muted">
-										{formatBillingTime(validQuote.quote.firstChargeAt)}
+										{formatBillingTime(
+											validQuote.quote.firstChargeAt,
+											timeZone,
+										)}
 									</p>
 								</div>
 							</div>
