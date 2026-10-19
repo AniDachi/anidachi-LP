@@ -1,4 +1,6 @@
 begin;
+set local lock_timeout = '5s';
+set local statement_timeout = '30s';
 -- Extend provider admission in place. No progress, epochs, grants, receipts or
 -- accepted catalogs are rewritten. Each patch fails closed if the active body
 -- no longer has exactly the reviewed anchors; function security/ACLs survive.

@@ -174,6 +174,20 @@ if (
 			"\ncommit;",
 	);
 }
+if (
+	sql("select to_regprocedure('anidachi_private.guard_trial_activation_deletion_v1()') is null;").trim() === "t"
+) {
+	const migration = readdirSync(resolve(base, "migrations")).find((f) =>
+		f.endsWith("_cardless_trial_deletion_guard.sql"),
+	);
+	assert.ok(migration);
+	sql(readFileSync(resolve(base, "migrations", migration), "utf8"));
+}
+assert.match(
+	sql(readFileSync(resolve(base, "tests", "cardless_trial_deletion.test.sql"), "utf8")),
+	/PASS cardless_trial_deletion/,
+);
+console.log("PASS cardless_trial_deletion: pending/cascade/recovery/consumed/unknown");
 for (const name of [
  "trial_context_rate_limit",
  "trial_offer_preflight",

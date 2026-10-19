@@ -13,9 +13,16 @@ Netflix, cardless-trial and player-onboarding plans.
 
 ## Global Constraints
 
-- Authorized now: isolated implementation, integration planning and staging delivery.
-- Production/main promotion, production feature activation and Store publication
-  need final owner acceptance of the concrete candidate.
+- The owner authorized the ordered production launch on October 19 after
+  confirming Store 0.1.4 is approved and awaits manual publication. Schema,
+  compatible Web/Worker and trial-policy activation follow the runbook gates;
+  the owner performs Store publication. Earlier preparation-only notes are
+  historical checkpoints, not the current authorization boundary.
+- Schema-only PR #451 completed the 79-migration production ledger with new
+  policy flags false and existing billing records preserved. A forward pending
+  activation deletion guard is being staged before new policy activation.
+- The owner will test old Store 0.1.2 after server deployment. Keep that
+  compatibility acceptance open and leave new policy activation gated on it.
 - Keep current main SEO/www fixes. Do not flip canonical host or reuse a conflicting
   old promotion PR without reviewing its complete final diff.
 - English extension copy; preserve approved opaque matte UI and working media behavior.

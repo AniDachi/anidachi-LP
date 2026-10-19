@@ -186,6 +186,14 @@ Do not alter source billing transitions to make a chart match.
 Account deletion is currently a manual support request. Before deleting its DB
 records, resolve or cancel owned Stripe obligations through the existing billing
 process, confirm their final state, then follow normal room/account cleanup.
+An activation with reserved browser or installation claims cannot be deleted,
+including through an account cascade (`TRIAL_ACTIVATION_DELETE_UNRESOLVED`).
+Use the existing hold/reconcile/settle procedure first: unknown or applying Stripe
+attempts retain their evidence; only proven no-effect settlement releases the
+reservation. Consumed claims survive deletion until their original expiry. Do
+not remove orphaned reservations automatically or infer no Stripe effect from a
+missing activation. The October 19 preflight found no reserved orphans in either
+staging or production.
 Cascading the ledger/outbox does not cancel Stripe. The candidate adds neither
 an automated delete endpoint nor permanent per-person anti-abuse retention.
 
