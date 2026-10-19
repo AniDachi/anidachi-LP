@@ -159,6 +159,16 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["compare", "online", "watch-party", "pillar-watch-crunchyroll"],
 	},
 	{
+		href: "/compare/anidachi-vs-kosmi",
+		label: "AniDachi vs Kosmi",
+		tags: ["compare", "online"],
+	},
+	{
+		href: "/compare/anidachi-vs-syncup",
+		label: "AniDachi vs SyncUp",
+		tags: ["compare", "online"],
+	},
+	{
 		href: "/compare/anidachi-vs-twoseven",
 		label: "AniDachi vs TwoSeven",
 		tags: ["compare", "long-distance", "crunchyroll", "pillar-watch-anime"],
