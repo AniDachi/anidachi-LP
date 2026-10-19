@@ -1,5 +1,26 @@
 # Current Development State
 
+## Authorized production launch, October 19, 2026
+
+The owner confirmed Store 0.1.4 is approved and waiting for manual publication,
+then authorized the ordered production launch. This supersedes the historical
+preparation-only boundaries below; Store publication remains the owner's step.
+PR #450 delivered the frozen package record to staging. Schema-only PR #451
+merged at `bb84825a`; production migration workflow `39263149172` succeeded.
+Production now has all 79 migrations through `20261018223354`. The 34 existing
+subscriptions, 22 account-trial records and 35 Checkout reservations match their
+pre-migration hashes. Policy revision 2, its activation timestamp and existing
+trials remain unchanged; cardless starts and abuse enforcement remain false.
+Trial-event environment is now production, with analytics delivery still off.
+
+A forward deletion guard is being staged before cardless activation. It blocks
+manual deletion of pending marker claims until evidence-backed recovery settles
+the activation, retaining unknown Stripe outcomes and consumed abuse history.
+Compatible Web/Worker delivery and post-deploy acceptance are still pending.
+The owner will test Store 0.1.2 after deployment; that compatibility gate is open,
+not waived. Fresh LIVE catalog/webhook/Portal checks and Sandbox saved-card
+renewal acceptance are recorded in the [launch runbook](releases/integrated-release-2026-10-17.md).
+
 ## Store listing rename, October 19, 2026
 
 The owner approved `AniDachi: Watch Together, Synced Watch Party` as the production

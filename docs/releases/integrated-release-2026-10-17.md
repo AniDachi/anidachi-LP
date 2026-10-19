@@ -1,7 +1,53 @@
 # AniDachi 0.1.4 — Store review and coordinated launch
 
-Status: release audit and package refresh authorized October 19, 2026.
-Production/main changes and Store publication are NOT authorized. The owner uploads
+Status: ordered production launch authorized October 19, 2026; schema complete,
+compatible Web/Worker and policy activation still pending at this checkpoint.
+
+## October 19 launch checkpoint
+
+This section supersedes the earlier preparation snapshots and pending-account
+notes below. The owner confirmed that the exact 0.1.4 package is approved and
+awaiting manual Store publication. Its SHA-256 remains
+`98f42ba080c38058053cced1fadb48e7587dd8c164c8cc3861f648178612d55e`.
+The approved ZIP has not been rebuilt or replaced. Production GitHub build
+variable `WXT_EXTENSION_VERSION` is now `0.1.4`.
+
+- PR #450 merged to staging `5c110cfa`; exact-head CI, staging smoke and Vercel
+  checks passed. PR #451 was the separately ordered schema-only main promotion.
+- Production workflow `39263149172` on `bb84825a` applied the ten pending
+  migrations successfully at 13:47 UTC. Netflix DDL has transaction-local
+  5-second lock and 30-second statement limits; other nine files are unchanged.
+  Migration history is now 79 through `20261018223354`. Existing subscriptions,
+  trial records and Checkout reservations match their pre-apply hashes.
+- Policy revision 2, `activation_at=2026-10-03T16:44:10.213666Z` and existing
+  `trials_enabled=true` are preserved. Both new flags remain false. Trial-event
+  scheduler environment is production and delivery remains disabled.
+- LIVE's four active USD prices, annual Portal, webhook endpoint and all seven
+  handled events match production configuration. Existing prices/secrets were
+  not changed. Failure/confirmation emails use Stripe links, as separately
+  authorized by the owner; mailbox delivery remains unverified.
+- Sandbox saved-card setup, plan/period changes, cancellation/re-enable, two-tab
+  consent and delayed returns passed in the actual staging UI, preserving the
+  72-hour deadline and no payment today. Sandbox webhook reconciliation was
+  verified; some deliveries needed manual retry, so this is not proof of a
+  complete automatic retry timeline. Existing Test Clock payment/decline and
+  cancellation receipts remain distinct from real-time hosted expiry.
+- Release review found a manual-delete edge case for reserved anti-abuse claims.
+  A new forward guard is being staged; it must pass before cardless activation.
+  Never clear unknown claims automatically. Neither environment had reserved
+  orphans at the preflight. Consumed claims retain their original expiry.
+- The owner will verify old Store 0.1.2 after the server deployment. Do not mark
+  that gate passed or enable the new policy on the strength of unit checks alone.
+  Actual new-Store update/permission acceptance, production auth and invitation
+  push remain post-deploy checks. The server public VAPID value is masked by the
+  provider; unchanged configuration is not proof of a delivered push.
+
+The live Web/Worker, flag activation and Store-publication steps below retain
+their order. Keep the new flags off until their prior acceptance gates pass.
+## Historical package-preparation checkpoint
+
+At the preparation checkpoint, production/main changes and Store publication
+were not authorized. The planned sequence was for the owner to upload
 the exact review ZIP with deferred publication, waits for approval, then authorizes
 the launch window. The owner screenshot now shows 0.1.3 as a draft and 0.1.2
 as published; the owner authorized 0.1.4 for the requested Store rename and
@@ -14,12 +60,12 @@ evidence below says so.
 - Frozen package source: `b49bbab000dbb6e979e8732d4dd07b3ca61a0653` on the release preparation branch.
   This adds only the approved production manifest name and matching validation
   to runtime baseline `32ad5ab035b2584a735edf0028e29b081e0ea1af` (staging, #448/#449).
-  The rename commit still needs staging integration before production promotion.
-- Production baseline remains `a8aee4641ab74bd8b7992217fdcc4302543b7d54`.
+  The rename was integrated through PR #450 before production promotion.
+- Pre-launch production baseline: `a8aee4641ab74bd8b7992217fdcc4302543b7d54`.
 - Documentation refresh branch: `codex/release-audit-oct19`.
 - Previous actual Store package: 0.1.2, SHA-256
   `90d2b981c17198cfa0472b5bf40d061f5aca84fd7a16ed767e1735f0be459375`.
-  The production GitHub version variable remains unchanged. The later owner
+  At this preparation checkpoint the production GitHub version variable was unchanged. The later owner
   screenshot shows draft 0.1.3 and published 0.1.2. Automated dashboard access
   was unavailable; no upload, submission or publication was performed here.
 - Candidate version: **0.1.4**. Production name is

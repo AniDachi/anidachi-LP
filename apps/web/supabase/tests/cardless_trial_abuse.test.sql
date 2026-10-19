@@ -45,9 +45,12 @@ set local role service_role;
 select lives_ok($$select pg_temp.reserve(4,4,repeat('4',64),null)$$,'safe retry after proven failure');
 reset role;
 update public.subscription_trial_activations set created_at=now()-interval '400 days' where user_id='ab000000-0000-4000-8000-000000000004';
-delete from public.users where id='ab000000-0000-4000-8000-000000000004';
+select throws_ok($$delete from public.users where id='ab000000-0000-4000-8000-000000000004'$$,
+ 'P0001','TRIAL_ACTIVATION_DELETE_UNRESOLVED','account deletion must retain unknown activation and recovery evidence');
+select ok(exists(select 1 from public.subscription_trial_activations where user_id='ab000000-0000-4000-8000-000000000004'),
+ 'blocked account deletion keeps the pending activation recoverable');
 set local role service_role;
-select throws_ok($$select pg_temp.reserve(5,5,repeat('4',64),null)$$,'P0001','TRIAL_MARKER_BUSY','unknown reservation survives time and account deletion');
+select throws_ok($$select pg_temp.reserve(5,5,repeat('4',64),null)$$,'P0001','TRIAL_MARKER_BUSY','unknown reservation survives time and blocked account deletion');
 reset role;
 update anidachi_private.trial_marker_claims set expires_at=now()-interval '1 second' where state='consumed';
 select is(anidachi_private.prune_trial_marker_history_v1(),2::bigint,'retention cleanup removes only expired consumed digests');
