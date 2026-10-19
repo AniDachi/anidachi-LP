@@ -100,7 +100,7 @@ pasting):
 
 ## 5. Changes that need owner approval (publishing gate)
 
-### Section index pages
+### Section index pages — approved Oct 19 (option A), implemented
 
 `/guides`, `/compare`, `/watch`, `/glossary` and `/tools` return 404, while the
 breadcrumbs point elsewhere:

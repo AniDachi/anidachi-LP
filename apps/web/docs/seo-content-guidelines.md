@@ -167,6 +167,7 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-10-19, section index pages (owner in chat, H.1 option A):** new URLs `/guides`, `/compare`, `/watch`, `/glossary`, `/tools`. Each lists every page in its section (data in `lib/section-index.ts`; `section-index.test.ts` fails if a section page is missing). "Compare", "Glossary" and generated "Guides" breadcrumbs now point at them, and the footer links all five under "Browse". No existing URL, title or redirect changed. Review at 30/60/90 days with the index-coverage re-check. The homepage title (E) stays frozen until about Nov 2.
 - **2026-10-19, SEO plan follow-up (owner in chat):**
   - **New compare pages approved:** `/compare/anidachi-vs-syncup` and `/compare/anidachi-vs-kosmi`. Parent hub `/watch-party-app`; inbound links from `/watch-party-app` and `/guides/best-watch-party-apps-for-anime`; competitor claims cite the competitors' own sites, checked 19 Oct 2026. Review at 30/60/90 days (Nov 18, Dec 18, Jan 17).
   - **Watch pages and genre hubs:** enrich the next 15 watch pages by GSC impressions in place (`lib/watch-page-enrichment.ts`). Genre hubs stay as they are (option A, keep and differentiate); re-measure after about Nov 2 before any merge, canonical or redirect, which still needs separate approval. Evidence: [index coverage report](../../../docs/releases/seo/2026-10-19-index-coverage-and-consolidation-report.md).

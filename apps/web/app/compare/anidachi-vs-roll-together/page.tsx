@@ -54,7 +54,7 @@ export default function AniDachiVsRollTogetherPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         {
           name: "AniDachi vs Roll Together",
           url: "/compare/anidachi-vs-roll-together",

@@ -55,7 +55,7 @@ export default function AniDachiVsSyncplayPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Syncplay", url: "/compare/anidachi-vs-syncplay" },
       ]}
       title="AniDachi vs Syncplay"

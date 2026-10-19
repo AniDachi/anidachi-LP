@@ -69,7 +69,7 @@ export default function AsyncWatchingGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Asynchronous Watching", url: "/glossary/asynchronous-watching" },
       ]}
       title="What Is Asynchronous Anime Watching?"

@@ -75,7 +75,7 @@ export default function AniDachiVsSyncUpPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Watch Party App", url: "/watch-party-app" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs SyncUp", url: PAGE_PATH },
       ]}
       title="AniDachi vs SyncUp"

@@ -80,7 +80,7 @@ export default function AniDachiVsTwosevenPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs TwoSeven", url: "/compare/anidachi-vs-twoseven" },
       ]}
       title="AniDachi vs TwoSeven"

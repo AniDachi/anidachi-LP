@@ -74,7 +74,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Amazon Watch Party", url: "/compare/anidachi-vs-amazon-watch-party" },
       ]}
       title="AniDachi vs Amazon Watch Together"

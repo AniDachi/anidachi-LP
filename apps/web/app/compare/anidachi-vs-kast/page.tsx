@@ -54,7 +54,7 @@ export default function AniDachiVsKastPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Kast", url: "/compare/anidachi-vs-kast" },
       ]}
       title="AniDachi vs Kast"

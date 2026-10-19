@@ -48,7 +48,7 @@ export default function AnimeSimulcastGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Anime Simulcast", url: "/glossary/anime-simulcast" },
       ]}
       title="What Is an Anime Simulcast?"

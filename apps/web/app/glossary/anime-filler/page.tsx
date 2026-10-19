@@ -74,7 +74,7 @@ export default function AnimeFillerGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Anime Filler", url: "/glossary/anime-filler" },
       ]}
       title="What Is Anime Filler?"

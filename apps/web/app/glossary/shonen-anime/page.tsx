@@ -85,7 +85,7 @@ export default function ShonenAnimeGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Shonen Anime", url: "/glossary/shonen-anime" },
       ]}
       title="What Is Shonen Anime?"

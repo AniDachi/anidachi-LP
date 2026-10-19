@@ -75,7 +75,7 @@ export default function AnimeMarathonGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Anime Marathon", url: "/glossary/anime-marathon" },
       ]}
       title="What Is an Anime Marathon?"

@@ -887,7 +887,7 @@ export function PseoListiclePage({
 		<SeoPageLayout
 			breadcrumbs={[
 				{ name: "Home", url: "/" },
-				{ name: "Guides", url: "/watch-anime-together" },
+				{ name: "Guides", url: "/guides" },
 				{ name: page.h1.replace(/ in 2026$/, ""), url },
 			]}
 			title={page.h1}
@@ -1018,7 +1018,7 @@ export function PseoGuidePage({ slug }: { slug: keyof typeof guidePages }) {
 							name: "Watch Crunchyroll Together",
 							url: "/watch-crunchyroll-together",
 						}
-					: { name: "Guides", url: "/watch-anime-together" },
+					: { name: "Guides", url: "/guides" },
 				{ name: page.h1, url },
 			]}
 			title={page.h1}

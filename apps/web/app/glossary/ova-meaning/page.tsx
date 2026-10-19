@@ -101,7 +101,7 @@ export default function OvaMeaningGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "OVA Meaning", url: "/glossary/ova-meaning" },
       ]}
       title="What Is an OVA in Anime?"

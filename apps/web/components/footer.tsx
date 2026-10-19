@@ -3,6 +3,15 @@ import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { FooterPricingCta } from "@/components/footer-pricing-cta";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
+/** Section index pages: every guide, comparison, watch page, term and tool. */
+const BROWSE_LINKS = [
+  { href: "/guides", label: "All guides" },
+  { href: "/compare", label: "Comparisons" },
+  { href: "/watch", label: "Anime A–Z" },
+  { href: "/glossary", label: "Glossary" },
+  { href: "/tools", label: "Free anime tools" },
+] as const;
+
 export function Footer() {
   return (
     <footer className="relative overflow-hidden border-t border-ani-line bg-ani-canvas py-12 text-ani-text">
@@ -70,6 +79,16 @@ export function Footer() {
                   FAQ
                 </Link>
               </li>
+            </ul>
+            <h4 className="font-semibold mt-8 mb-4 text-sm">Browse</h4>
+            <ul className="space-y-2 text-ani-muted text-sm">
+              {BROWSE_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-ani-text transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

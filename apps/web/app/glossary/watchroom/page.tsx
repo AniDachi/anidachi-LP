@@ -53,7 +53,7 @@ export default function WatchroomGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Watchroom", url: "/glossary/watchroom" },
       ]}
       title="What Is a Watchroom?"

@@ -67,7 +67,7 @@ export default function AniDachiVsWatch2GetherPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-anime-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Watch2Gether", url: "/compare/anidachi-vs-watch2gether" },
       ]}
       title="AniDachi vs Watch2Gether"

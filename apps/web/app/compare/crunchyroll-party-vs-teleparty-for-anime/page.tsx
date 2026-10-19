@@ -72,7 +72,7 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         {
           name: "Crunchyroll Party vs Teleparty",
           url: "/compare/crunchyroll-party-vs-teleparty-for-anime",

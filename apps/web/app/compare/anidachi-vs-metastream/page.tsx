@@ -75,7 +75,7 @@ export default function AniDachiVsMetastreamPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Metastream", url: "/compare/anidachi-vs-metastream" },
       ]}
       title="AniDachi vs Metastream"

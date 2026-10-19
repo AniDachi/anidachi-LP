@@ -68,7 +68,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         {
           name: "AniDachi vs Discord screen share",
           url: "/compare/anidachi-vs-discord-screen-share",
