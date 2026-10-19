@@ -360,7 +360,7 @@ The same source code builds three extension channels.
 
 `production`:
 
-- name: `Anidachi`;
+- name: `AniDachi: Watch Together, Synced Watch Party` (short name `AniDachi`);
 - future public build; publication is a separate release decision;
 - points at production web and production Worker endpoints;
 - should use narrow host permissions.
@@ -598,7 +598,7 @@ Before uploading production extension:
 - production PR checks have passed and the PR has been merged into `main`;
 - `pnpm build:extension:public` succeeds;
 - `pnpm validate:extension:production` succeeds;
-- manifest name is `Anidachi`;
+- manifest name is `AniDachi: Watch Together, Synced Watch Party`;
 - debug build id contains `production`;
 - host permissions are not broad;
 - web/API endpoints point to production.

@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-09-16.
+Last updated: 2026-10-19.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -29,9 +29,12 @@ Anidachi uses three extension channels.
 | --- | --- | --- | --- | --- |
 | `local` | `AniDachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
 | `staging` | `AniDachi Staging` | Stable unpacked artifact for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
-| `production` | `AniDachi` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
+| `production` | `AniDachi: Watch Together, Synced Watch Party` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
-The channel is selected with `WXT_EXTENSION_CHANNEL`.
+The channel is selected with `WXT_EXTENSION_CHANNEL`. The production short name
+remains `AniDachi`. The October 19 rename changes package metadata only; the
+[release runbook](releases/integrated-release-2026-10-17.md) records the 0.1.4
+replacement archive. Preparing it does not upload or publish it.
 
 An explicitly configured value outside `local`, `staging`, or `production`
 fails the build. Release scripts force their named channel: caller environment
@@ -260,7 +263,7 @@ Staging and production must not share runtime endpoints accidentally.
 
 Before distributing an artifact, inspect `manifest.json` and the debug panel build id:
 
-- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the selected release
+- Chrome shows the full name for its channel above, followed by the selected release
   version. `version_name` is omitted so internal build identifiers
   cannot crowd out the extension name.
 - Diagnostics retain the full `WXT_BUILD_ID`: `*-staging-*` for staging and

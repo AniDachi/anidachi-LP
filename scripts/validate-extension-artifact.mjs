@@ -106,7 +106,7 @@ const expectedByChannel = {
     extensionId: "ndkfphbchhfephdodcpehdcoclojagje",
   },
   production: {
-    name: "AniDachi",
+    name: "AniDachi: Watch Together, Synced Watch Party",
     web: "https://www.anidachi.app/*",
     api: "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
     hostPermissions: [

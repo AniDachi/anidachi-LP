@@ -50,10 +50,14 @@ idempotency, webhook/return recovery and verified commit remain authoritative.
 5. Extension ZIPs do not change. Production requires separate staging acceptance
    and explicit promotion.
 
-Rollback: revert the web candidate using the normal PR flow. Leave the additive
-migration and consent history intact; do not remove payment provenance or replay
-Stripe writes. The previous service can read the extra nullable column and the
-database continues rejecting destructive quote/setup races.
+Rollback: before any new saved-card operation is created, the previous compatible
+web service can be restored through the normal PR flow while retaining additive
+schema and consent history. Once such an operation exists, retain or backport the
+new payment-source and current-card reconciliation checks until all affected
+operations are proven settled. The older service ignores the source provenance
+and can restore a replaced card when replaying an applying operation; being able
+to read the nullable column is not sufficient compatibility. UI rollback can be
+separate. Never remove provenance or blindly replay Stripe writes.
 
 ## Evidence
 
