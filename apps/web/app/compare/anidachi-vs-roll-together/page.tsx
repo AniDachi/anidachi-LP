@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Roll Together — Crunchyroll Watch Party Extensions Compared (2026)",
+  title: { absolute: "AniDachi vs Roll Together: Crunchyroll Watch Party (2026)" },
   description:
     "AniDachi vs Roll Together for Crunchyroll watch parties: live sync, anime detection, personal history, and which workflow fits a friend group.",
   alternates: { canonical: "/compare/anidachi-vs-roll-together" },

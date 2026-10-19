@@ -864,7 +864,7 @@ function RoomScene({
 									tabIndex={-1}
 								>
 									<img
-										src="/Anidachi_logo.png"
+										src="/Anidachi_logo.webp"
 										alt=""
 										className="top-bubble-logo"
 										width={24}

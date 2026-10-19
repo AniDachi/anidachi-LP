@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Hyperbeam — Best Hyperbeam Alternative for Anime (2026)",
+  title: { absolute: "AniDachi vs Hyperbeam: Hyperbeam Alternative for Anime" },
   description:
     "AniDachi vs Hyperbeam for anime watch parties: per-user Crunchyroll sync vs cloud browser tab streaming. When to pick each for group nights.",
   alternates: { canonical: "/compare/anidachi-vs-hyperbeam" },

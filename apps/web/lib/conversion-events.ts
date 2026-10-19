@@ -1,5 +1,5 @@
 import { trackEvent } from "@/lib/gtag";
-import { getSeoAttributionFields } from "@/lib/seo-landing-path";
+import { getSeoAttributionFields, redactAttributionPath } from "@/lib/seo-landing-path";
 
 /**
  * Funnel event taxonomy (GA4) — see docs/CONVERSION_METRICS.md
@@ -11,6 +11,8 @@ export type ConversionFunnelEvent =
   | "extension_zip_download"
   | "install_step_viewed"
   | "desktop_install_link_copied"
+  | "mobile_install_panel_view"
+  | "extension_store_clicked"
   | "checkout_session_started"
   | "checkout_redirect_success"
   | "checkout_error";
@@ -114,4 +116,19 @@ export function trackConversion(
     cta_experiment: getExperimentVariant(),
   };
   trackEvent(name, payload);
+}
+
+/**
+ * A click that leaves for the Chrome Web Store listing. GA4 can report it by landing page
+ * without custom dimensions; `placement` says which link was used.
+ */
+export function trackStoreClick(placement: string) {
+  if (typeof window === "undefined") return;
+  const path = redactAttributionPath(window.location.pathname || "/");
+  trackConversion("extension_store_clicked", {
+    page_path: path,
+    page_template: inferPageTemplateFromPath(path),
+    placement,
+    cta_variant: "chrome_web_store",
+  });
 }

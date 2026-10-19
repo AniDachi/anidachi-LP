@@ -266,7 +266,7 @@ export function ExtensionInstallHub({
         <div className={styles.action}>
           {EXTENSION_INSTALL_MODE === "cws" ? (
             <Button asChild size="control" variant="cream" className={styles.installButton}>
-              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={desktopInstallUrl} target="_blank" rel="noopener noreferrer" onClick={onStoreClick}>
+              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={desktopInstallUrl} storePlacement="install_hub" target="_blank" rel="noopener noreferrer" onClick={onStoreClick}>
                 <Chrome className="size-6" aria-hidden="true" />
                 {isMobile ? "Install AniDachi" : "Add to Chrome"}
                 <span className="sr-only"> — Chrome Web Store</span>

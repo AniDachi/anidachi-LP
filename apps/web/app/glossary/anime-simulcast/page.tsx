@@ -7,6 +7,19 @@ export const metadata: Metadata = {
   description:
     "An anime simulcast is when an episode airs in Japan and becomes available internationally at the same time. Learn how simulcasts work on Crunchyroll and why they matter for watch parties.",
   alternates: { canonical: "/glossary/anime-simulcast" },
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+    title: "What Is an Anime Simulcast?",
+    description: "How simulcasts reach Crunchyroll as they air in Japan, and why they matter for watch parties.",
+    url: "/glossary/anime-simulcast",
+  },
 };
 
 const faq = [

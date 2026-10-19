@@ -48,10 +48,11 @@ function getPageLastModified(): string {
   return "2026-10-01";
 }
 
+/** The layout appends " | AniDachi"; keep the rendered title at 60 characters or less. */
+const TITLE_SUFFIX_LENGTH = " | AniDachi".length;
+
 function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
-  if (isMovieEntry(anime)) {
-    return `Watch ${anime.title} with Friends — Group Movie Night`;
-  }
+  const base = `Watch ${anime.title} with Friends`;
   const isLong =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
       `${episodesDisplay} ${anime.episodes}`
@@ -59,10 +60,13 @@ function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
     /one-piece|naruto|hunter-x-hunter|fairy-tail|gintama|inuyasha|bleach/i.test(
       anime.slug
     );
-  if (isLong) {
-    return `Watch ${anime.title} with Friends — Group Marathon`;
-  }
-  return `Watch ${anime.title} with Friends — Live Watchroom`;
+  const tail = isMovieEntry(anime)
+    ? "Group Movie Night"
+    : isLong
+      ? "Group Marathon"
+      : "Live Watchroom";
+  const full = `${base} — ${tail}`;
+  return full.length + TITLE_SUFFIX_LENGTH <= 60 ? full : base;
 }
 
 export async function generateStaticParams() {

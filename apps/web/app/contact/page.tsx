@@ -4,7 +4,7 @@ import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ContactForm } from "@/components/contact-form";
 
 export const metadata: Metadata = {
-  title: "Contact AniDachi",
+  title: { absolute: "Contact AniDachi" },
   description:
     "Contact AniDachi for product support, privacy requests, security reports, and press questions.",
   alternates: { canonical: "/contact" },

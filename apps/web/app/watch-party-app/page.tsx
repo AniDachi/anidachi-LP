@@ -13,12 +13,12 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-	title: "Watch Party App for Crunchyroll and YouTube",
+	title: "Watch Party App: Crunchyroll, YouTube & Netflix",
 	description:
 		"AniDachi is a watch party app for Crunchyroll, YouTube, and Netflix. Add it from the Chrome Web Store, share a link, and watch in sync on desktop Chrome.",
 	alternates: { canonical: "/watch-party-app" },
 	openGraph: {
-		title: "Watch Party App for Crunchyroll and YouTube",
+		title: "Watch Party App: Crunchyroll, YouTube & Netflix",
 		description:
 			"A Chrome extension watchroom. Each person uses their own account.",
 		url: "/watch-party-app",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Watch Party App for Crunchyroll and YouTube",
+		title: "Watch Party App: Crunchyroll, YouTube & Netflix",
 		description: "Sync Crunchyroll, YouTube, or Netflix from a shared room link.",
 		images: ["/opengraph-image.png"],
 	},
@@ -136,6 +136,14 @@ export default function WatchPartyAppPage() {
 				>
 					watch movies together online
 				</Link>
+				. For Netflix, start with the{" "}
+				<Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
+					Netflix watch party
+				</Link>{" "}
+				guide; groups of three or more can use{" "}
+				<Link href="/guides/netflix-group-watch" className="text-brand-orange hover:underline">
+					Netflix group watch
+				</Link>
 				. Ranked anime options are on{" "}
 				<Link
 					href="/guides/best-watch-party-apps-for-anime"
@@ -157,6 +165,11 @@ export default function WatchPartyAppPage() {
 						label: "Crunchyroll watch party",
 					},
 					{ href: "/watch-youtube-together", label: "YouTube watch party" },
+					{ href: "/netflix-watch-party", label: "Netflix watch party" },
+					{
+						href: "/compare/anidachi-vs-netflix-watch-party",
+						label: "AniDachi vs Netflix watch party tools",
+					},
 					{
 						href: "/compare/anidachi-vs-teleparty",
 						label: "AniDachi vs Teleparty",

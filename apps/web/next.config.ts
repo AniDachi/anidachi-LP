@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
 
 const nextConfig: NextConfig = {
+  // Dynamic routes (e.g. /extension) stream metadata into <body> for unlisted user agents.
+  // Add Googlebot to Next's default list so it gets <title> and description in <head>.
+  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|Googlebot`, "i"),
   async redirects() {
     return [
       // Canonicalize non-www → www to consolidate PageRank

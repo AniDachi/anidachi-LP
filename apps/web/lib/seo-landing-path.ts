@@ -12,6 +12,7 @@ const NON_MARKETING_PREFIXES = [
   "/login",
   "/join",
   "/friends",
+  "/friend/",
   "/room/",
   "/api/",
   "/blou",
@@ -19,6 +20,15 @@ const NON_MARKETING_PREFIXES = [
   "/success",
   "/extension/connect",
 ] as const;
+
+/** Routes whose last segment is a secret or private id (invite tokens, room ids). */
+const TOKEN_PATH_PREFIXES = ["/friend/invite/", "/room/"] as const;
+
+/** Drop invite tokens and room ids before a path leaves the browser in analytics or Stripe metadata. */
+export function redactAttributionPath(pathname: string): string {
+  const prefix = TOKEN_PATH_PREFIXES.find((p) => pathname.startsWith(p));
+  return prefix ? prefix.slice(0, -1) : pathname;
+}
 
 export function isNonMarketingPath(pathname: string): boolean {
   if (!pathname || pathname === "/") return false;
@@ -100,9 +110,10 @@ export function getSeoAttributionFields(): {
   seo_referrer?: string;
   seo_utm?: string;
 } {
-  const landing =
+  const landing = redactAttributionPath(
     getFirstLandingPath() ??
-    (typeof window !== "undefined" ? window.location.pathname || "/" : "/");
+      (typeof window !== "undefined" ? window.location.pathname || "/" : "/"),
+  );
   const referrer = getFirstLandingReferrer();
   const utm = getFirstLandingUtm();
   return {

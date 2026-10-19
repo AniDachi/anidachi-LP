@@ -15,9 +15,9 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-	title: "How to Watch Crunchyroll with Friends (2026) — 2-Minute Watch Party",
+	title: "How to Watch Crunchyroll with Friends in 5 Steps",
 	description:
-		"How to watch Crunchyroll with friends: Add to Chrome, open your own tab, share a link. Two people or a group — Discord voice optional. No account sharing.",
+		"Step by step: add AniDachi to Chrome, open your own Crunchyroll tab, create a room, invite friends, and watch in sync. No account sharing; Discord optional.",
 	alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
 	openGraph: {
 		images: [

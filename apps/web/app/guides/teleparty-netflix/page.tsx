@@ -114,7 +114,11 @@ export default function TelepartyNetflixPage() {
         >
           Netflix Party extension
         </Link>
-        . AniDachi does not wrap Teleparty. Its own Netflix, Crunchyroll, and YouTube rooms work in desktop Chrome. Install AniDachi from{" "}
+        . AniDachi does not wrap Teleparty. Its own Netflix, Crunchyroll, and YouTube rooms work in desktop Chrome; see{" "}
+        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+          watch Netflix together
+        </Link>{" "}
+        for the steps. Install AniDachi from{" "}
         <Link href="/extension">/extension</Link> now. The side-by-side page is{" "}
         <Link
           href="/compare/anidachi-vs-teleparty"

@@ -21,7 +21,7 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-	title: "Crunchyroll Watch Party with AniDachi — Sync & Chat (2026)",
+	title: "Crunchyroll Watch Party: Sync & Chat with Friends",
 	description:
 		"Crunchyroll has no built-in watch party. Add AniDachi from the Chrome Web Store, open your own tab, and watch Crunchyroll together in sync — Teleparty alternative included.",
 	alternates: { canonical: "/watch-crunchyroll-together" },
@@ -259,8 +259,12 @@ export default function WatchCrunchyrollTogetherPage() {
 							body: (
 								<>
 									Yes for live sync, with compatibility that can slip after
-									player updates. AniDachi is the Crunchyroll-first Teleparty
-									alternative (and also covers YouTube). Full compare:{" "}
+									player updates. Details:{" "}
+									<Link href="/guides/does-teleparty-work-with-crunchyroll">
+										does Teleparty work with Crunchyroll
+									</Link>
+									. AniDachi is the Crunchyroll-first Teleparty alternative
+									(and also covers YouTube and Netflix). Full compare:{" "}
 									<Link href="/compare/anidachi-vs-teleparty">
 										AniDachi vs Teleparty
 									</Link>
@@ -527,6 +531,10 @@ export default function WatchCrunchyrollTogetherPage() {
 						{
 							href: "/guides/how-to-host-a-crunchyroll-watch-party",
 							label: "How to host a Crunchyroll watch party",
+						},
+						{
+							href: "/guides/crunchyroll-group-watch",
+							label: "Crunchyroll group watch for three or more",
 						},
 						{
 							href: "/guides/teleparty-not-working-crunchyroll",

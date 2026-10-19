@@ -27,7 +27,7 @@ import { billingDisplayValidityMs } from "@/lib/billing-view";
 export const dynamic = "force-dynamic";
 
 const metadata: Metadata = {
-  title: "Install AniDachi Chrome Extension",
+  title: { absolute: "Install AniDachi — Chrome Extension for Watch Parties" },
   description:
     "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll, YouTube, and Netflix watchrooms.",
   alternates: { canonical: INSTALL_HUB_PATH },
@@ -138,9 +138,9 @@ export default async function ExtensionInstallPage({ searchParams }: PageProps) 
           <Suspense
             fallback={
               <div className="mx-auto max-w-4xl py-16 text-center">
-                <h1 className="text-4xl font-semibold tracking-[-0.035em] text-ani-text">
+                <p className="text-4xl font-semibold tracking-[-0.035em] text-ani-text">
                   Add AniDachi to Chrome
-                </h1>
+                </p>
               </div>
             }
           >

@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-	title: "Best Anime Movies to Watch With Friends Online (2026) | AniDachi",
+	title: "Best Anime Movies to Watch With Friends (2026)",
 	description:
 		"Watch the best anime movies with friends — Your Name, Spirited Away, A Silent Voice & more. Sync your streams perfectly with AniDachi for a shared movie night.",
 	alternates: { canonical: "/guides/best-anime-movies-to-watch-with-friends" },

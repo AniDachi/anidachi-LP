@@ -20,7 +20,7 @@ export function AnidachiLogo({
   "aria-hidden": ariaHidden,
 }: AnidachiLogoProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- must keep PNG alpha
+    // eslint-disable-next-line @next/next/no-img-element -- must keep logo alpha
     <img
       src={ANIDACHI_LOGO_SRC}
       alt={ariaHidden ? "" : alt}

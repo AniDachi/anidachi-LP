@@ -7,15 +7,15 @@ import { totalHours, WATCH_ORDERS } from "./watch-orders";
 describe("release schedule", () => {
   it("places a slot at its UTC day and time", () => {
     const at = slotInstant(CRUNCHYROLL_WEEK, { title: "x", utcDay: 4, utcTime: "15:00" });
-    assert.equal(at.toISOString(), "2026-10-16T15:00:00.000Z");
+    assert.equal(at.toISOString(), "2026-10-23T15:00:00.000Z");
   });
 
   it("moves an early UTC slot to the previous local day in the Americas", () => {
     const week = { ...CRUNCHYROLL_WEEK, slots: [{ title: "x", utcDay: 6, utcTime: "00:30" }] };
     const [utc] = groupByLocalDay(week, "UTC");
     const [ny] = groupByLocalDay(week, "America/New_York");
-    assert.equal(utc.key, "2026-10-18");
-    assert.equal(ny.key, "2026-10-17");
+    assert.equal(utc.key, "2026-10-25");
+    assert.equal(ny.key, "2026-10-24");
     assert.equal(ny.rows[0].time, "8:30 PM");
   });
 

@@ -8,8 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title:
-    "AniDachi vs Anime Watch Parties Extension — Crunchyroll Co-Watching Compared",
+  title: { absolute: "AniDachi vs Anime Watch Parties Extension (2026)" },
   description:
     "Compare AniDachi with an “anime watch parties” style extension: Crunchyroll-first live rooms, chat, personal history, and setup friction.",
   alternates: { canonical: "/compare/anidachi-vs-anime-watch-parties-extension" },

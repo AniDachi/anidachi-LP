@@ -17,9 +17,8 @@ AniDachi is a Chrome extension + web product for **watchrooms** on:
 - **YouTube** (full `youtube.com/watch` pages, desktop Chrome — not Shorts, embeds, feeds, or native mobile apps)
 - **Netflix** (movie and episode watch pages in desktop Chrome; each viewer needs their own access to the same title)
 
-Netflix copy is prepared for the coordinated 0.1.3 launch. Keep it on staging until
-the compatible production services and approved Store update are released. Do not
-promise Netflix ad-plan compatibility without acceptance evidence.
+Netflix launched in production on 2026-10-19 (Web/Worker `b48de0e9`, Chrome Web Store
+0.1.4). Do not promise Netflix ad-plan compatibility without acceptance evidence.
 
 Current features: live synchronized players, on-player chat and reactions, voice/video calls, and personal watch history. Each person uses their own access to the video.
 

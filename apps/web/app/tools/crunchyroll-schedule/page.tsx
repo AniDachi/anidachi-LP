@@ -12,23 +12,31 @@ const url = "/tools/crunchyroll-schedule";
 const headingClass = "mt-12 mb-3 scroll-mt-24 text-2xl font-bold tracking-[-0.02em] text-ani-text";
 const week = CRUNCHYROLL_WEEK;
 const showCount = week.slots.length;
+const weekStartDate = new Date(`${week.weekStart}T00:00:00Z`);
+const weekEndDate = new Date(weekStartDate.getTime() + 6 * 86_400_000);
 const weekLabel = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
   month: "short",
   day: "numeric",
   year: "numeric",
-}).formatRange(
-  new Date(`${week.weekStart}T00:00:00Z`),
-  new Date(new Date(`${week.weekStart}T00:00:00Z`).getTime() + 6 * 86_400_000),
-);
+}).formatRange(weekStartDate, weekEndDate);
+const shortWeekLabel = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC",
+  month: "short",
+  day: "numeric",
+}).formatRange(weekStartDate, weekEndDate);
+// The layout appends " | AniDachi" (11 chars). Drop the year when a cross-month week
+// would push the rendered title past 60 characters.
+const fullTitle = `Crunchyroll Simulcast Calendar: ${weekLabel}`;
+const pageTitle =
+  fullTitle.length + 11 <= 60 ? fullTitle : `Crunchyroll Simulcast Calendar: ${shortWeekLabel}`;
 
 export const metadata: Metadata = {
-  title: `Crunchyroll Release Schedule — ${weekLabel}`,
-  description:
-    `Crunchyroll release schedule for ${weekLabel}, converted to your timezone. Manually checked ${week.checked}; release times may change.`,
+  title: pageTitle,
+  description: `Crunchyroll simulcast calendar and release schedule for ${weekLabel}, in your timezone. Manually checked ${week.checked}; release times may change.`,
   alternates: { canonical: url },
   openGraph: {
-    title: "Crunchyroll Release Schedule",
+    title: pageTitle,
     description: `${showCount} scheduled simulcasts for ${weekLabel}, in your timezone.`,
     url,
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
@@ -85,17 +93,17 @@ export default function CrunchyrollSchedulePage() {
           { name: "Crunchyroll watch party", url: "/watch-crunchyroll-together" },
           { name: "Crunchyroll release schedule", url },
         ]}
-        title="Crunchyroll release schedule"
+        title="Crunchyroll simulcast calendar & release schedule"
         description={`Crunchyroll simulcasts for ${weekLabel}, converted to your timezone.`}
         url={url}
         datePublished="2026-10-12"
-        dateModified="2026-10-12"
+        dateModified="2026-10-19"
         faq={faq}
         headings={headings}
         itemList={itemList}
         articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
       >
-        <SeoGuideTitle>Crunchyroll release schedule</SeoGuideTitle>
+        <SeoGuideTitle>Crunchyroll simulcast calendar &amp; release schedule</SeoGuideTitle>
         <SeoGuideAnswer>
           <p>
             <strong>

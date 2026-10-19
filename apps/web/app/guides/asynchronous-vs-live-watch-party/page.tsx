@@ -9,6 +9,19 @@ export const metadata: Metadata = {
   description:
     "Compare async and live anime watch parties. Learn when each works best, tools for each approach, and why async watching is growing among anime fans.",
   alternates: { canonical: "/guides/asynchronous-vs-live-watch-party" },
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+    title: "Asynchronous vs Live Anime Watch Parties",
+    description: "When live and async anime watch parties work best, and the tools for each.",
+    url: "/guides/asynchronous-vs-live-watch-party",
+  },
 };
 
 const faq = [

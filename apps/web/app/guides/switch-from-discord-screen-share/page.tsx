@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Switch From Discord Screen Share to AniDachi (2026 Playbook)",
+  title: { absolute: "Switch From Discord Screen Share to AniDachi (2026)" },
   description:
     "Keep Discord for voice. Replace Go Live with an AniDachi Crunchyroll watchroom in under 10 minutes — step-by-step migration playbook.",
   alternates: { canonical: "/guides/switch-from-discord-screen-share" },

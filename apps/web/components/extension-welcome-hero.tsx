@@ -102,13 +102,13 @@ export function ExtensionWelcomeHero({ welcome, extensionId }: {
           </div> : mobile ? <>
             <p>Open AniDachi in Chrome on your computer.</p>
             <Button asChild variant="cream" size="control" className={styles.installButton}>
-              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={EXTENSION_WELCOME_PATH} target="_blank" rel="noopener noreferrer">
+              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={EXTENSION_WELCOME_PATH} storePlacement="extension_welcome" target="_blank" rel="noopener noreferrer">
                 <Chrome size={22} aria-hidden="true" />Install AniDachi
               </InstallLink>
             </Button>
           </> : present ? <span className={styles.welcomeReady}><Check size={17} aria-hidden="true" />Extension ready</span> : <>
             <Button asChild variant="cream" size="control" className={styles.installButton}>
-              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={EXTENSION_WELCOME_PATH} target="_blank" rel="noopener noreferrer"><Chrome size={22} aria-hidden="true" />Install AniDachi<span className="sr-only">, opens in a new tab</span></InstallLink>
+              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={EXTENSION_WELCOME_PATH} storePlacement="extension_welcome" target="_blank" rel="noopener noreferrer"><Chrome size={22} aria-hidden="true" />Install AniDachi<span className="sr-only">, opens in a new tab</span></InstallLink>
             </Button>
             <p>Install the extension, then open a video. Already installed? Choose a platform below.</p>
           </>}

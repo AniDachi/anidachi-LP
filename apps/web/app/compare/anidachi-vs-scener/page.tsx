@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Scener — Best Scener Alternative for Anime Watch Parties (2026)",
+  title: { absolute: "AniDachi vs Scener: Scener Alternative for Anime (2026)" },
   description:
     "Looking for a Scener alternative for anime? Compare AniDachi's Crunchyroll-first live watchrooms, chat, and personal history with Scener's co-watching approach.",
   alternates: { canonical: "/compare/anidachi-vs-scener" },

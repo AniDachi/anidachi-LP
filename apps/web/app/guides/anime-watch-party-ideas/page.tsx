@@ -8,6 +8,19 @@ export const metadata: Metadata = {
   description:
     "Creative anime watch party ideas for online and in-person gatherings. Themes, snack ideas, games, and how to host the perfect anime marathon.",
   alternates: { canonical: "/guides/anime-watch-party-ideas" },
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+    title: "Anime Watch Party Ideas",
+    description: "Themes, snacks, games, and marathon tips for online and in-person anime watch parties.",
+    url: "/guides/anime-watch-party-ideas",
+  },
 };
 
 const faq = [

@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs TwoSeven — Best TwoSeven Alternative for LDR Couples (2026)",
+  title: { absolute: "AniDachi vs TwoSeven: TwoSeven Alternative for Couples" },
   description:
     "AniDachi vs TwoSeven for long-distance couples watching on Crunchyroll and YouTube: live rooms, per-user sync, personal history, and when to pick each tool.",
   alternates: { canonical: "/compare/anidachi-vs-twoseven" },

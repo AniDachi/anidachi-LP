@@ -18,7 +18,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Screen Share Crunchyroll on Discord — Why It Black-Screens",
+  title: "Stream Crunchyroll on Discord: Black Screen Fix",
   description:
     "How to screen share Crunchyroll on Discord: DRM often shows a black screen. Keep Discord for voice; each person streams Crunchyroll locally with AniDachi.",
   alternates: {
@@ -159,7 +159,9 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         <strong>
           Often no — or only with poor quality. Discord Go Live of Crunchyroll is
           frequently blocked (black screen), bitrate-starved, and limited to one
-          streamer while everyone else watches a compressed feed.
+          streamer while everyone else watches a compressed feed. The fix that
+          works: keep Discord for voice and have each person play Crunchyroll in
+          their own tab, kept in sync by a watch-party extension.
         </strong>{" "}
         Even when capture works, friends do not get their own player controls or
         full Crunchyroll quality. For weekly anime nights, screen share is the

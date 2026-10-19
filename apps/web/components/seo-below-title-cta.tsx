@@ -1,5 +1,5 @@
 import { Children, isValidElement, type ReactNode } from "react";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import { PrimaryCheckoutCta, type CtaCopyKey } from "@/components/primary-checkout-cta";
 import { SeoGuideAnswer, SeoGuideTitle } from "@/components/seo-guide-blocks";
 import type { PageTemplateId } from "@/lib/conversion-events";
 
@@ -24,10 +24,12 @@ export function SeoBelowTitleCta({
   children,
   pagePath,
   pageTemplate,
+  ctaCopy,
 }: {
   children: ReactNode;
   pagePath: string;
   pageTemplate: PageTemplateId;
+  ctaCopy?: CtaCopyKey;
 }) {
   const arr = Children.toArray(children);
   let insertAt = Math.min(2, arr.length);
@@ -56,6 +58,7 @@ export function SeoBelowTitleCta({
         pagePath={pagePath}
         pageTemplate={pageTemplate}
         placement="content_above_fold"
+        variant={ctaCopy}
         className="!mt-0 mb-6"
       />
       {arr.slice(insertAt)}

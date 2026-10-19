@@ -5,8 +5,12 @@
 | Event | When |
 |--------|------|
 | `cta_impression` | CTA block entered viewport (or hero on mount) |
-| `cta_click` | User clicked a CTA that routes to `/pricing` (or nav Pricing) |
+| `cta_click` | User clicked a tracked CTA. Install cards route to `/extension`; the hub's Store button also sends `cta_variant: chrome_web_store` (kept for Amplitude history) |
 | `install_hub_view` | `/extension` loaded |
+| `extension_store_clicked` | A desktop click that opens the Chrome Web Store listing (`components/install-link.tsx`, Store reviews link, mobile panel). `placement`: `install_hub`, `extension_welcome`, `home_how_it_works`, `store_reviews`, `mobile_install_panel`, `install_link`. This is the install-intent event to mark as a GA4 key event. Added Oct 19, 2026. |
+| `mobile_install_panel_view` | A phone tap on an install link opened the "Continue on your computer" panel. Added Oct 19, 2026. |
+| `desktop_install_link_copied` | The mobile panel's Share link was shared (`cta_variant: shared`) or copied (`copied`). From Oct 19 it fires from the panel (`placement: mobile_install_panel`); the hub's older mobile button no longer renders in `cws` mode. |
+| `extension_clicked` | Legacy name. Fires on the homepage hero's **"See How It Works"** scroll link, not on an install or Store click, and has no attribution fields. Do not read it as install intent. |
 | `extension_zip_download` | Official zip download. Client click + `/api/extension/download` GET (same `insert_id` so Amplitude dedupes). Also sent to Amplitude HTTP from the download route. |
 | `checkout_session_started` | User clicked “Start paid plan” on the paid tier; API request begins |
 | `checkout_redirect_success` | API returned a Stripe `url`; redirect is about to happen |
@@ -19,8 +23,8 @@ prove installation; the former `extension_detected` event is no longer emitted.
 
 ## Parameters (all string-friendly for GA4)
 
-- `page_path` — pathname where the event fired, e.g. `/guides/how-to-watch-anime-with-friends-online`
-- `seo_landing_path` — first-touch marketing landing path for the browser session (captured on first marketing pageview, including after client navigations from auth routes; see `lib/seo-landing-path.ts`)
+- `page_path` — pathname where the event fired, e.g. `/guides/how-to-watch-anime-with-friends-online`. Invite and room paths are reported as `/friend/invite` and `/room`, without the token or id (`redactAttributionPath`).
+- `seo_landing_path` — first-touch marketing landing path for the browser session (captured on first marketing pageview, including after client navigations from auth routes; see `lib/seo-landing-path.ts`). Invite (`/friend/invite/…`) and room pages are never recorded, and the fallback path is redacted. Before Oct 19, 2026, invite tokens could appear here.
 - `seo_referrer` — document.referrer at first landing (when present)
 - `seo_utm` — first-touch UTM query string (when present)
 - `page_template` — `home`, `guide`, `compare`, `anime`, `listicle`, `glossary`, `pillar`, `default` (see `inferPageTemplateFromPath`)
