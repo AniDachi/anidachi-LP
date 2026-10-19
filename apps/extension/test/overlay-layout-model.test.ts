@@ -14,24 +14,24 @@ describe("overlay layout model v2", () => {
 		);
 	});
 
-	it("defaults to the clean four-seat definition", () => {
+	it("starts with large cameras at the bottom left and a three-column fill chat", () => {
 		const preferences = getDefaultOverlayLayoutPreferencesV2();
 		const definition = getDefaultOverlayLayoutDefinition();
 
 		expect(preferences).toEqual({ layout: definition, version: 2 });
 		expect(definition).toEqual({
-			video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
+			video: { anchor: { x: 0, y: 7 }, leaderSide: "left", sizeStep: 2 },
 			chat: {
 				messageTransparency: 0,
-				position: { x: 0, y: 4 },
-				width: 5,
+				position: { x: 0, y: 0 },
+				width: 3,
 				textScale: "normal",
-				maxMessages: 5,
+				maxMessages: "fill",
 			},
 		});
 
-		definition.video.anchor.x = 0;
-		expect(getDefaultOverlayLayoutDefinition().video.anchor.x).toBe(11);
+		definition.video.anchor.x = 11;
+		expect(getDefaultOverlayLayoutDefinition().video.anchor.x).toBe(0);
 	});
 
 	it("rejects version 1 geometry and starts from clean defaults", () => {

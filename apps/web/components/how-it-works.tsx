@@ -1,6 +1,7 @@
 import { Chrome, LogIn, Play, Users, MessageSquare, Clock3 } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
+import { InstallLink } from "@/components/install-link";
 
 const steps = [
   {
@@ -16,7 +17,7 @@ const steps = [
   {
     icon: Play,
     title: "Open a video",
-    description: "Choose something to watch on YouTube or Crunchyroll. Netflix is coming soon.",
+    description: "Choose something to watch on YouTube, Crunchyroll, or Netflix.",
   },
   {
     icon: Users,
@@ -68,14 +69,14 @@ export function HowItWorks() {
                   {i === 0 ? (
                     <>
                       Get the extension from the{" "}
-                      <a
+                      <InstallLink
                         href={CHROME_WEB_STORE_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-ani-progress underline-offset-4 hover:underline"
                       >
                         Chrome Web Store
-                      </a>.
+                      </InstallLink>.
                     </>
                   ) : (
                     step.description

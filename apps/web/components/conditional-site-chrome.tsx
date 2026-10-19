@@ -12,7 +12,8 @@ type MinimalChromeConfig = {
 
 function minimalChromeForPath(pathname: string): MinimalChromeConfig | null {
   if (pathname === "/login" || pathname === "/success" || pathname === "/checkout" ||
-      (process.env.NODE_ENV === "development" && pathname === "/dev/checkout-success")) {
+      (process.env.NODE_ENV === "development" &&
+        (pathname === "/dev/checkout-success" || pathname === "/dev/trial-start"))) {
     return { backHref: "/", backLabel: "Back to home" };
   }
   if (pathname.startsWith("/room/") ||
@@ -31,8 +32,9 @@ function minimalChromeForPath(pathname: string): MinimalChromeConfig | null {
 
 export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
   const pathname = usePathname();
+  if (process.env.NODE_ENV === "development" && pathname === "/dev/mobile-install") return null;
   if (pathname === "/account" || pathname.startsWith("/account/") ||
-      (process.env.NODE_ENV === "development" && pathname === "/dev/billing")) return null;
+      (process.env.NODE_ENV === "development" && ["/dev/billing", "/dev/watch-library"].includes(pathname))) return null;
   const minimal = minimalChromeForPath(pathname);
   if (minimal) {
     return (
@@ -48,8 +50,9 @@ export function ConditionalNav({ marketingNav }: { marketingNav: ReactNode }) {
 
 export function ConditionalFooter({ marketingFooter }: { marketingFooter: ReactNode }) {
   const pathname = usePathname();
+  if (process.env.NODE_ENV === "development" && pathname === "/dev/mobile-install") return null;
   if (pathname === "/account" || pathname.startsWith("/account/") ||
-      (process.env.NODE_ENV === "development" && pathname === "/dev/billing")) return null;
+      (process.env.NODE_ENV === "development" && ["/dev/billing", "/dev/watch-library"].includes(pathname))) return null;
   if (minimalChromeForPath(pathname)) {
     return null;
   }

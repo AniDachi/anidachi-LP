@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import {
@@ -13,13 +13,13 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 
 const COPY = {
   default: {
-    body: "Install the Chrome extension in about 2 minutes — Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+    body: "Install the Chrome extension in about 2 minutes — Crunchyroll, YouTube, and Netflix watchrooms.",
   },
   guide: {
-    body: "Install AniDachi in Chrome. Join friends for free, or host with Plus or Pro on Crunchyroll and YouTube. Netflix is coming soon.",
+    body: "Install AniDachi in Chrome. Join friends for free, or host with Plus or Pro on Crunchyroll, YouTube, and Netflix.",
   },
   compare: {
-    body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+    body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll, YouTube, and Netflix watchrooms.",
   },
   anime: {
     body: "Install AniDachi and open the video. Host with Plus or Pro, including during a trial; friends join free.",
@@ -128,7 +128,7 @@ export function PrimaryCheckoutCta({
           className="w-full shrink-0 sm:w-auto"
           asChild
         >
-          <Link
+          <InstallLink
             href={INSTALL_HUB_PATH}
             onClick={() => {
               trackConversion("cta_click", {
@@ -141,7 +141,7 @@ export function PrimaryCheckoutCta({
           >
             {INSTALL_CTA_LABEL}
             <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-          </Link>
+          </InstallLink>
         </Button>
       </div>
     </div>

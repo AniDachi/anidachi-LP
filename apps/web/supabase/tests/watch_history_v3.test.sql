@@ -1898,7 +1898,7 @@ select ok(
   pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'page_titles as materialized'
@@ -1906,7 +1906,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'all_titles as materialized'
@@ -1914,7 +1914,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'eligible_titles as'
@@ -1956,7 +1956,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'from public.watch_history_user_session_summaries as summary'
@@ -1964,7 +1964,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'cross join lateral'
@@ -1972,7 +1972,7 @@ select ok(
   and pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'session.history_generation ='
@@ -1995,7 +1995,7 @@ select ok(
   pg_catalog.strpos(
     pg_catalog.lower(
       pg_catalog.pg_get_functiondef(
-        'public.list_watch_history_v3_bounded_page(uuid,bigint,integer,timestamp with time zone,text)'::regprocedure
+        'public.list_watch_history_v3_provider_page(uuid,bigint,integer,integer,timestamp with time zone,text)'::regprocedure
       )
     ),
     'summary.last_watched_at <= p_cursor_watched_at'

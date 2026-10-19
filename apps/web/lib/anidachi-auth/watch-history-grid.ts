@@ -22,12 +22,14 @@ export type WatchHistoryGridStore = {
 		generation: number,
 		title: string,
 		snapshot: boolean,
+		provider: WatchHistoryGridQuery["provider"],
 	): Promise<RecordValue | null>;
 	progress(
 		owner: string,
 		generation: number,
 		title: string,
 		episodes: string[],
+		provider: WatchHistoryGridQuery["provider"],
 	): Promise<RecordValue[]>;
 };
 const fail = (code = "INVALID_RESPONSE", status = 502) =>
@@ -37,7 +39,7 @@ const fail = (code = "INVALID_RESPONSE", status = 502) =>
 		"Could not read the episode catalog",
 	);
 const metadataColumns =
-	"user_id,history_generation,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,projection,preferred_audio_locale";
+	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,projection,preferred_audio_locale";
 
 export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 	async settings(owner) {
@@ -49,19 +51,19 @@ export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 		if (result.error) throw result.error;
 		return result.data as RecordValue | null;
 	},
-	async catalog(owner, generation, title, snapshot) {
+	async catalog(owner, generation, title, snapshot, provider) {
 		const result = await db()
 			.from("watch_catalog_snapshots")
 			.select(`${metadataColumns}${snapshot ? ",snapshot" : ""}`)
 			.eq("user_id", owner)
 			.eq("history_generation", generation)
-			.eq("provider", "crunchyroll")
+			.eq("provider", provider)
 			.eq("title_key", title)
 			.maybeSingle();
 		if (result.error) throw result.error;
 		return result.data as unknown as RecordValue | null;
 	},
-	async progress(owner, generation, title, episodes) {
+	async progress(owner, generation, title, episodes, provider) {
 		if (!episodes.length) return [];
 		const result = await db()
 			.from("watch_episode_progress")
@@ -70,7 +72,7 @@ export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 			)
 			.eq("user_id", owner)
 			.eq("history_generation", generation)
-			.eq("provider", "crunchyroll")
+			.eq("provider", provider)
 			.eq("title_key", title)
 			.in("episode_key", episodes)
 			.limit(50);
@@ -158,11 +160,13 @@ export async function readWatchHistoryGrid(params: {
 		generation,
 		query.titleKey,
 		true,
+		query.provider,
 	);
 	if (
 		row &&
 		(row.user_id !== params.userId ||
 			row.history_generation !== generation ||
+			row.provider !== query.provider ||
 			row.title_key !== query.titleKey)
 	)
 		throw fail();
@@ -176,7 +180,7 @@ export async function readWatchHistoryGrid(params: {
 			accountGeneration: generation,
 			serverTime: now.toISOString(),
 		},
-		provider: "crunchyroll",
+		provider: query.provider,
 		titleKey: query.titleKey,
 		state: row ? "partial" : "unavailable",
 		revision: null,
@@ -200,6 +204,7 @@ export async function readWatchHistoryGrid(params: {
 		if (
 			!snapshot.success ||
 			snapshot.data.titleKey !== query.titleKey ||
+			snapshot.data.provider !== query.provider ||
 			snapshot.data.completeness !== "complete" ||
 			!Array.isArray(projection.seasons)
 		)
@@ -273,6 +278,7 @@ export async function readWatchHistoryGrid(params: {
 			generation,
 			query.titleKey,
 			keys,
+			query.provider,
 		);
 		if (rows.length > keys.length) throw fail();
 		progressRead = { keys, fingerprint: progressFingerprint(rows) };
@@ -284,7 +290,7 @@ export async function readWatchHistoryGrid(params: {
 			if (
 				progress.user_id !== params.userId ||
 				progress.history_generation !== generation ||
-				progress.provider !== "crunchyroll" ||
+				progress.provider !== query.provider ||
 				progress.title_key !== query.titleKey ||
 				typeof progress.episode_key !== "string" ||
 				!keys.includes(progress.episode_key) ||
@@ -369,13 +375,14 @@ export async function readWatchHistoryGrid(params: {
 	}
 	const [latestSettings, latestCatalog, latestProgress] = await Promise.all([
 		store.settings(params.userId),
-		store.catalog(params.userId, generation, query.titleKey, false),
+		store.catalog(params.userId, generation, query.titleKey, false, query.provider),
 		progressRead
 			? store.progress(
 					params.userId,
 					generation,
 					query.titleKey,
 					progressRead.keys,
+					query.provider,
 				)
 			: null,
 	]);

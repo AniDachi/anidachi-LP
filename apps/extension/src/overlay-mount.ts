@@ -1,3 +1,4 @@
+import { netflixWatchId } from "./source-adapters/netflix/contract";
 import {
   isYouTubeProviderHost,
   isYouTubeWatchPage,
@@ -21,6 +22,7 @@ export function isOverlayAllowedOnPage(pageUrl: string): boolean {
   try {
     const url = new URL(pageUrl);
     const hostname = url.hostname.toLowerCase();
+    if (hostname === "www.netflix.com") return netflixWatchId(pageUrl) !== null;
     if (hostname === "crunchyroll.com" || hostname.endsWith(".crunchyroll.com")) {
       return /\/watch\/[^/?#]+/i.test(url.pathname);
     }

@@ -21,7 +21,7 @@ type Options = {
 	discard: boolean;
 };
 function useProviderBrowse(
-	provider: "youtube" | "crunchyroll",
+	provider: "youtube" | "crunchyroll" | "netflix",
 	options: Options,
 ) {
 	const {
@@ -33,7 +33,7 @@ function useProviderBrowse(
 		enabled,
 		discard,
 	} = options;
-	const input = { ...options.input, provider, limit: 20 };
+	const input = { ...options.input, providerVersion: 2 as const, provider, limit: 20 };
 	const query = JSON.stringify(input);
 	const saved = readPopupHistoryView(ownerUserId, generation);
 	const result = usePopupWatchBrowse({
@@ -70,11 +70,12 @@ function useProviderBrowse(
 }
 
 /** Each provider has its own server query, cursor, cache and user-loaded depth.
- * Search/date conditions are sent to both streams before server pagination. */
+ * Search/date conditions are sent to all streams before server pagination. */
 export function usePopupProviderBrowse(options: Options) {
 	const crunchyroll = useProviderBrowse("crunchyroll", options);
 	const youtube = useProviderBrowse("youtube", options);
-	const streams = [crunchyroll, youtube];
+	const netflix = useProviderBrowse("netflix", options);
+	const streams = [crunchyroll, youtube, netflix];
 	const failures = streams.filter((stream) => stream.errorStatus);
 	// One stale authority must not be hidden behind the other stream's network error.
 	const failure =
@@ -133,7 +134,7 @@ export function usePopupProviderBrowse(options: Options) {
 		invalidated.current.error = failure.error;
 	}
 	// Clearing a request error is not proof that shared account authority recovered.
-	// Keep both lists hidden until both streams complete newer validated network reads (cache is not proof).
+	// Keep all lists hidden until all streams complete newer validated network reads (cache is not proof).
 	if (
 		invalidated.current &&
 		!failures.length &&
@@ -150,7 +151,7 @@ export function usePopupProviderBrowse(options: Options) {
 		authorityInvalid ? { ...stream, pages: [], nextCursor: null } : stream;
 	return {
 		authorityInvalid,
-		providers: { crunchyroll: visible(crunchyroll), youtube: visible(youtube) },
+		providers: { crunchyroll: visible(crunchyroll), youtube: visible(youtube), netflix: visible(netflix) },
 		pages: authorityInvalid ? [] : streams.flatMap((stream) => stream.pages),
 		loading: streams.some((stream) => stream.loading),
 		error: failure?.error ?? invalidated.current?.error ?? null,

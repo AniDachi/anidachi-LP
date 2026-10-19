@@ -36,7 +36,7 @@ const faq = [
   {
     question: "Is AniDachi only for Crunchyroll?",
     answer:
-      "No. AniDachi supports live rooms on Crunchyroll and full youtube.com/watch pages. Your own Plus/Pro access and recording permission enable personal history, with a separate YouTube recording toggle. Netflix is coming soon and is not supported yet. Disney+ and similar services are not supported.",
+      "No. AniDachi supports live rooms on Crunchyroll, full youtube.com/watch pages, and Netflix movie or episode pages. Your own Plus/Pro access and recording permission enable personal history, with a separate YouTube recording toggle. Disney+ and similar services are not supported.",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function AniDachiVsSyncplayPage() {
       description="Compare Crunchyroll-first watchrooms with desktop sync workflows."
       url="/compare/anidachi-vs-syncplay"
       datePublished="2026-05-11"
-      dateModified="2026-10-01"
+      dateModified="2026-10-17"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}

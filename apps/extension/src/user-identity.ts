@@ -1,5 +1,5 @@
 import type { Participant } from "@anidachi/protocol";
-import { sendAuthCommand } from "./auth-client";
+import { ExtensionAuthTemporarilyUnavailableError, sendAuthCommand } from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 
 export interface CurrentParticipantResult {
@@ -41,12 +41,13 @@ function participantFromTokens(tokens: ExtensionAuthTokens): Participant {
 }
 
 export async function createCurrentParticipant(
-  options: { fast?: boolean } = {},
+  options: { fast?: boolean; requireVerified?: boolean } = {},
 ): Promise<CurrentParticipantResult> {
   let response;
   try {
-    response = await sendAuthCommand(options.fast ? "get-session-fast" : "get-session");
+    response = await sendAuthCommand(options.fast && !options.requireVerified ? "get-session-fast" : "get-session");
   } catch (error) {
+    if (options.requireVerified) throw error;
     if (isExtensionContextInvalidatedError(error)) {
       return {
         participant: null,
@@ -62,6 +63,14 @@ export async function createCurrentParticipant(
       authenticated: false,
       tokens: null,
     };
+  }
+
+  // Cached identity is suitable for display; an action needs the fresh probe.
+  if (options.requireVerified && !response.ok) {
+    if (response.retryable && response.tokens) {
+      throw new ExtensionAuthTemporarilyUnavailableError(response.tokens);
+    }
+    throw new Error(response.error);
   }
 
   if (response?.tokens) {

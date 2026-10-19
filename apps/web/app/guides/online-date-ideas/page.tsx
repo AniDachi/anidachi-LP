@@ -29,7 +29,7 @@ const howToSteps = [
   },
   {
     name: "Keep playback together",
-    text: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} AniDachi syncs that player. Netflix is coming soon and is not on the public extension yet.`,
+    text: `${INSTALL_HOWTO_STEP_TEXT_VIA_HUB} AniDachi syncs that player.`,
   },
 ];
 
@@ -66,7 +66,7 @@ const faq = [
   {
     question: "Can the online date be a movie?",
     answer:
-      "Yes. Use a YouTube movie or a Crunchyroll episode, each person on their own account, in desktop Chrome. AniDachi keeps playback together. Netflix is coming soon and is not on the public extension yet.",
+      "Yes. Use a Netflix or YouTube movie, or a Crunchyroll episode, each person on their own account, in desktop Chrome. AniDachi keeps playback together.",
   },
   {
     question: "Do we both need a paid AniDachi plan?",
@@ -104,7 +104,7 @@ export default function OnlineDateIdeasPage() {
         description="Dates from two computers, including one synced watch."
         url="/guides/online-date-ideas"
         datePublished="2026-10-08"
-        dateModified="2026-10-08"
+        dateModified="2026-10-17"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -138,7 +138,7 @@ export default function OnlineDateIdeasPage() {
             },
             {
               title: "One episode",
-              body: "Same title and same audio. Each person uses their own Crunchyroll or YouTube account. AniDachi keeps the moment together.",
+              body: "Same title and same audio. Each person uses their own Crunchyroll, YouTube, or Netflix account. AniDachi keeps the moment together.",
             },
             {
               title: "A ten-minute tour",

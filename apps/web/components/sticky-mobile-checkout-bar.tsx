@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import { ArrowRight } from "lucide-react";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { trackConversion, type PageTemplateId } from "@/lib/conversion-events";
@@ -34,7 +34,7 @@ export function StickyMobileCheckoutBar({
       inert={!visible}
       style={{ transform: visible ? "translateY(0)" : "translateY(100%)" }}
     >
-      <Link
+      <InstallLink
         href={INSTALL_HUB_PATH}
         className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-ani-primary px-4 text-[13px] font-semibold text-ani-on-primary transition-colors duration-[180ms] hover:bg-ani-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ani-focus"
         onClick={() => {
@@ -48,7 +48,7 @@ export function StickyMobileCheckoutBar({
       >
         {INSTALL_CTA_LABEL}
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
-      </Link>
+      </InstallLink>
     </div>
   );
 }

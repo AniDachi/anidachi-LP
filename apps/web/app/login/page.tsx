@@ -76,7 +76,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <LoginOAuthButtons safeNext={safeNext} />
 
         <p className="mt-5 text-center text-xs text-foreground/45">
-          Syncs with Crunchyroll · Free to start
+          Crunchyroll · YouTube · Netflix
         </p>
 
         <p className="mt-6 text-center text-xs text-foreground/45">

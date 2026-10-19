@@ -457,3 +457,71 @@ test("internal callback maps every database failure to a stable privacy-safe res
 		);
 	}
 });
+
+const persistedEndedSource = {
+	room_id: "room-1",
+	status: "ended",
+	source_provider: "youtube",
+	source_url: youtubeSource.sourceUrl,
+	video_fingerprint: youtubeSource.videoFingerprint,
+	source_generation: 2,
+};
+
+test("lost source acknowledgement is recovered only from matching ended-room durable data", async () => {
+	for (const [row, outcome] of [
+		[persistedEndedSource, "persisted"],
+		[{ ...persistedEndedSource, source_generation: 3 }, "stale"],
+	] as const) {
+		const response = await handleInternalRoomSourcePost({
+			authorization: "Bearer correct", secret: "correct", roomId: "room-1",
+			readJson: async () => callback,
+			persist: async () => { throw new RoomSourcePersistenceError("ended"); },
+			readPersistedSource: async (roomId: string) => {
+				assert.equal(roomId, "room-1");
+				return row;
+			},
+		});
+		assert.deepEqual(response, {
+			status: 200, body: { ok: true, outcome, sourceGeneration: 2 },
+		});
+	}
+});
+
+test("ended status never acknowledges a newer, conflicting, missing or malformed source", async () => {
+	const rows = [
+		null,
+		{ ...persistedEndedSource, room_id: "another-room" },
+		{ ...persistedEndedSource, status: "live" },
+		{ ...persistedEndedSource, source_generation: 1 },
+		{ ...persistedEndedSource, source_generation: null, source_provider: null },
+		{ ...persistedEndedSource, source_generation: "2" },
+		{ ...persistedEndedSource, source_generation: Number.MAX_SAFE_INTEGER + 1 },
+		{ ...persistedEndedSource, source_url: "https://www.youtube.com/watch?v=M7lc1UVf-VE", video_fingerprint: "youtube|M7lc1UVf-VE" },
+		{ ...persistedEndedSource, source_generation: 3, source_provider: "crunchyroll", source_url: "https://www.crunchyroll.com/watch/G8WUNM123", video_fingerprint: "crunchyroll|watch/G8WUNM123" },
+		{ ...persistedEndedSource, video_fingerprint: "youtube|wrong" },
+	];
+	for (const row of rows) {
+		const response = await handleInternalRoomSourcePost({
+			authorization: "Bearer correct", secret: "correct", roomId: "room-1",
+			readJson: async () => callback,
+			persist: async () => { throw new RoomSourcePersistenceError("ended"); },
+			readPersistedSource: async () => row,
+		});
+		assert.deepEqual(response, { status: 409, body: { error: "Room has ended", code: "ROOM_ENDED" } });
+	}
+});
+
+test("reconciliation does not reinterpret other errors or leak read failures", async () => {
+	let reads = 0;
+	for (const kind of ["conflict", "unexpected", "ended"] as const) {
+		const response = await handleInternalRoomSourcePost({
+			authorization: "Bearer correct", secret: "correct", roomId: "room-1",
+			readJson: async () => callback,
+			persist: async () => { throw new RoomSourcePersistenceError(kind); },
+			readPersistedSource: async () => { reads++; throw new Error("private database detail"); },
+		});
+		assert.notEqual(response.status, 200);
+		assert.equal(JSON.stringify(response).includes("private database detail"), false);
+	}
+	assert.equal(reads, 1);
+});

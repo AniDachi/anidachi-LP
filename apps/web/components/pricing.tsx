@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, Lock } from "lucide-react";
+import {
+	BillingOwnerChangedError,
+	guardBillingNavigation,
+} from "@/lib/billing-navigation";
+import { ArrowRight, Check, Lock, Loader2 } from "lucide-react";
 import { getPlanPolicy } from "@anidachi/protocol";
 import {
 	inferPageTemplateFromPath,
@@ -21,9 +25,19 @@ import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
-import { hasConfirmedTrialOffer, type PricingOffer, type PricingPrices } from "@/lib/pricing-offer";
+import {
+	hasConfirmedTrialOffer,
+	type PricingOffer,
+	type PricingPrices,
+} from "@/lib/pricing-offer";
 import { formatMonthlyPrice, type BillingPeriod } from "@/lib/billing-view";
-import { checkoutLoginPath, checkoutSessionRecoveryPath } from "@/lib/checkout-selection";
+import {
+	checkoutLoginPath,
+	checkoutSessionRecoveryPath,
+	checkoutReturnPath,
+} from "@/lib/checkout-selection";
+import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
+import { readOnboardingCheckout, rememberOnboardingCheckout } from "@/lib/onboarding-return-client";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -42,13 +56,17 @@ function FeatureList({ features }: { features: string[] }) {
 export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
+	initialPeriod = "yearly",
+	onboarding,
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */
 	headingLevel?: 1 | 2;
 	/** Full plan-limits table — keep on `/pricing`, omit from homepage `#pricing`. */
 	showPlanMatrix?: boolean;
+	initialPeriod?: BillingPeriod;
+	onboarding?: string;
 } = {}) {
-	const [period, setPeriod] = useState<BillingPeriod>("yearly");
+	const [period, setPeriod] = useState<BillingPeriod>(initialPeriod);
 	const [checkoutError, setCheckoutError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [submittingTier, setSubmittingTier] = useState<CheckoutTier | null>(
@@ -57,6 +75,8 @@ export function Pricing({
 	const sectionRef = useRef<HTMLElement | null>(null);
 	const pricingViewFired = useRef(false);
 	const [offer, setOffer] = useState<PricingOffer | null>(null);
+	const [offerFresh, setOfferFresh] = useState(false);
+	const [offerLoading, setOfferLoading] = useState(true);
 	const checkingOfferRef = useRef(true);
 	const requestOffer = useRef<(() => Promise<PricingOffer | null>) | null>(
 		null,
@@ -65,40 +85,28 @@ export function Pricing({
 	const offerVersion = useRef(0);
 	const [reload, setReload] = useState(0);
 	const checkoutLock = useRef(false);
+	const departures = useRef(0);
+	const lifetime = useRef<AbortController | null>(null);
 	const lastAttemptedTier = useRef<CheckoutTier | null>(null);
 	const displayPrices = PUBLISHED_PRICING[period];
 	const showTrialTerms = hasConfirmedTrialOffer(offer);
 
 	useEffect(() => {
-		// Preserve the explicitly chosen monthly flow across the sign-in return.
-		if (
-			new URLSearchParams(window.location.search).get("billing") === "monthly"
-		) {
-			setPeriod("monthly");
-		}
-	}, []);
-
-	useEffect(() => {
-		let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+		const life = new AbortController();
+		lifetime.current = life;
 		let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 		let controller: AbortController | undefined;
 		let pending: Promise<PricingOffer | null> | null = null;
-		function loadOffer(
-			resetAccount = false,
-			purchase = false,
-		): Promise<PricingOffer | null> {
-			clearTimeout(refreshTimer);
-			// A scheduled refresh must not invalidate the explicit purchase already
-			// being checked by the server. Focus/account changes still retire it.
-			if (!resetAccount && !purchase && checkoutLock.current) {
-				refreshTimer = setTimeout(() => void loadOffer(), 1000);
-				return Promise.resolve(null);
-			}
-			if (!resetAccount && pending) return pending;
+		let pendingDeparture = departures.current;
+		let foreground = document.visibilityState !== "hidden";
+		function loadOffer(resetAccount = false): Promise<PricingOffer | null> {
+			if (!foreground) return Promise.resolve(null);
+			if (pending && pendingDeparture === departures.current) return pending;
 			const request = fetchOffer(resetAccount).finally(() => {
 				if (pending === request) pending = null;
 			});
 			pending = request;
+			pendingDeparture = departures.current;
 			return request;
 		}
 		async function fetchOffer(
@@ -106,47 +114,70 @@ export function Pricing({
 		): Promise<PricingOffer | null> {
 			// A bare abort() is reported by the Next.js overlay as a crash.
 			controller?.abort("pricing-offer-replaced");
-			controller = new AbortController();
+			const abort = new AbortController();
+			controller = abort;
 			const started = Date.now();
 			const version = ++offerVersion.current;
+			const departure = departures.current;
 			checkingOfferRef.current = true;
+			setOfferLoading(true);
 			if (resetAccount) {
 				clearTimeout(expiryTimer);
 				offerDeadline.current = 0;
-				setOffer(null);
+				setOfferFresh(false);
 			}
 			try {
 				const response = await fetch("/api/billing/offer", {
 					cache: "no-store",
-					signal: AbortSignal.any([
-						controller.signal,
-						AbortSignal.timeout(15_000),
-					]),
+					signal: AbortSignal.any([abort.signal, AbortSignal.timeout(15_000)]),
 				});
 				if (!response.ok) throw new Error("Plans unavailable");
-				const next = (await response.json()) as PricingOffer;
+				const accountOffer = (await response.json()) as PricingOffer;
+				if (
+					version !== offerVersion.current ||
+					abort.signal.aborted ||
+					(departure !== departures.current && !checkoutLock.current)
+				)
+					return null;
+				setOffer((previous) =>
+					previous?.ownerUserId === accountOffer.ownerUserId ? previous : null,
+				);
+				const checked = await resolveBrowserTrialOffer(
+					accountOffer,
+					abort.signal,
+				);
+				const next = checked.offer;
 				if (version !== offerVersion.current) return null;
+				if (departure !== departures.current) {
+					if (!checkoutLock.current) return null;
+					if (next.ownerUserId)
+						await guardBillingNavigation(
+							next.ownerUserId,
+							abort.signal,
+							true,
+							() => departures.current,
+						);
+					if (version !== offerVersion.current || abort.signal.aborted)
+						return null;
+				}
 				const remaining =
 					Math.min(60_000, next.validForMs) - (Date.now() - started);
 				if (!(remaining > 0)) throw new Error("Offer expired");
 				setOffer(next);
+				setOfferFresh(true);
 				offerDeadline.current = Date.now() + remaining;
 				clearTimeout(expiryTimer);
 				expiryTimer = setTimeout(() => {
 					offerDeadline.current = 0;
-					setOffer(null);
+					setOfferFresh(false);
 				}, remaining);
-				// Refresh before expiry. A slow response may retire eligibility, but
-				// it never removes the public prices or changes the card structure.
-				refreshTimer = setTimeout(
-					() => void loadOffer(),
-					Math.max(remaining / 2, remaining - 5000),
-				);
 				return next;
-			} catch {
+			} catch (failure) {
 				if (version === offerVersion.current) {
+					if (failure instanceof BillingOwnerChangedError) setOffer(null);
 					offerDeadline.current = 0;
-					setOffer(null);
+					setOfferFresh(false);
+					// A transport failure is not a confirmed change of eligibility.
 				}
 				// An account lookup must never turn browsing the public catalog into
 				// an error. Only an explicit checkout attempt can report its failure.
@@ -154,15 +185,44 @@ export function Pricing({
 			} finally {
 				if (version === offerVersion.current) {
 					checkingOfferRef.current = false;
+					setOfferLoading(false);
 				}
 			}
 		}
-		requestOffer.current = () => loadOffer(false, true);
-		const onFocus = () => void loadOffer(true);
+		requestOffer.current = () => loadOffer(false);
+		const pause = () => {
+			foreground = false;
+			++departures.current;
+			if (checkoutLock.current) return;
+			++offerVersion.current;
+			controller?.abort("pricing-offer-hidden");
+			pending = null;
+			clearTimeout(expiryTimer);
+			offerDeadline.current = 0;
+			checkingOfferRef.current = false;
+			setOfferFresh(false);
+		};
+		const onFocus = () => {
+			foreground = document.visibilityState !== "hidden";
+			if (checkoutLock.current) {
+				++departures.current;
+				return;
+			}
+			if (foreground && !checkoutLock.current) void loadOffer(true);
+		};
+		const onBlur = () => {
+			++departures.current;
+		};
+		const onVisibilityChange = () => {
+			if (document.visibilityState === "hidden") pause();
+			else onFocus();
+		};
 		void loadOffer(true);
 		window.addEventListener("focus", onFocus);
+		window.addEventListener("blur", onBlur);
+		document.addEventListener("visibilitychange", onVisibilityChange);
 		return () => {
-			clearTimeout(refreshTimer);
+			life.abort();
 			clearTimeout(expiryTimer);
 			// A bare abort() is reported by the Next.js overlay as a crash.
 			controller?.abort("pricing-offer-cancelled");
@@ -171,6 +231,8 @@ export function Pricing({
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 			++offerVersion.current;
 			window.removeEventListener("focus", onFocus);
+			window.removeEventListener("blur", onBlur);
+			document.removeEventListener("visibilitychange", onVisibilityChange);
 		};
 	}, [reload]);
 
@@ -216,6 +278,16 @@ export function Pricing({
 	const handleSubscribe = async (tier: CheckoutTier) => {
 		if (checkoutLock.current) return;
 		checkoutLock.current = true;
+		let checkedDeparture = departures.current;
+		const guard = async (owner: string) => {
+			await guardBillingNavigation(
+				owner,
+				lifetime.current!.signal,
+				departures.current !== checkedDeparture,
+				() => departures.current,
+			);
+			checkedDeparture = departures.current;
+		};
 		lastAttemptedTier.current = tier;
 		setCheckoutError(null);
 		const pagePath =
@@ -250,19 +322,31 @@ export function Pricing({
 			if (
 				offer &&
 				(currentOffer.ownerUserId !== offer.ownerUserId ||
-					currentOffer.action !== offer.action)
+					currentOffer.action !== offer.action ||
+					currentOffer.trialMode !== offer.trialMode ||
+					currentOffer.trialOfferRevision !== offer.trialOfferRevision)
 			) {
 				setCheckoutError(
-					"Your subscription options changed. Please choose your plan again.",
+					"Your subscription options changed. Review the subscription terms before continuing.",
 				);
 				return;
 			}
+			if (currentOffer.ownerUserId) await guard(currentOffer.ownerUserId);
+			if (version !== offerVersion.current) return;
+			// A Stripe cancellation returns to pricing in this tab. Retain only its
+			// short-lived, same-owner navigation receipt; it never alters the offer.
+			const returnToken = onboarding ?? (currentOffer.ownerUserId
+				? readOnboardingCheckout(currentOffer.ownerUserId)?.token : undefined);
 			if (currentOffer.action === "manage") {
-				window.location.href = "/account/billing";
+				window.location.href = "/account/billing?manage=1";
 				return;
 			}
 			if (currentOffer.action === "sign_in") {
-				window.location.href = checkoutLoginPath({ plan: tier, billing: period });
+				window.location.href = checkoutLoginPath({
+					plan: tier,
+					billing: period,
+					onboarding: returnToken,
+				});
 				return;
 			}
 			if (!offer && currentOffer.action === "subscribe") {
@@ -285,6 +369,17 @@ export function Pricing({
 				setCheckoutError(
 					"Checkout for this price is temporarily unavailable. Please try again later.",
 				);
+				return;
+			}
+			if (
+				currentOffer.action === "trial" &&
+				currentOffer.trialMode === "cardless"
+			) {
+				window.location.href = checkoutReturnPath({
+					plan: tier,
+					billing: period,
+					onboarding: returnToken,
+				});
 				return;
 			}
 			trackConversion("checkout_session_started", {
@@ -314,10 +409,12 @@ export function Pricing({
 
 			const data = (await response.json()) as {
 				url?: string;
+				sessionId?: string;
 				error?: string;
 				loginUrl?: string;
 				kind?: "checkout" | "manage_subscription";
 			};
+			if (currentOffer.ownerUserId) await guard(currentOffer.ownerUserId);
 			if (version !== offerVersion.current) {
 				setCheckoutError(
 					"Your account was refreshed. Please choose your plan again.",
@@ -327,7 +424,11 @@ export function Pricing({
 
 			if (!response.ok) {
 				if (response.status === 401) {
-					window.location.href = checkoutSessionRecoveryPath({ plan: tier, billing: period });
+					window.location.href = checkoutSessionRecoveryPath({
+						plan: tier,
+						billing: period,
+						onboarding: returnToken,
+					});
 					return;
 				}
 				const message =
@@ -367,9 +468,16 @@ export function Pricing({
 				plan_tier: tier,
 			});
 
+			if (data.kind !== "manage_subscription" && currentOffer.ownerUserId)
+				rememberOnboardingCheckout(returnToken, currentOffer.ownerUserId, data.sessionId);
 			window.location.href =
 				data.kind === "manage_subscription" ? "/account/billing" : data.url;
 		} catch (error) {
+			if (error instanceof BillingOwnerChangedError) {
+				setOffer(null);
+				setOfferFresh(false);
+				offerDeadline.current = 0;
+			}
 			const message =
 				error instanceof Error ? error.message : "Unexpected checkout error";
 			trackConversion("checkout_error", {
@@ -405,7 +513,7 @@ export function Pricing({
 					titleAs={headingLevel === 1 ? "h1" : "h2"}
 					title="Watch together. Choose your plan."
 					description={
-						offer?.paidHostingActive === false
+						offerFresh && offer?.paidHostingActive === false
 							? "Join friends for free. Choose Plus or Pro for more hosting and personal watch history."
 							: "Join friends for free, or host your own room with Plus or Pro."
 					}
@@ -457,13 +565,14 @@ export function Pricing({
 				<div className="pricing-plans__grid">
 					{PRICING_TIERS.map((baseTier) => {
 						const tier =
-							baseTier.id === "free" && offer?.paidHostingActive !== false
+							baseTier.id === "free" &&
+							(!offerFresh || offer?.paidHostingActive !== false)
 								? {
 										...baseTier,
 										audience: "Join a friend’s room for free.",
 										summary: "Join a Plus, Pro or trial host for free.",
 										features: [
-											"Join rooms on Crunchyroll + YouTube",
+											"Join rooms on Crunchyroll, YouTube, Netflix",
 											"Synced video, chat & reactions",
 											"Voice & video within your host’s limits",
 											"Read saved history & resume",
@@ -487,6 +596,8 @@ export function Pricing({
 									paidTier={paidTier}
 									onSubscribe={handleSubscribe}
 									offer={offer}
+									offerFresh={offerFresh}
+									offerLoading={!offer && offerLoading}
 									prices={displayPrices}
 									period={period}
 									headingLevel={headingLevel === 1 ? 2 : 3}
@@ -498,15 +609,16 @@ export function Pricing({
 				<div className="pricing-plans__footer">
 					{showTrialTerms ? (
 						<p id="pricing-trial-terms" className="pricing-plans__trial-terms">
-							Card required. One trial per account. Cancel before your trial ends
-							to avoid a charge.
+							{offer?.trialMode === "cardless"
+								? "One 3-day trial per eligible account. Changing plans does not restart it."
+								: "Card required. One trial per account. Cancel before your trial ends to avoid a charge."}
 						</p>
 					) : null}
 					<p className="pricing-plans__terms">
 						<Lock size={14} aria-hidden="true" />
 						<span>
-							Checkout is secured by Stripe. Final total, taxes and discounts are
-							shown before confirmation.
+							Checkout is secured by Stripe. Final total, taxes and discounts
+							are shown before confirmation.
 						</span>
 					</p>
 				</div>
@@ -536,7 +648,7 @@ export function Pricing({
 													: "—",
 											},
 										}
-									: offer?.paidHostingActive !== false
+									: !offerFresh || offer?.paidHostingActive !== false
 										? {
 												...row,
 												values: {
@@ -573,6 +685,8 @@ function TierCardBody({
 	paidTier,
 	onSubscribe,
 	offer,
+	offerFresh,
+	offerLoading,
 	prices,
 	period,
 	headingLevel,
@@ -587,13 +701,15 @@ function TierCardBody({
 	prices: PricingPrices | null;
 	period: BillingPeriod;
 	headingLevel: 2 | 3;
+	offerFresh: boolean;
+	offerLoading: boolean;
 }) {
 	const Heading = headingLevel === 2 ? "h2" : "h3";
 	const policy = getPlanPolicy(tier.id);
 	const features = paidTier
 		? [
 				"No daily hosting limit",
-				"Crunchyroll + YouTube",
+				"Crunchyroll, YouTube, Netflix",
 				"Synced video, chat & reactions",
 				`Up to ${policy.maxCameras} cameras & ${policy.maxMicrophones} mics`,
 				"Save, edit & resume watch progress",
@@ -604,12 +720,15 @@ function TierCardBody({
 	const yearly = period === "yearly" && !!paidTier;
 	const selectedPrice = paidTier && prices ? prices[paidTier] : null;
 	const annualPrice = yearly ? selectedPrice : null;
-	const yearlySavings = paidTier && annualPrice
-		? formatMonthlyPrice({
-				...annualPrice,
-				unitAmount: PUBLISHED_PRICING.monthly[paidTier].unitAmount * 12 - annualPrice.unitAmount,
-			})
-		: null;
+	const yearlySavings =
+		paidTier && annualPrice
+			? formatMonthlyPrice({
+					...annualPrice,
+					unitAmount:
+						PUBLISHED_PRICING.monthly[paidTier].unitAmount * 12 -
+						annualPrice.unitAmount,
+				})
+			: null;
 	const amount =
 		yearly && annualPrice
 			? { ...annualPrice, unitAmount: annualPrice.unitAmount / 12 }
@@ -631,24 +750,31 @@ function TierCardBody({
 		? formatMonthlyPrice(selectedPrice)
 		: "—";
 	const unit = yearly ? "year" : "month";
-	const termsSummary =
-		offer?.action === "sign_in" && trialOffered
-			? `Then ${recurringAmount}/${unit} automatically.`
-			: offer?.action === "trial"
-				? `3 days free, then ${recurringAmount}/${unit} automatically.`
-				: offer?.action === "manage"
-					? null
-					: `Renews at ${recurringAmount}/${unit}.`;
+	const termsSummary = !offer
+		? null
+		: trialOffered && offer?.trialMode === "cardless"
+			? "No card required. No automatic charge."
+			: offer?.action === "sign_in" && trialOffered
+				? `Then ${recurringAmount}/${unit} automatically.`
+				: offer?.action === "trial"
+					? `3 days free, then ${recurringAmount}/${unit} automatically.`
+					: offer?.action === "manage"
+						? null
+						: `Renews at ${recurringAmount}/${unit}.`;
 	const termsDetail =
-		!offer || offer.action === "sign_in" || offer.action === "trial"
-			? null
-			: offer.action === "manage"
-				? "Manage your current plan and renewal in Account → Subscription."
-				: "Cancel renewal in Account → Subscription. No new free trial is included.";
+		trialOffered && offer?.trialMode === "cardless"
+			? `Continue for ${recurringAmount}/${unit} only if you enable renewal.`
+			: !offer || offer.action === "sign_in" || offer.action === "trial"
+				? null
+				: offer.action === "manage"
+					? "Manage your current plan and renewal in Account → Subscription."
+					: "Cancel renewal in Account → Subscription. No new free trial is included.";
 
 	return (
 		<>
-			{highlighted ? <span className="pricing-plans__badge">Recommended</span> : null}
+			{highlighted ? (
+				<span className="pricing-plans__badge">Recommended</span>
+			) : null}
 			<div className="pricing-plans__top">
 				<header className="pricing-plans__card-header">
 					<Heading id={`pricing-${tier.id}-title`}>{tier.label}</Heading>
@@ -672,8 +798,7 @@ function TierCardBody({
 					<p className="pricing-plans__billing">
 						{yearly ? (
 							<>
-								Billed{" "}
-								<strong>{recurringAmount} / year</strong>
+								Billed <strong>{recurringAmount} / year</strong>
 							</>
 						) : paidTier ? (
 							"Billed monthly."
@@ -693,14 +818,29 @@ function TierCardBody({
 						variant={highlighted ? "cream" : "creamOutline"}
 						size="control"
 						onClick={() => onSubscribe(paidTier)}
-						disabled={isSubmitting}
-						aria-busy={isSubmitting && submittingTier === paidTier}
+						disabled={isSubmitting || offerLoading}
+						aria-busy={
+							offerLoading || (isSubmitting && submittingTier === paidTier)
+						}
 						aria-describedby={`pricing-${tier.id}-terms${trialOffered ? " pricing-trial-terms" : ""}`}
 					>
-						{isSubmitting && submittingTier === paidTier
-							? "Opening checkout…"
-							: ctaLabel}
-						<ArrowRight size={17} aria-hidden="true" />
+						{offerLoading ? (
+							<>
+								<Loader2
+									size={17}
+									className="animate-spin"
+									aria-hidden="true"
+								/>
+								<span className="sr-only">
+									Loading options for {tier.label}
+								</span>
+							</>
+						) : (
+							<>
+								{ctaLabel}
+								<ArrowRight size={17} aria-hidden="true" />
+							</>
+						)}
 					</Button>
 				) : (
 					<Button
@@ -709,10 +849,10 @@ function TierCardBody({
 						size="control"
 						className="pricing-plans__button"
 					>
-						<Link href={INSTALL_HUB_PATH}>
+						<InstallLink href={INSTALL_HUB_PATH}>
 							{INSTALL_CTA_LABEL}
 							<ArrowRight size={17} aria-hidden="true" />
-						</Link>
+						</InstallLink>
 					</Button>
 				)}
 				<p
@@ -734,12 +874,16 @@ function TierCardBody({
 					{tier.id === "free" ? (
 						"Everything you need to join"
 					) : (
-						<>Up to <strong>{policy.maxParticipants - 1} friends</strong> join free</>
+						<>
+							Up to <strong>{policy.maxParticipants - 1} friends</strong> join
+							free
+						</>
 					)}
 				</p>
 				<div>
 					<FeatureList features={features} />
-					{tier.id === "free" && offer?.paidHostingActive !== false ? (
+					{tier.id === "free" &&
+					(!offerFresh || offer?.paidHostingActive !== false) ? (
 						<p className="pricing-plans__free-note">
 							{offer
 								? "Creating rooms and saving new watch progress require Plus or Pro."

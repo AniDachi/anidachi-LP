@@ -1,3 +1,5 @@
+import { isSameExtensionAuthSession, normalizeExtensionAuthTokens } from "./auth-tokens";
+
 export type WatchHistoryRuntimeGateInput = {
   identityLoaded: boolean;
   ownerUserId: string | null;
@@ -12,6 +14,7 @@ export type WatchHistoryRuntimeGate = {
 };
 
 export type WatchHistoryAuthContext = {
+  authRevision?: string | null;
   ownerUserId: string | null;
   accessToken: string | null;
 };
@@ -42,5 +45,18 @@ export function shouldRefreshWatchHistoryAuthority(
     input.previous !== null &&
     input.next.ownerUserId !== null &&
     input.previous.ownerUserId === input.next.ownerUserId &&
-    input.previous.accessToken !== input.next.accessToken;
+    (input.previous.accessToken !== input.next.accessToken ||
+      (input.previous.authRevision ?? null) !== (input.next.authRevision ?? null));
+}
+
+/** Storage notification fencing is synchronous, before async identity hydration. */
+export function invalidateWatchHistoryOnAuthStorageChange(
+  controller: { invalidateCaptureAuthority(): void } | null,
+  nextValue: unknown,
+  previousValue: unknown,
+): void {
+  const previous = normalizeExtensionAuthTokens(previousValue);
+  const next = normalizeExtensionAuthTokens(nextValue);
+  if ((!previous && !next) || (previous && isSameExtensionAuthSession(previous, next))) return;
+  controller?.invalidateCaptureAuthority();
 }

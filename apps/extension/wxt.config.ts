@@ -19,6 +19,7 @@ const STORE_VIDEO_HOST_PERMISSIONS = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -50,7 +51,7 @@ const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANN
 const extensionManifestKey = getExtensionManifestKey(extensionChannel);
 const extensionName =
   extensionChannel === "production"
-    ? "AniDachi"
+    ? "AniDachi: Watch Together, Synced Watch Party"
     : extensionChannel === "staging"
       ? "AniDachi Staging"
       : "AniDachi Local MVP";
@@ -128,6 +129,11 @@ export default defineConfig({
       extensionChannel === "production" ? null : "downloads",
     ]),
     host_permissions: hostPermissions,
+    externally_connectable: {
+      matches: unique(channelWebHostPermissions.some(Boolean)
+        ? channelWebHostPermissions : ["http://localhost/*"]),
+      ids: [],
+    },
     icons: extensionIcons,
     web_accessible_resources: [
       {

@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-09-16.
+Last updated: 2026-10-19.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -29,9 +29,12 @@ Anidachi uses three extension channels.
 | --- | --- | --- | --- | --- |
 | `local` | `AniDachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
 | `staging` | `AniDachi Staging` | Stable unpacked artifact for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
-| `production` | `AniDachi` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
+| `production` | `AniDachi: Watch Together, Synced Watch Party` | Production ZIP for owner testing and the approved store identity | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
-The channel is selected with `WXT_EXTENSION_CHANNEL`.
+The channel is selected with `WXT_EXTENSION_CHANNEL`. The production short name
+remains `AniDachi`. The October 19 rename changes package metadata only; the
+[release runbook](releases/integrated-release-2026-10-17.md) records the 0.1.4
+replacement archive. Preparing it does not upload or publish it.
 
 An explicitly configured value outside `local`, `staging`, or `production`
 fails the build. Release scripts force their named channel: caller environment
@@ -93,6 +96,7 @@ watch surfaces and Anidachi infrastructure:
 - YouTube
 - YouTube embeds / `youtube-nocookie`
 - Crunchyroll
+- Netflix at exactly `https://www.netflix.com/*` (October 8 candidate)
 - the channel web app host
 - the configured Cloudflare Workers API host for the channel
 
@@ -108,6 +112,16 @@ The logo's `web_accessible_resources` entry uses the same supported video
 origins in narrow builds; unrelated sites cannot request it. The validator also
 rejects additional resources, extension IDs, or broad logo match patterns.
 The explicit local-broad build retains its separate development-only behavior.
+
+The Netflix MAIN bridge uses the same exact Netflix match to survive SPA route
+changes. Runtime overlay/history admission still requires a canonical
+`https://www.netflix.com/watch/<numeric-id>` page and matching primary content;
+browse previews never become recording sources. No optional permission prompt or
+broad host permission is added. Candidate source matching does not establish
+Store publication or loaded-artifact acceptance. See
+[Netflix adapter notes](netflix-adapter-notes.md) and
+[staging verification](netflix-staging-verification.md) for the source/artifact
+identity and acceptance gates.
 
 Every extension entrypoint imports `src/zod-csp.ts` before shared protocol
 schemas. It sets Zod's `jitless` option to avoid dynamic compilation and even the
@@ -249,7 +263,7 @@ Staging and production must not share runtime endpoints accidentally.
 
 Before distributing an artifact, inspect `manifest.json` and the debug panel build id:
 
-- Chrome shows `AniDachi Staging` or `AniDachi`, followed by the selected release
+- Chrome shows the full name for its channel above, followed by the selected release
   version. `version_name` is omitted so internal build identifiers
   cannot crowd out the extension name.
 - Diagnostics retain the full `WXT_BUILD_ID`: `*-staging-*` for staging and
@@ -283,5 +297,18 @@ Share staging access details out of band; do not commit them to git.
 Current instruction shape:
 
 ```txt
-Install Anidachi Staging, then open a YouTube or Crunchyroll video page. Click the small "A" bubble on the video, sign in through the staging site with Google/Discord. If asked for access, use the provided tester code. Click Create room, Copy invite, and open it in another Chrome profile/device. Controls: A opens menu; Sync now resyncs; keys 1-6 send emoji; hold V for push-to-talk; Alt/Option+C opens text chat; Ghost Cam toggles camera.
+Install Anidachi Staging, then open a full YouTube watch page, Crunchyroll episode, or Netflix movie/episode watch page. Netflix requires the matching candidate artifact and the acceptance checks in the Netflix staging verification record. Click the small "A" bubble on the video, sign in through the staging site with Google/Discord. If asked for access, use the provided tester code. Click Create room, Copy invite, and open it in another Chrome profile/device. Controls: A opens menu; Sync now resyncs; keys 1-6 send emoji; hold V for push-to-talk; Alt/Option+C opens text chat; Ghost Cam toggles camera.
 ```
+
+## Trial installation proof (October 15, 2026 candidate)
+
+`externally_connectable.matches` contains only the configured channel website;
+production uses `https://www.anidachi.app/*`, staging uses
+`https://staging.anidachi.app/*`. `ids: []` denies other extensions. The runtime
+checks the exact sender origin, rejects subframes/extension senders, validates a
+bounded v1 request and signs only the purpose-prefixed trial challenge. Local
+storage retains the installation key across sign-out; it is neither synced nor
+included in diagnostics. No new Chrome permissions or provider content scripts.
+The website uses its existing approved extension client ID, never a user-supplied
+ID. Old/missing extensions keep the account + cookie path. This is an abuse
+signal, not hardware attestation. No production/Store release is authorized.

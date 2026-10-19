@@ -5,7 +5,13 @@ import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { CheckoutContinuation } from "../app/checkout/checkout-continuation";
-import { checkoutSelectionFromPath } from "./checkout-selection";
+import {
+	checkoutSelectionFromPath,
+	checkoutReturnPath,
+	checkoutLoginPath,
+	checkoutSessionRecoveryPath,
+	checkoutLoginErrorPath,
+} from "./checkout-selection";
 import { getLoginContext } from "./login-context";
 
 const offer = {
@@ -35,12 +41,43 @@ async function mount(
 	plan: "plus" | "pro" = "plus",
 	billing: "monthly" | "yearly" = "yearly",
 	strict = false,
+	confirmTrial?: true,
+	context?: (init?: RequestInit) => Response,
+	preflight?: (value: typeof cardlessOffer) => Response,
+	onboarding?: string,
 ) {
+	const providedFetch = globalThis.fetch;
+	let latestOffer = cardlessOffer;
+	globalThis.fetch = async (url, init) =>
+		String(url) === "/api/billing/trial/context"
+			? (context?.(init) ??
+				Response.json({
+					state: "ready",
+					ownerUserId: new Headers(init?.headers).get(
+						"X-Anidachi-Billing-Owner",
+					),
+					challenge: "a".repeat(180) + "." + "b".repeat(43),
+					extensionId: null,
+				}))
+			: String(url) === "/api/billing/trial/offer"
+				? (preflight?.(latestOffer) ??
+					Response.json({
+						state: "ready",
+						ownerUserId: latestOffer.ownerUserId,
+						offer: latestOffer,
+					}))
+				: (async () => {
+						const response = await providedFetch(url, init);
+						if (String(url) === "/api/billing/offer" && response.ok)
+							latestOffer = await response.clone().json();
+						return response;
+					})();
+
 	const el = document.createElement("div");
 	document.body.append(el);
 	root = createRoot(el);
 	const child = React.createElement(CheckoutContinuation, {
-		selection: { plan, billing },
+		selection: { plan, billing, confirmTrial, onboarding },
 	});
 	await act(async () =>
 		root!.render(
@@ -63,6 +100,309 @@ function button(el: HTMLElement, label: RegExp) {
 	assert.ok(found);
 	return found;
 }
+
+const cardlessOffer = {
+	...offer,
+	trialMode: "cardless",
+	trialOfferRevision: "cardless-3d-v1",
+};
+test("onboarding return survives checkout login and rejects arbitrary destinations", () => {
+	const token = "cbe6173e-b4fb-4e1c-9df9-8c77e73016b1";
+	const path = `/checkout?plan=plus&billing=monthly&confirm=trial&onboarding=${token}`;
+	const selection = checkoutSelectionFromPath(path)!;
+	assert.equal(checkoutReturnPath(selection), path);
+	assert.equal(checkoutLoginPath(selection), `/login?next=${encodeURIComponent(path)}`);
+	assert.equal(checkoutSelectionFromPath(path + "&onboarding=duplicate"), null);
+	assert.equal(checkoutSelectionFromPath("/checkout?plan=plus&billing=monthly&onboarding=https://evil.example"), null);
+});
+test("onboarding trial stays on confirmation until activated and then offers the return", async () => {
+	const token = "cbe6173e-b4fb-4e1c-9df9-8c77e73016b1";
+	let starts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer") return Response.json(cardlessOffer);
+		starts++; return Response.json({ state: "active", ownerUserId: "owner-a" });
+	};
+	const el = await mount("plus", "monthly", false, true, undefined, undefined, token);
+	assert.equal(starts, 0);
+	assert.equal(el.querySelector<HTMLAnchorElement>('a[href*="/pricing"]')?.href, `http://localhost/pricing?plan=plus&billing=monthly&onboarding=${token}`);
+	await act(async () => button(el, /Start my 3-day trial/).click());
+	assert.equal(starts, 1);
+	assert.match(el.textContent!, /Your free trial has started/);
+	assert.notEqual(window.location.pathname, "/account/billing");
+});
+test("starting trial keeps the confirmation and button stable until the result", async () => {
+	const pending = deferred<Response>();
+	let starts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		starts++;
+		return pending.promise;
+	};
+	const el = await mount();
+	const start = button(el, /Start my 3-day trial/i);
+	await act(async () => {
+		start.click();
+		start.click();
+	});
+	assert.equal(button(el, /Start my 3-day trial/i), start);
+	assert.ok(start.disabled);
+	assert.match(el.textContent!, /No card required/);
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	assert.equal(button(el, /Start my 3-day trial/i), start);
+	assert.equal(starts, 1);
+	pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" }));
+	await act(async () => {});
+});
+test("confirmation reuses fresh same-operation browser proof while activation still reaches the server", async () => {
+	let contexts = 0,
+		verdicts = 0,
+		starts = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		starts++;
+		return Response.json({ state: "active", ownerUserId: "owner-a" });
+	};
+	const el = await mount(
+		"plus",
+		"monthly",
+		false,
+		true,
+		() => {
+			contexts++;
+			return Response.json({
+				state: "ready",
+				ownerUserId: "owner-a",
+				challenge: "a".repeat(180) + "." + "b".repeat(43),
+				extensionId: null,
+			});
+		},
+		(value) => {
+			verdicts++;
+			return Response.json({
+				state: "ready",
+				ownerUserId: "owner-a",
+				offer: value,
+			});
+		},
+	);
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.equal(contexts, 1);
+	assert.equal(verdicts, 1);
+	assert.equal(starts, 1);
+});
+test("email verification uses a real provider sign-in instead of looping through an existing session", async () => {
+	globalThis.fetch = async (url) =>
+		String(url) === "/api/billing/offer"
+			? Response.json(cardlessOffer)
+			: Response.json(
+					{ state: "verification_required", ownerUserId: "owner-a" },
+					{ status: 409 },
+				);
+	const el = await mount("pro", "monthly");
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.match(el.textContent!, /verified email/i);
+	for (const provider of ["google", "discord"]) {
+		const anchor = el.querySelector<HTMLAnchorElement>(
+			`a[href^="/api/auth/${provider}?"]`,
+		);
+		assert.ok(anchor);
+		assert.equal(
+			new URL(anchor.href).searchParams.get("returnTo"),
+			"/checkout?plan=pro&billing=monthly",
+		);
+	}
+});
+test("cardless selection survives sign-in but only an explicit confirmation starts the trial", async () => {
+	const posts: {
+		url: string;
+		body: Record<string, unknown>;
+		owner: string | null;
+	}[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		posts.push({
+			url: String(url),
+			body: JSON.parse(String(init?.body)),
+			owner: new Headers(init?.headers).get("X-Anidachi-Billing-Owner"),
+		});
+		return Response.json({
+			state: "active",
+			ownerUserId: "owner-a",
+			planCode: "pro",
+			trialEndsAt: "2030-01-04T00:00:00Z",
+		});
+	};
+	const el = await mount("pro", "monthly", true);
+	assert.equal(posts.length, 0);
+	assert.match(
+		el.querySelector("h1")!.textContent!,
+		/Try Pro free.*for 3 days/,
+	);
+	assert.match(el.textContent!, /no card/i);
+	assert.match(el.textContent!, /no automatic charge/i);
+	assert.match(
+		el.textContent!,
+		/return to Free unless you choose to subscribe/,
+	);
+	assert.equal(
+		el
+			.querySelector<HTMLAnchorElement>('a[href^="/pricing"]')
+			?.getAttribute("href"),
+		"/pricing?plan=pro&billing=monthly",
+	);
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.equal(posts.length, 1);
+	assert.equal(posts[0].url, "/api/billing/trial/start");
+	assert.equal(posts[0].owner, "owner-a");
+	assert.equal(posts[0].body.planCode, "pro");
+	assert.equal(posts[0].body.billingPeriod, "monthly");
+	assert.equal(posts[0].body.offerRevision, cardlessOffer.trialOfferRevision);
+	assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
+});
+
+test("a changed offer or account never turns cardless consent into a card Checkout", async () => {
+	for (const change of [
+		{ trialMode: "card_required" },
+		{ action: "subscribe" },
+		{ ownerUserId: "owner-b" },
+	]) {
+		let reads = 0,
+			posts = 0;
+		globalThis.fetch = async (url) => {
+			if (String(url) === "/api/billing/offer")
+				return Response.json({
+					...cardlessOffer,
+					...(++reads > 1 ? change : {}),
+				});
+			posts++;
+			return Response.json({ url: "https://checkout.stripe.com/unwanted" });
+		};
+		const el = await mount();
+		await act(async () => button(el, /Start my 3-day trial/i).click());
+		assert.equal(posts, 0);
+		assert.match(el.textContent!, /changed|no longer available/i);
+		await act(async () => root?.unmount());
+		root = null;
+	}
+});
+
+test("pending activation resumes the owned operation instead of making a new start", async () => {
+	const urls: string[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		urls.push(String(url));
+		if (String(url).endsWith("/start"))
+			return Response.json(
+				{
+					state: "pending",
+					kind: "activation",
+					operationId: "known-activation",
+					ownerUserId: "owner-a",
+				},
+				{ status: 202 },
+			);
+		assert.deepEqual(JSON.parse(String(init?.body)), {
+			operationId: "known-activation",
+		});
+		return Response.json({
+			state: "active",
+			ownerUserId: "owner-a",
+			planCode: "plus",
+			trialEndsAt: "2030-01-04T00:00:00Z",
+		});
+	};
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.match(el.textContent!, /being prepared/i);
+	await act(async () => button(el, /Check trial status/i).click());
+	assert.deepEqual(urls, [
+		"/api/billing/trial/start",
+		"/api/billing/trial/recover",
+	]);
+});
+
+test("a terminal recovery result retires the failed request before a new explicit trial start", async () => {
+	const requestIds: string[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		if (String(url).endsWith("/recover"))
+			return Response.json({ state: "ineligible", ownerUserId: "owner-a" });
+		requestIds.push(JSON.parse(String(init?.body)).requestId);
+		return Response.json(
+			{
+				state: "pending",
+				kind: "activation",
+				operationId: "known-activation",
+				ownerUserId: "owner-a",
+			},
+			{ status: 202 },
+		);
+	};
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Try again/i).click());
+	assert.equal(
+		requestIds.length,
+		1,
+		"a fresh offer still needs explicit confirmation",
+	);
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.equal(requestIds.length, 2);
+	assert.notEqual(requestIds[0], requestIds[1]);
+});
+
+test("an unavailable recovery keeps the owned activation instead of starting a replacement", async () => {
+	const posts: string[] = [];
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		posts.push(String(url));
+		return String(url).endsWith("/start")
+			? Response.json(
+					{
+						state: "pending",
+						kind: "activation",
+						operationId: "known-activation",
+						ownerUserId: "owner-a",
+					},
+					{ status: 202 },
+				)
+			: Response.json(
+					{ state: "unavailable", ownerUserId: "owner-a" },
+					{ status: 503 },
+				);
+	};
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Check trial status/i).click());
+	assert.deepEqual(posts, [
+		"/api/billing/trial/start",
+		"/api/billing/trial/recover",
+		"/api/billing/trial/recover",
+	]);
+});
+
+test("a harmless window blur keeps the same trial operation and revalidates its owner", async () => {
+	const pending = deferred<Response>();
+	globalThis.fetch = async (url) =>
+		String(url) === "/api/billing/offer"
+			? Response.json(cardlessOffer)
+			: pending.promise;
+	const el = await mount();
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	await act(async () =>
+		pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" })),
+	);
+	assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
+});
 
 test("the login context names the selected plan and billing period", () => {
 	const context = getLoginContext("/checkout?plan=pro&billing=monthly");
@@ -126,7 +466,7 @@ test("a used trial waits for an explicit paid confirmation", async () => {
 	};
 	const el = await mount();
 	assert.equal(requests.length, 0);
-	assert.match(el.textContent!, /no free trial/i);
+	assert.ok(button(el, /Subscribe to/));
 	assert.match(el.textContent!, /\$76\.70/);
 	assert.match(el.textContent!, /billed now/i);
 	await act(async () => button(el, /Subscribe to Plus/).click());
@@ -218,7 +558,7 @@ test("timeout retry reuses the request id and double clicks cannot duplicate che
 	assert.equal(window.location.href, "https://checkout.stripe.com/reused");
 });
 
-test("returning from another tab retires an old checkout response", async () => {
+test("returning after a blur accepts the same owner's checkout without restarting", async () => {
 	const response = deferred<Response>();
 	globalThis.fetch = async (url) =>
 		String(url) === "/api/billing/offer"
@@ -231,8 +571,8 @@ test("returning from another tab retires an old checkout response", async () => 
 	});
 	response.resolve(Response.json({ url: "https://checkout.stripe.com/stale" }));
 	await act(async () => {});
-	assert.notEqual(window.location.href, "https://checkout.stripe.com/stale");
-	assert.ok(el.querySelector('[role="alert"]'));
+	assert.equal(window.location.href, "https://checkout.stripe.com/stale");
+	assert.equal(el.querySelector('[role="alert"]'), null);
 });
 
 test("an offer that expires while loading cannot open checkout", async () => {
@@ -267,7 +607,7 @@ test("if trial eligibility changes on the server, retry requires paid confirmati
 	assert.equal(posts, 1);
 	await act(async () => button(el, /Try again/).click());
 	assert.equal(posts, 1);
-	assert.match(el.textContent!, /no free trial/i);
+	assert.ok(button(el, /Subscribe to/));
 });
 
 test("a failed offer read can retry without starting checkout prematurely", async () => {
@@ -296,7 +636,11 @@ test("a backgrounded checkout cannot redirect before the user returns", async ()
 			? Response.json(offer)
 			: response.promise;
 	await mount();
-	await act(async () => window.dispatchEvent(new Event("blur")));
+	Object.defineProperty(document, "visibilityState", {
+		configurable: true,
+		value: "hidden",
+	});
+	await act(async () => document.dispatchEvent(new Event("visibilitychange")));
 	response.resolve(
 		Response.json({ url: "https://checkout.stripe.com/background-owner" }),
 	);
@@ -305,6 +649,7 @@ test("a backgrounded checkout cannot redirect before the user returns", async ()
 		window.location.href,
 		"https://checkout.stripe.com/background-owner",
 	);
+	Reflect.deleteProperty(document, "visibilityState");
 });
 
 test("an invalid refresh session requests a real sign-in even if access JWT is still valid", async () => {
@@ -345,4 +690,323 @@ test("hiding a tab retires the checkout request even without a blur event", asyn
 	} finally {
 		Reflect.deleteProperty(document, "visibilityState");
 	}
+});
+
+test("a new document discovers the persisted activation after cardless starts are disabled", async () => {
+	const posts: { url: string; body: unknown }[] = [];
+	globalThis.fetch = async (url, init) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json({
+				...offer,
+				action: "manage",
+				trialMode: "card_required",
+				pendingTrialActivation: {
+					id: "activation-a",
+					planCode: "pro",
+					billingPeriod: "monthly",
+				},
+			});
+		posts.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+		return Response.json(
+			{
+				state: "pending",
+				kind: "activation",
+				operationId: "activation-a",
+				ownerUserId: "owner-a",
+			},
+			{ status: 409 },
+		);
+	};
+	const first = await mount("plus", "yearly");
+	assert.match(first.textContent!, /Check trial status/);
+	await act(async () => root?.unmount());
+	root = null;
+	const reloaded = await mount("plus", "yearly");
+	assert.match(reloaded.textContent!, /Check trial status/);
+	assert.deepEqual(
+		posts,
+		[0, 1].map(() => ({
+			url: "/api/billing/trial/recover",
+			body: { operationId: "activation-a" },
+		})),
+	);
+});
+
+test("extension Plus trial intent survives login, refresh and OAuth retry", () => {
+	const path = "/checkout?plan=plus&billing=monthly&confirm=trial";
+	const selection = checkoutSelectionFromPath(path);
+	assert.deepEqual(selection, {
+		plan: "plus",
+		billing: "monthly",
+		confirmTrial: true,
+	});
+	assert.ok(selection);
+	assert.equal(checkoutReturnPath(selection), path);
+	for (const authPath of [
+		checkoutLoginPath(selection),
+		checkoutSessionRecoveryPath(selection),
+		checkoutLoginErrorPath("access_denied", path),
+	]) {
+		assert.equal(
+			new URL(authPath, "https://example.test").searchParams.get("next"),
+			path,
+		);
+	}
+	assert.equal(
+		getLoginContext(path).subtitle,
+		"Plus is selected. Review your trial offer after sign-in.",
+	);
+	for (const query of [
+		"confirm=trial&confirm=trial",
+		"confirm=skip",
+		"confirm=",
+	]) {
+		assert.equal(
+			checkoutSelectionFromPath(`/checkout?plan=plus&billing=monthly&${query}`),
+			null,
+		);
+	}
+});
+
+for (const mode of ["cardless", "card_required"] as const) {
+	test(`extension Plus offer waits for confirmation with ${mode} terms`, async () => {
+		const posts: { url: string; body: Record<string, unknown> }[] = [];
+		globalThis.fetch = async (url, init) => {
+			if (String(url) === "/api/billing/offer")
+				return Response.json({ ...cardlessOffer, trialMode: mode });
+			posts.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+			return Response.json(
+				mode === "cardless"
+					? {
+							state: "active",
+							ownerUserId: "owner-a",
+							planCode: "plus",
+							trialEndsAt: "2030-01-04T00:00:00Z",
+						}
+					: { kind: "checkout", url: "https://checkout.stripe.com/selected" },
+			);
+		};
+		const el = await mount("plus", "monthly", true, true);
+		assert.equal(
+			posts.length,
+			0,
+			"opening the extension link must not start a trial or Stripe checkout",
+		);
+		assert.match(el.querySelector("h1")!.textContent!, /Plus/);
+		assert.match(
+			el.textContent!,
+			mode === "cardless" ? /No card required/ : /A card is required/,
+		);
+		await act(async () =>
+			button(
+				el,
+				mode === "cardless"
+					? /Start my 3-day trial/
+					: /Continue to card checkout/,
+			).click(),
+		);
+		assert.equal(posts.length, 1);
+		assert.equal(
+			posts[0].url,
+			mode === "cardless"
+				? "/api/billing/trial/start"
+				: "/api/create-checkout-session",
+		);
+		assert.equal(posts[0].body.planCode, "plus");
+		assert.equal(posts[0].body.billingPeriod, "monthly");
+	});
+}
+
+test("expired session retains the extension trial confirmation intent", async () => {
+	globalThis.fetch = async () =>
+		Response.json({ action: "sign_in", validForMs: 60000 });
+	await mount("plus", "monthly", false, true);
+	assert.equal(
+		new URL(window.location.href).searchParams.get("next"),
+		"/checkout?plan=plus&billing=monthly&confirm=trial",
+	);
+});
+
+test("used browser offers plans without a retry loop or starting paid Checkout", async () => {
+	const calls: string[] = [];
+	globalThis.fetch = async (url) => {
+		calls.push(String(url));
+		return String(url) === "/api/billing/offer"
+			? Response.json(cardlessOffer)
+			: Response.json(
+					{ state: "trial_used", ownerUserId: "owner-a" },
+					{ status: 409 },
+				);
+	};
+	const el = await mount("plus", "monthly");
+	await act(async () => button(el, /Start my 3-day trial/i).click());
+	assert.match(el.textContent!, /free trial is no longer available/);
+	assert.ok(button(el, /Subscribe to Plus/));
+	assert.equal(
+		[...el.querySelectorAll("button")].some((b) =>
+			/Try again/.test(b.textContent ?? ""),
+		),
+		false,
+	);
+	assert.equal(calls.includes("/api/create-checkout-session"), false);
+});
+
+test("legacy reconciliation retry reacquires the extension proof before a new reservation", async () => {
+	const extensionId = "a".repeat(32);
+	const runtimeGlobal = globalThis as typeof globalThis & { chrome?: unknown };
+	const previousChrome = runtimeGlobal.chrome;
+	const proofs: Record<string, unknown>[] = [];
+	const starts: Record<string, unknown>[] = [];
+	let contexts = 0;
+	runtimeGlobal.chrome = {
+		runtime: {
+			sendMessage: (
+				id: string,
+				message: { challenge: string },
+				reply: (value: unknown) => void,
+			) => {
+				assert.equal(id, extensionId);
+				const proof = {
+					version: 1,
+					challenge: message.challenge,
+					publicKey: "c".repeat(124),
+					signature: "d".repeat(86),
+				};
+				proofs.push(proof);
+				reply({ proof });
+			},
+		},
+	};
+	try {
+		globalThis.fetch = async (url, init) => {
+			if (String(url) === "/api/billing/offer")
+				return Response.json(cardlessOffer);
+			assert.equal(String(url), "/api/billing/trial/start");
+			starts.push(JSON.parse(String(init?.body)));
+			return Response.json(
+				starts.length === 1
+					? {
+							state: "pending",
+							kind: "legacy_checkout",
+							ownerUserId: "owner-a",
+						}
+					: { state: "trial_used", ownerUserId: "owner-a" },
+				{ status: starts.length === 1 ? 202 : 409 },
+			);
+		};
+		const el = await mount("plus", "monthly", false, true, () =>
+			Response.json({
+				state: "ready",
+				ownerUserId: "owner-a",
+				extensionId,
+				challenge:
+					String.fromCharCode(97 + contexts++).repeat(180) +
+					"." +
+					"b".repeat(43),
+			}),
+		);
+		await act(async () => button(el, /Start my 3-day trial/i).click());
+		assert.equal(starts.length, 1);
+		assert.deepEqual(starts[0].extensionProof, proofs[0]);
+		await act(async () => button(el, /Check trial status/i).click());
+		assert.equal(starts.length, 2);
+		assert.equal(
+			contexts,
+			2,
+			"legacy retry must refresh the request-bound challenge",
+		);
+		assert.equal(proofs.length, 2);
+		assert.equal(starts[1].requestId, starts[0].requestId);
+		assert.deepEqual(starts[1].extensionProof, proofs[1]);
+		assert.notEqual(proofs[1].challenge, proofs[0].challenge);
+		assert.match(el.textContent!, /free trial is no longer available/);
+	} finally {
+		if (previousChrome === undefined) delete runtimeGlobal.chrome;
+		else runtimeGlobal.chrome = previousChrome;
+	}
+});
+
+test("used browser gets ordinary purchase before any trial confirmation or activation", async () => {
+	let starts = 0;
+	globalThis.fetch = async (url) => {
+		if (
+			String(url).endsWith("/start") ||
+			String(url).includes("create-checkout")
+		)
+			starts++;
+		return Response.json(cardlessOffer);
+	};
+	const el = await mount("plus", "monthly", false, true, undefined, (value) =>
+		Response.json({
+			state: "ready",
+			ownerUserId: value.ownerUserId,
+			offer: { ...value, action: "subscribe", trialAvailable: false },
+		}),
+	);
+	assert.doesNotMatch(
+		el.textContent!,
+		/Start my 3-day trial|already been used here|This account has no free trial/,
+	);
+	assert.ok(button(el, /Subscribe to Plus/));
+	assert.equal(starts, 0);
+});
+test("busy marker or outage shows retry, not either purchase or trial", async () => {
+	globalThis.fetch = async () => Response.json(cardlessOffer);
+	const el = await mount("plus", "monthly", false, true, undefined, (value) =>
+		Response.json(
+			{ state: "trial_busy", ownerUserId: value.ownerUserId },
+			{ status: 409 },
+		),
+	);
+	assert.ok(button(el, /Try again/));
+	assert.doesNotMatch(
+		el.textContent!,
+		/Start my 3-day trial|Subscribe to Plus/,
+	);
+});
+test("initial lookup uses a compact accessible loader without subscription copy or premature price", async () => {
+	const lookup = deferred<Response>();
+	globalThis.fetch = () => lookup.promise;
+	const el = await mount("plus", "monthly");
+	assert.ok(el.querySelector('[role="status"]'));
+	assert.doesNotMatch(
+		el.textContent!,
+		/Checking your subscription|Continue with|7.99/,
+	);
+	lookup.resolve(Response.json({ ...offer, action: "subscribe" }));
+	await act(async () => {});
+});
+
+test("unknown activation recovery bypasses new marker checks and keeps its original operation", async () => {
+	let checks = 0,
+		starts = 0,
+		recoveries = 0;
+	globalThis.fetch = async (url) => {
+		if (String(url) === "/api/billing/offer")
+			return Response.json(cardlessOffer);
+		if (String(url).endsWith("/start")) {
+			starts++;
+			throw Error("response lost");
+		}
+		if (String(url).endsWith("/recover")) {
+			recoveries++;
+			return Response.json({ state: "active", ownerUserId: "owner-a" });
+		}
+		throw Error("unexpected request");
+	};
+	const el = await mount("plus", "monthly", false, true, undefined, (value) => {
+		checks++;
+		return Response.json(
+			checks === 1
+				? { state: "ready", ownerUserId: value.ownerUserId, offer: value }
+				: { state: "trial_busy", ownerUserId: value.ownerUserId },
+		);
+	});
+	await act(async () => button(el, /Start my 3-day trial/).click());
+	assert.ok(button(el, /Check trial status/));
+	await act(async () => button(el, /Check trial status/).click());
+	assert.equal(checks, 1);
+	assert.equal(starts, 1);
+	assert.equal(recoveries, 1);
+	assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
 });

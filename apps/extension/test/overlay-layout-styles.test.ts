@@ -50,40 +50,15 @@ describe("overlay layout pointer surfaces", () => {
 	});
 
 	it("separates personal camera controls from the participant hierarchy", () => {
-		const cameraControl = getRule(".icon-button.panel-camera-control");
-		expect(cameraControl).toContain("position: relative");
-		expect(cameraControl).toContain("width: 48px");
-		expect(cameraControl).toContain("height: 26px");
-		expect(cameraControl).toContain("box-sizing: border-box");
-		expect(cameraControl).toContain("overflow: hidden");
-		expect(cameraControl).toContain("border-radius: 999px");
-		expect(cameraControl).toContain("border: 1px solid var(--ad-border)");
-		expect(cameraControl).toContain("background: var(--ad-surface)");
-		expect(getRule(".panel-camera-control-thumb")).toContain("width: 20px");
-		expect(getRule(".panel-camera-control-thumb")).toContain("left: 2px");
-		expect(
-			getRule(
-				".icon-button.panel-camera-control.active .panel-camera-control-thumb",
-			),
-		).toContain("transform: translateX(22px)");
-		expect(
-			getRule(
-				".icon-button.panel-camera-control.active .panel-camera-control-icon",
-			),
-		).toContain("color: rgba(134, 239, 172, 0.98)");
-		expect(
-			getRule(
-				".icon-button.panel-camera-control.unavailable .panel-camera-control-icon",
-			),
-		).toContain("color: rgba(248, 113, 113, 0.72)");
+		const mediaControl = getRule(".panel-media-button");
+		expect(mediaControl).toContain("width:30px");
+		expect(mediaControl).toContain("height:30px");
+		expect(getRule(".panel-media-dock")).toContain("display:flex");
 		const peopleList = getRule(".room-people-list");
 		expect(peopleList).toContain(
-			"border: 1px solid rgba(255, 255, 255, 0.065)",
+			"border: 0",
 		);
-		expect(peopleList).toContain("background: rgba(255, 255, 255, 0.018)");
-		expect(getRule(".room-people-entry + .room-people-entry")).toContain(
-			"border-top: 1px solid rgba(255, 255, 255, 0.055)",
-		);
+		expect(peopleList).toContain("background: transparent");
 
 		const hostRow = getRule(".room-people-row.host");
 		expect(hostRow).toContain("background: transparent");
@@ -139,35 +114,18 @@ describe("overlay layout pointer surfaces", () => {
 
 	it("keeps the account name flexible and the header actions aligned", () => {
 		expect(getRule(".panel-account-name")).toContain("flex: 0 1 auto");
-		expect(getRule(".panel-account-title-row")).toContain(
-			"align-items: baseline",
-		);
-		const accountPlan = getRule(".panel-account-title-row .plan-badge");
-		expect(accountPlan).toContain("height: auto");
-		expect(accountPlan).toContain("padding: 0");
-		expect(accountPlan).toContain("border: 0");
-		expect(accountPlan).toContain("background: transparent");
-		expect(accountPlan).toContain("font-size: 8px");
-		expect(accountPlan).toContain("line-height: 1.1");
-		expect(accountPlan).toContain(
-			"transform: translateY(var(--plan-glyph-offset, -2px))",
-		);
-		expect(accountPlan).toContain("text-shadow:");
 		const panelHeader = getRule(".panel-header");
 		expect(panelHeader).toContain("display: grid");
 		expect(panelHeader).toContain("grid-template-columns: minmax(0, 1fr) auto");
-		expect(panelHeader).toContain("align-items: start");
+		expect(panelHeader).toContain("align-items: center");
 		const headerActions = getRule(".panel-header-actions");
 		expect(headerActions).toContain("display: flex");
 		expect(headerActions).toContain("justify-content: flex-end");
-		expect(headerActions).toContain("align-items: start");
+		expect(headerActions).toContain("align-items: center");
 		expect(overlayStyles).not.toContain("panel-close-button");
-		expect(getRule(".icon-button.panel-camera-control:focus")).toContain(
-			"outline: 0",
+		expect(getRule(".panel-media-button:focus-visible")).toContain(
+			"outline:2px solid #f0e7db",
 		);
-		expect(
-			getRule(".icon-button.panel-camera-control:focus-visible"),
-		).toContain("box-shadow: 0 0 0 2px rgba(255, 166, 92, 0.38)");
 	});
 
 	it("keeps the room action row flush with both panel content edges", () => {
@@ -250,7 +208,11 @@ describe("overlay layout pointer surfaces", () => {
 		expect(overlayStyles).not.toContain(
 			'.settings-category-scroll[data-active-category="layout"]::before',
 		);
-		expect(overlayStyles).not.toContain(".settings-category-tab.active::after");
+		// The practice drawer anchors its underline to the selected tab directly.
+		// Its static underline must replace, not duplicate, the measured live one.
+		expect(getRule(".settings-category-scroll-static::before")).toContain(
+			"display: none",
+		);
 	});
 
 	it("keeps the emoji shortcut row free of a redundant bottom divider", () => {
@@ -320,7 +282,8 @@ describe("overlay layout pointer surfaces", () => {
 	});
 
 	it("shares the account-style selected pill across the settings controls", () => {
-		const selector = ":is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented)";
+		const selector =
+			":is(.layout-chat-mode-segmented-v2, .voice-mode-control, .room-defaults-segmented, .interface-settings-segmented)";
 		const segmented = getRule(selector);
 		expect(segmented).toContain("position: relative");
 		expect(segmented).toContain("width: 100%");
@@ -344,11 +307,10 @@ describe("overlay layout pointer surfaces", () => {
 		expect(sectionTitle).not.toContain("255, 181, 116");
 
 		const settingsTitle = getRule(".settings-section-title");
-		expect(settingsTitle).toContain(
-			"border-top: 1px solid rgba(255, 255, 255, 0.07)",
+		expect(settingsTitle).not.toContain("border-top:");
+		expect(getRule(".settings-surface")).toContain(
+			"background: rgba(255, 255, 255, 0.045)",
 		);
-		expect(settingsTitle).toContain("padding-top: 14px");
-		expect(settingsTitle).toContain("margin: 18px 0 2px");
 
 		expect(settingsTitle).toContain("display: flex");
 		expect(settingsTitle).toContain("align-items: center");
@@ -359,24 +321,7 @@ describe("overlay layout pointer surfaces", () => {
 		expect(getRule(".settings-category-tab")).toContain(
 			"color: rgba(255, 255, 255, 0.58)",
 		);
-		const footer = getRule(".account-footer");
-		expect(footer).toContain("display: flex");
-		expect(footer).toContain("border-top: 1px solid rgba(255, 255, 255, 0.07)");
-		const footerAction = getRule(".account-footer-action");
-		expect(footerAction).toContain("width: auto");
-		expect(footerAction).toContain("background: transparent");
-		expect(footerAction).toContain("color: #58151c");
-		const footerActionHover = getRule(
-			".account-footer-action:not(:disabled):hover",
-		);
-		expect(footerActionHover).toContain("background: transparent");
-		expect(footerActionHover).toContain("color: #842029");
-		const footerActionConfirming = getRule(".account-footer-action.confirming");
-		expect(footerActionConfirming).toContain("background: transparent");
-		expect(footerActionConfirming).toContain("color: #b02a37");
-		expect(getRule(".account-footer-action:focus-visible")).toContain(
-			"outline: 2px solid rgba(220, 53, 69, 0.62)",
-		);
+
 	});
 
 	it("keeps the top bubble and rendered cameras interactive without blocking empty slots", () => {
@@ -661,9 +606,7 @@ describe("overlay layout pointer surfaces", () => {
 	});
 
 	it("keeps ghost objects legible over changing video frames", () => {
-		expect(
-			getNumericProperty(".overlay-layout-camera-ghost", "opacity"),
-		).toBeGreaterThanOrEqual(0.78);
+		expect(getRule(".overlay-layout-camera-ghost")).not.toContain("opacity:");
 		expect(getRule(".layout-chat-preview-shell")).not.toContain("opacity:");
 		expect(
 			getRule(".live-chat-message.overlay-layout-chat-preview-message"),
@@ -677,9 +620,6 @@ describe("overlay layout pointer surfaces", () => {
 		expect(
 			getRule(".live-chat-message.overlay-layout-chat-preview-message"),
 		).toContain("opacity: var(--live-chat-message-opacity, 1)");
-		expect(getRule(".layout-chat-preview-shell")).toContain(
-			"background: rgba(30, 64, 175, 0.22)",
-		);
 	});
 
 	it("keeps editor chat content inert while its surface is dragged", () => {
@@ -691,7 +631,6 @@ describe("overlay layout pointer surfaces", () => {
 
 	it("gives sample and real layout-preview chat the same framed shell", () => {
 		const shell = getRule(".layout-chat-preview-shell");
-		expect(shell).toContain("border: 1px dashed");
 		expect(shell).toContain("justify-content: flex-end");
 		expect(shell).toContain("overflow: hidden");
 

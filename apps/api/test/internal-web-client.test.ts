@@ -447,3 +447,18 @@ async function withTestDeadline<T>(promise: Promise<T>): Promise<T> {
     if (timeout !== undefined) clearTimeout(timeout);
   }
 }
+
+describe("terminal callback server retry deadlines", () => {
+    it.each([429, 503])("retains a %s Retry-After deadline in the local failure", async (status) => {
+        const env = { ANIDACHI_INTERNAL_API_SECRET: "secret", ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal" };
+        const start = Date.now();
+        const error = await internalWebClient.notifyWebRoomEnded(env, "room-1", command, async () => Response.json({ error: "overload" }, { status, headers: { "Retry-After": "600" } })).catch(e => e);
+        expect(error.retryAfterAt).toBeGreaterThanOrEqual(start + 600000);
+    });
+    it.each(["invalid", "-4", "1.5", "9007199254740992", "2027", "1e3"])("ignores malformed Retry-After %s", async (header) => {
+        const env = { ANIDACHI_INTERNAL_API_SECRET: "secret", ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal" };
+        const status = header === "2027" ? 500 : 503;
+        const error = await internalWebClient.notifyWebRoomEnded(env, "room-1", command, async () => new Response(null, { status, headers: { "Retry-After": header } })).catch(e => e);
+        expect(error.retryAfterAt).toBeUndefined();
+    });
+});

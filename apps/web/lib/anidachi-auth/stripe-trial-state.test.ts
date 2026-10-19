@@ -220,3 +220,32 @@ test("confirmed first payment remains monotonic on an old repeated event", async
 	assert.equal(result?.firstPaymentState, "paid");
 	assert.equal(result?.firstPaidAt, old.first_paid_at);
 });
+
+for (const mode of [
+	{ livemode: true, test_clock: null },
+	{ livemode: false, test_clock: null },
+	{ livemode: true, test_clock: "clock_unexpected" },
+]) {
+	test(`non-clock lookup retains the provider date boundary: ${JSON.stringify(mode)}`, async () => {
+		const paid = invoice({
+			status: "paid",
+			amount_remaining: 0,
+			status_transitions: {
+				paid_at: end + 3600,
+			} as Stripe.Invoice.StatusTransitions,
+		});
+		const api = stripe([paid]);
+		api.invoices.list = (async (params: Stripe.InvoiceListParams) => {
+			assert.equal(params.subscription, sub.id);
+			assert.deepEqual(params.created, { gte: end });
+			return { data: [paid], has_more: false };
+		}) as typeof api.invoices.list;
+		const result = await resolveStripeTrialSnapshot(
+			api,
+			{ ...sub, ...mode },
+			null,
+		);
+		assert.equal(result?.firstInvoiceId, paid.id);
+		assert.equal(result?.firstPaymentState, "paid");
+	});
+}

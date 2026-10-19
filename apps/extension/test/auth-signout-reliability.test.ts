@@ -23,7 +23,7 @@ vi.mock("wxt/utils/storage", () => ({
   storage: {
     getItem: vi.fn(async (key: string) => harness.storage.get(key) ?? null),
     setItem: vi.fn(async (key: string, value: unknown) => {
-      harness.events.push(`set:${key}`);
+      harness.events.push(key === "local:authTokens" && !(value as { accessToken?: string }).accessToken ? `tombstone:${key}` : `set:${key}`);
       harness.storage.set(key, value);
     }),
     removeItem: vi.fn(async (key: string) => {
@@ -99,8 +99,8 @@ describe("exact-family sign-out reliability", () => {
 
     const callbackStarted = deferred<void>();
     const callbackFailure = deferred<void>();
-    const signOut = signOutWithWebsite(accountA, async (matchedSession) => {
-      expect(matchedSession).toEqual(accountA);
+    const signOut = signOutWithWebsite((await getStoredAuthTokens())!, async (matchedSession) => {
+      expect(matchedSession).toMatchObject(accountA);
       harness.events.push("room-authority-clear");
       callbackStarted.resolve();
       await callbackFailure.promise;
@@ -113,10 +113,10 @@ describe("exact-family sign-out reliability", () => {
     await expect(signOut).resolves.toBe(true);
     await replacement;
 
-    expect(await getStoredAuthTokens()).toEqual(accountB);
+    expect(await getStoredAuthTokens()).toMatchObject(accountB);
     expect(harness.storage.has(socialSnapshotCacheKeyForUser(accountA.user.id))).toBe(false);
     expect(harness.storage.has(accountInboxCacheKeyForUser(accountA.user.id))).toBe(false);
-    expect(harness.flushWatchHistory).toHaveBeenCalledWith(accountA);
+    expect(harness.flushWatchHistory).toHaveBeenCalledWith(expect.objectContaining(accountA));
     expect(harness.recordDiagnosticEvent).toHaveBeenCalledWith(
       "auth.logout",
       "matched-session cleanup failed",
@@ -132,10 +132,10 @@ describe("exact-family sign-out reliability", () => {
     expectBefore("room-authority-clear", "flush-history");
     expectBefore("flush-history", "revoke-refresh");
     expectBefore("revoke-refresh", "website-logout");
-    expectBefore("website-logout", `remove:${AUTH_TOKENS_KEY}`);
-    expectBefore(`remove:${AUTH_TOKENS_KEY}`, `set:${AUTH_TOKENS_KEY}`);
-    expectBefore(`remove:${AUTH_TOKENS_KEY}`, `remove:${socialSnapshotCacheKeyForUser(accountA.user.id)}`);
-    expectBefore(`remove:${AUTH_TOKENS_KEY}`, `remove:${accountInboxCacheKeyForUser(accountA.user.id)}`);
+    expectBefore("website-logout", `tombstone:${AUTH_TOKENS_KEY}`);
+    expectBefore(`tombstone:${AUTH_TOKENS_KEY}`, `set:${AUTH_TOKENS_KEY}`);
+    expectBefore(`tombstone:${AUTH_TOKENS_KEY}`, `remove:${socialSnapshotCacheKeyForUser(accountA.user.id)}`);
+    expectBefore(`tombstone:${AUTH_TOKENS_KEY}`, `remove:${accountInboxCacheKeyForUser(accountA.user.id)}`);
   });
 
   it("runs neither the callback nor sign-out side effects for a stale non-matching family", async () => {
@@ -150,7 +150,7 @@ describe("exact-family sign-out reliability", () => {
     await expect(signOutWithWebsite(accountA, callback)).resolves.toBe(false);
 
     expect(callback).not.toHaveBeenCalled();
-    expect(await getStoredAuthTokens()).toEqual(accountB);
+    expect(await getStoredAuthTokens()).toMatchObject(accountB);
     expect(harness.events).toEqual([]);
     expect(harness.flushWatchHistory).not.toHaveBeenCalled();
     expect(harness.recordDiagnosticEvent).not.toHaveBeenCalled();
@@ -174,14 +174,14 @@ describe("exact-family sign-out reliability", () => {
       throw new Error("private browser failure text");
     });
 
-    await expect(signOutWithWebsite(accountA)).resolves.toBe(true);
+    await expect(signOutWithWebsite((await getStoredAuthTokens())!)).resolves.toBe(true);
 
     expect(await getStoredAuthTokens()).toBeNull();
     expect(harness.events).toEqual([
       "flush-history",
       "revoke-refresh",
       "website-logout",
-      `remove:${AUTH_TOKENS_KEY}`,
+      `tombstone:${AUTH_TOKENS_KEY}`,
       `remove:${socialSnapshotCacheKeyForUser(accountA.user.id)}`,
       `remove:${accountInboxCacheKeyForUser(accountA.user.id)}`,
     ]);
@@ -201,7 +201,7 @@ describe("exact-family sign-out reliability", () => {
     });
 
     let signOutResult: boolean | undefined;
-    const signOut = signOutWithWebsite(accountA).then((result) => {
+    const signOut = signOutWithWebsite((await getStoredAuthTokens())!).then((result) => {
       signOutResult = result;
       return result;
     });
@@ -224,9 +224,9 @@ describe("exact-family sign-out reliability", () => {
     await expect(signOut).resolves.toBe(true);
     expect(harness.events).toContain("website-logout");
     expectBefore("revoke-refresh", "website-logout");
-    expectBefore("website-logout", `remove:${AUTH_TOKENS_KEY}`);
-    expectBefore(`remove:${AUTH_TOKENS_KEY}`, `set:${AUTH_TOKENS_KEY}`);
-    expect(await getStoredAuthTokens()).toEqual(accountB);
+    expectBefore("website-logout", `tombstone:${AUTH_TOKENS_KEY}`);
+    expectBefore(`tombstone:${AUTH_TOKENS_KEY}`, `set:${AUTH_TOKENS_KEY}`);
+    expect(await getStoredAuthTokens()).toMatchObject(accountB);
   });
 
   it("captures the production website logout launch before registering its outer safety timer", async () => {
@@ -243,7 +243,7 @@ describe("exact-family sign-out reliability", () => {
       return nativeFlow.promise;
     });
 
-    const signOut = signOutWithWebsite(accountA);
+    const signOut = signOutWithWebsite((await getStoredAuthTokens())!);
     await flushMicrotasks(50);
 
     try {
@@ -276,7 +276,7 @@ describe("exact-family sign-out reliability", () => {
       });
 
       let signOutResult: boolean | undefined;
-      const signOut = signOutWithWebsite(accountA).then((result) => {
+      const signOut = signOutWithWebsite((await getStoredAuthTokens())!).then((result) => {
         signOutResult = result;
         return result;
       });
@@ -302,7 +302,7 @@ describe("exact-family sign-out reliability", () => {
       await replacement;
 
       expect(signOutResult).toBe(true);
-      expect(await getStoredAuthTokens()).toEqual(accountB);
+      expect(await getStoredAuthTokens()).toMatchObject(accountB);
       if (lateSettlement === "resolve") {
         nativeFlow.resolve(
           "https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/logout?signed_out=1&state=late-old-state",
@@ -312,7 +312,7 @@ describe("exact-family sign-out reliability", () => {
       }
       await flushMicrotasks();
 
-      expect(await getStoredAuthTokens()).toEqual(accountB);
+      expect(await getStoredAuthTokens()).toMatchObject(accountB);
       expect(JSON.stringify(harness.recordDiagnosticEvent.mock.calls)).not.toMatch(
         /native timeout secret|old-flow|late old-flow rejection/,
       );

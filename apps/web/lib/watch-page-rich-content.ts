@@ -133,7 +133,7 @@ export function pacingLeadParagraph(
  */
 export function buildWatchPageMetaDescription(anime: AnimeEntry): string {
   if (anime.notOnCrunchyroll) {
-    return `${anime.title} is not on Crunchyroll. Plan a legal group movie night; AniDachi cannot sync this title. Find discussion tips and alternatives.`;
+    return `${anime.title} is not on Crunchyroll. Check Netflix or YouTube availability in your region before planning an AniDachi room.`;
   }
   const gs = genreSet(anime.genres);
   const movie = isMovieEntry(anime);
@@ -291,11 +291,11 @@ export function buildWatchPageFaq(
     return [
       {
         question: `Can AniDachi sync ${anime.title}?`,
-        answer: `No. ${anime.title} is not on Crunchyroll, and AniDachi cannot sync this title. AniDachi currently supports Crunchyroll and YouTube.`,
+        answer: `${anime.title} is not on Crunchyroll. AniDachi supports Crunchyroll, YouTube, and Netflix, but this catalog does not confirm the title’s availability on Netflix or YouTube in your region. If everyone can access it on a supported service, you can use an AniDachi room. AniDachi cannot sync it on an unsupported service.`,
       },
       {
         question: `How can we plan a ${anime.title} movie night?`,
-        answer: `Check which legal service offers ${anime.title} in each viewer's region. Arrange a call, agree on the same version, and count down to start manually. This is separate from an AniDachi room.`,
+        answer: `Check which legal service offers ${anime.title} in each viewer's region and choose the same version. Use AniDachi if everyone has access on Netflix or YouTube. Otherwise, arrange a call and count down to start manually, outside an AniDachi room.`,
       },
       {
         question: `How do we avoid ${anime.title} spoilers?`,

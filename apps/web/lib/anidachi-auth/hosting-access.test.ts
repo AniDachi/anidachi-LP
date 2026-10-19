@@ -3,6 +3,7 @@ import test from "node:test";
 import { resolveAccountEntitlements } from "./account-entitlements";
 import { createAccountAccessHandlers } from "./watch-history-access";
 import { NextRequest } from "next/server";
+import { AccountEntitlementsMetadataSchema, HostingAccessSchema, PlanCodeSchema } from "@anidachi/protocol";
 
 const owner = "11111111-1111-4111-8111-111111111111";
 const now = new Date("2026-09-27T12:00:00Z");
@@ -96,4 +97,31 @@ test("entitlements endpoint exposes additive hosting metadata without changing h
 		"hosting" in (await (await handlers.getAccess(request)).json()),
 		false,
 	);
+});
+
+test("offer terms are opt-in, owner-fenced and compatible with the released extension projection", async () => {
+  let reads = 0;
+  const offer = { trialMode: "cardless" as const, trialDays: 3 as const, policyRevision: 1 };
+  const handlers = createAccountAccessHandlers({
+    getSession: async () => ({userId: owner, email: "owner@example.test", plan: "free", source: "extension"}),
+    resolve: (id, date) => resolveAccountEntitlements(id, date, async () => ({...authority(), hosting})),
+    readHostingOffer: async () => { reads++; return offer; },
+  });
+  const plain = new NextRequest("https://anidachi.test/api/me/entitlements");
+  assert.equal((await (await handlers.getEntitlements(plain)).json()).hostingOffer, undefined);
+  assert.equal(reads, 0);
+  const request = new NextRequest("https://anidachi.test/api/me/entitlements?hostingOffer=1");
+  const body = await (await handlers.getEntitlements(request)).json();
+  assert.deepEqual(body.hostingOffer, offer);
+  assert.equal(reads, 1);
+  const legacy = AccountEntitlementsMetadataSchema.extend({
+    planCode: PlanCodeSchema, hosting: HostingAccessSchema.optional(),
+  }).strip().parse(body);
+  assert.deepEqual(legacy.hosting, hosting);
+  assert.equal("hostingOffer" in legacy, false);
+  assert.equal("hostingOffer" in await (await handlers.getAccess(request)).json(), false);
+  assert.equal(reads, 1);
+  const wrongOwner = new NextRequest(request.url, {headers: {"x-anidachi-history-owner": "another-user"}});
+  assert.equal((await handlers.getEntitlements(wrongOwner)).status, 409);
+  assert.equal(reads, 1);
 });

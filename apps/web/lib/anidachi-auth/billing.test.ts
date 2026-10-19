@@ -9,6 +9,7 @@ import {
 } from "./billing";
 import type { SubscriptionRow } from "./db";
 import type { StripeSubscriptionSyncResult } from "./stripe-subscription-sync";
+import type { TrialRenewalOperation } from "./trial-renewal";
 
 const row: SubscriptionRow = {
 	id: "local-subscription",
@@ -113,9 +114,16 @@ function fixture(
 		trial?: import("./stripe-trial-state").SubscriptionTrialRecord | null;
 		now?: number;
 		portalUrl?: string;
+		renewal?: TrialRenewalOperation | null;
+		activation?: {
+			id: string;
+			planCode: "plus" | "pro";
+			billingPeriod: "monthly" | "yearly";
+		} | null;
 	} = {},
 ) {
 	const calls: string[] = [];
+	let priceReads = 0;
 	let portalParams: Stripe.BillingPortal.SessionCreateParams | undefined;
 	const stripe = {
 		billingPortal: {
@@ -179,11 +187,16 @@ function fixture(
 			options.access ??
 			({ policy: { planCode: "free" } } as AccountEntitlements),
 		readTrial: async () => options.trial ?? null,
-		readPrice: async () => ({
-			unitAmount: 799,
-			currency: "usd",
-			billingPeriod: "monthly",
-		}),
+		readRenewal: async () => options.renewal ?? null,
+		readActivation: async () => options.activation ?? null,
+		readPrice: async () => {
+			priceReads++;
+			return {
+				unitAmount: 799,
+				currency: "usd",
+				billingPeriod: "monthly",
+			};
+		},
 		createStripe: () => {
 			calls.push("client");
 			return stripe;
@@ -197,8 +210,215 @@ function fixture(
 		},
 		mode: () => options.mode ?? "test",
 	});
-	return { service, calls, params: () => portalParams };
+	return {
+		service,
+		calls,
+		params: () => portalParams,
+		priceReads: () => priceReads,
+	};
 }
+
+test("billing history shares one public price read across identical prices", async () => {
+	const f = fixture({
+		rows: [
+			row,
+			{
+				...row,
+				id: "past",
+				stripe_subscription_id: "sub_past",
+				status: "canceled",
+			},
+		],
+	});
+	const overview = await f.service.overview("owner");
+	assert.equal(overview.subscriptions.length, 2);
+	assert.equal(f.priceReads(), 1);
+});
+
+test("cardless trial cannot use legacy cancellation or restore Portal", async () => {
+	for (const method of ["cancellationPortal", "renewalPortal"] as const) {
+		const f = fixture({
+			trial: { ...trialRecord, trial_mode: "cardless" },
+			syncResult: { ...result, status: "trialing", cancelAtPeriodEnd: true },
+		});
+		await assert.rejects(
+			f.service[method]("owner", row.id, returnUrl),
+			/trial renewal controls/i,
+		);
+		assert.ok(!f.calls.includes("portal"));
+	}
+});
+
+test("cardless billing distinguishes default expiry, confirmed renewal and an unresolved cancellation", async () => {
+	for (const enabled of [false, true]) {
+		const trial = {
+			...trialRecord,
+			trial_mode: "cardless" as const,
+			renewal_operation_id: enabled ? "confirmed-operation" : null,
+		};
+		const base = {
+			trial,
+			access: trialAccess("2030-01-03T00:00:00Z"),
+			rows: [{ ...row, status: "trialing", cancel_at_period_end: !enabled }],
+		};
+		const view = (await fixture(base).service.overview("owner"))
+			.subscriptions[0];
+		assert.equal(view.trial?.mode, "cardless");
+		assert.equal(view.trial?.renewalState, enabled ? "enabled" : "not_enabled");
+		assert.equal(view.trial?.renewalEnabled, enabled);
+		assert.equal(view.canCancel, false);
+		assert.equal(view.canRestoreRenewal, false);
+		assert.equal(view.canChangeTrialPlan, false);
+		assert.equal(view.canSwitchToYearly, false);
+		const pending = (
+			await fixture({
+				...base,
+				renewal: {
+					id: "cancel-pending",
+					user_id: "owner",
+					stripe_subscription_id: "sub_owner",
+					action: "cancel",
+					state: "applying",
+				} as TrialRenewalOperation,
+			}).service.overview("owner")
+		).subscriptions[0];
+		assert.equal(pending.trial?.renewalState, "pending");
+		assert.equal(pending.trial?.renewalEnabled, enabled);
+		assert.deepEqual(pending.trial?.pendingRenewal, {
+			id: "cancel-pending",
+			action: "cancel",
+		});
+	}
+});
+
+test("cardless access never shows payment processing without verified renewal", async () => {
+	const access = trialAccess("2030-01-04T00:00:01Z", "free");
+	const view = (
+		await fixture({
+			access,
+			trial: { ...trialRecord, trial_mode: "cardless" },
+			rows: [{ ...row, status: "active" }],
+		}).service.overview("owner")
+	).subscriptions[0];
+	assert.equal(view.trial?.stage, "ended");
+});
+
+test("trial receipt remains visible after entitlement no longer carries a trial end", async () => {
+	const access = trialAccess("2030-01-05T00:00:00Z", "free");
+	access.hosting!.trialEndsAt = null;
+	const view = (
+		await fixture({
+			access,
+			trial: { ...trialRecord, trial_mode: "cardless" },
+			rows: [{ ...row, status: "canceled" }],
+		}).service.overview("owner")
+	).subscriptions[0];
+	assert.equal(view.trial?.stage, "ended");
+	assert.equal(view.trial?.mode, "cardless");
+});
+
+test("a newly viewed quote cannot erase previously enabled renewal", async () => {
+	const view = (
+		await fixture({
+			access: trialAccess("2030-01-03T00:00:00Z"),
+			trial: {
+				...trialRecord,
+				trial_mode: "cardless",
+				renewal_operation_id: "confirmed-operation",
+			},
+			renewal: {
+				id: "new-quote",
+				user_id: "owner",
+				stripe_subscription_id: "sub_owner",
+				action: "enable",
+				state: "quoted",
+			} as TrialRenewalOperation,
+		}).service.overview("owner")
+	).subscriptions[0];
+	assert.equal(view.trial?.renewalState, "enabled");
+});
+
+test("billing only confirms the latest owned, unexpired renewal quote", async () => {
+	for (const [state, expiry, id] of [
+		["quoted", "2030-01-03T00:05:00Z", "current-quote"],
+		["quoted", "2030-01-03T00:00:00Z", undefined],
+		["canceled", "2030-01-03T00:05:00Z", undefined],
+		["setup_pending", "2030-01-03T00:05:00Z", undefined],
+	] as const) {
+		const view = (
+			await fixture({
+				access: trialAccess("2030-01-03T00:00:00Z"),
+				rows: [{ ...row, status: "trialing" }],
+				trial: { ...trialRecord, trial_mode: "cardless" },
+				renewal: {
+					id: "current-quote",
+					user_id: "owner",
+					stripe_subscription_id: "sub_owner",
+					action: "enable",
+					state,
+					quote_expires_at: expiry,
+					original_trial_end: trialRecord.trial_ends_at,
+				} as TrialRenewalOperation,
+			}).service.overview("owner")
+		).subscriptions[0];
+		assert.equal(view.trial?.renewalQuoteId, id, state + " " + expiry);
+		assert.doesNotMatch(
+			JSON.stringify(view),
+			/sub_owner|cus_owner|stripe_price/,
+		);
+	}
+});
+
+test("after a declined first payment cardless billing still offers cancellation in Stripe", async () => {
+	const view = (
+		await fixture({
+			access: trialAccess("2030-01-04T03:00:00Z", "free"),
+			trial: {
+				...trialRecord,
+				trial_mode: "cardless",
+				renewal_operation_id: "confirmed-operation",
+				first_payment_state: "failed",
+			},
+			rows: [{ ...row, status: "past_due" }],
+		}).service.overview("owner")
+	).subscriptions[0];
+	assert.equal(view.trial?.stage, "payment_required");
+	assert.equal(view.canCancel, true);
+	assert.equal(view.canChangeTrialPlan, false);
+});
+
+test("resumable card setup includes its frozen price and original payment date", async () => {
+	const op = {
+		id: "pending-setup",
+		user_id: "owner",
+		stripe_subscription_id: "sub_owner",
+		state: "setup_pending",
+		action: "enable",
+		setup_request_id: "same-request",
+		plan_code: "pro",
+		billing_period: "yearly",
+		amount: 14390,
+		currency: "usd",
+		original_trial_end: trialRecord.trial_ends_at,
+	} as TrialRenewalOperation;
+	const view = (
+		await fixture({
+			access: trialAccess("2030-01-03T00:00:00Z"),
+			trial: { ...trialRecord, trial_mode: "cardless" },
+			renewal: op,
+		}).service.overview("owner")
+	).subscriptions[0];
+	assert.deepEqual(view.trial?.pendingRenewal?.terms, {
+		planCode: "pro",
+		price: { unitAmount: 14390, currency: "usd", billingPeriod: "yearly" },
+		firstChargeAt: trialRecord.trial_ends_at,
+	});
+	assert.equal(view.trial?.pendingRenewal?.setupRequestId, "same-request");
+	assert.doesNotMatch(
+		JSON.stringify(view),
+		/sub_owner|payment_method|setup_session|stripe_price/,
+	);
+});
 
 test("cancellation refreshes owned subscription before creating the verified end-period portal", async () => {
 	const f = fixture();
@@ -491,4 +711,16 @@ test("payment problem and paused subscriptions can stop renewal without claiming
 		"unknown",
 	])
 		assert.equal(canCancelSubscription(status, false), false);
+});
+
+test("overview includes durable activation before Stripe subscription is committed", async () => {
+	const activation = {
+		id: "activation-a",
+		planCode: "plus" as const,
+		billingPeriod: "monthly" as const,
+	};
+	const { service } = fixture({ rows: [], activation });
+	const result = await service.overview("owner");
+	assert.deepEqual(result.pendingTrialActivation, activation);
+	assert.equal(result.subscriptions.length, 0);
 });

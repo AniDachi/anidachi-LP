@@ -21,6 +21,7 @@ import type {
 	SubscriptionTrialRecord,
 } from "./stripe-trial-state";
 import {
+  type PersistedRoomSourceProof,
   parseRoomSourcePersistenceRpcResult,
   roomSourceCreationColumns,
   roomSourcePersistenceErrorFromDatabase,
@@ -523,12 +524,26 @@ export async function getSubscriptionTrial(
 ): Promise<SubscriptionTrialRecord | null> {
 	const { data, error } = await db()
 		.from("account_subscription_trials")
-		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at")
+		.select("user_id,stripe_subscription_id,trial_started_at,trial_ends_at,first_invoice_id,first_payment_state,first_paid_at,trial_mode,trial_activation_id,stripe_schedule_id,renewal_operation_id,first_cash_invoice_id,first_cash_paid_at,first_cash_amount_paid")
 		.eq("stripe_subscription_id", subscriptionId)
 		.abortSignal(AbortSignal.timeout(10_000))
 		.maybeSingle();
 	if (error) throw new Error("Trial ledger unavailable");
 	return data as SubscriptionTrialRecord | null;
+}
+export async function getCardlessTrialActivation(activationId: string): Promise<import("./stripe-trial-state").CardlessTrialActivationRecord | null> {
+	const { data, error } = await db().from("subscription_trial_activations")
+		.select("id,user_id,state,stripe_customer_id,stripe_schedule_id,stripe_subscription_id,trial_started_at,trial_ends_at,plan_code,price_id")
+		.eq("id", activationId).abortSignal(AbortSignal.timeout(10_000)).maybeSingle();
+	if (error) throw new Error("Trial activation unavailable");
+	return data;
+}
+export async function recordCardlessTrialCreated(userId: string, activationId: string, proof: import("./cardless-trial").TrialCreatedProof): Promise<import("./stripe-trial-state").CardlessTrialActivationRecord> {
+  const { data, error } = await db().rpc("record_cardless_trial_created_v1", {
+    p_user_id:userId,p_activation_id:activationId,p_customer_id:proof.customerId,p_schedule_id:proof.scheduleId,p_subscription_id:proof.subscriptionId,p_price_id:proof.priceId,p_trial_start:proof.trialStartedAt,p_trial_end:proof.trialEndsAt,
+  }).abortSignal(AbortSignal.timeout(10000));
+  if (error || !data) throw new Error("Trial activation recovery unavailable");
+  return data;
 }
 export async function beginStripeSubscriptionRefresh(
 	subscriptionId: string,
@@ -566,7 +581,7 @@ export async function commitStripeSubscriptionRefresh(
 	lease: StripeRefreshLease,
 ): Promise<PlanCode> {
 	const { data, error } = await db()
-		.rpc("commit_stripe_subscription_refresh_v2", {
+		.rpc(params.trial?.trialMode === "cardless" ? "commit_stripe_subscription_refresh_v3" : "commit_stripe_subscription_refresh_v2", {
 			p_subscription_id: params.stripeSubscriptionId,
 			p_fence: lease.fence,
 			p_token: lease.token,
@@ -817,6 +832,17 @@ export async function persistRoomSource(
     result.data,
     callback.sourceGeneration,
   );
+}
+
+export async function getPersistedRoomSourceProof(
+  roomId: string,
+): Promise<PersistedRoomSourceProof | null> {
+  const result = await db().from("rooms")
+    .select("room_id,status,source_provider,source_url,video_fingerprint,source_generation")
+    .eq("room_id", roomId)
+    .maybeSingle();
+  if (result.error) throw new Error("Unable to read persisted room source");
+  return result.data;
 }
 
 export function roomCapabilitiesFromRoom(room: RoomRow): RoomCapabilities {

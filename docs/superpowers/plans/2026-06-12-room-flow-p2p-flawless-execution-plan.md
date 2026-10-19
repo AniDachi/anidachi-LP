@@ -295,6 +295,8 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- **2026-10-17, `codex/netflix-input-media-fixes`:** the [player input/media repair](2026-10-17-netflix-input-media-fixes.md) preserves reported v2/v3 camera publication across hibernation without treating a grant as capture, and routes held-key releases before composer/provider handlers. Regression evidence includes real forced-wake Worker snapshots and all-provider overlay keyboard fixtures. Exact full-suite/CI/staging results are recorded in the PR; loaded-artifact and cross-network media acceptance are still separate release gates.
+
 - [x] 2026-10-01: Reproduced the commercial terminal-cleanup test race: an
   overdue runtime alarm was consumed before `runDurableObjectAlarm`, whose
   `false` return did not await cleanup. Manual retries now use a future alarm

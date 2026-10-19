@@ -339,3 +339,48 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
   isHistoryRecordingEnabled: vi.fn(async () => true),
 }));
+
+describe("Netflix catalog through existing history authority", () => {
+  const nfContext = { ...context, audioLocale: null, subtitleLocales: [] };
+  const identity = { kind: "episode", providerSeriesId: "10", providerSeasonIdentifier: "20", providerEpisodeIdentifier: "30" };
+  const snapshot = { generation: "generation-one", movieId: "30", currentTime: 10, duration: 100, playing: false,
+    metadata: { identity, title: "Show", episodeTitle: "Episode", seasonTitle: "Season", seasonNumber: 1, episodeNumber: 1, artworkUrl: null, context: nfContext } };
+  const nfAck = { ...ack(1), provider: "netflix", titleKey: "netflix:series:10" };
+  const event = { captureProof: paidHistoryLease(owner), provider: "netflix", netflixIdentity: identity, accountGeneration: 1,
+    clientSessionKey: "session", clientEventId: "event" } as never;
+  const nfCatalog = { schemaVersion: 3, provider: "netflix", providerSeriesId: "10", titleKey: "netflix:series:10", title: "Show", completeness: "partial", context: nfContext, seasons: [] };
+  it("does not use CR identity lookup and gates one collection behind catalog-begin", async () => {
+    const sequence: string[] = []; const crCommand = vi.fn();
+    const resolver = createWatchHistoryPageResolver({ command: crCommand,
+      netflixCommand: async (request) => { sequence.push(request.action); return { ok: true, snapshot, ...(request.action === "catalog" ? { catalog: nfCatalog } : {}) } as never; },
+      send: async message => { sequence.push(message.command); return { ok: true, data: message.command === "bootstrap-cache" ? { accessLease: paidHistoryLease(owner) } : nfAck }; },
+    });
+    await resolver.resolve(event, owner, { refreshCatalog: true });
+    await resolver.resolve(event, owner, { refreshCatalog: true });
+    expect(crCommand).not.toHaveBeenCalled(); expect(sequence).not.toContain("resolve-identity");
+    expect(sequence.filter(value => value === "catalog")).toHaveLength(1);
+    expect(sequence.indexOf("catalog-begin")).toBeLessThan(sequence.indexOf("catalog"));
+    expect(sequence).toContain("catalog-commit"); expect(sequence).toContain("catalog-release"); resolver.dispose();
+  });
+  it.each(["missing-region", "wrong-series", "changed-context"])("refuses a %s catalog", async mode => {
+    const messages: string[] = [];
+    const resolver = createWatchHistoryPageResolver({
+      netflixCommand: async request => ({ ok: true,
+        snapshot: mode === "missing-region" ? { ...snapshot, metadata: { ...snapshot.metadata, context: { ...nfContext, region: null } } } : snapshot,
+        ...(request.action === "catalog" ? { catalog: { ...nfCatalog, ...(mode === "wrong-series" ? { titleKey: "netflix:series:11" } : { context: { ...nfContext, region: "US" } }) } } : {}) } as never),
+      send: async message => { messages.push(message.command); return { ok: true, data: message.command === "bootstrap-cache" ? { accessLease: paidHistoryLease(owner) } : nfAck }; },
+    });
+    await resolver.resolve(event, owner, { refreshCatalog: true });
+    expect(messages).not.toContain("catalog-commit"); resolver.dispose();
+  });
+  it("aborts an in-flight Netflix snapshot on disposal before catalog-begin", async () => {
+    let signal: AbortSignal | undefined; const messages: string[] = [];
+    const resolver = createWatchHistoryPageResolver({
+      netflixCommand: async (_request, abortSignal) => { signal = abortSignal; return new Promise(resolve => abortSignal!.addEventListener("abort", () => resolve(null), { once: true })); },
+      send: async message => { messages.push(message.command); return { ok: true, data: { accessLease: paidHistoryLease(owner) } }; },
+    });
+    const pending = resolver.resolve(event, owner, { refreshCatalog: true });
+    await vi.waitFor(() => expect(signal).toBeDefined()); resolver.dispose(); await pending;
+    expect(signal!.aborted).toBe(true); expect(messages).not.toContain("catalog-begin");
+  });
+});

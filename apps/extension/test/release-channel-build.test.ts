@@ -31,6 +31,7 @@ const videoHosts = [
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -88,6 +89,10 @@ function expectSuccessfulBuild(result: ReturnType<typeof run>) {
 }
 
 function expectNarrow(manifest: Manifest) {
+  const external = manifest.externally_connectable as { matches?: string[]; ids?: string[] };
+  expectExact(external?.matches, [deriveId(manifest.key ?? "") === productionId
+    ? "https://www.anidachi.app/*" : "https://staging.anidachi.app/*"]);
+  expectExact(external?.ids, []);
   for (const pattern of broadPatterns) {
     expect(manifest.host_permissions ?? []).not.toContain(pattern);
   }
@@ -195,7 +200,8 @@ describe.sequential("extension release channel builds", () => {
     expectSuccessfulBuild(result);
 
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
-    expect(manifest.name).toBe("AniDachi");
+    expect(manifest.name).toBe("AniDachi: Watch Together, Synced Watch Party");
+    expect(manifest.short_name).toBe("AniDachi");
     expect(manifest.version).toBe("0.1.2");
     expect(manifest.version_name).toBeUndefined();
     expect(manifest.key).toBeTypeOf("string");
@@ -268,6 +274,7 @@ describe.sequential("extension release channel builds", () => {
     expectExact(manifest.host_permissions, localHostPermissions);
     expectExact(contentMatches(manifest), [
       ...localHostPermissions,
+      "https://www.netflix.com/*",
       "https://*.crunchyroll.com/*",
     ]);
     expectCanonicalRuntime("anidachi-extension-staging-local-broad", {

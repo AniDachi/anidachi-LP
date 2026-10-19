@@ -14,13 +14,22 @@ import {
 import { extensionInstallFaq } from "@/lib/extension-install-faq";
 import { extensionUsingSteps } from "@/lib/extension-using-guide";
 import { INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { cookies } from "next/headers";
+import { getSession } from "@/lib/anidachi-auth/session";
+import { REFRESH_TOKEN_COOKIE } from "@/lib/anidachi-auth/cookies";
+import { resolveWebsiteSession } from "@/lib/anidachi-auth/website-session";
+import { createBillingService } from "@/lib/anidachi-auth/billing";
+import { loadBillingSnapshot } from "@/lib/anidachi-auth/billing-snapshot";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
+import { resolveExtensionWelcome, type ExtensionWelcome } from "@/lib/extension-welcome";
+import { billingDisplayValidityMs } from "@/lib/billing-view";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: "Install AniDachi Chrome Extension",
   description:
-    "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+    "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll, YouTube, and Netflix watchrooms.",
   alternates: { canonical: INSTALL_HUB_PATH },
   openGraph: {
     images: [
@@ -34,7 +43,7 @@ export const metadata: Metadata = {
 
     title: "Install AniDachi on Chrome",
     description:
-      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll, YouTube, and Netflix watchrooms.",
     url: INSTALL_HUB_PATH,
   },
   twitter: {
@@ -43,23 +52,51 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Install AniDachi on Chrome",
     description:
-      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll and YouTube watchrooms. Netflix is coming soon.",
+      "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll, YouTube, and Netflix watchrooms.",
   },
 };
 
 const howToSteps = [
   {
-    name: "Install from the Chrome Web Store",
-    text: "Open the official AniDachi Chrome Web Store listing and choose Add to Chrome.",
+    name: "Add the extension",
+    text: "On the Chrome Web Store page, choose Add to Chrome, then Add extension.",
   },
   {
-    name: "Pin and open Crunchyroll or YouTube",
-    text: "Click the puzzle-piece icon in Chrome’s toolbar, find AniDachi, and pin it. Open a Crunchyroll episode or a full YouTube watch page and sign in when asked. Netflix is coming soon and is not supported yet. Join a friend for free, or create a room with Plus or Pro, including during a trial.",
+    name: "Pin AniDachi",
+    text: "Open the puzzle-piece menu in Chrome’s toolbar. Find AniDachi and click the pin.",
+  },
+  {
+    name: "Open a video & sign in",
+    text: "Open a supported video page, click the AniDachi capsule in the player, and sign in.",
   },
 ];
 
-export default function ExtensionInstallPage() {
+type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  return (await searchParams)?.welcome === "1"
+    ? { ...metadata, robots: { index: false, follow: false } }
+    : metadata;
+}
+
+export default async function ExtensionInstallPage({ searchParams }: PageProps) {
   const artifact = toPublicExtensionArtifact(getExtensionArtifact());
+  let welcome: ExtensionWelcome | undefined;
+  let owner: string | undefined;
+  if ((await searchParams)?.welcome === "1") {
+    try {
+      const session = await getSession();
+      owner = session?.userId;
+      if (!session) welcome = { kind: "sign_in" };
+      else {
+        const snapshot = await loadBillingSnapshot(session.userId, {
+          websiteUser: async () => resolveWebsiteSession((await cookies()).get(REFRESH_TOKEN_COOKIE)?.value),
+          overview: userId => createBillingService().overview(userId),
+        });
+        welcome = snapshot ? resolveExtensionWelcome(snapshot.overview,
+          billingDisplayValidityMs(snapshot.overview) - snapshot.remainingMs) : { kind: "error" };
+      }
+    } catch { welcome = { kind: "error" }; }
+  }
 
   return (
     <>
@@ -72,12 +109,12 @@ export default function ExtensionInstallPage() {
       <FAQPageJsonLd questions={extensionInstallFaq} />
       <HowToJsonLd
         name="How to install the AniDachi Chrome extension"
-        description="Install the official AniDachi Chrome extension from the Chrome Web Store, then open a Crunchyroll or YouTube watch page. Netflix is coming soon."
+        description="Install the official AniDachi Chrome extension from the Chrome Web Store, then open a Crunchyroll, YouTube, or Netflix watch page."
         steps={howToSteps}
       />
       <HowToJsonLd
         name="How to Watch Together"
-        description="Host a live Crunchyroll or YouTube room with Plus or Pro, including during a trial. Friends join for free. Netflix is coming soon. Use the overlay for invites, calls, reactions, and room settings."
+        description="Host a live Crunchyroll, YouTube, or Netflix room with Plus or Pro, including during a trial. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
         steps={extensionUsingSteps.map(({ name, text }) => ({ name, text }))}
       />
       <main id="main-content" className="min-h-screen bg-ani-canvas">
@@ -97,17 +134,18 @@ export default function ExtensionInstallPage() {
             </ol>
           </div>
         </nav>
-        <div className="container mx-auto px-4 py-12 lg:py-16">
+        <div className="mx-auto max-w-[1200px] px-5 pb-16 sm:px-8">
           <Suspense
             fallback={
-              <div className="mx-auto max-w-3xl">
+              <div className="mx-auto max-w-4xl py-16 text-center">
                 <h1 className="text-4xl font-semibold tracking-[-0.035em] text-ani-text">
-                  Install AniDachi on Chrome
+                  Add AniDachi to Chrome
                 </h1>
               </div>
             }
           >
-            <ExtensionInstallHub artifact={artifact} />
+            <ExtensionInstallHub key={owner ?? "public"} artifact={artifact} welcome={welcome}
+              extensionId={welcome ? readApprovedExtensionClientId() : null} />
           </Suspense>
         </div>
       </main>

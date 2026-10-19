@@ -66,7 +66,7 @@ describe("useRoomJoinDefaults", () => {
 		expect(readPreferences(view.container)).toEqual({
 			version: 1,
 			microphoneOnJoin: "last-used",
-			cameraOnJoin: "off",
+			cameraOnJoin: "last-used",
 		});
 
 		secondRead.resolve({
@@ -102,7 +102,7 @@ describe("useRoomJoinDefaults", () => {
 		expect(readPreferences(view.container)).toEqual({
 			version: 1,
 			microphoneOnJoin: "open-mic",
-			cameraOnJoin: "off",
+			cameraOnJoin: "last-used",
 		});
 		expect(view.container.firstElementChild?.getAttribute("data-error")).toBe(
 			"Couldn't save room defaults.",

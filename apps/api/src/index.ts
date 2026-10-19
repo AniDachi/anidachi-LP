@@ -7,7 +7,7 @@ import {
 	nextRoomPolicyAlarm,
 	type RoomPolicyState,
 } from "./room-capability";
-import { checkWebRoomAdmission, notifyWebRoomPolicy } from "./internal-web-client";
+import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy } from "./internal-web-client";
 import {
 	roomUsageBuckets,
 	acknowledgeRoomUsageDay,
@@ -48,7 +48,7 @@ import {
 } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
-import { ROOM_TERMINAL_STORAGE_KEY, ROOM_TERMINAL_RETRY_MS, parseRoomTerminalIntent, type RoomTerminalIntent } from "./room-terminal";
+import { ROOM_TERMINAL_STORAGE_KEY, roomTerminalRetryAt, parseRoomTerminalIntent, type RoomTerminalIntent } from "./room-terminal";
 import {
   notifyWebParticipantDeparted,
   notifyWebRoomEnded,
@@ -931,6 +931,11 @@ export class RoomDurableObject {
 	private async settleRoomUsage(): Promise<boolean> {
 		if (!this.roomPolicy || !this.isFreeRoom()) return true;
 		try {
+      if ((this.terminalIntent?.attempts ?? 0) > 1 && roomUsageBuckets(this.roomMeter).length === 0) {
+        // Confirm the local ACK writes before skipping an empty settlement call.
+        await this.state.storage.sync();
+        return !this.roomMeter.accountingBlocked;
+      }
 			const result = await notifyWebRoomPolicy(
 				this.env,
 				this.room.roomId,
@@ -945,7 +950,8 @@ export class RoomDurableObject {
 				);
 			await this.state.storage.sync();
 			return true;
-		} catch {
+		} catch (error) {
+      if (this.terminalIntent) throw error;
 			if (this.roomPolicy) {
 				this.roomPolicy.alarmAt = Date.now() + 10_000;
 				await this.state.storage.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
@@ -1215,10 +1221,10 @@ export class RoomDurableObject {
     }
   }
 
-  private runRoomSourceDeliveryExclusively(force: boolean): Promise<boolean> {
+  private runRoomSourceDeliveryExclusively(force: boolean, terminalAttempt = false): Promise<boolean> {
     const delivery = this.roomSourceDeliveryQueue.then(
-      () => this.deliverPendingRoomSource(force),
-      () => this.deliverPendingRoomSource(force),
+      () => this.deliverPendingRoomSource(force, terminalAttempt),
+      () => this.deliverPendingRoomSource(force, terminalAttempt),
     );
     this.roomSourceDeliveryQueue = delivery.then(
       () => undefined,
@@ -1258,7 +1264,7 @@ export class RoomDurableObject {
     }
   }
 
-  private async deliverPendingRoomSource(force: boolean): Promise<boolean> {
+  private async deliverPendingRoomSource(force: boolean, terminalAttempt = false): Promise<boolean> {
     try {
 			if (!(await this.ensureCurrentRoomSourcePending())) return false;
       const attempt = await claimStoredRoomSourceAttempt(
@@ -1279,7 +1285,8 @@ export class RoomDurableObject {
 			return (
 				(await readStoredRoomSourcePersistence(this.state.storage)) === null
 			);
-    } catch {
+    } catch (error) {
+      if (terminalAttempt) throw error;
       // A completed claim already committed its retry deadline before I/O;
       // storage failures remain fail-closed and cannot allow room finalization.
       return false;
@@ -1545,6 +1552,18 @@ export class RoomDurableObject {
     await this.state.storage.transaction(async transaction=>{await transaction.put(ROOM_POLICY_STORAGE_KEY,this.roomPolicy!);await reconcileStoredRoomAlarm(transaction);});
   }
   private async endRoomExclusive(command: EndRoomCommand): Promise<Response> {
+    if (this.terminalIntent && !this.terminalIntentDurable) {
+      try {
+        const stored = parseRoomTerminalIntent(await this.state.storage.get(ROOM_TERMINAL_STORAGE_KEY));
+        await this.state.storage.sync();
+        if (stored) {
+          this.terminalIntent = stored;
+          this.terminalIntentDurable = true;
+        }
+      } catch {
+        return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true }, { status: 502 });
+      }
+    }
     if (command.cutover) {
       const current = this.terminalIntent?.cutover;
       if (command.cutover.roomId !== this.room.roomId || command.cutover.roomGeneration !== (current?.roomGeneration ?? this.room.roomGeneration)
@@ -1573,31 +1592,39 @@ export class RoomDurableObject {
     }
 
     this.roomEndInProgress = true;
+    let claimedAttempt: RoomTerminalIntent | null = null;
     try {
       if (!this.terminalIntent) {
         const fencedAt = Date.now();
         const usage = this.stopRoomUsage(fencedAt);
         if (this.roomPolicy) await this.retryRoomPolicyEnd(command);
         await this.persistTerminalIntent({ ...command, endedAt: command.cutover ? fencedAt : command.endedAt,
-          schemaVersion: 1, fencedAt, finalizedAt: null, nextAttemptAt: fencedAt + ROOM_TERMINAL_RETRY_MS,
+          schemaVersion: 1, fencedAt, finalizedAt: null, attempts: 0, nextAttemptAt: fencedAt,
           ...(usage ? { usage } : {}),
         });
-      } else {
-        await this.persistTerminalIntent({ ...this.terminalIntent, nextAttemptAt: Date.now() + ROOM_TERMINAL_RETRY_MS });
       }
       this.closeTerminalSockets();
-      const intent = this.terminalIntent!;
-      if (this.roomPolicy && !(await this.settleRoomUsage())) {
+      const claim = await this.claimTerminalAttempt();
+      const intent = claim?.intent ?? null;
+      claimedAttempt = intent;
+      if (!intent) return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
+      try {
+        if (this.roomPolicy && !(await this.settleRoomUsage())) {
+          return Response.json({ error: "ROOM_ACCOUNTING_UNAVAILABLE", ...this.terminalReceipt() }, { status: 503 });
+        }
+      } catch (error) {
+        await this.deferTerminalAttempt(intent, error);
         return Response.json({ error: "ROOM_ACCOUNTING_UNAVAILABLE", ...this.terminalReceipt() }, { status: 503 });
       }
-      if (!(await this.runRoomSourceDeliveryExclusively(true))) {
+      if (!(await this.runRoomSourceDeliveryExclusively(claim!.firstAttempt, true))) {
+        await this.deferTerminalAttempt(intent);
         return Response.json({ error: "ROOM_END_CALLBACK_FAILED", retryable: true, ...this.terminalReceipt() }, { status: 502 });
       }
       await notifyWebRoomEnded(this.env, this.room.roomId, {
         endedAt: intent.endedAt, reason: intent.reason,
         ...(intent.usage ? { usage: intent.usage } : {}),
       });
-      await this.persistTerminalIntent({ ...intent, finalizedAt: Date.now() });
+      await this.persistTerminalIntent({ ...intent, finalizedAt: Date.now() }, intent);
       const tombstone = endedRoomTombstone(intent, { ...(intent.usage ? { usage: intent.usage } : {}), usageFinalized: true });
       await this.applyTerminalRoomState(tombstone);
       return Response.json({
@@ -1607,7 +1634,8 @@ export class RoomDurableObject {
         ...tombstone,
         ...this.terminalReceipt(),
       });
-    } catch {
+    } catch (error) {
+      if (this.terminalIntentDurable && claimedAttempt) await this.deferTerminalAttempt(claimedAttempt, error).catch(() => undefined);
       // Retry deadline was committed before any network I/O. Storage failures
       // also cannot be converted into success or reopening the live room.
       this.closeTerminalSockets();
@@ -1617,17 +1645,76 @@ export class RoomDurableObject {
     }
   }
 
-  private async persistTerminalIntent(intent: RoomTerminalIntent): Promise<void> {
-    // Gate concurrent work even if storage returns an unknown outcome. Only a
-    // confirmed flush can be reported as durable fence/finalization evidence.
-    this.terminalIntent = intent;
+  private async claimTerminalAttempt(): Promise<{ intent: RoomTerminalIntent; firstAttempt: boolean } | null> {
+    let claimed: RoomTerminalIntent | null = null;
+    let firstAttempt = false;
     this.terminalIntentDurable = false;
     await this.state.storage.transaction(async transaction => {
-      await transaction.put(ROOM_TERMINAL_STORAGE_KEY, intent);
+      const current = parseRoomTerminalIntent(await transaction.get(ROOM_TERMINAL_STORAGE_KEY));
+      if (!current) throw new Error("Missing terminal authority");
+      this.terminalIntent = current;
+      const now = Date.now();
+      const source = await readStoredRoomSourcePersistence(transaction);
+      const first = current.attempts === 0;
+      firstAttempt = first;
+      const nextAttemptAt = first ? current.nextAttemptAt : Math.max(current.nextAttemptAt, source?.nextAttemptAt ?? 0);
+      if (now < nextAttemptAt) {
+        if (nextAttemptAt !== current.nextAttemptAt) {
+          this.terminalIntent = { ...current, nextAttemptAt };
+          await transaction.put(ROOM_TERMINAL_STORAGE_KEY, this.terminalIntent);
+        }
+      } else {
+        claimed = { ...current, attempts: Math.min(Number.MAX_SAFE_INTEGER, (current.attempts ?? 0) + 1), nextAttemptAt: roomTerminalRetryAt((current.attempts ?? 0) + 1, now) };
+        this.terminalIntent = claimed;
+        await transaction.put(ROOM_TERMINAL_STORAGE_KEY, claimed);
+      }
+      await reconcileStoredRoomAlarm(transaction);
+    });
+    this.terminalIntentDurable = false;
+    await this.state.storage.sync();
+    this.terminalIntentDurable = true;
+    // First-delivery behavior comes from the persisted pre-claim state, including recovery.
+    return claimed ? { intent: claimed, firstAttempt } : null;
+  }
+
+  private async deferTerminalAttempt(attempt: RoomTerminalIntent, error?: unknown): Promise<void> {
+    const retryAfterAt = error instanceof InternalWebCallbackError ? error.retryAfterAt ?? 0 : 0;
+    this.terminalIntentDurable = false;
+    await this.state.storage.transaction(async transaction => {
+      const current = parseRoomTerminalIntent(await transaction.get(ROOM_TERMINAL_STORAGE_KEY));
+      if (!current || current.attempts !== attempt.attempts || current.fencedAt !== attempt.fencedAt || current.finalizedAt !== null) return;
+      const source = await readStoredRoomSourcePersistence(transaction);
+      const nextAttemptAt = Math.max(current.nextAttemptAt, source?.nextAttemptAt ?? 0, retryAfterAt);
+      this.terminalIntent = { ...current, nextAttemptAt };
+      if (nextAttemptAt !== current.nextAttemptAt) await transaction.put(ROOM_TERMINAL_STORAGE_KEY, this.terminalIntent);
       await reconcileStoredRoomAlarm(transaction);
     });
     await this.state.storage.sync();
     this.terminalIntentDurable = true;
+  }
+
+  private async persistTerminalIntent(intent: RoomTerminalIntent, expectedAttempt?: RoomTerminalIntent): Promise<void> {
+    // Gate concurrent work even if storage returns an unknown outcome. Only a
+    // confirmed flush can be reported as durable fence/finalization evidence.
+    const previous = this.terminalIntent;
+    this.terminalIntent = intent;
+    this.terminalIntentDurable = false;
+    try {
+      await this.state.storage.transaction(async transaction => {
+        if (expectedAttempt) {
+          const current = parseRoomTerminalIntent(await transaction.get(ROOM_TERMINAL_STORAGE_KEY));
+          if (!current || current.attempts !== expectedAttempt.attempts || current.fencedAt !== expectedAttempt.fencedAt) throw new Error("Stale terminal callback completion");
+        }
+        await transaction.put(ROOM_TERMINAL_STORAGE_KEY, intent);
+        await reconcileStoredRoomAlarm(transaction);
+      });
+      await this.state.storage.sync();
+      this.terminalIntentDurable = true;
+    } catch (error) {
+      // A failed completion commit retains the fence, never an in-memory ACK.
+      if (expectedAttempt && previous) this.terminalIntent = previous;
+      throw error;
+    }
   }
 
   private terminalReceipt() {

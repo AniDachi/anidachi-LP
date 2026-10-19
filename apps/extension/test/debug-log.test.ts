@@ -3,6 +3,7 @@ import {
   clearDebugLog,
   getCompactDebugLogText,
   getDebugEntries,
+  getDebugEntryCount,
   getDebugLogText,
   logDebug,
   playerOverlayGeometryDebugSnapshot,
@@ -64,6 +65,50 @@ describe("debug log", () => {
     expect(localStorage.getItem("page-owned-neighbor")).toBe("must-remain");
     expect(removeItem).toHaveBeenCalledTimes(1);
     expect(removeItem).toHaveBeenCalledWith("anidachi:debug-log:v1");
+  });
+
+  it("counts retained entries without reading or serializing their diagnostic payloads", () => {
+    clearDebugLog();
+    logDebug("p2p.health", "connected", {
+      remoteUserId: "private-remote-user",
+      accessToken: "private-access-token",
+      nested: { connectionState: "connected", framesDecoded: 42 },
+    });
+    const readPayload = vi.spyOn(Object, "entries");
+    const serialize = vi.spyOn(JSON, "stringify");
+    const parse = vi.spyOn(JSON, "parse");
+
+    expect(getDebugEntryCount()).toBe(2);
+    expect(getDebugEntryCount()).toBe(2);
+    expect(readPayload).not.toHaveBeenCalled();
+    expect(serialize).not.toHaveBeenCalled();
+    expect(parse).not.toHaveBeenCalled();
+
+    readPayload.mockRestore();
+    serialize.mockRestore();
+    parse.mockRestore();
+    for (const exported of [getDebugLogText(), getCompactDebugLogText()]) {
+      expect(exported).toContain("connected");
+      expect(exported).not.toContain("private-remote-user");
+      expect(exported).not.toContain("private-access-token");
+    }
+  });
+
+  it("counts the retained buffer after eviction and clearing, not lifetime log calls", () => {
+    clearDebugLog();
+    for (let index = 0; index < 1_250; index += 1) {
+      logDebug("p2p.health", "sample", { sequence: index });
+    }
+    expect(getDebugEntryCount()).toBe(1_200);
+    expect(getDebugEntries()).toHaveLength(1_200);
+
+    clearDebugLog();
+    expect(getDebugEntryCount()).toBe(1);
+    expect(getDebugEntries()).toEqual([
+      expect.objectContaining({ scope: "debug", message: "cleared" }),
+    ]);
+    logDebug("p2p.health", "connected");
+    expect(getDebugEntryCount()).toBe(2);
   });
 
   it("stores debug entries without printing to the console by default", () => {

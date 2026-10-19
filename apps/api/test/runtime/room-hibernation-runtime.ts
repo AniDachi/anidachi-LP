@@ -892,6 +892,15 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		});
 
 		allowSourceSuccess = true;
+		const premature = await endRoom(stub, {
+			endedAt: 2_000,
+			reason: "host_ended",
+		});
+		expect(premature.status).toBe(502);
+		await premature.text();
+		expect(callbackOrder).toEqual(["source", "source"]);
+		// User retries cannot bypass the persisted source backoff.
+		vi.spyOn(Date, "now").mockReturnValue(await runInDurableObject(stub, async(_instance,state)=>(await state.storage.get<any>("room_terminal_intent_v1")).nextAttemptAt));
 		const completed = await endRoom(stub, {
 			endedAt: 2_000,
 			reason: "host_ended",
@@ -899,6 +908,67 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		expect(completed.status).toBe(200);
 		expect(callbackOrder).toEqual(["source", "source", "source", "ended"]);
 		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null });
+		host.close();
+	});
+
+	it("bounds terminal source retries over an hour and preserves pending work across restart", async () => {
+		const roomId = `runtime-terminal-source-backoff-${crypto.randomUUID()}`;
+		const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = ns.get(ns.idFromName(roomId));
+		let sourceAttempts = 0;
+		let finalizations = 0;
+		let allowSourceSuccess = false;
+		stubWebFetch(async (input, init) => {
+			if (String(input).endsWith("/source")) {
+				sourceAttempts++;
+				const body = JSON.parse(String(init?.body));
+				return allowSourceSuccess
+					? Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration })
+					: Response.json({ error: "Room has ended", code: "ROOM_ENDED" }, { status: 409 });
+			}
+			if (String(input).endsWith("/ended")) finalizations++;
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-backoff", userId: "host-user",
+		});
+		const sourceUrl = "https://www.crunchyroll.com/watch/retry-proof";
+		host.send({ type: "HOST_STATE", roomId,
+			state: playbackState("crunchyroll|watch/retry-proof", sourceUrl),
+			source: sourceDescriptor("crunchyroll|watch/retry-proof", "Retry proof", sourceUrl),
+		});
+		await waitForRoomRuntime(stub, value => value.pendingSource?.attempts === 1, "initial pending source");
+		const ended = await endRoom(stub, { endedAt: Date.now(), reason: "host_ended" });
+		expect(ended.status).toBe(502);
+		await ended.text();
+		const initial = await readRoomRuntime(stub);
+		const start = Date.now();
+		const clock = vi.spyOn(Date, "now");
+		for (let step = 1; step <= 120; step++) {
+			clock.mockReturnValue(start + step * 30_000);
+			if (step === 60) await evictDurableObject(stub, { webSockets: "hibernate" });
+			await runInDurableObject(stub, async instance => {
+				await (instance as any).runAlarmExclusive();
+			});
+		}
+		const pending = await readRoomRuntime(stub);
+		expect(sourceAttempts).toBeLessThanOrEqual(18);
+		expect(sourceAttempts).toBeGreaterThan(10);
+		expect(finalizations).toBe(0);
+		expect(pending.pendingSource?.callback).toEqual(initial.pendingSource?.callback);
+		expect(pending.tombstone).toBeNull();
+		expect(pending.alarm).toBe(await runInDurableObject(stub, async(_instance,state)=>(await state.storage.get<any>("room_terminal_intent_v1")).nextAttemptAt));
+    expect(pending.alarm).toBeGreaterThanOrEqual(pending.pendingSource!.nextAttemptAt as number);
+		allowSourceSuccess = true;
+		clock.mockReturnValue(start + 3_900_000);
+		await runInDurableObject(stub, async instance => { await (instance as any).runAlarmExclusive(); });
+		expect(finalizations).toBe(1);
+		expect(await readRoomRuntime(stub)).toMatchObject({ pendingSource: null, acknowledgedSourceGeneration: 2 });
+		const settledCalls = sourceAttempts;
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		await runInDurableObject(stub, async instance => { await (instance as any).runAlarmExclusive(); });
+		expect(sourceAttempts).toBe(settledCalls);
+		expect(finalizations).toBe(1);
 		host.close();
 	});
 
@@ -2160,6 +2230,8 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		expect(first.status).toBe(502);
 		expect(await readRoomRuntime(stub)).toMatchObject({ tombstone: null });
 
+    const deadline = await runInDurableObject(stub, async(_instance,state)=>(await state.storage.get<any>("room_terminal_intent_v1")).nextAttemptAt);
+    vi.spyOn(Date,"now").mockReturnValue(deadline);
 		const completed = await endRoom(stub, command);
 		expect(completed.status).toBe(200);
 		expect(await completed.json()).toMatchObject({
@@ -3193,6 +3265,7 @@ describe("RoomDurableObject media v2", () => {
 			);
 		let deny = false;
 		let fail = false;
+		let failSource = false;
     let settlementGate: Promise<void> | null = null;
     let releaseSettlement: (()=>void) | null = null;
 		const ledger = new Map<string, number>();
@@ -3201,6 +3274,7 @@ describe("RoomDurableObject media v2", () => {
 				const body = JSON.parse(String(init?.body));
 				calls.push(body);
 				if (String(input).endsWith("/source")) {
+					if (failSource) return Response.json({ code: "ROOM_ENDED" }, { status: 409 });
 					return Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration });
 				}
 				if (body.operation === "room_policy_v2") {
@@ -3277,6 +3351,7 @@ describe("RoomDurableObject media v2", () => {
 			stub,
 			join,
 			calls,
+			setSourceFailure: () => { failSource = true; },
       stallSettlement: () => { settlementGate=new Promise<void>(resolve=>{releaseSettlement=resolve;}); },
       releaseSettlement: () => {releaseSettlement?.();settlementGate=null;},
       ledger,
@@ -3289,6 +3364,71 @@ describe("RoomDurableObject media v2", () => {
 		};
 	}
 
+ it("caps failed settlement traffic while retaining frozen usage through eviction", async () => {
+  const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;
+  const clock=vi.spyOn(Date,"now").mockReturnValue(start);
+  vi.spyOn(Math,"random").mockReturnValue(0);
+  const f=await fixture("free",3);const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
+  const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"guest");
+  await runInDurableObject(f.stub,async(instance)=>{const i=instance as any;i.updateRoomMeter({...i.roomMeter,accumulatedMs:50000,activeSince:null},start);});
+  f.setFail();const end=()=>endRoom(f.stub,{endedAt:start,reason:"host_ended"});
+  const first=await end();expect(first.status).toBe(503);expect(await first.json()).toMatchObject({webFinalized:false});
+  const before=f.calls.length;
+  for(let i=0;i<10;i++){const early=await end();expect(early.status).toBe(502);await early.text();}
+  expect(f.calls).toHaveLength(before);
+  for(let step=1;step<=120;step++){
+   clock.mockReturnValue(start+step*30000);
+   if(step===60)await evictDurableObject(f.stub,{webSockets:"hibernate"});
+   await runInDurableObject(f.stub,async instance=>{await (instance as any).runAlarmExclusive();});
+  }
+  const settlements=f.calls.filter((call:any)=>call.settleOnly) as {usage:{day:string;seconds:number}[]}[];
+  expect(settlements).toHaveLength(15);
+  for(const settlement of settlements)expect(settlement.usage).toEqual([{day:new Date(start).toISOString().slice(0,10),seconds:50}]);
+  const stored=await runInDurableObject(f.stub,async(_instance,state)=>({intent:await state.storage.get<any>("room_terminal_intent_v1"),meter:readStoredRoomMeter(state.storage)}));
+  expect(stored.intent).toMatchObject({fencedAt:start,finalizedAt:null,attempts:15,usage:{day:new Date(start).toISOString().slice(0,10),seconds:50}});
+  expect(stored.meter).toMatchObject({accumulatedMs:50000,acknowledgedSeconds:0,activeSince:null});
+  host.close();guest.close();
+ });
+
+	it("settles frozen usage before a blocked terminal source without repeating network work before retry", async () => {
+		const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+		const day = new Date(start).toISOString().slice(0, 10);
+		const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+		const f = await fixture("free", 3);
+		const host = await f.join(0);
+		await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "source retry host");
+		const guest = await f.join(1);
+		await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "source retry guest");
+		f.setSourceFailure();
+		const sourceUrl = "https://www.crunchyroll.com/watch/frozen-usage";
+		host.send({ type: "HOST_STATE", roomId: f.roomId,
+			state: playbackState("crunchyroll|watch/frozen-usage", sourceUrl),
+			source: sourceDescriptor("crunchyroll|watch/frozen-usage", "Frozen usage", sourceUrl),
+		});
+		await waitForRoomRuntime(f.stub, value => value.pendingSource?.attempts === 1, "blocked source");
+		clock.mockReturnValue(start + 12_000);
+		const end = () => endRoom(f.stub, { endedAt: start + 12_000, reason: "host_ended" });
+		const initial = await end();
+		expect(initial.status).toBe(502);
+		await initial.text();
+		expect(f.ledger.get(day)).toBe(12);
+		const before = f.calls.length;
+		for (let retry = 0; retry < 3; retry++) {
+			const response = await end();
+			expect(response.status).toBe(502);
+			await response.text();
+		}
+		expect(f.calls).toHaveLength(before);
+		expect(await readRoomRuntime(f.stub)).toMatchObject({ pendingSource: { attempts: 2 }, tombstone: null });
+		clock.mockReturnValue(await runInDurableObject(f.stub, async (_instance,state) => (await state.storage.get<any>("room_terminal_intent_v1")).nextAttemptAt));
+		const retry = await end();
+		expect(retry.status).toBe(502);
+		await retry.text();
+		expect(f.ledger.get(day)).toBe(12);
+    expect(f.calls.slice(before).filter((call:any)=>call.operation==="room_policy_v2")).toHaveLength(0);
+		expect(await readRoomRuntime(f.stub)).toMatchObject({ pendingSource: { attempts: 3 }, tombstone: null });
+		host.close(); guest.close();
+	});
 
   it.each([
     ["free", 1], ["free", 2], ["plus", 2], ["pro", 2],
@@ -3569,6 +3709,32 @@ it("v3 durably fences revocation, receiver-only sessions and two grants for the 
  expect(await runInDurableObject(f.stub,async(_i,state)=>state.storage.sql.exec("SELECT user_id FROM room_media_seat_denials").toArray())).toEqual([]);
 
 });
+it.each([2, 3] as const)("keeps reported v%s cameras on after hibernation and microphone changes", async (version) => {
+  const f = await fixture("plus", version);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "media admitted");
+  const cameraIntent = {type: "SET_MEDIA_INTENT", roomId: f.roomId, roomGeneration: 1,
+    participantSessionId: "v2-session-0", media: "camera", enabled: true,
+    requestId: "camera-before-wake", intentSequence: 1, revocationEpoch: 0};
+  host.send(cameraIntent);
+  await host.waitFor(e => e.type === "MEDIA_INTENT_ACK" && e.requestId === "camera-before-wake", "camera granted");
+  host.send({type: "CAMERA_ON", roomId: f.roomId, userId: hostId});
+  await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.participants.some(p => p.id === hostId && p.cameraEnabled), "camera reported");
+  const receiver = await f.join(1);
+  await receiver.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.participants.length === 2, "receiver joined");
+  for (const [enabled, sequence] of [[true, 1], [false, 2]] as const) {
+    await evictDurableObject(f.stub, {webSockets: "hibernate"});
+    const requestId = `microphone-${sequence}`;
+    host.send({...cameraIntent, media: "microphone", enabled, intentSequence: sequence, requestId});
+    const ack = await host.waitFor(e => e.type === "MEDIA_INTENT_ACK" && e.requestId === requestId, "microphone after wake");
+    expect(ack).toMatchObject({state: {cameraGranted: true, microphoneGranted: enabled}});
+    const snapshot = await receiver.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.serverSeq === (ack as Extract<ServerEvent, {type: "MEDIA_INTENT_ACK"}>).snapshotSequence, "receiver sees media change");
+    expect(snapshot).toMatchObject({participants: expect.arrayContaining([expect.objectContaining({id: hostId, cameraEnabled: true})])});
+  }
+  host.send({type: "CAMERA_OFF", roomId: f.roomId, userId: hostId});
+  await receiver.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.participants.some(p => p.id === hostId && !p.cameraEnabled), "camera really stopped");
+});
+
 it.each([
 	"before-write",
 	"after-write",
@@ -3955,6 +4121,10 @@ it.each([
 		expect((await replacement.waitFor(e => e.type === "ROOM_ENDED", "terminal cause")) as object).not.toHaveProperty("hostingCutover");
 	});
 	it("meters only actual host+guest sockets, preserves acknowledged600s on renewal, and ACKs before quota end", async () => {
+    // This scenario keeps 600 seconds in one UTC day; midnight rollover has dedicated cases below.
+    const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+    const day = new Date(start).toISOString().slice(0, 10);
+    vi.spyOn(Date, "now").mockReturnValue(start);
 		const f = await fixture("free");
 		const host = await f.join(0);
 		await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "solo host");
@@ -3989,6 +4159,8 @@ it.each([
 			};
 		});
 		expect(values.allowed - values.seconds).toBe(1200);
+    expect(values.seconds).toBe(600);
+    expect(f.ledger.get(day)).toBe(600);
     const reconciled = await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.remainingSeconds === 1200, "published ACK-reconciled budget");
     expect(reconciled.type === "ROOM_SNAPSHOT" && reconciled.quota?.metering).toBe(true);
 		await runInDurableObject(f.stub, async (instance) => {

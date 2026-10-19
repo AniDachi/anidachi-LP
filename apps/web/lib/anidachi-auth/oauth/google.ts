@@ -47,6 +47,7 @@ export function buildGoogleAuthUrl(
 }
 
 export type OAuthProfile = {
+  emailVerified: boolean;
   providerId: string;
   email: string;
   displayName: string;
@@ -98,6 +99,7 @@ export async function exchangeGoogleCode(
   return {
     providerId: user.sub as string,
     email: user.email as string,
+    emailVerified: user.email_verified === true,
     displayName: user.name ?? user.given_name ?? "Anonymous",
     avatarUrl: (user.picture as string | undefined) ?? null,
   };

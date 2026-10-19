@@ -3,6 +3,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PopupWelcome } from "../src/popup-welcome";
 
+vi.mock("../src/constants", () => ({ WEB_HTTP_BASE: "https://staging.anidachi.app" }));
+
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let data: Record<string, unknown>;
 let root: Root;
@@ -95,6 +97,23 @@ it("opens Settings directly from the explanation", async () => {
   await render(true);
   expect(button("Got it")).toBeTruthy();
   expect(data).toEqual({});
+  await remount();
+  expect(button("Got it")).toBeTruthy();
+});
+it("links to this channel's setup guide without acknowledging or changing recording", async () => {
+  data["anidachi.historyRecordingChoice:owner-a"] = { enabled: false };
+  await render();
+  const guide = host.querySelector<HTMLAnchorElement>(".popup-welcome-guide")!;
+  expect(guide.href).toBe("https://staging.anidachi.app/extension#using");
+  expect(guide.target).toBe("_blank");
+  expect(guide.rel).toBe("noopener noreferrer");
+  // Native link navigation is checked in the browser; isolate its click side effects here.
+  guide.addEventListener("click", event => event.preventDefault());
+  await act(async () => guide.click());
+  expect(set).not.toHaveBeenCalled();
+  expect(dismiss).not.toHaveBeenCalled();
+  expect(openSettings).not.toHaveBeenCalled();
+  expect(data).toEqual({ "anidachi.historyRecordingChoice:owner-a": { enabled: false } });
   await remount();
   expect(button("Got it")).toBeTruthy();
 });

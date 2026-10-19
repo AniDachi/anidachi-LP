@@ -28,6 +28,7 @@ describe("content adapter lifecycle", () => {
 
 	afterEach(() => {
 		vi.useRealTimers();
+		vi.unstubAllEnvs();
 		vi.restoreAllMocks();
 		document.body.replaceChildren();
 	});
@@ -56,6 +57,33 @@ describe("content adapter lifecycle", () => {
 		expect(localStorage.getItem("anidachi:debug-log:v1")).toBeNull();
 		expect(localStorage.getItem("page-owned-neighbor")).toBe("must-remain");
 		runtime.dispose();
+	});
+
+	it("isolates production tour keys before player listeners and releases them after disposal", () => {
+		vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
+		const runtime = startContentLifecycle({
+			detect: () => ({ status: "none" }),
+			ensureStyles: () => undefined,
+			mount: vi.fn(),
+			startProviderStudy: () => vi.fn(),
+		});
+		const nativeKey = vi.fn();
+		window.addEventListener("keydown", nativeKey, true);
+		try {
+			document.documentElement.setAttribute("data-anidachi-player-introduction", "true");
+			const key = new KeyboardEvent("keydown", { key: "v", code: "KeyV", bubbles: true, cancelable: true });
+			window.dispatchEvent(key);
+			expect(key.defaultPrevented).toBe(true);
+			expect(nativeKey).not.toHaveBeenCalled();
+			document.documentElement.removeAttribute("data-anidachi-player-introduction");
+			runtime.dispose();
+			window.dispatchEvent(new KeyboardEvent("keydown", { key: "v", code: "KeyV" }));
+			expect(nativeKey).toHaveBeenCalledOnce();
+		} finally {
+			document.documentElement.removeAttribute("data-anidachi-player-introduction");
+			runtime.dispose();
+			window.removeEventListener("keydown", nativeKey, true);
+		}
 	});
 
 	it("keeps the mounted room shell while suspending and replacing the player", () => {
@@ -101,6 +129,10 @@ describe("content adapter lifecycle", () => {
 		window.dispatchEvent(new Event("pagehide"));
 		runtime.dispose();
 
+		expect(mounted.suspend).toHaveBeenCalledTimes(1);
+		expect(vi.mocked(mounted.suspend).mock.invocationCallOrder[0]).toBeLessThan(
+			vi.mocked(mounted.dispose).mock.invocationCallOrder[0],
+		);
 		expect(mounted.dispose).toHaveBeenCalledTimes(1);
 		expect(stopKeyboardGuard).toHaveBeenCalledTimes(1);
 		expect(stopProviderStudy).toHaveBeenCalledTimes(1);

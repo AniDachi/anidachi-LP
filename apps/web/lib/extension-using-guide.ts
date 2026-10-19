@@ -18,43 +18,43 @@ export function extensionUsingStepHref(name: string) {
 
 export const extensionUsingSteps = [
   {
-    name: "Open the bubble",
-    text: "On a Crunchyroll title or a full YouTube watch page, look at the top-right of the player. Click the AniDachi bubble — logo, green dot, and a number.",
+    name: "Open the capsule",
+    text: "Click the capsule at the top-right of your player to open room controls.",
   },
   {
     name: "Create a room",
-    text: "Hosting requires your own Plus or Pro access, including an active trial. To join for free, open an invite from a Plus, Pro, or trial host. If you are hosting, AniDachi detects the title. Click Create room — the orange button under your name. After the room starts, click the copy icon next to End room and send that invite. Friends open it on their own player.",
+    text: "Choose Create room, then copy the invite to share it with friends. Hosting needs Plus or Pro, including an active trial.",
   },
   {
     name: "Invite a friend",
-    text: "Next to End room, click the person-plus icon. Friends & groups opens — Invite a friend or a group from the list. Copy invite still works for one-off links.",
+    text: "Click the person-plus button next to End room to open Friends & groups. Choose Invite beside a friend or group. You can also copy the room link and send it yourself.",
   },
   {
     name: "Media seats",
-    text: "In People, hosts tap the round radio button on a person. White means they have microphone and camera access. Grey means listening and chat only. Tap to give or take a seat. Up to four cameras can be on at once.",
+    text: "Hosts control microphone and camera access in People. The round radio button is white when access is on and grey when it is off. Guests without access can still listen and chat. Up to four cameras can be on at once.",
   },
   {
     name: "Reactions",
-    text: "Open Settings → Reactions. Turn Quick reactions on. Keys 1–0 each map to an emoji — click a slot to change it. In a room, press that number to send it.",
+    text: "In Settings → Reactions, turn on Quick reactions. Press a number from 1–0 to send its emoji. Click an emoji slot to choose a different one.",
   },
   {
     name: "Send a message",
-    text: "While watching in a room, press Enter to open the message field. Type your message, then press Enter again to send it.",
+    text: "Press Enter while watching to open the message field. Type your message, then press Enter again to send it.",
   },
   {
     name: "Layout",
-    text: "Open Settings → Layout. Drag cameras or chat in the preview to reposition them. Under Video, enlarge Camera size, then Apply.",
+    text: "In Settings → Layout, drag the cameras and chat to where you want them. Adjust their size, then choose Apply to save your layout.",
   },
   {
-    name: "Voice",
-    text: "Open Settings → Voice. Leave Push to talk selected on the left. Hold V to speak. Use Open mic only if you want the mic live without holding a key.",
+    name: "Microphone & camera",
+    text: "Yellow microphone: hold V to talk. Click it for an always-on microphone in green; click again to return to push to talk. The camera button turns video on or off. These examples never use your microphone or camera.",
   },
   {
     name: "Interface",
-    text: "Open Settings → Interface. Both controls are visible by default. Choose Auto hide to reveal the main control near the player edge, or Smart for participant pills that appear when someone speaks or you hover the edge.",
+    text: "In Settings → Interface, choose when the player controls appear. Auto hide reveals the capsule near the player edge. Smart shows participant pills when someone speaks or you hover the edge.",
   },
   {
     name: "Room",
-    text: "Open Settings → Room. Room defaults are your starting mic and camera for every room. Microphone: Last used, Push to talk, or Open mic. Camera: Last used, Off, or On.",
+    text: "In Settings → Room, choose how your microphone and camera start in each room. Last used remembers your previous choice. You can also set a fixed starting mode.",
   },
 ] as const;

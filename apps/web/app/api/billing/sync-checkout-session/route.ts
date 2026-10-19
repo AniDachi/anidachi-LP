@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
 		const response = NextResponse.json(
 			{
 				ok: true,
+				checkoutComplete: checkoutSession.status === "complete" &&
+					(checkoutSession.payment_status === "paid" || checkoutSession.payment_status === "no_payment_required"),
 				planCode: result.effectivePlan,
 				subscriptionPlanCode: result.planCode,
 				status: result.status,

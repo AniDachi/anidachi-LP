@@ -20,6 +20,7 @@ import {
 import { RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
+import { LibraryEmptyState } from "./library-empty-state";
 import { WatchLibraryCapacity } from "./watch-library-capacity";
 import { HistoryBrowser, HistoryActions, type HistoryPlatform } from "./history-browser";
 import { useAccountViewState } from "@/components/account/account-workspace-state";
@@ -134,7 +135,7 @@ function WatchLibraryOwnerClient({
   }, [hideInaccessible]);
 
   const readPage = useCallback(async (cursor: string | null = null, signal?: AbortSignal) => {
-    const query = new URLSearchParams({ limit: "24" });
+    const query = new URLSearchParams({ limit: "24", providerVersion: "2" });
     if (cursor) query.set("cursor", cursor);
     const filtered = provider !== "all";
     if (filtered) { query.set("mode", "personal"); query.set("provider", provider); }
@@ -380,7 +381,7 @@ function WatchLibraryOwnerClient({
       currentTime: number,
     ) => {
       if (busyAction || mutationInFlight.current || !canRead) return;
-      if (provider !== "crunchyroll" && provider !== "youtube") return;
+      if (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix") return;
       const revision = operationRevision.current;
       const generation = history.meta.accountGeneration;
       const current = () =>
@@ -429,14 +430,18 @@ function WatchLibraryOwnerClient({
     ],
   );
 
+  // A filtered page is not evidence that the user's entire library is empty.
+  const emptyLibrary = canRead && provider === "all" && historyProvider === "all"
+    && history.totalTitleCount === 0 && history.items.length === 0 && !history.nextCursor;
+
   return (
-    <div className="wh-page">
+    <div className={`wh-page${emptyLibrary ? " wh-page-first-watch" : ""}`}>
       <header className="wh-page-heading">
         <div>
           <h1>Watch Library</h1>
-          <p>Your progress, all in one place.</p>
+          {!emptyLibrary && <p>Your progress, all in one place.</p>}
         </div>
-        <div className="wh-page-actions">
+        {(!emptyLibrary || notice?.tone === "error") && <div className="wh-page-actions">
           <button
             className="wh-icon"
             aria-label="Refresh history"
@@ -446,7 +451,7 @@ function WatchLibraryOwnerClient({
           >
             <RefreshCw size={16} aria-hidden />
           </button>
-          <HistoryActions
+          {!emptyLibrary && <HistoryActions
             label="Library options"
             disabled={Boolean(busyAction) || editorDirty || provider !== historyProvider}
           >
@@ -459,10 +464,10 @@ function WatchLibraryOwnerClient({
               <Trash2 size={15} aria-hidden />
               Clear all history
             </button>
-          </HistoryActions>
-        </div>
+          </HistoryActions>}
+        </div>}
       </header>
-      {accessState === "plan_required" && (
+      {accessState === "plan_required" && !emptyLibrary && (
         <p className="wh-hint" role="status">
           Your saved history stays here. Plus or Pro unlocks recording and
           progress editing.{" "}
@@ -485,6 +490,8 @@ function WatchLibraryOwnerClient({
             ? "Update AniDachi to use personal history."
             : "History access is temporarily unavailable. Please retry."}
         </section>
+      ) : emptyLibrary ? (
+        <LibraryEmptyState canRecord={accessState === "allowed"} />
       ) : (
         <HistoryBrowser
           key={`${ownerUserId}:${history.meta.accountGeneration}`}
@@ -844,7 +851,7 @@ function deleteScopeKey(target: WatchHistoryDeleteScope): string {
 
 function deleteConfirmation(target: WatchHistoryDeleteScope): string {
   if (target.scope === "all")
-    return "Clear all your AniDachi watch history on YouTube and Crunchyroll? This cannot be undone.";
+    return "Clear all your AniDachi watch history on YouTube, Crunchyroll, and Netflix? This cannot be undone.";
   if (target.scope === "title")
     return "Delete this title from your watch history?";
   return "Delete this episode from your watch history?";

@@ -26,7 +26,7 @@ export default async function AccountWatchLibraryPage() {
 				access: async (userId) =>
 					(await resolveAccountEntitlements(userId, new Date())).history,
 				preferences: (userId) => getWatchHistoryPreferencesV3({ userId }),
-				history: (userId) => listWatchHistoryV3({ userId, limit: 24 }),
+				history: (userId) => listWatchHistoryV3({ userId, limit: 24, providerVersion: 2 }),
 			},
 		);
 		return (

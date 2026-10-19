@@ -52,3 +52,16 @@ test("capacity rejection is a public 409 without access revocation", () => {
 	const error = publicDatabaseError({ message: "HISTORY_LIMIT_REACHED" });
 	assert.equal(error.status, 409); assert.equal(error.code, "HISTORY_LIMIT_REACHED");
 });
+
+test("capacity v2 is explicit, provider-complete and version-bound", async () => {
+  const v2 = { ...capacity, capacityVersion: 2, providers: { ...capacity.providers, netflix: { used: 2, limit: 200 } } };
+  const handle = createWatchHistoryCapacityHandler({ getSession: async () => session,
+    store: { load: async (_owner, _generation, version) => version === 2 ? v2 : capacity },
+  });
+  assert.deepEqual(await (await handle(request())).json(), capacity);
+  assert.deepEqual(await (await handle(request("?capacityVersion=2"))).json(), v2);
+  for (const version of ["0", "3", "02", "", "abc"])
+    assert.equal((await handle(request(`?capacityVersion=${version}`))).status, 400);
+  const mismatch = createWatchHistoryCapacityHandler({ getSession: async () => session, store: { load: async () => v2 } });
+  assert.equal((await mismatch(request())).status, 502);
+});

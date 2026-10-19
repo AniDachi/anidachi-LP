@@ -524,14 +524,14 @@ describe("overlay layout resolver", () => {
 
 	it("aligns the last chat row and column with the safe-area edges", () => {
 		const definition = getDefaultOverlayLayoutDefinition();
-		definition.chat.position = { x: 7, y: 7 };
+		definition.chat.position = { x: 9, y: 7 };
 		const result = resolveOverlayLayout(definition, {
 			cameraCount: 0,
 			reservedRects: [],
 			viewport,
 		});
 
-		expect(result.chat.position).toEqual({ x: 7, y: 7 });
+		expect(result.chat.position).toEqual({ x: 9, y: 7 });
 		expect(result.chat.rect.x + result.chat.rect.width).toBeCloseTo(1268);
 		expect(result.chat.rect.y + result.chat.rect.height).toBe(664);
 	});
@@ -691,6 +691,7 @@ describe("overlay layout resolver", () => {
 
 	it("uses temporary compact fallback without mutating preferences", () => {
 		const definition = getDefaultOverlayLayoutDefinition();
+		definition.chat.maxMessages = 5;
 		const snapshot = structuredClone(definition);
 		const result = resolveOverlayLayout(definition, {
 			cameraCount: 4,
@@ -712,6 +713,9 @@ describe("overlay layout resolver", () => {
 
 	it("reduces camera size when reservations leave no chat space at the requested size", () => {
 		const definition = getDefaultOverlayLayoutDefinition();
+		// Keep this constrained legacy layout explicit, independent of install defaults.
+		definition.video = { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 };
+		definition.chat = { ...definition.chat, position: { x: 0, y: 4 }, width: 5, maxMessages: 5 };
 		const context = {
 			cameraCount: 4 as const,
 			reservedRects: [

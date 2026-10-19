@@ -35,6 +35,7 @@ export type HotkeyEventLike = Pick<
   | "target"
   | "type"
 > & {
+  keyCode?: number;
   composedPath?: () => EventTarget[];
 };
 
@@ -42,13 +43,13 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   if (
     !state.roomActive ||
     state.messageComposerOpen ||
-    hasBlockedModifier(event) ||
+    hasBlockedModifierOrComposition(event) ||
     isEditableEventTarget(event)
   ) {
     return null;
   }
 
-  if (isMessageComposerOpenKey(event)) {
+  if (isMessageComposerOpenKey(event) && !isInteractiveEventTarget(event)) {
     return { type: "message-composer-open" };
   }
 
@@ -94,7 +95,7 @@ export function shouldCaptureReactionShortcutEvent(
     state.roomActive &&
     !state.messageComposerOpen &&
     state.reactionsEnabled &&
-    !hasBlockedModifier(event) &&
+    !hasBlockedModifierOrComposition(event) &&
     !isEditableEventTarget(event) &&
     reactionShortcutIndexFromCode(event.code) !== null
   );
@@ -130,8 +131,8 @@ export function isFireReactionReleaseEvent(
   );
 }
 
-function hasBlockedModifier(event: HotkeyEventLike): boolean {
-  return event.altKey || event.ctrlKey || event.metaKey;
+function hasBlockedModifierOrComposition(event: HotkeyEventLike): boolean {
+  return event.isComposing || event.keyCode === 229 || event.altKey || event.ctrlKey || event.metaKey;
 }
 
 function isVoiceKey(event: Pick<HotkeyEventLike, "code" | "key">): boolean {
@@ -177,5 +178,14 @@ function isEditableElement(element: HTMLElement): boolean {
     tagName === "select" ||
     element.isContentEditable ||
     element.getAttribute("role") === "textbox"
+  );
+}
+
+// Enter activates the focused native control. Opening chat must not steal that
+// activation from player buttons, menus, links or accessible custom controls.
+function isInteractiveEventTarget(event: HotkeyEventLike): boolean {
+  const selector = 'button, a[href], area[href], summary, [role="button"], [role="link"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="slider"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], [role="combobox"], [role="listbox"], [role="option"], [role="treeitem"], [role="spinbutton"]';
+  return (event.composedPath?.() ?? [event.target]).some(
+    target => target instanceof Element && target.closest(selector) !== null,
   );
 }

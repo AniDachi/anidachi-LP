@@ -1,5 +1,319 @@
 # Current Development State
 
+## Authorized production launch, October 19, 2026
+
+The owner confirmed Store 0.1.4 is approved and waiting for manual publication,
+then authorized the ordered production launch. This supersedes the historical
+preparation-only boundaries below; Store publication remains the owner's step.
+PR #450 delivered the frozen package record to staging. Schema-only PR #451
+merged at `bb84825a`; production migration workflow `39263149172` succeeded.
+Production now has all 79 migrations through `20261018223354`. The 34 existing
+subscriptions, 22 account-trial records and 35 Checkout reservations match their
+pre-migration hashes. Policy revision 2, its activation timestamp and existing
+trials remain unchanged; cardless starts and abuse enforcement remain false.
+Trial-event environment is now production, with analytics delivery still off.
+
+A forward deletion guard is being staged before cardless activation. It blocks
+manual deletion of pending marker claims until evidence-backed recovery settles
+the activation, retaining unknown Stripe outcomes and consumed abuse history.
+Compatible Web/Worker delivery and post-deploy acceptance are still pending.
+The owner will test Store 0.1.2 after deployment; that compatibility gate is open,
+not waived. Fresh LIVE catalog/webhook/Portal checks and Sandbox saved-card
+renewal acceptance are recorded in the [launch runbook](releases/integrated-release-2026-10-17.md).
+
+## Store listing rename, October 19, 2026
+
+The owner approved `AniDachi: Watch Together, Synced Watch Party` as the production
+manifest name. `short_name` remains `AniDachi`; staging/local names, stable IDs,
+permissions, endpoints, assets and runtime behavior remain unchanged. Package
+source `b49bbab0` adds only the name and matching validation to staging `32ad5ab0`.
+The new 0.1.4 channel ZIPs supersede the earlier 0.1.3 archives; the owner screenshot
+shows 0.1.3 as draft and 0.1.2 published. Exact hashes and unchanged launch gates
+are in the [runbook](releases/integrated-release-2026-10-17.md). No Store upload,
+main promotion or production mutation occurred. The audit below is the earlier
+0.1.3 checkpoint; its no-upload observation is superseded by the screenshot.
+
+## Store review package audit, October 19, 2026
+
+The new 0.1.3 channel ZIPs freeze current staging `32ad5ab0`, including the latest
+popup welcome from #447 and all accepted extension runtime changes. The owner
+confirmed 0.1.3 has not been uploaded. Extension typecheck and 2,439 tests pass;
+current staging CI, Rooms/P2P E2E and smoke passed. #448/#449 billing screens and
+renewal guards are now deployed on staging; production remains `a8aee464`.
+
+The owner reported anti-abuse works. This does not manufacture separate evidence
+for cookie-only denial, new saved-card Sandbox flows or actual Store upgrades.
+Production still needs ten ordered additive migrations before the compatible Web
+and Worker launch. After saved-card operations exist, rollback must retain their
+new provenance/reconciliation guards. Exact artifact hashes, live read-only
+checks, fixture results and remaining acceptance gates are recorded in the
+[coordinated launch runbook](releases/integrated-release-2026-10-17.md).
+No production mutation or Store publication is authorized by this preparation.
+
+## Trial renewal clarity candidate, October 19, 2026
+
+The isolated `codex/trial-renewal-clarity` candidate replaces per-selection renewal
+reservations with one owner-bound, read-only price/card preview. Confirmation still
+checks live Stripe terms, explicit consent and the original trial deadline. A saved
+card can be reused only with fresh consent and verified same-subscription provenance.
+Migration `20261018223354` prevents a new quote from superseding consented setup and
+adds service-only saved-card consent. Apply the additive migration before the web
+candidate; it does not change trial eligibility or require an extension rebuild.
+Local web and disposable database verification are recorded in the
+[implementation record](superpowers/plans/2026-10-19-trial-renewal-clarity.md).
+This is not evidence of a staging deployment or production acceptance.
+
+## Mobile installation handoff, October 18, 2026
+
+The accepted mobile install panel opens only after an Install action. Marketing,
+Free-plan, account and active trial/paid welcome entry points share the same panel;
+desktop and modified clicks retain their original destinations. The panel links to
+the canonical Chrome Web Store listing and offers native sharing, clipboard copy,
+or a selectable fallback URL. Shared links retain only validated installation
+context on the current environment. No account, trial, payment or extension
+contract changes are included, and the existing Store ZIP does not need rebuilding.
+
+Local browser and web checks passed; staging delivery is authorized, while real
+phone Add to Desktop acceptance and production promotion remain separate.
+See the [delivery record](releases/mobile-install-panel-2026-10-18.md) for scope,
+verification, the Graphify tooling limitation and rollback.
+
+## Trial flow stability, October 17, 2026
+
+The [stability follow-up](superpowers/plans/2026-10-17-trial-flow-stability.md)
+separates presentation from freshness and authorization. Same-owner pricing,
+subscription cards and extension badges remain visible during ordinary revalidation.
+Initial unknown actions use a neutral loader; confirmed owner changes and explicit
+server admission denials retire stale data. Pending reads are coalesced only within
+the current owner/session and departure epoch. Sent billing operations keep their
+locks and request IDs across blur/backgrounding, then verify the owner before a
+deferred redirect. Actual trial/quote expiry remains independent of display TTL.
+
+Account-eligible extension entries open Plus/monthly trial confirmation directly;
+known used accounts go to ordinary plans. Onboarding unknown actions now use a
+compact loader. Follow-up #444 removes the remaining Continue with Plus paths
+left after #438: initial errors/incomplete terms offer a real retry, unresolved
+identity stays neutral and confirmed signed-out users sign in to the selected
+Plus confirmation. The same-owner verified offer persists during revalidation.
+The hosting notice follows the same unknown-versus-confirmed rule; a confirmed
+card-required server retains ordinary pricing navigation.
+The website checks its HttpOnly browser cookie and optional installation proof
+before showing trial terms. A used marker produces explicit paid terms; outages
+remain retryable. Final atomic reservation, anti-abuse and Stripe lifecycle are
+unchanged. Checkout reuses a proof only for its same owner-bound operation and
+unchanged offer/departure, for at most 60 seconds. Context and offer have separate
+20/minute buckets after additive migration `20261017130802` (staging PR #436).
+
+Query-selected pricing uses a small Suspense boundary to avoid painting yearly
+prices for monthly links without making public pages dynamic. Notification reads
+coalesce focus bursts and queue a fresh read for a mutation that overlaps a read.
+No Worker/provider/media changes, permissions, secrets, price or renewal changes.
+This delivery is staging-only; updated 0.1.3 channel ZIPs supersede the earlier
+candidate, while production promotion and real-account acceptance stay separate.
+
+## Netflix website launch copy, October 17, 2026
+
+The approved website follow-up presents Netflix as supported alongside Crunchyroll
+and YouTube for the coordinated 0.1.3 release. It removes stale coming-soon and
+unsupported claims from public copy, FAQ/HowTo structured data, search/social
+metadata, comparison tables, account help and the privacy provider list. Netflix
+is removed from the future-platform logo strip; the remaining logos stay centered.
+Published URLs, canonical/www behavior, high-traffic homepage title/H1, pricing,
+authorization and the frozen extension ZIP are unchanged.
+
+This copy is prepared for staging and the later coordinated launch, not an early
+production claim. Netflix ad-plan acceptance and Store listing/privacy declarations
+remain separate launch checks. See the [website-copy receipt](releases/netflix-website-copy-2026-10-17.md)
+and [integrated launch runbook](releases/integrated-release-2026-10-17.md).
+
+## Integrated release package refresh, October 18, 2026
+
+The owner authorized preparing a production-channel review ZIP with the accepted
+onboarding enabled, followed by deferred Store publication and a separately
+authorized production launch after approval. `codex/integrated-release-candidate`
+starts from staging `847e9d16`. The overlay mount, document-start keyboard guard
+and background claim now use the same behavior in every channel. The existing
+installation-local seen key and sender validation are preserved. No production
+server, database policy or Store publication is changed by this preparation.
+
+The integrated release plan remains the acceptance checklist; actual fresh-account
+abuse acceptance, two-client provider checks and Store update permission handling
+must not be inferred from passing unit tests. Exact source/artifact identities and
+remaining gates belong to the release receipt and the
+[coordinated launch runbook](releases/integrated-release-2026-10-17.md). Production
+read-only October 18 preflight confirms hosting is already active from October 3,
+with nine pending additive migrations, including `20261017130802` rate buckets;
+the old hosting cutover must not be replayed.
+
+The refreshed 0.1.3 Store review ZIP freezes runtime `9b99ba0e` from #444 and includes
+website presence / welcome routing from #440 plus the already approved onboarding,
+trial stability, provider and request optimizations. Subscription screens #441/#442
+are Web-only. Both channel artifact identities and exact CI/deployment evidence
+are in the runbook; the production ZIP's 2,438 tests and offline Chrome fixtures
+pass. Both channel ZIPs were rebuilt after #444; the older October 18 archives
+are superseded. Seven packaged offer states per channel and the existing
+onboarding/return fixtures pass without real account or payment operations. Two requested test accounts were reset only in staging/Sandbox; the owner
+will run the fresh-account anti-abuse flow later. Actual Store update, combined
+provider acceptance and LIVE Stripe preflight remain open. Production is unchanged.
+
+## Player input and camera-state candidate, October 17, 2026
+
+The [four-finding repair plan](superpowers/plans/2026-10-17-netflix-input-media-fixes.md)
+adds stable document-start routing for room hotkeys, releases held push-to-talk
+when opening chat, preserves Enter activation on native player controls, and
+restores reported camera state from the matching v2/v3 media grant after Worker
+hibernation. It preserves YouTube/Crunchyroll paths, legacy rooms, open-mic choice,
+onboarding priority, protocol shapes and request-cost optimizations.
+
+This is a staging-only candidate. Exact tests, CI, Worker deployment and extension
+artifact identity belong to its PR. Loaded-artifact and two-client acceptance
+remain distinct from local integration/runtime tests; production and Store are
+not part of this delivery.
+
+## Trial offer preflight candidate, October 16, 2026
+
+The approved follow-up checks account authority plus the signed browser and optional
+installation markers before displaying a cardless trial CTA. A consumed marker
+shows ordinary priced purchase; pending markers or failures show retry. The existing
+atomic activation reservation remains authoritative. Preflight never starts a trial
+or creates Stripe state. Current subscriptions and same-operation recovery take priority.
+
+Pricing and checkout share a bounded preflight without periodic offer polling.
+The October 17 stability follow-up above supersedes the original display-expiry
+and neutral View plans entry behavior. Checkout retains a compact accessible
+initial loader; the final atomic marker check remains authoritative.
+
+See the [design](superpowers/specs/2026-10-16-trial-offer-preflight-design.md) and
+[plan](superpowers/plans/2026-10-16-trial-offer-preflight.md). This is candidate
+behavior, not production acceptance. Delivery is two ordered staging PRs: additive
+DB first via the normal staging migration workflow, then runtime. No feature-ref
+release, new secret, permission, price or entitlement change. The actual release
+receipt and remaining real-account acceptance belong in the PR/controller report.
+
+## Cardless trial abuse protection candidate, October 15, 2026
+
+The approved candidate adds account + signed browser-cookie checks and an optional
+extension installation-key proof. Web verifies the proof; PostgreSQL reserves
+marker hashes atomically with a new trial activation. Verified creation consumes
+them; unknown Stripe outcomes remain reserved. Existing trials and recovery retain
+their original identity. Missing/old extensions use the cookie-only path.
+
+New routes: POST `/api/billing/trial/context`; additive proof on trial start.
+The extension permits external messages only from its exact channel website.
+A marker rejection shows View plans; a short-lived account/browser-bound receipt
+makes the website offer ordinary purchase with explicit price confirmation.
+No price, automatic renewal, room or Worker entitlement change is introduced.
+Consumed hashes expire after 365 days with daily bounded PostgreSQL cleanup.
+
+Database `trial_abuse_enforced` is initially false for a compatible staged rollout;
+when enabled it rejects new reservations from older unguarded servers. Existing
+activation recovery remains valid. See the [design](superpowers/specs/2026-10-15-cardless-trial-abuse-design.md)
+and [plan](superpowers/plans/2026-10-15-cardless-trial-abuse.md). This paragraph
+records implemented candidate behavior, not deployment or production acceptance.
+
+## Player onboarding staging candidate, October 14, 2026
+
+The owner accepted the final six-step local practice tour and authorized its
+selective staging delivery. `codex/onboarding-staging-oct14` starts from staging
+`7140b9d4`, preserving PR419–421 request/camera work, PR422 drawer and hosting
+notices, and PR423 room-end feedback. It imports only the teaching components,
+claim/keyboard integration and icon exports. No Web, Worker, protocol, permissions,
+billing, environment or dependency change is included.
+
+A ready personal video plays for two seconds before the once-per-installation tour
+pauses it. The existing drawer rehearses create/invite/chat/media/settings without
+real room, invite, message, capture or preference writes. Let’s watch rolls the
+existing logo across a 1.2-second wipe, with a short reduced-motion fade instead,
+then resumes only the same foreground video if it was previously playing. Skip,
+Escape and lifecycle interruptions retain their cleanup and ownership checks.
+
+This is a staging candidate, not loaded-extension or production acceptance. The
+[onboarding plan](superpowers/plans/2026-10-10-player-onboarding-local.md) records
+behavior, local evidence, packaging and reset instructions. The exact PR, merged
+SHA and immutable artifact receipt belong in the delivery report. At that October 14 checkpoint all three production guards were disabled.
+The October 17 release preparation above enables them; deployment/publication
+remain separate gates.
+
+## Request-cost follow-up candidate, October 14, 2026
+
+PR #419 delivered the first request-cost fixes to staging `de27cc98`.
+The approved follow-up on `codex/vercel-request-followup` removes a duplicate
+startup history validation, separates transient profile lookup errors from
+invalid tokens, joins only equivalent in-flight account probes using a durable
+session revision, and persists a backoff deadline for terminal room delivery.
+This section describes candidate behavior, not deployment or browser acceptance.
+
+No completed authorization cache or extended history lease is introduced. Cached
+identity remains suitable for display during temporary errors; privileged actions
+require fresh validation. Logout/account replacement fences late responses.
+Terminal retries retain frozen usage and pending sources, respect Retry-After,
+and never reopen a closed room or acknowledge unconfirmed persistence.
+
+The [follow-up plan](superpowers/plans/2026-10-14-vercel-request-followup.md)
+records tests and delivery gates. Source-specific failed-request reconciliation,
+actual loaded-extension acceptance, measured production savings and the integrated
+UI/onboarding/Netflix/trial release remain separate gates. No production or Store
+publication, schema/env/price/permission change is included.
+
+## Cardless trial staging delivery, October 11, 2026
+
+[PR #410](https://github.com/AniDachi/anidachi-LP/pull/410) merged as
+`2471411b7bede05a5564679988fee7725df93d17`. The Schedule-based 72-hour trial,
+account authority, explicit renewal consent/setup/cancellation, recovery,
+website states and verified funnel are deployed to staging with new starts off.
+All five additive migrations applied. A before/after fingerprint comparison
+preserved all 17 subscription rows, nine legacy trial rows, the empty manual-grant
+set and existing paid-hosting/trial policy fields. Production is untouched.
+
+Independent final review accepted runtime `4b6a8027`; Graphify was refreshed in
+`32250893`. Staging Web is READY on the merge SHA; protected-site smoke and the
+staging extension build/validation passed. The existing paid account Billing
+page was inspected without payment actions. The local extension redesign folder
+remains separate. Local proof includes fourteen real Stripe Sandbox Schedule
+cases, 258 SQL assertions and four DB concurrency scenarios.
+
+The authenticated staging analytics probe returned 503 while the scheduler was
+disabled and its queue empty. The follow-up candidate identifies the environment
+by the Vercel target plus exact Git branch, instead of the public SEO origin.
+Its focused tests (12), full web suite (1095 passed, six existing skips),
+TypeScript and changed-file lint passed. Hosted success remains unproven at this
+source checkpoint. The exact follow-up delivery and probe receipt belong in its
+PR description/controller report rather than a docs-only deployment loop.
+
+New starts and analytics delivery remain disabled. Fresh OAuth/trial/setup,
+actual AniDachi-project event delivery, loaded current/old extension behavior,
+72-hour room expiry and owner acceptance remain open. See
+[acceptance evidence](superpowers/plans/2026-10-11-cardless-trial-acceptance.md) and
+[rollout/recovery runbook](releases/cardless-trial/staging-runbook.md). Production
+requires separate authorization and an isolated billing promotion diff.
+
+## Netflix staging candidate, October 8, 2026
+
+The approved `codex/netflix-platform-staging` candidate adds Netflix movies and
+series to canonical room sources, personal history, the extension adapter and
+popup/site library. Tasks 1–4 are implemented and locally reviewed through
+`fc7bb3e8`; final integration adds lifecycle coverage, staging target protection
+and launch guidance. This checkpoint describes candidate source, not deployed
+Netflix support. Earlier dated sections below retain their historical context.
+
+Legacy all-provider history reads and capacity remain version 1 with only
+Crunchyroll/YouTube. New consumers explicitly request `providerVersion=2` and
+`capacityVersion=2`; an explicit Netflix provider filter opts into Netflix reads.
+Netflix capacity is 200 titles, with no pricing or entitlement change. Recording
+still requires the viewer's existing paid/trial access and history authority.
+
+Local SQL, protocol, Web/Worker, extension and room-harness evidence is recorded
+in [Netflix staging verification](netflix-staging-verification.md). The exact
+delivered revisions, protected-site smoke and immutable final artifact receipt
+will be recorded in the feature PR description and controller release report;
+the verification document preserves the state at this source checkpoint without
+requiring a docs-only deployment loop. Loaded-extension movie/series/history acceptance,
+native episode replacement, two-client room sync and real ad-plan behavior remain
+pending. The browser's current Free/empty staging account cannot prove recording.
+No main promotion, production migration/deploy, Store publication or entitlement
+change is authorized. See [adapter contracts and limitations](netflix-adapter-notes.md)
+and the [approved plan](superpowers/plans/2026-10-08-netflix-staging.md).
+
 ## Release safeguards delivered to staging, October 2, 2026
 
 [PR #397](https://github.com/AniDachi/anidachi-LP/pull/397) merged at 12:28:38 UTC

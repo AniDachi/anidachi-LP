@@ -1,0 +1,31 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into public.users(id,email,display_name) values
+ ('a7000000-0000-4000-8000-000000000001','cardless-launch@example.test','Launch'),
+ ('a7000000-0000-4000-8000-000000000002','cardless-old@example.test','Old checkout');
+set local role service_role;
+select ok(public.consume_trial_action_rate_limit_v1('a7000000-0000-4000-8000-000000000001','start'),'first trial action permitted');
+select bool_and(public.consume_trial_action_rate_limit_v1('a7000000-0000-4000-8000-000000000001','start')) from generate_series(1,19);
+select ok(not public.consume_trial_action_rate_limit_v1('a7000000-0000-4000-8000-000000000001','start'),'per-account limit persists across requests');
+select is((select count(*) from public.account_subscription_trials where user_id='a7000000-0000-4000-8000-000000000001'),0::bigint,'rate limit does not consume trial');
+select throws_ok($$select public.consume_trial_action_rate_limit_v1('a7000000-0000-4000-8000-000000000001','arbitrary-key')$$,'P0001','TRIAL_RATE_LIMIT_INPUT_INVALID','cannot create arbitrary rate-limit buckets');
+select throws_ok($$select public.record_verified_account_email_v1('a7000000-0000-4000-8000-000000000001','foreign@example.test')$$,'P0001','VERIFIED_EMAIL_OWNER_MISMATCH','verified email must match the current account');
+select public.record_verified_account_email_v1('a7000000-0000-4000-8000-000000000001','cardless-launch@example.test');
+select is((select email from public.account_verified_emails where user_id='a7000000-0000-4000-8000-000000000001'),'cardless-launch@example.test','only provider-confirmed current email is retained');
+reset role;
+update public.hosting_commercial_policy set activation_at=now()-interval '1 day',trials_enabled=true,cardless_trials_enabled=false;
+set local role service_role;
+select public.reserve_subscription_checkout_v1('a7000000-0000-4000-8000-000000000002','plus','price_old','https://anidachi.test',gen_random_uuid(),'{}');
+reset role;
+update public.hosting_commercial_policy set cardless_trials_enabled=true;
+set local role service_role;
+select throws_ok($$select public.reserve_subscription_checkout_v1('a7000000-0000-4000-8000-000000000001','plus','price_new','https://anidachi.test',gen_random_uuid(),'{}')$$,'P0001','CARDLESS_TRIAL_OFFER_CHANGED','old server cannot mint a new card-required trial under cardless policy');
+select is(public.reserve_subscription_checkout_v1('a7000000-0000-4000-8000-000000000002','plus','price_new','https://anidachi.test',gen_random_uuid(),'{}')->>'price_id','price_old','old reservation keeps its frozen terms');
+reset role;
+select ok(not has_function_privilege('authenticated','public.consume_trial_action_rate_limit_v1(uuid,text)','execute'),'browser cannot reset or consume arbitrary account quota');
+select ok(not has_function_privilege('authenticated','public.record_verified_account_email_v1(uuid,text)','execute'),'browser cannot certify its own email');
+select ok(not has_table_privilege('authenticated','public.account_verified_emails','select'),'verification records are private');
+select * from finish();
+rollback;

@@ -10,6 +10,7 @@ import {
   PRICING_PLUS_VS_PRO_ANSWER,
   PRICING_PLUS_SHORT,
   PRICING_PRO_SHORT,
+  PRICING_TRIAL_NOTE,
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
@@ -168,8 +169,8 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         </p>
         <p className="text-foreground/80 leading-relaxed mb-8">
           Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro (
-          {PRICING_PRO_SHORT} on monthly billing) to create rooms. Eligible accounts
-          can start a three-day card trial; see pricing for yearly options and renewal terms.
+          {PRICING_PRO_SHORT} on monthly billing) to create rooms.{" "}
+          {PRICING_TRIAL_NOTE} See pricing for yearly options and renewal terms.
         </p>
 
         <h2

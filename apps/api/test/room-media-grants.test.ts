@@ -122,3 +122,39 @@ it("revoke fences arbitrary in-flight sequence, delayed disable and duplicate ho
 	).toMatchObject({ code: "MEDIA_STALE_INTENT" });
 	expect(r.mediaFor("u1")?.microphoneGranted).toBe(true);
 });
+
+// A camera publication report is separate from the permission to capture.
+it.each([2, 3] as const)("preserves a reported camera across v%s wake and subsequent microphone intent", (version) => {
+  let r = room();
+  if (version === 3) {
+    const snapshot = r.toSnapshot();
+    const {maxMicrophones, ...caps} = snapshot.media!.capabilities as Extract<import("@anidachi/protocol").RoomMediaCapabilities, {mediaProtocolVersion: 2}>;
+    snapshot.media!.capabilities = {...caps, mediaProtocolVersion: 3, maxMediaSeats: 8};
+    snapshot.media!.participants = snapshot.media!.participants.map((p, i) => ({...p, mediaSeatGranted: i < 8, seatRevision: 0}));
+    r = new RoomState("room", undefined, snapshot);
+  }
+  r.applyMediaIntent("u0", intent(0, "camera"));
+  r.setCamera("u0", true);
+  const sequence = r.toSnapshot().serverSeq;
+  r = new RoomState("room", undefined, r.toSnapshot());
+  expect(r.participants.find(p => p.id === "u0")?.cameraEnabled).toBe(true);
+  expect(r.toSnapshot().serverSeq).toBe(sequence);
+  r.applyMediaIntent("u0", intent(0, "microphone"));
+  r.applyMediaIntent("u0", intent(0, "microphone", false, 2));
+  expect(r.participants.find(p => p.id === "u0")?.cameraEnabled).toBe(true);
+  r.setCamera("u0", false);
+  r = new RoomState("room", undefined, r.toSnapshot());
+  expect(r.participants.find(p => p.id === "u0")?.cameraEnabled).toBe(false);
+});
+
+it.each(["no-report", "no-grant", "disconnected", "stale-session"])("does not invent a camera publication on wake: %s", (condition) => {
+  const r = room();
+  r.applyMediaIntent("u0", intent(0, "camera"));
+  if (condition !== "no-report") r.setCamera("u0", true);
+  const snapshot = r.toSnapshot();
+  if (condition === "no-grant") snapshot.media!.participants[0]!.cameraGranted = false;
+  if (condition === "disconnected") snapshot.participants[0]!.connected = false;
+  if (condition === "stale-session") snapshot.media!.participants[0]!.participantSessionId = "old-session";
+  const restored = new RoomState("room", undefined, snapshot);
+  expect(restored.participants.find(p => p.id === "u0")?.cameraEnabled).toBe(false);
+});

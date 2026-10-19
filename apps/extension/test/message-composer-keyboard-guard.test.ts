@@ -116,3 +116,39 @@ describe("composer dismissal keyboard guard", () => {
 		expect(document.documentElement.dataset.anidachiComposerOpen).toBe("true");
 	});
 });
+
+describe("Netflix capture-phase keyboard isolation", () => {
+  function netflix() {
+    const previous = Object.getOwnPropertyDescriptor(window, "location")!;
+    Object.defineProperty(window, "location", { configurable: true, value: new URL("https://www.netflix.com/watch/1") });
+    cleanups.push(() => Object.defineProperty(window, "location", previous));
+    install();
+  }
+  it("keeps typing and held keys away from Netflix capture handlers without cancelling native text editing", () => {
+    netflix();
+    const native = vi.fn();
+    for (const type of ["keydown", "keyup", "keypress"]) {
+      window.addEventListener(type, native, true);
+      cleanups.push(() => window.removeEventListener(type, native, true));
+    }
+    document.documentElement.dataset.anidachiComposerOpen = "true";
+    for (const init of [{ key: "k", code: "KeyK" }, { key: " ", code: "Space", repeat: true }, { key: "v", code: "KeyV", metaKey: true }]) {
+      expect(key("keydown", init).defaultPrevented).toBe(false);
+      key("keypress", init); key("keyup", init);
+    }
+    expect(native).not.toHaveBeenCalled();
+    delete document.documentElement.dataset.anidachiComposerOpen;
+    key("keydown", { key: "k", code: "KeyK" }); expect(native).toHaveBeenCalledOnce();
+  });
+  it("dismisses page-delivered fullscreen Escape without calling exitFullscreen or requesting permission", () => {
+    netflix();
+    Object.defineProperty(document, "fullscreenElement", { configurable: true, value: document.body });
+    cleanups.push(() => Reflect.deleteProperty(document, "fullscreenElement"));
+    const dismiss = vi.fn();
+    window.addEventListener("anidachi:message-composer-dismiss", dismiss);
+    cleanups.push(() => window.removeEventListener("anidachi:message-composer-dismiss", dismiss));
+    document.documentElement.dataset.anidachiComposerOpen = "true";
+    expect(key("keydown", { key: "Escape", code: "Escape" }).defaultPrevented).toBe(true);
+    expect(dismiss).toHaveBeenCalledOnce(); expect(document.fullscreenElement).toBe(document.body);
+  });
+});

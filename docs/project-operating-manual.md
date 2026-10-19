@@ -360,7 +360,7 @@ The same source code builds three extension channels.
 
 `production`:
 
-- name: `Anidachi`;
+- name: `AniDachi: Watch Together, Synced Watch Party` (short name `AniDachi`);
 - future public build; publication is a separate release decision;
 - points at production web and production Worker endpoints;
 - should use narrow host permissions.
@@ -442,6 +442,13 @@ retain their documented triggers. See the
 [production delivery procedure](releases/paid-hosting-trial/production-preparation-2026-10-02.md).
 Release workflows must run from `staging` or `main`.
 Do not use manual dispatch from a feature branch as an alternate release path.
+
+The approved October 8 Netflix staging plan has one ordered-delivery exception:
+the reviewed additive DB workflow can run from the frozen feature ref against
+the guarded staging project before runtime merge. Web, Worker and extension
+artifacts still deliver from `staging`. This does not authorize a general
+feature-ref release or production migration. See
+[the exact staging procedure](netflix-staging-verification.md#ordered-staging-delivery).
 
 Never push risky changes directly to `main`. Never mix unrelated P2P, billing,
 auth, UI, and migration changes in one large PR unless the change cannot be split.
@@ -591,7 +598,7 @@ Before uploading production extension:
 - production PR checks have passed and the PR has been merged into `main`;
 - `pnpm build:extension:public` succeeds;
 - `pnpm validate:extension:production` succeeds;
-- manifest name is `Anidachi`;
+- manifest name is `AniDachi: Watch Together, Synced Watch Party`;
 - debug build id contains `production`;
 - host permissions are not broad;
 - web/API endpoints point to production.

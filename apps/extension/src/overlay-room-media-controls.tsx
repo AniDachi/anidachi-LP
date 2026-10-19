@@ -8,6 +8,8 @@ import {
 	CircleCheck,
 	CircleMinus,
 	CirclePlus,
+	Headphones,
+	Mic,
 	Radio,
 	UsersRound,
 	Video,
@@ -16,49 +18,6 @@ import {
 } from "lucide-react";
 import { useId, type ReactNode } from "react";
 import type { MediaSeatControlState } from "./room-media-session";
-
-export interface PanelCameraControlProps {
-	cameraEnabled: boolean;
-	disabled: boolean;
-	disabledReason: string;
-	onToggle: () => void;
-}
-
-export function PanelCameraControl({
-	cameraEnabled,
-	disabled,
-	disabledReason,
-	onToggle,
-}: PanelCameraControlProps) {
-	const label = disabled
-		? "Camera unavailable"
-		: cameraEnabled
-			? "Turn camera off"
-			: "Turn camera on";
-	const CameraIcon = cameraEnabled && !disabled ? Video : VideoOff;
-	const stateClassName = disabled
-		? "unavailable"
-		: cameraEnabled
-			? "active"
-			: "inactive";
-
-	return (
-		<button
-			aria-checked={cameraEnabled && !disabled}
-			aria-label={label}
-			className={`icon-button panel-camera-control ${stateClassName}`}
-			disabled={disabled}
-			onClick={onToggle}
-			role="switch"
-			title={disabled ? disabledReason : label}
-			type="button"
-		>
-			<span aria-hidden="true" className="panel-camera-control-thumb">
-				<CameraIcon className="panel-camera-control-icon" size={12} />
-			</span>
-		</button>
-	);
-}
 
 export interface RoomPeopleSectionProps {
 	expanded: boolean;
@@ -114,6 +73,12 @@ export function RoomPeopleSection({
 	const mediaV3 = mediaProtocolVersion === 3 || mediaSnapshot?.capabilities.mediaProtocolVersion === 3;
 	const seatsUsed = mediaV3 ? mediaSnapshot?.participants.filter(p => "mediaSeatGranted" in p && p.mediaSeatGranted).length ?? 0 : occupiedMediaSeatCount;
 	const seatsLimit = mediaSnapshot && "maxMediaSeats" in mediaSnapshot.capabilities ? mediaSnapshot.capabilities.maxMediaSeats : maxMediaSeats;
+	const capacityCount = mediaSnapshot && !mediaV3
+		? mediaSnapshot.participants.filter(p => p.microphoneGranted).length : seatsUsed;
+	const capacityLimit = mediaSnapshot && "maxMicrophones" in mediaSnapshot.capabilities
+		? mediaSnapshot.capabilities.maxMicrophones : seatsLimit;
+	const capacityLabel = mediaSnapshot && !mediaV3 ? "microphones" : "media seats";
+	const cameraCount = mediaSnapshot?.participants.filter(p => p.cameraGranted).length;
 	const mediaSeatsFull = seatsUsed >= seatsLimit;
 	const showFullSeatReason = mediaV3 && currentUserIsHost && mediaSeatsFull && participants.some(item =>
 		!mediaSnapshot?.participants.some(p => p.participantSessionId === item.participantSessionId && "mediaSeatGranted" in p && p.mediaSeatGranted),
@@ -208,7 +173,7 @@ export function RoomPeopleSection({
 							<span className="room-people-status" role={mediaV3 && seatControl?.error ? "alert" : mediaV3 && seatControl?.pending ? "status" : undefined} title={seatControl?.error}>
 								{mediaV3 && seatControl?.error ? seatControl.error : mediaV3 && seatControl?.pending ? "Updating media seat…" : item.connected === false
 									? "Reconnecting — places reserved"
-									: mediaV3 ? `${hasSeat ? "Media seat" : "Listening"}${isSpeaking ? " · Speaking" : item.cameraEnabled ? " · Camera on" : ""}`
+									: mediaV3 ? <ParticipantStatus cameraEnabled={item.cameraEnabled} speaking={isSpeaking} listening={!hasSeat} />
 									: mediaSnapshot !== undefined
 										? `${item.cameraEnabled ? "Camera on" : grant?.cameraGranted ? "Camera granted, off" : "Camera off"} · ${isSpeaking ? "Speaking" : grant?.microphoneGranted ? "Microphone ready" : "Listening"}`
 										: participantMediaStatus(item)}
@@ -239,18 +204,20 @@ export function RoomPeopleSection({
 						strokeWidth={1.8}
 					/>
 					<span>People</span>
+					<span className="room-people-count" role="img" aria-label={roomPeopleCountText} title={roomPeopleCountText}>{roomPeopleCountText.replace(/\s+in room$/, "")}</span>
 				</span>
-				<span className="room-people-count">{roomPeopleCountText}</span>
+				{mediaSnapshot ? <span className="room-people-capacities">
+					<span className="room-people-capacity" role="img" aria-label={`${capacityCount}/${capacityLimit} ${capacityLabel}`} title={`${capacityCount}/${capacityLimit} ${capacityLabel}`}>
+						<Headphones aria-hidden="true" size={12} /><span>{capacityCount}/{capacityLimit}</span>
+					</span>
+					<span className="room-people-capacity" role="img" aria-label={`${cameraCount}/${mediaSnapshot.capabilities.maxCameras} cameras`} title={`${cameraCount}/${mediaSnapshot.capabilities.maxCameras} cameras`}>
+						<Video aria-hidden="true" size={12} /><span>{cameraCount}/{mediaSnapshot.capabilities.maxCameras}</span>
+					</span>
+				</span> : null}
 			</div>
 			{mediaSnapshot !== undefined ? (
 				<div className="room-media-grants">
-					<p className="room-people-count">
-						{mediaSnapshot
-							? mediaV3
-								? `${seatsUsed}/${seatsLimit} media seats · ${mediaSnapshot.participants.filter(p => p.cameraGranted).length}/4 cameras`
-								: `${mediaSnapshot.participants.filter((p) => p.cameraGranted).length}/${mediaSnapshot.capabilities.maxCameras} cameras · ${mediaSnapshot.participants.filter((p) => p.microphoneGranted).length}/${"maxMicrophones" in mediaSnapshot.capabilities ? mediaSnapshot.capabilities.maxMicrophones : 0} microphones`
-							: "Waiting for room media permissions…"}
-					</p>
+					{!mediaSnapshot ? <p className="room-people-status">Waiting for room media permissions…</p> : null}
 					{!mediaV3 ? <button
 						className="button secondary"
 						type="button"
@@ -283,7 +250,7 @@ export function RoomPeopleSection({
 						aria-hidden={!expanded}
 						inert={!expanded}
 					>
-						<div className="room-people-extra-scroll" tabIndex={expanded ? 0 : -1} aria-label="More room participants">
+						<div role="group" className="room-people-extra-scroll" tabIndex={expanded ? 0 : -1} aria-label="More room participants">
 							{participantRows.slice(2)}
 						</div>
 					</div>
@@ -343,25 +310,15 @@ function participantInitials(displayName: string): string {
 function participantMediaStatus(participant: Participant): ReactNode {
 	if (participant.mediaSeat === "requested") return "Requested media";
 	if (participant.mediaSeat !== "joined") return "Chat only";
-	const CameraIcon = participant.cameraEnabled ? Video : VideoOff;
-	const cameraLabel = participant.cameraEnabled ? "Camera on" : "Camera off";
+	return <ParticipantStatus cameraEnabled={participant.cameraEnabled} />;
+}
 
-	return (
-		<span className="room-people-media-status">
-			<span className="room-people-seat-status">
-				<Radio aria-hidden="true" size={10} />
-				Media seat
-			</span>
-			<span
-				aria-label={cameraLabel}
-				className={`room-people-camera-status ${participant.cameraEnabled ? "active" : "inactive"}`}
-				role="img"
-				title={cameraLabel}
-			>
-				<CameraIcon aria-hidden="true" size={10} />
-			</span>
-		</span>
-	);
+function ParticipantStatus({ cameraEnabled, speaking = false, listening = false }: { cameraEnabled: boolean; speaking?: boolean; listening?: boolean }) {
+	const Icon = speaking ? Mic : cameraEnabled ? Video : listening ? Headphones : VideoOff;
+	const label = speaking ? "Speaking" : cameraEnabled ? "Camera on" : listening ? "Listening" : "Camera off";
+	return <span className="room-people-status-detail" data-active={speaking || cameraEnabled}>
+		<Icon aria-hidden="true" size={11} /><span>{label}</span>
+	</span>;
 }
 
 interface MediaActionInput {

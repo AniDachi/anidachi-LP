@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { persistRoomSource } from "@/lib/anidachi-auth/db";
+import { getPersistedRoomSourceProof, persistRoomSource } from "@/lib/anidachi-auth/db";
 import { handleInternalRoomSourcePost } from "@/lib/anidachi-auth/room-source";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,7 @@ export async function POST(
 		roomId,
 		readJson: () => request.json(),
 		persist: persistRoomSource,
+		readPersistedSource: getPersistedRoomSourceProof,
 	});
 	return NextResponse.json(response.body, { status: response.status });
 }

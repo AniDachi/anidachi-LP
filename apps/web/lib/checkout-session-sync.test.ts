@@ -1,4 +1,4 @@
-import "./test-helpers/account-client-dom";
+import { dom } from "./test-helpers/account-client-dom";
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import * as React from "react";
@@ -7,6 +7,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { CheckoutSessionSync } from "../app/success/checkout-session-sync";
+import { rememberOnboardingCheckout } from "./onboarding-return-client";
+import { onboardingRuntime } from "./test-helpers/onboarding-runtime";
 
 const originalFetch = globalThis.fetch;
 let root: Root | null = null;
@@ -22,18 +24,18 @@ const router = {
 		refreshes += 1;
 	},
 };
-function view(sessionId?: string, initialPlanCode = "free") {
+function view(sessionId?: string, initialPlanCode = "free", ownerUserId?: string) {
 	return React.createElement(
 		AppRouterContext.Provider,
 		{ value: router },
-		React.createElement(CheckoutSessionSync, { sessionId, initialPlanCode }),
+		React.createElement(CheckoutSessionSync, { sessionId, initialPlanCode, ownerUserId, extensionId: "a".repeat(32) }),
 	);
 }
-async function mount(sessionId?: string, initialPlanCode = "free") {
+async function mount(sessionId?: string, initialPlanCode = "free", ownerUserId?: string) {
 	container = document.createElement("div");
 	document.body.append(container);
 	root = createRoot(container);
-	await act(async () => root!.render(view(sessionId, initialPlanCode)));
+	await act(async () => root!.render(view(sessionId, initialPlanCode, ownerUserId)));
 }
 function title() {
 	return container.querySelector("h1")?.textContent;
@@ -51,6 +53,56 @@ afterEach(async () => {
 	document.body.innerHTML = "";
 	globalThis.fetch = originalFetch;
 	refreshes = 0;
+	window.sessionStorage.clear();
+	delete (globalThis as { chrome?: unknown }).chrome;
+	dom.happyDOM.setURL("http://localhost/success");
+});
+test("a confirmed website purchase continues to getting started, with no onboarding token", async () => {
+  globalThis.fetch = async url => String(url) === "/api/billing/offer"
+    ? Response.json({ ownerUserId: "owner", action: "manage" })
+    : Response.json({ ok: true, planCode: "plus", checkoutComplete: true, checkoutSubscription: { status: "active", planCode: "plus" } });
+  await mount("cs_paid", "free", "owner");
+  await act(async () => new Promise(r => setTimeout(r, 20)));
+  assert.equal(window.location.pathname + window.location.search, "/extension?welcome=1");
+});
+test("an account change after payment confirmation cannot redirect the replacement account", async () => {
+  globalThis.fetch = async url => String(url) === "/api/billing/offer"
+    ? Response.json({ ownerUserId: "another-owner", action: "manage" })
+    : Response.json({ ok: true, planCode: "plus", checkoutComplete: true, checkoutSubscription: { status: "active", planCode: "plus" } });
+  await mount("cs_paid", "free", "owner");
+  await act(async () => new Promise(r => setTimeout(r, 20)));
+  assert.notEqual(window.location.pathname, "/extension");
+});
+test("paid checkout returns only after its own successful verification", async () => {
+	const token = "cbe6173e-b4fb-4e1c-9df9-8c77e73016b1";
+	rememberOnboardingCheckout(token, "owner", "cs_paid");
+	const pending = deferredResponse(); let sent = 0;
+	globalThis.fetch = async url => String(url) === "/api/billing/offer" ? Response.json({ ownerUserId: "owner", action: "manage" }) : pending.promise;
+	(globalThis as { chrome?: unknown }).chrome = { runtime: onboardingRuntime((_id, _message, reply) => { sent++; reply({ returned: true }); }) };
+	await mount("cs_paid", "free", "owner");
+	assert.equal(sent, 0);
+	await act(async () => { pending.resolve(Response.json({ ok: true, planCode: "plus", checkoutComplete: true, checkoutSubscription: { status: "active", planCode: "plus" } })); });
+	await act(async () => new Promise(r => setTimeout(r, 20)));
+	assert.equal(sent, 1);
+	assert.match(container.textContent!, /Continue the tour/);
+});
+test("failed paid verification leaves checkout on the website", async () => {
+	rememberOnboardingCheckout("cbe6173e-b4fb-4e1c-9df9-8c77e73016b1", "owner", "cs_failed");
+	let sent = 0;
+	globalThis.fetch = async () => Response.json({ ok: false }, { status: 409 });
+	(globalThis as { chrome?: unknown }).chrome = { runtime: onboardingRuntime(() => { sent++; }) };
+	await mount("cs_failed", "free", "owner");
+	await act(async () => new Promise(r => setTimeout(r, 20)));
+	assert.equal(sent, 0); assert.match(title()!, /Could not confirm/);
+});
+test("another paid subscription is not proof this checkout succeeded", async () => {
+	rememberOnboardingCheckout("cbe6173e-b4fb-4e1c-9df9-8c77e73016b1", "owner", "cs_unpaid");
+	let sent = 0;
+	globalThis.fetch = async () => Response.json({ ok: true, planCode: "plus", checkoutComplete: false, checkoutSubscription: { status: "incomplete", planCode: "plus" } });
+	(globalThis as { chrome?: unknown }).chrome = { runtime: onboardingRuntime(() => { sent++; }) };
+	await mount("cs_unpaid", "free", "owner");
+	await act(async () => new Promise(r => setTimeout(r, 20)));
+	assert.equal(sent, 0);
 });
 test("trial success uses the checkout plan and rechecks at its original end", async (t) => {
 	t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
