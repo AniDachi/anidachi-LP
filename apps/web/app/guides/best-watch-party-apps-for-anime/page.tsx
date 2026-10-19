@@ -282,6 +282,16 @@ export default function BestWatchPartyAppsForAnimePage() {
           </Link>
         </li>
         <li>
+          <Link href="/compare/anidachi-vs-kosmi" className="hover:underline">
+            AniDachi vs Kosmi for anime nights
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-syncup" className="hover:underline">
+            AniDachi vs SyncUp for anime nights
+          </Link>
+        </li>
+        <li>
           <Link href="/pricing" className="hover:underline">
             AniDachi pricing
           </Link>

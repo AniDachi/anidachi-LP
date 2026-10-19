@@ -153,7 +153,22 @@ roundups. The audit found AniDachi missing from SyncUp's, Gitnux's and
 Peepstune's lists. Pitch the anime and Crunchyroll angle; none of those lists
 covers it.
 
-### Homepage title (after about November 2)
+### Homepage title (after about November 2) — recommendation: wait
+
+Recommendation (Oct 19): **do not ship the homepage title change in this batch.**
+
+- **The freeze rule:** the guidelines freeze the homepage title until about Nov 2.
+- **The move isn't finished:** Google still showed the apex homepage more than the
+  www one last week (1,631 vs 994 impressions).
+- **We couldn't tell what worked:** this batch already changes 30+ titles and
+  adds hub links. A homepage title change in the same release would make it
+  impossible to see which change moved the Crunchyroll searches.
+
+Ship it in its own release after Nov 2, when both of these hold:
+
+1. www has most of the homepage impressions (roughly 80% or more).
+2. The hub still trails the homepage on the four Crunchyroll searches after two
+   weeks of the new body links.
 
 The homepage now outranks `/watch-crunchyroll-together` for "crunchyroll watch
 party", "watch together crunchyroll" and "crunchyroll watch together". The hub

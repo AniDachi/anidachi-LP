@@ -144,6 +144,14 @@ export default function WatchPartyAppPage() {
 				<Link href="/guides/netflix-group-watch" className="text-brand-orange hover:underline">
 					Netflix group watch
 				</Link>
+				. Comparing browser-based watch-together sites? See{" "}
+				<Link href="/compare/anidachi-vs-kosmi" className="text-brand-orange hover:underline">
+					AniDachi vs Kosmi
+				</Link>{" "}
+				and{" "}
+				<Link href="/compare/anidachi-vs-syncup" className="text-brand-orange hover:underline">
+					AniDachi vs SyncUp
+				</Link>
 				. Ranked anime options are on{" "}
 				<Link
 					href="/guides/best-watch-party-apps-for-anime"
@@ -170,6 +178,8 @@ export default function WatchPartyAppPage() {
 						href: "/compare/anidachi-vs-netflix-watch-party",
 						label: "AniDachi vs Netflix watch party tools",
 					},
+					{ href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi" },
+					{ href: "/compare/anidachi-vs-syncup", label: "AniDachi vs SyncUp" },
 					{
 						href: "/compare/anidachi-vs-teleparty",
 						label: "AniDachi vs Teleparty",

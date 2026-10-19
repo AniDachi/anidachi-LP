@@ -167,6 +167,10 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-10-19, SEO plan follow-up (owner in chat):**
+  - **New compare pages approved:** `/compare/anidachi-vs-syncup` and `/compare/anidachi-vs-kosmi`. Parent hub `/watch-party-app`; inbound links from `/watch-party-app` and `/guides/best-watch-party-apps-for-anime`; competitor claims cite the competitors' own sites, checked 19 Oct 2026. Review at 30/60/90 days (Nov 18, Dec 18, Jan 17).
+  - **Watch pages and genre hubs:** enrich the next 15 watch pages by GSC impressions in place (`lib/watch-page-enrichment.ts`). Genre hubs stay as they are (option A, keep and differentiate); re-measure after about Nov 2 before any merge, canonical or redirect, which still needs separate approval. Evidence: [index coverage report](../../../docs/releases/seo/2026-10-19-index-coverage-and-consolidation-report.md).
+
 - **2026-10-12, SEO audit (GSC + GA4 + Amplitude):**
   - The 2026-07-28 portfolio freeze is lifted. New URLs still go through the publishing gate.
   - **Canonical host is `https://www.anidachi.app`.** Public metadata and sitemaps use `getSeoSiteOrigin()` to normalize the known public hosts to www. Keep `NEXT_PUBLIC_SITE_URL` and `getResolvedSiteOrigin()` unchanged for runtime consumers, including Gmail OAuth callback fallbacks; changing the shared env value is not an SEO fix. After separate production authorization, change only the existing Vercel apex-to-www redirect status from 307 to 308, preserving its destination, paths, and queries. See the [selective release contract](../../../docs/releases/seo/2026-10-12-selective-website-release.md).

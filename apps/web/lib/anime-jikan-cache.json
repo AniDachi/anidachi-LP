@@ -54,16 +54,18 @@
       ]
     },
     "assassination-classroom": {
-      "mal_id": 30654,
-      "posterUrl": "https://myanimelist.net/images/anime/8/77966l.jpg",
-      "episodes": 25,
+      "mal_id": 24833,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/5/75639l.jpg",
+      "episodes": 22,
       "airing": false,
-      "score": 8.47,
-      "members": 1570600,
+      "score": 8.07,
+      "members": 2253357,
       "status": "Finished Airing",
       "genres": [
         "Action",
-        "Comedy"
+        "Comedy",
+        "School",
+        "Shounen"
       ]
     },
     "attack-on-titan": {
@@ -109,16 +111,23 @@
       ]
     },
     "berserk": {
-      "mal_id": 34034,
-      "posterUrl": "https://myanimelist.net/images/anime/11/84673l.jpg",
-      "episodes": 146,
+      "mal_id": 33,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1384/119988l.jpg",
+      "episodes": 25,
       "airing": false,
-      "score": 7.05,
-      "members": 133035,
+      "score": 8.61,
+      "members": 786137,
       "status": "Finished Airing",
       "genres": [
         "Action",
-        "Fantasy"
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Horror",
+        "Gore",
+        "Military",
+        "Psychological",
+        "Seinen"
       ]
     },
     "black-butler": {
@@ -188,51 +197,64 @@
       ]
     },
     "blue-lock": {
-      "mal_id": 50613,
-      "posterUrl": "https://myanimelist.net/images/anime/1599/136532l.jpg",
+      "mal_id": 49596,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1258/126929l.jpg",
       "episodes": 24,
       "airing": false,
-      "score": 7.63,
-      "members": 153928,
+      "score": 8.08,
+      "members": 934873,
       "status": "Finished Airing",
       "genres": [
-        "Action"
+        "Sports",
+        "Team Sports",
+        "Shounen"
       ]
     },
     "blue-period": {
-      "mal_id": 46369,
-      "posterUrl": "https://myanimelist.net/images/anime/1183/129709l.jpg",
+      "mal_id": 46352,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1757/116931l.jpg",
       "episodes": 12,
       "airing": false,
-      "score": null,
-      "members": 88,
+      "score": 7.79,
+      "members": 540256,
       "status": "Finished Airing",
-      "genres": []
+      "genres": [
+        "Drama",
+        "School",
+        "Visual Arts",
+        "Seinen"
+      ]
     },
     "bocchi-the-rock": {
-      "mal_id": 57524,
-      "posterUrl": "https://myanimelist.net/images/anime/1332/143513l.jpg",
+      "mal_id": 47917,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1448/127956l.jpg",
       "episodes": 12,
       "airing": false,
-      "score": 8.08,
-      "members": 334940,
+      "score": 8.72,
+      "members": 830698,
       "status": "Finished Airing",
       "genres": [
         "Comedy",
-        "Romance"
+        "CGDCT",
+        "Music"
       ]
     },
     "bungo-stray-dogs": {
-      "mal_id": 32867,
-      "posterUrl": "https://myanimelist.net/images/anime/1572/133096l.jpg",
+      "mal_id": 31478,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/3/79409l.jpg",
       "episodes": 12,
       "airing": false,
-      "score": 8.16,
-      "members": 954581,
+      "score": 7.8,
+      "members": 1578230,
       "status": "Finished Airing",
       "genres": [
         "Action",
-        "Mystery"
+        "Mystery",
+        "Adult Cast",
+        "Detective",
+        "Organized Crime",
+        "Super Power",
+        "Seinen"
       ]
     },
     "chainsaw-man": {
@@ -275,30 +297,37 @@
       ]
     },
     "claymore": {
-      "mal_id": 477,
-      "posterUrl": "https://myanimelist.net/images/anime/2/77620l.jpg",
-      "episodes": 13,
+      "mal_id": 1818,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/3/21834l.jpg",
+      "episodes": 26,
       "airing": false,
-      "score": 7.71,
-      "members": 178717,
+      "score": 7.73,
+      "members": 733241,
       "status": "Finished Airing",
       "genres": [
-        "Sci-Fi",
-        "Slice of Life"
+        "Action",
+        "Adventure",
+        "Fantasy",
+        "Gore",
+        "Shounen"
       ]
     },
     "code-geass": {
-      "mal_id": 2904,
-      "posterUrl": "https://myanimelist.net/images/anime/1088/135089l.jpg",
+      "mal_id": 1575,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1032/135088l.jpg",
       "episodes": 25,
       "airing": false,
-      "score": 8.92,
-      "members": 1957271,
+      "score": 8.71,
+      "members": 2518377,
       "status": "Finished Airing",
       "genres": [
         "Award Winning",
         "Drama",
-        "Sci-Fi"
+        "Sci-Fi",
+        "Mecha",
+        "Military",
+        "School",
+        "Super Power"
       ]
     },
     "cowboy-bebop": {
@@ -316,15 +345,18 @@
       ]
     },
     "cyberpunk-edgerunners": {
-      "mal_id": 51318,
-      "posterUrl": "https://myanimelist.net/images/anime/1800/135847l.jpg",
-      "episodes": 27,
+      "mal_id": 42310,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1818/126435l.jpg",
+      "episodes": 10,
       "airing": false,
-      "score": 7.92,
-      "members": 118099,
+      "score": 8.62,
+      "members": 1127383,
       "status": "Finished Airing",
       "genres": [
-        "Sports"
+        "Action",
+        "Sci-Fi",
+        "Gore",
+        "Organized Crime"
       ]
     },
     "dandadan": {
@@ -538,30 +570,33 @@
       ]
     },
     "fate-zero": {
-      "mal_id": 11741,
-      "posterUrl": "https://myanimelist.net/images/anime/1522/117645l.jpg",
-      "episodes": 12,
+      "mal_id": 10087,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1887/117644l.jpg",
+      "episodes": 13,
       "airing": false,
-      "score": 8.54,
-      "members": 1197521,
-      "status": "Finished Airing",
-      "genres": [
-        "Action",
-        "Fantasy"
-      ]
-    },
-    "fire-force": {
-      "mal_id": 40956,
-      "posterUrl": "https://myanimelist.net/images/anime/1673/107657l.jpg",
-      "episodes": 24,
-      "airing": false,
-      "score": 7.82,
-      "members": 921558,
+      "score": 8.26,
+      "members": 1622004,
       "status": "Finished Airing",
       "genres": [
         "Action",
         "Fantasy",
-        "Sci-Fi"
+        "Urban Fantasy"
+      ]
+    },
+    "fire-force": {
+      "mal_id": 38671,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1664/103275l.jpg",
+      "episodes": 24,
+      "airing": false,
+      "score": 7.72,
+      "members": 1576820,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Fantasy",
+        "Sci-Fi",
+        "Urban Fantasy",
+        "Shounen"
       ]
     },
     "food-wars-shokugeki-no-soma": {
@@ -906,15 +941,18 @@
       ]
     },
     "kaguya-sama": {
-      "mal_id": 39996,
-      "posterUrl": "https://myanimelist.net/images/anime/1475/101665l.jpg",
-      "episodes": 1,
+      "mal_id": 37999,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1295/106551l.jpg",
+      "episodes": 12,
       "airing": false,
-      "score": 5.26,
-      "members": 514,
+      "score": 8.4,
+      "members": 1979582,
       "status": "Finished Airing",
       "genres": [
-        "Avant Garde"
+        "Comedy",
+        "Romance",
+        "School",
+        "Seinen"
       ]
     },
     "kaiju-no-8": {
@@ -975,17 +1013,18 @@
       ]
     },
     "kingdom": {
-      "mal_id": 1735,
-      "posterUrl": "https://myanimelist.net/images/anime/1565/111305l.jpg",
-      "episodes": 500,
+      "mal_id": 12031,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/13/39511l.jpg",
+      "episodes": 38,
       "airing": false,
-      "score": 8.29,
-      "members": 2750555,
+      "score": 7.86,
+      "members": 268410,
       "status": "Finished Airing",
       "genres": [
         "Action",
-        "Adventure",
-        "Fantasy"
+        "Historical",
+        "Military",
+        "Seinen"
       ]
     },
     "konosuba": {
@@ -1015,15 +1054,20 @@
       ]
     },
     "land-of-the-lustrous": {
-      "mal_id": 34822,
-      "posterUrl": "https://myanimelist.net/images/anime/2/85592l.jpg",
+      "mal_id": 35557,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/3/88293l.jpg",
       "episodes": 12,
       "airing": false,
-      "score": 8.02,
-      "members": 598147,
+      "score": 8.39,
+      "members": 529834,
       "status": "Finished Airing",
       "genres": [
-        "Romance"
+        "Action",
+        "Drama",
+        "Fantasy",
+        "Mystery",
+        "Anthropomorphic",
+        "Seinen"
       ]
     },
     "log-horizon": {
@@ -1109,16 +1153,17 @@
       ]
     },
     "mob-psycho-100": {
-      "mal_id": 31933,
-      "posterUrl": "https://myanimelist.net/images/anime/3/79156l.jpg",
-      "episodes": 39,
+      "mal_id": 32182,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/8/80356l.jpg",
+      "episodes": 12,
       "airing": false,
-      "score": 8.51,
-      "members": 1273527,
+      "score": 8.49,
+      "members": 2367121,
       "status": "Finished Airing",
       "genres": [
         "Action",
-        "Adventure"
+        "Comedy",
+        "Supernatural"
       ]
     },
     "monster": {
@@ -1574,16 +1619,16 @@
       ]
     },
     "sk8-the-infinity": {
-      "mal_id": 40729,
-      "posterUrl": "https://myanimelist.net/images/anime/1190/113352l.jpg",
-      "episodes": 13,
+      "mal_id": 42923,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1549/119195l.jpg",
+      "episodes": 12,
       "airing": false,
-      "score": 8.19,
-      "members": 231095,
+      "score": 7.99,
+      "members": 643698,
       "status": "Finished Airing",
       "genres": [
-        "Sci-Fi",
-        "Sports"
+        "Sports",
+        "Racing"
       ]
     },
     "slam-dunk": {
@@ -1627,18 +1672,19 @@
       ]
     },
     "spice-and-wolf": {
-      "mal_id": 457,
-      "posterUrl": "https://myanimelist.net/images/anime/2/73862l.jpg",
-      "episodes": 26,
+      "mal_id": 2966,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/5/59401l.jpg",
+      "episodes": 13,
       "airing": false,
-      "score": 8.65,
-      "members": 907601,
+      "score": 8.21,
+      "members": 880621,
       "status": "Finished Airing",
       "genres": [
         "Adventure",
-        "Mystery",
-        "Slice of Life",
-        "Supernatural"
+        "Drama",
+        "Romance",
+        "Supernatural",
+        "Adult Cast"
       ]
     },
     "spirited-away": {
@@ -1713,30 +1759,35 @@
       ]
     },
     "that-time-i-got-reincarnated-as-a-slime": {
-      "mal_id": 37407,
-      "posterUrl": "https://myanimelist.net/images/anime/1320/93443l.jpg",
-      "episodes": 1,
+      "mal_id": 37430,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1069/123309l.jpg",
+      "episodes": 24,
       "airing": false,
-      "score": 7.54,
-      "members": 105554,
+      "score": 8.12,
+      "members": 1689151,
       "status": "Finished Airing",
       "genres": [
+        "Action",
+        "Comedy",
         "Fantasy",
-        "Mystery",
-        "Sci-Fi"
+        "Isekai",
+        "Reincarnation",
+        "Shounen"
       ]
     },
     "the-apothecary-diaries": {
-      "mal_id": 54428,
-      "posterUrl": "https://myanimelist.net/images/anime/1190/133281l.jpg",
-      "episodes": 1,
+      "mal_id": 54492,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1708/138033l.jpg",
+      "episodes": 24,
       "airing": false,
-      "score": null,
-      "members": 221,
+      "score": 8.84,
+      "members": 914727,
       "status": "Finished Airing",
       "genres": [
-        "Avant Garde",
-        "Romance"
+        "Drama",
+        "Mystery",
+        "Historical",
+        "Medical"
       ]
     },
     "the-devil-is-a-part-timer": {
@@ -1753,17 +1804,19 @@
       ]
     },
     "the-disastrous-life-of-saiki-k": {
-      "mal_id": 27831,
-      "posterUrl": "https://myanimelist.net/images/anime/8/74981l.jpg",
-      "episodes": 12,
+      "mal_id": 33255,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1973/142750l.jpg",
+      "episodes": 120,
       "airing": false,
-      "score": 7.96,
-      "members": 421430,
+      "score": 8.41,
+      "members": 1283574,
       "status": "Finished Airing",
       "genres": [
-        "Action",
-        "Mystery",
-        "Supernatural"
+        "Comedy",
+        "Gag Humor",
+        "School",
+        "Super Power",
+        "Shounen"
       ]
     },
     "the-eminence-in-shadow": {
@@ -1847,15 +1900,19 @@
       ]
     },
     "tower-of-god": {
-      "mal_id": 40223,
-      "posterUrl": "https://myanimelist.net/images/anime/1326/102464l.jpg",
-      "episodes": 3,
+      "mal_id": 40221,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1702/106229l.jpg",
+      "episodes": 13,
       "airing": false,
-      "score": 6.18,
-      "members": 416,
+      "score": 7.55,
+      "members": 1086182,
       "status": "Finished Airing",
       "genres": [
-        "Slice of Life"
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Mystery"
       ]
     },
     "trigun": {
@@ -1873,15 +1930,18 @@
       ]
     },
     "undead-unluck": {
-      "mal_id": 49918,
-      "posterUrl": "https://myanimelist.net/images/anime/1483/126005l.jpg",
-      "episodes": 25,
+      "mal_id": 52741,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1136/138410l.jpg",
+      "episodes": 24,
       "airing": false,
-      "score": 8.22,
-      "members": 824697,
+      "score": 7.73,
+      "members": 360733,
       "status": "Finished Airing",
       "genres": [
-        "Action"
+        "Action",
+        "Comedy",
+        "Super Power",
+        "Shounen"
       ]
     },
     "vinland-saga": {
@@ -1963,17 +2023,19 @@
       ]
     },
     "zom-100-bucket-list-of-the-dead": {
-      "mal_id": 53835,
-      "posterUrl": "https://myanimelist.net/images/anime/1143/142439l.jpg",
+      "mal_id": 54112,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1384/136408l.jpg",
       "episodes": 12,
       "airing": false,
-      "score": 6.83,
-      "members": 158870,
+      "score": 7.69,
+      "members": 705728,
       "status": "Finished Airing",
       "genres": [
-        "Adventure",
-        "Fantasy",
-        "Romance"
+        "Comedy",
+        "Suspense",
+        "Adult Cast",
+        "Survival",
+        "Seinen"
       ]
     },
     "call-of-the-night": {
@@ -2126,18 +2188,19 @@
       ]
     },
     "nisekoi": {
-      "mal_id": 20785,
-      "posterUrl": "https://myanimelist.net/images/anime/11/61039l.jpg",
-      "episodes": 26,
+      "mal_id": 18897,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/13/75587l.jpg",
+      "episodes": 20,
       "airing": false,
-      "score": 7.36,
-      "members": 1150872,
+      "score": 7.55,
+      "members": 1260670,
       "status": "Finished Airing",
       "genres": [
-        "Action",
-        "Fantasy",
+        "Comedy",
         "Romance",
-        "Sci-Fi"
+        "Harem",
+        "School",
+        "Shounen"
       ]
     },
     "oregairu": {
@@ -2154,32 +2217,36 @@
       ]
     },
     "ouran-high-school-host-club": {
-      "mal_id": 179,
-      "posterUrl": "https://myanimelist.net/images/anime/2/3132l.jpg",
-      "episodes": 1,
+      "mal_id": 853,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/2/71992l.jpg",
+      "episodes": 26,
       "airing": false,
-      "score": 6.62,
-      "members": 6117,
+      "score": 8.16,
+      "members": 1250025,
       "status": "Finished Airing",
       "genres": [
         "Comedy",
-        "Fantasy",
-        "Romance"
+        "Romance",
+        "Crossdressing",
+        "Reverse Harem",
+        "School",
+        "Shoujo"
       ]
     },
     "the-melancholy-of-haruhi-suzumiya": {
-      "mal_id": 904,
-      "posterUrl": "https://myanimelist.net/images/anime/1035/93674l.jpg",
-      "episodes": 1,
+      "mal_id": 849,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1470/137929l.jpg",
+      "episodes": 14,
       "airing": false,
-      "score": 5.77,
-      "members": 135984,
+      "score": 7.82,
+      "members": 994194,
       "status": "Finished Airing",
       "genres": [
-        "Action",
-        "Adventure",
+        "Award Winning",
         "Comedy",
-        "Fantasy"
+        "Mystery",
+        "Sci-Fi",
+        "School"
       ]
     },
     "boruto": {
@@ -2239,19 +2306,21 @@
       ]
     },
     "fullmetal-alchemist": {
-      "mal_id": 25,
-      "posterUrl": "https://cdn.myanimelist.net/images/anime/6/75536l.jpg",
-      "episodes": 24,
+      "mal_id": 121,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/10/75815l.jpg",
+      "episodes": 51,
       "airing": false,
-      "score": 7.37,
-      "members": 152214,
+      "score": 8.12,
+      "members": 1575188,
       "status": "Finished Airing",
       "genres": [
         "Action",
         "Adventure",
-        "Comedy",
-        "Sci-Fi",
-        "Ecchi"
+        "Award Winning",
+        "Drama",
+        "Fantasy",
+        "Military",
+        "Shounen"
       ]
     },
     "ghost-in-the-shell-stand-alone-complex": {
@@ -2269,18 +2338,18 @@
       ]
     },
     "gundam-iron-blooded-orphans": {
-      "mal_id": 31592,
-      "posterUrl": "https://cdn.myanimelist.net/images/anime/1627/140267l.jpg",
-      "episodes": 47,
+      "mal_id": 31251,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/6/75879l.jpg",
+      "episodes": 25,
       "airing": false,
-      "score": 7.83,
-      "members": 166156,
+      "score": 8.07,
+      "members": 278718,
       "status": "Finished Airing",
       "genres": [
-        "Action",
-        "Adventure",
-        "Comedy",
-        "Fantasy"
+        "Drama",
+        "Sci-Fi",
+        "Mecha",
+        "Space"
       ]
     },
     "kimi-ni-todoke": {
@@ -2365,17 +2434,17 @@
       ]
     },
     "suzume": {
-      "mal_id": 50265,
-      "posterUrl": "https://cdn.myanimelist.net/images/anime/1441/122795l.jpg",
-      "episodes": 12,
+      "mal_id": 50594,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1598/128450l.jpg",
+      "episodes": 1,
       "airing": false,
-      "score": 8.41,
-      "members": 1899922,
+      "score": 8.23,
+      "members": 527236,
       "status": "Finished Airing",
       "genres": [
-        "Action",
-        "Award Winning",
-        "Comedy"
+        "Adventure",
+        "Supernatural",
+        "Mythology"
       ]
     },
     "weathering-with-you": {
@@ -2391,6 +2460,22 @@
         "Drama",
         "Romance",
         "Supernatural"
+      ]
+    },
+    "trigun-stampede": {
+      "mal_id": 52093,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1426/129194l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 7.79,
+      "members": 242157,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Sci-Fi",
+        "Adult Cast",
+        "Shounen"
       ]
     }
   }

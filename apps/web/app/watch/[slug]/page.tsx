@@ -89,10 +89,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     anime.slug,
     jikanBundle?.jikanAnime ?? null
   );
-  const episodesDisplay = formatEpisodesForUi(
-    jikanBundle?.jikanAnime ?? null,
-    anime.episodes
-  );
+  const episodesDisplay =
+    WATCH_ENRICHMENT[anime.slug]?.episodes ??
+    formatEpisodesForUi(jikanBundle?.jikanAnime ?? null, anime.episodes);
 
   const metaDescription = buildWatchPageMetaDescription(anime);
   const titleTag = buildTitleTag(anime, episodesDisplay);
@@ -195,7 +194,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       ? "Picked from MyAnimeList recommendations (matched to our guides)."
       : "Curated for fans of the same kind of show.";
 
-  const episodesDisplay = formatEpisodesForUi(jikan, anime.episodes);
+  const episodesDisplay =
+    WATCH_ENRICHMENT[anime.slug]?.episodes ?? formatEpisodesForUi(jikan, anime.episodes);
   const scoreLine = formatScoreLine(jikan);
   const membersLine = formatMembersLine(jikan);
   const statusLine = jikanStatusLine(jikan);
@@ -209,7 +209,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
   const faq = enrichment
     ? [...enrichment.faq, ...buildWatchPageFaq(anime, episodesDisplay)]
     : buildWatchPageFaq(anime, episodesDisplay);
-  const dateModified = getPageLastModified();
+  const dateModified = enrichment?.updated ?? getPageLastModified();
   const isMovie = isMovieEntry(anime);
 
   const genreBits = (jikan?.genres?.length
