@@ -364,9 +364,14 @@ describe("commercial closure in the Workers runtime", () => {
 		const first = await f.end();
 		expect(first.status).toBe(502);
 		expect(await first.json()).not.toHaveProperty("fencedAt");
+		// The intent was written before the flush failed, so its retry alarm is
+		// already due. Miniflare may run it before this reconnect; the room is
+		// then ended (410) rather than ending (409). It must never reopen.
 		const refused = await f.connect();
-		expect(refused.status).toBe(409);
-		await refused.text();
+		expect([409, 410]).toContain(refused.status);
+		expect(await refused.json()).toMatchObject({
+			error: refused.status === 410 ? "ROOM_ENDED" : "ROOM_ENDING",
+		});
 		const completed = await f.end();
 		expect(completed.status).toBe(200);
 		await completed.json();
