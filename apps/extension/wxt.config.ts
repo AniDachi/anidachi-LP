@@ -51,7 +51,7 @@ const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANN
 const extensionManifestKey = getExtensionManifestKey(extensionChannel);
 const extensionName =
   extensionChannel === "production"
-    ? "AniDachi"
+    ? "AniDachi: Watch Together, Synced Watch Party"
     : extensionChannel === "staging"
       ? "AniDachi Staging"
       : "AniDachi Local MVP";
