@@ -12,7 +12,7 @@ const PAGE_PATH = "/virtual-movie-night";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-	title: "Virtual Movie Night on Crunchyroll or YouTube",
+	title: "Virtual Movie Night on Netflix or Crunchyroll",
 	description:
 		"Host a virtual movie night on a Netflix movie, a Crunchyroll film, or a full YouTube watch page. Each person uses their own account.",
 	alternates: { canonical: PAGE_PATH },
@@ -91,7 +91,8 @@ export default function VirtualMovieNightPage() {
 				<p>
 					A virtual movie night on AniDachi is one film on Netflix or Crunchyroll, or a full YouTube watch page. Each person opens it in desktop Chrome. The room
 					keeps play aligned.
-					Disney+, Hulu, and Prime Video are not synced.
+					Disney+, Hulu, and Prime Video are not synced. For a Netflix film, see{" "}
+					<Link href="/guides/netflix-movie-night">Netflix movie night</Link>.
 				</p>
 			</SeoGuideAnswer>
 			<h2

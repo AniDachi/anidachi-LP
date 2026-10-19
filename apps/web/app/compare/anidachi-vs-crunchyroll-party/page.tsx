@@ -19,7 +19,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Crunchyroll Party — Which Is Better for Anime Nights? (2026)",
+  title: { absolute: "AniDachi vs Crunchyroll Party for Anime Nights (2026)" },
   description:
     "Compare Crunchyroll watch parties: live sync, on-player chat, voice and cameras, invitations, and personal watch history. See what AniDachi offers today.",
   alternates: { canonical: "/compare/anidachi-vs-crunchyroll-party" },

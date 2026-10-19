@@ -23,7 +23,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Rave: Which Is Better for Anime Watch Parties? (2026)",
+  title: { absolute: "AniDachi vs Rave: Better for Anime Watch Parties? (2026)" },
   description:
     "Compare AniDachi's live Crunchyroll and YouTube rooms with Rave's multi-platform sync. Features, personal history, and pricing for anime watch parties.",
   alternates: { canonical: "/compare/anidachi-vs-rave" },

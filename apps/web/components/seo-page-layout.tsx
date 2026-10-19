@@ -8,7 +8,7 @@ import {
   ItemListJsonLd,
 } from "@/components/json-ld";
 import { TableOfContents, type TocHeading } from "@/components/table-of-contents";
-import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import { PrimaryCheckoutCta, type CtaCopyKey } from "@/components/primary-checkout-cta";
 import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
@@ -30,6 +30,8 @@ export interface SeoPageLayoutProps {
   bottomCta?: boolean;
   /** Override autodetected template (from `url`) for conversion analytics + CTA copy */
   conversionTemplate?: PageTemplateId;
+  /** Install-card copy for both cards; analytics keep the template above. */
+  ctaCopy?: CtaCopyKey;
   /** Primary image URL(s) for Article JSON-LD (absolute URLs preferred). */
   articleImage?: string | string[];
   /** Optional CTA or promo block between main content and bottom checkout CTA (e.g. after intro on long guides) */
@@ -68,6 +70,7 @@ export function SeoPageLayout({
   aboveFoldCta,
   bottomCta = true,
   conversionTemplate,
+  ctaCopy,
   articleImage,
   midContentSlot,
   faqDefaultOpenIndexes,
@@ -101,7 +104,7 @@ export function SeoPageLayout({
   const articleBody = (
     <div className="seo-prose">
       {aboveFoldCta ? (
-        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate}>
+        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate} ctaCopy={ctaCopy}>
           {children}
         </SeoBelowTitleCta>
       ) : (
@@ -114,6 +117,7 @@ export function SeoPageLayout({
           pagePath={url}
           pageTemplate={pageTemplate}
           placement="content_bottom"
+          variant={ctaCopy}
         />
       </div>}
     </div>

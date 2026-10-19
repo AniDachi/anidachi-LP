@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Syncplay — Best Syncplay Alternative for Crunchyroll Anime (2026)",
+  title: { absolute: "AniDachi vs Syncplay: Syncplay Alternative for Anime" },
   description:
     "Looking for a Syncplay alternative for Crunchyroll? AniDachi vs Syncplay compared: browser-based Crunchyroll watchrooms vs desktop sync for local files. Which fits anime groups watching on Crunchyroll?",
   alternates: { canonical: "/compare/anidachi-vs-syncplay" },

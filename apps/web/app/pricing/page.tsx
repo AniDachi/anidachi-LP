@@ -10,7 +10,7 @@ import { getPlanPolicy } from "@anidachi/protocol";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-	title: "AniDachi Pricing — Free Chrome Watch Party for Crunchyroll & YouTube",
+	title: { absolute: "AniDachi Pricing — Free to Join, Plus or Pro to Host" },
 	description:
 		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms, and check your trial availability.",
 	alternates: { canonical: "/pricing" },

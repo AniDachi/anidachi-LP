@@ -16,7 +16,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Crunchyroll Party Alternative — Upgrade to AniDachi (2026)",
+  title: "Crunchyroll Party Alternative (2026): Sync & Chat",
   description:
     "Outgrew free Crunchyroll Party live sync? AniDachi offers live rooms, personal watch history, and host controls. Compare and upgrade path.",
   alternates: { canonical: "/guides/crunchyroll-party-alternative" },

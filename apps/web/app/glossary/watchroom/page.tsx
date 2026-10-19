@@ -7,6 +7,19 @@ export const metadata: Metadata = {
   description:
     "A watchroom is a shared virtual space for watching together. Learn how AniDachi live rooms combine synchronized playback, chat, reactions, and calls.",
   alternates: { canonical: "/glossary/watchroom" },
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+    title: "What Is a Watchroom?",
+    description: "A watchroom is a shared space for watching together: synced playback, chat, reactions, and calls.",
+    url: "/glossary/watchroom",
+  },
 };
 
 const faq = [

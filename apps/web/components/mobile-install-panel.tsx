@@ -5,11 +5,18 @@ import { ArrowRight, Check, Chrome, Monitor, Share2, Smartphone, X } from "lucid
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { InstallPlatformMarks } from "@/components/install-platform-marks";
 import { CHROME_WEB_STORE_URL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { inferPageTemplateFromPath, trackConversion, trackStoreClick } from "@/lib/conversion-events";
 import { desktopInstallUrl } from "@/lib/mobile-install";
+import { redactAttributionPath } from "@/lib/seo-landing-path";
 import { MobileInstallContext } from "@/components/install-link";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { shareOrCopyUrl } from "@/lib/use-mobile-device";
 import styles from "./mobile-install-panel.module.css";
+
+function panelEventContext() {
+  const path = redactAttributionPath(window.location.pathname || "/");
+  return { page_path: path, page_template: inferPageTemplateFromPath(path), placement: "mobile_install_panel" };
+}
 
 export function MobileInstallProvider({ children, mobilePreview = false }: { children: ReactNode; mobilePreview?: boolean }) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -26,6 +33,7 @@ export function MobileInstallProvider({ children, mobilePreview = false }: { chi
     setHasOpened(true);
     setShareState("idle");
     setShareUrl(desktopInstallUrl(href, window.location.origin));
+    trackConversion("mobile_install_panel_view", panelEventContext());
   }, []);
   const close = useCallback(() => {
     shareAttempt.current += 1;
@@ -53,6 +61,7 @@ export function MobileInstallProvider({ children, mobilePreview = false }: { chi
     try {
       const result = await shareOrCopyUrl(shareUrl, { title: "Install AniDachi", text: "Watch together with friends in Chrome on your computer." });
       if (attempt === shareAttempt.current) setShareState(result === "copied" ? "copied" : "idle");
+      trackConversion("desktop_install_link_copied", { ...panelEventContext(), cta_variant: result });
     } catch (error) {
       if (attempt === shareAttempt.current) setShareState(error instanceof Error && error.name === "AbortError" ? "idle" : "manual");
     } finally {
@@ -79,7 +88,8 @@ export function MobileInstallProvider({ children, mobilePreview = false }: { chi
         </div>
         <h2 id={titleId} className={styles.title}>Continue on<br />your computer</h2>
         <p id={descriptionId} className={styles.description}>AniDachi works in Chrome on desktop.</p>
-        <a className={styles.primary} href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">
+        <a className={styles.primary} href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer"
+          onClick={() => trackStoreClick("mobile_install_panel")}>
           <Chrome size={21} strokeWidth={1.8} aria-hidden="true" />
           Open Chrome Web Store
           <span className="sr-only"> (opens in a new tab)</span>

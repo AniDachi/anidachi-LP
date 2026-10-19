@@ -73,7 +73,7 @@ export function OverlayBubbleMock() {
 				<div className="top-bubble-reveal bubble-visible">
 					<button type="button" className="top-bubble example-highlight">
 						<img
-							src="/Anidachi_logo.png"
+							src="/Anidachi_logo.webp"
 							alt=""
 							width={24}
 							height={24}

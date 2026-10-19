@@ -23,7 +23,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Teleparty Alternatives for YouTube (2026) | Switch to AniDachi",
+  title: "Best Teleparty Alternatives for YouTube (2026)",
   description:
     "Best Teleparty alternative for YouTube: AniDachi for live sync, chat, and calling. Ranked vs Watch2Gether, Rave, and Discord voice — start at pricing.",
   alternates: {

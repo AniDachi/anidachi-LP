@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { InstallLink } from "@/components/install-link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveDataTable } from "@/components/responsive-data-table";
 
@@ -191,6 +192,14 @@ export default function BestAnimeWithFriendsPage() {
           Neighbor Totoro — high accessibility, great first impressions.
         </li>
       </ul>
+      <p className="text-foreground/80 leading-relaxed mb-6">
+        Picked a show?{" "}
+        <InstallLink href="/extension" className="text-brand-orange hover:underline">
+          Start a watchroom in desktop Chrome
+        </InstallLink>
+        : one person hosts with Plus or Pro, and friends join free on their own
+        accounts.
+      </p>
 
 
       <h2

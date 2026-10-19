@@ -39,19 +39,49 @@ describe("sitemap", () => {
   });
 });
 
+/** First metadata title in a page file: a template string, or `{ absolute: … }` that skips the suffix. */
+export function readMetadataTitle(source: string): { title: string; absolute: boolean } | null {
+  const match = source.match(
+    /^(?:export )?const metadata[\s\S]*?^[ \t]+title:\s*(?:\{\s*absolute:\s*)?("(?:[^"\\]|\\.)*"|`[^`]*`)/m,
+  );
+  if (!match) return null;
+  return { title: match[1].slice(1, -1), absolute: /title:\s*\{\s*absolute:/.test(match[0]) };
+}
+
 describe("titles", () => {
-  it("never end with the brand, which the layout template already adds", () => {
+  it("never repeat the brand that the layout template already adds", () => {
     const offenders: string[] = [];
+    const unread: string[] = [];
     for (const urlPath of discoverStaticSitemapUrlPaths()) {
+      if (urlPath === "/") continue;
       const source = fs.readFileSync(pageFile(urlPath), "utf8");
-      const match = source.match(/^export const metadata[\s\S]*?^ {2}title:\s*\n?\s*"([^"]+)"/m);
-      if (match && /(\||—|-)\s*AniDachi\s*$/.test(match[1])) offenders.push(`${urlPath}: ${match[1]}`);
+      const found = readMetadataTitle(source);
+      if (!found) {
+        // Computed titles (`title: pageTitle`) and metadata helpers are checked by their own tests.
+        const computed = /^(?:export )?const metadata[\s\S]*?^[ \t]+title:\s*[A-Za-z_$]/m.test(source);
+        if (!computed && !/get(Guide|Listicle)Metadata\(|generateMetadata/.test(source)) unread.push(urlPath);
+        continue;
+      }
+      if (!found.absolute && /AniDachi/.test(found.title)) offenders.push(`${urlPath}: ${found.title}`);
     }
     const guides = fs.readFileSync(path.join(process.cwd(), "lib/pseo-new-guides.tsx"), "utf8");
-    for (const m of guides.matchAll(/\n\t\ttitle: "([^"]+)"/g)) {
-      if (/(\||—)\s*AniDachi$/.test(m[1])) offenders.push(`pseo: ${m[1]}`);
+    // Page entries sit two levels deep; deeper `title:` keys are section headings.
+    for (const m of guides.matchAll(/\n(?:\t\t| {4})title: "([^"]+)"/g)) {
+      if (/AniDachi/.test(m[1])) offenders.push(`pseo: ${m[1]}`);
     }
     assert.deepEqual(offenders, []);
+    assert.deepEqual(unread, []);
+  });
+
+  it("reads tab- and space-indented titles alike", () => {
+    assert.deepEqual(readMetadataTitle('export const metadata = {\n\ttitle: "A | AniDachi",\n};'), {
+      title: "A | AniDachi",
+      absolute: false,
+    });
+    assert.deepEqual(readMetadataTitle('const metadata: Metadata = {\n  title: { absolute: "About AniDachi" },\n};'), {
+      title: "About AniDachi",
+      absolute: true,
+    });
   });
 });
 

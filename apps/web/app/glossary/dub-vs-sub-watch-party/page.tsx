@@ -8,6 +8,19 @@ export const metadata: Metadata = {
   description:
     "Should your anime watch party use dubbed or subbed episodes? Pros and cons of each for group watching, plus tips for mixed-preference groups.",
   alternates: { canonical: "/glossary/dub-vs-sub-watch-party" },
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+    title: "Dub vs Sub for Anime Watch Parties",
+    description: "Dubbed or subbed for your anime watch party? Pros, cons, and tips for mixed-preference groups.",
+    url: "/glossary/dub-vs-sub-watch-party",
+  },
 };
 
 const faq = [

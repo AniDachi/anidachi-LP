@@ -33,9 +33,12 @@ const COPY = {
   pillar: {
     body: "Add AniDachi from the Chrome Web Store. Create a room with Plus or Pro, or join a friend for free.",
   },
+  animePillar: {
+    body: "Add AniDachi to Chrome, then open the episode on Crunchyroll, YouTube, or Netflix. Host with Plus or Pro; friends join free.",
+  },
 } as const;
 
-type CtaCopyKey = keyof typeof COPY;
+export type CtaCopyKey = keyof typeof COPY;
 
 export interface PrimaryCheckoutCtaProps {
   pagePath: string;

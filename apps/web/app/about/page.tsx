@@ -4,7 +4,7 @@ import { MarketingArticle } from "@/components/marketing-article";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 export const metadata: Metadata = {
-  title: "About AniDachi",
+  title: { absolute: "About AniDachi" },
   description:
     "Who operates AniDachi, what the product does on Crunchyroll, YouTube, and Netflix, and how we stay independent of streaming platforms.",
   alternates: { canonical: "/about" },

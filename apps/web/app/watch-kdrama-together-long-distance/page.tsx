@@ -148,6 +148,15 @@ export default function WatchKdramaTogetherLongDistancePage() {
         Both require you to be online at the same time — neither supports
         async watching.
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        AniDachi also syncs Netflix movies and episodes in desktop Chrome, with
+        chat, reactions, and calls beside each person&apos;s own Netflix player.
+        Each of you needs your own access to the same title. See{" "}
+        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+          how to watch Netflix together
+        </Link>
+        .
+      </p>
 
       <h2
         id="viki"

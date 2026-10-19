@@ -8,6 +8,19 @@ export const metadata: Metadata = {
   description:
     "Asynchronous anime watching means friends watch the same show on their own schedules and discuss it later. Learn the routine and what AniDachi supports today.",
   alternates: { canonical: "/glossary/asynchronous-watching" },
+  openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+    title: "What Is Asynchronous Anime Watching?",
+    description: "Friends watch the same show on their own schedules and talk later. The routine, and what AniDachi supports today.",
+    url: "/glossary/asynchronous-watching",
+  },
 };
 
 const faq = [

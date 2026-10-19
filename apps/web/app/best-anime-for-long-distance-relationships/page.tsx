@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Long Distance Relationships (2026)",
+  title: "LDR Anime: Best Long-Distance Relationship Anime",
   description:
-    "15 anime picks curated for LDR couples — series about separation, letters across distance, reunion, and emotional bonds that survive geography.",
+    "15 LDR anime picks: anime about long-distance relationships, like Your Name and 5 Centimeters per Second, plus series about separation and reunion.",
   alternates: { canonical: "/best-anime-for-long-distance-relationships" },
   openGraph: {
     images: [
@@ -54,6 +54,7 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
+  { id: "ldr-anime", label: "Anime about long-distance relationships", level: 2 },
   { id: "list", label: "The full list", level: 2 },
   { id: "how-to-watch", label: "How to watch these with your partner", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -114,6 +115,28 @@ export default function BestAnimeForLongDistanceRelationshipsPage() {
         </strong>{" "}
         These land differently when you are watching with someone you
         actually miss.
+      </p>
+
+      <h2
+        id="ldr-anime"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+      >
+        LDR Anime: Shows About Long-Distance Relationships
+      </h2>
+      <p className="text-foreground/80 leading-relaxed mb-4">
+        If you searched for LDR anime, you probably want stories where the
+        distance is the plot, not just the mood. These four deal with
+        distance and separation most directly:
+      </p>
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
+        <li><strong>Your Name</strong> — two strangers connected across distance and time, trying to reach each other.</li>
+        <li><strong>5 Centimeters per Second</strong> — childhood sweethearts pulled apart by moves and years.</li>
+        <li><strong>Nana</strong> — a bond that survives separation and years apart; the separation arc hits hard.</li>
+        <li><strong>Please Teacher (Onegai Teacher)</strong> — keeping a relationship going under secrecy and outside constraints.</li>
+      </ul>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        The rest of the list resonates through separation, longing, and
+        reunion rather than a literal long-distance plot.
       </p>
 
       <h2

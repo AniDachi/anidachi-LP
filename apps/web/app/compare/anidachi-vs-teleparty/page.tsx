@@ -18,7 +18,7 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Teleparty — Crunchyroll & YouTube Watch Party (2026)",
+  title: { absolute: "AniDachi vs Teleparty for Crunchyroll, YouTube & Netflix" },
   description:
     "Teleparty alternative for Crunchyroll and YouTube. AniDachi syncs each person's own tab — Add to Chrome free. Compare live sync, chat, and anime rooms.",
   alternates: { canonical: "/compare/anidachi-vs-teleparty" },
@@ -212,10 +212,15 @@ export default function AniDachiVsTelepartyPage() {
         Deeper look: live rooms and personal history
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-6">
-        AniDachi combines <strong>live Crunchyroll and YouTube rooms</strong> with
+        AniDachi combines <strong>live Crunchyroll, YouTube, and Netflix rooms</strong> with
         chat, reactions, and voice/video beside each person’s player.
         Personal history helps subscribed viewers resume their own playback. Teleparty&apos;s
-        strength is a wide net of services for people who are online together.
+        strength is a wide net of services for people who are online together. For
+        Netflix on AniDachi, see{" "}
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
+          Netflix watch party
+        </Link>
+        .
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         For marathon shows or seasonal simulcasts, agree on an episode and a

@@ -5,7 +5,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 export const metadata: Metadata = {
   title: "What Is an Anime Marathon? Meaning & Group Watch Tips (2026)",
   description:
-    "An anime marathon is a session where you watch multiple episodes or an entire series in a single sitting. What anime marathon means, how to run one with friends, and the best anime for marathon watching.",
+    "An anime marathon means watching many episodes or a whole series in one sitting. What it means, how to run one with friends, and which anime to marathon.",
   alternates: { canonical: "/glossary/anime-marathon" },
   openGraph: {
     images: [

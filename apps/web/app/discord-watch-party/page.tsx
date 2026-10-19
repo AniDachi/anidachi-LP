@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-	title: "Discord Watch Party — Voice on Discord, Sync on AniDachi",
+	title: "Discord Watch Party — Discord Voice, Synced Video",
 	description:
 		"Run a Discord watch party without a soft screen share. Keep the voice call in Discord and sync Crunchyroll, YouTube, or Netflix with AniDachi.",
 	alternates: { canonical: "/discord-watch-party" },

@@ -348,6 +348,16 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
             AniDachi vs Rave — detailed comparison
           </Link>
         </li>
+        <li>
+          <Link href="/compare/anidachi-vs-twoseven" className="hover:underline">
+            AniDachi vs TwoSeven for long-distance couples
+          </Link>
+        </li>
+        <li>
+          <Link href="/guides/how-to-watch-anime-for-free-with-friends" className="hover:underline">
+            How to watch anime for free with friends
+          </Link>
+        </li>
       </ul>
     </SeoPageLayout>
   );

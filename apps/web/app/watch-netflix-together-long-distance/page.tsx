@@ -167,7 +167,16 @@ export default function WatchNetflixTogetherLongDistancePage() {
         live sync, chat, reactions, and voice/video beside each person’s player.
         A Plus, Pro, or trial host creates the room and Free friends can join.
         Personal history needs your own Plus/Pro access and recording permission.
-        Choose a shared live time; async catch-up is coming soon.
+        Choose a shared live time; async catch-up is coming soon. The full setup is
+        in{" "}
+        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+          how to watch Netflix together
+        </Link>
+        , and the options side by side are on{" "}
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
+          Netflix watch party
+        </Link>
+        .
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
@@ -197,6 +206,11 @@ export default function WatchNetflixTogetherLongDistancePage() {
         <li>
           <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
             How to watch Crunchyroll together long distance
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-kdrama-together-long-distance" className="hover:underline">
+            How to watch K-dramas together long distance
           </Link>
         </li>
         <li>

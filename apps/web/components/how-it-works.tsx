@@ -1,5 +1,6 @@
 import { Chrome, LogIn, Play, Users, MessageSquare, Clock3 } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
+import Link from "next/link";
 import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 import { InstallLink } from "@/components/install-link";
 
@@ -31,6 +32,8 @@ const steps = [
     description: "Watch in sync, chat and share reactions.",
   },
 ];
+
+const platformLinkClass = "font-medium text-ani-progress underline-offset-4 hover:underline";
 
 export function HowItWorks() {
   return (
@@ -71,12 +74,29 @@ export function HowItWorks() {
                       Get the extension from the{" "}
                       <InstallLink
                         href={CHROME_WEB_STORE_URL}
+                        storePlacement="home_how_it_works"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-ani-progress underline-offset-4 hover:underline"
                       >
                         Chrome Web Store
                       </InstallLink>.
+                    </>
+                  ) : i === 2 ? (
+                    <>
+                      {step.description} Guides:{" "}
+                      <Link href="/watch-crunchyroll-together" className={platformLinkClass}>
+                        Crunchyroll watch party
+                      </Link>
+                      ,{" "}
+                      <Link href="/watch-youtube-together" className={platformLinkClass}>
+                        YouTube watch party
+                      </Link>
+                      , and{" "}
+                      <Link href="/netflix-watch-party" className={platformLinkClass}>
+                        Netflix watch party
+                      </Link>
+                      .
                     </>
                   ) : (
                     step.description

@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Metastream — Best Metastream Alternative for Anime (2026)",
+  title: { absolute: "AniDachi vs Metastream: Metastream Alternative for Anime" },
   description:
     "AniDachi vs Metastream for Crunchyroll anime nights: per-user sync, live room features, personal history, and when to pick each tool.",
   alternates: { canonical: "/compare/anidachi-vs-metastream" },

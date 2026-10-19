@@ -146,6 +146,7 @@ export default function WatchAnimeTogetherPage() {
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
       aboveFoldCta
+      ctaCopy="animePillar"
     >
       <SeoGuideTitle>Watch Anime Together Online</SeoGuideTitle>
 
