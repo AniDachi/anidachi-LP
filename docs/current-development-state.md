@@ -1,5 +1,17 @@
 # Current Development State
 
+## Store listing rename, October 19, 2026
+
+The owner approved `AniDachi: Watch Together, Synced Watch Party` as the production
+manifest name. `short_name` remains `AniDachi`; staging/local names, stable IDs,
+permissions, endpoints, assets and runtime behavior remain unchanged. Package
+source `b49bbab0` adds only the name and matching validation to staging `32ad5ab0`.
+The new 0.1.4 channel ZIPs supersede the earlier 0.1.3 archives; the owner screenshot
+shows 0.1.3 as draft and 0.1.2 published. Exact hashes and unchanged launch gates
+are in the [runbook](releases/integrated-release-2026-10-17.md). No Store upload,
+main promotion or production mutation occurred. The audit below is the earlier
+0.1.3 checkpoint; its no-upload observation is superseded by the screenshot.
+
 ## Store review package audit, October 19, 2026
 
 The new 0.1.3 channel ZIPs freeze current staging `32ad5ab0`, including the latest

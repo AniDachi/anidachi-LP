@@ -1,29 +1,34 @@
-# AniDachi 0.1.3 — Store review and coordinated launch
+# AniDachi 0.1.4 — Store review and coordinated launch
 
 Status: release audit and package refresh authorized October 19, 2026.
 Production/main changes and Store publication are NOT authorized. The owner uploads
 the exact review ZIP with deferred publication, waits for approval, then authorizes
-the launch window. The owner confirmed that 0.1.3 has not been uploaded yet and
+the launch window. The owner screenshot now shows 0.1.3 as a draft and 0.1.2
+as published; the owner authorized 0.1.4 for the requested Store rename and
 reported that anti-abuse works. This is owner-reported acceptance, not a new
 instrumented cookie-only or Stripe test. Preparation is complete only where the
 evidence below says so.
 
 ## Candidate identity and evidence
 
-- Frozen source: `32ad5ab035b2584a735edf0028e29b081e0ea1af` (current staging,
-  PR #448 after migration-only PR #449).
+- Frozen package source: `b49bbab000dbb6e979e8732d4dd07b3ca61a0653` on the release preparation branch.
+  This adds only the approved production manifest name and matching validation
+  to runtime baseline `32ad5ab035b2584a735edf0028e29b081e0ea1af` (staging, #448/#449).
+  The rename commit still needs staging integration before production promotion.
 - Production baseline remains `a8aee4641ab74bd8b7992217fdcc4302543b7d54`.
 - Documentation refresh branch: `codex/release-audit-oct19`.
 - Previous actual Store package: 0.1.2, SHA-256
   `90d2b981c17198cfa0472b5bf40d061f5aca84fd7a16ed767e1735f0be459375`.
-  The production GitHub version variable is still 0.1.2. On October 19 the owner
-  confirmed no 0.1.3 draft or review upload; the dashboard was not independently
-  inspected in this preparation.
-- Candidate version: **0.1.3**. Keep the existing Store item/ID
+  The production GitHub version variable remains unchanged. The later owner
+  screenshot shows draft 0.1.3 and published 0.1.2. Automated dashboard access
+  was unavailable; no upload, submission or publication was performed here.
+- Candidate version: **0.1.4**. Production name is
+  `AniDachi: Watch Together, Synced Watch Party`; short name remains `AniDachi`. Keep the existing Store item/ID
   `gpkolofebdhfpapbbgdkdkmlmjfidgmn`; do not create a second listing.
 - The previous frozen source was `9b99ba0ec10855984bad3724c76b60ad6deb142b`.
-  Since then, the extension changed only its popup welcome and its tests. This
-  refresh includes the progress/people/invites overview and website setup guide.
+  The audited 0.1.3 refresh added only the popup welcome and its tests:
+  the progress/people/invites overview and website setup guide. The 0.1.4
+  follow-up changes only Store metadata and matching validation.
   Later subscription, library and mobile-install changes are Web-only.
 - Exact build IDs, package hashes, migration hashes, deployment IDs and check
   output belong in the ignored artifact directory's receipts. A rebuilt ZIP is
@@ -45,19 +50,23 @@ fixtures, not real-provider, real-billing, Store-update or two-person acceptance
 
 ### Frozen artifact receipt (October 19)
 
-Local ignored bundle: `artifacts/chrome-web-store-0.1.3-release-20261019/`.
+Local ignored bundle: `artifacts/chrome-web-store-0.1.4-release-20261019/`.
 
 | Artifact | Identity |
 | --- | --- |
-| Store review ZIP | `AniDachi-0.1.3-Chrome-Web-Store.zip` |
-| SHA-256 | `8d5ff4f85da450f5104314b3ef7b89e3bc1a44da528460c44d153c23e6c9c720` |
-| Build ID | `32ad5ab035b2584a735edf0028e29b081e0ea1af-production-release-20261019` |
-| Staging test ZIP | `AniDachi-0.1.3-Staging-Test.zip` |
-| Staging SHA-256 | `792693cd8670e2d792829a197a68cde0a4660e5c13e6bbfd665a310ab9e5a60d` |
-| Staging build source | `32ad5ab035b2584a735edf0028e29b081e0ea1af` |
+| Store review ZIP | `AniDachi-0.1.4-Chrome-Web-Store.zip` |
+| SHA-256 | `98f42ba080c38058053cced1fadb48e7587dd8c164c8cc3861f648178612d55e` |
+| Build ID | `b49bbab000dbb6e979e8732d4dd07b3ca61a0653-production-rename-20261019` |
+| Staging test ZIP | `AniDachi-0.1.4-Staging-Test.zip` |
+| Staging SHA-256 | `cc9b66e3a05f9c9e850892190ad2b85a6ee08e5311441e27ba3bee5fd0ff351c` |
+| Staging build source | `b49bbab000dbb6e979e8732d4dd07b3ca61a0653` |
 
 Both channel ZIPs are rebuilt from the same frozen source. They supersede all
-previous 0.1.3 archives, which must not be uploaded. The #444 trial fallback fix
+0.1.3 archives. Byte comparison allows only the new manifest name/version and
+diagnostic build IDs; all functional bundles are otherwise identical. The
+rename checks rerun extension typecheck/tests, both channel validators and local
+Chrome onboarding/welcome fixtures. Earlier offer/return receipts below belong
+to the unchanged 0.1.3 runtime and are retained, not misreported as new live tests. The #444 trial fallback fix
 is preserved: unresolved access stays neutral, retries use the existing coalesced
 read, and a confirmed card-required server retains ordinary pricing navigation.
 Confirmed trial/paid behavior and final server authorization are unchanged.
@@ -68,7 +77,7 @@ explicit read; signed-out uses none. These are offline fixtures, not live accoun
 or payment acceptance; the receipt records their actual outcomes.
 
 Both ZIPs retain `anidachi:website-presence:v1`, the existing production public
-VAPID key, channel IDs and unchanged narrow manifests. Channel endpoints and push
+VAPID key, channel IDs and unchanged narrow permissions. Channel endpoints and push
 configuration intentionally differ. Validators, ZIP CRC/extracted-byte comparisons
 and removed-text scans pass. Upload only the Store ZIP, not the evidence folder.
 Old archives are retained for history and must not be uploaded.
@@ -146,7 +155,7 @@ billing code reads the new tables even while trial starts are disabled.
    Web/Worker source, extension callback ID, LIVE Stripe catalog/annual prices,
    Portal/webhook event handling and public VAPID match. Keep signing/Stripe/TURN
    secrets server-side. Do not rotate auth signing secrets for this release.
-   Update the production build version variable to 0.1.3 only during the
+   Update the production build version variable to 0.1.4 only during the
    authorized launch; do not upload a later CI rebuild in place of the reviewed ZIP.
 3. **Schema first, separately.** Pre-apply only the reviewed pending migrations
    with an approved migration-only operation, or deliver a migration-only main
@@ -202,7 +211,7 @@ instructions when required, never credentials inside the package or repository.
 | Multi-provider rooms | Prior provider/input tests and staging repairs passed; final combined two-person Netflix plus YouTube/Crunchyroll smoke remains separate. Include V/repeat/keyup/chat, native controls/fullscreen/navigation, real mic/camera and room end. |
 | Browser/installation abuse | Owner reported that anti-abuse works. Server tests and staging migrations pass; read-only October 19 policy confirms enforcement remains on. Do not repeat completed owner testing merely for this popup change. Cookie-only denial and exact Stripe-operation evidence remain unrecorded if not covered by that test; confirm their coverage before production activation. |
 | Trial billing | Preserve earlier no-charge expiry, renewal/decline/3DS/recovery receipts. Current staging includes 21 preview states and saved-card renewal guards from #448/#449; 1,316 web tests passed with 6 skipped, plus disposable SQL contracts. Preview switching is local and price preview is read-only. Real Sandbox saved-card setup/change/cancel/re-enable, multi-tab and delayed-return acceptance still require explicit evidence; preview screenshots are not payment proof. Re-run affected cases only. |
-| Store update | Compare exact 0.1.2/0.1.3 permissions; Netflix adds `https://www.netflix.com/*`. Actual Store permission acceptance/re-enable and settings/session/seen-state preservation are not proven by unpacked reload. |
+| Store update | Compare exact 0.1.2/0.1.4 permissions; Netflix adds `https://www.netflix.com/*`. Actual Store permission acceptance/re-enable and settings/session/seen-state preservation are not proven by unpacked reload. |
 | Public copy/privacy | The [website-copy follow-up](netflix-website-copy-2026-10-17.md) removes stale Netflix availability claims and adds Netflix to the existing privacy provider list for the coordinated launch. Verify its staging delivery and review Store listing/privacy declarations before publication. Do not imply ad-plan acceptance without evidence or change SEO routes/H1s to perform this cleanup. |
 | Production readiness | October 19 read-only schema/policy/deployment baseline is recorded; ten migrations remain pending. The current Stripe connector exposes Sandbox only, so LIVE catalog/Portal/webhook readiness is still open. Real post-deploy auth/push and legacy-client smoke remain required. |
 
@@ -218,7 +227,7 @@ instructions when required, never credentials inside the package or repository.
 3. Close combined provider/host+guest and account/history gates above. Existing
    passing unit/SQL/E2E results are not actual Netflix DRM/ad-plan or Store update
    acceptance. Preserve earlier valid receipts; repeat affected cases only.
-4. The owner confirmed 0.1.3 was never uploaded. Submit the exact hashed ZIP with
+4. Replace the current 0.1.3 draft with the exact hashed 0.1.4 ZIP and submit with
    automatic publication off; review listing/privacy/reviewer notes. Store review
    can happen while these acceptance checks continue. Approval is not permission
    to change main or production; use the ordered launch stages above.

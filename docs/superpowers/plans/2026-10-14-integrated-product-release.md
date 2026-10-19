@@ -21,6 +21,16 @@ Netflix, cardless-trial and player-onboarding plans.
 - English extension copy; preserve approved opaque matte UI and working media behavior.
 - Staging stays password gated/noindex; analytics stays disabled there per owner.
 
+## October 19 Store-name follow-up
+
+The owner approved the production name `AniDachi: Watch Together, Synced Watch Party`
+and version 0.1.4 after confirming the highest uploaded package is 0.1.3 or lower.
+The later screenshot shows draft 0.1.3 and published 0.1.2. The name-only package
+source is `b49bbab0`; it preserves runtime `32ad5ab0`, channel IDs, permissions,
+endpoints and assets. The [runbook](../../releases/integrated-release-2026-10-17.md)
+identifies the replacement ZIPs. Older 0.1.3 statements below are historical;
+production activation and Store publication remain separately gated.
+
 ## October 19 release-preparation checkpoint
 
 The owner authorized a production-channel 0.1.3 review ZIP with onboarding enabled,
