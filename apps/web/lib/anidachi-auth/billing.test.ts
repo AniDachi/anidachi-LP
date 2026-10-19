@@ -123,6 +123,7 @@ function fixture(
 	} = {},
 ) {
 	const calls: string[] = [];
+	let priceReads = 0;
 	let portalParams: Stripe.BillingPortal.SessionCreateParams | undefined;
 	const stripe = {
 		billingPortal: {
@@ -188,11 +189,14 @@ function fixture(
 		readTrial: async () => options.trial ?? null,
 		readRenewal: async () => options.renewal ?? null,
 		readActivation: async () => options.activation ?? null,
-		readPrice: async () => ({
-			unitAmount: 799,
-			currency: "usd",
-			billingPeriod: "monthly",
-		}),
+		readPrice: async () => {
+			priceReads++;
+			return {
+				unitAmount: 799,
+				currency: "usd",
+				billingPeriod: "monthly",
+			};
+		},
 		createStripe: () => {
 			calls.push("client");
 			return stripe;
@@ -206,8 +210,30 @@ function fixture(
 		},
 		mode: () => options.mode ?? "test",
 	});
-	return { service, calls, params: () => portalParams };
+	return {
+		service,
+		calls,
+		params: () => portalParams,
+		priceReads: () => priceReads,
+	};
 }
+
+test("billing history shares one public price read across identical prices", async () => {
+	const f = fixture({
+		rows: [
+			row,
+			{
+				...row,
+				id: "past",
+				stripe_subscription_id: "sub_past",
+				status: "canceled",
+			},
+		],
+	});
+	const overview = await f.service.overview("owner");
+	assert.equal(overview.subscriptions.length, 2);
+	assert.equal(f.priceReads(), 1);
+});
 
 test("cardless trial cannot use legacy cancellation or restore Portal", async () => {
 	for (const method of ["cancellationPortal", "renewalPortal"] as const) {

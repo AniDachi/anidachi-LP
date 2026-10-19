@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { readBillingPrice } from "./billing-price";
+import { readPricingPrice } from "./pricing-catalog";
 import { db } from "./db";
 import { createStripeClient, resolveStripeMode } from "./stripe-env";
 import { stripePriceIdForPlanCode } from "./stripe-plans";
@@ -113,6 +114,27 @@ export function trialRenewalService(stripe: Stripe = createStripeClient()) {
 		},
 		readOperation: readTrialRenewal,
 		readLatest: (user) => readTrialRenewal(user),
+		async readSavedCard(user, subscriptionId) {
+			const { data, error } = await db()
+				.from("subscription_trial_renewals")
+				.select("*")
+				.eq("user_id", user)
+				.eq("stripe_subscription_id", subscriptionId)
+				.eq("state", "applied")
+				.eq("action", "enable")
+				.order("generation", { ascending: false })
+				.limit(1)
+				.abortSignal(timeout())
+				.maybeSingle();
+			if (error) throw new TrialRenewalError("unavailable");
+			return data ? parseTrialRenewalOperation(data) : null;
+		},
+		async readPreviewPrice(plan, period) {
+			const priceId = stripePriceIdForPlanCode(plan, period);
+			if (!priceId) throw new TrialRenewalError("unavailable");
+			const price = await readPricingPrice(priceId, true, period);
+			return { priceId, amount: price.unitAmount, currency: price.currency };
+		},
 		async readPrice(plan, period) {
 			const priceId = stripePriceIdForPlanCode(plan, period);
 			if (!priceId) throw new TrialRenewalError("unavailable");
@@ -132,6 +154,14 @@ export function trialRenewalService(stripe: Stripe = createStripeClient()) {
 				...fence(user, o),
 				p_request_id: requestId,
 				p_origin: origin,
+			}),
+		beginSavedCard: (user, o, origin, requestId, source) =>
+			rpc("begin_trial_saved_renewal_v1", {
+				...fence(user, o),
+				p_request_id: requestId,
+				p_origin: origin,
+				p_source_operation_id: source.id,
+				p_payment_method_id: source.payment_method_id,
 			}),
 		saveSetup: (user, o, sessionId) =>
 			rpc("record_trial_setup_session_v1", {

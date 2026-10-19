@@ -15,6 +15,13 @@ export type TrialRenewalQuote = RenewalQuoteInput & {
 	expiresAt: string;
 	termsRevision: string;
 };
+export type TrialRenewalPreview = {
+	serverTime: string;
+	expiresAt: string;
+	firstChargeAt: string;
+	options: (RenewalQuoteInput & { amount: number; currency: string })[];
+	savedCard: { sourceId: string; brand: string; last4: string } | null;
+};
 export type RenewalResult = {
 	state:
 		| "active"
@@ -77,6 +84,7 @@ export type TrialRenewalOperation = {
 	setup_session_id: string | null;
 	setup_intent_id: string | null;
 	payment_method_id: string | null;
+	payment_source_operation_id?: string | null;
 	created_at: string;
 	updated_at: string;
 };
@@ -94,6 +102,18 @@ export type TrialRenewalDeps = {
 		plan: PaidPlanCode,
 		period: BillingPeriod,
 	): Promise<{ priceId: string; amount: number; currency: string }>;
+	readPreviewPrice?: TrialRenewalDeps["readPrice"];
+	readSavedCard(
+		userId: string,
+		subscriptionId: string,
+	): Promise<TrialRenewalOperation | null>;
+	beginSavedCard(
+		userId: string,
+		operation: TrialRenewalOperation,
+		origin: string,
+		requestId: string,
+		source: TrialRenewalOperation,
+	): Promise<TrialRenewalOperation>;
 	reserve(
 		userId: string,
 		requestId: string,
@@ -156,6 +176,8 @@ export function parseTrialRenewalOperation(
 		!validTrialOperationId(o.id) ||
 		!validTrialOperationId(o.user_id) ||
 		!validTrialOperationId(o.request_id) ||
+		(o.payment_source_operation_id != null &&
+			!validTrialOperationId(o.payment_source_operation_id)) ||
 		!Number.isSafeInteger(o.generation) ||
 		o.generation < 1 ||
 		!o.stripe_subscription_id ||
@@ -315,6 +337,33 @@ export function createTrialRenewalService(deps: TrialRenewalDeps) {
 			throw new TrialRenewalError("unavailable");
 		return { schedule, sub };
 	}
+	async function savedCard(c: TrialRenewalContext, sub: Stripe.Subscription) {
+		const source = await deps.readSavedCard(c.userId, c.subscriptionId);
+		if (!source || !id(sub.default_payment_method)) return null;
+		if (
+			source.user_id !== c.userId ||
+			source.stripe_subscription_id !== c.subscriptionId ||
+			source.state !== "applied" ||
+			source.action !== "enable" ||
+			!source.consented_at ||
+			source.payment_method_id !== id(sub.default_payment_method)
+		)
+			return null;
+		const method = await stripe.paymentMethods.retrieve(
+			source.payment_method_id!,
+			{},
+			REQUEST,
+		);
+		if (
+			method.id !== source.payment_method_id ||
+			id(method.customer) !== c.customerId ||
+			method.livemode !== deps.livemode ||
+			method.type !== "card" ||
+			!method.card
+		)
+			throw new TrialRenewalError("unavailable");
+		return { source, method };
+	}
 	function proof(
 		c: TrialRenewalContext,
 		s: Awaited<ReturnType<typeof snapshot>>,
@@ -429,6 +478,18 @@ export function createTrialRenewalService(deps: TrialRenewalDeps) {
 			if (o.state !== "applying") return terminal(o) ?? { state: "pending" };
 			const age = now() - Date.parse(o.updated_at);
 			if (age < -300000 || age >= REPLAY_MS) return { state: "pending" };
+			if (o.action === "enable" && o.payment_source_operation_id) {
+				// A delayed/replayed opt-in must not restore a card that the owner
+				// removed or replaced after consent. An unknown prior effect keeps
+				// its existing reconciliation fence instead of guessing it failed.
+				const card = await savedCard(c, s.sub);
+				if (
+					!card ||
+					card.source.id !== o.payment_source_operation_id ||
+					card.method.id !== o.payment_method_id
+				)
+					return { state: "pending" };
+			}
 			const metadata = {
 				...s.schedule.metadata,
 				trialRenewalId: o.id,
@@ -579,6 +640,55 @@ export function createTrialRenewalService(deps: TrialRenewalDeps) {
 		}
 	}
 	return {
+		async previewTrialRenewal(userId: string): Promise<TrialRenewalPreview> {
+			if (!validTrialOperationId(userId))
+				throw new TrialRenewalError("unavailable");
+			const c = await context(userId);
+			if (Date.parse(c.trialEndsAt) <= now())
+				throw new TrialRenewalError("expired");
+			const choices: RenewalQuoteInput[] = ["plus", "pro"].flatMap((planCode) =>
+				["monthly", "yearly"].map(
+					(billingPeriod) => ({ planCode, billingPeriod }) as RenewalQuoteInput,
+				),
+			);
+			const [s, options] = await Promise.all([
+				snapshot(c),
+				Promise.all(
+					choices.map(async (choice) => {
+						const p = await (deps.readPreviewPrice ?? deps.readPrice)(
+							choice.planCode,
+							choice.billingPeriod,
+						);
+						if (
+							!p.priceId ||
+							!Number.isSafeInteger(p.amount) ||
+							p.amount <= 0 ||
+							p.currency !== "usd"
+						)
+							throw new TrialRenewalError("unavailable");
+						return { ...choice, amount: p.amount, currency: p.currency };
+					}),
+				),
+			]);
+			if (s.schedule.status !== "active" || s.sub.status !== "trialing")
+				throw new TrialRenewalError("expired");
+			const card = await savedCard(c, s.sub);
+			return {
+				serverTime: new Date(now()).toISOString(),
+				expiresAt: new Date(
+					Math.min(now() + 300_000, Date.parse(c.trialEndsAt)),
+				).toISOString(),
+				firstChargeAt: c.trialEndsAt,
+				options,
+				savedCard: card
+					? {
+							sourceId: card.source.id,
+							brand: card.method.card!.brand,
+							last4: card.method.card!.last4,
+						}
+					: null,
+			};
+		},
 		async quoteTrialRenewal(
 			userId: string,
 			input: RenewalQuoteInput,
@@ -586,6 +696,8 @@ export function createTrialRenewalService(deps: TrialRenewalDeps) {
 			if (!validTrialOperationId(userId) || !validRenewalQuoteInput(input))
 				throw new TrialRenewalError("unavailable");
 			await reconcileApplying(userId);
+			if ((await deps.readLatest(userId))?.state === "setup_pending")
+				throw new TrialRenewalError("pending");
 			const c = await context(userId);
 			if (Date.parse(c.trialEndsAt) <= now())
 				throw new TrialRenewalError("expired");
@@ -610,10 +722,15 @@ export function createTrialRenewalService(deps: TrialRenewalDeps) {
 			opId: string,
 			requestId: string,
 			origin: string,
+			savedCardSourceId?: string,
 		): Promise<RenewalSetupResult> {
 			let found = false;
 			try {
-				if (!validTrialOperationId(requestId))
+				if (
+					!validTrialOperationId(requestId) ||
+					(savedCardSourceId !== undefined &&
+						!validTrialOperationId(savedCardSourceId))
+				)
 					throw new TrialRenewalError("unavailable");
 				let o = await operation(userId, opId);
 				found = true;
@@ -629,6 +746,20 @@ export function createTrialRenewalService(deps: TrialRenewalDeps) {
 				)
 					return await stop(userId, o, "expired");
 				if (!(await unchanged(o))) return await stop(userId, o, "failed");
+				if (savedCardSourceId && o.state === "quoted") {
+					const s = await snapshot(c);
+					const card = await savedCard(c, s.sub);
+					if (!card || card.source.id !== savedCardSourceId)
+						return { state: "offer_changed" };
+					o = await deps.beginSavedCard(
+						userId,
+						o,
+						origin,
+						requestId,
+						card.source,
+					);
+					return await apply(userId, o, c);
+				}
 				if (o.state === "quoted")
 					o = await deps.beginSetup(userId, o, origin, requestId);
 				if (!o.setup_origin || !o.consented_at || o.state !== "setup_pending")

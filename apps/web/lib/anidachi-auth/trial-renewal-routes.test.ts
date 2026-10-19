@@ -10,6 +10,7 @@ import {
 const USER = "a1000000-0000-4000-8000-000000000001",
 	OP = "a2000000-0000-4000-8000-000000000001";
 const bodies = {
+	preview: {},
 	quote: { planCode: "plus", billingPeriod: "yearly" },
 	setup: { quoteId: OP, requestId: OP },
 	complete: { operationId: OP },
@@ -35,7 +36,13 @@ function request(
 		},
 	);
 }
-for (const action of ["quote", "setup", "complete", "cancel"] as const) {
+for (const action of [
+	"preview",
+	"quote",
+	"setup",
+	"complete",
+	"cancel",
+] as const) {
 	test(`${action} fences CSRF, account, input and quota before the billing service`, async () => {
 		let calls = 0,
 			allowed = true;
@@ -58,7 +65,14 @@ for (const action of ["quote", "setup", "complete", "cancel"] as const) {
 				.status,
 			409,
 		);
-		assert.equal((await handler(request(action, {}, {}))).status, 400);
+		assert.equal(
+			(
+				await handler(
+					request(action, {}, action === "preview" ? { foreign: true } : {}),
+				)
+			).status,
+			400,
+		);
 		allowed = false;
 		const limited = await handler(request(action));
 		assert.equal(limited.status, 429);

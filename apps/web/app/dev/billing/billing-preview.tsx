@@ -21,15 +21,15 @@ const example: BillingOverview = {
 			id: "sample-subscription",
 			planCode: "plus",
 			status: "trialing",
-			currentPeriodEnd: "2026-10-02T16:00:00Z",
+			currentPeriodEnd: "2030-01-04T16:00:00Z",
 			cancelAtPeriodEnd: false,
 			canCancel: true,
 			canRestoreRenewal: false,
 			canChangeTrialPlan: true,
 			trial: {
 				stage: "trial",
-				endsAt: "2026-10-02T16:00:00Z",
-				pendingUntil: "2026-10-02T18:00:00Z",
+				endsAt: "2030-01-04T16:00:00Z",
+				pendingUntil: "2030-01-04T18:00:00Z",
 			},
 			price: { unitAmount: 7670, currency: "usd", billingPeriod: "yearly" },
 		},
@@ -59,7 +59,7 @@ export function BillingPreview() {
 	const pending = variant === "Setup pending";
 	const processing = variant === "Payment processing";
 	const paymentRequired = variant === "Payment failed";
-	const view: BillingOverview = paid
+	let view: BillingOverview = paid
 		? {
 				...example,
 				subscriptions: [
@@ -141,6 +141,65 @@ export function BillingPreview() {
 					],
 				}
 			: example;
+	if (
+		[
+			"Free",
+			"Canceled",
+			"Trial activation pending",
+			"Loading",
+			"Unavailable",
+		].includes(variant)
+	) {
+		view = {
+			...example,
+			planCode: "free",
+			subscriptions: variant === "Canceled" ? [example.subscriptions[1]] : [],
+			pendingTrialActivation:
+				variant === "Trial activation pending"
+					? {
+							id: "sample-activation",
+							planCode: "plus",
+							billingPeriod: "monthly",
+						}
+					: undefined,
+		};
+	}
+	const otherStatus: Record<string, string> = {
+		Overdue: "past_due",
+		Unpaid: "unpaid",
+		"Payment incomplete": "incomplete",
+		Paused: "paused",
+		"Unknown status": "unknown",
+	};
+	if (otherStatus[variant]) {
+		view = {
+			...example,
+			planCode: "free",
+			subscriptions: [
+				{
+					...example.subscriptions[0],
+					status: otherStatus[variant],
+					trial: undefined,
+					canChangeTrialPlan: false,
+					canCancel: false,
+				},
+			],
+		};
+	}
+	if (variant === "Card trial renewal off") {
+		view = {
+			...example,
+			subscriptions: [
+				{
+					...example.subscriptions[0],
+					cancelAtPeriodEnd: true,
+					canCancel: false,
+					canRestoreRenewal: true,
+				},
+			],
+		};
+	}
+
 	const previewAction = async () => {
 		setNotice("Preview only. No subscription changes were made.");
 	};
@@ -202,6 +261,17 @@ export function BillingPreview() {
 						"Setup pending",
 						"Payment processing",
 						"Payment failed",
+						"Free",
+						"Canceled",
+						"Trial activation pending",
+						"Overdue",
+						"Unpaid",
+						"Payment incomplete",
+						"Paused",
+						"Unknown status",
+						"Card trial renewal off",
+						"Loading",
+						"Unavailable",
 					].map((label) => (
 						<button
 							key={label}
@@ -228,9 +298,15 @@ export function BillingPreview() {
 					<BillingView
 						key={variant}
 						ownerUserId="local-preview"
-						overview={view}
-						busy={false}
-						error={null}
+						overview={
+							["Loading", "Unavailable"].includes(variant) ? null : view
+						}
+						busy={variant === "Loading"}
+						error={
+							variant === "Unavailable"
+								? "We couldn’t load your subscription. Please refresh to try again."
+								: null
+						}
 						notice={notice}
 						planQuote={null}
 						load={previewAction}
@@ -248,6 +324,24 @@ export function BillingPreview() {
 								selection={selection}
 								onSelectionChange={setSelection}
 								onAction={previewRenewal}
+								onPreview={async () => ({
+									serverTime: new Date().toISOString(),
+									expiresAt: new Date(Date.now() + 300000).toISOString(),
+									firstChargeAt: s.trial!.endsAt,
+									savedCard: enabled
+										? { sourceId: "preview-card", brand: "visa", last4: "4242" }
+										: null,
+									options: (["plus", "pro"] as const).flatMap((planCode) =>
+										(["monthly", "yearly"] as const).map((billingPeriod) => ({
+											planCode,
+											billingPeriod,
+											amount:
+												PUBLISHED_PRICING[billingPeriod][planCode].unitAmount,
+											currency:
+												PUBLISHED_PRICING[billingPeriod][planCode].currency,
+										})),
+									),
+								})}
 								onDismiss={() => setQuote(null)}
 							/>
 						)}

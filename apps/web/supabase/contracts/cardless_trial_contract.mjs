@@ -159,6 +159,21 @@ if (!sql("select pg_get_functiondef('public.consume_trial_action_rate_limit_v1(u
  assert.ok(migration);
  sql("begin;\n" + readFileSync(resolve(base, "migrations", migration), "utf8") + "\ncommit;");
 }
+if (
+	sql(
+		"select to_regprocedure('public.begin_trial_saved_renewal_v1(uuid,uuid,bigint,uuid,text,uuid,text)') is null;",
+	).trim() === "t"
+) {
+	const migration = readdirSync(resolve(base, "migrations")).find((f) =>
+		f.endsWith("_trial_renewal_preview_and_saved_card.sql"),
+	);
+	assert.ok(migration);
+	sql(
+		"begin;\n" +
+			readFileSync(resolve(base, "migrations", migration), "utf8") +
+			"\ncommit;",
+	);
+}
 for (const name of [
  "trial_context_rate_limit",
  "trial_offer_preflight",

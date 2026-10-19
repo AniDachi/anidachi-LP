@@ -6,6 +6,7 @@ import type {
 } from "../billing-view";
 import { resolveAccountEntitlements } from "./account-entitlements";
 import { readBillingPrice } from "./billing-price";
+import { readBillingDisplayPrice } from "./pricing-catalog";
 import {
 	getBillingCustomerByUserId,
 	getSubscriptionTrial,
@@ -83,7 +84,7 @@ const defaultDeps: BillingDeps = {
 	mode: resolveStripeMode,
 	readTrial: getSubscriptionTrial,
 	readRenewal: readTrialRenewal,
-	readPrice: readBillingPrice,
+	readPrice: readBillingDisplayPrice,
 };
 
 export function createBillingService(deps: BillingDeps = defaultDeps) {
@@ -236,13 +237,25 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 				deps.resolveEntitlements(userId, new Date()),
 				deps.readActivation(userId),
 			]);
+			const prices = new Map<
+				string,
+				Promise<Awaited<ReturnType<typeof readBillingPrice>> | null>
+			>();
+			const displayPrice = (id: string) => {
+				if (!prices.has(id))
+					prices.set(
+						id,
+						deps.readPrice(id).catch(() => null),
+					);
+				return prices.get(id)!;
+			};
 			const subscriptions: BillingSubscription[] = await Promise.all(
 				rows
 					.sort((a, b) => b.created_at.localeCompare(a.created_at))
 					.map(async (row) => {
 						const [record, price] = await Promise.all([
 							deps.readTrial(row.stripe_subscription_id),
-							deps.readPrice(row.stripe_price_id).catch(() => null),
+							displayPrice(row.stripe_price_id),
 						]);
 						let trial: BillingTrial | undefined;
 						if (record) {

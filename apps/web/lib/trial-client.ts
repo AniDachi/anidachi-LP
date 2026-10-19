@@ -1,6 +1,7 @@
 import { BILLING_OWNER_HEADER } from "./billing-view";
 
 const states = new Set([
+	"preview",
 	"ready",
 	"trial_used",
 	"trial_busy",

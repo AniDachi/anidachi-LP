@@ -8,18 +8,26 @@ import {
 	type RenewalSetupResult,
 	TrialRenewalError,
 	type TrialRenewalQuote,
+	type TrialRenewalPreview,
 	validRenewalQuoteInput,
 	validTrialOperationId,
 } from "./trial-renewal";
 import { trialRenewalService } from "./trial-renewal-server";
 import { resolveWebsiteSession } from "./website-session";
-export type RenewalAction = "quote" | "setup" | "complete" | "cancel";
+export type RenewalAction =
+	| "preview"
+	| "quote"
+	| "setup"
+	| "complete"
+	| "cancel";
 type Body =
 	| RenewalQuoteInput
-	| { quoteId: string; requestId: string }
+	| { quoteId: string; requestId: string; savedCardSourceId?: string }
+	| Record<string, never>
 	| { operationId: string }
 	| { requestId: string };
 type Output =
+	| (TrialRenewalPreview & { state: "preview" })
 	| RenewalResult
 	| RenewalSetupResult
 	| (TrialRenewalQuote & { state: "quoted" });
@@ -31,10 +39,14 @@ type Deps = {
 function validBody(action: RenewalAction, value: unknown): value is Body {
 	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 	const v = value as Record<string, unknown>;
+	if (action === "preview") return Object.keys(v).length === 0;
 	return action === "quote"
 		? validRenewalQuoteInput(value)
 		: action === "setup"
-			? validTrialOperationId(v.quoteId) && validTrialOperationId(v.requestId)
+			? validTrialOperationId(v.quoteId) &&
+				validTrialOperationId(v.requestId) &&
+				(v.savedCardSourceId === undefined ||
+					validTrialOperationId(v.savedCardSourceId))
 			: action === "complete"
 				? validTrialOperationId(v.operationId)
 				: validTrialOperationId(v.requestId);
@@ -48,14 +60,29 @@ export function createTrialRenewalHandler(
 		deps.execute ??
 		(async (user: string, body: Body, origin: string): Promise<Output> => {
 			if (!service) service = trialRenewalService();
+			if (action === "preview")
+				return {
+					...(await service.previewTrialRenewal(user)),
+					state: "preview",
+				};
 			if (action === "quote")
 				return {
 					...(await service.quoteTrialRenewal(user, body as RenewalQuoteInput)),
 					state: "quoted",
 				};
 			if (action === "setup") {
-				const b = body as { quoteId: string; requestId: string };
-				return service.beginTrialRenewal(user, b.quoteId, b.requestId, origin);
+				const b = body as {
+					quoteId: string;
+					requestId: string;
+					savedCardSourceId?: string;
+				};
+				return service.beginTrialRenewal(
+					user,
+					b.quoteId,
+					b.requestId,
+					origin,
+					b.savedCardSourceId,
+				);
 			}
 			if (action === "complete")
 				return service.completeTrialRenewal(
@@ -109,7 +136,13 @@ export function createTrialRenewalHandler(
 			}
 			if (!validBody(action, body))
 				return json({ error: "Review your trial renewal first." }, 400);
-			if (!(await (deps.allowRequest ?? allowTrialAction)(user.id, action)))
+			if (
+				!(await (
+					deps.allowRequest ??
+					((user, action) =>
+						allowTrialAction(user, action === "preview" ? "quote" : action))
+				)(user.id, action))
+			)
 				return json({ error: "Please wait a moment and try again." }, 429, {
 					"Retry-After": "60",
 				});

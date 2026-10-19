@@ -4,6 +4,7 @@ import test from "node:test";
 import type Stripe from "stripe";
 import {
 	createTrialRenewalService,
+	TrialRenewalError,
 	type TrialRenewalDeps,
 	type TrialRenewalOperation,
 } from "./trial-renewal";
@@ -169,6 +170,7 @@ function fixture() {
 					customer: "cus_trial",
 					livemode: false,
 					type: "card",
+					card: { brand: "visa", last4: "4242" },
 				}),
 			},
 		} as unknown as Stripe,
@@ -189,6 +191,28 @@ function fixture() {
 			return o?.user_id === user ? structuredClone(o) : null;
 		},
 		readLatest: async () => structuredClone(latest()),
+		readSavedCard: async (user, subscription) =>
+			structuredClone(
+				[...operations.values()]
+					.reverse()
+					.find(
+						(o) =>
+							o.user_id === user &&
+							o.stripe_subscription_id === subscription &&
+							o.state === "applied" &&
+							o.action === "enable",
+					) ?? null,
+			),
+		beginSavedCard: async (user, op, origin, requestId, source) => {
+			const o = owned(user, op);
+			o.state = "applying";
+			o.consented_at = new Date(time).toISOString();
+			o.setup_origin = origin;
+			o.setup_request_id = requestId;
+			o.payment_method_id = source.payment_method_id;
+			o.payment_source_operation_id = source.id;
+			return structuredClone(o);
+		},
 		readPrice: async (plan, period) => ({
 			priceId: `price_${plan}_${period}`,
 			amount: changedPrice ? 899 : period === "yearly" ? 7670 : 799,
@@ -688,3 +712,131 @@ test("quote terms are canonical regardless of JSON property order or untrusted e
 		assert.equal(q.currency, "usd");
 	}
 });
+
+test("a second tab cannot supersede consented card setup by requesting a quote", async () => {
+	const f = fixture();
+	const { quote } = await f.setup();
+	await assert.rejects(
+		f.service.quoteTrialRenewal(USER, {
+			planCode: "pro",
+			billingPeriod: "yearly",
+		}),
+		(error: unknown) =>
+			error instanceof TrialRenewalError && error.state === "pending",
+	);
+	f.confirm(quote.id);
+	assert.equal(
+		(await f.service.completeTrialRenewal(USER, quote.id)).state,
+		"active",
+	);
+	assert.equal(f.creates.length, 1);
+});
+
+test("a renewal preview reads all choices without reserving or changing an operation", async () => {
+	const f = fixture();
+	const preview = await f.service.previewTrialRenewal(USER);
+	assert.equal(preview.options.length, 4);
+	assert.equal(preview.firstChargeAt, new Date(f.end * 1000).toISOString());
+	assert.equal(preview.savedCard, null);
+	assert.equal(f.operations.size, 0);
+	assert.equal(f.updates.length, 0);
+	assert.equal(f.creates.length, 0);
+});
+
+test("explicit changes reuse the verified saved card without another Checkout", async () => {
+	const f = fixture();
+	const { quote: first } = await f.setup();
+	f.confirm(first.id);
+	await f.service.completeTrialRenewal(USER, first.id);
+	const preview = await f.service.previewTrialRenewal(USER);
+	assert.deepEqual(preview.savedCard, {
+		sourceId: first.id,
+		brand: "visa",
+		last4: "4242",
+	});
+	const quote = await f.service.quoteTrialRenewal(USER, {
+		planCode: "pro",
+		billingPeriod: "yearly",
+	});
+	const request = randomUUID();
+	const confirm = () =>
+		f.service.beginTrialRenewal(
+			USER,
+			quote.id,
+			request,
+			"https://staging.anidachi.app",
+			first.id,
+		);
+	assert.equal((await confirm()).state, "active");
+	assert.equal((await confirm()).state, "active");
+	assert.equal(f.creates.length, 1);
+	assert.equal(f.updates.length, 2);
+	assert.equal(f.sub.items.data[0].price.id, "price_pro_yearly");
+	assert.equal(f.sub.trial_end, f.end);
+});
+
+test("a removed saved card requires review and never silently starts another setup", async () => {
+	const f = fixture();
+	const { quote: first } = await f.setup();
+	f.confirm(first.id);
+	await f.service.completeTrialRenewal(USER, first.id);
+	const quote = await f.service.quoteTrialRenewal(USER, {
+		planCode: "pro",
+		billingPeriod: "monthly",
+	});
+	f.sub.default_payment_method = null;
+	assert.equal(
+		(
+			await f.service.beginTrialRenewal(
+				USER,
+				quote.id,
+				randomUUID(),
+				"https://staging.anidachi.app",
+				first.id,
+			)
+		).state,
+		"offer_changed",
+	);
+	assert.equal(f.creates.length, 1);
+	assert.equal(f.updates.length, 1);
+});
+
+for (const replacement of [null, "pm_replacement"])
+	test(`saved-card apply and recovery never restore a changed default: ${replacement}`, async () => {
+		const f = fixture();
+		const { quote: first } = await f.setup();
+		f.confirm(first.id);
+		await f.service.completeTrialRenewal(USER, first.id);
+		const quote = await f.service.quoteTrialRenewal(USER, {
+			planCode: "pro",
+			billingPeriod: "yearly",
+		});
+		const begin = f.deps.beginSavedCard;
+		f.deps.beginSavedCard = async (...args) => {
+			const op = await begin(...args);
+			f.sub.default_payment_method = replacement;
+			return op;
+		};
+		assert.equal(
+			(
+				await f.service.beginTrialRenewal(
+					USER,
+					quote.id,
+					randomUUID(),
+					"https://staging.anidachi.app",
+					first.id,
+				)
+			).state,
+			"pending",
+		);
+		assert.equal(
+			(await f.service.completeTrialRenewal(USER, quote.id)).state,
+			"pending",
+		);
+		assert.equal(f.sub.default_payment_method, replacement);
+		assert.equal(
+			f.updates.length,
+			1,
+			"no new Stripe mutation after the card changed",
+		);
+	});
