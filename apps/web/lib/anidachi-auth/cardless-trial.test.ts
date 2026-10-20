@@ -76,6 +76,10 @@ function fixture() {
 	const stripe = {
 		customers: {
 			create: async (p: Stripe.CustomerCreateParams) => {
+				// Keep the original request stable across deploys/profile changes.
+				assert.deepEqual(p, {
+					metadata: { userId: USER, trialActivationId: ACTIVATION },
+				});
 				assert.ok(
 					activation,
 					"account must be reserved before Customer creation",

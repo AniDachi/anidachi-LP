@@ -6,7 +6,8 @@ import {
 	trialDenialCookieName,
 	TRIAL_DENIAL_MAX_AGE,
 } from "./trial-abuse";
-import { type NextRequest, NextResponse } from "next/server";
+import { after, type NextRequest, NextResponse } from "next/server";
+import { syncCardlessTrialCustomerContact } from "./cardless-trial-customer";
 import { BILLING_OWNER_HEADER } from "../billing-view";
 import {
 	type TrialStartInput,
@@ -25,6 +26,8 @@ const PRIVATE_HEADERS = {
 	Vary: "Cookie",
 };
 type StartDeps = {
+	defer?: (work: () => Promise<void>) => void;
+	syncCustomerContact?: (userId: string) => Promise<unknown>;
 	getUser?: (request: NextRequest) => Promise<{ id: string } | null>;
 	allowRequest?: (userId: string) => Promise<boolean>;
 	start?: (
@@ -177,6 +180,22 @@ function createCardlessTrialHandler(
 						maxAge: TRIAL_DENIAL_MAX_AGE,
 					},
 				);
+			}
+			if (result.state === "active") {
+				try {
+					(deps.defer ?? after)(async () => {
+						try {
+							await (
+								deps.syncCustomerContact ?? syncCardlessTrialCustomerContact
+							)(user.id);
+						} catch {
+							// Do not log contact details or turn an active trial into an error.
+							console.warn("Trial customer contact sync failed");
+						}
+					});
+				} catch {
+					console.warn("Trial customer contact sync could not be scheduled");
+				}
 			}
 			return response;
 		} catch {
