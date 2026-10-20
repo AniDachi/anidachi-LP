@@ -8,6 +8,77 @@ import {
 } from "./cardless-trial-routes";
 
 const OWNER = "a1000000-0000-4000-8000-000000000001";
+test("contact sync runs after an active start/recovery response and never on denied/pending trials", async () => {
+	for (const factory of [
+		createCardlessTrialStartHandler,
+		createCardlessTrialRecoveryHandler,
+	]) {
+		for (const state of [
+			"active",
+			"pending",
+			"trial_used",
+			"unavailable",
+		] as const) {
+			const queued: Array<() => Promise<void>> = [];
+			const synced: string[] = [];
+			const result =
+				state === "active"
+					? {
+							state,
+							planCode: "plus" as const,
+							trialEndsAt: "2030-01-04T00:00:00Z",
+						}
+					: state === "pending"
+						? { state, kind: "activation" as const, operationId: "operation" }
+						: { state };
+			const handler = factory({
+				getUser: async () => ({ id: OWNER }),
+				allowRequest: async () => true,
+				start: async () => result,
+				recover: async () => result,
+				defer: (work) => {
+					queued.push(work);
+				},
+				syncCustomerContact: async (userId) => {
+					synced.push(userId);
+				},
+			});
+			const response = await handler(request());
+			assert.equal((await response.json()).state, state);
+			assert.deepEqual(synced, [], "contact I/O must not delay the response");
+			assert.equal(queued.length, state === "active" ? 1 : 0);
+			for (const work of queued) await work();
+			assert.deepEqual(synced, state === "active" ? [OWNER] : []);
+		}
+	}
+});
+
+test("contact synchronization failure cannot turn an active trial into an error", async (t) => {
+	t.mock.method(console, "warn", () => {});
+	for (const schedulingFails of [false, true]) {
+		const queued: Array<() => Promise<void>> = [];
+		const handler = createCardlessTrialStartHandler({
+			getUser: async () => ({ id: OWNER }),
+			allowRequest: async () => true,
+			start: async () => ({
+				state: "active",
+				planCode: "plus",
+				trialEndsAt: "2030-01-04T00:00:00Z",
+			}),
+			defer: (work) => {
+				if (schedulingFails) throw new Error("no request context");
+				queued.push(work);
+			},
+			syncCustomerContact: async () => {
+				throw new Error("Stripe unavailable");
+			},
+		});
+		const response = await handler(request());
+		assert.equal(response.status, 200);
+		assert.equal((await response.json()).state, "active");
+		for (const work of queued) await assert.doesNotReject(work);
+	}
+});
 const body = {
 	requestId: "a2000000-0000-4000-8000-000000000001",
 	planCode: "plus",
