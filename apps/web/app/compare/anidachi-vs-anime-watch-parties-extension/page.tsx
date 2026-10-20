@@ -54,7 +54,7 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         {
           name: "AniDachi vs Anime Watch Parties extension",
           url: "/compare/anidachi-vs-anime-watch-parties-extension",

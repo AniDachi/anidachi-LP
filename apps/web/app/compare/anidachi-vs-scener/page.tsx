@@ -54,7 +54,7 @@ export default function AniDachiVsScenerPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Scener", url: "/compare/anidachi-vs-scener" },
       ]}
       title="AniDachi vs Scener"

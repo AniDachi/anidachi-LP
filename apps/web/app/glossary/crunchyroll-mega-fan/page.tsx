@@ -53,7 +53,7 @@ export default function CrunchyrollMegaFanGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Crunchyroll Mega Fan", url: "/glossary/crunchyroll-mega-fan" },
       ]}
       title="What is Crunchyroll Mega Fan?"

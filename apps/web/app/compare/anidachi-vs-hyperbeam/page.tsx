@@ -75,7 +75,7 @@ export default function AniDachiVsHyperbeamPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Hyperbeam", url: "/compare/anidachi-vs-hyperbeam" },
       ]}
       title="AniDachi vs Hyperbeam"

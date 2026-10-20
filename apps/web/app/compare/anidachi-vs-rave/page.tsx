@@ -90,7 +90,7 @@ export default function AniDachiVsRavePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Rave", url: "/compare/anidachi-vs-rave" },
       ]}
       title="AniDachi vs Rave"

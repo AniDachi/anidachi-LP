@@ -98,7 +98,7 @@ export default function AniDachiVsTelepartyPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Teleparty", url: "/compare/anidachi-vs-teleparty" },
       ]}
       title="AniDachi vs Teleparty"

@@ -60,7 +60,7 @@ export default function DubVsSubGlossaryPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Glossary", url: "/watch-anime-together" },
+        { name: "Glossary", url: "/glossary" },
         { name: "Dub vs Sub Watch Party", url: "/glossary/dub-vs-sub-watch-party" },
       ]}
       title="Dub vs Sub for Anime Watch Parties"

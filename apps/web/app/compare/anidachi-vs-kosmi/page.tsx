@@ -77,7 +77,7 @@ export default function AniDachiVsKosmiPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Watch Party App", url: "/watch-party-app" },
+        { name: "Compare", url: "/compare" },
         { name: "AniDachi vs Kosmi", url: PAGE_PATH },
       ]}
       title="AniDachi vs Kosmi"
