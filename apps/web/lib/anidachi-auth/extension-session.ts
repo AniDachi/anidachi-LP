@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import {
-  getUserById,
+  getUserIdentityById,
 } from "./db";
 import { ANIDACHI_AUTH_ISSUER, getJwtSecret } from "./jwt";
 import { normalizePlanCode, type PlanCode } from "./plan-entitlements";
@@ -91,7 +91,7 @@ export async function getExtensionSessionFromAuthorization(
 export async function getExtensionUserProfile(
   userId: string,
 ): Promise<ExtensionUserProfile | null> {
-  const user = await getUserById(userId);
+  const user = await getUserIdentityById(userId);
   if (!user) return null;
 
   return {

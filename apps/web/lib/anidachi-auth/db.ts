@@ -70,6 +70,21 @@ export type UserRow = {
   created_at: string;
 };
 
+// Display/session reads do not need OAuth provider IDs or creation timestamps.
+export type UserIdentityRow = Pick<UserRow, "id" | "email" | "display_name" | "avatar_url" | "plan">;
+
+export async function getUserIdentityById(userId: string): Promise<UserIdentityRow | null> {
+  const result = await db()
+    .from("users")
+    .select("id,email,display_name,avatar_url,plan")
+    .eq("id", userId)
+    .maybeSingle();
+  return databaseResultOrThrow("load user", {
+    data: (result.data as UserIdentityRow | null) ?? null,
+    error: result.error,
+  });
+}
+
 type ProfileSyncRow = {
   user_id: string;
   display_name: string;
