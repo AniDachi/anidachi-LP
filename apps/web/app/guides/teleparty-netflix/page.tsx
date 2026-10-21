@@ -80,7 +80,11 @@ export default function TelepartyNetflixPage() {
           Chrome. One person opens Netflix, starts a Teleparty session, and
           sends the link. Everyone else needs Netflix too. This is the tool
           that used to be called{" "}
-          <Link href="/netflix-party">Netflix Party</Link>.
+          <Link href="/netflix-party">Netflix Party</Link>. For costs, see{" "}
+          <Link href="/guides/is-teleparty-free">
+            Teleparty Premium and pricing
+          </Link>
+          .
         </p>
       </SeoGuideAnswer>
       <h2 id="session" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">

@@ -155,7 +155,15 @@ export default function BestAnimeForLongDistanceRelationshipsPage() {
         Your Name is about the specific ache of loving someone you cannot
         reach, and the determination to close the gap anyway. For LDR
         couples, this hits with a familiarity that surprises people who
-        watch it together. <strong>Available on Crunchyroll.</strong>
+        watch it together. <strong>Available on Crunchyroll.</strong> It runs
+        under two hours, so here is how to{" "}
+        <Link
+          href="/guides/watch-movies-together-online"
+          className="text-brand-orange hover:underline"
+        >
+          watch a movie together online
+        </Link>
+        .
       </p>
 
       <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">

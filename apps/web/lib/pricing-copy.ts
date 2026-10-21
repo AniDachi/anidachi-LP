@@ -50,7 +50,7 @@ export const PRICING_ASYNC_HOST_SNIPPET =
   `${ASYNC_COMING_SOON}. Today, host a live watchroom with Plus or Pro and invite friends for free. Each viewer needs their own Plus or Pro access to record personal watch progress.`;
 
 export const PRICING_TELEPARTY_COMPARE_FAQ =
-  `Teleparty has a free tier for basic live sync, plus a premium tier. With AniDachi, friends join for free and the host needs Plus or Pro, including during a trial. Both plans support Crunchyroll, YouTube, and Netflix. Personal history recording requires each viewer's own Plus or Pro access. ${ASYNC_COMING_SOON}.`;
+  `Teleparty's free version covers services such as Netflix and YouTube; its support FAQ (checked 20 Oct 2026) says Crunchyroll parties and voice or video chat need Teleparty Premium. With AniDachi, friends join for free and the host needs Plus or Pro, including during a trial. Both plans support Crunchyroll, YouTube, and Netflix. Personal history recording requires each viewer's own Plus or Pro access. ${ASYNC_COMING_SOON}.`;
 
 export const PRICING_RAVE_COMPARE_FAQ =
   `Rave offers a free tier with basic sync and chat. AniDachi lets friends join a Plus, Pro or trial host for free. Plus and Pro include hosting and personal history recording, with monthly and yearly billing. ${ASYNC_COMING_SOON}.`;

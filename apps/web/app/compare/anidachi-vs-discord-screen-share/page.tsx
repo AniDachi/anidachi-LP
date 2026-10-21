@@ -94,7 +94,13 @@ export default function AnidachiVsDiscordScreenSharePage() {
           for talk. Do not Go Live a Crunchyroll tab — DRM black-screens it.
           Each person streams full quality on their own tab while AniDachi
           keeps playback in sync.
-        </strong>
+        </strong>{" "}
+        The same DRM block applies to{" "}
+        <Link href="/guides/how-to-screen-share-netflix-on-discord">
+          Netflix on Discord
+        </Link>
+        . Setup steps are in the{" "}
+        <Link href="/discord-watch-party">Discord watch party guide</Link>.
       
       </SeoGuideAnswer>
 

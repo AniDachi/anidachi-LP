@@ -119,7 +119,9 @@ export default function BestTelepartyAlternativesForAnimePage() {
         >
           AniDachi vs Teleparty
         </Link>
-        .
+        . Wondering{" "}
+        <Link href="/netflix-party">what happened to Netflix Party</Link>? It
+        was renamed Teleparty.
       
       </SeoGuideAnswer>
 

@@ -174,7 +174,14 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 					>
 						Crunchyroll watch party hub
 					</Link>
-					.
+					. For a{" "}
+					<Link
+						href="/discord-watch-party"
+						className="text-brand-orange hover:underline"
+					>
+						Discord watch party
+					</Link>{" "}
+					on other services, see the broader guide.
 				</p>
 
 				<h2
@@ -204,6 +211,14 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 					reactions aligned automatically. Downsides: quality depends on the
 					host&apos;s upload bandwidth and Discord&apos;s streaming tier, and
 					the host must stay focused so accidental skips affect everyone.
+					Protected streams can also go black, as with the{" "}
+					<Link
+						href="/guides/how-to-screen-share-netflix-on-discord"
+						className="text-brand-orange hover:underline"
+					>
+						Netflix black screen on Discord
+					</Link>
+					.
 				</p>
 
 				<h2

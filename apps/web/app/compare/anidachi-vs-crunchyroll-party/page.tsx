@@ -97,7 +97,12 @@ export default function AniDachiVsCrunchyrollPartyPage() {
           Both tools support live Crunchyroll watch parties. AniDachi adds
           on-player chat, reactions, voice and cameras, friend and group
           invitations, and personal progress recording on Plus and Pro.
-        </strong>
+        </strong>{" "}
+        Both are a{" "}
+        <Link href="/guides/crunchyroll-watch-party-chrome-extension">
+          Crunchyroll watch party extension
+        </Link>{" "}
+        for desktop Chrome.
       
       </SeoGuideAnswer>
 

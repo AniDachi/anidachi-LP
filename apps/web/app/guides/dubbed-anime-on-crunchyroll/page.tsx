@@ -82,7 +82,12 @@ export default function DubbedAnimeOnCrunchyrollPage() {
           Crunchyroll carries English dubs for a lot of series. Choose that
           audio, make sure the group is on the same episode, and sync it with
           AniDachi. The <Link href="/sub-vs-dub">sub vs dub</Link> choice should
-          be settled before anyone hits play.
+          be settled before anyone hits play. To see which dubs are coming, check
+          the{" "}
+          <Link href="/tools/crunchyroll-dub-schedule">
+            Crunchyroll dub schedule
+          </Link>
+          .
         </p>
       </SeoGuideAnswer>
       <h2 id="start" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">

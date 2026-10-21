@@ -167,6 +167,11 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-10-20, indexing and enrichment plan (owner in chat):** approved items 1–5 of the [indexing, enrichment and linking plan](../../../docs/superpowers/plans/2026-10-20-indexing-enrichment-linking-plan.md); items 6–8 (Crunchyroll plans guide, Netflix anime list, streaming-services matrix) are not approved.
+  - **Same-URL rebuilds:** `/netflix-watch-party` (Netflix hub), `/tools/crunchyroll-schedule` (title now leads with "release schedule"), `/guides/how-to-screen-share-netflix-on-discord`.
+  - **New URLs:** `/tools/crunchyroll-dub-schedule` (parent `/tools`, updated every Monday with the simulcast calendar) and `/guides/is-teleparty-free` (parent `/compare/anidachi-vs-teleparty`; Teleparty claims cite its own pages, checked 20 Oct 2026). Review both at 30/60/90 days (Nov 19, Dec 19, Jan 18).
+  - Same-URL enrichment of the unindexed Netflix, Discord, Crunchyroll, schedule, movie and free-anime pages listed in the plan, plus 43 contextual links from indexed pages. No merges, redirects or URL changes; the five merge proposals in section 6 of the plan still need separate approval.
+
 - **2026-10-19, section index pages (owner in chat, H.1 option A):** new URLs `/guides`, `/compare`, `/watch`, `/glossary`, `/tools`. Each lists every page in its section (data in `lib/section-index.ts`; `section-index.test.ts` fails if a section page is missing). "Compare", "Glossary" and generated "Guides" breadcrumbs now point at them, and the footer links all five under "Browse". No existing URL, title or redirect changed. Review at 30/60/90 days with the index-coverage re-check. The homepage title (E) stays frozen until about Nov 2.
 - **2026-10-19, SEO plan follow-up (owner in chat):**
   - **New compare pages approved:** `/compare/anidachi-vs-syncup` and `/compare/anidachi-vs-kosmi`. Parent hub `/watch-party-app`; inbound links from `/watch-party-app` and `/guides/best-watch-party-apps-for-anime`; competitor claims cite the competitors' own sites, checked 19 Oct 2026. Review at 30/60/90 days (Nov 18, Dec 18, Jan 17).

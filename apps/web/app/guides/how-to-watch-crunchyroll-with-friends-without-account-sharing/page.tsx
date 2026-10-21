@@ -1,252 +1,418 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HowToJsonLd } from "@/components/json-ld";
+import { InstallLink } from "@/components/install-link";
+import { ResponsiveDataTable } from "@/components/responsive-data-table";
+import {
+  SeoGuideAnswer,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getSeoSiteOrigin } from "@/lib/site-url";
-import {
-  PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
-  PRICING_GROUP_ONBOARDING,
-} from "@/lib/pricing-copy";
+import { PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
+const PAGE_PATH =
+  "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing";
+
+const SOURCES = [
+  { href: "https://www.crunchyroll.com/tos", label: "Crunchyroll Terms of Service" },
+  { href: "https://www.crunchyroll.com/premium", label: "Crunchyroll plans page" },
+];
 
 export const metadata: Metadata = {
-  title: "Watch Crunchyroll With Friends Without Account Sharing (2026)",
+  title: "Crunchyroll Account Sharing: Rules & a Better Way",
   description:
-    "Legal per-user model for Crunchyroll group watch — no password sharing. Each friend uses their own login while AniDachi syncs playback.",
-  alternates: {
-    canonical:
-      "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
-  },
+    "Can you share a Crunchyroll account? The terms limit it to your household and cap streams per plan (1 on Fan, 4 on Mega Fan). How friends can watch together.",
+  alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "Watch Crunchyroll With Friends Without Account Sharing",
+    title: "Crunchyroll Account Sharing: Rules and a Better Way",
     description:
-      "Per-user Crunchyroll logins + AniDachi sync — the legal alternative to sharing one account.",
-    url: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
+      "What Crunchyroll's terms say about password sharing, how many streams each plan allows, and how friends watch together on their own accounts.",
+    url: PAGE_PATH,
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crunchyroll Without Account Sharing",
-    description: "Legal group watch with per-user logins and synced playback.",
+    title: "Crunchyroll Account Sharing: Rules and a Better Way",
+    description: "Household rules, streams per plan, and the separate-accounts setup.",
     images: [BRAND_OG_PATH],
   },
 };
 
 const faq = [
   {
-    question: "Can you watch Crunchyroll with friends without sharing an account?",
+    question: "Can you share a Crunchyroll account?",
     answer:
-      "Yes — and you should. Each person signs into their own Crunchyroll account and opens the same episode. AniDachi (or another sync tool) aligns play/pause and chat across separate streams without anyone sharing passwords.",
+      "Only within your household. Crunchyroll's Terms of Service, checked 20 Oct 2026, limit an account to the holder's immediate household, meaning people at the same home address, and prohibit sharing login details with anyone outside it. Friends in other homes need their own accounts.",
   },
   {
-    question: "Is sharing a Crunchyroll account for watch parties allowed?",
+    question: "How many people can use one Crunchyroll account at the same time?",
     answer:
-      "Account sharing violates Crunchyroll's terms of service and creates concurrent-stream limits. The supported model is one login per viewer with a sync layer on top — not one subscription passed around the group.",
+      "It depends on the plan. On Crunchyroll's plans page, checked 20 Oct 2026, Fan allows 1 device at a time and Mega Fan 4. The page also mentions up to 6 devices on the top tier where it is offered. Benefits vary by region.",
   },
   {
-    question: "Do all friends need their own Crunchyroll subscription?",
+    question: "Does Crunchyroll have a family plan?",
     answer:
-      "Each viewer needs their own access to the selected episode. Check playback and regional availability before the session. AniDachi syncs individual streams; it does not grant streaming access or share a Crunchyroll subscription.",
+      "Not under that name. The plans page we checked lists Fan and Mega Fan, with no plan called family. Mega Fan's 4 streams at a time is the closest option for one household. The terms still limit any plan to people living at the same address.",
+  },
+  {
+    question: "Does Crunchyroll stop password sharing?",
+    answer:
+      "Its terms allow it to. Crunchyroll says it may limit simultaneous streams and registered devices, enforce limits with technical measures, and block devices or end access where it believes they are used for password sharing.",
+  },
+  {
+    question: "How do I watch Crunchyroll with friends without sharing an account?",
+    answer:
+      "Each friend signs in to their own Crunchyroll account in desktop Chrome and opens the same episode. One person hosts an AniDachi room and shares the link; AniDachi keeps everyone's player in sync and adds chat, voice and video. Nobody hands over a password.",
   },
   {
     question: "Do friends need to pay for AniDachi too?",
     answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
   },
-  {
-    question: "What if someone in the group cannot afford Crunchyroll?",
-    answer:
-      "Choose an episode everyone can legally play in their region and check access before the session. AniDachi does not unlock paid content or share a Crunchyroll subscription. If someone cannot access the episode, choose another title the whole group can open.",
-  },
 ];
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
-  { id: "why-not-share", label: "Why not share accounts", level: 2 },
-  { id: "legal-model", label: "Legal per-user model", level: 2 },
-  { id: "setup", label: "Setup steps", level: 2 },
+  { id: "terms", label: "What Crunchyroll's terms say", level: 2 },
+  { id: "streams", label: "Streams per plan", level: 2 },
+  { id: "options", label: "Your options compared", level: 2 },
+  { id: "setup", label: "Separate accounts, one room", level: 2 },
+  { id: "objections", label: "Common objections", level: 2 },
+  { id: "sources", label: "Sources", level: 2 },
   { id: "related", label: "Related guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
+const howToSteps = [
+  {
+    name: "Everyone uses their own Crunchyroll account",
+    text: "Each friend signs in on their own computer and checks that the chosen episode plays in their region.",
+  },
+  {
+    name: "Install AniDachi in desktop Chrome",
+    text: "Everyone adds the extension from the official Chrome Web Store listing, starting at /extension.",
+  },
+  {
+    name: "The host creates a room",
+    text: "With Plus, Pro or a trial, the host opens the episode, clicks the AniDachi capsule on the player and chooses Create room.",
+  },
+  {
+    name: "Share the invite, not the password",
+    text: "The host sends the room link in Discord or a group chat. Friends join on free AniDachi accounts.",
+  },
+  {
+    name: "Watch in sync",
+    text: "AniDachi moves each guest to the host's episode and keeps play, pause and seek aligned. Chat, voice and video run on top.",
+  },
+];
+
+const optionRows = [
+  {
+    option: "Give your password to a friend in another home",
+    terms: "Not allowed: outside the household",
+    streams: "Uses one of your plan's streams",
+    party: "Risky: Crunchyroll may block devices",
+  },
+  {
+    option: "Share within your household",
+    terms: "Allowed for people at the same address",
+    streams: "1 on Fan, 4 on Mega Fan",
+    party: "Fine on one couch; no help for friends elsewhere",
+  },
+  {
+    option: "Discord screen share of one stream",
+    terms: "Terms prohibit stream capture and retransmission",
+    streams: "One stream, re-broadcast",
+    party: "Often a black screen; one picture for everyone",
+  },
+  {
+    option: "Each friend on their own account + AniDachi",
+    terms: "Each person uses their own plan",
+    streams: "Each account uses its own stream",
+    party: "Synced players, chat, voice and video",
+  },
+];
+
 export default function WatchCrunchyrollWithoutAccountSharingPage() {
   const relatedGuideLinks = getGuideLinks({
-    includeTags: ["crunchyroll", "how-to-core", "watch-party"],
-    excludeHref:
-      "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
+    includeTags: ["pillar-watch-crunchyroll"],
+    excludeHref: PAGE_PATH,
     limit: 4,
   });
 
   return (
-    <SeoPageLayout
-      breadcrumbs={[
-        { name: "Home", url: "/" },
-        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
-        {
-          name: "Watch Crunchyroll without account sharing",
-          url: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
-        },
-      ]}
-      title="Watch Crunchyroll with friends without account sharing"
-      description="Legal per-user Crunchyroll group watch — no password sharing required."
-      url="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
-      datePublished="2026-07-22"
-      dateModified="2026-10-01"
-      faq={faq}
-      headings={tocHeadings}
-      articleImage={articleImageAbsolute}
-      aboveFoldCta={true}
-    >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        How to Watch Crunchyroll With Friends Without Account Sharing
-      </h1>
-
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
+    <>
+      <HowToJsonLd
+        name="How to watch Crunchyroll with friends without account sharing"
+        description="Each friend uses their own Crunchyroll account while one AniDachi room keeps the players in sync."
+        steps={howToSteps}
+      />
+      <SeoPageLayout
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
+          {
+            name: "Crunchyroll account sharing",
+            url: PAGE_PATH,
+          },
+        ]}
+        title="Crunchyroll account sharing: rules and a better way"
+        description="What Crunchyroll's terms allow, how many streams each plan has, and how friends watch together on their own accounts."
+        url={PAGE_PATH}
+        datePublished="2026-07-22"
+        dateModified="2026-10-20"
+        faq={faq}
+        headings={tocHeadings}
+        articleImage={articleImageAbsolute}
+        aboveFoldCta
       >
-        Short Answer
-      </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
-        <strong>
-          Do not share one Crunchyroll login — give every friend their own
-          account and sync playback with AniDachi watchrooms.
-        </strong>{" "}
-        Each person streams at full quality from their own subscription while
-        the watchroom keeps everyone on the same episode with shared chat.
-      </p>
+        <SeoGuideTitle>
+          Crunchyroll Account Sharing: Rules and a Better Way
+        </SeoGuideTitle>
 
-      <h2
-        id="why-not-share"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Why not share accounts
-      </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>
-          <strong>Terms violation</strong> — Crunchyroll prohibits credential
-          sharing outside your household.
-        </li>
-        <li>
-          <strong>Stream limits</strong> — concurrent playback caps kick in
-          when too many devices use one login.
-        </li>
-        <li>
-          <strong>Single bottleneck</strong> — one person&apos;s connection and
-          device become the group&apos;s video server.
-        </li>
-        <li>
-          <strong>Security risk</strong> — sharing passwords exposes payment
-          and profile data across the friend group.
-        </li>
-      </ul>
+        <h2 id="answer" className="scroll-mt-24">
+          Short answer
+        </h2>
+        <SeoGuideAnswer>
+          <strong>
+            Crunchyroll lets you share an account only with your immediate
+            household, the people at your home address, and it caps how many
+            devices stream at once: 1 on Fan, 4 on Mega Fan. Friends elsewhere
+            need their own accounts. To watch together, each person streams on
+            their own login and a sync extension lines the players up.
+          </strong>
+        </SeoGuideAnswer>
 
-      <h2
-        id="legal-model"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Legal per-user model
-      </h2>
-      <p className="text-foreground/80 leading-relaxed mb-4">
-        {PRICING_GROUP_ONBOARDING} Watch party tools sync separate Crunchyroll
-        tabs — they do not replace individual streaming rights.
-      </p>
-      <p className="text-foreground/80 leading-relaxed mb-8">
-        For tier requirements per friend, read{" "}
-        <Link
-          href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
-          className="text-brand-orange hover:underline"
+        <p className="text-foreground/80 leading-relaxed mb-6">
+          Rules and plan limits below come from Crunchyroll&apos;s own Terms
+          of Service and plans page, checked on 20 October 2026. Links are in
+          the sources section. We are not Crunchyroll and this is not legal
+          advice; it is a plain reading of what the pages say, plus the setup
+          we built for groups who live apart.
+        </p>
+
+        <h2
+          id="terms"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
-          does everyone need Crunchyroll Premium for watch parties?
-        </Link>
-      </p>
+          What Crunchyroll&apos;s terms say about sharing
+        </h2>
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          The Terms of Service have a section called Account Sharing. In short:
+        </p>
+        <SeoGuideBulletList
+          items={[
+            {
+              title: "Household only",
+              body: "Access is limited to the account holder's immediate household, defined as people living at the same residential address. Profiles exist for those household members.",
+            },
+            {
+              title: "No password sharing outside it",
+              body: "Sharing your login details, transferring your profile, or letting anyone outside the household use the account is prohibited. The terms call unauthorized sharing a material breach.",
+            },
+            {
+              title: "Limits can be enforced",
+              body: "Crunchyroll may limit simultaneous streams and registered devices, enforce those limits with technical measures, and block devices or cut access where it believes password sharing is happening.",
+            },
+            {
+              title: "You are responsible",
+              body: "The subscriber is responsible for all use of the account, including by household members and anyone else using it.",
+            },
+          ]}
+        />
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          The terms also say content is licensed for personal, non-commercial
+          use and prohibit stream capture and retransmitting content unless
+          your plan allows it. That matters for the screen-share option in the
+          table below.
+        </p>
 
-      <h2
-        id="setup"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Setup steps
-      </h2>
-      <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
-        <li>
-          <span className="font-medium text-foreground">
-            Each friend creates or uses their own Crunchyroll account.
-          </span>{" "}
-          Confirm that each account can play the selected episode in its region.
-        </li>
-        <li>
-          <span className="font-medium text-foreground">
-            Host creates an AniDachi watchroom.
-          </span>{" "}
-          Open the same anime on Crunchyroll and start a room from the extension.
-        </li>
-        <li>
-          <span className="font-medium text-foreground">
-            Share the invite link.
-          </span>{" "}
-          Friends join from their own Crunchyroll tab — no passwords exchanged.
-        </li>
-        <li>
-          <span className="font-medium text-foreground">
-            Confirm the same episode and press play.
-          </span>{" "}
-          AniDachi syncs playback and provides live chat during the session.
-        </li>
-      </ol>
-      <p className="text-foreground/80 leading-relaxed mb-8">
-        See{" "}
-        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
-          AniDachi pricing
-        </Link>{" "}
-        — hosts need Plus or Pro access, including an active trial; guests can join on Free.
-      </p>
-
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Related guides
-      </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
+        <h2
+          id="streams"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+        >
+          How many streams each plan allows
+        </h2>
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          The plans page shows the number of devices that can stream at the
+          same time on each plan:
+        </p>
+        <SeoGuideBulletList
+          items={[
+            { title: "Fan", body: "1 device at a time." },
+            { title: "Mega Fan", body: "4 devices at a time." },
+            {
+              title: "Top tier",
+              body: "The page's summary mentions up to 6 devices at a time. Our check showed Fan and Mega Fan cards; the top tier is not offered in every region.",
+            },
+          ]}
+        />
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          Prices and benefits change by country, and the page itself says so.
+          People searching for a Crunchyroll family plan usually mean this:
+          there is no plan with that name, and Mega Fan&apos;s 4 streams is
+          the household option. Even 4 streams do not stretch the household
+          rule to friends in other cities. For which plan each friend needs,
+          read{" "}
           <Link
             href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
-            className="hover:underline"
+            className="text-brand-orange hover:underline"
           >
-            Does everyone need Crunchyroll Premium?
+            does everyone need Crunchyroll Premium for a watch party
           </Link>
-        </li>
-        <li>
+          .
+        </p>
+
+        <h2
+          id="options"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+        >
+          Your options compared
+        </h2>
+        <ResponsiveDataTable
+          titleKey="option"
+          columns={[
+            { key: "option", label: "Option" },
+            { key: "terms", label: "Crunchyroll's terms" },
+            { key: "streams", label: "Streams used" },
+            { key: "party", label: "As a watch party" },
+          ]}
+          rows={optionRows}
+        />
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          The last row is the only one that works for friends in different
+          homes without breaking a rule. Each person&apos;s player loads from
+          Crunchyroll under their own plan, so nobody shares a stream and
+          nobody re-broadcasts one. A sync tool only tells each player when to
+          play, pause and seek. Why screen share often fails anyway is covered
+          in{" "}
           <Link
-            href="/guides/how-to-watch-crunchyroll-with-friends"
-            className="hover:underline"
+            href="/guides/can-you-screen-share-crunchyroll-on-discord"
+            className="text-brand-orange hover:underline"
           >
-            How to watch Crunchyroll with friends
+            can you screen share Crunchyroll on Discord
           </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/crunchyroll-watch-party-free"
-            className="hover:underline"
-          >
-            Crunchyroll watch party free
+          .
+        </p>
+
+        <h2
+          id="setup"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+        >
+          Separate accounts, one room
+        </h2>
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          This is the setup with AniDachi in desktop Chrome. It takes about
+          five minutes the first time.
+        </p>
+        <SeoGuideSteps steps={howToSteps} />
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          <InstallLink href="/extension" className="text-brand-orange hover:underline">
+            Add AniDachi to Chrome
+          </InstallLink>{" "}
+          to try it. Only the host needs AniDachi Plus or Pro, including a
+          trial; friends join on free accounts. Rooms hold up to 6 people on
+          Plus and 15 on Pro, host included. The full walkthrough is on the{" "}
+          <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
+            Crunchyroll watch party guide
           </Link>
-        </li>
-        <li>
-          <Link href="/watch-crunchyroll-together" className="hover:underline">
-            Watch Crunchyroll together
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </SeoPageLayout>
+          .
+        </p>
+
+        <h2
+          id="objections"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+        >
+          Common objections
+        </h2>
+        <SeoGuideBulletList
+          items={[
+            {
+              title: "\"Everyone has to pay for Crunchyroll\"",
+              body: "Yes, each viewer needs access that can play the episode. The plans page offers a free trial to new and eligible subscribers, which covers a first session. AniDachi does not unlock episodes or share a subscription.",
+            },
+            {
+              title: "\"My friend lives in another country\"",
+              body: "Crunchyroll's catalog differs by territory. Before the night, have each person open the episode on their own account. Pick a show that plays for everyone.",
+            },
+            {
+              title: "\"We share a flat\"",
+              body: "Then you are one household under the terms. Share the account on separate devices within your plan's stream limit, and use AniDachi only for friends outside the flat.",
+            },
+            {
+              title: "\"Isn't a sync extension just sharing with extra steps?\"",
+              body: "No account or password changes hands, and no video is passed between people. Each player streams on its own login; the room sends play, pause and seek.",
+            },
+          ]}
+        />
+        <SeoGuideNote>
+          Keep your Crunchyroll password to yourself even inside a friend
+          group. A shared login exposes your payment details and watch
+          history, and you carry responsibility for every device on it.
+        </SeoGuideNote>
+
+        <h2
+          id="sources"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+        >
+          Sources
+        </h2>
+        <p className="text-foreground/80 mb-8">
+          Crunchyroll terms and plan details checked 20 Oct 2026:{" "}
+          {SOURCES.map((source, index) => (
+            <span key={source.href}>
+              {index > 0 ? ", " : null}
+              <a
+                href={source.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-orange hover:underline"
+              >
+                {source.label}
+              </a>
+            </span>
+          ))}
+          . The plans page shows regional prices and notes that benefits vary
+          by region. AniDachi is not affiliated with Crunchyroll.
+        </p>
+
+        <h2 id="related" className="scroll-mt-24">
+          Related guides
+        </h2>
+        <SeoGuideRelated
+          links={[
+            {
+              href: "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
+              label: "Does everyone need Crunchyroll Premium?",
+            },
+            {
+              href: "/guides/how-to-watch-crunchyroll-with-friends",
+              label: "How to watch Crunchyroll with friends",
+            },
+            { href: "/guides/crunchyroll-watch-party-free", label: "Crunchyroll watch party free" },
+            { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party guide" },
+            ...relatedGuideLinks
+              .filter(
+                (g) =>
+                  ![
+                    "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
+                    "/guides/how-to-watch-crunchyroll-with-friends",
+                    "/guides/crunchyroll-watch-party-free",
+                    "/watch-crunchyroll-together",
+                  ].includes(g.href),
+              )
+              .map((g) => ({ href: g.href, label: g.label })),
+          ]}
+        />
+      </SeoPageLayout>
+    </>
   );
 }

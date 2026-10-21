@@ -225,7 +225,11 @@ export default function AniDachiVsSyncUpPage() {
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
           You want to host for free. SyncUp&apos;s free rooms hold up to 5 people, while
-          AniDachi hosts need Plus or Pro.
+          AniDachi hosts need Plus or Pro. Teleparty is another free option; see{" "}
+          <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
+            Teleparty&apos;s free and paid tiers
+          </Link>
+          .
         </li>
         <li>
           Your group is bigger than 15. SyncUp says one Plus member lifts the room to 50.

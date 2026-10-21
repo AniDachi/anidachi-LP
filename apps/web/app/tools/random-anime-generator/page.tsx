@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SeoGuideAnswer, SeoGuideRelated, SeoGuideTitle } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { AnimeSpin, type SpinEntry, type SpinLength } from "@/components/tools/anime-spin";
@@ -114,11 +115,23 @@ export default function RandomAnimeGeneratorPage() {
         </h2>
         <p className="mb-4 leading-relaxed text-ani-muted">
           Start with length. A short series fits one or two nights. A 100-plus episode show needs a
-          weekly slot. The spin skips the show you just saw, and movies are left out.
+          weekly slot. The spin skips the show you just saw, and movies are left out. For a new
+          show, check{" "}
+          <Link href="/tools/crunchyroll-schedule" className="text-brand-orange hover:underline">
+            what&apos;s airing on Crunchyroll this week
+          </Link>
+          .
         </p>
         <p className="mb-8 leading-relaxed text-ani-muted">
           Each person watches on their own Crunchyroll account. AniDachi keeps the room in sync,
-          with chat and reactions on the player.
+          with chat and reactions on the player. On a budget? Here is{" "}
+          <Link
+            href="/guides/how-to-watch-anime-for-free-with-friends"
+            className="text-brand-orange hover:underline"
+          >
+            free, legal anime to watch with friends
+          </Link>
+          .
         </p>
 
         <h2 id="related" className={headingClass}>

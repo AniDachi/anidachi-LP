@@ -300,7 +300,10 @@ export default function WatchCrunchyrollTogetherPage() {
 					watch-party feature — unlike Amazon Prime Video or Hulu. This means
 					anime fans must rely on third-party tools to create shared viewing
 					sessions. The most popular options are Chrome extensions like AniDachi
-					and Crunchyroll Party, or screen sharing via Discord.
+					and Crunchyroll Party, or screen sharing via Discord. AniDachi also
+					works on YouTube, and you can host a{" "}
+					<Link href="/netflix-watch-party">Netflix watch party</Link> the same
+					way.
 				</p>
 
 				<h2 id="step-by-step" className="scroll-mt-24">
@@ -426,7 +429,11 @@ export default function WatchCrunchyrollTogetherPage() {
 					<Link href="/guides/can-you-screen-share-crunchyroll-on-discord">
 						how to screen share Crunchyroll on Discord
 					</Link>
-					.
+					.{" "}
+					<Link href="/guides/crunchyroll-watch-party-not-working">
+						Crunchyroll watch party not working?
+					</Link>{" "}
+					Start with the step-by-step fixes.
 				</p>
 
 				<h2 id="group-watch" className="scroll-mt-24">
@@ -434,7 +441,12 @@ export default function WatchCrunchyrollTogetherPage() {
 				</h2>
 				<p>
 					Running a <strong>Crunchyroll group watch</strong> for more than two
-					or three people introduces some logistics worth planning for:
+					or three people introduces some logistics worth planning for. To pick
+					a night, check the{" "}
+					<Link href="/tools/crunchyroll-schedule">
+						Crunchyroll release schedule
+					</Link>{" "}
+					for when new episodes drop:
 				</p>
 				<SeoGuideBulletList
 					items={[

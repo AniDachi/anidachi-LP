@@ -129,6 +129,14 @@ export default function HowToSyncCrunchyrollWithFriendsPage() {
           AniDachi&apos;s Chrome extension syncs Crunchyroll playback across
           watchroom members. Everyone watches in full quality on their own
           account — no screen sharing required. Anyone who misses a session can watch independently before the next live meeting.
+          Use these fixes{" "}
+          <Link
+            href="/guides/crunchyroll-watch-party-not-working"
+            className="text-brand-orange hover:underline"
+          >
+            if the room won&apos;t sync
+          </Link>
+          .
         </p>
 
         <h2 id="method-party" className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24">

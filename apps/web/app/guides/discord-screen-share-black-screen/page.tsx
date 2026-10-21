@@ -132,7 +132,14 @@ export default function DiscordScreenShareBlackScreenPage() {
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
           This is the common case. The player blocks capture, so the share
-          stays black. The Crunchyroll-only writeup is{" "}
+          stays black. Netflix does the same; here is how to{" "}
+          <Link
+            href="/guides/how-to-screen-share-netflix-on-discord"
+            className="text-brand-orange hover:underline"
+          >
+            fix the Netflix black screen
+          </Link>
+          . The Crunchyroll-only writeup is{" "}
           <Link
             href="/guides/can-you-screen-share-crunchyroll-on-discord"
             className="text-brand-orange hover:underline"

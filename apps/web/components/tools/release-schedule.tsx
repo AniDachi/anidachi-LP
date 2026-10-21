@@ -2,10 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { groupByLocalDay, slotAnchor, type ScheduleWeek } from "@/lib/tools/schedule-time";
+import {
+  DEFAULT_ZONE,
+  ZONE_PRESETS,
+  groupByLocalDay,
+  presetForZone,
+  slotAnchor,
+  type ScheduleWeek,
+} from "@/lib/tools/schedule-time";
 
-/** First paint uses US Eastern so the HTML already has times; the browser then swaps in its own zone. */
-const SERVER_ZONE = "America/New_York";
+/** Remembers the visitor's pick across weekly visits. Shared by every schedule tool. */
+const STORAGE_KEY = "anidachi.schedule.zone";
 
 function zoneName(timeZone: string): string {
   const part = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "long" })
@@ -14,16 +21,52 @@ function zoneName(timeZone: string): string {
   return part?.value ?? timeZone;
 }
 
+function readStoredZone(): string | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeZone(timeZone: string) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, timeZone);
+  } catch {
+    // Private mode or blocked storage: the switch still works for this visit.
+  }
+}
+
+function isValidZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Weekly schedule with a time-zone switch. The server renders US Eastern so the HTML
+ * already has times; the browser then moves to the stored pick, or the visitor's own zone.
+ */
 export function ReleaseSchedule({ week }: { week: ScheduleWeek }) {
-  const [timeZone, setTimeZone] = useState(SERVER_ZONE);
+  const [timeZone, setTimeZone] = useState(DEFAULT_ZONE);
+  const [localZone, setLocalZone] = useState<string | null>(null);
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
-    setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone || SERVER_ZONE);
+    const device = Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_ZONE;
+    const devicePreset = presetForZone(device, week);
+    // A device zone that matches a preset (Toronto = ET) is shown as that preset.
+    setLocalZone(devicePreset ? null : device);
+    const stored = readStoredZone();
+    if (stored && isValidZone(stored)) setTimeZone(stored);
+    else setTimeZone(devicePreset?.timeZone ?? device);
     setNow(Date.now());
     const id = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [week]);
 
   const days = useMemo(() => groupByLocalDay(week, timeZone), [week, timeZone]);
   const next =
@@ -31,11 +74,44 @@ export function ReleaseSchedule({ week }: { week: ScheduleWeek }) {
       ? null
       : (days.flatMap((day) => day.rows).find((row) => row.at.getTime() > now) ?? null);
 
+  const choose = (zone: string) => {
+    setTimeZone(zone);
+    storeZone(zone);
+  };
+  const options = [
+    ...ZONE_PRESETS.map((preset) => ({ label: preset.label, timeZone: preset.timeZone })),
+    ...(localZone ? [{ label: "My time", timeZone: localZone }] : []),
+  ];
+
   return (
     <div className="not-prose">
+      <div
+        role="group"
+        aria-label="Time zone"
+        className="mb-3 flex flex-wrap gap-1.5"
+      >
+        {options.map((option) => {
+          const active = option.timeZone === timeZone;
+          return (
+            <button
+              key={option.timeZone}
+              type="button"
+              aria-pressed={active}
+              onClick={() => choose(option.timeZone)}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
+                active
+                  ? "border-ani-control-border bg-ani-selected-quiet text-ani-text"
+                  : "border-ani-line text-ani-muted hover:border-ani-control-border hover:bg-ani-hover hover:text-ani-text"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
       <p className="mb-4 text-sm text-ani-muted">
         Times shown in <strong className="font-medium text-ani-text">{zoneName(timeZone)}</strong>
-        {timeZone === SERVER_ZONE && now === null ? " until your browser loads its own zone" : ""}.
+        {now === null ? " until your browser loads your own zone" : ""}.
       </p>
 
       {next ? (
@@ -85,6 +161,9 @@ export function ReleaseSchedule({ week }: { week: ScheduleWeek }) {
                       )}
                       {row.slot.episode ? (
                         <span className="ml-2 text-sm text-ani-muted">{row.slot.episode}</span>
+                      ) : null}
+                      {row.slot.note ? (
+                        <span className="ml-2 text-xs text-ani-muted">· {row.slot.note}</span>
                       ) : null}
                       {past ? <span className="ml-2 text-xs text-ani-muted">Scheduled time passed</span> : null}
                     </span>

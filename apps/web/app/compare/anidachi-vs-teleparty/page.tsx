@@ -135,6 +135,11 @@ export default function AniDachiVsTelepartyPage() {
         <strong>TL;DR:</strong> Choose AniDachi for Crunchyroll- and YouTube-first
         live watchrooms. Choose Teleparty if you need many streaming apps in one
         place and can always watch live. Async catch-up on AniDachi is planned.
+        If you used{" "}
+        <Link href="/netflix-party" className="text-brand-orange hover:underline">
+          Netflix Party, now called Teleparty
+        </Link>
+        , it is the same extension compared here.
       </p>
 
       <h2
@@ -178,6 +183,12 @@ export default function AniDachiVsTelepartyPage() {
           },
         ]}
       />
+      <p className="text-foreground/80 leading-relaxed mt-4 mb-6">
+        <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
+          Is Teleparty free?
+        </Link>{" "}
+        Its basic tier is free on services like Netflix and YouTube, but Crunchyroll parties and voice or video chat need Premium.
+      </p>
 
       <h2
         id="when-anidachi"

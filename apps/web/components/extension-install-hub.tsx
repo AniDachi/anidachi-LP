@@ -310,7 +310,7 @@ export function ExtensionInstallHub({
 
       {EXTENSION_INSTALL_MODE === "cws" ? (
         <OverlayUsingGuide
-          setup={welcome ? undefined :
+          setup={welcome ? undefined : <>
             <ol className={styles.setupSteps} aria-label="Install AniDachi">
               <li>
                 <span className={styles.setupNumber} aria-hidden="true">1</span>
@@ -328,7 +328,17 @@ export function ExtensionInstallHub({
                 <p>Open the capsule and sign in.</p>
               </li>
             </ol>
-          }
+            <p className="-mt-6 mb-10 text-sm leading-relaxed text-ani-muted md:-mt-10 md:mb-16">
+              Watching anime? Here is{" "}
+              <Link
+                href="/guides/crunchyroll-watch-party-chrome-extension"
+                className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
+              >
+                how the Crunchyroll extension works
+              </Link>{" "}
+              for a group watch party.
+            </p>
+          </>}
         />
       ) : (
       <ol className="mt-10 space-y-6">

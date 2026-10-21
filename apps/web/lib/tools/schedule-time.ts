@@ -7,6 +7,8 @@ export type ScheduleSlot = {
   episode?: string;
   /** Existing `/watch/{slug}-with-friends` page, when there is one. */
   watchSlug?: string;
+  /** Short muted note after the episode, e.g. "Same day as sub". */
+  note?: string;
 };
 
 export type ScheduleWeek = {
@@ -71,4 +73,71 @@ export function slotAnchor(slot: ScheduleSlot): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")}`;
+}
+
+export type ZonePreset = {
+  id: string;
+  /** Button label, e.g. "ET". */
+  label: string;
+  timeZone: string;
+};
+
+/** Time-zone switch options. ET first: it is the server-rendered default. */
+export const ZONE_PRESETS: ZonePreset[] = [
+  { id: "et", label: "ET", timeZone: "America/New_York" },
+  { id: "pt", label: "PT", timeZone: "America/Los_Angeles" },
+  { id: "uk", label: "UK", timeZone: "Europe/London" },
+  { id: "cet", label: "CET", timeZone: "Europe/Paris" },
+  { id: "ist", label: "IST", timeZone: "Asia/Kolkata" },
+  { id: "jst", label: "JST", timeZone: "Asia/Tokyo" },
+];
+
+export const DEFAULT_ZONE = ZONE_PRESETS[0].timeZone;
+
+/** UTC offset of a zone at an instant, in minutes (New York in October: -240). */
+export function zoneOffsetMinutes(timeZone: string, at: Date): number {
+  const name =
+    new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
+      .formatToParts(at)
+      .find((part) => part.type === "timeZoneName")?.value ?? "GMT";
+  const match = /GMT([+-])(\d{2}):?(\d{2})?/.exec(name);
+  if (!match) return 0;
+  const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
+  return match[1] === "-" ? -minutes : minutes;
+}
+
+/**
+ * The preset that shows the same clock times as `timeZone` for every slot in the week,
+ * so a visitor in Toronto lands on ET and one in Madrid on CET. Undefined when none match.
+ */
+export function presetForZone(timeZone: string, week: ScheduleWeek): ZonePreset | undefined {
+  const exact = ZONE_PRESETS.find((preset) => preset.timeZone === timeZone);
+  if (exact) return exact;
+  const instants = week.slots.map((slot) => slotInstant(week, slot));
+  if (instants.length === 0) instants.push(new Date(`${week.weekStart}T00:00:00Z`));
+  return ZONE_PRESETS.find((preset) =>
+    instants.every((at) => zoneOffsetMinutes(preset.timeZone, at) === zoneOffsetMinutes(timeZone, at)),
+  );
+}
+
+/** Week range label, e.g. "Oct 19 – 25, 2026" (or without the year when `year` is false). */
+export function weekRangeLabel(week: Pick<ScheduleWeek, "weekStart">, year = true): string {
+  const start = new Date(`${week.weekStart}T00:00:00Z`);
+  const end = new Date(start.getTime() + 6 * 86_400_000);
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    ...(year ? { year: "numeric" as const } : {}),
+  }).formatRange(start, end);
+}
+
+/** Local weekday and time of a slot, e.g. "Fri 11:00 AM", for static tables. */
+export function slotLocalLabel(week: ScheduleWeek, slot: ScheduleSlot, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(slotInstant(week, slot));
 }

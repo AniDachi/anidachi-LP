@@ -90,7 +90,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       description="Every watch-together app compared for long-distance anime couples."
       url="/best-apps-watch-anime-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-10-01"
+      dateModified="2026-10-20"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -113,8 +113,8 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           playback on their own tab while AniDachi syncs the room.
         </strong>{" "}
         Live rooms still need a shared start time. Async catch-up is planned,
-        not available today. If you need Netflix or Disney+ in the same tool,
-        Teleparty or Rave are the next live-only alternatives. Keep Discord for
+        not available today. AniDachi also covers Netflix; if you need Disney+
+        or Hulu in the same tool, Teleparty or Rave are the live-only alternatives. Keep Discord for
         voice; do not screen-share Crunchyroll.
       </p>
 
@@ -173,9 +173,18 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         <strong>Async catch-up is planned</strong> and is not available yet —
         live rooms still need everyone online together. Personal history on Plus
         or Pro, with recording permission, helps you resume your own viewing between sessions.
+        AniDachi also works on Netflix, so you can{" "}
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
+          host a Netflix watch party
+        </Link>{" "}
+        with the same invite flow. For a wider look, see these{" "}
+        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+          ways to watch Netflix together
+        </Link>
+        .
       </p>
       <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-6">
-        <li>Live sync on Crunchyroll and YouTube (async planned)</li>
+        <li>Live sync on Crunchyroll, YouTube and Netflix (async planned)</li>
         <li>Auto anime detection on Crunchyroll</li>
         <li>Live chat and reactions alongside the player</li>
         <li>Personal progress with your own Plus/Pro access and recording permission</li>
@@ -194,7 +203,11 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         2. Teleparty — Best Free Multi-Platform Option
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        Teleparty (formerly Netflix Party) supports Crunchyroll alongside
+        Teleparty, which started as{" "}
+        <Link href="/netflix-party" className="text-brand-orange hover:underline">
+          the old Netflix Party extension
+        </Link>
+        , supports Crunchyroll alongside
         Netflix, Disney+, Hulu, and others. It is primarily a live sync
         tool — both people must be online at the same time. There is no async
         mode, no per-person progress tracking, and no spoiler control.
