@@ -59,7 +59,7 @@ Interface: a private operator-only cleanup function, max 5,000 completed rows pe
 - [x] Test old completed versus recent/unfinished cron rows and denied client execution.
 - [x] Create bounded cleanup and a named hourly cron job; do not run cleanup during migration.
 - [x] Verify migration replay and pgTAP locally.
-- [ ] Run `pnpm dev:check`, checks, review and Graphify update; open a PR to staging.
+- [x] Run `pnpm dev:check`, checks and independent review; open staging PR #460. Graphify update was attempted and aborted safely as recorded below.
 - [ ] Verify staging migration/Web delivery, resolver no-op and profile/API compatibility. Prove existing conditional inbox recovery with an isolated staging fixture; remove only that fixture.
 - [ ] Record exact release identities, tests, measured limits and rollback. Do not disable the production Worker timer or enable production scheduler here.
 
@@ -82,3 +82,10 @@ Rollback: Web can return to the previous verified build; SQL can restore the pre
 - `pnpm dev:check` selects web and docs checks. Extension/API/protocol source and configuration remain unchanged.
 
 Staging delivery and the isolated inbox recovery test are pending until the reviewed PR is merged. CI/deployment identities and that acceptance evidence belong in the PR delivery record. Production daily egress remains unmeasured for this patch until a separate promotion.
+
+
+## Review and graph status
+
+Fresh independent whole-branch review of `1a4ff860..8dfa5318` found no actionable issues and checked all five review focuses. The reviewer separately passed the 14 identity tests and diff check. Production runtime state and realized savings are deliberately outside this staging review.
+
+Graphify semantic extraction covered this complete plan. The safe update adapter attempted the existing pending AST corpus but stopped on an unrelated unresolved `storage (wxt/utils/storage)` node before publication. Existing `graph.json`, `GRAPH_REPORT.md` and `manifest.json` remain byte-for-byte unchanged. No incomplete fragment or stale hash was stamped. Repairing the navigation tool's historical corpus is separate from this runtime optimization; source, tests and the independent review are the evidence for this change.
