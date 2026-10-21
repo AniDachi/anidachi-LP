@@ -160,7 +160,14 @@ export default function BestAnimeWithFriendsPage() {
         <Link href="/watch-youtube-together" className="text-brand-orange hover:underline">
           YouTube
         </Link>{" "}
-        watch page. Share one invite. Everyone keeps their own tab.
+        watch page. Share one invite. Everyone keeps their own tab.{" "}
+        <Link
+          href="/guides/does-crunchyroll-have-watch-party"
+          className="text-brand-orange hover:underline"
+        >
+          Crunchyroll has no built-in watch party
+        </Link>
+        , so AniDachi handles the sync.
       </p>
 
       <h2

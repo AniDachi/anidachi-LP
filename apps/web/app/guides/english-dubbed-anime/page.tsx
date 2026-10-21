@@ -79,7 +79,11 @@ export default function EnglishDubbedAnimePage() {
           English dubbed anime is the English voice track on the episode you
           opened. Check that track on every screen before you start.{" "}
           <Link href="/sub-vs-dub">Sub vs dub</Link> only works live when the
-          group is on one version.
+          group is on one version. For new episodes, check{" "}
+          <Link href="/tools/crunchyroll-dub-schedule">
+            this week&apos;s English dubs
+          </Link>
+          .
         </p>
       </SeoGuideAnswer>
       <h2 id="find" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">

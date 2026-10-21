@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { InstallLink } from "@/components/install-link";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
+import {
+  SeoGuideAnswer,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
+import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getSeoSiteOrigin } from "@/lib/site-url";
 import { PRICING_FREE_TIER_TABLE } from "@/lib/pricing-copy";
 
@@ -9,58 +18,64 @@ const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
+const PAGE_TITLE = "AniDachi vs Screen Share & Countdown for Netflix";
+const PAGE_DESCRIPTION =
+  "Netflix has no watch party of its own. Compare AniDachi sync with a Discord screen share and a countdown on a call: picture, sync, cost, devices and accounts.";
+
 export const metadata: Metadata = {
-  title: { absolute: "AniDachi vs Netflix Watch Party for Anime (2026)" },
-  description:
-    "AniDachi vs Netflix Teleparty watch parties for anime — Crunchyroll catalog, live sync, personal history, and which tool fits anime friend groups.",
+  title: { absolute: "AniDachi vs Screen Share & Countdown for Netflix" },
+  description: PAGE_DESCRIPTION,
   alternates: { canonical: "/compare/anidachi-vs-netflix-watch-party" },
   openGraph: {
-    title: "AniDachi vs Netflix Watch Party for Anime",
-    description:
-      "Compare AniDachi (Crunchyroll-first) with Netflix watch party tools for anime groups.",
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
     url: "/compare/anidachi-vs-netflix-watch-party",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi vs Netflix Watch Party for Anime",
-    description:
-      "Crunchyroll vs Netflix anime catalog and group-watch features compared.",
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
     images: [BRAND_OG_PATH],
   },
 };
 
 const faq = [
   {
-    question: "Does Netflix have a watch party for anime?",
+    question: "Is there a product called Netflix Watch Party?",
     answer:
-      "Netflix does not ship a native watch party feature. Most Netflix groups use Teleparty (formerly Netflix Party) or Discord screen sharing for live sync. Netflix's anime catalog is smaller than Crunchyroll's for current simulcasts — titles like Demon Slayer, Jujutsu Kaisen, and Haikyuu!! are Crunchyroll exclusives.",
+      "No. Netflix has no built-in watch party, and no Netflix product by that name, as of October 20, 2026. \"Netflix watch party\" describes the night itself, which people set up with a sync extension, a screen share or a countdown.",
   },
   {
-    question: "Can AniDachi sync Netflix anime?",
+    question: "Is it better to screen share Netflix or use an extension?",
     answer:
-      "Yes. AniDachi supports Netflix, Crunchyroll, and YouTube watchrooms in desktop Chrome. Each person plays the same title through their own provider access; AniDachi adds live sync, chat, reactions and calls.",
+      "An extension, if everyone has Netflix. Screen sharing Netflix often shows viewers a black screen because of copy protection, and when it works the picture depends on the sharer's upload. An extension like AniDachi syncs each person's own player at full quality.",
   },
   {
-    question: "Which is better for anime watch parties, AniDachi or Netflix Teleparty?",
+    question: "Does a countdown work for watching Netflix together?",
     answer:
-      "AniDachi offers live rooms on Netflix, Crunchyroll, and YouTube with chat, reactions, and voice/video. Your own Plus/Pro access and recording permission enable personal history. Teleparty on Netflix works when your group's show is Netflix-exclusive and everyone can watch live at the same time. Async catch-up in AniDachi is coming soon.",
+      "For a short film between two people, yes. It is free and works on any device. The trouble is drift: every buffer, pause or late join needs another countdown, and longer films slide out of step.",
   },
   {
-    question: "What anime is on Netflix vs Crunchyroll?",
+    question: "Can I use Discord for voice and AniDachi for Netflix?",
     answer:
-      "Netflix carries select anime films (Your Name on some regions, Neon Genesis Evangelion in certain territories) and Netflix Original anime (Cyberpunk: Edgerunners, Castlevania). Crunchyroll has the largest simulcast and shonen catalog — One Piece, Naruto, Demon Slayer, Jujutsu Kaisen, Attack on Titan, and most seasonal premieres.",
+      "Yes. Stay in your Discord voice channel and let AniDachi sync the video. AniDachi rooms also have their own voice and video, so you can drop Discord if you prefer.",
+  },
+  {
+    question: "Which is cheapest for a Netflix night?",
+    answer:
+      "A countdown or screen share costs nothing beyond Netflix. AniDachi is free to join, and the host needs Plus or Pro, with a 3-day trial for eligible accounts.",
   },
 ];
 
 const headings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
-  { id: "tldr", label: "At a glance", level: 2 },
-  { id: "feature-comparison", label: "Feature comparison", level: 2 },
-  { id: "catalog", label: "Anime catalog: Netflix vs Crunchyroll", level: 2 },
-  { id: "when-anidachi", label: "When to choose AniDachi", level: 2 },
-  { id: "when-netflix", label: "When to use Netflix watch parties", level: 2 },
-  { id: "related", label: "Related guides", level: 2 },
+  { id: "methods", label: "The three methods", level: 2 },
+  { id: "comparison", label: "Side-by-side", level: 2 },
+  { id: "screen-share", label: "Screen share in practice", level: 2 },
+  { id: "countdown", label: "Countdown in practice", level: 2 },
+  { id: "verdict", label: "Which to choose", level: 2 },
+  { id: "related", label: "Related", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
@@ -70,113 +85,206 @@ export default function AniDachiVsNetflixWatchPartyPage() {
       breadcrumbs={[
         { name: "Home", url: "/" },
         { name: "Compare", url: "/compare" },
-        { name: "AniDachi vs Netflix Watch Party", url: "/compare/anidachi-vs-netflix-watch-party" },
+        {
+          name: "AniDachi vs screen share and countdown for Netflix",
+          url: "/compare/anidachi-vs-netflix-watch-party",
+        },
       ]}
-      title="AniDachi vs Netflix Watch Party"
-      description="Side-by-side comparison for anime watch parties on Crunchyroll vs Netflix."
+      title={PAGE_TITLE}
+      description={PAGE_DESCRIPTION}
       url="/compare/anidachi-vs-netflix-watch-party"
       datePublished="2026-07-02"
-      dateModified="2026-10-17"
+      dateModified="2026-10-20"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
+      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Netflix Watch Party for Anime (2026)
-      </h1>
+      <SeoGuideTitle>AniDachi vs Screen Share and Countdown for Netflix</SeoGuideTitle>
+      <SeoGuideAnswer id="answer">
+        <p>
+          <strong>
+            Netflix has no watch party of its own, so a Netflix night comes down to
+            three methods: sync each person&apos;s player with AniDachi, share one
+            screen on Discord or Zoom, or count down and press play together.
+            AniDachi gives the best picture and sync; the other two are free.
+          </strong>{" "}
+          The table below shows the trade-offs.
+        </p>
+      </SeoGuideAnswer>
 
-      <h2 id="answer" className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24">
-        Short Answer
+      <h2 id="methods" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        The three methods
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
-        <strong>
-          AniDachi supports Netflix, Crunchyroll, and YouTube in desktop Chrome, with live sync, chat, reactions, and calls. Netflix + Teleparty is another live-sync setup. Choose the room features your group needs, and make sure everyone can access the same title.
-        </strong>
-      </p>
+      <SeoGuideBulletList
+        items={[
+          {
+            title: "AniDachi",
+            body: "A Chrome extension. Everyone opens the movie or episode on their own Netflix in desktop Chrome; the host's room keeps play, pause and seeking in step, with chat, reactions, voice and video on the player.",
+          },
+          {
+            title: "Screen share",
+            body: "One person plays Netflix and shares the window through Discord Go Live, Zoom, Google Meet or similar. Everyone else watches that video feed.",
+          },
+          {
+            title: "Countdown",
+            body: "Everyone opens the title on their own Netflix, joins a call, and presses play on \"3, 2, 1\". No tool keeps you together after that.",
+          },
+        ]}
+      />
 
-      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-8 mb-3 scroll-mt-24">
-        At a glance
-      </h2>
-      <p className="text-foreground/80 mb-6">
-        <strong>TL;DR:</strong> For Demon Slayer, Jujutsu Kaisen, Haikyuu!!,
-        One Piece, and current simulcasts — use AniDachi on Crunchyroll.
-        Netflix Teleparty fits Netflix Original anime or regional Netflix
-        exclusives when your whole group subscribes to Netflix and schedules align.
-      </p>
-
-      <h2 id="feature-comparison" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
-        Feature comparison
+      <h2 id="comparison" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Side-by-side
       </h2>
       <ResponsiveCompareTable
         columns={[
           { id: "anidachi", label: "AniDachi", highlight: true },
-          { id: "netflix", label: "Netflix + Teleparty" },
+          { id: "share", label: "Screen share" },
+          { id: "countdown", label: "Countdown + call" },
         ]}
         rows={[
-          { feature: "Crunchyroll support", values: { anidachi: "yes", netflix: "No" } },
-          { feature: "Netflix support", values: { anidachi: "yes", netflix: "yes" } },
-          { feature: "Asynchronous watching", values: { anidachi: "Coming soon", netflix: "no" } },
-          { feature: "Live synchronized playback", values: { anidachi: "yes", netflix: "yes" } },
-          { feature: "Per-user episode progress", values: { anidachi: "Own Plus/Pro + recording permission", netflix: "no" } },
-          { feature: "Auto anime detection", values: { anidachi: "yes", netflix: "no" } },
-          { feature: "Built-in chat", values: { anidachi: "yes", netflix: "yes" } },
-          { feature: "Requires streaming subscription", values: { anidachi: "Own access to the selected platform", netflix: "Netflix" } },
-          { feature: "Host cost", values: { anidachi: PRICING_FREE_TIER_TABLE, netflix: "Teleparty free tier" } },
+          {
+            feature: "Picture for viewers",
+            values: { anidachi: "Full Netflix quality", share: "Often black; else compressed", countdown: "Full Netflix quality" },
+          },
+          {
+            feature: "Stays in sync",
+            values: { anidachi: "yes", share: "One stream, with delay", countdown: "no" },
+          },
+          {
+            feature: "Who can pause",
+            values: { anidachi: "Host, for everyone", share: "Sharer only", countdown: "Everyone, separately" },
+          },
+          {
+            feature: "Each person needs Netflix",
+            values: { anidachi: "yes", share: "Sharer only", countdown: "yes" },
+          },
+          {
+            feature: "Voice and video",
+            values: { anidachi: "Built in", share: "From the call app", countdown: "From the call app" },
+          },
+          {
+            feature: "Phones and TVs",
+            values: { anidachi: "no", share: "Viewers can use phones", countdown: "yes" },
+          },
+          {
+            feature: "Cost beyond Netflix",
+            values: { anidachi: PRICING_FREE_TIER_TABLE, share: "Free", countdown: "Free" },
+          },
+          {
+            feature: "Setup time",
+            values: { anidachi: "Install once, then a link", share: "Seconds, if it shows", countdown: "None" },
+          },
         ]}
       />
-
-      <h2 id="catalog" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
-        Anime Catalog: Netflix vs Crunchyroll
-      </h2>
-      <ul className="space-y-4 text-foreground/80 mb-8">
-        <li>
-          <strong>Netflix anime (partial):</strong> Cyberpunk: Edgerunners,
-          Castlevania, select films and classics depending on region. Catalog
-          varies significantly by country.
-        </li>
-        <li>
-          <strong>Crunchyroll anime (larger for groups):</strong>{" "}
-          <Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">Demon Slayer</Link>,{" "}
-          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-brand-orange hover:underline">Jujutsu Kaisen</Link>,{" "}
-          <Link href="/watch/attack-on-titan-with-friends" className="text-brand-orange hover:underline">Attack on Titan</Link>,{" "}
-          <Link href="/watch/haikyuu-with-friends" className="text-brand-orange hover:underline">Haikyuu!!</Link>, and most seasonal simulcasts.
-        </li>
-      </ul>
-
-      <h2 id="when-anidachi" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
-        When to choose AniDachi
-      </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
-        <li>Your group watches on Netflix, Crunchyroll, or YouTube in desktop Chrome.</li>
-        <li>You want live chat, reactions, and voice/video beside the episode.</li>
-        <li>You want to save your own episode progress with Plus or Pro.</li>
-        <li>You host recurring watchrooms and want anime-specific tooling.</li>
-      </ul>
-
-      <h2 id="when-netflix" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
-        When to use Netflix Watch Parties
-      </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
-        <li>The show is Netflix-exclusive in your region and not on Crunchyroll.</li>
-        <li>Everyone already has Netflix and can watch live at the same time.</li>
-        <li>You only need basic sync — no async progress tracking.</li>
-      </ul>
-      <p className="text-foreground/80 mb-8">
-        For Netflix-only long-distance viewing (non-anime or mixed catalogs), see{" "}
-        <Link href="/watch-netflix-together-long-distance" className="text-brand-orange hover:underline">
-          how to watch Netflix together long distance
-        </Link>.
+      <p className="mb-6 leading-relaxed text-ani-muted">
+        Want to see the AniDachi column for yourself?{" "}
+        <InstallLink href="/extension" className="text-brand-orange hover:underline">
+          Add AniDachi to Chrome
+        </InstallLink>{" "}
+        and open a room on any Netflix movie or episode. A Plus host fits up to 6
+        people, a Pro host up to 15, and friends join free.
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
+      <h2 id="screen-share" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Screen share in practice
+      </h2>
+      <p className="mb-6 leading-relaxed text-ani-muted">
+        Screen sharing looks like the easy answer because only one person presses
+        play. With Netflix it usually breaks at the first step: Netflix protects its
+        video, so many browsers and apps send a black box instead of the picture.
+        Our{" "}
+        <Link
+          href="/guides/how-to-screen-share-netflix-on-discord"
+          className="text-brand-orange hover:underline"
+        >
+          guide to streaming Netflix on Discord
+        </Link>{" "}
+        covers the black screen and the setup we suggest instead. Even when the
+        picture shows, viewers get a re-encoded feed
+        limited by the sharer&apos;s upload speed, and only the sharer can pause.
+        There is also the account question: Netflix&apos;s Help Center says an
+        account may not be shared outside the household, and broadcasting your
+        screen to friends in other homes sits uneasily with that.
+      </p>
+
+      <h2 id="countdown" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Countdown in practice
+      </h2>
+      <p className="mb-6 leading-relaxed text-ani-muted">
+        A countdown keeps everyone on their own Netflix, so the picture is perfect.
+        The weak point is time. People react to &quot;play&quot; a fraction of a
+        second apart, players buffer at different moments, and every pause needs
+        another countdown. On a 20-minute episode that is fine. On a two-hour film
+        you will be calling out timestamps by the second act. It is still the right
+        choice when someone is watching on a TV or phone, which AniDachi does not
+        support.
+      </p>
+      <SeoGuideNote>
+        <strong>Why this page has this name:</strong> people search for a
+        &quot;Netflix watch party&quot; as if Netflix made one. It does not. The
+        practical choice is between the three methods above, plus other sync tools
+        such as Teleparty, which are compared in{" "}
+        <Link href="/compare/anidachi-vs-teleparty">AniDachi vs Teleparty</Link> and{" "}
+        <Link href="/guides/watch-netflix-together">watch Netflix together</Link>.
+      </SeoGuideNote>
+
+      <h2 id="verdict" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Which to choose
+      </h2>
+      <SeoGuideOptions
+        options={[
+          {
+            title: "Choose AniDachi",
+            body: "Everyone has Netflix and a laptop with Chrome, the film is longer than an episode, and you want to see and hear each other without managing a separate call.",
+            highlight: true,
+          },
+          {
+            title: "Choose a countdown",
+            body: "Two people, a short title, or anyone watching on a TV or phone.",
+          },
+          {
+            title: "Choose a screen share",
+            body: "Only as a last resort, and test it first; for Netflix, use Discord for voice and sync the video another way.",
+          },
+        ]}
+      />
+      <p className="mb-6 leading-relaxed text-ani-muted">
+        Everything about setting up the AniDachi option, including what works today
+        and a troubleshooting checklist, is on the{" "}
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
+          Netflix watch party
+        </Link>{" "}
+        hub.
+      </p>
+
+      <h2 id="related" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li><Link href="/compare/anidachi-vs-teleparty" className="hover:underline">AniDachi vs Teleparty</Link></li>
-        <li><Link href="/compare/anidachi-vs-amazon-watch-party" className="hover:underline">AniDachi vs Amazon Watch Party</Link></li>
-        <li><Link href="/anime-watch-party" className="hover:underline">Anime watch party guide</Link></li>
-        <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll together</Link></li>
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/netflix-watch-party", label: "Netflix watch party hub" },
+          { href: "/guides/watch-netflix-together", label: "Watch Netflix together: 4 ways compared" },
+          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+          { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share" },
+          {
+            href: "/watch-netflix-together-long-distance",
+            label: "Watch Netflix together long distance",
+          },
+        ]}
+      />
+      <p className="mt-6 text-sm leading-relaxed text-ani-muted">
+        Source, checked October 20, 2026:{" "}
+        <a
+          href="https://help.netflix.com/en/node/123277"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-orange hover:underline"
+        >
+          Netflix Help: sharing your account
+        </a>
+        . AniDachi is not affiliated with Netflix, Discord or Zoom.
+      </p>
     </SeoPageLayout>
   );
 }

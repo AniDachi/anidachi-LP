@@ -129,7 +129,15 @@ export default function BestAnimeMoviesWithFriendsPage() {
 				Unlike series, a movie wraps in under two hours so your entire group
 				finishes at the same time and can immediately discuss what just
 				happened. These picks are sorted by the kind of group energy they
-				create.
+				create. Where a pick streams on Netflix in your region, AniDachi can
+				help you{" "}
+				<Link
+					href="/netflix-watch-party"
+					className="text-brand-orange hover:underline"
+				>
+					watch Netflix films together
+				</Link>{" "}
+				in sync.
 			</p>
 
 			{/* ── SECTION 1: EMOTIONAL ─────────────────────────── */}
@@ -149,7 +157,14 @@ export default function BestAnimeMoviesWithFriendsPage() {
 				>
 					virtual movie night
 				</Link>
-				.
+				. For other ways to{" "}
+				<Link
+					href="/guides/watch-movies-together-online"
+					className="text-brand-orange hover:underline"
+				>
+					watch movies together online
+				</Link>
+				, start with the general guide.
 			</p>
 			<ul className="space-y-4 text-foreground/80 mb-10">
 				<li>

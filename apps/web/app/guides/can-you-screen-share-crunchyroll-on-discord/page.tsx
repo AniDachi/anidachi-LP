@@ -180,7 +180,15 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
           <strong>DRM / Widevine</strong> — Crunchyroll encrypts the video
           path. Discord captures pixels from the window, not a licensed decode,
           so Go Live often shows a solid black screen (audio may still play).
-          Hardware acceleration off is a rumor, not a fix.
+          Hardware acceleration off is a rumor, not a fix. The same block hits
+          when you try to{" "}
+          <Link
+            href="/guides/how-to-screen-share-netflix-on-discord"
+            className="text-brand-orange hover:underline"
+          >
+            stream Netflix on Discord
+          </Link>
+          .
         </li>
         <li>
           <strong>One uplink</strong> — the host’s upload bandwidth becomes
@@ -222,7 +230,15 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         Crunchyroll access. Using one subscription as a private “cinema feed”
         for a friend group is the wrong model: it puts all risk on the host and
         leaves guests without legitimate playback. Synced local streams keep
-        everyone on the right side of normal account rules.
+        everyone on the right side of normal account rules. Here is how to
+        watch together without{" "}
+        <Link
+          href="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
+          className="text-brand-orange hover:underline"
+        >
+          Crunchyroll account sharing
+        </Link>
+        .
       </p>
 
       <h2

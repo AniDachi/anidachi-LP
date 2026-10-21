@@ -109,6 +109,8 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
           parties when everyone is online together.
         </strong>{" "}
         AniDachi also requires everyone online together for live sync. Compare its cameras, microphones, and personal history on Plus or Pro if those features matter to your group.
+        Before you pick, check{" "}
+        <Link href="/guides/is-teleparty-free">what Teleparty costs</Link>.
       
       </SeoGuideAnswer>
 

@@ -187,6 +187,17 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
             </li>
           ))}
         </ol>
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          The same voice-plus-sync steps work on YouTube and Netflix if you want
+          to{" "}
+          <Link
+            href="/discord-watch-party"
+            className="text-brand-orange hover:underline"
+          >
+            set up a Discord watch party
+          </Link>{" "}
+          for other shows.
+        </p>
 
 
         <h2

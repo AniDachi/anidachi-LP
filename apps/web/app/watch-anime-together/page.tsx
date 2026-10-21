@@ -236,7 +236,15 @@ export default function WatchAnimeTogetherPage() {
         Whether it&apos;s your first time watching Attack on Titan or
         re-watching One Piece with a friend, shared viewing makes every episode
         better. The word &quot;AniDachi&quot; itself means &quot;anime
-        friend&quot; — 友達 (tomodachi) + アニメ (anime).
+        friend&quot; — 友達 (tomodachi) + アニメ (anime). New weekly episodes
+        also give a group a standing date: here is how to follow{" "}
+        <Link
+          href="/guides/how-to-watch-seasonal-anime-together"
+          className="text-brand-orange hover:underline"
+        >
+          seasonal anime with friends
+        </Link>
+        .
       </p>
 
       <h2
@@ -281,7 +289,12 @@ export default function WatchAnimeTogetherPage() {
         Want a step-by-step walkthrough?{" "}
         <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-brand-orange hover:underline">
           How to watch Crunchyroll with friends (full guide)
-        </Link>.
+        </Link>
+        . Or browse{" "}
+        <Link href="/guides" className="text-brand-orange hover:underline">
+          all watch-party guides
+        </Link>
+        .
       </p>
 
       <h2
@@ -313,6 +326,14 @@ export default function WatchAnimeTogetherPage() {
         Share your Crunchyroll tab via Discord&apos;s Go Live feature. Free and
         requires no extra tools, but quality is often capped at 720p and
         there&apos;s no automatic sync. Best for casual, impromptu sessions.
+        For other no-cost options, see how to{" "}
+        <Link
+          href="/guides/how-to-watch-anime-for-free-with-friends"
+          className="text-brand-orange hover:underline"
+        >
+          watch anime free with friends
+        </Link>
+        .
       </p>
 
       <h3

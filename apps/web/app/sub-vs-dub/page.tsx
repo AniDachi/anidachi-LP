@@ -105,6 +105,10 @@ export default function SubVsDubPage() {
                 <Link href="/guides/dubbed-anime-on-crunchyroll">
                   dubbed anime on Crunchyroll
                 </Link>
+                . Dubs often arrive after the subbed episode, so check{" "}
+                <Link href="/tools/crunchyroll-dub-schedule">
+                  when dubs come out
+                </Link>
                 .
               </>
             ),

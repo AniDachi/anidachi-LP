@@ -145,8 +145,8 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/compare/anidachi-vs-netflix-watch-party",
-		label: "AniDachi vs Netflix Watch Party",
-		tags: ["compare", "pillar-watch-anime"],
+		label: "AniDachi vs Screen Share and Countdown for Netflix",
+		tags: ["compare", "pillar-netflix"],
 	},
 	{
 		href: "/compare/anidachi-vs-metastream",
@@ -401,6 +401,11 @@ export const guideLinks: GuideLinkItem[] = [
 			"watch-party",
 			"pillar-watch-crunchyroll",
 		],
+	},
+	{
+		href: "/guides/is-teleparty-free",
+		label: "Is Teleparty Free?",
+		tags: ["template-c", "watch-party", "compare", "online"],
 	},
 	{
 		href: "/guides/best-teleparty-alternatives-for-anime",

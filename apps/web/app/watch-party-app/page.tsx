@@ -144,7 +144,14 @@ export default function WatchPartyAppPage() {
 				<Link href="/guides/netflix-group-watch" className="text-brand-orange hover:underline">
 					Netflix group watch
 				</Link>
-				. Comparing browser-based watch-together sites? See{" "}
+				, and every way to{" "}
+				<Link
+					href="/guides/watch-netflix-together"
+					className="text-brand-orange hover:underline"
+				>
+					watch Netflix together
+				</Link>{" "}
+				is in one guide. Comparing browser-based watch-together sites? See{" "}
 				<Link href="/compare/anidachi-vs-kosmi" className="text-brand-orange hover:underline">
 					AniDachi vs Kosmi
 				</Link>{" "}

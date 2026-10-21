@@ -110,7 +110,16 @@ export default function DubVsSubGlossaryPage() {
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Original voice acting often conveys more emotion and nuance.</li>
-        <li>Available immediately on simulcast — dubs often lag by weeks.</li>
+        <li>
+          Available immediately on simulcast — dubs often lag by weeks; see the{" "}
+          <Link
+            href="/tools/crunchyroll-dub-schedule"
+            className="text-brand-orange hover:underline"
+          >
+            dub release schedule
+          </Link>
+          .
+        </li>
         <li>Preferred by the majority of the anime community.</li>
       </ul>
 

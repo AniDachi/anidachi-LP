@@ -187,6 +187,16 @@ export default function TelepartyNotWorkingCrunchyrollPage() {
             </li>
           ))}
         </ol>
+        <p className="text-foreground/80 leading-relaxed mb-8">
+          Running an AniDachi room instead? See{" "}
+          <Link
+            href="/guides/crunchyroll-watch-party-not-working"
+            className="text-brand-orange hover:underline"
+          >
+            AniDachi troubleshooting
+          </Link>{" "}
+          for rooms that drift or do not detect the episode.
+        </p>
 
         <h2
           id="updates"

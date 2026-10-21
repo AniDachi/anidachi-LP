@@ -109,7 +109,14 @@ export default function PricingPage() {
 				<FAQSection title="Pricing FAQ" questions={faq} />
 				<section className="container mx-auto max-w-3xl px-4 pb-16 text-center text-sm text-ani-muted">
 					<p>
-						Looking for how watch parties work? See{" "}
+						Plus and Pro both cover Crunchyroll, YouTube and{" "}
+						<Link
+							href="/netflix-watch-party"
+							className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
+						>
+							Netflix watch parties
+						</Link>
+						, and friends join free. Looking for how watch parties work? See{" "}
 						<Link
 							href="/watch-crunchyroll-together"
 							className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
