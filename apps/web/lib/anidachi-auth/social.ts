@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "crypto";
 import type { RecentPerson } from "@anidachi/protocol";
-import { db, getUserById, type RoomRow, type UserRow } from "./db";
+import { db, getUserById, getUserIdentityById, type RoomRow, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
 const UNIQUE_VIOLATION = "23505";
@@ -26,6 +26,10 @@ export type ProfileRow = {
   created_at: string;
   updated_at: string;
 };
+
+type ProfileDisplayRow = Pick<ProfileRow, "user_id" | "handle" | "display_name" | "avatar_url">;
+type UserDisplayRow = Pick<UserRow, "id" | "display_name" | "avatar_url">;
+const PROFILE_DISPLAY_COLUMNS = "user_id,handle,display_name,avatar_url";
 
 export type FriendshipRow = {
   id: string;
@@ -264,7 +268,7 @@ function friendInviteExpired(invite: Pick<FriendInviteLinkRow, "expires_at">): b
 
 export function publicProfileFromRows(
   userId: string,
-  profile: ProfileRow | null | undefined,
+  profile: ProfileDisplayRow | null | undefined,
   user: Pick<UserRow, "display_name" | "avatar_url"> | null | undefined
 ): PublicProfile {
   return {
@@ -289,44 +293,44 @@ function directionFor(viewerUserId: string, friendship: FriendshipRow): FriendLi
   return friendship.requester_user_id === viewerUserId ? "outgoing" : "incoming";
 }
 
-async function getProfilesByUserIds(userIds: string[]): Promise<Map<string, ProfileRow>> {
+async function getProfilesByUserIds(userIds: string[]): Promise<Map<string, ProfileDisplayRow>> {
   if (userIds.length === 0) return new Map();
   const { data, error } = await db()
     .from("profiles")
-    .select("*")
+    .select(PROFILE_DISPLAY_COLUMNS)
     .in("user_id", Array.from(new Set(userIds)));
   if (error) throw new Error(`Failed to load profiles: ${error.message}`);
-  return new Map(((data as ProfileRow[] | null) ?? []).map((row) => [row.user_id, row]));
+  return new Map(((data as ProfileDisplayRow[] | null) ?? []).map((row) => [row.user_id, row]));
 }
 
-async function getUsersByIds(userIds: string[]): Promise<Map<string, UserRow>> {
+async function getUsersByIds(userIds: string[]): Promise<Map<string, UserDisplayRow>> {
   if (userIds.length === 0) return new Map();
   const { data, error } = await db()
     .from("users")
-    .select("*")
+    .select("id,display_name,avatar_url")
     .in("id", Array.from(new Set(userIds)));
   if (error) throw new Error(`Failed to load users: ${error.message}`);
-  return new Map(((data as UserRow[] | null) ?? []).map((row) => [row.id, row]));
+  return new Map(((data as UserDisplayRow[] | null) ?? []).map((row) => [row.id, row]));
 }
 
 export async function ensureProfileForUser(
   userId: string,
   // Only a user already read by the server in this request, never request-body data.
   loadedUser?: Pick<UserRow, "id" | "display_name" | "avatar_url">,
-): Promise<ProfileRow | null> {
+): Promise<ProfileDisplayRow | null> {
   if (loadedUser && loadedUser.id !== userId) throw new Error("Loaded user ID mismatch");
-  const user = loadedUser ?? await getUserById(userId);
+  const user = loadedUser ?? await getUserIdentityById(userId);
   if (!user) return null;
 
   const { data: existing, error: readError } = await db()
     .from("profiles")
-    .select("*")
+    .select(PROFILE_DISPLAY_COLUMNS)
     .eq("user_id", user.id)
     .maybeSingle();
   if (readError) throw new Error(`Failed to load profile: ${readError.message}`);
 
   if (existing) {
-    const profile = existing as ProfileRow;
+    const profile = existing as ProfileDisplayRow;
     const updates: Partial<ProfileRow> = {};
     if (!profile.avatar_url && user.avatar_url) updates.avatar_url = user.avatar_url;
 
@@ -339,10 +343,10 @@ export async function ensureProfileForUser(
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", user.id)
-      .select()
+      .select(PROFILE_DISPLAY_COLUMNS)
       .single();
     if (error) throw new Error(`Failed to ensure profile: ${error.message}`);
-    return data as ProfileRow;
+    return data as ProfileDisplayRow;
   }
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -353,9 +357,9 @@ export async function ensureProfileForUser(
         display_name: user.display_name,
         avatar_url: user.avatar_url,
       })
-      .select()
+      .select(PROFILE_DISPLAY_COLUMNS)
       .single();
-    if (!error) return data as ProfileRow;
+    if (!error) return data as ProfileDisplayRow;
     if (error.code !== UNIQUE_VIOLATION) {
       throw new Error(`Failed to ensure profile: ${error.message}`);
     }
@@ -889,11 +893,9 @@ export async function getFriendInvitePreview(tokenValue: string, viewerUserId?: 
     throw new SocialApiError(410, "This invite has expired. Ask for a new link.");
   }
 
-  const [profile, user] = await Promise.all([
-    ensureProfileForUser(invite.sender_user_id),
-    getUserById(invite.sender_user_id),
-  ]);
+  const user = await getUserIdentityById(invite.sender_user_id);
   if (!user) throw new SocialApiError(404, "Friend invite sender not found");
+  const profile = await ensureProfileForUser(invite.sender_user_id, user);
 
   const relationship = viewerUserId && viewerUserId !== invite.sender_user_id
     ? await getFriendshipBetween(viewerUserId, invite.sender_user_id) : null;
