@@ -32,7 +32,7 @@ const howToSteps = [
 ];
 
 export const metadata: Metadata = {
-  title: "Watch Anime Dub — Start the English Audio, Then the Room",
+  title: "Watch Anime Dub: English Audio, Then the Room",
   description:
     "Watch anime dub by switching to the English audio on your own Crunchyroll or YouTube player, then open an AniDachi room on that same version.",
   alternates: { canonical: "/guides/watch-anime-dub" },

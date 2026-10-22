@@ -23,7 +23,7 @@ import {
 export const metadata: Metadata = {
 	title: "Crunchyroll Watch Party: Sync & Chat with Friends",
 	description:
-		"Crunchyroll has no built-in watch party. Add AniDachi from the Chrome Web Store, open your own tab, and watch Crunchyroll together in sync — Teleparty alternative included.",
+		"Crunchyroll has no built-in watch party. Add AniDachi from the Chrome Web Store, open your own tab, and watch Crunchyroll together in sync with friends.",
 	alternates: { canonical: "/watch-crunchyroll-together" },
 	openGraph: {
 		images: [

@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "English Dubbed Anime — Same Audio for the Whole Room",
+  title: "English Dubbed Anime: Same Audio for Everyone",
   description:
     "English dubbed anime means the English voice track. Confirm it on each person’s Crunchyroll or YouTube player before you start an AniDachi room.",
   alternates: { canonical: "/guides/english-dubbed-anime" },

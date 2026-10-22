@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Anime Watch Party Toolkit — Guides, Glossary & Compare (2026)",
+  title: "Anime Watch Party Toolkit: Guides & Glossary",
   description:
     "Start here for Crunchyroll anime watch parties: install AniDachi, read a setup guide, compare alternatives, and learn the key terms — all in one place.",
   alternates: { canonical: "/anime-watch-party-toolkit" },

@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Animes to Watch List — Queue Titles, Then Track Them",
+  title: "Animes to Watch List: Queue, Then Track Titles",
   description:
     "Build an animes to watch list, then let AniDachi record the Crunchyroll episode or YouTube video you actually start.",
   alternates: { canonical: "/guides/animes-to-watch-list" },

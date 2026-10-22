@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Rave Alternatives for YouTube Watch Parties (2026)",
+  title: "Rave Alternatives for YouTube Watch Parties",
   description:
     "Looking for Rave alternatives for YouTube? Ranked options: AniDachi watchrooms, Teleparty, Watch2Gether — when to pick each for synced YouTube nights.",
   alternates: { canonical: "/guides/rave-alternatives-for-youtube" },

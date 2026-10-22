@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is a Watchroom? — Anime Watch Party Glossary (2026)",
+  title: "What Is a Watchroom? Anime Watch Party Glossary",
   description:
     "A watchroom is a shared virtual space for watching together. Learn how AniDachi live rooms combine synchronized playback, chat, reactions, and calls.",
   alternates: { canonical: "/glossary/watchroom" },

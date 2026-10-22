@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Horror Anime to Watch With Friends (2026)",
   description:
-    "Best horror anime to watch with friends — Parasyte, Berserk, Hell's Paradise & more. Sync Crunchyroll with your friends and react to every terrifying moment together.",
+    "Best horror anime to watch with friends: Parasyte, Berserk, Hell's Paradise and more. Sync Crunchyroll and react to every terrifying moment together.",
   alternates: {
     canonical: "/guides/best-horror-anime-to-watch-with-friends",
   },

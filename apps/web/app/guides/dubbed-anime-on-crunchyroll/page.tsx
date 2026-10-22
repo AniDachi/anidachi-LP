@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Dubbed Anime on Crunchyroll — Watch the English Dub Together",
+  title: "Dubbed Anime on Crunchyroll: Watch English Dubs",
   description:
     "Find dubbed anime on Crunchyroll, pick the English audio, and watch that version together with AniDachi. Each person uses their own account.",
   alternates: { canonical: "/guides/dubbed-anime-on-crunchyroll" },

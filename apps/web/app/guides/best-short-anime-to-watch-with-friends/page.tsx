@@ -9,14 +9,14 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
   title:
-    "Best Short Anime to Watch With Friends (Under 13 Episodes)",
+    "Best Short Anime to Watch With Friends",
   description:
     "Best short anime series to watch with friends in one night — Erased, Angel Beats, Cyberpunk: Edgerunners & more. Perfect single-session watch parties.",
   alternates: {
     canonical: "/guides/best-short-anime-to-watch-with-friends",
   },
   openGraph: {
-    title: "Best Short Anime to Watch With Friends (Under 13 Episodes)",
+    title: "Best Short Anime to Watch With Friends",
     description:
       "Erased, Angel Beats, Cyberpunk: Edgerunners, Anohana & more — short anime you can finish with friends in one sitting.",
     url: "/guides/best-short-anime-to-watch-with-friends",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Short Anime to Watch With Friends (Under 13 Episodes)",
+    title: "Best Short Anime to Watch With Friends",
     description:
       "Erased, Angel Beats, Cyberpunk: Edgerunners & more — short anime for single-session group watches with AniDachi.",
     images: [BRAND_OG_PATH],

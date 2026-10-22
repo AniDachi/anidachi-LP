@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
+  title: "Best Anime for Beginners: 29 Starter Picks",
   description:
-    "30 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "29 beginner-friendly anime with clear hooks and strong pacing: action, comedy, sports, and short classics, plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
     images: [
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
+    title: "Best Anime for Beginners: 29 Starter Picks",
     description:
       "Starter anime picks for first-time viewers and mixed-experience watch groups.",
     url: "/guides/best-anime-to-watch-for-beginners",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     images: ["/opengraph-image.png"],
 
     card: "summary_large_image",
-    title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
+    title: "Best Anime for Beginners: 29 Starter Picks",
     description:
       "Easy-entry anime for your first watch party or solo binge — curated for 2026.",
   },

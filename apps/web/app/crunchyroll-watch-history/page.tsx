@@ -14,9 +14,9 @@ const HISTORY_HELP =
 	"https://help.crunchyroll.com/hc/en-us/articles/22728708616852-Getting-started-on-Crunchyroll-website";
 
 export const metadata: Metadata = {
-	title: "Crunchyroll Watch History — Where It Is and What It Stores",
+	title: "Crunchyroll Watch History: Where to Find It",
 	description:
-		"Crunchyroll watch history is under your avatar, then History. It lists episodes. Continue Watching is separate. AniDachi keeps its own progress when you clear that list.",
+		"Crunchyroll watch history sits under your avatar, then History. It lists episodes; Continue Watching is separate. AniDachi keeps its own progress.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Crunchyroll Watch History",

@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Anime Diary — What You Watched, Saved From the Player",
+  title: "Anime Diary: What You Watched, From the Player",
   description:
     "An anime diary records what you played. AniDachi saves the Crunchyroll episode or YouTube video on Plus or Pro. It is not a public profile.",
   alternates: { canonical: "/guides/anime-diary" },

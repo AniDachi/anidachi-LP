@@ -34,7 +34,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "How to Watch Netflix Together",
   description:
-    "How to watch Netflix together: each person opens the same title on their own account in desktop Chrome, then a Chrome extension keeps playback together. AniDachi adds live sync, chat, reactions, and calls.",
+    "How to watch Netflix together: everyone opens the same title on their own account in desktop Chrome, then AniDachi syncs playback with chat and calls.",
   alternates: { canonical: "/guides/how-to-watch-netflix-together" },
   openGraph: {
     title: "How to Watch Netflix Together",

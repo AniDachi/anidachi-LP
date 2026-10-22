@@ -8,14 +8,14 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch on Crunchyroll With Friends (2026)",
+  title: "Best Anime to Watch on Crunchyroll With Friends",
   description:
-    "Best anime to watch on Crunchyroll with friends — Attack on Titan, Demon Slayer, Haikyuu, One Piece & 30+ more picks sorted by group-watch quality. Watch in live sync with AniDachi.",
+    "Best anime to watch on Crunchyroll with friends: Attack on Titan, Demon Slayer, Haikyuu, One Piece and 30+ more picks sorted by group-watch quality.",
   alternates: {
     canonical: "/guides/best-anime-to-watch-on-crunchyroll-with-friends",
   },
   openGraph: {
-    title: "Best Anime to Watch on Crunchyroll With Friends (2026)",
+    title: "Best Anime to Watch on Crunchyroll With Friends",
     description:
       "30+ picks for Crunchyroll group watches — sorted by ease for newcomers, episode count, and group-watch energy.",
     url: "/guides/best-anime-to-watch-on-crunchyroll-with-friends",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Anime to Watch on Crunchyroll With Friends (2026)",
+    title: "Best Anime to Watch on Crunchyroll With Friends",
     description:
       "30+ Crunchyroll picks for group watches — AoT, Demon Slayer, Haikyuu, One Piece & more.",
     images: [BRAND_OG_PATH],

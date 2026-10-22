@@ -21,7 +21,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Way to Watch YouTube With Friends (2026 Verdict)",
+  title: "Best Way to Watch YouTube With Friends",
   description:
     "Compare live sync, independent viewing, and screen share for YouTube. AniDachi watchrooms sync each person's own stream and add live conversation.",
   alternates: {

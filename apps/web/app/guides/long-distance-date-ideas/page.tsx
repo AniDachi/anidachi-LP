@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Long Distance Date Ideas — Watch Together From Two Places",
+  title: "Long Distance Date Ideas: Watch Together Online",
   description:
     "Long distance date ideas that work on a call. The main plan is a synced Crunchyroll episode or YouTube movie with AniDachi.",
   alternates: { canonical: "/guides/long-distance-date-ideas" },

@@ -8,9 +8,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Isekai Anime to Watch With Friends (2026) — 14 Group-Friendly Picks",
+  title: "Best Isekai Anime to Watch With Friends: 14 Picks",
   description:
-    "The best isekai anime for group watches on Crunchyroll — from binge-ready comedy isekai to deep-lore epics. Each pick links to a dedicated AniDachi watchroom guide.",
+    "The best isekai anime for group watches on Crunchyroll, from binge-ready comedy to deep-lore epics. Each pick links to its own AniDachi watchroom guide.",
   alternates: { canonical: "/guides/best-isekai-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Isekai Anime to Watch With Friends — 2026",

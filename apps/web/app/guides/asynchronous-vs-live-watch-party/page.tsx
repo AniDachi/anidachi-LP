@@ -5,7 +5,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "Asynchronous vs Live Anime Watch Parties — Which Is Better?",
+  title: "Asynchronous vs Live Anime Watch Parties",
   description:
     "Compare async and live anime watch parties. Learn when each works best, tools for each approach, and why async watching is growing among anime fans.",
   alternates: { canonical: "/guides/asynchronous-vs-live-watch-party" },

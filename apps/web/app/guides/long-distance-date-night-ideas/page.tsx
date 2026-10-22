@@ -33,7 +33,7 @@ const howToSteps = [
 ];
 
 export const metadata: Metadata = {
-  title: "Long Distance Date Night Ideas — One Movie or Episode",
+  title: "Long Distance Date Night Ideas: Watch a Movie",
   description:
     "Long distance date night ideas for one evening: a shared start time, a call, and one YouTube movie or Crunchyroll episode synced with AniDachi.",
   alternates: { canonical: "/guides/long-distance-date-night-ideas" },

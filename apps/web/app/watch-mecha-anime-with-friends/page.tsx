@@ -7,7 +7,7 @@ import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 export const metadata: Metadata = {
   title: "Watch Mecha Anime With Friends (2026)",
   description:
-    "Watch mecha anime battles with friends in real-time sync on Crunchyroll. AniDachi watchrooms keep everyone at the same robot reveal. Gurren Lagann, Evangelion, Code Geass, and more.",
+    "Watch mecha anime with friends in real-time sync on Crunchyroll, so everyone hits the same robot reveal. Gurren Lagann, Evangelion, Code Geass and more.",
   alternates: { canonical: "/watch-mecha-anime-with-friends" },
   openGraph: {
     images: [

@@ -51,8 +51,17 @@ function getPageLastModified(): string {
 /** The layout appends " | AniDachi"; keep the rendered title at 60 characters or less. */
 const TITLE_SUFFIX_LENGTH = " | AniDachi".length;
 
+/** Common short names, used in the title only when the full name won't fit in 60 characters. */
+const SHORT_TITLE_BY_SLUG: Record<string, string> = {
+  konosuba: "KonoSuba",
+  danmachi: "DanMachi",
+  "rascal-does-not-dream-of-bunny-girl-senpai": "Bunny Girl Senpai",
+};
+
 function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
-  const base = `Watch ${anime.title} with Friends`;
+  const fullName = `Watch ${anime.title} with Friends`;
+  const short = SHORT_TITLE_BY_SLUG[anime.slug];
+  const base = fullName.length > 60 && short ? `Watch ${short} with Friends` : fullName;
   const isLong =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
       `${episodesDisplay} ${anime.episodes}`
@@ -97,7 +106,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const titleTag = buildTitleTag(anime, episodesDisplay);
 
   return {
-    title: titleTag,
+    // Long anime names push "Watch … with Friends | AniDachi" past 60 characters;
+    // those pages drop the brand suffix instead of truncating the title.
+    title:
+      titleTag.length + TITLE_SUFFIX_LENGTH <= 60 ? titleTag : { absolute: titleTag },
     description: metaDescription,
     alternates: { canonical: `/watch/${rawSlug}` },
     openGraph: {

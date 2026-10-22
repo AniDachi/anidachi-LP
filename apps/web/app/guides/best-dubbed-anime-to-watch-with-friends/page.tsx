@@ -8,9 +8,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Dubbed Anime to Watch With Friends (2026) — 12 English Dub Picks",
+  title: "Best Dubbed Anime to Watch With Friends: 12 Picks",
   description:
-    "Best dubbed anime to watch with friends on Crunchyroll — Cowboy Bebop, Fullmetal Alchemist, Spy x Family & more. Resolve the dub vs sub debate for your watch party.",
+    "Best dubbed anime to watch with friends on Crunchyroll: Cowboy Bebop, Fullmetal Alchemist, Spy x Family and more. Settle dub vs sub for your watch party.",
   alternates: { canonical: "/guides/best-dubbed-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Dubbed Anime to Watch With Friends — 2026",

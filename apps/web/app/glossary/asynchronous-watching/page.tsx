@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "What Is Asynchronous Anime Watching? — Glossary (2026)",
+  title: "What Is Asynchronous Anime Watching?",
   description:
     "Asynchronous anime watching means friends watch the same show on their own schedules and discuss it later. Learn the routine and what AniDachi supports today.",
   alternates: { canonical: "/glossary/asynchronous-watching" },

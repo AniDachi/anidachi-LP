@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Netflix Party for YouTube — Watch YouTube Together (2026)",
+  title: "Netflix Party for YouTube: Watch YouTube Together",
   description:
     "Searching “Netflix Party YouTube”? Teleparty (formerly Netflix Party) can sync YouTube live. AniDachi adds YouTube live watchrooms and personal history.",
   alternates: { canonical: "/guides/netflix-party-for-youtube" },

@@ -35,7 +35,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "Subbed Anime — When the Group Should Stay on Subs",
   description:
-    "Subbed anime is the original audio with on-screen text. Stay on it when there is no English dub, or when everyone wants those performances, then start an AniDachi room.",
+    "Subbed anime is the original audio with on-screen text. Stay on subs when there is no English dub or everyone wants those performances, then start a room.",
   alternates: { canonical: "/guides/subbed-anime" },
   openGraph: {
     title: "Subbed Anime",

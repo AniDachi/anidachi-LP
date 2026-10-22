@@ -36,7 +36,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "Discord Screen Share Black Screen — What to Check",
   description:
-    "A Discord screen share black screen usually means the wrong window or a player that blocks capture. Stop the share for a full Crunchyroll, YouTube, or Netflix episode and sync it with AniDachi.",
+    "A Discord screen share black screen usually means the wrong window or a player blocking capture. Sync full Crunchyroll, YouTube, or Netflix with AniDachi.",
   alternates: { canonical: "/guides/discord-screen-share-black-screen" },
   openGraph: {
     title: "Discord Screen Share Black Screen",

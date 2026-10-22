@@ -33,9 +33,9 @@ const howToSteps = [
 ];
 
 export const metadata: Metadata = {
-  title: "Discord Screen Share Not Working — Button and Permissions",
+  title: "Discord Screen Share Not Working? Fix Permissions",
   description:
-    "If Discord screen share is not working, join a voice call, allow screen recording, and test a direct call. For a full Crunchyroll, YouTube, or Netflix episode, sync it with AniDachi instead.",
+    "Discord screen share not working? Join a voice call, allow screen recording, and test a direct call. For a full episode, sync it with AniDachi instead.",
   alternates: { canonical: "/guides/discord-screen-share-not-working" },
   openGraph: {
     title: "Discord Screen Share Not Working",

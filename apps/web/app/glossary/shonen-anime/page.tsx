@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is Shonen Anime? Shonen Meaning & Best Examples (2026)",
+  title: "What Is Shonen Anime? Meaning & Best Examples",
   description:
-    "Shonen anime targets teenage male audiences and focuses on action, friendship, and personal growth. What shonen means, famous shonen series, and which shonen anime are best for group watching with friends.",
+    "Shonen anime targets teen boys with action, friendship and growth. What shonen means, famous shonen series, and which are best to watch with friends.",
   alternates: { canonical: "/glossary/shonen-anime" },
   openGraph: {
     images: [

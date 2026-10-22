@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
 	title: "Discord Watch Together Activity vs a Watchroom",
 	description:
-		"Discord's Watch Together Activity plays YouTube inside Discord. AniDachi keeps the voice channel and syncs a Crunchyroll episode or a full YouTube watch page in Chrome.",
+		"Discord's Watch Together Activity plays YouTube inside Discord. AniDachi keeps the voice channel and syncs a Crunchyroll episode or YouTube page in Chrome.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Discord Watch Together Activity",

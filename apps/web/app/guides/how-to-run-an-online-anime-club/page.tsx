@@ -13,7 +13,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Run an Online Anime Club (2026) — Discord & Watchroom Guide",
+  title: "How to Run an Online Anime Club With Discord",
   description:
     "Start and run an online anime club: pick a schedule, set up Discord + AniDachi watchrooms, manage members across time zones, and keep a seasonal lineup fresh.",
   alternates: { canonical: "/guides/how-to-run-an-online-anime-club" },

@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch Asynchronously With Friends (2026)",
+  title: "Best Anime to Watch Asynchronously With Friends",
   description:
     "Best anime for asynchronous viewing with friends — long-run marathons, weekly simulcasts, and films to watch independently and discuss when everyone finishes.",
   alternates: { canonical: "/guides/best-anime-to-watch-asynchronously" },

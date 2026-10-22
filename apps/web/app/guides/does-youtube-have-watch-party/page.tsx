@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Does YouTube Have a Watch Party? No — Watch Together (2026)",
+  title: "Does YouTube Have a Watch Party Feature?",
   description:
     "YouTube offers SharePlay on iPhone and iPad; desktop Chrome groups Add to Chrome and sync full videos with AniDachi. Start from /extension.",
   alternates: { canonical: "/guides/does-youtube-have-watch-party" },

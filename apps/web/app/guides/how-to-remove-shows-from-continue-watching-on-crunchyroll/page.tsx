@@ -22,7 +22,7 @@ const HISTORY_HELP =
 	"https://help.crunchyroll.com/hc/en-us/articles/22728708616852-Getting-started-on-Crunchyroll-website";
 
 export const metadata: Metadata = {
-	title: "How to Remove Shows from Continue Watching on Crunchyroll",
+	title: "Remove Shows From Crunchyroll Continue Watching",
 	description:
 		"Remove one show from Crunchyroll Continue Watching, or clear watch history. Mark the series as watched, or delete episodes from History.",
 	alternates: { canonical: PAGE_PATH },

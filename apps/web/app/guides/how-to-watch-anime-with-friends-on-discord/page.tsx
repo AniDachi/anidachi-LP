@@ -6,7 +6,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 export const metadata: Metadata = {
 	title: "Watch Anime on Discord Without Screen Share Pain",
 	description:
-		"Stream anime on Discord without Go Live pain: keep Discord for voice, sync Crunchyroll in an AniDachi watchroom — full quality anime watch party. Start at pricing.",
+		"Stream anime on Discord without Go Live pain: keep Discord for voice and sync Crunchyroll in an AniDachi watchroom for a full-quality anime watch party.",
 	alternates: {
 		canonical: "/guides/how-to-watch-anime-with-friends-on-discord",
 	},

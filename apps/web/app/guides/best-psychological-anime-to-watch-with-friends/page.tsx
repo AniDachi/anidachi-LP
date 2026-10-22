@@ -8,14 +8,14 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Psychological Anime to Watch With Friends (2026)",
+  title: "Best Psychological Anime to Watch With Friends",
   description:
-    "The best psychological anime to watch with friends — Death Note, Steins;Gate, Monster & more. Sync and theorize together. Perfect for deep-discussion watch parties.",
+    "The best psychological anime to watch with friends: Death Note, Steins;Gate, Monster and more. Sync up, then theorize together after each episode.",
   alternates: {
     canonical: "/guides/best-psychological-anime-to-watch-with-friends",
   },
   openGraph: {
-    title: "Best Psychological Anime to Watch With Friends (2026)",
+    title: "Best Psychological Anime to Watch With Friends",
     description:
       "Death Note, Steins;Gate, Monster, Odd Taxi & more — psychological anime that generate the best post-episode theory threads.",
     url: "/guides/best-psychological-anime-to-watch-with-friends",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Psychological Anime to Watch With Friends (2026)",
+    title: "Best Psychological Anime to Watch With Friends",
     description:
       "Death Note, Steins;Gate, Monster & more — sync and theorize together with AniDachi watchrooms.",
     images: [BRAND_OG_PATH],

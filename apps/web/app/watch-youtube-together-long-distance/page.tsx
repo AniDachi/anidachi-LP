@@ -9,9 +9,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Watch YouTube Together Long Distance (2026)",
+  title: "How to Watch YouTube Together Long Distance",
   description:
-    "For desktop Chrome watch parties, long-distance couples use AniDachi for synced YouTube watchrooms (live together) — or Watch2Gether/Teleparty for free live-only sync.",
+    "In desktop Chrome, long-distance couples use AniDachi for synced YouTube watchrooms, or Watch2Gether and Teleparty for free live-only sync.",
   alternates: { canonical: "/watch-youtube-together-long-distance" },
   openGraph: {
     images: [

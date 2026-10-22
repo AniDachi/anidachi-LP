@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Does OVA Mean in Anime? OVA Full Form & Examples (2026)",
+  title: "What Does OVA Mean in Anime? Full Form & Examples",
   description:
-    "OVA stands for Original Video Animation — anime released directly to home video, not broadcast TV. What does OVA mean in anime, how OVAs differ from TV episodes, and famous OVAs like Haikyuu, Demon Slayer, and Attack on Titan explained.",
+    "OVA stands for Original Video Animation: anime released straight to home video, not TV. How OVAs differ from TV episodes, plus famous OVA examples.",
   alternates: { canonical: "/glossary/ova-meaning" },
   openGraph: {
     images: [

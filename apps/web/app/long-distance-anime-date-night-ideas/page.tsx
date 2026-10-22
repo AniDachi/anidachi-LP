@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "12 Anime Date Night Ideas for Long-Distance Couples (2026)",
+  title: "Anime Date Night Ideas for Long-Distance Couples",
   description:
-    "12 creative anime date night ideas for long-distance couples — from weekly sync rituals to themed watch parties, async reactions, and planning a reunion around a convention.",
+    "12 anime date night ideas for long-distance couples: weekly sync rituals, themed watch parties, and planning a reunion around an anime convention.",
   alternates: { canonical: "/long-distance-anime-date-night-ideas" },
   openGraph: {
     images: [

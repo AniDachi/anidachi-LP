@@ -13,7 +13,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Anime Tracker — Log Crunchyroll and YouTube Progress",
+  title: "Anime Tracker Extension for Crunchyroll & YouTube",
   description:
     "Track what you play on Crunchyroll and YouTube with your own Plus or Pro access and recording permission. Resume from your saved personal history.",
   alternates: { canonical: "/anime-tracker" },

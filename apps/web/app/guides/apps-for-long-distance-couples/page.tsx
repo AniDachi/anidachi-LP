@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Apps for Long Distance Couples — Watch Together Included",
+  title: "Apps for Long Distance Couples to Watch Together",
   description:
     "Apps for long distance couples: a call for voice, and AniDachi when you want to watch Crunchyroll, YouTube, or Netflix in sync.",
   alternates: { canonical: "/guides/apps-for-long-distance-couples" },

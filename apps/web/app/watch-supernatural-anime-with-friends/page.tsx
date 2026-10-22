@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Supernatural Anime With Friends (2026)",
   description:
-    "Supernatural anime power reveals hit harder together — AniDachi syncs live Crunchyroll rooms for your group. Fullmetal Alchemist, Jujutsu Kaisen, Noragami, and more.",
+    "Supernatural anime power reveals hit harder together. AniDachi syncs Crunchyroll rooms for your group: Fullmetal Alchemist, Jujutsu Kaisen, Noragami.",
   alternates: { canonical: "/watch-supernatural-anime-with-friends" },
   openGraph: {
     images: [

@@ -4,9 +4,9 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveDataTable } from "@/components/responsive-data-table";
 
 export const metadata: Metadata = {
-  title: "How to Watch K-Dramas Together Long Distance (2026)",
+  title: "How to Watch K-Dramas Together Long Distance",
   description:
-    "Short answer: K-dramas have no native watch party feature. Long-distance couples use Teleparty, Rave, or general sync methods for most platforms — and AniDachi if you watch anime on Crunchyroll.",
+    "K-dramas have no native watch party feature. Long-distance couples use Teleparty, Rave, or other sync methods, and AniDachi for anime on Crunchyroll.",
   alternates: { canonical: "/watch-kdrama-together-long-distance" },
   openGraph: {
     images: [

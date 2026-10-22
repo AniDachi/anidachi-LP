@@ -16,7 +16,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Watch2Gether Alternatives for Anime (2026 Ranked)",
   description:
-    "Ranked Watch2Gether alternatives for anime on Crunchyroll — AniDachi, Crunchyroll Party, Teleparty, and more. Distinct from the 1:1 AniDachi vs Watch2Gether compare page.",
+    "Ranked Watch2Gether alternatives for watching anime on Crunchyroll with friends: AniDachi, Crunchyroll Party, Teleparty and more.",
   alternates: { canonical: "/guides/watch2gether-alternatives-for-anime" },
   openGraph: {
     title: "Watch2Gether Alternatives for Anime — 2026",

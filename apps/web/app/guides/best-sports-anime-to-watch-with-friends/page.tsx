@@ -8,9 +8,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Sports Anime to Watch With Friends (2026) — 9 Group Picks",
+  title: "Best Sports Anime to Watch With Friends: 9 Picks",
   description:
-    "The best sports anime for group watches on Crunchyroll — Haikyuu!!, Blue Lock, Slam Dunk & more. Hype matchups, synced playback, and live reactions with AniDachi.",
+    "The best sports anime for group watches on Crunchyroll: Haikyuu!!, Blue Lock, Slam Dunk and more. Hype matchups with synced playback and live reactions.",
   alternates: { canonical: "/guides/best-sports-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Sports Anime to Watch With Friends — 2026",

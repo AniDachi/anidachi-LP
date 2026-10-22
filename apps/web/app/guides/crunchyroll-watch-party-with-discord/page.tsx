@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Crunchyroll Watch Party With Discord — Voice + Sync Guide (2026)",
+  title: "Watch Crunchyroll With Friends on Discord",
   description:
     "How to watch Crunchyroll with friends on Discord: use Discord voice for reactions and AniDachi for synced playback — not Go Live screen share.",
   alternates: { canonical: "/guides/crunchyroll-watch-party-with-discord" },

@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
   title: "Netflix Party Extension — Now Called Teleparty",
   description:
-    "The Netflix Party extension was renamed Teleparty. Install Teleparty from the Chrome Web Store if you want that tool. AniDachi is a separate extension that also supports Netflix watchrooms.",
+    "The Netflix Party extension was renamed Teleparty; it's in the Chrome Web Store. AniDachi is a separate extension that also supports Netflix watchrooms.",
   alternates: { canonical: "/guides/netflix-party-extension" },
   openGraph: {
     title: "Netflix Party Extension",

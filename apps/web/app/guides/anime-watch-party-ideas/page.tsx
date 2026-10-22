@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "Anime Watch Party Ideas — Fun Ways to Watch with Friends (2026)",
+  title: "Anime Watch Party Ideas: Themes, Snacks & Games",
   description:
     "Creative anime watch party ideas for online and in-person gatherings. Themes, snack ideas, games, and how to host the perfect anime marathon.",
   alternates: { canonical: "/guides/anime-watch-party-ideas" },

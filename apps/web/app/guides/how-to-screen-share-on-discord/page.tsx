@@ -35,7 +35,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "How to Screen Share on Discord (and When to Stop)",
   description:
-    "How to screen share on Discord: join a voice call, share the window, then switch Crunchyroll, YouTube, or Netflix to an AniDachi watchroom when the picture gets soft.",
+    "How to screen share on Discord: join a voice call and share the window. When it gets blurry, move Crunchyroll, YouTube, or Netflix to an AniDachi room.",
   alternates: { canonical: "/guides/how-to-screen-share-on-discord" },
   openGraph: {
     title: "How to Screen Share on Discord",

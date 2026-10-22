@@ -33,7 +33,7 @@ const howToSteps = [
 ];
 
 export const metadata: Metadata = {
-  title: "Romance Anime Dubbed — English Audio Before You Press Play",
+  title: "Romance Anime Dubbed: Check English Audio First",
   description:
     "Romance anime dubbed means the English track is on for everyone. Confirm it on Crunchyroll or YouTube, then start an AniDachi room on that same version.",
   alternates: { canonical: "/guides/romance-anime-dubbed" },

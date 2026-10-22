@@ -33,7 +33,7 @@ const entries: SpinEntry[] = animeList
 const shortCount = entries.filter((entry) => entry.length === "short").length;
 
 export const metadata: Metadata = {
-  title: "Random Anime Generator — What Anime Should I Watch?",
+  title: "Random Anime Generator: What Should I Watch?",
   description: `Spin a random anime from ${entries.length} series, filter by length, then open a guide to watch it with friends on Crunchyroll. Free, no signup.`,
   alternates: { canonical: url },
   openGraph: {
