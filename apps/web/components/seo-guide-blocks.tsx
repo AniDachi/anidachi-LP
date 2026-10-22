@@ -193,9 +193,13 @@ export function SeoGuideRelated({
   links: SeoGuideRelatedLink[];
   className?: string;
 }) {
+  // Pages mix hand-picked links with registry picks; show each URL once.
+  const uniqueLinks = links.filter(
+    (link, index) => links.findIndex((other) => other.href === link.href) === index,
+  );
   return (
     <ul className={cn("not-prose mb-2 divide-y divide-ani-line", className)}>
-      {links.map((link) => (
+      {uniqueLinks.map((link) => (
         <li key={link.href}>
           <Link
             href={link.href}
