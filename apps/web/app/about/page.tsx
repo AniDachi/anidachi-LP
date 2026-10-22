@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <MarketingArticle title="About AniDachi" updated="October 1, 2026">
+    <MarketingArticle path="/about" title="About AniDachi" updated="October 1, 2026">
       <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">

@@ -261,7 +261,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Watch Anime Together", url: "/watch-anime-together" },
+        { name: "Anime A–Z", url: "/watch" },
         { name: anime.title, url: `/watch/${rawSlug}` },
       ]}
       title={`Watch ${anime.title} with Friends — ${anime.notOnCrunchyroll ? "Group Movie Night" : "Live Watchrooms"}`}

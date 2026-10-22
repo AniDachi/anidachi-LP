@@ -61,7 +61,7 @@ export default function OnePieceFillerListPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Anime filler", url: "/glossary/anime-filler" },
+          { name: "Tools", url: "/tools" },
           { name: "One Piece filler list", url },
         ]}
         title="One Piece filler list"

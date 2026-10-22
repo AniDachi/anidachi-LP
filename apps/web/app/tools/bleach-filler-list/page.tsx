@@ -62,7 +62,7 @@ export default function BleachFillerListPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Anime filler", url: "/glossary/anime-filler" },
+          { name: "Tools", url: "/tools" },
           { name: "Bleach filler list", url },
         ]}
         title="Bleach filler list"

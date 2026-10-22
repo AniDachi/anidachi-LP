@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function EditorialPolicyPage() {
   return (
-    <MarketingArticle title="Editorial Policy" updated="September 15, 2026">
+    <MarketingArticle path="/editorial-policy" title="Editorial Policy" updated="September 15, 2026">
       <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">

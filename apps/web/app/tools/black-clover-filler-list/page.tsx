@@ -62,7 +62,7 @@ export default function BlackCloverFillerListPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Anime filler", url: "/glossary/anime-filler" },
+          { name: "Tools", url: "/tools" },
           { name: "Black Clover filler list", url },
         ]}
         title="Black Clover filler list"

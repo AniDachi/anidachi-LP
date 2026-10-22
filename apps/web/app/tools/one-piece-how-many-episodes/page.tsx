@@ -69,7 +69,7 @@ export default function OnePieceEpisodeCountPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Watch anime together", url: "/watch-anime-together" },
+          { name: "Tools", url: "/tools" },
           { name: "One Piece episode count", url },
         ]}
         title="How many episodes does One Piece have?"

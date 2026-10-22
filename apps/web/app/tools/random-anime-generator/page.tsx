@@ -82,7 +82,7 @@ export default function RandomAnimeGeneratorPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Watch anime together", url: "/watch-anime-together" },
+          { name: "Tools", url: "/tools" },
           { name: "Random anime generator", url },
         ]}
         title="Random anime generator"

@@ -62,7 +62,7 @@ export default function FateWatchOrderPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Watch anime together", url: "/watch-anime-together" },
+          { name: "Tools", url: "/tools" },
           { name: "Fate watch order", url },
         ]}
         title="Fate watch order"

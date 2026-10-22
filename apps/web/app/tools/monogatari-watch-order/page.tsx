@@ -62,7 +62,7 @@ export default function MonogatariWatchOrderPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Watch anime together", url: "/watch-anime-together" },
+          { name: "Tools", url: "/tools" },
           { name: "Monogatari series watch order", url },
         ]}
         title="Monogatari series watch order"
