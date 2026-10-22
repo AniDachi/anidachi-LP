@@ -167,6 +167,22 @@ test("annual conversion waits for the promotion to end and never removes the mon
 	assert.equal(f.sessions.length, 1);
 });
 
+test("campaign guard preserves unrelated coupon behavior and fails closed on unknown discounts", async () => {
+	const f = fixture();
+	f.sub.discounts = [
+		{
+			id: "di_other",
+			end: null,
+			coupon: { id: "other", metadata: {} },
+		} as unknown as Stripe.Discount,
+	];
+	await f.open();
+	assert.equal(f.sessions.length, 1);
+	f.sub.discounts = ["di_unexpanded"];
+	await assert.rejects(f.open, /could not be verified/i);
+	assert.equal(f.sessions.length, 1);
+});
+
 test("ownership, unpaid invoices and unsafe portal configuration block yearly conversion", async () => {
 	const mutations: ((f: ReturnType<typeof fixture>) => void)[] = [
 		(f) => {

@@ -52,11 +52,11 @@ node:test. Specification: the approved conversation and constraints above.
 
 ### Task 3: Acceptance and delivery
 
-- [ ] Configure only Sandbox after cutoff is confirmed; retain proof object IDs.
-- [ ] Exercise monthly redemptions, three renewals, trial/past-paid exclusion,
+- [x] Configure only Sandbox after cutoff is confirmed; retain proof object IDs.
+- [x] Exercise monthly redemptions, three renewals, trial/past-paid exclusion,
       annual protection, expiry and failed payment recovery in Sandbox.
-- [ ] Verify account billing doesn't claim list price is a discounted next charge.
-- [ ] Run full web check/tests, dev:check and independent branch review.
+- [x] Verify account billing doesn't claim list price is a discounted next charge.
+- [x] Run full web check/tests, dev:check and independent branch review.
 - [ ] Update domain/runbook docs and Graphify using the safe adapter.
 - [ ] Deliver additive schema before runtime through staging PRs and verify deployment.
 - [ ] Report remaining human acceptance; do not activate LIVE.
@@ -81,6 +81,15 @@ node:test. Specification: the approved conversation and constraints above.
 - Full web suite: 1368 passed, 6 skipped, zero failed (1374 total).
 - Local `/dev/billing` visual inspection: discount, next monthly amount, regular
   price after discount, and annual-transition explanation. No live payment action.
+- Independent review: 110 focused tests passed and no Critical/Important defect.
+  Controller narrowed annual deferral to campaign discounts, preserving unrelated
+  coupon behavior; expanded unknown discounts fail verification. Four annual
+  tests pass, including the new scope regression.
+- Sandbox edge proof (`scripts/stripe/product-hunt-edge-proof.ts`): foreign
+  customer redemption rejected; a declined first invoice stays $4.79, then the
+  same invoice is paid for $4.79 with the original discount and one redemption.
+  Hosted Checkout accepts ANIHUNT40 and displays 40% off for 3 months.
+- Schema-only staging PR: https://github.com/AniDachi/anidachi-LP/pull/464.
 
 ## Deployment order and acceptance
 
@@ -106,3 +115,13 @@ Disable new campaign issuance, retain bindings and existing discounts/redemption
 history. Keep annual safeguards until all campaign discounts have ended. Do not
 restore universal annual promotion entry or replay a consumed code. Existing
 trial reservations, renewal consent and anti-abuse records must be preserved.
+
+## Unknown promotion outcomes
+
+An account binding older than 23 hours with no discoverable code deliberately
+fails closed. Inspect only that binding's customer, coupon, Stripe request logs
+and promotion-code list, including inactive codes. Never delete the binding or
+mint a replacement with a new redemption allowance. Recover an already-created
+code only after verifying customer, campaign, binding ID and redemption count.
+If creation cannot be disproved or the mapping differs, keep issuance blocked
+and handle that account explicitly; do not reset trial or paid-history records.
