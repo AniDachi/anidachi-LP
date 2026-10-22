@@ -1052,6 +1052,11 @@ export function BillingView({
 									</button>
 								)}
 								<div className="billing-actions">
+									{subscription.promotion?.state === "active" && (
+										<p className="ac-muted">
+											Yearly billing is available after your discount ends.
+										</p>
+									)}
 									{subscription.canSwitchToYearly &&
 									subscription.planCode !== "free" ? (
 										<div className="ac-renewal-action">
@@ -1312,6 +1317,13 @@ function SubscriptionFacts({
 				</div>
 			</dl>
 			<div className="billing-terms">
+				{subscription.promotion?.state === "active" && (
+					<p>
+						ANIHUNT40: 40% off until{" "}
+						{formatBillingTime(subscription.promotion.endsAt!, timeZone)}.
+						Monthly renewal continues at the regular price after that.
+					</p>
+				)}
 				{inTrial && (
 					<p>
 						{cardless

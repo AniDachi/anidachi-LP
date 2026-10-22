@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { PRODUCT_HUNT_CAMPAIGN } from "./product-hunt-promo";
 import { BillingError } from "./billing";
 import { getBillingCustomerByUserId, listSubscriptionsForUser } from "./db";
 import {
@@ -55,7 +56,7 @@ export async function yearlyBillingPortal(
 	const stripe = deps.createStripe();
 	const sub = await stripe.subscriptions.retrieve(
 		row.stripe_subscription_id,
-		{},
+		{ expand: ["discounts", "items.data.discounts"] },
 		REQUEST,
 	);
 	if (
@@ -69,6 +70,31 @@ export async function yearlyBillingPortal(
 			"Subscription ownership could not be verified.",
 		);
 	const item = sub.items.data[0];
+	// Stripe Portal carries discounts into the annual invoice. Hold campaign
+	// conversion until its discount ends; preserve unrelated coupon behavior.
+	const discounts = [
+		...(sub.discounts ?? []),
+		...sub.items.data.flatMap((i) => i.discounts ?? []),
+	];
+	for (const discount of discounts) {
+		if (typeof discount === "string" || !discount.coupon)
+			throw new BillingError(
+				503,
+				"Subscription discounts could not be verified.",
+			);
+	}
+	if (
+		discounts.some(
+			(d) =>
+				typeof d !== "string" &&
+				d.coupon.metadata?.anidachiCampaign === PRODUCT_HUNT_CAMPAIGN &&
+				(!d.end || d.end * 1000 > deps.now()),
+		)
+	)
+		throw new BillingError(
+			409,
+			"Yearly billing is available after your discount ends.",
+		);
 	if (
 		sub.status !== "active" ||
 		sub.items.has_more ||
