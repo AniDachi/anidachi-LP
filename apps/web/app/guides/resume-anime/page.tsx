@@ -29,7 +29,7 @@ const howToSteps = [
 ];
 
 export const metadata: Metadata = {
-	title: "Resume Anime — Pick Up a Saved Crunchyroll or YouTube Episode",
+	title: "Resume Anime: Pick Up a Saved Episode",
 	description:
 		"Resume anime from AniDachi Watch Library. Plus or Pro records the episode. Free accounts can open saved history and Resume.",
 	alternates: { canonical: PAGE_PATH },

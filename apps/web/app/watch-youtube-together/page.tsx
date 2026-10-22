@@ -25,7 +25,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Watch Party — Watch YouTube Together With Friends (2026)",
+  title: "YouTube Watch Party: Watch YouTube With Friends",
   description:
     "YouTube watch party hub: Add AniDachi from the Chrome Web Store, open a full youtube.com/watch page, and sync with friends. Teleparty and Discord compared.",
   alternates: { canonical: "/watch-youtube-together" },

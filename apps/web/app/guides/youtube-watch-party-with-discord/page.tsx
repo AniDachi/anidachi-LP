@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Watch Party With Discord (2026 Hybrid Guide)",
+  title: "YouTube Watch Party With Discord: Hybrid Guide",
   description:
     "Best setup: Discord for voice + AniDachi for YouTube sync — not Discord Go Live. How to watch YouTube together on Discord without crushed video quality.",
   alternates: {

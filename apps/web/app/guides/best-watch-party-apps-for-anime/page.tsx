@@ -16,7 +16,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Watch Party Apps for Anime (2026 Ranked)",
   description:
-    "Ranked watch party apps for anime: AniDachi, Teleparty, Crunchyroll Party, Discord, Rave — with a comparison table and when to pick each. Deeper than a thin app landing page.",
+    "Ranked watch party apps for anime: AniDachi, Teleparty, Crunchyroll Party, Discord and Rave, with a comparison table and when to pick each one.",
   alternates: { canonical: "/guides/best-watch-party-apps-for-anime" },
   openGraph: {
     title: "Best Watch Party Apps for Anime — 2026",

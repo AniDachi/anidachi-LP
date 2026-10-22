@@ -61,7 +61,7 @@ export default function ShippudenFillerListPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Anime filler", url: "/glossary/anime-filler" },
+          { name: "Tools", url: "/tools" },
           { name: "Naruto Shippuden filler list", url },
         ]}
         title="Naruto Shippuden filler list"

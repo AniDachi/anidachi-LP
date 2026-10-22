@@ -53,24 +53,30 @@ async function fetchNavUser(): Promise<NavUser | null> {
   };
 }
 
+type NavMenuLink = { href: string; label: string; description: string };
+
 /** Sibling hubs under Watch — platforms are peers of the anime vertical (not nested under anime). */
-const watchHubLinks = [
-  {
-    href: "/watch-anime-together",
-    label: "Watch Anime Together",
-    description: "Anime vertical hub",
-  },
-  {
-    href: "/watch-crunchyroll-together",
-    label: "Crunchyroll Watch Party",
-    description: "Crunchyroll platform",
-  },
-  {
-    href: "/watch-youtube-together",
-    label: "YouTube Watch Party",
-    description: "YouTube platform",
-  },
-] as const;
+const watchHubLinks: readonly NavMenuLink[] = [
+  { href: "/watch-anime-together", label: "Watch Anime Together", description: "Anime vertical hub" },
+  { href: "/watch-crunchyroll-together", label: "Crunchyroll Watch Party", description: "Crunchyroll platform" },
+  { href: "/watch-youtube-together", label: "YouTube Watch Party", description: "YouTube platform" },
+  { href: "/netflix-watch-party", label: "Netflix Watch Party", description: "Netflix platform" },
+  { href: "/discord-watch-party", label: "Discord Watch Party", description: "Voice on Discord, video in sync" },
+];
+
+/** Section index pages: every guide, comparison, watch page, term and tool. */
+const exploreLinks: readonly NavMenuLink[] = [
+  { href: "/guides", label: "Guides", description: "Every watch party how-to" },
+  { href: "/compare", label: "Compare", description: "AniDachi vs other watch party apps" },
+  { href: "/watch", label: "Anime A–Z", description: "Watch a series or film with friends" },
+  { href: "/tools", label: "Free Anime Tools", description: "Schedules, filler lists, watch orders" },
+  { href: "/glossary", label: "Glossary", description: "Anime and watch party terms" },
+];
+
+const contactLinks: readonly NavMenuLink[] = [
+  { href: "/contact", label: "Contact", description: "Support, privacy, security, press" },
+  { href: "/feature-requests", label: "Feature Requests", description: "Suggest watchroom product ideas" },
+];
 
 function isWatchClusterPath(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -78,6 +84,8 @@ function isWatchClusterPath(pathname: string | null): boolean {
     pathname === "/watch-anime-together" ||
     pathname === "/watch-crunchyroll-together" ||
     pathname === "/watch-youtube-together" ||
+    pathname === "/netflix-watch-party" ||
+    pathname === "/discord-watch-party" ||
     pathname === "/anime-watch-party-toolkit" ||
     pathname === "/anime-watch-party" ||
     pathname.startsWith("/watch-crunchyroll-") ||
@@ -102,30 +110,36 @@ function isWatchClusterPath(pathname: string | null): boolean {
       pathname.includes("anime"));
 }
 
-function ContactNavMenu({
+function isExplorePath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return exploreLinks.some((link) => pathname === link.href) ||
+    pathname.startsWith("/glossary/") || pathname.startsWith("/tools/");
+}
+
+/**
+ * Dropdown for the desktop bar and a labelled group in the mobile drawer. The desktop
+ * panel stays in the HTML while closed (`hidden`), so crawlers can follow its links;
+ * `hidden` also keeps closed links out of the tab order and the accessibility tree.
+ */
+function NavMenu({
+  id,
+  label,
+  links,
+  active,
   variant,
   onNavigate,
 }: {
-  variant: "desktop" | "tablet" | "mobile";
+  id: string;
+  label: string;
+  links: readonly NavMenuLink[];
+  active: boolean;
+  variant: "desktop" | "mobile";
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLLIElement>(null);
-  const links = [
-    {
-      href: "/contact",
-      label: "Contact",
-      description: "Support, privacy, security, press",
-    },
-    {
-      href: "/feature-requests",
-      label: "Feature Requests",
-      description: "Suggest watchroom product ideas",
-    },
-  ] as const;
-  const active = pathname === "/contact" || pathname === "/feature-requests";
-  const menuId = "contact-menu";
+  const menuId = `${id}-menu`;
 
   useEffect(() => {
     if (variant === "mobile") return;
@@ -148,27 +162,23 @@ function ContactNavMenu({
   }, [open, variant]);
 
   if (variant === "mobile") {
+    const labelId = `mobile-${id}-nav-label`;
     return (
       <li>
         <p
-          id="mobile-contact-nav-label"
+          id={labelId}
           className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-ani-muted"
         >
-          Contact
+          {label}
         </p>
-        <ul
-          className="flex flex-col gap-1"
-          aria-labelledby="mobile-contact-nav-label"
-        >
+        <ul className="flex flex-col gap-1" aria-labelledby={labelId}>
           {links.map((link) => (
             <li key={link.href}>
               <Link
                 href={link.href}
                 className={cn(
                   "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-ani-hover hover:text-ani-text",
-                  pathname === link.href
-                    ? "text-ani-text"
-                    : "text-ani-muted",
+                  pathname === link.href ? "text-ani-text" : "text-ani-muted",
                 )}
                 onClick={onNavigate}
               >
@@ -200,168 +210,40 @@ function ContactNavMenu({
         onClick={() => setOpen((o) => !o)}
         onFocus={() => setOpen(true)}
       >
-        Contact
+        {label}
         <ChevronDown
           className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")}
           aria-hidden
         />
       </button>
-      {open ? (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label="Contact options"
-          className="absolute left-0 top-full z-[100] w-72 pt-2"
-        >
-          <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                role="menuitem"
-                className={cn(
-                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
-                  pathname === link.href &&
-                    "bg-ani-selected-quiet text-ani-text",
-                )}
-                onClick={() => {
-                  setOpen(false);
-                  onNavigate?.();
-                }}
-              >
-                <span className="text-sm font-semibold">{link.label}</span>
-                <span className="text-xs opacity-70">{link.description}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </li>
-  );
-}
-
-function WatchNavMenu({
-  variant,
-  onNavigate,
-}: {
-  variant: "desktop" | "tablet" | "mobile";
-  onNavigate?: () => void;
-}) {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLLIElement>(null);
-  const active = isWatchClusterPath(pathname);
-  const menuId = "watch-hubs-menu";
-
-  useEffect(() => {
-    if (variant === "mobile") return;
-    function onClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    if (open) document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open, variant]);
-
-  useEffect(() => {
-    if (!open || variant === "mobile") return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, variant]);
-
-  if (variant === "mobile") {
-    return (
-      <li>
-        <p
-          id="mobile-watch-nav-label"
-          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-ani-muted"
-        >
-          Watch
-        </p>
-        <ul
-          className="flex flex-col gap-1"
-          aria-labelledby="mobile-watch-nav-label"
-        >
-          {watchHubLinks.map((hub) => (
-            <li key={hub.href}>
-              <Link
-                href={hub.href}
-                className={cn(
-                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-ani-hover hover:text-ani-text",
-                  pathname === hub.href
-                    ? "text-ani-text"
-                    : "text-ani-muted",
-                )}
-                onClick={onNavigate}
-              >
-                {hub.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </li>
-    );
-  }
-
-  return (
-    <li
-      ref={ref}
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-        className={cn(
-          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-ani-text",
-          active || open ? "text-ani-text" : "text-ani-muted",
-        )}
-        onClick={() => setOpen((o) => !o)}
-        onFocus={() => setOpen(true)}
+      <div
+        id={menuId}
+        role="menu"
+        aria-label={`${label} links`}
+        hidden={!open}
+        className="absolute left-0 top-full z-[100] w-72 pt-2"
       >
-        Watch
-        <ChevronDown
-          className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")}
-          aria-hidden
-        />
-      </button>
-      {open ? (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label="Watch hubs"
-          className="absolute left-0 top-full z-[100] w-72 pt-2"
-        >
-          <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
-            {watchHubLinks.map((hub) => (
-              <Link
-                key={hub.href}
-                href={hub.href}
-                role="menuitem"
-                className={cn(
-                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
-                  pathname === hub.href &&
-                    "bg-ani-selected-quiet text-ani-text",
-                )}
-                onClick={() => {
-                  setOpen(false);
-                  onNavigate?.();
-                }}
-              >
-                <span className="text-sm font-semibold">{hub.label}</span>
-                <span className="text-xs opacity-70">{hub.description}</span>
-              </Link>
-            ))}
-          </div>
+        <div className="rounded-[20px] border border-ani-line bg-ani-panel p-2 shadow-[0_18px_60px_#0008]">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              role="menuitem"
+              className={cn(
+                "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-ani-hover hover:text-ani-text",
+                pathname === link.href && "bg-ani-selected-quiet text-ani-text",
+              )}
+              onClick={() => {
+                setOpen(false);
+                onNavigate?.();
+              }}
+            >
+              <span className="text-sm font-semibold">{link.label}</span>
+              <span className="text-xs opacity-70">{link.description}</span>
+            </Link>
+          ))}
         </div>
-      ) : null}
+      </div>
     </li>
   );
 }
@@ -442,8 +324,9 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                 Pricing
               </Link>
             </li>
-            <WatchNavMenu variant="desktop" />
-            <ContactNavMenu variant="desktop" />
+            <NavMenu id="watch" label="Watch" links={watchHubLinks} active={isWatchClusterPath(pathname)} variant="desktop" />
+            <NavMenu id="explore" label="Explore" links={exploreLinks} active={isExplorePath(pathname)} variant="desktop" />
+            <NavMenu id="contact" label="Contact" links={contactLinks} active={contactLinks.some((link) => link.href === pathname)} variant="desktop" />
             <li><JoinDiscordButton variant="nav" placement="nav" /></li>
             <li><NavPricingButton /></li>
             {!user && (
@@ -507,8 +390,9 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                   Pricing
                 </Link>
               </li>
-              <WatchNavMenu variant="mobile" onNavigate={() => setMenuOpen(false)} />
-              <ContactNavMenu variant="mobile" onNavigate={() => setMenuOpen(false)} />
+              <NavMenu id="watch" label="Watch" links={watchHubLinks} active={isWatchClusterPath(pathname)} variant="mobile" onNavigate={() => setMenuOpen(false)} />
+              <NavMenu id="explore" label="Explore" links={exploreLinks} active={isExplorePath(pathname)} variant="mobile" onNavigate={() => setMenuOpen(false)} />
+              <NavMenu id="contact" label="Contact" links={contactLinks} active={contactLinks.some((link) => link.href === pathname)} variant="mobile" onNavigate={() => setMenuOpen(false)} />
               <li>
                 <JoinDiscordButton variant="nav" placement="nav_mobile" touchTarget className="w-full" onClick={() => setMenuOpen(false)} />
               </li>

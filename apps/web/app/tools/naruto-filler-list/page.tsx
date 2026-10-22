@@ -61,7 +61,7 @@ export default function NarutoFillerListPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Anime filler", url: "/glossary/anime-filler" },
+          { name: "Tools", url: "/tools" },
           { name: "Naruto filler list", url },
         ]}
         title="Naruto filler list"

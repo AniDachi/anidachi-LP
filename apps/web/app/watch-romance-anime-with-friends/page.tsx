@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Romance Anime With Friends (2026)",
   description:
-    "The best romance anime to watch with friends on Crunchyroll — sync tearjerker moments live or catch up at your own pace with AniDachi. Your Lie in April, Toradora, Clannad, and more.",
+    "The best romance anime to watch with friends on Crunchyroll, synced live with AniDachi for every tearjerker. Your Lie in April, Toradora, Clannad and more.",
   alternates: { canonical: "/watch-romance-anime-with-friends" },
   openGraph: {
     images: [

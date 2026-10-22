@@ -22,7 +22,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "How to Watch YouTube With Friends (2026 Guide)",
   description:
-    "Step-by-step: how to watch YouTube with friends. Add AniDachi from the Chrome Web Store, open a full video, share a link — live sync. Free alternatives included.",
+    "How to watch YouTube with friends: add AniDachi from the Chrome Web Store, open a full video and share a link for live sync. Free alternatives included.",
   alternates: { canonical: "/guides/how-to-watch-youtube-with-friends" },
   openGraph: {
     images: [

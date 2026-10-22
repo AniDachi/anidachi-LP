@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Sub vs Dub — Which Audio Should a Watch Party Use?",
+  title: "Sub vs Dub: Which Audio for a Watch Party?",
   description:
     "Sub vs dub for a group: pick one Crunchyroll or YouTube version so reactions land together, then start an AniDachi watchroom.",
   alternates: { canonical: "/sub-vs-dub" },

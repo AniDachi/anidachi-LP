@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { WATCH_ENRICHMENT } from "@/lib/watch-page-enrichment";
+import { getWatchGenreHubs, getWatchRelated } from "@/lib/watch-related";
 import { animeList, isMovieEntry, type AnimeEntry } from "@/lib/anime-data";
 import { getMalIdForSlug } from "@/lib/anime-mal-ids";
 import {
@@ -51,8 +52,17 @@ function getPageLastModified(): string {
 /** The layout appends " | AniDachi"; keep the rendered title at 60 characters or less. */
 const TITLE_SUFFIX_LENGTH = " | AniDachi".length;
 
+/** Common short names, used in the title only when the full name won't fit in 60 characters. */
+const SHORT_TITLE_BY_SLUG: Record<string, string> = {
+  konosuba: "KonoSuba",
+  danmachi: "DanMachi",
+  "rascal-does-not-dream-of-bunny-girl-senpai": "Bunny Girl Senpai",
+};
+
 function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
-  const base = `Watch ${anime.title} with Friends`;
+  const fullName = `Watch ${anime.title} with Friends`;
+  const short = SHORT_TITLE_BY_SLUG[anime.slug];
+  const base = fullName.length > 60 && short ? `Watch ${short} with Friends` : fullName;
   const isLong =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
       `${episodesDisplay} ${anime.episodes}`
@@ -97,7 +107,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const titleTag = buildTitleTag(anime, episodesDisplay);
 
   return {
-    title: titleTag,
+    // Long anime names push "Watch … with Friends | AniDachi" past 60 characters;
+    // those pages drop the brand suffix instead of truncating the title.
+    title:
+      titleTag.length + TITLE_SUFFIX_LENGTH <= 60 ? titleTag : { absolute: titleTag },
     description: metaDescription,
     alternates: { canonical: `/watch/${rawSlug}` },
     openGraph: {
@@ -182,17 +195,19 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
     malId != null ? await fetchJikanForWatchPage(malId, anime.slug) : null;
   const jikan = jikanBundle?.jikanAnime ?? null;
   const fromJikan = resolveRelatedFromJikan(jikanBundle?.recs, anime.slug);
-  const relatedAnime =
+  const relatedPicks =
     fromJikan.length > 0
       ? fromJikan
       : (anime.related
           .map((s) => animeList.find((a) => a.slug === s))
           .filter(Boolean) as AnimeEntry[]);
+  const relatedAnime = getWatchRelated(anime, relatedPicks);
+  const genreHubs = getWatchGenreHubs(anime);
 
   const relatedSourceLabel =
     fromJikan.length > 0
-      ? "Picked from MyAnimeList recommendations (matched to our guides)."
-      : "Curated for fans of the same kind of show.";
+      ? "MyAnimeList recommendations first, then shows in the same genres."
+      : "Picked for fans of the same kind of show, then shows in the same genres.";
 
   const episodesDisplay =
     WATCH_ENRICHMENT[anime.slug]?.episodes ?? formatEpisodesForUi(jikan, anime.episodes);
@@ -261,7 +276,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Watch Anime Together", url: "/watch-anime-together" },
+        { name: "Anime A–Z", url: "/watch" },
         { name: anime.title, url: `/watch/${rawSlug}` },
       ]}
       title={`Watch ${anime.title} with Friends — ${anime.notOnCrunchyroll ? "Group Movie Night" : "Live Watchrooms"}`}
@@ -708,6 +723,20 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
               </li>
             ))}
           </ul>
+          {genreHubs.length > 0 ? (
+            <p className="text-foreground/80 mb-8">
+              More like this:{" "}
+              {genreHubs.map((hub, i) => (
+                <span key={hub.href}>
+                  {i > 0 ? " · " : null}
+                  <Link href={hub.href} className="text-brand-orange hover:underline">
+                    {hub.label}
+                  </Link>
+                </span>
+              ))}{" "}
+              · <Link href="/watch" className="text-brand-orange hover:underline">all anime A–Z</Link>
+            </p>
+          ) : null}
         </>
       )}
     </SeoPageLayout>

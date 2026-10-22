@@ -8,7 +8,7 @@ import { PRICING_PLUS_PRICE_LINE } from "@/lib/pricing-copy";
 export const metadata: Metadata = {
   title: "Watch Crunchyroll Together Long Distance (2026)",
   description:
-    "Short answer: Crunchyroll has no built-in watch party. Long-distance couples use AniDachi to sync Crunchyroll across devices, react in real time, and catch up on separate schedules without spoilers.",
+    "Crunchyroll has no built-in watch party. Long-distance couples use AniDachi to sync Crunchyroll in desktop Chrome and react to each episode in real time.",
   alternates: { canonical: "/watch-crunchyroll-together-long-distance" },
   openGraph: {
     images: [

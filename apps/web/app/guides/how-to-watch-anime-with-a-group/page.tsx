@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "How to Watch Anime With a Group — Host Tips for 2026",
+  title: "How to Watch Anime With a Group: Host Tips",
   description:
     "Watch anime together as a bigger crew with clear chat rules. Room caps, host duties, live session rules, and AniDachi watchrooms on Crunchyroll.",
   alternates: { canonical: "/guides/how-to-watch-anime-with-a-group" },

@@ -142,7 +142,7 @@ export const animeList: AnimeEntry[] = [
       "A spy, an assassin, and a telepathic child form a fake family — each hiding their true identity. Heartwarming comedy meets espionage action.",
     episodes: "37+ episodes across 2 seasons",
     genres: ["Comedy", "Action", "Slice of Life"],
-    related: ["kaguya-sama", "the-apothecary-diaries", "odd-taxi"],
+    related: ["kaguya-sama", "the-apothecary-diaries", "odd-taxi", "lycoris-recoil"],
   },
   {
     slug: "the-apothecary-diaries",
@@ -1441,7 +1441,7 @@ export const animeList: AnimeEntry[] = [
       "Three high-school girls form an anime club and turn wild ideas into storyboards and sets. Creative energy and absurd imagination make it perfect for groups that shout ideas at the screen and compare their own fan projects.",
     episodes: "12 episodes",
     genres: ["Comedy", "Slice of Life", "School"],
-    related: ["bocchi-the-rock", "k-on", "nichijou"],
+    related: ["bocchi-the-rock", "k-on", "nichijou", "hyouka"],
   },
   {
     slug: "kingdom",

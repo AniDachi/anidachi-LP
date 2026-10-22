@@ -223,3 +223,18 @@ for (const control of ["Account menu", "Close menu"]) {
     }
   });
 }
+
+test("closed desktop menus keep their hub links in the page but hidden until opened", async () => {
+  await mount(1280, false);
+  const hubs = ["/guides", "/compare", "/watch", "/tools", "/glossary", "/netflix-watch-party", "/discord-watch-party"];
+  for (const href of hubs) {
+    const link = container.querySelector<HTMLAnchorElement>(`a[href="${href}"]`);
+    assert.ok(link, `${href} is in the page for crawlers`);
+    assert.ok(link.closest("[hidden]"), `${href} stays hidden while its menu is closed`);
+  }
+  const explore = [...container.querySelectorAll<HTMLButtonElement>("button[aria-haspopup=menu]")].find((b) => b.textContent?.includes("Explore"));
+  assert.ok(explore);
+  await act(async () => explore.click());
+  assert.equal(explore.getAttribute("aria-expanded"), "true");
+  assert.equal(container.querySelector('a[href="/guides"]')!.closest("[hidden]"), null);
+});

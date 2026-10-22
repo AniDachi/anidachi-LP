@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Things to Do Long Distance — Activities That Fit a Call",
+  title: "Things to Do Long Distance: Activities for a Call",
   description:
     "Things to do long distance: cook, play, or watch one Crunchyroll episode or YouTube video together. Same ideas as long distance relationship activities.",
   alternates: { canonical: "/guides/things-to-do-long-distance" },

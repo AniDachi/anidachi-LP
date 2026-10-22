@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Action Anime With Friends (2026)",
   description:
-    "Watch action anime with friends on Crunchyroll with AniDachi — synced fight scenes, live chat, and reactions. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
+    "Watch action anime with friends on Crunchyroll: synced fight scenes, live chat and reactions. Attack on Titan, Demon Slayer, Jujutsu Kaisen and more.",
   alternates: { canonical: "/watch-action-anime-with-friends" },
   openGraph: {
     images: [

@@ -12,9 +12,9 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Teleparty Netflix — Watch a Netflix Title with Teleparty",
+  title: "Teleparty Netflix: Watch a Title With Teleparty",
   description:
-    "Teleparty on Netflix is the Chrome extension, formerly Netflix Party, syncing a Netflix title. Each person needs Netflix. AniDachi is a separate extension that also supports Netflix rooms.",
+    "Teleparty is the Chrome extension formerly called Netflix Party; it syncs a Netflix title and each person needs Netflix. AniDachi also supports Netflix.",
   alternates: { canonical: "/guides/teleparty-netflix" },
   openGraph: {
     title: "Teleparty Netflix",

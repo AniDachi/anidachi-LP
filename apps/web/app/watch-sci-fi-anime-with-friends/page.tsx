@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Sci-Fi Anime With Friends (2026)",
   description:
-    "Watch sci-fi anime with friends on Crunchyroll — sync mind-bending reveals live or catch up at your own pace with AniDachi. Steins;Gate, Vivy, Ghost in the Shell, and more.",
+    "Watch sci-fi anime with friends on Crunchyroll and sync every mind-bending reveal live with AniDachi. Steins;Gate, Vivy, Ghost in the Shell and more.",
   alternates: { canonical: "/watch-sci-fi-anime-with-friends" },
   openGraph: {
     images: [

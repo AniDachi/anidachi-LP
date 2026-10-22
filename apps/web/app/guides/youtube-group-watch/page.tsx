@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Group Watch — How to Watch YouTube Together (2026)",
+  title: "YouTube Group Watch: Watch YouTube Together",
   description:
     "YouTube group watch on desktop Chrome: run AniDachi watchrooms on full YouTube pages for synced playback and live chat.",
   alternates: { canonical: "/guides/youtube-group-watch" },

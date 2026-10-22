@@ -14,7 +14,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 export const metadata: Metadata = {
 	title: "Discord Go Live for a Watch Party",
 	description:
-		"Discord Go Live is screen share inside a voice call. Crunchyroll often goes black. Keep the call, and sync each person's own Crunchyroll, YouTube, or Netflix tab.",
+		"Discord Go Live is screen share in a voice call; Crunchyroll often goes black. Keep the call; sync each viewer's own Crunchyroll, YouTube or Netflix tab.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
 		title: "Discord Go Live for a Watch Party",

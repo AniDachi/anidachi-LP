@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "How to Watch Anime With Friends, Different Time Zones — 2026",
+  title: "Watch Anime With Friends in Different Time Zones",
   description:
     "The easiest way is AniDachi live watchrooms so friends in different time zones stay on the same story. Takes under 2 minutes to set up.",
   alternates: {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "How to Watch Anime With Friends, Different Time Zones — 2026",
+    title: "Watch Anime With Friends in Different Time Zones",
     description:
       "Keep global anime clubs social with live Crunchyroll watchrooms and clear chat rules.",
     url: "/guides/how-to-watch-anime-with-friends-in-different-time-zones",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
-    title: "How to Watch Anime With Friends, Different Time Zones — 2026",
+    title: "Watch Anime With Friends in Different Time Zones",
     description:
       "AniDachi live watchrooms help friends in different time zones watch the same anime without midnight calls.",
   },

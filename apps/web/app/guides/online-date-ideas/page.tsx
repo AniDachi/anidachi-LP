@@ -36,7 +36,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "Online Date Ideas — Two Computers, One Evening",
   description:
-    "Online date ideas from two computers: one call, one shared activity, and a stop time. A Crunchyroll episode or YouTube movie can be the activity, synced with AniDachi.",
+    "Online date ideas for two computers: one call, one shared activity and a stop time. A Crunchyroll episode or YouTube movie works, synced with AniDachi.",
   alternates: { canonical: "/guides/online-date-ideas" },
   openGraph: {
     title: "Online Date Ideas",

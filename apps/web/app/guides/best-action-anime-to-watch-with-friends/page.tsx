@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Action Anime to Watch With Friends (2026)",
   description:
-    "Best action anime for group watch parties on Crunchyroll — Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more. Synced fight scenes with spoiler-safe AniDachi watchrooms.",
+    "Best action anime to watch with friends on Crunchyroll: Attack on Titan, Demon Slayer, Jujutsu Kaisen and more, with synced fight scenes in AniDachi rooms.",
   alternates: { canonical: "/guides/best-action-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Action Anime to Watch With Friends — 2026",

@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Fantasy Anime to Watch With Friends (2026)",
   description:
-    "Best fantasy anime for group watch parties on Crunchyroll — isekai epics, dark fantasy, and world-building marathons with synced playback and live chat in AniDachi.",
+    "Best fantasy anime for Crunchyroll watch parties: isekai epics, dark fantasy and world-building marathons, with synced playback and chat in AniDachi.",
   alternates: { canonical: "/guides/best-fantasy-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Fantasy Anime to Watch With Friends — 2026",

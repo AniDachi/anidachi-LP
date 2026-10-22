@@ -12,7 +12,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
 export const metadata: Metadata = {
-  title: "Anime Checklist — Mark Titles You Actually Finished",
+  title: "Anime Checklist: Mark the Titles You Finished",
   description:
     "An anime checklist is the titles you mean to finish. Check one off when AniDachi has the episode from your Crunchyroll or YouTube player.",
   alternates: { canonical: "/guides/anime-checklist" },

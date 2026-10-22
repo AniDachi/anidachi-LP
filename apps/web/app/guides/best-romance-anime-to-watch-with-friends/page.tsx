@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Romance Anime to Watch With Friends (2026)",
   description:
-    "Best romance anime to watch with friends — Toradora, Your Name, Fruits Basket, Your Lie in April & 20+ more picks. Share reactions and track everyone's progress with AniDachi watchrooms.",
+    "Best romance anime to watch with friends: Toradora, Your Name, Fruits Basket, Your Lie in April and 20+ more picks to share reactions in AniDachi rooms.",
   alternates: {
     canonical: "/guides/best-romance-anime-to-watch-with-friends",
   },

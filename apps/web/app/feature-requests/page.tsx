@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/components/json-ld";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { FeatureRequestForm } from "@/components/feature-request-form";
 
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
 export default function FeatureRequestsPage() {
   return (
     <main id="main-content" className="min-h-screen bg-background">
+      <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Feature Requests", url: "/feature-requests" }]} />
       <article className="container mx-auto max-w-2xl px-4 py-14 lg:py-20">
         <div className="mb-8 flex items-center gap-3">
           <AnidachiLogo size={40} priority />

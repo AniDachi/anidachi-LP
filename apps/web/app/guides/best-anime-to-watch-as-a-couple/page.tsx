@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch as a Couple (2026) — 20 Date-Night Friendly Picks",
+  title: "Best Anime to Watch as a Couple: 20 Picks",
   description:
     "Romcoms, earnest dramas, and cozy adventures that spark conversation—each with a dedicated AniDachi watch page on Crunchyroll.",
   alternates: { canonical: "/guides/best-anime-to-watch-as-a-couple" },

@@ -5,9 +5,9 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { PRICING_COMPARE_OVERVIEW, PRICING_PRICE_TABLE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "How to Watch Movies & TV Together Long Distance (2026)",
+  title: "How to Watch Movies & TV Together Long Distance",
   description:
-    "Watching movies and TV shows together long distance: Teleparty (Netflix), Rave (multi-platform), press-play-together, and AniDachi for Crunchyroll anime — compared by use case.",
+    "Watch movies and TV together long distance: Teleparty for Netflix, Rave for multiple platforms, press-play-together, and AniDachi for Crunchyroll anime.",
   alternates: { canonical: "/watch-movies-together-long-distance" },
   openGraph: {
     images: [

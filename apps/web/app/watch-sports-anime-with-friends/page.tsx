@@ -6,7 +6,7 @@ import { getAnimeByGenre } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Sports Anime With Friends (2026)",
   description:
-    "Watch sports anime match nights with friends on Crunchyroll — sync every comeback live or catch up at your own pace with AniDachi. Haikyuu, Kuroko's Basketball, Ping Pong, and more.",
+    "Watch sports anime match nights with friends on Crunchyroll and sync every comeback live with AniDachi. Haikyuu, Kuroko's Basketball, Ping Pong and more.",
   alternates: { canonical: "/watch-sports-anime-with-friends" },
   openGraph: {
     images: [

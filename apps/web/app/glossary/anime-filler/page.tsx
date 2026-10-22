@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is Anime Filler? — Anime Watch Party Glossary (2026)",
+  title: "What Is Filler Anime? Meaning & How to Skip It",
   description:
-    "Anime filler is content not adapted from the original manga — non-canon episodes added to avoid catching up with the source material. Learn how to skip filler when watching with friends.",
+    "Anime filler is non-canon content not adapted from the manga, added so the show doesn't overtake its source. How to skip filler when watching with friends.",
   alternates: { canonical: "/glossary/anime-filler" },
   openGraph: {
     images: [

@@ -22,7 +22,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party Chrome Extension (2026)",
   description:
-    "Best YouTube watch party Chrome extension for 2026: AniDachi syncs full youtube.com/watch pages with live chat. Install from the official Chrome Web Store listing via /extension.",
+    "AniDachi is a YouTube watch party Chrome extension that syncs full youtube.com/watch pages with live chat. Install it from the official Chrome Web Store.",
   alternates: {
     canonical: "/guides/youtube-watch-party-chrome-extension",
   },

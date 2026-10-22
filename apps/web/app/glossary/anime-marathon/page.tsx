@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is an Anime Marathon? Meaning & Group Watch Tips (2026)",
+  title: "Anime Marathon: Meaning and Group Watch Tips",
   description:
     "An anime marathon means watching many episodes or a whole series in one sitting. What it means, how to run one with friends, and which anime to marathon.",
   alternates: { canonical: "/glossary/anime-marathon" },

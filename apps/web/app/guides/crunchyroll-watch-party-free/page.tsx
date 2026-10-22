@@ -23,9 +23,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Free Crunchyroll Watch Party — Free Tier Options (2026)",
+  title: "Free Crunchyroll Watch Party Options",
   description:
-    "Compare free Crunchyroll watch party options. AniDachi guests join free; hosts need Plus or Pro, including an active trial. Compare Crunchyroll Party and Discord.",
+    "Free Crunchyroll watch party options. AniDachi guests join free; hosts need Plus or Pro, including a trial. Covers Crunchyroll Party and Discord too.",
   alternates: { canonical: "/guides/crunchyroll-watch-party-free" },
   openGraph: {
     title: "Free Crunchyroll Watch Party Options",

@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Crunchyroll Party vs Teleparty for Anime (2026) — Which Extension Wins?",
+  title: "Crunchyroll Party vs Teleparty for Anime",
   description:
     "Crunchyroll Party vs Teleparty for anime watch parties: sync quality, Crunchyroll focus, free tiers, and when to consider AniDachi's live rooms.",
   alternates: { canonical: "/compare/crunchyroll-party-vs-teleparty-for-anime" },

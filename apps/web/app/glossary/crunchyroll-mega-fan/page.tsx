@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "What Is Crunchyroll Mega Fan? — Glossary for Watch Parties (2026)",
+  title: "What Is Crunchyroll Mega Fan? Tier Explained",
   description:
     "Plain-language primer on Crunchyroll’s Mega Fan subscription tier—what it affects for multi-device watchers and how watch party tools plug in afterward.",
   alternates: { canonical: "/glossary/crunchyroll-mega-fan" },

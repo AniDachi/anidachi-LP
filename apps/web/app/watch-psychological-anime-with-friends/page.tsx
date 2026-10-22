@@ -7,7 +7,7 @@ import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 export const metadata: Metadata = {
   title: "Watch Psychological Anime With Friends (2026)",
   description:
-    "Watch psychological anime twists with friends in real-time using AniDachi on Crunchyroll. Synced reveals and live chat. Async catch-up is planned. Death Note, Paranoia Agent, Psycho-Pass, and more.",
+    "Watch psychological anime twists with friends in real time with AniDachi on Crunchyroll: synced reveals and live chat for Death Note, Psycho-Pass and more.",
   alternates: { canonical: "/watch-psychological-anime-with-friends" },
   openGraph: {
     images: [

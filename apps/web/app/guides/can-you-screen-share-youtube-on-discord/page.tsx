@@ -22,9 +22,9 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Can You Screen Share YouTube on Discord? Better Sync (2026)",
+  title: "Can You Screen Share YouTube on Discord?",
   description:
-    "Can you screen share YouTube on Discord? Yes — but sync a YouTube watch party instead. Keep Discord for voice; AniDachi aligns full watch pages. Start from /extension.",
+    "Yes, you can screen share YouTube on Discord. For a watch party, keep Discord for voice and let AniDachi sync full YouTube watch pages instead.",
   alternates: {
     canonical: "/guides/can-you-screen-share-youtube-on-discord",
   },

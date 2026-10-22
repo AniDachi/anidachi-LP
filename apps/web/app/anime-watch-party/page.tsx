@@ -14,7 +14,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Anime Watch Party — Host on Crunchyroll With Friends (2026)",
+  title: "Anime Watch Party on Crunchyroll With Friends",
   description:
     "Start a live anime watch party on Crunchyroll with AniDachi. A Plus, Pro, or trial host invites Free friends for synced playback, chat, and reactions.",
   alternates: { canonical: "/anime-watch-party" },

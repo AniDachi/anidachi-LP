@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Best Sci-Fi Anime to Watch With Friends (2026)",
   description:
-    "Best sci-fi anime for group watch parties on Crunchyroll — time travel, mecha, cyberpunk, and space opera. AniDachi watchrooms with synced playback and theory-friendly chat.",
+    "Best sci-fi anime for group watch parties on Crunchyroll: time travel, mecha, cyberpunk, and space opera, with AniDachi synced playback and live chat.",
   alternates: { canonical: "/guides/best-sci-fi-anime-to-watch-with-friends" },
   openGraph: {
     title: "Best Sci-Fi Anime to Watch With Friends — 2026",

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "How to Watch Netflix Together Long Distance (2026)",
+  title: "How to Watch Netflix Together Long Distance",
   description:
     "Watch Netflix together long distance with AniDachi in desktop Chrome. Sync the same title on your own accounts with chat, reactions, and calls.",
   alternates: { canonical: "/watch-netflix-together-long-distance" },

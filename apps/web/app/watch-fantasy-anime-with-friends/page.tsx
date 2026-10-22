@@ -7,7 +7,7 @@ import { PRICING_ROOM_SIZE_RANGE } from "@/lib/pricing-copy";
 export const metadata: Metadata = {
   title: "Watch Fantasy Anime With Friends (2026)",
   description:
-    "AniDachi lets you watch fantasy anime with friends on Crunchyroll in live sync. Share every world-building reveal with your group. Frieren, Hunter x Hunter, Made in Abyss, and more.",
+    "Watch fantasy anime with friends on Crunchyroll in live sync with AniDachi. Share each world-building reveal in Frieren, Made in Abyss and more.",
   alternates: { canonical: "/watch-fantasy-anime-with-friends" },
   openGraph: {
     images: [

@@ -6,7 +6,7 @@ import { animeList, getAnimeByGenre, type AnimeEntry } from "@/lib/anime-data";
 export const metadata: Metadata = {
   title: "Watch Shonen Anime With Friends (2026)",
   description:
-    "Watch shonen anime with friends on Crunchyroll — Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter, and more. Live rooms with synced playback, chat, and reactions.",
+    "Watch shonen anime with friends on Crunchyroll: Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter and more in live rooms with synced play and chat.",
   alternates: { canonical: "/watch-shonen-anime-with-friends" },
   openGraph: {
     images: [

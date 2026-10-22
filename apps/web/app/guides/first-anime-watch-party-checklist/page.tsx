@@ -11,7 +11,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "First Anime Watch Party Checklist — Before You Press Play (2026)",
+  title: "First Anime Watch Party Checklist",
   description:
     "A practical prep list for your first Crunchyroll watch party: accounts, pacing, etiquette, and how to start a watchroom without awkward spoilers.",
   alternates: { canonical: "/guides/first-anime-watch-party-checklist" },

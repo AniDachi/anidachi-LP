@@ -16,7 +16,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Watch2Gether Alternatives for YouTube (2026)",
   description:
-    "Best Watch2Gether alternatives for YouTube: AniDachi for live extension watchrooms, Teleparty for multi-platform live sync, Discord for voice. Honest free-tier notes.",
+    "Watch2Gether alternatives for YouTube: AniDachi for live extension watchrooms, Teleparty for multi-platform sync, Discord for voice, with free-tier notes.",
   alternates: {
     canonical: "/guides/watch2gether-alternatives-for-youtube",
   },

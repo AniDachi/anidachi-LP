@@ -10,7 +10,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Group Watch Onboarding — Accounts, Roles & First Session",
+  title: "Group Watch Onboarding: Accounts & Roles",
   description:
     "Onboard a Discord crew or IRL friend group to Crunchyroll watch parties: who pays for what, how to assign a host, and when to switch from screen share.",
   alternates: { canonical: "/resources/group-watch-onboarding" },

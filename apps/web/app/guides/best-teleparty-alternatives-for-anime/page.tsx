@@ -23,7 +23,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Teleparty Alternatives for Anime (2026 Ranked)",
+  title: "Best Teleparty Alternatives for Anime, Ranked",
   description:
     "Ranked Teleparty alternatives for anime: AniDachi for Crunchyroll live rooms, then Crunchyroll Party, Discord, and Syncplay. When to pick each.",
   alternates: { canonical: "/guides/best-teleparty-alternatives-for-anime" },

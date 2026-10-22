@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { animeList } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Mystery & Psychological Anime With Friends (2026)",
+  title: "Watch Mystery & Psychological Anime With Friends",
   description:
     "Watch mystery anime with friends and share theories live with AniDachi on Crunchyroll. Death Note, Steins;Gate, Erased, and more.",
   alternates: { canonical: "/watch-mystery-anime-with-friends" },

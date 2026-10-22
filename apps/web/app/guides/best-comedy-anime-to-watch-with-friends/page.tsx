@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Comedy Anime to Watch With Friends (2026) — 12 Funny Picks",
+  title: "Best Comedy Anime to Watch With Friends: 12 Picks",
   description:
     "The funniest anime to watch with friends on Crunchyroll — KonoSuba, Spy x Family, Gintama & more. Reaction-heavy comedy that needs a synced watchroom crowd.",
   alternates: { canonical: "/guides/best-comedy-anime-to-watch-with-friends" },

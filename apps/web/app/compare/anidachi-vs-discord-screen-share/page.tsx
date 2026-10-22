@@ -20,7 +20,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Don't Screen Share Crunchyroll on Discord — Watch in Sync Instead",
+  title: "Don't Screen Share Crunchyroll on Discord",
   description:
     "Discord black-screens Crunchyroll. AniDachi lets everyone stream full quality on their own tab while you keep Discord for voice.",
   alternates: { canonical: "/compare/anidachi-vs-discord-screen-share" },

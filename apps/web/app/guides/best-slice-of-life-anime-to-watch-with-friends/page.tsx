@@ -8,14 +8,14 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Slice of Life Anime to Watch With Friends (2026)",
+  title: "Best Slice of Life Anime to Watch With Friends",
   description:
     "Best slice of life anime to watch with friends — Bocchi the Rock, K-On!, Horimiya & more. Cozy watch parties synced perfectly with AniDachi.",
   alternates: {
     canonical: "/guides/best-slice-of-life-anime-to-watch-with-friends",
   },
   openGraph: {
-    title: "Best Slice of Life Anime to Watch With Friends (2026)",
+    title: "Best Slice of Life Anime to Watch With Friends",
     description:
       "Bocchi the Rock, K-On!, Horimiya, March Comes in Like a Lion & more — cozy, feel-good anime for a relaxed group watch party.",
     url: "/guides/best-slice-of-life-anime-to-watch-with-friends",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Slice of Life Anime to Watch With Friends (2026)",
+    title: "Best Slice of Life Anime to Watch With Friends",
     description:
       "Bocchi the Rock, K-On!, Horimiya & more — cozy anime for a relaxed group watch party with AniDachi.",
     images: [BRAND_OG_PATH],

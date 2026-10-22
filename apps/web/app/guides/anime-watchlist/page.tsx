@@ -34,9 +34,9 @@ const howToSteps = [
 ];
 
 export const metadata: Metadata = {
-  title: "Anime Watchlist — My Anime Watchlist, Then Press Play",
+  title: "Anime Watchlist: Plan It, Then Press Play",
   description:
-    "Build an anime watchlist of titles you plan to start. My anime watchlist stays personal. AniDachi records the Crunchyroll episode or YouTube video only after you play it.",
+    "Build an anime watchlist of titles you plan to start. It stays personal. AniDachi records the Crunchyroll episode or YouTube video only after you play it.",
   alternates: { canonical: "/guides/anime-watchlist" },
   openGraph: {
     title: "Anime Watchlist",

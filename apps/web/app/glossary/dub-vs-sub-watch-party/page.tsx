@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "Dub vs Sub for Anime Watch Parties — Which Is Better? (2026)",
+  title: "Dub vs Sub for Anime Watch Parties: Which Wins?",
   description:
     "Should your anime watch party use dubbed or subbed episodes? Pros and cons of each for group watching, plus tips for mixed-preference groups.",
   alternates: { canonical: "/glossary/dub-vs-sub-watch-party" },

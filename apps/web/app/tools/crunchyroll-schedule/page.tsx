@@ -103,7 +103,7 @@ export default function CrunchyrollSchedulePage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Crunchyroll watch party", url: "/watch-crunchyroll-together" },
+          { name: "Tools", url: "/tools" },
           { name: "Crunchyroll release schedule", url },
         ]}
         title="Crunchyroll release schedule & simulcast calendar"
