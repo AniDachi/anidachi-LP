@@ -3,13 +3,13 @@ import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { FooterPricingCta } from "@/components/footer-pricing-cta";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
-/** Section index pages: every guide, comparison, watch page, term and tool. */
-const BROWSE_LINKS = [
-  { href: "/guides", label: "All guides" },
-  { href: "/compare", label: "Comparisons" },
+/** Section index pages: the paths to every guide, comparison, watch page, tool and term. */
+const EXPLORE_LINKS = [
+  { href: "/guides", label: "All Guides" },
+  { href: "/compare", label: "Compare Watch Party Apps" },
   { href: "/watch", label: "Anime A–Z" },
+  { href: "/tools", label: "Free Anime Tools" },
   { href: "/glossary", label: "Glossary" },
-  { href: "/tools", label: "Free anime tools" },
 ] as const;
 
 export function Footer() {
@@ -80,9 +80,12 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
-            <h4 className="font-semibold mt-8 mb-4 text-sm">Browse</h4>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4 text-sm">Explore</h4>
             <ul className="space-y-2 text-ani-muted text-sm">
-              {BROWSE_LINKS.map((link) => (
+              {EXPLORE_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="hover:text-ani-text transition-colors">
                     {link.label}
@@ -336,10 +339,7 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-sm">Social</h4>
+            <h4 className="font-semibold mt-8 mb-4 text-sm">Social</h4>
             <ul className="space-y-2 text-ani-muted text-sm">
               {PUBLIC_SOCIAL_LINKS.map((link) => (
                 <li key={link.href}>
