@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { WATCH_ENRICHMENT } from "@/lib/watch-page-enrichment";
+import { getWatchGenreHubs, getWatchRelated } from "@/lib/watch-related";
 import { animeList, isMovieEntry, type AnimeEntry } from "@/lib/anime-data";
 import { getMalIdForSlug } from "@/lib/anime-mal-ids";
 import {
@@ -194,17 +195,19 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
     malId != null ? await fetchJikanForWatchPage(malId, anime.slug) : null;
   const jikan = jikanBundle?.jikanAnime ?? null;
   const fromJikan = resolveRelatedFromJikan(jikanBundle?.recs, anime.slug);
-  const relatedAnime =
+  const relatedPicks =
     fromJikan.length > 0
       ? fromJikan
       : (anime.related
           .map((s) => animeList.find((a) => a.slug === s))
           .filter(Boolean) as AnimeEntry[]);
+  const relatedAnime = getWatchRelated(anime, relatedPicks);
+  const genreHubs = getWatchGenreHubs(anime);
 
   const relatedSourceLabel =
     fromJikan.length > 0
-      ? "Picked from MyAnimeList recommendations (matched to our guides)."
-      : "Curated for fans of the same kind of show.";
+      ? "MyAnimeList recommendations first, then shows in the same genres."
+      : "Picked for fans of the same kind of show, then shows in the same genres.";
 
   const episodesDisplay =
     WATCH_ENRICHMENT[anime.slug]?.episodes ?? formatEpisodesForUi(jikan, anime.episodes);
@@ -720,6 +723,20 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
               </li>
             ))}
           </ul>
+          {genreHubs.length > 0 ? (
+            <p className="text-foreground/80 mb-8">
+              More like this:{" "}
+              {genreHubs.map((hub, i) => (
+                <span key={hub.href}>
+                  {i > 0 ? " · " : null}
+                  <Link href={hub.href} className="text-brand-orange hover:underline">
+                    {hub.label}
+                  </Link>
+                </span>
+              ))}{" "}
+              · <Link href="/watch" className="text-brand-orange hover:underline">all anime A–Z</Link>
+            </p>
+          ) : null}
         </>
       )}
     </SeoPageLayout>
