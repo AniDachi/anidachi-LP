@@ -55,7 +55,13 @@ export function BillingPreview() {
 	const isCardless = variant !== "Card trial";
 	const enabled = variant === "Renewal enabled";
 	const ended = variant === "Trial ended";
-	const paid = ["Paid", "Paid yearly", "Renewal off"].includes(variant);
+	const paid = [
+		"Paid",
+		"Paid yearly",
+		"Renewal off",
+		"Product Hunt",
+		"Discount ending",
+	].includes(variant);
 	const pending = variant === "Setup pending";
 	const processing = variant === "Payment processing";
 	const paymentRequired = variant === "Payment failed";
@@ -71,7 +77,28 @@ export function BillingPreview() {
 						canChangeTrialPlan: false,
 						canCancel: variant !== "Renewal off",
 						canRestoreRenewal: variant === "Renewal off",
-						canSwitchToYearly: variant !== "Paid yearly",
+						canSwitchToYearly: ![
+							"Paid yearly",
+							"Product Hunt",
+							"Discount ending",
+						].includes(variant),
+						...(["Product Hunt", "Discount ending"].includes(variant)
+							? {
+									promotion: {
+										state: "active" as const,
+										percentOff: 40,
+										endsAt:
+											variant === "Discount ending"
+												? "2030-02-04T16:00:00Z"
+												: "2030-04-04T16:00:00Z",
+										nextPrice: {
+											unitAmount: variant === "Discount ending" ? 799 : 479,
+											currency: "usd",
+											billingPeriod: "monthly" as const,
+										},
+									},
+								}
+							: {}),
 						cancelAtPeriodEnd: variant === "Renewal off",
 						price: {
 							...PUBLISHED_PRICING[
@@ -256,6 +283,8 @@ export function BillingPreview() {
 						"Renewal enabled",
 						"Trial ended",
 						"Paid",
+						"Product Hunt",
+						"Discount ending",
 						"Renewal off",
 						"Paid yearly",
 						"Setup pending",

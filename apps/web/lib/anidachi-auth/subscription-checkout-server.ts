@@ -3,6 +3,7 @@ import { resolveAccountEntitlements } from "./account-entitlements";
 import { readBillingPrice } from "./billing-price";
 import { db, getBillingCustomerByUserId } from "./db";
 import { getPricingOffer } from "./pricing-offer";
+import { provisionProductHuntPromotion } from "./product-hunt-promo-server";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 import {
 	createSubscriptionCheckoutService,
@@ -17,6 +18,8 @@ export function subscriptionCheckoutService(
 ) {
 	return createSubscriptionCheckoutService({
 		stripe,
+		ensurePromotion: (userId, customerId) =>
+			provisionProductHuntPromotion(stripe, userId, customerId),
 		async readReservation(userId) {
 			const { data, error } = await db()
 				.from("subscription_checkout_reservations")

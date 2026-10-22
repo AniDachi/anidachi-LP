@@ -99,6 +99,43 @@ afterEach(async () => {
 	actions.length = 0;
 });
 
+test("discounted subscription shows the next charge and explains when yearly billing returns", async () => {
+	await mount(
+		{
+			...subscription,
+			canSwitchToYearly: false,
+			promotion: {
+				state: "active",
+				percentOff: 40,
+				endsAt: "2030-04-04T16:00:00Z",
+				nextPrice: {
+					unitAmount: 479,
+					currency: "usd",
+					billingPeriod: "monthly",
+				},
+			},
+		},
+		"plus",
+	);
+	const card = container.querySelector(".billing-summary-card")!;
+	assert.match(card.textContent!, /\$4\.79/);
+	assert.match(card.textContent!, /40% off.*Then \$7\.99/);
+	await act(async () => card.querySelector("button")!.click());
+	assert.match(
+		container.textContent!,
+		/Yearly billing is available after your discount ends/,
+	);
+	assert.doesNotMatch(container.textContent!, /Switch to yearly billing/);
+});
+
+test("unverified campaign billing hides the amount without hiding the paid account", async () => {
+	await mount({ ...subscription, promotion: { state: "unavailable" } }, "plus");
+	const card = container.querySelector(".billing-summary-card")!;
+	assert.match(card.textContent!, /Active subscription/);
+	assert.match(card.textContent!, /Amount unavailable/);
+	assert.match(card.textContent!, /Refresh to check your discount/);
+});
+
 for (const [status, expected] of [
 	["past_due", "Payment overdue"],
 	["unpaid", "Unpaid"],

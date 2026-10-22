@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import type { BillingPeriod, MonthlyPrice } from "../billing-view";
 import type { PaidPlanCode } from "./plan-entitlements";
+import { CHECKOUT_PROMOTION_POLICY } from "./product-hunt-promo";
 
 export type CheckoutReservation = {
 	user_id: string;
@@ -37,6 +38,7 @@ export type CheckoutResult = {
 	trialOffered: boolean;
 };
 export type CheckoutDeps = {
+	ensurePromotion?: (userId: string, customerId: string) => Promise<void>;
 	readReservation?: (userId: string) => Promise<CheckoutReservation | null>;
 	stripe: Stripe;
 	offer?: (
@@ -165,6 +167,20 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				"Use the trial renewal controls to confirm or cancel payment after your trial.",
 				409,
 			);
+		if (deps.ensurePromotion) {
+			const configs = await stripe.billingPortal.configurations.list(
+				{ is_default: true, active: true, limit: 2 },
+				REQUEST,
+			);
+			if (
+				configs.has_more ||
+				configs.data.length !== 1 ||
+				configs.data[0].features.subscription_update.enabled
+			)
+				throw new SubscriptionCheckoutError(
+					"Billing management configuration unavailable.",
+				);
+		}
 		const session = await stripe.billingPortal.sessions.create(
 			{ customer: customerId, return_url: input.origin + "/account/billing" },
 			REQUEST,
@@ -258,7 +274,10 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 		for (const previous of open.data) {
 			if (
 				previous.mode !== "subscription" ||
-				previous.metadata?.checkoutReservationId
+				(previous.metadata?.checkoutReservationId &&
+					(!deps.ensurePromotion ||
+						previous.metadata.checkoutPromotionPolicy ===
+							CHECKOUT_PROMOTION_POLICY))
 			)
 				continue;
 			const outcome = await expireAndRead(previous, customerId, input.userId);
@@ -366,7 +385,11 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 							(["monthly", "yearly"].includes(r.attribution.billingPeriod)
 								? `?billing=${r.attribution.billingPeriod}`
 								: ""),
-						allow_promotion_codes: true,
+						allow_promotion_codes:
+							r.attribution.checkoutPromotionPolicy ===
+							CHECKOUT_PROMOTION_POLICY
+								? !r.trial_offered && r.attribution.billingPeriod === "monthly"
+								: true,
 						billing_address_collection: "required",
 						metadata,
 						subscription_data: {
@@ -459,6 +482,15 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 		async prepareSubscriptionCheckout(
 			input: CheckoutInput,
 		): Promise<CheckoutResult> {
+			if (deps.ensurePromotion)
+				input = {
+					...input,
+					attribution: {
+						...input.attribution,
+						checkoutPromotionPolicy: CHECKOUT_PROMOTION_POLICY,
+						billingPeriod: input.billingPeriod ?? "monthly",
+					},
+				};
 			let cardlessPolicy = false;
 			if (deps.offer) {
 				const current = await deps.offer(
@@ -536,6 +568,9 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				const customerId = customer.stripe_customer_id;
 				const access = await deps.access(input.userId);
 				const matches =
+					(!deps.ensurePromotion ||
+						r.attribution.checkoutPromotionPolicy ===
+							CHECKOUT_PROMOTION_POLICY) &&
 					r.plan_code === input.planCode &&
 					r.price_id === input.priceId &&
 					r.origin === input.origin &&
@@ -599,6 +634,12 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 						"Previous checkout is still open. Please retry.",
 					);
 				}
+				if (
+					deps.ensurePromotion &&
+					!r.trial_offered &&
+					r.attribution.billingPeriod === "monthly"
+				)
+					await deps.ensurePromotion(input.userId, customerId);
 				return {
 					kind: "checkout",
 					sessionId: session.id,
