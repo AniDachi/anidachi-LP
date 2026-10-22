@@ -57,7 +57,7 @@ node:test. Specification: the approved conversation and constraints above.
       annual protection, expiry and failed payment recovery in Sandbox.
 - [x] Verify account billing doesn't claim list price is a discounted next charge.
 - [x] Run full web check/tests, dev:check and independent branch review.
-- [ ] Update domain/runbook docs and Graphify using the safe adapter.
+- [x] Update domain/runbook docs; attempt Graphify using the safe adapter.
 - [ ] Deliver additive schema before runtime through staging PRs and verify deployment.
 - [ ] Report remaining human acceptance; do not activate LIVE.
 
@@ -90,6 +90,14 @@ node:test. Specification: the approved conversation and constraints above.
   same invoice is paid for $4.79 with the original discount and one redemption.
   Hosted Checkout accepts ANIHUNT40 and displays 40% off for 3 months.
 - Schema-only staging PR: https://github.com/AniDachi/anidachi-LP/pull/464.
+- Schema PR merged as `9e7ffcd0`; staging migration workflow `39785790897`
+  succeeded. Read-only verification confirms table/function/version, enabled
+  RLS, no browser grants and no direct service-role write grants.
+- Graphify semantic extraction completed for both changed documents. The safe
+  publisher stopped on pre-existing pending AST input `storage (wxt/utils/storage)`
+  before publishing; all three shared graph artifacts remain unchanged. This
+  tooling exception does not waive source review or billing tests. Repair the
+  graph adapter separately rather than publish an incomplete graph.
 
 ## Deployment order and acceptance
 
