@@ -47,7 +47,14 @@ export function formatBillingTime(value: string, timeZone?: string): string {
 	});
 }
 
+export type BillingPromotion = {
+	state: "active" | "unavailable";
+	percentOff?: number;
+	endsAt?: string;
+	nextPrice?: BillingPrice;
+};
 export type BillingSubscription = {
+	promotion?: BillingPromotion;
 	id: string;
 	planCode: PlanCode;
 	status: string;
@@ -91,6 +98,8 @@ export function billingDisplayValidityMs(
 	if (overview.planCode !== "free" && overview.selectedPlanExpiresAt)
 		deadlines.push(Date.parse(overview.selectedPlanExpiresAt));
 	for (const subscription of overview.subscriptions) {
+		if (subscription.promotion?.endsAt)
+			deadlines.push(Date.parse(subscription.promotion.endsAt));
 		if (subscription.canRestoreRenewal)
 			deadlines.push(Date.parse(subscription.currentPeriodEnd ?? ""));
 		if (subscription.trial?.stage === "trial")

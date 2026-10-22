@@ -5,6 +5,7 @@ import {
 	type CheckoutReservation,
 	createSubscriptionCheckoutService,
 	parseCheckoutReservation,
+	type CheckoutDeps,
 } from "./subscription-trial";
 
 const input = {
@@ -23,6 +24,7 @@ function fixture(
 		action: trial ? "trial" : "subscribe",
 		price: { unitAmount: 799, currency: "usd" },
 	}),
+	promotionDeps: Partial<CheckoutDeps> = {},
 ) {
 	let clock = now;
 	let reserved = false;
@@ -127,12 +129,15 @@ function fixture(
 		},
 	} as unknown as Stripe;
 	const service = createSubscriptionCheckoutService({
+		...promotionDeps,
 		stripe,
 		readReservation: async () => (reserved ? reservation : null),
 		offer: readOffer,
 		now: () => clock,
 		reserve: async (next) => {
 			if (!reserved) {
+				if (promotionDeps.ensurePromotion)
+					reservation.attribution = next.attribution;
 				reservation.created_at = new Date(
 					Date.parse(reservation.created_at) + clock - now,
 				).toISOString();
@@ -744,4 +749,67 @@ test("cardless transition recovers an unknown old create with its original key b
 	assert.equal(f.reservation.state, "expired");
 	assert.equal(f.createdRequests[0].key, f.createdRequests[1].key);
 	assert.deepEqual(f.createdRequests[0].params, f.createdRequests[1].params);
+});
+
+test("monthly purchase provisions the account code; annual and trial never do", async () => {
+	for (const [period, trial] of [
+		["monthly", false],
+		["yearly", false],
+		["monthly", true],
+	] as const) {
+		const claims: unknown[] = [];
+		const f = fixture(trial, undefined, {
+			ensurePromotion: async (...args) => {
+				claims.push(args);
+			},
+		});
+		await f.service.prepareSubscriptionCheckout({
+			...input,
+			billingPeriod: period,
+			attribution: {
+				checkoutPromotionPolicy: "forged",
+				billingPeriod: "monthly",
+			},
+		});
+		assert.equal(
+			f.params?.allow_promotion_codes,
+			period === "monthly" && !trial,
+		);
+		assert.equal(
+			f.params?.metadata?.checkoutPromotionPolicy,
+			"monthly_purchase_v1",
+		);
+		assert.equal(f.params?.metadata?.billingPeriod, period);
+		assert.equal(claims.length, period === "monthly" && !trial ? 1 : 0);
+	}
+});
+
+test("promotion availability cannot change frozen Checkout parameters on a lost-response retry", async () => {
+	let claims = 0;
+	const f = fixture(false, undefined, {
+		ensurePromotion: async () => {
+			claims++;
+		},
+	});
+	f.loseResponse();
+	await assert.rejects(f.service.prepareSubscriptionCheckout(input));
+	await f.service.prepareSubscriptionCheckout(input);
+	assert.deepEqual(f.createdRequests[0], f.createdRequests[1]);
+	assert.equal(claims, 1);
+});
+
+test("legacy reserved annual sessions are recovered with original terms then expired before a code is exposed", async () => {
+	const f = fixture(false, undefined, {
+		ensurePromotion: async () => {
+			assert.ok(f.expiredSessions.includes("cs_new"));
+		},
+	});
+	// Simulate an already reserved session from a pre-campaign deployment.
+	f.reservation.attribution = { billingPeriod: "yearly" };
+	f.reservation.price_id = "price_year";
+	f.reservation.stripe_session_id = "cs_new";
+	f.reservation.state = "open";
+	await f.service.prepareSubscriptionCheckout(input);
+	assert.ok(f.expiredSessions.includes("cs_new"));
+	assert.equal(f.params?.allow_promotion_codes, true);
 });

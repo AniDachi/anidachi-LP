@@ -104,6 +104,7 @@ test("billing rejects another owner's trial ledger", async () => {
 function fixture(
 	options: {
 		rows?: SubscriptionRow[];
+		promotion?: import("../billing-view").BillingPromotion;
 		customerOwner?: string;
 		customerId?: string;
 		syncResult?: StripeSubscriptionSyncResult;
@@ -172,6 +173,8 @@ function fixture(
 		},
 	} as unknown as Stripe;
 	const service = createBillingService({
+		readPromotions: async () =>
+			options.promotion ? { [row.id]: options.promotion } : {},
 		now: () => options.now ?? Date.parse("2029-12-31T00:00:00Z"),
 		listSubscriptions: async (userId) => {
 			assert.equal(userId, "owner");

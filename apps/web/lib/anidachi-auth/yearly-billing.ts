@@ -55,7 +55,7 @@ export async function yearlyBillingPortal(
 	const stripe = deps.createStripe();
 	const sub = await stripe.subscriptions.retrieve(
 		row.stripe_subscription_id,
-		{},
+		{ expand: ["discounts", "items.data.discounts"] },
 		REQUEST,
 	);
 	if (
@@ -69,6 +69,21 @@ export async function yearlyBillingPortal(
 			"Subscription ownership could not be verified.",
 		);
 	const item = sub.items.data[0];
+	// Stripe Portal carries discounts into the annual invoice. Never let a
+	// discounted monthly contract become a discounted annual charge.
+	const discounts = [
+		...(sub.discounts ?? []),
+		...sub.items.data.flatMap((i) => i.discounts ?? []),
+	];
+	if (
+		discounts.some(
+			(d) => typeof d === "string" || !d.end || d.end * 1000 > deps.now(),
+		)
+	)
+		throw new BillingError(
+			409,
+			"Yearly billing is available after your discount ends.",
+		);
 	if (
 		sub.status !== "active" ||
 		sub.items.has_more ||

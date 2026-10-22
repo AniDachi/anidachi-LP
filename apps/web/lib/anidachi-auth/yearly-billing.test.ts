@@ -146,6 +146,27 @@ test("paid monthly conversion opens a same-item annual Stripe confirmation witho
 	assert.equal(f.sessions[0].configuration, "bpc_year");
 });
 
+test("annual conversion waits for the promotion to end and never removes the monthly discount", async () => {
+	const f = fixture();
+	const now = Date.parse("2030-01-15T00:00:00Z") / 1000;
+	f.sub.discounts = [
+		{
+			id: "di_campaign",
+			end: now + 86400,
+			coupon: {
+				id: "coupon_campaign",
+				metadata: { anidachiCampaign: "product_hunt_2026" },
+			},
+		} as unknown as Stripe.Discount,
+	];
+	await assert.rejects(f.open, /after.*discount/i);
+	assert.equal(f.sessions.length, 0);
+	assert.equal(f.sub.discounts.length, 1);
+	(f.sub.discounts[0] as Stripe.Discount).end = now;
+	await f.open();
+	assert.equal(f.sessions.length, 1);
+});
+
 test("ownership, unpaid invoices and unsafe portal configuration block yearly conversion", async () => {
 	const mutations: ((f: ReturnType<typeof fixture>) => void)[] = [
 		(f) => {

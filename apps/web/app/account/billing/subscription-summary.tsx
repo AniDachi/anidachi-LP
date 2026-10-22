@@ -102,7 +102,9 @@ export function SubscriptionSummary({
 				timeZone,
 			}).format(date)
 		: "";
-	const price = s.price ?? s.monthlyPrice;
+	const price = s.promotion
+		? s.promotion.nextPrice
+		: (s.price ?? s.monthlyPrice);
 	const enabled =
 		trial?.mode === "cardless"
 			? trial.renewalEnabled || trial.renewalState === "enabled"
@@ -205,6 +207,25 @@ export function SubscriptionSummary({
 			note={
 				<>
 					{note}
+					{s.promotion?.state === "active" && (
+						<span className="billing-summary-access">
+							40% off your first 3 months.
+							{(s.price ?? s.monthlyPrice) ? (
+								<>
+									{" "}
+									Then {formatMonthlyPrice((s.price ?? s.monthlyPrice)!)} /
+									month.
+								</>
+							) : (
+								" Then the regular monthly price."
+							)}
+						</span>
+					)}
+					{s.promotion?.state === "unavailable" && (
+						<span className="billing-summary-access">
+							Refresh to check your discount and next payment.
+						</span>
+					)}
 					{(trial || paid) && accountPlan !== s.planCode && (
 						<span className="billing-summary-access">
 							Current account access: {names[accountPlan]}.

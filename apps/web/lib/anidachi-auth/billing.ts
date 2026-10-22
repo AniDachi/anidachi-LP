@@ -20,6 +20,7 @@ import {
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 import { readTrialRenewal } from "./trial-renewal-server";
+import { readProductHuntBilling } from "./product-hunt-billing-server";
 
 export class BillingError extends Error {
 	constructor(
@@ -61,6 +62,7 @@ function canRestoreRenewal(
 }
 
 type BillingDeps = {
+	readPromotions?: typeof readProductHuntBilling;
 	readActivation: typeof readPendingTrialActivation;
 	now?: () => number;
 	listSubscriptions: typeof listSubscriptionsForUser;
@@ -75,6 +77,7 @@ type BillingDeps = {
 };
 
 const defaultDeps: BillingDeps = {
+	readPromotions: readProductHuntBilling,
 	readActivation: readPendingTrialActivation,
 	listSubscriptions: listSubscriptionsForUser,
 	getCustomer: getBillingCustomerByUserId,
@@ -185,8 +188,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 			cancellation.mode !== "at_period_end" ||
 			// Generic Portal plan updates can end a trial early. Keep plan changes
 			// in our existing quote/confirm flow that preserves its original end.
-			(intent === "restore" &&
-				config.features.subscription_update?.enabled !== false)
+			config.features.subscription_update?.enabled !== false
 		) {
 			throw new BillingError(
 				503,
@@ -241,6 +243,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 				string,
 				Promise<Awaited<ReturnType<typeof readBillingPrice>> | null>
 			>();
+			const promotions = (await deps.readPromotions?.(userId, rows)) ?? {};
 			const displayPrice = (id: string) => {
 				if (!prices.has(id))
 					prices.set(
@@ -364,6 +367,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 						const cardlessTrial =
 							trial?.mode === "cardless" && trial.stage !== "paid";
 						return {
+							...(promotions[row.id] ? { promotion: promotions[row.id] } : {}),
 							id: row.id,
 							planCode: row.plan_code,
 							status: row.status,
@@ -382,6 +386,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 								),
 							price,
 							canSwitchToYearly:
+								!promotions[row.id] &&
 								!cardlessTrial &&
 								price?.billingPeriod === "monthly" &&
 								row.plan_code !== "free" &&
