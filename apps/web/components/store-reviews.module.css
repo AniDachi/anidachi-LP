@@ -37,6 +37,8 @@
 .header a:focus-visible { outline: 2px solid var(--ani-focus); outline-offset: 4px; }
 .header a svg { flex-shrink: 0; }
 
+.headerLinks { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+
 .reviews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .review {

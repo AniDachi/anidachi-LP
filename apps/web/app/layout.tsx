@@ -5,6 +5,7 @@ import Script from "next/script";
 import { extensionPreviewFont } from "@/components/extension-preview-font";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
+import { ProductHuntLaunchBar } from "@/components/product-hunt-launch-bar";
 import {
   ConditionalFooter,
   ConditionalNav,
@@ -107,7 +108,14 @@ export default function RootLayout({
           `}
         </Script>
         <MobileInstallProvider>
-          <ConditionalNav marketingNav={<NavBar />} />
+          <ConditionalNav
+            marketingNav={
+              <>
+                <ProductHuntLaunchBar />
+                <NavBar />
+              </>
+            }
+          />
           {children}
           <ConditionalFooter marketingFooter={<Footer />} />
         </MobileInstallProvider>
