@@ -1,5 +1,4 @@
 import { ArrowUpRight, Star } from "lucide-react";
-import { ProductHuntBadge } from "@/components/product-hunt-badge";
 import { TrackedStoreLink } from "@/components/tracked-store-link";
 import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 import styles from "./store-reviews.module.css";
@@ -37,13 +36,10 @@ export function StoreReviews() {
       <div className={styles.container}>
         <header className={styles.header}>
           <h2 id="store-reviews-title">What our users say</h2>
-          <div className={styles.headerLinks}>
-            <TrackedStoreLink placement="store_reviews" target="_blank" rel="noopener noreferrer">
-              Chrome Web Store reviews
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </TrackedStoreLink>
-            <ProductHuntBadge placement="store_reviews" pagePath="/" />
-          </div>
+          <TrackedStoreLink placement="store_reviews" target="_blank" rel="noopener noreferrer">
+            Chrome Web Store reviews
+            <ArrowUpRight size={18} aria-hidden="true" />
+          </TrackedStoreLink>
         </header>
         <div className={styles.reviews}>
           {reviews.map((review) => (
