@@ -1,5 +1,6 @@
 import { type AccountInboxItem, type AccountInboxResponse, AccountInboxResponseSchema } from "@anidachi/protocol";
 import { storage } from "wxt/utils/storage";
+import { clearCachedSocialSnapshotForUser } from "./social-snapshot-cache";
 import { AUTH_TOKENS_KEY, normalizeExtensionAuthTokens } from "./auth-tokens";
 
 export const ACCOUNT_INBOX_CACHE_VERSION = 1 as const;
@@ -66,6 +67,11 @@ async function writeAccountInbox(
     if (!(await isCurrent())) return null;
     const changed = !current || JSON.stringify(current.data) !== JSON.stringify(canonical);
     if (changed) {
+      if (current && accountInboxSocialSignature(current.data) !== accountInboxSocialSignature(canonical)) {
+        // Push updates can arrive while People is closed. Only semantic changes
+        // expire its cache; seen acknowledgements and response timestamps do not.
+        await clearCachedSocialSnapshotForUser(userId).catch(() => undefined);
+      }
       await storage.setItem(key, {
         schemaVersion: ACCOUNT_INBOX_CACHE_VERSION,
         userId,
@@ -106,6 +112,10 @@ export function subscribeToAccountInboxForUser(
 export function accountInboxItemInstanceKey(item: AccountInboxItem): string {
   const id = item.kind === "room-invite" ? item.inviteId : item.friendshipId;
   return `${item.kind}:${id}:${item.createdAt}`;
+}
+
+export function accountInboxSocialSignature(inbox: AccountInboxResponse): string {
+  return JSON.stringify(inbox.items.map(({ seenAt: _seenAt, ...item }) => item));
 }
 
 export function mergeAccountInboxResponses(
