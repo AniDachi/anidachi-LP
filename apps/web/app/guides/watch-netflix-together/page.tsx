@@ -332,7 +332,7 @@ export default function WatchNetflixTogetherPage() {
             href: "/guides/how-to-watch-netflix-with-friends",
             label: "How to watch Netflix with friends, step by step",
           },
-          { href: "/guides/how-to-watch-netflix-together", label: "How to watch Netflix together" },
+          { href: "/guides/does-netflix-have-a-watch-party", label: "Does Netflix have a watch party?" },
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
         ]}
       />

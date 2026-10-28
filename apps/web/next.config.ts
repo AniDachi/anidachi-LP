@@ -39,6 +39,16 @@ const nextConfig: NextConfig = {
         destination: "/guides/how-to-watch-anime-with-friends-on-discord",
         permanent: true,
       },
+      {
+        source: "/guides/how-to-watch-netflix-together",
+        destination: "/guides/watch-netflix-together",
+        permanent: true,
+      },
+      {
+        source: "/guides/netflix-party-extension",
+        destination: "/netflix-party",
+        permanent: true,
+      },
     ];
   },
   images: {
