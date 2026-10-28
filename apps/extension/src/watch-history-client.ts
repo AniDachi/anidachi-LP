@@ -184,6 +184,11 @@ export type WatchHistoryCaptureResult =
 
 const unpersistedCapturePauses = new Set<string>();
 let preferenceSyncTail: Promise<void> = Promise.resolve();
+// All production clients use the same background store, including alarm,
+// reconnect and sign-out clients. Injected stores keep tests/isolated clients
+// independent. This is only a live-worker lock; durable events survive restart.
+const backgroundFlushScope = {};
+const flushTailsByStore = new WeakMap<object, Map<string, Promise<void>>>();
 
 export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
   if (!isRecord(value) ||
@@ -354,7 +359,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   const accessFailures = new Map<string, WatchHistoryMessageResponse>();
   const accessFlights = new Map<string, Promise<WatchHistoryLease | null>>();
   const storage = dependencies.storage ?? createWatchHistoryStorage();
-  const request = dependencies.fetch ?? fetch;
+  const flushScope = dependencies.storage ?? backgroundFlushScope;
+  const fetchImpl = dependencies.fetch ?? fetch;
+  const request: typeof fetch = (input, init) => {
+    const path = new URL(String(input)).pathname;
+    if (path !== "/api/watch-history/v3/progress" && path !== "/api/watch-history/v3/access")
+      return fetchImpl(input, init);
+    // A stalled capture/access request must not hold the per-owner drain forever.
+    // Aborting leaves durable events intact for the next alarm/reconnect retry.
+    const deadline = AbortSignal.timeout(15_000);
+    return fetchImpl(input, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline });
+  };
   const browseCache = dependencies.browseCache ?? createWatchHistoryBrowseCache();
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
   const refreshFlights = new Map<string, {
@@ -890,7 +905,30 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return !drained.ok && drained.status === "retryable" ? { ok: true } : drained;
   }
 
-  async function flush(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+  function flush(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    let tails = flushTailsByStore.get(flushScope);
+    if (!tails) {
+      tails = new Map();
+      flushTailsByStore.set(flushScope, tails);
+    }
+    const owner = session.user.id;
+    // Queue another read of durable state, not another copy of an old snapshot.
+    // Work persisted while a request is in flight belongs to the following drain.
+    const operation = (tails.get(owner) ?? Promise.resolve()).then(() => flushPending(session));
+    const settled = operation.then(() => undefined, () => undefined);
+    tails.set(owner, settled);
+    void settled.then(() => { if (tails.get(owner) === settled) tails.delete(owner); });
+    return operation;
+  }
+
+  async function flushPending(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    if (!sameSession(session, await dependencies.getCurrentSession())) return { ok: false, status: "rejected" };
+    const before = await storage.readRoot();
+    const beforeGeneration = before.activeGenerations?.[session.user.id];
+    const pending = beforeGeneration === undefined ? undefined
+      : before.partitions[watchHistoryPartitionKey(session.user.id, beforeGeneration)];
+    if (!pending || (!pending.outbox.entries.length && pending.preferencesSyncPending !== true))
+      return { ok: true, flushed: 0 };
     const denied = await requireAccess(session); if (denied) return denied;
     const root = await storage.readRoot();
     const generation = root.activeGenerations?.[session.user.id];
@@ -2078,7 +2116,7 @@ export async function handleWatchHistoryAuthSessionChange(
     const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession ?? await defaultRequestWatchHistorySession();
     const current = await getCurrentSession();
     if (!current || !sameSession(next, current)) return { ok: false, status: "retryable" };
-    const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession, getRequestSession });
+    const client = createWatchHistoryClient({ ...dependencies, getCurrentSession, getRequestSession });
     const bootstrapped = await client.handle({ type: WATCH_HISTORY_MESSAGE_TYPE, command: "bootstrap", expectedOwnerUserId: current.user.id });
     if (!bootstrapped.ok) return bootstrapped;
     const reconciled = await client.reconcile(current);

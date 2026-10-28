@@ -634,6 +634,34 @@ describe("PopupApp social mutations", () => {
     vi.unstubAllGlobals();
   });
 
+  it("loads Inbox on Watch without fetching People until that tab is opened", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    const view = await renderElement(<PopupApp />); root = view.root;
+    await waitFor(() => expect(listAccountInbox).toHaveBeenCalledTimes(1));
+    expect(listSocialDirectory).not.toHaveBeenCalled();
+    expect(listRoomInvites).not.toHaveBeenCalled();
+    await click(await findButton(view.container, "People"));
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(1));
+    expect(listRoomInvites).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses a fresh People cache, while an explicit refresh still fetches", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    vi.mocked(getCachedSocialSnapshotForUser).mockResolvedValue({
+      schemaVersion: 1, userId: VIEWER_ID, cachedAt: new Date().toISOString(),
+      data: { directory: directory(), invites: roomInvites([]) },
+    });
+    const view = await renderElement(<PopupApp />); root = view.root;
+    await click(await findButton(view.container, "People"));
+    await waitFor(() => expect(getCachedSocialSnapshotForUser).toHaveBeenCalled());
+    expect(listSocialDirectory).not.toHaveBeenCalled();
+    await click(await findButton(view.container, "Watch"));
+    await click(await findButton(view.container, "People"));
+    expect(listSocialDirectory).not.toHaveBeenCalled();
+    await click(getButton(view.container, "Refresh people"));
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(1));
+  });
+
   it("shows the active account identity in the compact Popup header", async () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
     // The login profile is identity; the badge now reads current server access.
@@ -1036,6 +1064,7 @@ async function renderElement(element: ReactNode): Promise<RenderedView> {
 async function renderPopupApp(): Promise<RenderedView> {
   const view = await renderElement(<PopupApp />);
   await findButton(view.container, "Watch");
+  await click(await findButton(view.container, "People"));
   await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(1));
   return view;
 }
