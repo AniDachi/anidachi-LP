@@ -993,11 +993,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "long-distance", "pillar-long-distance"],
 	},
 	{
-		href: "/guides/how-to-watch-netflix-together",
-		label: "How to Watch Netflix Together",
-		tags: ["template-c", "how-to-core", "pillar-netflix"],
-	},
-	{
 		href: "/guides/watch-netflix-together",
 		label: "Watch Netflix Together",
 		tags: ["template-c", "pillar-netflix"],
@@ -1015,11 +1010,6 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/netflix-group-watch",
 		label: "Netflix Group Watch",
-		tags: ["template-c", "pillar-netflix"],
-	},
-	{
-		href: "/guides/netflix-party-extension",
-		label: "Netflix Party Extension",
 		tags: ["template-c", "pillar-netflix"],
 	},
 	{

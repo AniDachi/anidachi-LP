@@ -193,6 +193,11 @@ export default function NetflixWatchPartyPage() {
             The host needs Plus or Pro (a 3-day trial counts). Rooms add chat,
             reactions, voice and video, with push-to-talk on the V key.
           </p>
+          <p>
+            To start one, install AniDachi, open the movie or episode on
+            netflix.com/watch, click the AniDachi capsule on the player, choose
+            Create room and send the link to your friends.
+          </p>
         </SeoGuideAnswer>
 
         <h2 id="how-it-works" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">

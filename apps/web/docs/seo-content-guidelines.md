@@ -167,6 +167,11 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-10-28, Netflix merges (owner in chat, ANI-6):** two of the five merge proposals in section 6 of the [indexing plan](../../../docs/superpowers/plans/2026-10-20-indexing-enrichment-linking-plan.md) are approved. Permanent redirects (308), route folders removed, inbound links repointed:
+  - `/guides/how-to-watch-netflix-together` → `/guides/watch-netflix-together` (384 words, same "watch netflix together" intent; never indexed)
+  - `/guides/netflix-party-extension` → `/netflix-party` (305 words, same "Netflix Party" intent; unknown to Google on Oct 28). `/netflix-party` gains a "Where do I find the Netflix Party extension?" FAQ.
+  - The other three proposals still need separate approval. Re-inspect the Netflix cluster on Nov 4.
+
 - **2026-10-20, indexing and enrichment plan (owner in chat):** approved items 1–5 of the [indexing, enrichment and linking plan](../../../docs/superpowers/plans/2026-10-20-indexing-enrichment-linking-plan.md); items 6–8 (Crunchyroll plans guide, Netflix anime list, streaming-services matrix) are not approved.
   - **Same-URL rebuilds:** `/netflix-watch-party` (Netflix hub), `/tools/crunchyroll-schedule` (title now leads with "release schedule"), `/guides/how-to-screen-share-netflix-on-discord`.
   - **New URLs:** `/tools/crunchyroll-dub-schedule` (parent `/tools`, updated every Monday with the simulcast calendar) and `/guides/is-teleparty-free` (parent `/compare/anidachi-vs-teleparty`; Teleparty claims cite its own pages, checked 20 Oct 2026). Review both at 30/60/90 days (Nov 19, Dec 19, Jan 18).

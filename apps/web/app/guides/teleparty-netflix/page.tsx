@@ -111,12 +111,9 @@ export default function TelepartyNetflixPage() {
       </h2>
       <p className="mb-6 leading-relaxed text-ani-muted">
         “Netflix Teleparty” is the same search with the words in the other order,
-        and this page covers both. The install name is{" "}
-        <Link
-          href="/guides/netflix-party-extension"
-          className="text-brand-orange hover:underline"
-        >
-          Netflix Party extension
+        and this page covers both. The extension used to be called{" "}
+        <Link href="/netflix-party" className="text-brand-orange hover:underline">
+          Netflix Party
         </Link>
         . AniDachi does not wrap Teleparty. Its own Netflix, Crunchyroll, and YouTube rooms work in desktop Chrome; see{" "}
         <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">

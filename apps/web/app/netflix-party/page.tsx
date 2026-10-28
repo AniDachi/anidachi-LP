@@ -66,6 +66,11 @@ const faq = [
       "Yes, under the name Teleparty. Its Chrome Web Store listing is titled \"Netflix Party is now Teleparty\" and showed version 5.8.5, updated October 8, 2026, when we checked on October 20, 2026.",
   },
   {
+    question: "Where do I find the Netflix Party extension?",
+    answer:
+      "Search the Chrome Web Store for Teleparty. Its listing is titled \"Netflix Party is now Teleparty\". Other extensions with similar names come from different developers, so check the developer before you install. AniDachi is a separate extension.",
+  },
+  {
     question: "Is Netflix Party free?",
     answer:
       "Teleparty's free tier hosts Netflix parties with synced playback and text chat. Teleparty Premium costs $6.59 a month or $47.88 a year and adds voice and video chat and more streaming services, according to its support FAQ.",
@@ -330,7 +335,7 @@ export default function NetflixPartyPage() {
         links={[
           { href: "/netflix-watch-party", label: "Netflix watch party hub" },
           { href: "/guides/watch-netflix-together", label: "Watch Netflix together: 4 ways compared" },
-          { href: "/guides/netflix-party-extension", label: "Netflix Party extension" },
+          { href: "/guides/how-to-watch-netflix-with-friends", label: "How to watch Netflix with friends" },
           { href: "/guides/does-netflix-have-a-watch-party", label: "Does Netflix have a watch party?" },
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
         ]}
