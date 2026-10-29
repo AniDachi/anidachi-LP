@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "How to Stream Crunchyroll on Discord: Black Screen Fix",
     description:
-      "Go Live steps, the black screen fix, and a setup that works every time.",
+      "Go Live steps, black screen troubleshooting, and a way to watch without screen sharing.",
     url: "/guides/can-you-screen-share-crunchyroll-on-discord",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -167,8 +167,8 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
           people.
         </strong>{" "}
         When it works, everyone watches one compressed feed from your upload
-        and can&apos;t pause or pick their own subtitles. The setup that works every
-        time: keep Discord for voice and have each person play the episode on
+        and can&apos;t pause or pick their own subtitles. To avoid screen sharing,
+        keep Discord for voice and have each person play the episode on
         their own account, kept in sync by a watch-party extension.
       </SeoGuideAnswer>
 
