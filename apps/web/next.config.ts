@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
         destination: "/netflix-party",
         permanent: true,
       },
+      {
+        source: "/guides/can-you-stream-crunchyroll-on-discord",
+        destination: "/guides/can-you-screen-share-crunchyroll-on-discord",
+        permanent: true,
+      },
     ];
   },
   images: {
