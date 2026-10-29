@@ -167,7 +167,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
           people.
         </strong>{" "}
         When it works, everyone watches one compressed feed from your upload
-        and can't pause or pick their own subtitles. The setup that works every
+        and can&apos;t pause or pick their own subtitles. The setup that works every
         time: keep Discord for voice and have each person play the episode on
         their own account, kept in sync by a watch-party extension.
       </SeoGuideAnswer>
