@@ -80,7 +80,10 @@ entry. Check every factual claim, not a sample.
 
 ### 7. Build
 
-- `pnpm --filter @anidachi/web check` passes.
+- `pnpm --filter @anidachi/web check` passes. It runs `tsc` only.
+- `pnpm --filter @anidachi/web exec eslint <changed files>` has no errors.
+  `next build` (Vercel) fails on lint errors such as a raw `'` in JSX text
+  (`react/no-unescaped-entities`); use `&apos;`.
 - Relevant tests pass (title guard, section index, link tests).
 
 ## Output
