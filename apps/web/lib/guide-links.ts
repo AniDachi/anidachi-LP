@@ -876,17 +876,7 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "Anime Checklist",
 		tags: ["template-c", "how-to-core", "pillar-anime-tracker"],
 	},
-	{
-		href: "/guides/can-you-stream-crunchyroll-on-discord",
-		label: "Can You Stream Crunchyroll on Discord?",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"discord",
-			"crunchyroll",
-			"pillar-discord-watch-party",
-		],
-	},
+
 	{
 		href: "/guides/discord-watch-together",
 		label: "Discord Watch Together",
