@@ -194,8 +194,8 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       </p>
       <SeoGuideSteps steps={goLiveSteps} />
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Still black? The protection is winning, and more settings won&apos;t
-        change it. Use the setup below instead.
+        Still black? Check that you shared the Chrome window with the video.
+        If the picture stays black, use the setup below.
       </p>
 
       <h2
