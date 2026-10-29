@@ -167,6 +167,8 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-10-29, Crunchyroll-on-Discord merge (owner in chat, ANI-10):** `/guides/can-you-stream-crunchyroll-on-discord` → 308 → `/guides/can-you-screen-share-crunchyroll-on-discord`. Same question, 740 words, "URL is unknown to Google" on Oct 29. Route folder removed and its one inbound link repointed. The target was refreshed the same day with Go Live steps and the hardware acceleration fix. Of the five merge proposals, two remain: `discord-watch-together-activity` and `/compare/anidachi-vs-netflix-watch-party`.
+
 - **2026-10-28, Netflix merges (owner in chat, ANI-6):** two of the five merge proposals in section 6 of the [indexing plan](../../../docs/superpowers/plans/2026-10-20-indexing-enrichment-linking-plan.md) are approved. Permanent redirects (308), route folders removed, inbound links repointed:
   - `/guides/how-to-watch-netflix-together` → `/guides/watch-netflix-together` (384 words, same "watch netflix together" intent; never indexed)
   - `/guides/netflix-party-extension` → `/netflix-party` (305 words, same "Netflix Party" intent; unknown to Google on Oct 28). `/netflix-party` gains a "Where do I find the Netflix Party extension?" FAQ.

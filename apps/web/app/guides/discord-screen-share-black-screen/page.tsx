@@ -146,14 +146,7 @@ export default function DiscordScreenShareBlackScreenPage() {
           >
             can you screen share Crunchyroll on Discord
           </Link>
-          . Streaming the episode through the call is{" "}
-          <Link
-            href="/guides/can-you-stream-crunchyroll-on-discord"
-            className="text-brand-orange hover:underline"
-          >
-            can you stream Crunchyroll on Discord
-          </Link>
-          .
+          , with Go Live steps and the hardware acceleration fix.
         </p>
         <h2 id="youtube" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
           YouTube black screen on Discord
