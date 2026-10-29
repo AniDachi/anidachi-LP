@@ -81,7 +81,7 @@ const faq = [
   {
     question: "What app can I use to watch YouTube videos with friends?",
     answer:
-      "On desktop Chrome, AniDachi is an extension that syncs YouTube, Crunchyroll and Netflix, with chat, voice and video in the room. Watch2Gether is a free browser room where you paste a YouTube link. Teleparty is an extension many people already use for Netflix. On iPhone and iPad, YouTube supports SharePlay.",
+      "On desktop Chrome, AniDachi is an extension that syncs YouTube, Crunchyroll and Netflix, with chat, voice and video in the room. Watch2Gether is a free browser room where you paste a YouTube link. Teleparty is an extension many people already use for Netflix. On iPhone and iPad, YouTube supports SharePlay; the person starting the session needs YouTube Premium.",
   },
   {
     question: "What is a watch party?",
@@ -103,7 +103,7 @@ const faq = [
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
   { id: "start-here", label: "Start here", level: 2 },
-  { id: "no-native", label: "Why no built-in watch party", level: 2 },
+  { id: "no-native", label: "Watching together on desktop", level: 2 },
   { id: "step-by-step", label: "Step-by-step", level: 2 },
   { id: "compare-methods", label: "Compare methods", level: 2 },
   { id: "anidachi-difference", label: "What makes AniDachi different", level: 2 },
@@ -293,12 +293,22 @@ export default function WatchYoutubeTogetherPage() {
           id="no-native"
           className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
-          Why YouTube Doesn&apos;t Have a Built-In Watch Party
+          Watching YouTube Together on Desktop
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-6">
-          As of 2026, YouTube still has no official watch-together or party mode
-          for standard videos. Viewers rely on third-party extensions and room
-          sites. AniDachi mounts on full <strong>youtube.com/watch</strong> pages
+          YouTube has no built-in watch-together button for regular videos on
+          desktop. On iPhone and iPad,{" "}
+          <a
+            href="https://support.google.com/youtube/answer/13323543"
+            className="text-brand-orange hover:underline"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            SharePlay
+          </a>{" "}
+          is an option when the person starting the session has YouTube Premium.
+          On desktop, viewers use
+          extensions or room sites. AniDachi mounts on full <strong>youtube.com/watch</strong> pages
           (not Shorts, embeds, or homepage feeds) and adds the same watchroom
           layer it uses for{" "}
           <Link
