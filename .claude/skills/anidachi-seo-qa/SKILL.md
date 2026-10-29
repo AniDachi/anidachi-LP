@@ -82,6 +82,8 @@ entry. Check every factual claim, not a sample.
 
 - `pnpm --filter @anidachi/web check` passes. It runs `tsc` only.
 - `pnpm --filter @anidachi/web exec eslint <changed files>` has no errors.
+  Pass paths relative to `apps/web`, for example `app/watch-youtube-together/page.tsx`,
+  not repository-root paths such as `apps/web/app/watch-youtube-together/page.tsx`.
   `next build` (Vercel) fails on lint errors such as a raw `'` in JSX text
   (`react/no-unescaped-entities`); use `&apos;`.
 - Relevant tests pass (title guard, section index, link tests).
