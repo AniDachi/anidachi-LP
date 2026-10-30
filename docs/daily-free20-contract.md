@@ -1,4 +1,4 @@
-# Free20: выключенный контракт и серверный расчет
+# Free20: выключенный контракт, серверный расчет и сверка комнаты
 
 Дата: 2026-10-30. Рабочая ветка: `codex/daily-free20-contract`.
 База: staging `3089b700877e6385ff65f9c3ca8040fe2308f58f`.
@@ -15,7 +15,17 @@ Production не менялся. Полная запись доставки — �
 После этого владелец согласовал блок 2А: расчет остатка на существующем серверном
 учете, тесты и доставку через PR в staging. Ветка `codex/daily-free20-server-budget`
 начата от `d1a422a9`. Ниже разделы про 1А сохраняют локальные доказательства
-первого этапа; результат 2А описан отдельно в конце.
+первого этапа; результат 2А описан отдельно ниже.
+
+Блок 2А доставлен через [PR #477](https://github.com/AniDachi/anidachi-LP/pull/477),
+staging `0e66cb45fa960a00f79eee5d1dab44ec25cb89ab`: CI и Web READY, smoke после
+переключения Web alias прошли. DB workflow подтвердил отсутствие новых миграций.
+Worker/extension для этого web-only diff не пересобирались. Production остался
+на `9da93cd9`, promotion PR #471 открыт без auto-merge. Полная запись — в PR #477.
+
+Владелец затем согласовал блок 2Б: сверку сохраненных секунд и живого интервала,
+проверки повторов/переподключения/UTC/restart, PR и staging. Ветка
+`codex/daily-free20-room-budget` начата от `0e66cb45`. Активация не согласована.
 
 ## Граница локального блока 1А
 
@@ -193,3 +203,83 @@ real-WebRTC/Worker runtime/extension builds не требуются для эт�
 web reader: соответствующий runtime/manifest не менялся; CI выполняет свои gates.
 Rollback до интеграции — revert этого модуля/тестов/docs через staging PR,
 без отмены миграций и без очистки каких-либо пользовательских данных.
+
+## Блок 2Б: сохраненный расход плюс живой интервал
+
+Добавлены внутренний `Free20RoomBudgetRequest` / `Free20RoomBudgetCheckpoint`
+в `packages/protocol/src/free20-room-budget.ts`, выключенный web producer
+`apps/web/lib/anidachi-auth/free20-room-budget.ts` и чистая Worker-сверка
+`apps/api/src/free20-room-budget.ts`. Новые функции не импортируются действующими
+HTTP/WS/DO handlers; payloads, текущий Free1800, TTL/grace, UI, billing, grants,
+схема SQL и окружения не переключаются. Это не выпуск Free20 для пользователей.
+
+Producer проверяет существующую Free-комнату, последовательно подтверждает
+переданные накопительные UTC-buckets через `commit_room_usage_day_v1`, затем
+читает account authority и usage через reader 2А. Ответ содержит ACK и post-commit
+account total вместе. Владелец берется из комнаты в БД; текущий generation 1
+проверяется до записей. Завершение/смена владельца проверяется повторно перед
+ответом. Partial commit может сохраниться при ошибке, но ответ с бюджетом не
+выдается; retry использует те же cumulative totals. Уже подтвержденные секунды
+повторно не отправляются в commit. Действующий SQL и его идемпотентность сохранены.
+
+Нельзя вычитать из произвольно прочитанного ledger сумму `live - local ACK`:
+при потере ответа ledger уже может включать эти секунды. Вместо этого consumer
+сверяет весь ответ с сохраненным запросом, owner/room/generation/sequence/UTC и
+authority freshness, проверяет полный точный ACK, затем применяет его целиком.
+ACK впереди durable checkpoint считается неопределенностью, а не лишним кредитом.
+Неполный/старый/чужой ответ не меняет meter и не дает нового бюджета.
+
+Допустимый накопительный расход комнаты:
+`max(0, 1200 - accountCommitted + roomAcknowledged)`; оставшееся время вычитает
+из этого значения текущие cumulative room seconds ровно один раз. В пределах
+одного дня допустимое значение только уменьшается. Пример: 420 секунд из прошлых
+комнат + 180 текущих = 600 остатка до и после commit, повтора и restart.
+Текущая authority по истечении `refreshBy` требует обновления, не продления
+или автоматического downgrade. Unlimited от 2А не превращается в Free или
+выдуманный paid/trial/manual time right: этот переход готовится в блоке 4.
+
+В budget сохраняется ACK, с которым он был рассчитан. Meter при восстановлении
+должен содержать как минимум эти секунды; неполное восстановление не возвращает
+время. На новом UTC-дне старый ACK закрывает только старый bucket, минуты не
+переносятся. View не создает новый дневной бюджет при локальном достижении полуночи.
+
+### Проверки и граница доказательства 2Б
+
+Новые protocol/API/web tests проверяют контракт, полный pipeline producer→meter,
+потерю ACK после commit, retry без двойного списания, no-write renewal, partial
+commit, scope/order/time fences, overshoot, неполное восстановление и UTC split.
+Реальные account resolver и room meter используются с подменой только DB boundary.
+Это проверка orchestration; реальная SQL concurrency и живой аккаунт не проверялись.
+
+Существующий Cloudflare runtime harness расширен тестовой authority 1200 секунд
+при сохранении default 1800: host alone, host+guest при paused playback, guest
+reconnect, hibernation, ACK-before-end, обычная/точная/запоздалая UTC-полночь и
+недоступный учет. Истекшая до полуночи комната завершается по прежнему deadline.
+Это доказательство работы существующего DO-механизма с таким лимитом, а не
+выдачи нового checkpoint через рабочий endpoint или пользовательской приемки.
+
+Будущее подключение обязано сохранять единственный serialized DO lifecycle,
+durable checkpoint и sequence до внешнего I/O, meter+budget вместе после ответа,
+active-host assignment до полного settlement, terminal-before-rollover и
+совместимость старых клиентов. Новый checkpoint не является admission, reservation,
+room lease или публичным `HostingTimeSnapshot`; ни один из этих gates не обходится.
+Новых polling/cron/таймеров/записей на playback heartbeat нет. Действующие media
+и P2P не меняются. Общие блоки 1–3 и paid-live transition остаются незавершенными.
+
+Финальные checks/review и delivery фиксируются в PR блока 2Б. До runtime wiring
+rollback — revert этого выключенного кода/тестов/docs через staging PR; данных
+для удаления или миграций для отката нет. После включения такой rollback должен
+оцениваться заново с сохранением накопленного расхода.
+
+Локальная проверка 2Б: `pnpm check` 6/6, `pnpm test` 6/6 (protocol 260,
+API 283, Web 1397 + 6 existing skips, extension 2455); Cloudflare runtime 117/117,
+room harness 39/39. 24 новых protocol/API/web tests сначала падали без реализации;
+дополнительная проверка неполного восстановления также показала RED→GREEN.
+Шесть дополнительных runtime cases подтверждают существующее поведение с 1200.
+Отдельная ручная browser/реальная SQL/платежная приемка этим не заменяется.
+
+Для Graphify в предыдущих блоках зафиксирован исходный сбой safe adapter:
+`Unresolved cross-source AST node: anidachi_protocol (@anidachi/protocol)`.
+Повторная semantic/safe-adapter попытка 2Б и неизменность team artifacts при
+ошибке фиксируются в PR. Восстановление graph tooling не входит в этот блок;
+граф не считается актуальным, важные выводы проверены по исходникам.

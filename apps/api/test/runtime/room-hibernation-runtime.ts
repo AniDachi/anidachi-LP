@@ -3225,7 +3225,7 @@ function sleep(ms: number): Promise<void> {
 // Negotiated v2 rooms use real signed capabilities and the actual hibernating DO.
 describe("RoomDurableObject media v2", () => {
 	const hostId = "v2-host";
-	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2) {
+	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2, dailyLimit: 1200 | 1800 = 1800) {
 		const roomId = `media-v2-${crypto.randomUUID()}`;
 		const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = ns.get(ns.idFromName(roomId));
@@ -3304,7 +3304,7 @@ describe("RoomDurableObject media v2", () => {
 											? {
 													day,
 													remainingSeconds:
-														1800 - (ledger.get(day) ?? 0),
+														Math.max(0, dailyLimit - (ledger.get(day) ?? 0)),
 													resetAt: new Date(
 														(Math.floor(now / 86400000) + 1) * 86400000,
 													).toISOString(),
@@ -4120,12 +4120,12 @@ it.each([
 		);
 		expect((await replacement.waitFor(e => e.type === "ROOM_ENDED", "terminal cause")) as object).not.toHaveProperty("hostingCutover");
 	});
-	it("meters only actual host+guest sockets, preserves acknowledged600s on renewal, and ACKs before quota end", async () => {
+	it.each([1200, 1800] as const)("meters host+guest, preserves cumulative ACKs and settles before ending a %ss allowance", async (dailyLimit) => {
     // This scenario keeps 600 seconds in one UTC day; midnight rollover has dedicated cases below.
     const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
     const day = new Date(start).toISOString().slice(0, 10);
     vi.spyOn(Date, "now").mockReturnValue(start);
-		const f = await fixture("free");
+		const f = await fixture("free", 2, dailyLimit);
 		const host = await f.join(0);
 		await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "solo host");
 		expect(
@@ -4158,16 +4158,16 @@ it.each([
 				seconds: Math.floor(i.roomMeter.accumulatedMs / 1000),
 			};
 		});
-		expect(values.allowed - values.seconds).toBe(1200);
+		expect(values.allowed - values.seconds).toBe(dailyLimit - 600);
     expect(values.seconds).toBe(600);
     expect(f.ledger.get(day)).toBe(600);
-    const reconciled = await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.remainingSeconds === 1200, "published ACK-reconciled budget");
+    const reconciled = await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.remainingSeconds === dailyLimit - 600, "published ACK-reconciled budget");
     expect(reconciled.type === "ROOM_SNAPSHOT" && reconciled.quota?.metering).toBe(true);
 		await runInDurableObject(f.stub, async (instance) => {
 			const i = instance as any;
 			i.roomMeter = {
 				...i.roomMeter,
-				accumulatedMs: 1800000,
+				accumulatedMs: dailyLimit * 1000,
 				activeSince: Date.now(),
 			};
 			await i.serviceRoomPolicy(Date.now());
@@ -4183,6 +4183,37 @@ it.each([
 		expect((f.calls[terminal - 1] as any).operation).toBe("room_policy_v2");
 		expect((f.calls[terminal - 1] as any).settleOnly).toBe(true);
 	});
+  it("preserves a 1200s test allowance through paused playback, hibernation and guest reconnect", async () => {
+    // Test-only authority: production still uses the unchanged legacy policy.
+    const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const f = await fixture("free", 3, 1200);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.metering === false, "solo host does not spend");
+    clock.mockReturnValue(start + 60_000);
+    const guest = await f.join(1);
+    await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "guest starts meter");
+    const paused = { ...playbackState("crunchyroll|watch/free20-paused", "https://www.crunchyroll.com/watch/free20-paused"), playing: false };
+    host.send({ type: "HOST_STATE", roomId: f.roomId, state: paused,
+      source: sourceDescriptor(paused.videoFingerprint, "Paused metering", paused.sourceUrl) });
+    await guest.waitFor(e => e.type === "HOST_STATE" && !e.state.playing, "paused playback");
+    clock.mockReturnValue(start + 120_000);
+    await evictDurableObject(f.stub, { webSockets: "hibernate" });
+    const restored = await runInDurableObject(f.stub, instance => {
+      const room = instance as any;
+      return { seconds: roomUsageSummary(room.roomMeter, Date.now()).seconds, budget: room.roomPolicy.budget };
+    });
+    expect(restored.seconds).toBe(60);
+    expect(restored.budget.allowedSeconds).toBe(1200);
+    guest.close();
+    await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.metering === false && e.participants.some(p => !p.connected), "guest leaves, meter stops");
+    clock.mockReturnValue(start + 180_000);
+    const replacement = await f.join(1);
+    await replacement.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.metering === true, "guest reconnects");
+    clock.mockReturnValue(start + 240_000);
+    const quota = await runInDurableObject(f.stub, instance => (instance as any).currentRoomSnapshot().quota);
+    expect(quota).toMatchObject({ remainingSeconds: 1080, metering: true });
+  });
   it("publishes paused v2 quota while a disconnected guest keeps a reservation", async () => {
     const f=await fixture("free"); const host=await f.join(0);
     await host.waitFor(e=>e.type==="ROOM_SNAPSHOT"&&e.quota?.metering===false,"solo paused quota");
@@ -4281,22 +4312,22 @@ it.each([
   expect(h.countEvents(e=>e.type==='ROOM_ENDED')).toBe(1);
  });
 
- it.each([
-  ['delayed midnight',1620,false,1740,180,false],
-  ['exact midnight exhaustion',1680,false,1800,180,false],
-  ['pre-midnight exhaustion',1740,false,1800,0,true],
-  ['new-day accounting unavailable',1620,true,1740,180,true],
- ] as const)('handles %s without extending yesterday quota',async(_name,used,fail,oldSeconds,newSeconds,ended)=>{
-  const f=await fixture('free');const h=await f.join(0);await h.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT','host');const g=await f.join(1);await g.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT'&&e.participants.length===2,'guest');
+ it.each(([1200, 1800] as const).flatMap(limit => [
+  [`delayed midnight (${limit})`,limit-180,false,limit-60,180,false,limit],
+  [`exact midnight exhaustion (${limit})`,limit-120,false,limit,180,false,limit],
+  [`pre-midnight exhaustion (${limit})`,limit-60,false,limit,0,true,limit],
+  [`new-day accounting unavailable (${limit})`,limit-180,true,limit-60,180,true,limit],
+ ] as const))('handles %s without extending yesterday quota',async(_name,used,fail,oldSeconds,newSeconds,ended,dailyLimit)=>{
+  const f=await fixture('free',2,dailyLimit);const h=await f.join(0);await h.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT','host');const g=await f.join(1);await g.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT'&&e.participants.length===2,'guest');
   const midnight=Math.floor(Date.now()/86400000)*86400000;const now=midnight+180000;
   const previousDay=new Date(midnight-1).toISOString().slice(0,10);const day=new Date(midnight).toISOString().slice(0,10);
   const clock=vi.spyOn(Date,'now').mockReturnValue(now);
   try {
    if(fail)f.setFail();
-   await runInDurableObject(f.stub,async(instance,state)=>{const i=instance as any;i.roomMeter={schemaVersion:2,day:previousDay,accumulatedMs:used*1000,activeSince:midnight-120000,acknowledgedSeconds:0,pending:[],accountingBlocked:false};i.roomPolicy.budget={day:previousDay,allowedSeconds:1800};i.roomPolicy.refreshAt=0;await state.storage.put('room_policy_v2',i.roomPolicy);await i.serviceRoomPolicy(now);});
+   await runInDurableObject(f.stub,async(instance,state)=>{const i=instance as any;i.roomMeter={schemaVersion:2,day:previousDay,accumulatedMs:used*1000,activeSince:midnight-120000,acknowledgedSeconds:0,pending:[],accountingBlocked:false};i.roomPolicy.budget={day:previousDay,allowedSeconds:dailyLimit};i.roomPolicy.refreshAt=0;await state.storage.put('room_policy_v2',i.roomPolicy);await i.serviceRoomPolicy(now);});
    const result=await runInDurableObject(f.stub,instance=>{const i=instance as any;return {ending:i.roomPolicy?.endingReason??i.endedTombstone?.reason??null,day:i.roomMeter.day,seconds:Math.floor(i.roomMeter.accumulatedMs/1000),pending:i.roomMeter.pending};});
    expect(!!result.ending).toBe(ended);
-   if(!ended){const renewed=await h.waitFor(e=>e.type==='ROOM_SNAPSHOT'&&e.quota?.day===day&&e.quota.measuredAt===now,'published new UTC budget');expect(renewed.type==='ROOM_SNAPSHOT'&&renewed.quota?.remainingSeconds).toBe(1800-newSeconds);expect(f.ledger.get(previousDay)).toBe(oldSeconds);expect(f.ledger.get(day)).toBe(newSeconds);expect(result.day).toBe(day);expect(result.seconds).toBe(newSeconds);}
+   if(!ended){const renewed=await h.waitFor(e=>e.type==='ROOM_SNAPSHOT'&&e.quota?.day===day&&e.quota.measuredAt===now,'published new UTC budget');expect(renewed.type==='ROOM_SNAPSHOT'&&renewed.quota?.remainingSeconds).toBe(dailyLimit-newSeconds);expect(f.ledger.get(previousDay)).toBe(oldSeconds);expect(f.ledger.get(day)).toBe(newSeconds);expect(result.day).toBe(day);expect(result.seconds).toBe(newSeconds);}
    else if(fail){expect(result.ending).toBe('accounting_unavailable');expect(result.pending).toContainEqual({day:previousDay,seconds:oldSeconds});await h.waitForClose(4004,'unsafe new-day accounting');}
    else {expect(f.ledger.get(previousDay)).toBe(oldSeconds);expect(f.ledger.get(day)??0).toBe(0);const event=await h.waitFor(e=>e.type==='ROOM_ENDED','old day exhaustion');expect(event.type==='ROOM_ENDED'&&event.endedAt).toBe(midnight-60000);}
   } finally {clock.mockRestore();}
