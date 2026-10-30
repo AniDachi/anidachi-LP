@@ -15,7 +15,7 @@ const Usage = RoomUsageSummarySchema.extend({
 		"Usage days must be unique",
 	);
 
-/** Inactive internal server contract. A single authoritative DO must serialize
+/** Internal server contract, gated off by default. A single authoritative DO must serialize
  * requests, persist its materialized meter BEFORE I/O, and keep a monotonically
  * increasing sequence across retries/restarts/days. This is not room admission.
  */
@@ -33,7 +33,7 @@ export type Free20RoomBudgetRequest = z.infer<
  * reads that a consumer may mix. committedSeconds includes this room's ACKed
  * seconds and may exceed 1200. This is neither the public HostingTimeSnapshot
  * nor a lease, reservation, unlimited assertion, or permission to revive a room.
- * No existing HTTP/WS route issues this prepared contract.
+ * Issued only by the authenticated, explicitly enabled internal budget route.
  */
 export const Free20RoomBudgetCheckpointSchema = HostingTimeBindingSchema.extend(
 	{
@@ -70,4 +70,16 @@ export const Free20RoomBudgetCheckpointSchema = HostingTimeBindingSchema.extend(
 });
 export type Free20RoomBudgetCheckpoint = z.infer<
 	typeof Free20RoomBudgetCheckpointSchema
+>;
+
+/** Internal transport only; the signed lease retains its existing verifier. */
+export const Free20RoomBudgetResponseSchema = z.strictObject({
+	checkpoint: Free20RoomBudgetCheckpointSchema,
+	policy: z.discriminatedUnion("denied", [
+		z.strictObject({ denied: z.literal(false), roomToken: z.string().min(1) }),
+		z.strictObject({ denied: z.literal(true), closingAt: z.iso.datetime() }),
+	]),
+});
+export type Free20RoomBudgetResponse = z.infer<
+	typeof Free20RoomBudgetResponseSchema
 >;

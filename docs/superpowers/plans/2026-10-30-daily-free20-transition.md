@@ -155,15 +155,42 @@ Reader не вызывается текущими HTTP/WS/room handlers и не 
 - [x] Тесты повторов, атомарного применения ACK, UTC, guest reconnect, paused
   playback и hibernation. Реальный DO проверен с тестовым лимитом 1200;
   действующие legacy 1800 cases сохраняются.
-- [ ] Финальные checks/review, PR и проверка доставки блока 2Б в staging.
+- [x] Финальные checks/review и PR #478: staging `5705743c`, Web/Worker READY,
+  post-switch smoke, extension build #225. Production/Store/активация не менялись.
 
-Новые функции пока не вызываются HTTP/WS/DO handlers. Это подготовленная цепочка
+В границе 2Б функции не вызывались HTTP/WS/DO handlers. Это подготовленная цепочка
 web→Worker, а не включенный новый учет. Existing serialized DO lifecycle,
 checkpoint-before-I/O, settlement-before-release и проверка истечения старого дня
 до rollover остаются обязательными условиями подключения. Новый SQL transaction,
 ledger, polling и таймер не добавляются. Paid/unlimited не переводится в Free:
 выдача нового time right и grant source относится к отдельному блоку 4.
-Общие блоки 1–3 еще не завершены, runtime wiring и приемка остаются впереди.
+Общие блоки 1–3 еще не завершены; wiring продолжен в отдельно согласованном 3А,
+а включение и пользовательская приемка остаются впереди.
+
+### Блок 3А. Согласованное выключенное runtime-подключение
+
+Владелец разрешил подключить подготовленную сверку к циклу комнаты, проверить
+сохранение запроса/ACK/остатка, restart/lost response/terminal и экономность,
+затем доставить через PR в staging. Активация отдельно не разрешена.
+
+- [x] Internal route с существующим service auth и strict protocol; один bounded
+  callback возвращает budget и существующее подписанное media-разрешение.
+- [x] `ANIDACHI_FREE20_ACCOUNTING_ENABLED` отсутствует по умолчанию; только точное
+  `true` разрешает новый путь. Настройка не добавлена в реальные окружения.
+- [x] В DO запрос+sequence+meter сохраняются до I/O; полный ACK и budget — одной
+  SQLite transaction. Cache меняется после записи, policy KV восстанавливается
+  по этой паре. При сбое более новый cumulative запрос покрывает предыдущий.
+- [x] Проверки потери ответа, torn write, eviction, UTC во время callback,
+  позднего старого expiry, host+guest/paused/reconnect и точных 20 минут.
+- [x] В одинаковых 20 playback frames нет дополнительных budget callbacks,
+  записей meter/Free20 state, KV или alarm. Один существующий alarm сохраняется.
+- [ ] Полные checks/review и доставка 3А в staging; запись результата — в PR.
+
+Это кандидат runtime, а не включенный новый продукт: room admission, новый
+public HostingTimeSnapshot, live purchase/unlimited, UI и старые клиенты еще
+требуют своих блоков. При неопределенности новый путь закрывает комнату и
+сохраняет settlement до ACK; нового grace/payment hold нет. Старый warning на
+5 мин в новом пути не выбирается. SQL account ledger и media/P2P не меняются.
 
 ## Блок 3. DO и экономный таймер
 

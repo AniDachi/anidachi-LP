@@ -1,4 +1,8 @@
 import {
+  Free20RoomBudgetRequestSchema,
+  Free20RoomBudgetResponseSchema,
+  type Free20RoomBudgetRequest,
+  type Free20RoomBudgetResponse,
   RoomHostingAdmissionSchema,
   type RoomHostingAdmission,
   RoomPresenceEvidenceSchema,
@@ -409,6 +413,31 @@ export async function notifyWebRoomPolicy(
 	)
 		throw new Error("Room usage not acknowledged");
 	return { acknowledged, policy: result.policy };
+}
+
+export async function notifyWebFree20Budget(
+	env: InternalWebLifecycleEnv,
+	input: Free20RoomBudgetRequest,
+	fetchImplementation: typeof fetch = fetch,
+	timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
+): Promise<Free20RoomBudgetResponse> {
+	const request = Free20RoomBudgetRequestSchema.parse(input);
+	const config = internalWebCallbackConfig(env);
+	const { response, body } = await fetchAndReadJsonWithBoundedTimeout(
+		fetchImplementation,
+		new URL(`/api/internal/rooms/${encodeURIComponent(request.roomId)}/free20-budget`, config.baseUrl),
+		{
+			method: "POST", redirect: "manual",
+			headers: { Authorization: `Bearer ${config.secret}`, "Content-Type": "application/json" },
+			body: JSON.stringify(request),
+		}, timeoutMs,
+	);
+	if (response.status !== 200) throw internalWebCallbackFailure("Free20 budget callback failed", response);
+	const result = Free20RoomBudgetResponseSchema.parse(body);
+	if (result.checkpoint.roomId !== request.roomId || result.checkpoint.roomGeneration !== request.roomGeneration ||
+		result.checkpoint.checkpointSequence !== request.checkpointSequence)
+		throw new Error("Free20 budget response binding mismatch");
+	return result;
 }
 
 // A local error carries HTTP pacing only; no wire acknowledgement contract changes.
