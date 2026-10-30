@@ -77,6 +77,7 @@ export function nextRoomPolicyAlarm(
 	now: number,
 	meter: RoomMeterState,
 	active: boolean,
+	quotaWarning = true,
 ): number {
 	const expiry = Date.parse(state.lease.capabilities.capabilitiesValidUntil);
 	const candidates = state.closingAt
@@ -91,7 +92,7 @@ export function nextRoomPolicyAlarm(
 			// display seconds; ordinary frames must not move the quota alarm.
 			const remainingMs = state.budget.allowedSeconds * 1000 - meter.accumulatedMs;
 			candidates.push(meter.activeSince + Math.max(0, remainingMs));
-			if (state.quotaWarnedDay !== meter.day)
+			if (quotaWarning && state.quotaWarnedDay !== meter.day)
 				candidates.push(meter.activeSince + Math.max(0, remainingMs - 300_000));
 		}
 	}

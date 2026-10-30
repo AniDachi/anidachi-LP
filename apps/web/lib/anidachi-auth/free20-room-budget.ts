@@ -25,7 +25,7 @@ type Dependencies = {
 	readUsage: typeof getUsageSecondsForDay;
 };
 
-/** Prepared only: no route calls this. Requires the existing authenticated,
+/** Used by the gated internal budget route. Requires the existing authenticated,
  * serialized DO lifecycle and active-host assignment fences. It never admits a
  * room, releases an assignment, selects a grant source or enables Free20.
  * Retries must use cumulative durable usage; a lost ACK is not a failed commit.

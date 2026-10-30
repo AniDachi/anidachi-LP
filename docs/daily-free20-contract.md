@@ -1,4 +1,4 @@
-# Free20: выключенный контракт, серверный расчет и сверка комнаты
+# Free20: контракт, серверный расчет и выключенное runtime-подключение
 
 Дата: 2026-10-30. Рабочая ветка: `codex/daily-free20-contract`.
 База: staging `3089b700877e6385ff65f9c3ca8040fe2308f58f`.
@@ -26,6 +26,16 @@ Worker/extension для этого web-only diff не пересобиралис
 Владелец затем согласовал блок 2Б: сверку сохраненных секунд и живого интервала,
 проверки повторов/переподключения/UTC/restart, PR и staging. Ветка
 `codex/daily-free20-room-budget` начата от `0e66cb45`. Активация не согласована.
+
+Блок 2Б доставлен через [PR #478](https://github.com/AniDachi/anidachi-LP/pull/478),
+staging `5705743c8a2d021d43f99e32c35da85df89085ac`: CI/Rooms/P2P, Web READY,
+Worker deploy, smoke после смены Web alias, extension build #225; DB без миграций.
+Точные идентификаторы и ограничения доказательств сохранены в PR #478.
+
+Теперь отдельно согласован блок 3А в `codex/daily-free20-runtime` от `5705743c`:
+подключение к Web/DO lifecycle с выключенным по умолчанию флагом, durable
+request/ACK/budget, recovery/UTC и измерением запросов/записей. Ниже ранние
+разделы описывают границы своих блоков; актуальное подключение описано в 3А.
 
 ## Граница локального блока 1А
 
@@ -283,3 +293,76 @@ room harness 39/39. 24 новых protocol/API/web tests сначала пада
 Повторная semantic/safe-adapter попытка 2Б и неизменность team artifacts при
 ошибке фиксируются в PR. Восстановление graph tooling не входит в этот блок;
 граф не считается актуальным, важные выводы проверены по исходникам.
+
+## Блок 3А: runtime с выключенной настройкой
+
+`POST /api/internal/rooms/:roomId/free20-budget` требует существующий room service
+bearer и точное серверное `ANIDACHI_FREE20_ACCOUNTING_ENABLED=true`. По умолчанию
+ответ `503 FREE20_ACCOUNTING_DISABLED` приходит до DB access. Strict request
+должен совпасть с roomId URL и generation 1; owner никогда не берется у клиента.
+Worker использует один bounded callback без redirect, в котором возвращаются
+post-commit checkpoint и подписанный pinned media lease. Для этого пути
+`issueRoomPolicy` пропускает старое quota-чтение: account usage читается один раз.
+
+Worker выбирает новый путь только при начальной настройке Free media room и
+явном opt-in. Уже выбранный режим сохраняется в SQL `room_meta` под
+`room_free20_accounting_v1`; отсутствие переменной после restart не превращает
+его в legacy. Существующие комнаты, paid комнаты и default-off путь не меняются.
+Флаг не дает admission: действующие проверки room token и web admission остаются.
+Настройка не внесена в Wrangler/Vercel и не включена на staging/production.
+
+В существующей serialized lifecycle queue materialized meter, request и sequence
+записываются до fetch. После проверки ответа meter ACK и budget записываются
+одной `storage.transactionSync`; synchronous SQL failure откатывает оба значения.
+Кеш обновляется после записи. Media policy остается в KV; после hibernation ее
+budget/refresh восстанавливаются из SQL-пары, поэтому crash между этими записями
+не возвращает минуты. Неизвестное/поврежденное состояние не заменяется новым
+полным лимитом. Это не новая transaction между Cloudflare и Supabase.
+
+Потерянный ответ оставляет cumulative usage и pending request. Новый запрос с
+большим sequence обязан покрывать все старые неподтвержденные buckets. ACKs,
+ledger total, owner/room/generation/day/sequence и freshness проверяются вместе.
+Terminal использует прежний settlement-only callback и его bounded backoff;
+сохраняет запрос до I/O, подтверждает полный расход до finalize/release и не
+выдает новый бюджет. Данные SQL очищаются только вместе с terminal tombstone.
+
+Если callback пересек UTC midnight, старый ответ не применяется; разрешена ровно
+одна повторная cumulative сверка нового дня. До rollover и после callback
+проверяется deadline старого бюджета: истекшая до полуночи комната остается
+завершенной и учитывается только до ее deadline. Остаток не переносится.
+При ошибке/неподтвержденной authority кандидат закрывает комнату и доводит
+settlement через существующее recovery. Новый grace/payment hold не добавлен.
+Это консервативное поведение при временном сбое требует будущей live-приемки.
+
+Один существующий alarm обслуживает quota/UTC/обязательную authority refresh.
+Отдельного quota polling нет. Старый warning на 5 минут не выдается и не
+планируется в новом режиме: порог нового предупреждения еще не согласован.
+Playback/media heartbeat и P2P не меняются. Новые public snapshot/UI,
+совместимость Store-клиентов, room admission и live paid/unlimited остаются
+отдельными незавершенными блоками. Этот флаг пока нельзя считать готовой активацией.
+
+Runtime-тесты проходят через настоящий workerd/SQLite и подписанные room tokens;
+внешняя Web/DB boundary подменяется. Отдельные Web route tests проходят через
+реальный producer/resolver/signing с подменой только Supabase HTTP. Это не
+реальная SQL concurrency, реальный аккаунт, покупка или browser acceptance.
+Измерение одинаковых 20 playback frames для Free solo и host+guest до/после:
+20 необходимых room-state SQL writes, 0 meter/Free20/KV/alarm writes и
+0 quota/budget callbacks. На authority refresh запись request и ACK обязательна.
+
+До активации rollback — revert через staging PR: реальных candidate-rooms/новых
+данных нет. После будущего включения старый runtime, не знающий SQL marker,
+не является безопасным rollback. Сначала прекратить выбор нового режима,
+сохранить понимающий marker runtime и завершить/settle выбранные комнаты.
+Отключенный Web gate заставляет их fail-closed и сохраняет terminal recovery;
+удалять счетчики или сбрасывать ledger нельзя. Production promotion требует
+отдельного разрешения после staging acceptance.
+
+Локальные проверки 3А: `pnpm check` 6/6; `pnpm test` 6/6 (protocol 260,
+API 290, Web 1401 + 6 прежних skips, extension 2455); workerd runtime 126/126;
+room harness 39/39; staging extension собран и validated с narrow permissions.
+Подтверждены SQL rollback вместе с неизменным cache и восстановление из SQL
+при старой policy KV без budget. Lint не содержит ошибок; существующие warnings
+в больших runtime/test файлах фиксируются в PR. Свежий whole-branch review,
+Graphify safe-adapter attempt и точные SHA/deployment/artifact/smoke результаты
+доставки фиксируются в PR. Локальный real-WebRTC повтор не выполнялся: media
+код не менялся, default-off регрессии проверяет CI E2E P2P перед merge.

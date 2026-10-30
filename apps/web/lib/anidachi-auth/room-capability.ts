@@ -18,7 +18,10 @@ export function roomMediaLease(
 		? undefined
 		: RoomMediaCapabilityLeaseSchema.parse(room.media_lease);
 }
-export async function issueRoomPolicy(roomId: string) {
+export async function issueRoomPolicy(
+	roomId: string,
+	includeLegacyQuota = true,
+) {
 	const result = await renewRoomMediaLease(roomId);
 	const room = await getRoomById(roomId);
 	if (!room || room.status === "ended") throw new Error("ROOM_ENDED");
@@ -38,12 +41,10 @@ export async function issueRoomPolicy(roomId: string) {
 		return { denied: true as const, closingAt };
 	}
 	const lease = RoomMediaCapabilityLeaseSchema.parse(result);
-	const quotaTime=new Date();
- const quota = await getHostQuotaView(
-		room.host_user_id,
-		room.host_plan_code,
-		quotaTime,
-	);
+	const quotaTime = new Date();
+	const quota = includeLegacyQuota
+		? await getHostQuotaView(room.host_user_id, room.host_plan_code, quotaTime)
+		: null;
 	const roomToken = await signRoomToken({
 		sub: room.host_user_id,
 		roomId,
@@ -56,13 +57,17 @@ export async function issueRoomPolicy(roomId: string) {
 	return {
 		denied: false as const,
 		roomToken,
-		quota:
-			room.host_plan_code === "free"
-				? {
-						day: quotaTime.toISOString().slice(0, 10),
-						remainingSeconds: quota.remainingSeconds,
-						resetAt: quota.resetAt,
-					}
-				: null,
+		...(includeLegacyQuota
+			? {
+					quota:
+						room.host_plan_code === "free" && quota
+							? {
+									day: quotaTime.toISOString().slice(0, 10),
+									remainingSeconds: quota.remainingSeconds,
+									resetAt: quota.resetAt,
+								}
+							: null,
+				}
+			: {}),
 	};
 }

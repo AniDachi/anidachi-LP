@@ -39,7 +39,7 @@ function validMeter(meter: RoomMeterState, day: string, now: number) {
 		throw new Error("Free20 meter unavailable");
 	}
 }
-function validBudget(budget: Free20RoomBudget) {
+export function validateFree20RoomBudget(budget: Free20RoomBudget) {
 	Free20RoomBudgetCheckpointSchema.parse(budget.checkpoint);
 	if (
 		!Number.isSafeInteger(budget.allowedSeconds) ||
@@ -66,7 +66,7 @@ function sameRoom(a: HostingTimeBinding, b: HostingTimeBinding) {
 	);
 }
 
-/** Pure, inactive reconciliation. The caller must persist the materialized
+/** Pure reconciliation used by the gated runtime. The caller must persist the materialized
  * meter and outgoing sequence before I/O, serialize lifecycle callbacks, and
  * persist the returned meter + budget together. null binding means ended.
  * An error applies NOTHING, grants NOTHING, and must never become a full budget.
@@ -100,7 +100,7 @@ export function reconcileFree20RoomBudget(
 		throw new Error("Free20 checkpoint does not match the active request");
 	}
 	if (previous) {
-		validBudget(previous);
+		validateFree20RoomBudget(previous);
 		if (
 			!sameRoom(previous.checkpoint, binding) ||
 			previous.checkpoint.utcDay > binding.utcDay ||
@@ -171,7 +171,7 @@ export function readFree20RoomTime(
 	meter: RoomMeterState,
 	now: number,
 ) {
-	validBudget(budget);
+	validateFree20RoomBudget(budget);
 	validMeter(meter, budget.checkpoint.utcDay, now);
 	if (
 		meter.pending.length ||
