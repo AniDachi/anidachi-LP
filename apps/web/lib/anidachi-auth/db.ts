@@ -694,7 +694,11 @@ export async function createRoomWithActiveSession(params: {
 			throw new Error("QUOTA_EXHAUSTED");
 		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
 			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
-		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+		if (
+			result.error.message.includes("ROOM_AUTHORITY_UNAVAILABLE") ||
+			result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") ||
+			["55P03", "57014"].includes(result.error.code)
+		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
 		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
 			throw new Error("ROOM_UPDATE_REQUIRED");
@@ -727,7 +731,11 @@ export async function claimActiveRoomSession(params: {
 			throw new Error("QUOTA_EXHAUSTED");
 		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
 			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
-		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+		if (
+			result.error.message.includes("ROOM_AUTHORITY_UNAVAILABLE") ||
+			result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") ||
+			["55P03", "57014"].includes(result.error.code)
+		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
     if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
       throw new Error("ROOM_UPDATE_REQUIRED");
