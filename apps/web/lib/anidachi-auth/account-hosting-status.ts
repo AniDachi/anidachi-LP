@@ -2,50 +2,16 @@ import {
 	ACCOUNT_HOSTING_OWNER_HEADER,
 	AccountHostingStatusSchema,
 	Free20LiveStatusSchema,
-	HostingTimeBindingSchema,
-	PlanCodeSchema,
+	Free20AccountAuthoritySchema,
+	type Free20AccountAuthority as Authority,
 	type AccountHostingStatus,
 	type Free20LiveStatusRequest,
 } from "@anidachi/protocol";
 import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
 import { internalServiceAuthorization } from "../internal-service-auth";
 import { db } from "./db";
 import { getAccountAccessSession } from "./watch-history-access";
 
-const DateValue = z.iso
-	.datetime({ offset: true })
-	.transform((value) => Date.parse(value));
-const Counter = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
-const AuthoritySchema = z.strictObject({
-	enabled: z.literal(true),
-	ownerUserId: HostingTimeBindingSchema.shape.ownerUserId,
-	planCode: PlanCodeSchema,
-	serverTime: DateValue,
-	refreshBy: DateValue,
-	resetAt: DateValue,
-	accountGeneration: Counter.positive(),
-	accessEpoch: Counter.positive(),
-	committedSeconds: Counter,
-	grant: z
-		.strictObject({
-			source: z.enum(["paid", "trial", "manual"]),
-			validUntil: DateValue.nullable(),
-		})
-		.nullable(),
-	assignment: z
-		.strictObject({
-			roomId: HostingTimeBindingSchema.shape.roomId,
-			roomGeneration: z.literal(1),
-			role: z.enum(["host", "member"]),
-			sessionId: z.string().min(1).max(128),
-			hostingTimeMode: z.literal("daily_free20").nullable(),
-			status: z.enum(["lobby", "live", "ended"]),
-			hostUserId: HostingTimeBindingSchema.shape.ownerUserId,
-		})
-		.nullable(),
-});
-type Authority = z.infer<typeof AuthoritySchema>;
 function authorityFor(owner: string, raw: unknown): Authority | null {
 	if (
 		raw &&
@@ -55,7 +21,7 @@ function authorityFor(owner: string, raw: unknown): Authority | null {
 		(raw as { enabled?: unknown }).enabled === false
 	)
 		return null;
-	const value = AuthoritySchema.parse(raw);
+	const value = Free20AccountAuthoritySchema.parse(raw);
 	const midnight = (Math.floor(value.serverTime / 86_400_000) + 1) * 86_400_000;
 	if (
 		value.ownerUserId !== owner ||

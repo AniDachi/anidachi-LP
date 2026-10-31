@@ -106,3 +106,45 @@ export const Free20LiveStatusSchema = Free20LiveStatusRequestSchema.extend({
 	"Invalid live read window",
 );
 export type Free20LiveStatus = z.infer<typeof Free20LiveStatusSchema>;
+
+/** Internal SQL read DTO, not a browser response or admission capability.
+ * The Web producer validates current owner/time/grant consistency before using
+ * it to construct AccountHostingStatus. Keep all Free20 wire shapes here.
+ */
+const AuthorityDate = z.iso.datetime({ offset: true }).transform(Date.parse);
+const AuthorityCounter = z
+	.number()
+	.int()
+	.nonnegative()
+	.max(Number.MAX_SAFE_INTEGER);
+export const Free20AccountAuthoritySchema = z.strictObject({
+	enabled: z.literal(true),
+	ownerUserId: HostingTimeBindingSchema.shape.ownerUserId,
+	planCode: PlanCodeSchema,
+	serverTime: AuthorityDate,
+	refreshBy: AuthorityDate,
+	resetAt: AuthorityDate,
+	accountGeneration: AuthorityCounter.positive(),
+	accessEpoch: AuthorityCounter.positive(),
+	committedSeconds: AuthorityCounter,
+	grant: z
+		.strictObject({
+			source: z.enum(["paid", "trial", "manual"]),
+			validUntil: AuthorityDate.nullable(),
+		})
+		.nullable(),
+	assignment: z
+		.strictObject({
+			roomId: HostingTimeBindingSchema.shape.roomId,
+			roomGeneration: z.literal(1),
+			role: z.enum(["host", "member"]),
+			sessionId: z.string().min(1).max(128),
+			hostingTimeMode: z.literal("daily_free20").nullable(),
+			status: z.enum(["lobby", "live", "ended"]),
+			hostUserId: HostingTimeBindingSchema.shape.ownerUserId,
+		})
+		.nullable(),
+});
+export type Free20AccountAuthority = z.infer<
+	typeof Free20AccountAuthoritySchema
+>;
