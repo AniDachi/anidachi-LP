@@ -71,6 +71,7 @@ type Options = {
 	paid?: boolean;
 	invalid?: boolean;
 	sqlZero?: boolean;
+	sqlAuthorityUnavailable?: boolean;
 	conflict?: boolean;
 };
 async function fixture(
@@ -204,6 +205,11 @@ async function fixture(
 					{ code: "P0001", message: "QUOTA_EXHAUSTED" },
 					{ status: 400 },
 				);
+			if (options.sqlAuthorityUnavailable)
+				return Response.json(
+					{ code: "P0001", message: "ROOM_AUTHORITY_UNAVAILABLE" },
+					{ status: 400 },
+				);
 			if (options.conflict)
 				return Response.json([
 					{
@@ -264,6 +270,15 @@ for (const kind of ["create", "connect"] as const) {
 			const response = await request(kind);
 			assert.equal(response.status, 403);
 			assert.equal((await response.json()).code, "QUOTA_EXHAUSTED");
+		}));
+	test(`${kind} returns 503 when authority becomes unavailable inside the locked SQL call`, async () =>
+		fixture({ sqlAuthorityUnavailable: true }, async (state) => {
+			const response = await request(kind);
+			const body = await response.json();
+			assert.equal(response.status, 503);
+			assert.equal(body.code, "ROOM_AUTHORITY_UNAVAILABLE");
+			assert.equal("roomToken" in body, false);
+			assert.equal(state.creates + state.claims, 1);
 		}));
 	test(`${kind} retains active-room conflict without another allowance`, async () =>
 		fixture({ conflict: true }, async () => {

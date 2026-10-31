@@ -27922,7 +27922,7 @@
       "file_type": "code",
       "norm_label": "claimactiveroomsession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L711"
+      "source_location": "L715"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_createroomwithactivesession",
@@ -27946,7 +27946,7 @@
       "file_type": "code",
       "norm_label": "getpersonalhistorypolicyactive()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1012"
+      "source_location": "L1020"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getusagesecondsforday",
@@ -27958,7 +27958,7 @@
       "file_type": "code",
       "norm_label": "getusagesecondsforday()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L952"
+      "source_location": "L960"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_renewroommedialease",
@@ -27970,7 +27970,7 @@
       "file_type": "code",
       "norm_label": "renewroommedialease()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1023"
+      "source_location": "L1031"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_resolvewatchhistoryaccess",
@@ -27994,7 +27994,7 @@
       "file_type": "code",
       "norm_label": "roomcapabilitiesfromroom()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L868"
+      "source_location": "L876"
     },
     {
       "id": "apps_web_lib_anidachi_auth_device_push_revokedevicepushsubscription",
@@ -49077,7 +49077,7 @@
       "file_type": "code",
       "norm_label": "listroommembers()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1000"
+      "source_location": "L1008"
     },
     {
       "id": "apps_web_lib_anidachi_auth_plan_entitlements_getlegacywatchlibraryentitlements",
@@ -66216,7 +66216,7 @@
       "file_type": "code",
       "norm_label": "commitroomusageday()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1030"
+      "source_location": "L1038"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_endhostlobbyforactivesession",
@@ -66228,7 +66228,7 @@
       "file_type": "code",
       "norm_label": "endhostlobbyforactivesession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L769"
+      "source_location": "L777"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_finalizeroomusage",
@@ -66240,7 +66240,7 @@
       "file_type": "code",
       "norm_label": "finalizeroomusage()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L914"
+      "source_location": "L922"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getactiveroomsessionassignment",
@@ -66252,7 +66252,7 @@
       "file_type": "code",
       "norm_label": "getactiveroomsessionassignment()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L755"
+      "source_location": "L763"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_releaseactiveroomsession",
@@ -66264,7 +66264,7 @@
       "file_type": "code",
       "norm_label": "releaseactiveroomsession()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L739"
+      "source_location": "L747"
     },
     {
       "id": "apps_web_lib_anidachi_auth_room_lifecycle_completehostroomend",
@@ -74572,7 +74572,7 @@
       "file_type": "code",
       "norm_label": "addroommember()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L966"
+      "source_location": "L974"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_beginstripesubscriptionrefresh",
@@ -74620,7 +74620,7 @@
       "file_type": "code",
       "norm_label": "createroom()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L793"
+      "source_location": "L801"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_databaseresultorthrow",
@@ -74644,7 +74644,7 @@
       "file_type": "code",
       "norm_label": "getactiveroombyclientrequestid()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L878"
+      "source_location": "L886"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getroombyid",
@@ -74656,7 +74656,7 @@
       "file_type": "code",
       "norm_label": "getroombyid()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L941"
+      "source_location": "L949"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getroommembercount",
@@ -74668,7 +74668,7 @@
       "file_type": "code",
       "norm_label": "getroommembercount()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L992"
+      "source_location": "L1000"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_getsubscriptionowner",
@@ -74752,7 +74752,7 @@
       "file_type": "code",
       "norm_label": "isroommember()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L979"
+      "source_location": "L987"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_isuuid",
@@ -74800,7 +74800,7 @@
       "file_type": "code",
       "norm_label": "persistroomsource()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L841"
+      "source_location": "L849"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_releasestripesubscriptionrefresh",
@@ -74872,7 +74872,7 @@
       "file_type": "code",
       "norm_label": "updateroom()",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L892"
+      "source_location": "L900"
     },
     {
       "id": "apps_web_lib_anidachi_auth_db_upsertuser",
@@ -195865,7 +195865,7 @@
       "label": "getPersistedRoomSourceProof()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L857",
+      "source_location": "L865",
       "_callable": true,
       "_origin": "ast"
     },
@@ -211579,7 +211579,7 @@
       "label": "fixture()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
-      "source_location": "L76",
+      "source_location": "L77",
       "_callable": true,
       "_origin": "ast"
     },
@@ -260113,7 +260113,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L970",
+      "source_location": "L978",
       "weight": 1.0
     },
     {
@@ -260146,7 +260146,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L718",
+      "source_location": "L722",
       "weight": 1.0
     },
     {
@@ -260157,7 +260157,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L736",
+      "source_location": "L744",
       "weight": 1.0
     },
     {
@@ -260168,7 +260168,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1034",
+      "source_location": "L1042",
       "weight": 1.0
     },
     {
@@ -260223,7 +260223,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L804",
+      "source_location": "L812",
       "weight": 1.0
     },
     {
@@ -260234,7 +260234,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L809",
+      "source_location": "L817",
       "weight": 1.0
     },
     {
@@ -260245,7 +260245,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L831",
+      "source_location": "L839",
       "weight": 1.0
     },
     {
@@ -260278,7 +260278,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L703",
+      "source_location": "L707",
       "weight": 1.0
     },
     {
@@ -260300,7 +260300,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L775",
+      "source_location": "L783",
       "weight": 1.0
     },
     {
@@ -260311,7 +260311,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L784",
+      "source_location": "L792",
       "weight": 1.0
     },
     {
@@ -260322,7 +260322,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L919",
+      "source_location": "L927",
       "weight": 1.0
     },
     {
@@ -260333,7 +260333,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L882",
+      "source_location": "L890",
       "weight": 1.0
     },
     {
@@ -260344,7 +260344,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L758",
+      "source_location": "L766",
       "weight": 1.0
     },
     {
@@ -260355,7 +260355,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L766",
+      "source_location": "L774",
       "weight": 1.0
     },
     {
@@ -260377,7 +260377,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1013",
+      "source_location": "L1021",
       "weight": 1.0
     },
     {
@@ -260388,7 +260388,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L942",
+      "source_location": "L950",
       "weight": 1.0
     },
     {
@@ -260399,7 +260399,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L993",
+      "source_location": "L1001",
       "weight": 1.0
     },
     {
@@ -260421,7 +260421,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L956",
+      "source_location": "L964",
       "weight": 1.0
     },
     {
@@ -260476,7 +260476,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L983",
+      "source_location": "L991",
       "weight": 1.0
     },
     {
@@ -260487,7 +260487,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1003",
+      "source_location": "L1011",
       "weight": 1.0
     },
     {
@@ -260564,7 +260564,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L844",
+      "source_location": "L852",
       "weight": 1.0
     },
     {
@@ -260575,7 +260575,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L846",
+      "source_location": "L854",
       "weight": 1.0
     },
     {
@@ -260586,7 +260586,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L849",
+      "source_location": "L857",
       "weight": 1.0
     },
     {
@@ -260597,7 +260597,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L851",
+      "source_location": "L859",
       "weight": 1.0
     },
     {
@@ -260608,7 +260608,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L744",
+      "source_location": "L752",
       "weight": 1.0
     },
     {
@@ -260619,7 +260619,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L752",
+      "source_location": "L760",
       "weight": 1.0
     },
     {
@@ -260641,7 +260641,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1024",
+      "source_location": "L1032",
       "weight": 1.0
     },
     {
@@ -260817,7 +260817,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L903",
+      "source_location": "L911",
       "weight": 1.0
     },
     {
@@ -432129,7 +432129,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L711",
+      "source_location": "L715",
       "weight": 1.0
     },
     {
@@ -432139,7 +432139,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L739",
+      "source_location": "L747",
       "weight": 1.0
     },
     {
@@ -432159,7 +432159,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L755",
+      "source_location": "L763",
       "weight": 1.0
     },
     {
@@ -432169,7 +432169,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L769",
+      "source_location": "L777",
       "weight": 1.0
     },
     {
@@ -432179,7 +432179,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L793",
+      "source_location": "L801",
       "weight": 1.0
     },
     {
@@ -432199,7 +432199,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L841",
+      "source_location": "L849",
       "weight": 1.0
     },
     {
@@ -432209,7 +432209,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L868",
+      "source_location": "L876",
       "weight": 1.0
     },
     {
@@ -432219,7 +432219,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L878",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -432239,7 +432239,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L892",
+      "source_location": "L900",
       "weight": 1.0
     },
     {
@@ -432249,7 +432249,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L914",
+      "source_location": "L922",
       "weight": 1.0
     },
     {
@@ -432259,7 +432259,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L941",
+      "source_location": "L949",
       "weight": 1.0
     },
     {
@@ -432269,7 +432269,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L952",
+      "source_location": "L960",
       "weight": 1.0
     },
     {
@@ -432279,7 +432279,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L966",
+      "source_location": "L974",
       "weight": 1.0
     },
     {
@@ -432289,7 +432289,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L979",
+      "source_location": "L987",
       "weight": 1.0
     },
     {
@@ -432299,7 +432299,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L992",
+      "source_location": "L1000",
       "weight": 1.0
     },
     {
@@ -432309,7 +432309,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1000",
+      "source_location": "L1008",
       "weight": 1.0
     },
     {
@@ -432319,7 +432319,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1012",
+      "source_location": "L1020",
       "weight": 1.0
     },
     {
@@ -432329,7 +432329,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1023",
+      "source_location": "L1031",
       "weight": 1.0
     },
     {
@@ -432349,7 +432349,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L1030",
+      "source_location": "L1038",
       "weight": 1.0
     },
     {
@@ -615505,7 +615505,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L857",
+      "source_location": "L865",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -615516,7 +615516,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/db.ts",
-      "source_location": "L860",
+      "source_location": "L868",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -672661,7 +672661,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -672672,7 +672672,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
-      "source_location": "L242",
+      "source_location": "L248",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -672683,7 +672683,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
-      "source_location": "L243",
+      "source_location": "L249",
       "weight": 1.0,
       "_origin": "ast"
     },
