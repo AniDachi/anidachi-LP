@@ -26,7 +26,7 @@ export type Free20AccountBudget = BudgetContext &
 				committedSeconds: number;
 				remainingAfterCommittedSeconds: number;
 		  }
-		| { kind: "unlimited" }
+		| { kind: "unlimited"; planCode: "plus" | "pro" }
 	);
 
 type Dependencies = {
@@ -34,7 +34,7 @@ type Dependencies = {
 	readUsage: typeof getUsageSecondsForDay;
 };
 
-/** Prepared for Free20; deliberately unused by current HTTP/WS/room handlers.
+/** Used by the explicitly gated internal Free20 reconciliation route.
  * userId must come from authenticated server context. Existing authority resolves
  * paid/trial/manual grants; trial offer eligibility is not daily Free eligibility.
  * No usage writes, caching, polling, resets or grant-source inference occur here.
@@ -74,7 +74,8 @@ export async function readFree20AccountBudget(
 			),
 		).toISOString(),
 	};
-	if (unlimited) return { ...context, kind: "unlimited" };
+	if (access.policy.planCode !== "free")
+		return { ...context, kind: "unlimited", planCode: access.policy.planCode };
 
 	const committedSeconds = await deps.readUsage(userId, context.utcDay);
 	if (!Number.isSafeInteger(committedSeconds) || committedSeconds < 0) {

@@ -2,13 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Статус на 2026-10-30:** правила согласованы в пределах
+**Статус на 2026-10-31:** правила согласованы в пределах
 [spec](../specs/2026-10-30-daily-free20-design.md). Выключенный блок 1А доставлен
 в staging через PR #476 (`d1a422a9`), блок 2А — через PR #477 (`0e66cb45`).
-Теперь отдельно согласован блок 2Б: сверка сохраненного и живого расхода,
-тесты повторов/восстановления/UTC и доставка в staging без активации.
+Блоки 2Б и 3А доставлены через PR #478/#479; staging `50932ed1`.
+Теперь отдельно согласован блок 4А: применение подтвержденного серверного
+права на безлимитное время к живой комнате, проверки и staging без активации.
 [Состояние блоков и доказательства](../../daily-free20-contract.md).
-Подключение к действующим обработчикам, дизайн, включение Free20, production
+Checkout/Sandbox-покупка, admission, public UI, включение Free20, production
 и Store согласуются отдельно.
 [Исходная передача](2026-10-30-daily-free20-handoff.md) остается историческим срезом.
 
@@ -184,7 +185,8 @@ ledger, polling и таймер не добавляются. Paid/unlimited не
   позднего старого expiry, host+guest/paused/reconnect и точных 20 минут.
 - [x] В одинаковых 20 playback frames нет дополнительных budget callbacks,
   записей meter/Free20 state, KV или alarm. Один существующий alarm сохраняется.
-- [ ] Полные checks/review и доставка 3А в staging; запись результата — в PR.
+- [x] Полные checks/review и доставка 3А через PR #479 в staging `50932ed1`;
+  Web/Worker, post-switch smoke и extension build #226. Полная запись — в PR.
 
 Это кандидат runtime, а не включенный новый продукт: room admission, новый
 public HostingTimeSnapshot, live purchase/unlimited, UI и старые клиенты еще
@@ -212,6 +214,31 @@ public HostingTimeSnapshot, live purchase/unlimited, UI и старые клие
 отсутствие лишних записей при неизменных условиях и сохраненная синхронизация.
 
 ## Блок 4. Покупка во время комнаты
+
+### Блок 4А. Подтвержденное право на время, выключенный кандидат
+
+Владелец согласовал серверное применение уже подтвержденного права, сохранение
+Free-расхода и pinned caps, проверки сбоев/повторов/границ, ревью и PR в staging.
+Сам Checkout, быстрая доставка подтверждения покупки из платежного сценария,
+настоящая Sandbox-покупка, admission/UI и включение остаются отдельными шагами.
+
+- [x] Strict internal unlimited checkpoint от существующей account authority;
+  owner/room/generation/sequence и ограниченный срок. Не угадывать источник
+  paid/trial/manual по названию плана; public source-labelled snapshot отдельно.
+- [x] Атомарно сохранить остановленный Free-интервал, ACK и право на время;
+  хвост во время I/O остается в cumulative settlement до финализации.
+- [x] Durable schema2 с чтением старого schema1, восстановлением из SQL при
+  старой policy KV; ссылка/участники/hostPlanCode/места/media не меняются.
+- [x] Проверки paid-vs-zero, UTC, повторов, потери ответа, eviction, SQL rollback,
+  завершения и возврата к подтвержденному Free с сохраненным остатком.
+- [ ] Полные checks/review и staging-доставка; точный receipt в PR.
+
+Применение происходит при существующей обязательной сверке прав. Это еще не
+доказательство немедленной реакции комнаты на webhook/возврат из Checkout.
+Опоздавшее подтверждение не отменяет уже наступивший quota deadline.
+Общий блок 4 ниже остается незавершенным до платежной интеграции и приемки.
+
+### Оставшаяся сквозная интеграция
 
 **Плоскости:** Stripe webhook/entitlements, Worker, room capability contract.
 

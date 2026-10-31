@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	Free20RoomBudgetCheckpointSchema,
 	Free20RoomBudgetRequestSchema,
+	Free20RoomBudgetResponseSchema,
 } from "../src/free20-room-budget";
 
 const at = Date.parse("2026-10-30T12:00:00Z");
@@ -27,6 +28,47 @@ const checkpoint = {
 };
 
 describe("inactive Free20 room accounting contract", () => {
+	it("requires an explicit bounded account authority for unlimited time and rejects mixed finite grants", () => {
+		const {
+			roomBudgetVersion: _version,
+			budgetSeconds: _limit,
+			committedSeconds: _used,
+			...context
+		} = checkpoint;
+		const right = {
+			...context,
+			roomTimeVersion: 1,
+			kind: "confirmed_unlimited",
+			authority: "account_entitlements_v1",
+			planCode: "plus",
+		};
+		const policy = { denied: false, roomToken: "synthetic-signed-token" };
+		expect(
+			Free20RoomBudgetResponseSchema.safeParse({ checkpoint: right, policy })
+				.success,
+		).toBe(true);
+		for (const change of [
+			{ refreshBy: at },
+			{ refreshBy: at + 300001 },
+			{ refreshBy: null },
+			{ planCode: "free" },
+			{ authority: "checkout_return" },
+			{ roomTimeVersion: 2 },
+			{ source: "paid" },
+			{ budgetSeconds: 1200 },
+			{ acknowledged: [{ day: "2026-10-31", seconds: 1 }] },
+		])
+			expect(
+				Free20RoomBudgetResponseSchema.safeParse({
+					checkpoint: { ...right, ...change },
+					policy,
+				}).success,
+			).toBe(false);
+		expect(
+			Free20RoomBudgetResponseSchema.safeParse({ checkpoint: null, policy })
+				.success,
+		).toBe(false);
+	});
 	it("keeps a raw post-commit account total and cumulative room ACK together", () => {
 		expect(Free20RoomBudgetRequestSchema.parse(request)).toEqual(request);
 		expect(Free20RoomBudgetCheckpointSchema.parse(checkpoint)).toEqual(

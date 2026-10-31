@@ -2,6 +2,7 @@ import {
 	Free20RoomBudgetCheckpointSchema,
 	type Free20RoomBudgetRequest,
 	Free20RoomBudgetRequestSchema,
+	Free20RoomUnlimitedCheckpointSchema,
 	HostingTimeBindingSchema,
 	RoomUsageSummarySchema,
 } from "@anidachi/protocol";
@@ -68,11 +69,6 @@ export async function settleFree20RoomBudget(
 	}
 	// Do not move this read before settlement or return a partial response.
 	const budget = await readFree20AccountBudget(owner, now, deps);
-	if (budget.kind !== "daily_free") {
-		// Paid transition is a separate integration: never reinterpret it as Free
-		// or fabricate the paid/trial/manual source missing from existing authority.
-		throw new Error("Free20 daily budget not applicable");
-	}
 	const current = await deps.readRoom(request.roomId);
 	if (
 		!current ||
@@ -83,8 +79,7 @@ export async function settleFree20RoomBudget(
 	) {
 		throw new Error("Free20 room changed during settlement");
 	}
-	return Free20RoomBudgetCheckpointSchema.parse({
-		roomBudgetVersion: 1,
+	const context = {
 		ownerUserId: owner,
 		roomId: request.roomId,
 		roomGeneration: request.roomGeneration,
@@ -93,8 +88,21 @@ export async function settleFree20RoomBudget(
 		serverTime: Date.parse(budget.serverTime),
 		resetAt: Date.parse(budget.resetAt),
 		refreshBy: Date.parse(budget.refreshBy),
+		acknowledged,
+	};
+	if (budget.kind === "unlimited") {
+		return Free20RoomUnlimitedCheckpointSchema.parse({
+			...context,
+			roomTimeVersion: 1,
+			kind: "confirmed_unlimited",
+			authority: "account_entitlements_v1",
+			planCode: budget.planCode,
+		});
+	}
+	return Free20RoomBudgetCheckpointSchema.parse({
+		...context,
+		roomBudgetVersion: 1,
 		budgetSeconds: budget.budgetSeconds,
 		committedSeconds: budget.committedSeconds,
-		acknowledged,
 	});
 }

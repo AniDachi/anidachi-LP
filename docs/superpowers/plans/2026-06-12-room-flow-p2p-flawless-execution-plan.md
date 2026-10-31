@@ -295,6 +295,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- **2026-10-31, `codex/daily-free20-paid-time`:** approved disabled Free20 block4A
+  adds a bounded time right independent of pinned room/media capabilities.
+  Free usage, including the callback tail, stays durable until cumulative ACK;
+  SQL restore/rollback, quota expiry, UTC and terminal behavior are covered by
+  workerd tests. [Scope and evidence](../../daily-free20-contract.md) distinguish
+  local checks/PR staging delivery from future live payment/browser acceptance.
+  No P2P, heartbeat, media quality or permission changes; activation remains off.
+
 - **2026-10-17, `codex/netflix-input-media-fixes`:** the [player input/media repair](2026-10-17-netflix-input-media-fixes.md) preserves reported v2/v3 camera publication across hibernation without treating a grant as capture, and routes held-key releases before composer/provider handlers. Regression evidence includes real forced-wake Worker snapshots and all-provider overlay keyboard fixtures. Exact full-suite/CI/staging results are recorded in the PR; loaded-artifact and cross-network media acceptance are still separate release gates.
 
 - [x] 2026-10-01: Reproduced the commercial terminal-cleanup test race: an

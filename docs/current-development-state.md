@@ -1,5 +1,18 @@
 # Current Development State
 
+## Free20 disabled server candidate, October 31, 2026
+
+The owner-approved daily Free20 migration is tracked in the
+[active transition plan](superpowers/plans/2026-10-30-daily-free20-transition.md)
+and [contract/evidence record](daily-free20-contract.md). Blocks1A/2A/2B/3A
+reached staging through PRs476–479, last merge `50932ed1`; they do not activate
+Free20. Block4A now adds bounded account-confirmed unlimited time to the same
+room while retaining its pinned media capabilities and cumulative settlement.
+It is a local candidate until its PR receipt confirms staging delivery.
+Checkout/event delivery, actual Sandbox purchase, admission, public UI and
+old-client acceptance remain open. Production/main/Store and live flags are
+unchanged by this block; older launch permissions below are historical.
+
 ## Authorized production launch, October 19, 2026
 
 The owner confirmed Store 0.1.4 is approved and waiting for manual publication,

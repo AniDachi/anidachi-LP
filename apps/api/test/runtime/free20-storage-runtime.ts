@@ -2,27 +2,31 @@ import { reset, runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { afterEach, expect, it, vi } from "vitest";
 import {
-	readStoredRoomMeter,
-	writeStoredFree20Accounting,
-	readStoredFree20Accounting,
-} from "../../src/room-persistence";
+	acknowledgeFree20Accounting,
+	createFree20AccountingState,
+	type Free20AccountingState,
+	prepareFree20Accounting,
+} from "../../src/free20-room-accounting";
 import {
 	createRoomMeterState,
 	type RoomMeterState,
 	reconcileRoomMeter,
 } from "../../src/room-metering";
 import {
-	createFree20AccountingState,
-	type Free20AccountingState,
-	prepareFree20Accounting,
-	acknowledgeFree20Accounting,
-} from "../../src/free20-room-accounting";
+	readStoredFree20Accounting,
+	readStoredRoomMeter,
+	writeStoredFree20Accounting,
+} from "../../src/room-persistence";
+
 const now = Date.parse("2026-10-30T12:00:00Z");
 afterEach(async () => {
 	vi.restoreAllMocks();
 	await reset();
 });
-it("rolls back meter and Free20 ACK/budget together, including a failed identical retry", async () => {
+it.each([
+	false,
+	true,
+])("rolls back meter and Free20 ACK/authority together, including a failed identical retry: unlimited=%s", async (unlimited) => {
 	const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 	await runInDurableObject(
 		ns.get(ns.idFromName(`free20-storage-${crypto.randomUUID()}`)),
@@ -58,13 +62,19 @@ it("rolls back meter and Free20 ACK/budget together, including a failed identica
 				meter,
 				{
 					...binding,
-					roomBudgetVersion: 1,
+					...(unlimited
+						? {
+								roomTimeVersion: 1,
+								kind: "confirmed_unlimited",
+								authority: "account_entitlements_v1",
+								planCode: "plus",
+							}
+						: { roomBudgetVersion: 1 }),
 					checkpointSequence: 1,
 					serverTime: now,
 					refreshBy: now + 300000,
 					resetAt: Date.parse("2026-10-31T00:00:00Z"),
-					budgetSeconds: 1200,
-					committedSeconds: 600,
+					...(!unlimited ? { budgetSeconds: 1200, committedSeconds: 600 } : {}),
 					acknowledged: pending.pending?.usage ?? [],
 				},
 				binding,

@@ -204,6 +204,7 @@ test("confirmed Plus and Pro do not read or apply the daily Free budget", async 
 			resetAt: "2026-10-31T00:00:00.000Z",
 			refreshBy: "2026-10-30T12:05:00.000Z",
 			kind: "unlimited",
+			planCode: plan,
 		});
 	}
 });
