@@ -3408,6 +3408,64 @@ describe("RoomDurableObject media v2", () => {
 		};
 	}
 
+ it("Free20 status reads real live usage without settlement, writes or alarms", async () => {
+  let clock = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  f.setPriorUsage(420);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "status host");
+  const guest = await f.join(1);
+  await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "status guest");
+  let profile!: ReturnType<typeof observeRoomStorage>;
+  await runInDurableObject(f.stub, async (_i, ctx) => { await ctx.storage.sync(); profile = observeRoomStorage(ctx.storage); });
+  const calls = f.calls.length;
+  clock += 180_000;
+  const response = await f.stub.fetch("https://room.internal/internal/free20-status", {
+   method: "POST", headers: { Authorization: `Bearer ${INTERNAL_SECRET}`, "Content-Type": "application/json" },
+   body: JSON.stringify({ ownerUserId: hostId, roomId: f.roomId, roomGeneration: 1 }),
+  });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({ ownerUserId: hostId, roomId: f.roomId, serverTime: clock, access: { usedSeconds: 600, remainingSeconds: 600, metering: true } });
+  expect(f.calls).toHaveLength(calls);
+  expect(profile.snapshot()).toMatchObject({ sqlRowsWritten: 0, kvPuts: 0, kvDeletes: 0, alarmSets: 0, alarmDeletes: 0 });
+  profile.restore();
+  host.close(); guest.close();
+ });
+ it("Free20 status denies unauthenticated, mismatched and disabled reads", async () => {
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "status identity host");
+  const read = (owner = hostId, auth = true) => f.stub.fetch("https://room.internal/internal/free20-status", {
+   method: "POST", headers: { ...(auth ? { Authorization: `Bearer ${INTERNAL_SECRET}` } : {}), "Content-Type": "application/json" },
+   body: JSON.stringify({ ownerUserId: owner, roomId: f.roomId, roomGeneration: 1 }),
+  });
+  expect((await read(hostId, false)).status).toBe(401);
+  expect((await read("22222222-2222-4222-8222-222222222222")).status).toBe(503);
+  expect((await read()).status).toBe(200);
+  await runInDurableObject(f.stub, i => { free20Room(i).env = { ...free20Room(i).env, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "false" }; });
+  expect((await read()).status).toBe(404);
+  host.close();
+ });
+
+ it("Free20 status does not refresh expired authority during an internal read", async () => {
+  let clock = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "status expiry host");
+  const calls = f.calls.length;
+  clock += 300_001;
+  const response = await f.stub.fetch("https://room.internal/internal/free20-status", {
+   method: "POST", headers: { Authorization: `Bearer ${INTERNAL_SECRET}` },
+   body: JSON.stringify({ ownerUserId: hostId, roomId: f.roomId, roomGeneration: 1 }),
+  });
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({ code: "HOSTING_STATUS_UNAVAILABLE" });
+  expect(f.calls).toHaveLength(calls);
+  host.close();
+ });
+
  it("server opt-in does not convert an unmarked legacy Free room", async () => {
   const f = await fixture("free", 3, 1800, true, false);
   const host = await f.join(0);

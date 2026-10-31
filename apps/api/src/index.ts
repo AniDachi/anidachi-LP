@@ -9,6 +9,8 @@ import {
 } from "./room-capability";
 import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy, notifyWebFree20Budget } from "./internal-web-client";
 import { createFree20AccountingState, prepareFree20Accounting, acknowledgeFree20Accounting, settleFree20Accounting, type Free20AccountingState } from "./free20-room-accounting";
+import { readFree20LiveStatus } from "./free20-live-status";
+import { Free20LiveStatusRequestSchema } from "@anidachi/protocol";
 import {
 	roomUsageBuckets,
 	acknowledgeRoomUsageDay,
@@ -184,6 +186,27 @@ app.get("/", (c) => {
     );
   }
   return c.json({ ok: true, service: "anidachi-api" });
+});
+
+app.post("/internal/rooms/:roomId/free20-status", async (c) => {
+  const headers = { "Cache-Control": "private, no-store" };
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(authorization, c.env.ANIDACHI_INTERNAL_API_SECRET))
+    return c.json({ code: "UNAUTHORIZED" }, 401, headers);
+  if (c.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+    return c.json({ code: "FREE20_DISABLED" }, 404, headers);
+  const command = Free20LiveStatusRequestSchema.safeParse(await c.req.json().catch(() => null));
+  if (!command.success || command.data.roomId !== c.req.param("roomId"))
+    return c.json({ code: "INVALID_STATUS_REQUEST" }, 400, headers);
+  try {
+    const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(command.data.roomId));
+    return await stub.fetch(new Request("https://room.internal/internal/free20-status", {
+      method: "POST", headers: { Authorization: authorization!, "Content-Type": "application/json" },
+      body: JSON.stringify(command.data),
+    }));
+  } catch {
+    return c.json({ code: "HOSTING_STATUS_UNAVAILABLE" }, 503, headers);
+  }
 });
 
 app.post("/internal/rooms/:roomId/end", async (c) => {
@@ -1409,6 +1432,31 @@ export class RoomDurableObject {
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname === "/internal/free20-status") {
+      const headers = { "Cache-Control": "private, no-store" };
+      if (!hasValidInternalAuthorization(request.headers.get("authorization"), this.env.ANIDACHI_INTERNAL_API_SECRET))
+        return Response.json({ code: "UNAUTHORIZED" }, { status: 401, headers });
+      if (this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+        return Response.json({ code: "FREE20_DISABLED" }, { status: 404, headers });
+      const command = Free20LiveStatusRequestSchema.safeParse(await request.json().catch(() => null));
+      if (!command.success) return Response.json({ code: "INVALID_STATUS_REQUEST" }, { status: 400, headers });
+      return this.runRoomEndExclusively(async () => {
+        try {
+          const policy = this.roomPolicy;
+          if (!policy || !this.isFreeRoom()) throw new Error("Missing finite room authority");
+          const now = Date.now();
+          const status = readFree20LiveStatus(command.data, {
+            binding: { ownerUserId: policy.hostId, roomId: this.room.roomId, roomGeneration: this.room.roomGeneration, utcDay: new Date(now).toISOString().slice(0, 10) },
+            accounting: this.free20Accounting, meter: this.roomMeter,
+            validUntil: Math.min(policy.refreshAt, Date.parse(policy.lease.capabilities.capabilitiesValidUntil)),
+            terminal: !!(this.endedTombstone || this.terminalIntent || this.roomEndInProgress || policy.endingReason || policy.closingAt !== null),
+          }, now);
+          return Response.json(status, { headers });
+        } catch {
+          return Response.json({ code: "HOSTING_STATUS_UNAVAILABLE" }, { status: 503, headers });
+        }
+      });
+    }
     if (request.method === "POST" && url.pathname === "/internal/end") {
 			if (
 				!hasValidInternalAuthorization(

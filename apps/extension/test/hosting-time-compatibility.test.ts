@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HostingTimeSnapshotSchema } from "@anidachi/protocol";
+import {
+	AccountHostingStatusSchema,
+	HostingTimeSnapshotSchema,
+} from "@anidachi/protocol";
 import { free } from "../../../packages/protocol/test/fixtures/hosting-time";
 import { requestHostingAccess } from "../src/hosting-access-client";
 
@@ -35,5 +38,32 @@ describe("inactive hosting time compatibility with the real extension parser", (
 			bridge({ ...legacy, hosting });
 			await expect(requestHostingAccess(free.ownerUserId)).rejects.toThrow();
 		}
+	});
+	it("does not reinterpret the independent account status as legacy entitlements", async () => {
+		const at = Date.parse(legacy.serverTime);
+		const status = AccountHostingStatusSchema.parse({
+			accountHostingVersion: 1,
+			ownerUserId: free.ownerUserId,
+			planCode: "free",
+			serverTime: at,
+			validUntil: at + 60_000,
+			period: {
+				utcDay: "2026-10-30",
+				resetAt: Date.parse("2026-10-31T00:00:00Z"),
+			},
+			access: {
+				kind: "daily_free",
+				budgetSeconds: 1200,
+				usedSeconds: 420,
+				remainingSeconds: 780,
+				metering: false,
+			},
+			activeRoom: null,
+			canCreateRoom: true,
+		});
+		bridge({ ...legacy, accountHosting: status });
+		expect(await requestHostingAccess(free.ownerUserId)).toEqual(legacy);
+		bridge(status);
+		await expect(requestHostingAccess(free.ownerUserId)).rejects.toThrow();
 	});
 });

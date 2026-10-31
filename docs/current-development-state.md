@@ -6,7 +6,9 @@ The owner-approved daily Free20 migration is tracked in the
 [active transition plan](superpowers/plans/2026-10-30-daily-free20-transition.md)
 and [contract/evidence record](daily-free20-contract.md). Blocks1A/2A/2B/3A
 reached staging through PRs476–479; block4A reached staging through PR480
-(`5bc4b215`). Graphify repair PR481 followed at `c4a4750c`.
+(`5bc4b215`). Graphify repair PR481 followed at `c4a4750c`. Block5A reached
+staging through PR482; PR483 (`ec46a6c0`) maps unavailable room authority to503
+in both create and connect handlers.
 
 Block5A prepares default-off SQL/Web/Worker admission and renewal. The additive
 `hosting_commercial_policy.free20_enabled` defaults false; existing rooms retain
@@ -17,6 +19,18 @@ runtime flag nor the SQL switch is enabled by deployment. SQL serializes account
 admission, keeps the active-room assignment through settlement, and rechecks
 1200-second UTC usage. Confirmed paid time can continue a pinned Free-capacity
 room; terminal deadlines and ended rooms are never revived.
+
+The separately approved block5B prepares `GET /api/me/hosting-status` for later
+website/extension consumers, with a required expected-owner header and a new
+strict versioned contract. Existing me/entitlements/room-quota responses remain
+unchanged. The gated SQL projection returns the current paid/trial/manual source,
+UTC reset and active assignment. Idle/guest Free reads committed account usage;
+an active Free host reads its actual finite DO meter and then rechecks account
+identity/assignment. Unknown, pending or expired authority produces503, never a
+successful zero/null allowance. These on-demand reads do not settle room usage,
+reserve minutes, add polling or issue room tokens. Both server and SQL gates stay
+off; UI, live room snapshot events, trial-start changes and purchase delivery are
+separate work. See the contract record for consistency, request bounds and rollback.
 
 Local evidence and the exact staging delivery receipt belong in this block's PR.
 Checkout/event delivery, actual Sandbox purchase, stopping new trial offers,
