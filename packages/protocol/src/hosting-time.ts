@@ -38,7 +38,7 @@ export type HostingTimeBinding = z.infer<typeof HostingTimeBindingSchema>;
  * metering means host + at least one guest are present, including playback pause;
  * a solo host does not meter. Durable intervals/ACKs remain server internals.
  */
-const DailyFree = z
+export const DailyFreeHostingTimeSchema = z
 	.strictObject({
 		kind: z.literal("daily_free"),
 		budgetSeconds: z.literal(1200),
@@ -56,7 +56,7 @@ const DailyFree = z
  * validUntil bounds this time-right assertion, not existing renewal/reconnect
  * grace. Null is explicit indefinite manual authority only, never missing data.
  */
-const ConfirmedUnlimited = z
+export const ConfirmedUnlimitedHostingTimeSchema = z
 	.strictObject({
 		kind: z.literal("confirmed_unlimited"),
 		source: z.enum(["paid", "trial", "manual"]),
@@ -68,8 +68,8 @@ const ConfirmedUnlimited = z
 	);
 
 export const HostingTimeAccessSchema = z.discriminatedUnion("kind", [
-	DailyFree,
-	ConfirmedUnlimited,
+	DailyFreeHostingTimeSchema,
+	ConfirmedUnlimitedHostingTimeSchema,
 	z.strictObject({ kind: z.literal("unknown") }),
 ]);
 export type HostingTimeAccess = z.infer<typeof HostingTimeAccessSchema>;

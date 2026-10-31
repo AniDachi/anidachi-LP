@@ -473,3 +473,85 @@ Rollback до активации — revert через staging PR; аддити�
 выключенными. После активации требуется marker/schema2-aware runtime: сначала
 закрыть новые SQL admissions, дать комнатам корректно завершить settlement,
 не удалять режим/usage/trial/paid данные и не возвращать unaware старый Worker.
+
+## Блок 5Б: выключенное чтение доступа аккаунта, 2026-10-31
+
+Блок5А доставлен PR #482; PR #483 (`ec46a6c0`) исправил распознавание
+`ROOM_AUTHORITY_UNAVAILABLE` в обоих Web create/connect обработчиках: ответ503.
+От этой базы отдельно согласованы серверные данные для сайта/расширения,
+совместимость, ревью и доставка в staging; ветка `codex/free20-access-status`.
+Интерфейс, выдача новых trial, покупка и активация остаются следующими блоками.
+
+### Публичный read-контракт
+
+`GET /api/me/hosting-status` использует прежний bearer-first/cookie account resolver
+и требует `x-anidachi-hosting-owner`, совпадающий с подтвержденным аккаунтом.
+Ответы:401 без сессии,409 при несовпадении/отсутствии владельца,404 при выключенном
+server/SQL gate,503 при неизвестном/просроченном/изменившемся состоянии,200 только
+для строгого `AccountHostingStatus`. Все ответы private/no-store с Vary по cookie,
+authorization и owner header. Новый endpoint не вызывается старыми клиентами.
+
+Снимок имеет `accountHostingVersion:1`, владельца, effective plan, время измерения,
+ограниченный `validUntil`, UTC-день/reset, activeRoom(host/member) и canCreateRoom.
+У Free access содержит1200/used/remaining/metering; overshoot отображается как
+1200/0. Paid/trial/manual обозначены отдельным confirmed_unlimited с источником
+и сроком. Только бессрочное ручное право может иметь null в сроке самого grant;
+срок снимка всегда конечен: не позже5 минут, UTC-полуночи и текущего grant expiry.
+Неизвестных, null-access или придуманного нулевого остатка в успешном ответе нет.
+
+Любое текущее назначение комнаты делает canCreateRoom=false; гость не тратит
+свой hosting budget. Это наблюдение для отображения, не токен допуска или резерв.
+Будущий consumer должен проверять ожидаемого владельца, учитывать время получения
+и истечение снимка; старый ответ после logout/account switch нельзя показывать.
+Shared `acceptAccountHostingStatus` проверяет форму/владельца; freshness UI остается
+ответственностью будущего consumer. Действия создания/входа заново проверяют сервер.
+Старые me/entitlements/room-quota/HostingAccess и room events не расширяются и не
+меняют значение1800 или null; тесты используют реальные web/extension парсеры.
+
+### Откуда берется остаток
+
+Миграция `20261031100000_free20_account_status.sql` добавляет service-only
+`read_free20_account_status_v1`, использующий существующие policy/account locks
+и `resolve_watch_history_access_v1`. Общая функция subscription grant details
+показывает источник, сохраняя прежнюю eligibility/expiry логику. Старый
+`subscription_access_grants_v1` сохраняет две колонки и свои права; данные,
+activationAt, usage, trial/renewal и сроки подписок миграция не меняет.
+
+Idle/guest Free использует свой SQL UTC ledger; unlimited использует подтвержденный
+выигравший grant. Активный Free-хост читает реальную комнату через authenticated
+`POST /internal/rooms/:roomId/free20-status`. DO сериализует чистую проекцию с
+room lifecycle, проверяет account/room/generation/day и finite checkpoint.
+Он не делает budget callback, settlement, storage write или alarm update ради read.
+Pending ACK, expired authority, ended/closing, неизвестный budget и legacy/unlimited
+DO не дают finite success. Отключенный Worker возвращает404; потерянный read —503.
+
+После DO Web повторно читает SQL и сверяет account generation/access epoch,
+владельца, план/источник/срок, UTC-день и полное назначение комнаты. При смене
+контекста ответ503. Live budget уже включает committed usage и незаписанный
+интервал: SQL total не прибавляется второй раз и отдельный новый ACK не вычитается.
+Снимок остается измерением на времени DO; он не обещает неизменный будущий остаток.
+Web консервативно учитывает длительность сборки ответа, чтобы истекший grant не
+успел стать опубликованным success. DB/Worker reads ограничены timeout2 секунды.
+
+Стоимость нового on-demand запроса: один SQL для idle/guest/unlimited, два SQL и
+один Worker для Free host. Нет фонового polling или сети на счетчик UI; действующие
+клиенты не получают дополнительных запросов. Account resolver может выполнять
+свои прежние authority/epoch обновления; чтение не списывает и не резервирует время.
+
+### Проверки и доставка
+
+Локальная проверка включает synthetic rollback pgTAP, прежние SQL suites,
+strict protocol/web/extension contracts, HTTP auth/timeout/race/expiry и настоящие
+DO reads со счетчиками storage/alarms. Полный список команд, результаты и точные
+SHA/deploy/alias/smoke evidence записываются в PR. Это не доказательство включенной
+стейджинг-системы, реальной Sandbox-покупки или работы опубликованного Store binary.
+UI/visual и real-WebRTC acceptance отложены: этот блок не подключает consumers
+и не меняет signaling/media; они обязательны для соответствующих следующих этапов.
+
+Новых secrets/env нет: используются прежние server/Worker flag и internal service
+auth. SQL free20_enabled=false и оба server opt-in остаются выключены. Сначала
+аддитивная миграция, затем совместимые Web/Worker; при выключенных gates порядок
+их завершения не открывает новый пользовательский режим. Main/production/Store
+не входят в доставку. До включения rollback — revert Web/Worker через staging PR;
+аддитивные read helpers можно оставить. Для будущих активных комнат по-прежнему
+нельзя откатывать accounting/schema2-aware runtime или стирать usage/права.

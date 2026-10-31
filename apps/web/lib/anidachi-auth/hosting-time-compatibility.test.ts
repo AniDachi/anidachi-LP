@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { HostingTimeSnapshotSchema } from "@anidachi/protocol";
+import {
+	AccountHostingStatusSchema,
+	HostingTimeSnapshotSchema,
+} from "@anidachi/protocol";
 import { free } from "../../../../packages/protocol/test/fixtures/hosting-time";
 import {
 	HistoryAccessError,
@@ -56,4 +59,38 @@ test("real web resolver rejects replacing strict hosting data or granting active
 			HistoryAccessError,
 		);
 	}
+});
+
+test("account status stays independent from the existing web entitlement resolver", async () => {
+	const status = AccountHostingStatusSchema.parse({
+		accountHostingVersion: 1,
+		ownerUserId: free.ownerUserId,
+		planCode: "free",
+		serverTime: now.getTime(),
+		validUntil: now.getTime() + 60_000,
+		period: {
+			utcDay: "2026-10-30",
+			resetAt: Date.parse("2026-10-31T00:00:00Z"),
+		},
+		access: {
+			kind: "daily_free",
+			budgetSeconds: 1200,
+			usedSeconds: 420,
+			remainingSeconds: 780,
+			metering: false,
+		},
+		activeRoom: null,
+		canCreateRoom: true,
+	});
+	const unchanged = await resolveAccountEntitlements(
+		free.ownerUserId,
+		now,
+		async () => ({ ...legacy, accountHosting: status }),
+	);
+	assert.equal(unchanged.hosting?.canHost, false);
+	assert.equal(unchanged.policy.dailyHostSeconds, 1800);
+	await assert.rejects(
+		resolveAccountEntitlements(free.ownerUserId, now, async () => status),
+		HistoryAccessError,
+	);
 });

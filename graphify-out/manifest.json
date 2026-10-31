@@ -30,9 +30,9 @@
     "semantic_hash": "10c7ffb4e1227855af283f14bd0ec83d"
   },
   "apps/api/src/index.ts": {
-    "mtime": 1793433279.0346487,
-    "seen": 1793435376.517303,
-    "ast_hash": "cad121324cd3540182df0ee6ba0675a2",
+    "mtime": 1793441626.2093577,
+    "seen": 1793442625.9566562,
+    "ast_hash": "c0af7fde91605f2abd19253de8b9f425",
     "semantic_hash": ""
   },
   "apps/api/src/internal-auth.ts": {
@@ -162,15 +162,15 @@
     "semantic_hash": ""
   },
   "apps/api/test/routes.test.ts": {
-    "mtime": 1790647538.432892,
-    "seen": 1790649145.834948,
-    "ast_hash": "428f49a9ce7a268efe558fd45763d172",
+    "mtime": 1793441601.8376977,
+    "seen": 1793442625.956662,
+    "ast_hash": "7fbf7f45aecf3688539ab6bdb9360085",
     "semantic_hash": ""
   },
   "apps/api/test/runtime/room-hibernation-runtime.ts": {
-    "mtime": 1793433183.9617712,
-    "seen": 1793435376.517306,
-    "ast_hash": "dfbad8620e3113de53cd2ae664c285cd",
+    "mtime": 1793441700.456617,
+    "seen": 1793442625.956665,
+    "ast_hash": "724a2c1adcd514e2b567e2515d54a03b",
     "semantic_hash": ""
   },
   "apps/api/test/telemetry.test.ts": {
@@ -3120,9 +3120,9 @@
     "semantic_hash": "008cbb7aa3e7e7917fd1e68946868fb6"
   },
   "packages/protocol/src/index.ts": {
-    "mtime": 1793364351.9376988,
-    "seen": 1793424347.6724422,
-    "ast_hash": "d98adc5593fbf5d722b0e6c9a9f93624",
+    "mtime": 1793440726.3477228,
+    "seen": 1793442625.956685,
+    "ast_hash": "fc5d577eba74ce14150786497cc8c3dc",
     "semantic_hash": ""
   },
   "packages/protocol/src/limits.ts": {
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793434007.66421,
-    "seen": 1793435376.5896,
+    "mtime": 1793441855.160642,
+    "seen": 1793442626.0618088,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "c7eb4a6d7ea721786c4ed662bef18df3"
+    "semantic_hash": "cb53e410facb0be1a9871c5f98559f8a"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -10416,9 +10416,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/hosting-time-compatibility.test.ts": {
-    "mtime": 1793356299.15361,
-    "seen": 1793424347.6721878,
-    "ast_hash": "b15ab5c986d9893419b808b95a38c42b",
+    "mtime": 1793441731.708432,
+    "seen": 1793442625.956667,
+    "ast_hash": "2b1aa8901be0c8633293630228924cba",
     "semantic_hash": ""
   },
   "apps/extension/test/onboarding-checkout-return.test.ts": {
@@ -10680,9 +10680,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/hosting-time-compatibility.test.ts": {
-    "mtime": 1793356321.8485157,
-    "seen": 1793424347.672374,
-    "ast_hash": "d4e53fc5f6d53a3495858badb4b60a2c",
+    "mtime": 1793441731.708428,
+    "seen": 1793442625.956676,
+    "ast_hash": "ec7b5052166d8d90ec9d57e2c33a084f",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/product-hunt-billing-server.ts": {
@@ -11046,9 +11046,9 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/hosting-time.ts": {
-    "mtime": 1793356321.8487258,
-    "seen": 1793424347.672441,
-    "ast_hash": "7963e8702d93228a54573a05c9963689",
+    "mtime": 1793440705.0365021,
+    "seen": 1793442625.956682,
+    "ast_hash": "0035ec1a6315311fb27ca093c03c22bd",
     "semantic_hash": ""
   },
   "packages/protocol/src/onboarding-return.ts": {
@@ -11088,16 +11088,16 @@
     "semantic_hash": ""
   },
   "docs/daily-free20-contract.md": {
-    "mtime": 1793434007.665516,
-    "seen": 1793435376.589602,
+    "mtime": 1793441855.200099,
+    "seen": 1793442626.061814,
     "ast_hash": "",
-    "semantic_hash": "b4a3bc188f70de6d2c0177c476c1e924"
+    "semantic_hash": "1e17be195b912659cf4ae88b4f6304ec"
   },
   "docs/superpowers/plans/2026-10-30-daily-free20-transition.md": {
-    "mtime": 1793434007.6649203,
-    "seen": 1793435376.5896041,
+    "mtime": 1793441855.1790512,
+    "seen": 1793442626.061816,
     "ast_hash": "",
-    "semantic_hash": "fe673565b21a333de5d0b8cecb9b03eb"
+    "semantic_hash": "edc6c848f18ae6dcc10a285e09c889dd"
   },
   "docs/superpowers/specs/2026-10-30-daily-free20-design.md": {
     "mtime": 1793420630.2221746,
@@ -11139,6 +11139,60 @@
     "mtime": 1793433704.1638086,
     "seen": 1793435376.5173178,
     "ast_hash": "139cba82839dc37c51a59dfa71331729",
+    "semantic_hash": ""
+  },
+  "apps/api/src/free20-live-status.ts": {
+    "mtime": 1793441731.7080717,
+    "seen": 1793442625.9566479,
+    "ast_hash": "17e16186e4ce950c49f0841eefb7541b",
+    "semantic_hash": ""
+  },
+  "apps/api/test/free20-live-status.test.ts": {
+    "mtime": 1793441731.70843,
+    "seen": 1793442625.9566588,
+    "ast_hash": "3466d95f8d3eeabc12ff22adf83a83f0",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/me/hosting-status/route.ts": {
+    "mtime": 1793441292.750233,
+    "seen": 1793442625.9566689,
+    "ast_hash": "32feddc637fcf8a0a9adac8fff6a38fc",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/account-hosting-status.test.ts": {
+    "mtime": 1793441731.7096434,
+    "seen": 1793442625.956672,
+    "ast_hash": "bbd969698bfe9b529ed6dc612b88bc50",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/account-hosting-status.ts": {
+    "mtime": 1793442584.6981792,
+    "seen": 1793442625.956673,
+    "ast_hash": "2a2728f016bad50b6d33d9b5c118256a",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261031100000_free20_account_status.sql": {
+    "mtime": 1793442033.1805353,
+    "seen": 1793442625.9566772,
+    "ast_hash": "e1b3f3155449e13e9e2d9f59f17771e4",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/free20_account_status.test.sql": {
+    "mtime": 1793442019.331403,
+    "seen": 1793442625.9566789,
+    "ast_hash": "419770d86433111de9d7219d02a4dbe6",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/account-hosting-status.ts": {
+    "mtime": 1793442591.2692614,
+    "seen": 1793442625.9566798,
+    "ast_hash": "970247416b66305fd77f7eb39855d221",
+    "semantic_hash": ""
+  },
+  "packages/protocol/test/account-hosting-status.test.ts": {
+    "mtime": 1793441731.7085664,
+    "seen": 1793442625.956686,
+    "ast_hash": "8a0cf3515750b316b06d053b00152556",
     "semantic_hash": ""
   }
 }
