@@ -78,12 +78,13 @@ export function nextRoomPolicyAlarm(
 	meter: RoomMeterState,
 	active: boolean,
 	quotaWarning = true,
+	finiteTime = true,
 ): number {
 	const expiry = Date.parse(state.lease.capabilities.capabilitiesValidUntil);
 	const candidates = state.closingAt
 		? [state.closingAt]
 		: [state.refreshAt, expiry];
-	if (state.lease.capabilities.hostPlanCode === "free") {
+	if (finiteTime && state.lease.capabilities.hostPlanCode === "free") {
 		const midnight = (Math.floor(now / 86400000) + 1) * 86400000;
 		candidates.push(midnight);
 		if (!state.budget || state.budget.day !== meter.day) candidates.push(now);

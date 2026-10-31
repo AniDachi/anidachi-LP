@@ -215,6 +215,7 @@ test("Free20 producer and existing Worker meter keep 7+3 minutes at 10 through l
 		new Date(later),
 		f.deps,
 	);
+	assert.ok("committedSeconds" in again);
 	assert.equal(again.committedSeconds, 600);
 	assert.equal(
 		f.calls.some((value) => value.startsWith("commit:")),
@@ -249,6 +250,7 @@ test("Free20 settles old UTC buckets without subtracting them from the new day",
 		f.deps,
 	);
 	assert.equal(result.utcDay, "2026-10-31");
+	assert.ok("committedSeconds" in result);
 	assert.equal(result.committedSeconds, 180);
 	assert.equal(result.resetAt, Date.parse("2026-11-01T00:00:00Z"));
 	assert.equal(f.committed.get(day), 540);
@@ -280,6 +282,7 @@ test("Free20 partial multi-day commit failure returns no budget and safely retri
 	assert.equal(f.calls.includes("authority"), false);
 	fail = false;
 	const result = await settleFree20RoomBudget(submit, new Date(at), f.deps);
+	assert.ok("committedSeconds" in result);
 	assert.equal(result.committedSeconds, 600);
 	assert.equal(f.committed.get("2026-10-29"), 120);
 });
@@ -336,8 +339,8 @@ test("Free20 requires the immutable active Free room owner before committing", a
 	}
 });
 
-test("Free20 does not return a daily budget after room termination, owner change or paid transition", async () => {
-	for (const transition of ["ended", "owner", "paid"] as const) {
+test("Free20 does not return a daily budget after room termination or owner change", async () => {
+	for (const transition of ["ended", "owner"] as const) {
 		const f = fixture();
 		const read = f.deps.readUsage;
 		f.deps.readUsage = async (...args) => {
@@ -347,7 +350,6 @@ test("Free20 does not return a daily budget after room termination, owner change
 				f.room.host_user_id = "22222222-2222-4222-8222-222222222222";
 			return result;
 		};
-		if (transition === "paid") f.setPaid();
 		await assert.rejects(
 			settleFree20RoomBudget(request(180), new Date(at), f.deps),
 		);

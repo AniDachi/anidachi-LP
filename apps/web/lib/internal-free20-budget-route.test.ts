@@ -3,6 +3,7 @@ import { afterEach, beforeEach, test } from "node:test";
 import { NextRequest } from "next/server";
 import { POST } from "../app/api/internal/rooms/[roomId]/free20-budget/route";
 import { verifyRoomToken } from "./anidachi-auth/jwt";
+
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
 const owner = "11111111-1111-4111-8111-111111111111";
@@ -21,6 +22,7 @@ let used: number;
 let failAuthority: boolean;
 let roomSeconds: number;
 let now: number;
+let accountPlan: "free" | "plus" | "pro";
 const input = () => ({
 	roomId: "room-1",
 	roomGeneration: 1,
@@ -40,6 +42,7 @@ beforeEach(() => {
 	roomSeconds = 0;
 	failAuthority = false;
 	now = Date.now();
+	accountPlan = "free";
 	globalThis.fetch = async (url, init) => {
 		const path = new URL(String(url)).pathname;
 		calls.push(path);
@@ -64,14 +67,14 @@ beforeEach(() => {
 			if (failAuthority)
 				return Response.json({ message: "private detail" }, { status: 500 });
 			return Response.json({
-				planCode: "free",
+				planCode: accountPlan,
 				selectedPlanExpiresAt: null,
 				paidUntil: null,
 				hosting: {
 					hostingPolicyVersion: 2,
 					hostingActivationAt: "2026-09-28T00:00:00Z",
-					canHost: false,
-					trialEligibility: "eligible",
+					canHost: accountPlan !== "free",
+					trialEligibility: accountPlan === "free" ? "eligible" : "unavailable",
 					trialEndsAt: null,
 				},
 				history: {
@@ -80,7 +83,7 @@ beforeEach(() => {
 					accountGeneration: 3,
 					accessEpoch: 4,
 					youtubeConsentEpoch: 2,
-					state: "plan_required",
+					state: accountPlan === "free" ? "plan_required" : "allowed",
 					serverTime: new Date(now).toISOString(),
 					captureNotBefore: "2026-09-08T10:00:00Z",
 					validUntil: new Date(now + 300000).toISOString(),
@@ -167,4 +170,30 @@ test("authority failure after commit returns no budget; a cumulative retry charg
 	assert.equal(retried.status, 200);
 	assert.equal((await retried.json()).checkpoint.committedSeconds, 600);
 	assert.equal(used, 600);
+});
+
+test("confirmed account access removes only the time cap after settlement and retains the signed Free media capabilities", async () => {
+	process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true";
+	for (const plan of ["plus", "pro"] as const) {
+		accountPlan = plan;
+		const response = await POST(request(input()), context);
+		assert.equal(response.status, 200);
+		const body = await response.json();
+		assert.equal(body.checkpoint.kind, "confirmed_unlimited");
+		assert.equal(body.checkpoint.authority, "account_entitlements_v1");
+		assert.equal(body.checkpoint.planCode, plan);
+		assert.equal(
+			body.checkpoint.refreshBy,
+			Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
+		);
+		assert.deepEqual(body.checkpoint.acknowledged, input().usage);
+		assert.equal(used, 600);
+		assert.equal(
+			calls.some((p) => p.endsWith("/usage_daily")),
+			false,
+		);
+		const token = await verifyRoomToken(body.policy.roomToken);
+		assert.equal(token?.mediaLease?.capabilities.hostPlanCode, "free");
+		assert.equal(token?.mediaLease?.capabilities.maxParticipants, 4);
+	}
 });

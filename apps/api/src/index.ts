@@ -639,12 +639,13 @@ export class RoomDurableObject {
 				if (this.free20Accounting) {
 					if (!this.roomPolicy || !this.isFreeRoom()) throw new Error("Missing Free20 room authority");
 					const budget = this.free20Accounting.budget;
-					if (budget && (budget.checkpoint.roomId !== this.room.roomId ||
-						budget.checkpoint.roomGeneration !== this.room.roomGeneration ||
-						budget.checkpoint.ownerUserId !== this.roomPolicy.hostId)) throw new Error("Free20 restore binding mismatch");
+					const checkpoint = this.free20Accounting.unlimited ?? budget?.checkpoint;
+					if (checkpoint && (checkpoint.roomId !== this.room.roomId ||
+						checkpoint.roomGeneration !== this.room.roomGeneration ||
+						checkpoint.ownerUserId !== this.roomPolicy.hostId)) throw new Error("Free20 restore binding mismatch");
 					// SQL accounting is authoritative even if the later policy KV write was interrupted.
 					this.roomPolicy.budget = budget ? { day: budget.checkpoint.utcDay, allowedSeconds: budget.allowedSeconds } : null;
-					if (budget) this.roomPolicy.refreshAt = Math.min(this.roomPolicy.refreshAt, budget.checkpoint.refreshBy);
+					if (checkpoint) this.roomPolicy.refreshAt = Math.min(this.roomPolicy.refreshAt, checkpoint.refreshBy);
 				}
         if (this.terminalIntent?.finalizedAt !== null && this.terminalIntent) {
           // Recovery after Web ACK/intent commit but before the SQL tombstone.
@@ -898,7 +899,7 @@ export class RoomDurableObject {
   }
 
   private shouldMeterRoom(): boolean {
-		if (!this.isFreeRoom() || this.roomPolicy?.endingReason) return false;
+		if (!this.isFreeRoom() || this.roomPolicy?.endingReason || this.free20Accounting?.unlimited) return false;
     let hostJoined = false;
     let guestJoined = false;
     for (const socket of this.participantsBySocket.keys()) {
@@ -924,8 +925,13 @@ export class RoomDurableObject {
   }
 
   private free20ExhaustedAt(policy: RoomPolicyState, now: number): number | null {
+    if (this.free20Accounting?.unlimited) return null;
     const meter = this.roomMeter;
-    if (!policy.budget || policy.budget.day !== meter.day || meter.activeSince === null) return null;
+    if (!policy.budget || policy.budget.day !== meter.day) return null;
+    // A departure can materialize the last second before the alarm runs.
+    // Stopping the interval must not make an already spent budget renewable.
+    if (meter.activeSince === null)
+      return meter.accumulatedMs >= policy.budget.allowedSeconds * 1000 ? now : null;
     const at = meter.activeSince + Math.max(0, policy.budget.allowedSeconds * 1000 - meter.accumulatedMs);
     const midnight = Date.parse(`${policy.budget.day}T00:00:00Z`) + 86400000;
     return now >= at && at < midnight ? at : null;
@@ -964,11 +970,12 @@ export class RoomDurableObject {
         utcDay: meter.day,
       }, acceptedAt);
       const budget = result.state.budget;
-      if (!budget) throw new Error("Missing reconciled Free20 budget");
+      const checkpoint = result.state.unlimited ?? budget?.checkpoint;
+      if (!checkpoint) throw new Error("Missing reconciled Free20 time authority");
       this.persistFree20Accounting(result.meter, result.state, acceptedAt);
       this.room.setMediaCapabilities(token.mediaLease.capabilities);
-      return { ...updated, budget: { day: budget.checkpoint.utcDay, allowedSeconds: budget.allowedSeconds },
-        refreshAt: Math.min(updated.refreshAt, budget.checkpoint.refreshBy) };
+      return { ...updated, budget: budget ? { day: budget.checkpoint.utcDay, allowedSeconds: budget.allowedSeconds } : null,
+        refreshAt: Math.min(updated.refreshAt, checkpoint.refreshBy) };
     }
     throw new Error("Free20 UTC period changed during reconciliation");
   }
@@ -994,7 +1001,10 @@ export class RoomDurableObject {
 			this.roomMeter,
 			this.shouldMeterRoom(),
 			this.free20Accounting === null,
+			!this.free20Accounting?.unlimited,
 		);
+		if (this.free20Accounting && this.free20ExhaustedAt(this.roomPolicy, now) !== null)
+			this.roomPolicy.alarmAt = now;
 		await this.state.storage.transaction(async (transaction) => {
 			const stored = await transaction.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY);
 			// Policy may change in place while awaiting storage. Never use an
@@ -1057,6 +1067,10 @@ export class RoomDurableObject {
       if (now >= policy.alarmAt) await this.endRoomExclusive({ reason: policy.endingReason, endedAt: policy.closingAt });
       return;
     }
+		if (this.free20Accounting && this.roomMeter.activeSince === null && this.free20ExhaustedAt(policy, now) !== null) {
+			await this.endRoomExclusive({ reason: "quota_exhausted", endedAt: now });
+			return;
+		}
 		if (
 			this.isFreeRoom() &&
 			policy.budget?.day === this.roomMeter.day &&
@@ -1094,7 +1108,7 @@ export class RoomDurableObject {
 		);
 		if (now >= leaseExpiry) policy = failRoomPolicy(policy, leaseExpiry);
 		const needsBudget =
-			this.isFreeRoom() &&
+			this.isFreeRoom() && !this.free20Accounting?.unlimited &&
 			(!policy.budget ||
 				policy.budget.day !== usage.day ||
 				this.roomMeter.pending.length > 0);

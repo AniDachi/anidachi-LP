@@ -3292,6 +3292,7 @@ describe("RoomDurableObject media v2", () => {
 		const calls: Array<{ operation?: string; checkpointSequence?: number; settleOnly?: boolean; usage?: {day:string;seconds:number}[]; reason?: string }> = [];
 		let lostBudget = false;
 		let priorAccountSeconds = 0;
+		let unlimitedTime = false;
 		let beforeBudgetReply: (() => void) | null = null;
 		stubWebFetch(vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 				const body = JSON.parse(String(init?.body));
@@ -3304,11 +3305,12 @@ describe("RoomDurableObject media v2", () => {
 					const now = Date.now(); const day = new Date(now).toISOString().slice(0, 10);
 					revision++;
 					return Response.json({ checkpoint: {
-						roomBudgetVersion: 1, ownerUserId: hostId, roomId, roomGeneration: 1,
+						...(unlimitedTime ? { roomTimeVersion: 1, kind: "confirmed_unlimited", authority: "account_entitlements_v1", planCode: "plus" } : { roomBudgetVersion: 1 }),
+						ownerUserId: hostId, roomId, roomGeneration: 1,
 						checkpointSequence: body.checkpointSequence, utcDay: day, serverTime: now,
 						resetAt: (Math.floor(now / 86400000) + 1) * 86400000,
 						refreshBy: Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
-						budgetSeconds: 1200, committedSeconds: priorAccountSeconds + (ledger.get(day) ?? 0), acknowledged: body.usage,
+						...(!unlimitedTime ? { budgetSeconds: 1200, committedSeconds: priorAccountSeconds + (ledger.get(day) ?? 0) } : {}), acknowledged: body.usage,
 					}, policy: { denied: false, roomToken: await token(hostId, "internal-capability-renewal") } });
 				}
 				if (String(input).endsWith("/source")) {
@@ -3390,6 +3392,7 @@ describe("RoomDurableObject media v2", () => {
 			join,
 			calls,
 			setPriorUsage: (seconds: number) => { priorAccountSeconds = seconds; },
+			setUnlimited: (value = true) => { unlimitedTime = value; },
 			loseBudgetReply: () => { lostBudget = true; },
 			beforeBudgetReply: (callback: () => void) => { beforeBudgetReply = callback; },
 			setSourceFailure: () => { failSource = true; },
@@ -3404,6 +3407,72 @@ describe("RoomDurableObject media v2", () => {
 			},
 		};
 	}
+
+ it("Free20 paid time survives eviction with stale policy, retains pinned caps and settles the I/O tail once", async () => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  const day = new Date(start).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true); f.setPriorUsage(420);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "paid host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "paid guest");
+  const savedPolicy = await runInDurableObject(f.stub, async (_i, ctx) => ctx.storage.get<RoomPolicyState>("room_policy_v2"));
+  clock += 180000; f.setUnlimited(); f.beforeBudgetReply(() => { clock += 2000; });
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  const applied = await runInDurableObject(f.stub, instance => { const i = free20Room(instance); return { ended: i.endedTombstone, meter: i.roomMeter, right: i.free20Accounting.unlimited, caps: i.roomPolicy.lease.capabilities, quota: i.currentRoomSnapshot().quota }; });
+  expect(applied.ended).toBeNull(); expect(applied.right?.kind).toBe("confirmed_unlimited");
+  expect(applied.meter).toMatchObject({ accumulatedMs: 182000, activeSince: null, acknowledgedSeconds: 180 });
+  expect(applied.caps).toMatchObject({ hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMediaSeats: 4 });
+  expect(applied.quota).toBeUndefined(); expect(f.ledger.get(day)).toBe(180);
+  // Crash after SQL commit but before the new policy KV write: SQL wins on restore.
+  await runInDurableObject(f.stub, async (_i, ctx) => ctx.storage.put("room_policy_v2", savedPolicy));
+  await evictDurableObject(f.stub); clock += 300000;
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); await i.serviceRoomPolicy(clock); });
+  expect(f.ledger.get(day)).toBe(182);
+  const restored = await runInDurableObject(f.stub, instance => { const i = free20Room(instance); return { meter: i.roomMeter, quota: i.currentRoomSnapshot().quota, ended: i.endedTombstone }; });
+  expect(restored.ended).toBeNull(); expect(restored.quota).toBeUndefined(); expect(restored.meter.accumulatedMs).toBe(182000);
+  // A known Free account returns to its saved remainder, not a fresh allowance.
+  f.setUnlimited(false); clock += 60000;
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).currentRoomSnapshot().quota?.remainingSeconds)).toBe(598);
+ });
+
+ it.each(["before", "during", "stopped"])("Free20 paid confirmation cannot revive a room at quota zero: %s", async (boundary) => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  const day = new Date(start).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true); f.setPriorUsage(1140);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "boundary host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "boundary guest");
+  f.setUnlimited(); clock += boundary === "during" ? 59000 : 60000;
+  if (boundary === "during") f.beforeBudgetReply(() => { clock += 1000; });
+  if (boundary === "stopped") {
+   guest.close();
+   await vi.waitFor(async () => expect(await runInDurableObject(f.stub, instance => free20Room(instance).roomMeter.activeSince)).toBeNull());
+  }
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).endedTombstone)).toMatchObject({ reason: "quota_exhausted", endedAt: start + 60000, usageFinalized: true });
+  expect(f.ledger.get(day)).toBe(60);
+ });
+
+ it("Free20 paid room settles its frozen tail before finalization and never charges paid viewing", async () => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  const day = new Date(start).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "terminal paid host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "terminal paid guest");
+  clock += 180000; f.setUnlimited(); f.beforeBudgetReply(() => { clock += 2000; });
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  clock += 60000;
+  const ended = await endRoom(f.stub, { endedAt: clock, reason: "host_ended" });
+  expect(ended.status).toBe(200); await ended.text();
+  expect(f.ledger.get(day)).toBe(182);
+  expect(f.calls.filter(c => c.settleOnly).at(-1)?.usage).toEqual([{ day, seconds: 182 }]);
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).endedTombstone?.usageFinalized)).toBe(true);
+  const before = f.calls.length;
+  await runInDurableObject(f.stub, async instance => free20Room(instance).serviceRoomPolicy(clock));
+  expect(f.calls).toHaveLength(before);
+ });
 
  it("Free20 wiring persists the request before I/O and restores the ACK/budget after a torn policy write", async () => {
   const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;
@@ -3440,12 +3509,12 @@ describe("RoomDurableObject media v2", () => {
   host.close();guest.close();
  });
 
- it("Free20 wiring freezes a lost-response room and retries cumulative settlement before finalization after eviction",async()=>{
+ it.each([false, true])("Free20 wiring freezes a lost-response room and retries cumulative settlement before finalization after eviction: paid=%s",async(paid)=>{
   const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;
   const clock=vi.spyOn(Date,"now").mockReturnValue(start);vi.spyOn(Math,"random").mockReturnValue(0);
   const f=await fixture("free",3,1200,true);const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
   const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"guest");
-  clock.mockReturnValue(start+180000);f.loseBudgetReply();f.setFail();
+  clock.mockReturnValue(start+180000);f.setUnlimited(paid);f.loseBudgetReply();f.setFail();
   await runInDurableObject(f.stub,async(instance)=>{const i=free20Room(instance);i.roomPolicy.refreshAt=Date.now();await i.serviceRoomPolicy(Date.now());});
   expect(f.calls.filter((c)=>c.reason)).toHaveLength(0);
   const frozen=await runInDurableObject(f.stub,instance=>{const i=free20Room(instance);return {meter:i.roomMeter,pending:i.free20Accounting.pending,retry:i.terminalIntent.nextAttemptAt};});
@@ -3463,13 +3532,13 @@ describe("RoomDurableObject media v2", () => {
   expect(await runInDurableObject(f.stub,instance=>(free20Room(instance)).endedTombstone?.usageFinalized)).toBe(true);
  });
 
- it.each([false,true])("Free20 callback crossing midnight preserves an unexpired room and never revives an expired one: expired=%s",async(expired)=>{
+ it.each([[false, false], [true, false], [false, true], [true, true]])("Free20 callback crossing midnight preserves an unexpired room and never revives an expired one: expired=%s paid=%s",async(expired, paid)=>{
   const midnight=(Math.floor(Date.now()/86400000)+2)*86400000;
   const start=midnight-120000;const clock=vi.spyOn(Date,"now").mockReturnValue(start);
   const f=await fixture("free",3,1200,true);if(expired)f.setPriorUsage(1140);
   const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
   const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"guest");
-  clock.mockReturnValue(start+30000);f.beforeBudgetReply(()=>clock.mockReturnValue(midnight+10000));
+  clock.mockReturnValue(start+30000);f.setUnlimited(paid);f.beforeBudgetReply(()=>clock.mockReturnValue(midnight+10000));
   await runInDurableObject(f.stub,async instance=>{const i=free20Room(instance);i.roomPolicy.refreshAt=Date.now();await i.serviceRoomPolicy(Date.now());});
   const result=await runInDurableObject(f.stub,instance=>{const i=free20Room(instance);return {ended:i.endedTombstone,quota:i.endedTombstone?null:i.currentRoomSnapshot().quota};});
   const previousDay=new Date(start).toISOString().slice(0,10),day=new Date(midnight).toISOString().slice(0,10);
@@ -3478,7 +3547,7 @@ describe("RoomDurableObject media v2", () => {
    expect(f.ledger.get(previousDay)).toBe(60);expect(f.ledger.get(day)??0).toBe(0);
    expect(f.calls.filter((c)=>c.checkpointSequence!==undefined)).toHaveLength(2);
   }else{
-   expect(result.ended).toBeNull();expect(result.quota).toMatchObject({day,remainingSeconds:1190});
+   expect(result.ended).toBeNull();if(paid)expect(result.quota).toBeUndefined();else expect(result.quota).toMatchObject({day,remainingSeconds:1190});
    expect(f.ledger.get(previousDay)).toBe(120);expect(f.ledger.get(day)).toBe(10);
    expect(f.calls.filter((c)=>c.checkpointSequence!==undefined)).toHaveLength(3);
   }
@@ -3567,10 +3636,11 @@ describe("RoomDurableObject media v2", () => {
 	});
 
   it.each([
-    ["free", 1, false], ["free", 2, false], ["plus", 2, false], ["pro", 2, false],
-    ["free", 1, true], ["free", 2, true],
-  ] as const)("storage write profile: %s with %i participants, Free20=%s", async (plan, participants, free20) => {
+    ["free", 1, false, false], ["free", 2, false, false], ["plus", 2, false, false], ["pro", 2, false, false],
+    ["free", 1, true, false], ["free", 2, true, false], ["free", 2, true, true],
+  ] as const)("storage write profile: %s with %i participants, Free20=%s paid=%s", async (plan, participants, free20, paid = false) => {
     const f = await fixture(plan, 3, 1800, free20);
+    f.setUnlimited(paid);
     const host = await f.join(0);
     await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "profile host joined");
     const observer = participants === 2 ? await f.join(1) : host;
@@ -3615,10 +3685,10 @@ describe("RoomDurableObject media v2", () => {
         return { seq: room.room.serverSeq, meter: room.roomMeter, counts: profile.snapshot() };
       });
       expect(final.seq).toBe(before + frames);
-      expect(final.meter.activeSince === null).toBe(plan !== "free" || participants === 1);
+      expect(final.meter.activeSince === null).toBe(paid || plan !== "free" || participants === 1);
       const budgetCalls = f.calls.filter(c => c.checkpointSequence !== undefined || c.operation === "room_policy_v2").length - budgetCallsBefore;
       expect(budgetCalls).toBe(0);
-      console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, free20, frames, budgetCalls, ...final.counts }));
+      console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, free20, paid, frames, budgetCalls, ...final.counts }));
       expect(final.counts, JSON.stringify({ plan, participants, frames, ...final.counts })).toMatchObject({
         sqlRowsWritten: frames,
         kvPuts: 0,

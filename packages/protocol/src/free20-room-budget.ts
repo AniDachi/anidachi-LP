@@ -72,9 +72,49 @@ export type Free20RoomBudgetCheckpoint = z.infer<
 	typeof Free20RoomBudgetCheckpointSchema
 >;
 
+/** Internal bounded time right from the existing account resolver. The issuer
+ * confirms effective access, not which paid/trial/manual grant won. This is NOT
+ * the public source-labelled HostingTimeSnapshot or a change to pinned media.
+ */
+export const Free20RoomUnlimitedCheckpointSchema =
+	HostingTimeBindingSchema.extend({
+		roomTimeVersion: z.literal(1),
+		kind: z.literal("confirmed_unlimited"),
+		authority: z.literal("account_entitlements_v1"),
+		planCode: z.enum(["plus", "pro"]),
+		checkpointSequence: Counter,
+		serverTime: Timestamp,
+		resetAt: Timestamp,
+		refreshBy: Timestamp,
+		acknowledged: Usage,
+	}).superRefine((value, ctx) => {
+		const start = Date.parse(`${value.utcDay}T00:00:00.000Z`);
+		const end = start + 86_400_000;
+		if (
+			value.serverTime < start ||
+			value.serverTime >= end ||
+			value.resetAt !== end ||
+			value.refreshBy <= value.serverTime ||
+			value.refreshBy > Math.min(end, value.serverTime + 300_000) ||
+			value.acknowledged.some((ack) => ack.day > value.utcDay)
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Invalid unlimited time authority period",
+			});
+		}
+	});
+export type Free20RoomUnlimitedCheckpoint = z.infer<
+	typeof Free20RoomUnlimitedCheckpointSchema
+>;
+export const Free20RoomTimeCheckpointSchema = z.union([
+	Free20RoomBudgetCheckpointSchema,
+	Free20RoomUnlimitedCheckpointSchema,
+]);
+
 /** Internal transport only; the signed lease retains its existing verifier. */
 export const Free20RoomBudgetResponseSchema = z.strictObject({
-	checkpoint: Free20RoomBudgetCheckpointSchema,
+	checkpoint: Free20RoomTimeCheckpointSchema,
 	policy: z.discriminatedUnion("denied", [
 		z.strictObject({ denied: z.literal(false), roomToken: z.string().min(1) }),
 		z.strictObject({ denied: z.literal(true), closingAt: z.iso.datetime() }),

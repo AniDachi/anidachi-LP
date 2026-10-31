@@ -37,6 +37,12 @@ Worker deploy, smoke после смены Web alias, extension build #225; DB �
 request/ACK/budget, recovery/UTC и измерением запросов/записей. Ниже ранние
 разделы описывают границы своих блоков; актуальное подключение описано в 3А.
 
+Блок 3А доставлен через [PR #479](https://github.com/AniDachi/anidachi-LP/pull/479):
+staging `50932ed1`, Web/Worker и post-switch smoke, extension build #226.
+На 2026-10-31 отдельно согласован блок 4А в `codex/daily-free20-paid-time` от
+`50932ed1`: серверное применение подтвержденного права на время в живой комнате,
+сохранение расхода и pinned caps, проверки и PR в staging без активации.
+
 ## Граница локального блока 1А
 
 Первым разрешением была только подготовка локального контракта и проверок совместимости.
@@ -366,3 +372,56 @@ room harness 39/39; staging extension собран и validated с narrow permis
 Graphify safe-adapter attempt и точные SHA/deployment/artifact/smoke результаты
 доставки фиксируются в PR. Локальный real-WebRTC повтор не выполнялся: media
 код не менялся, default-off регрессии проверяет CI E2E P2P перед merge.
+
+## Блок 4А: подтвержденное время без изменения возможностей комнаты
+
+Тот же закрытый internal route после полного cumulative commit возвращает
+либо прежний конечный checkpoint, либо strict `confirmed_unlimited` с
+`roomTimeVersion:1`, issuer `account_entitlements_v1`, подтвержденным Plus/Pro,
+owner/room/generation/sequence, UTC и `refreshBy`. Срок не превышает 5 минут,
+ближайшую UTC-полночь или срок существующей authority/выбранного плана.
+Null, неизвестная версия, Checkout return и название плана от клиента права
+не дают. Signed media lease проверяется независимо и сохраняет pinned caps.
+
+Источник — существующий `resolveAccountEntitlements` и SQL grant resolver,
+который уже учитывает paid, действующие trial и manual grants. Их правила,
+даты и renewal не меняются. Он не сообщает победивший grant: поэтому internal
+checkpoint называет issuer, а не выдуманный `source:paid`. Это не public
+`HostingTimeSnapshot`, для которого paid/trial/manual provenance еще потребуется.
+Новых SQL, Stripe-операций, polling, env или public events в блоке нет.
+
+Серверный момент перехода — принятие проверенного ответа Worker. До него
+счетчик работает обычно. ACK покрывает отправленный до I/O расход; секунды
+до принятия ответа добавляются в остановленный meter и сохраняются вместе
+с правом одной SQLite transaction. Этот хвост доставляется следующим cumulative
+запросом либо terminal settlement. Не подтвержденный запрос не считается
+неуспешной записью: повторы не списывают дважды. Не сохраняем права только в кеше.
+
+Durable accounting теперь schema2 (под тем же SQL key); старый schema1 читается
+как конечный учет. Unlimited и finite budget взаимоисключающие. При restore
+SQL восстанавливает время независимо от старой policy KV; running meter вместе
+с unlimited, потерянный ACK или чужая привязка отклоняются. Ссылка, участники,
+hostPlanCode, места, камеры и микрофоны не меняются. До последующего создания
+комнаты расширенные media caps купленного тарифа не применяются.
+
+Один существующий alarm обновляет право. Unlimited не расходует Free-секунды
+и не создает quota deadline. Подтвержденный возврат к Free использует текущий
+остаток аккаунта и возобновляет счетчик при применении ответа, без ретроактивного
+списания unlimited-интервала. Неизвестная authority по-прежнему закрывает
+кандидат и сохраняет settlement. Quota deadline проверяется до запроса и после
+ответа/проверки подписи; истекшая либо terminal generation не восстанавливается.
+При пересечении UTC старое подтверждение отбрасывается и выполняется одна
+ограниченная сверка нового дня, с прежним запретом revival после старого expiry.
+
+Проверки используют настоящие workerd/SQLite и production parsers/resolvers;
+внешние Web/Supabase ответы заменены тестовой границей. Платежные операции
+Checkout/webhook/3DS и немедленная доставка подтверждения в комнату здесь не
+подключаются: сейчас переход применяется при обязательной серверной сверке.
+Реальная покупка, public time UI, старые клиенты, admission и включение требуют
+отдельных блоков. Полный результат checks/review и staging delivery фиксируется
+в PR; локальная проверка не доказывает live-приемку.
+
+Rollback до активации — обычный staging revert. После будущего появления schema2
+нужен понимающий ее runtime до settlement всех выбранных комнат. Откат на 3А
+или более старый runtime не поддерживается; нельзя удалять marker/usage и
+выдавать новый полный бюджет. Флаг остается выключенным по умолчанию.
