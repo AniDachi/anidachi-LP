@@ -49,11 +49,11 @@ beforeEach(() => stubWebFetch(runtimeFetch));
 
 // These tests isolate existing lifecycle callbacks. Admission has dedicated
 // denial, timeout and cutover-race coverage in paid-hosting-transition-runtime.
-function stubWebFetch(callback: typeof fetch) {
+function stubWebFetch(callback: typeof fetch, dailyRoomId?: string) {
  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = new URL(String(input));
   const match = url.pathname.match(/^\/api\/internal\/rooms\/([^/]+)\/admission$/);
-  if (url.origin === "https://web.internal" && match) return Response.json({ roomId: decodeURIComponent(match[1]!), roomGeneration: 1, allowed: true });
+  if (url.origin === "https://web.internal" && match) return Response.json({ roomId: decodeURIComponent(match[1]!), roomGeneration: 1, allowed: true, ...(decodeURIComponent(match[1]!) === dailyRoomId ? { hostingTimeMode: "daily_free20" } : {}) });
   return callback(input, init);
  });
 }
@@ -3241,7 +3241,7 @@ function sleep(ms: number): Promise<void> {
 // Negotiated v2 rooms use real signed capabilities and the actual hibernating DO.
 describe("RoomDurableObject media v2", () => {
 	const hostId = "11111111-1111-4111-8111-111111111111";
-	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2, dailyLimit: 1200 | 1800 = 1800, free20 = false) {
+	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2, dailyLimit: 1200 | 1800 = 1800, free20 = false, dailyMode = free20) {
 		const roomId = `media-v2-${crypto.randomUUID()}`;
 		const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = ns.get(ns.idFromName(roomId));
@@ -3364,7 +3364,7 @@ describe("RoomDurableObject media v2", () => {
 					usageFinalized: true,
 					accepted: true,
 				});
-			}),
+			}), dailyMode ? roomId : undefined,
 		);
 		async function join(i: number, sessionId = `v2-session-${i}`) {
 			const userId = i === 0 ? hostId : `v2-user-${i}`;
@@ -3407,6 +3407,24 @@ describe("RoomDurableObject media v2", () => {
 			},
 		};
 	}
+
+ it("server opt-in does not convert an unmarked legacy Free room", async () => {
+  const f = await fixture("free", 3, 1800, true, false);
+  const host = await f.join(0);
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).free20Accounting)).toBeNull();
+  expect(f.calls.some(call => call.checkpointSequence !== undefined)).toBe(false);
+  host.close();
+ });
+ it("marked Free20 admission fails before retaining a socket when the Worker is not enabled", async () => {
+  const f = await fixture("free", 3, 1200, false, true);
+  const now = Date.now();
+  const token = await signRoomTokenForTest({ sub: hostId, roomId: f.roomId, role: "host", participantSessionId: "disabled", hostUserId: hostId,
+   mediaLease: RoomMediaCapabilityLeaseSchema.parse({ roomId: f.roomId, roomGeneration: 1, issuedAt: new Date(now).toISOString(), paidUntil: null,
+    capabilities: { mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMediaSeats: 4, capabilityRevision: 1, capabilitiesValidUntil: new Date(now+1800000).toISOString() } }) }, TEST_SECRET_ENV);
+  const response = await f.stub.fetch(`https://room.test/?roomToken=${encodeURIComponent(token)}`, { headers: { Upgrade: "websocket" } });
+  expect(response.status).toBe(503);
+  expect(await runInDurableObject(f.stub, (_instance,state) => state.getWebSockets().length)).toBe(0);
+ });
 
  it("Free20 paid time survives eviction with stale policy, retains pinned caps and settles the I/O tail once", async () => {
   const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;

@@ -13,6 +13,7 @@ import {
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { resolveAccountEntitlements } from "@/lib/anidachi-auth/account-entitlements";
 import { hostingDeniedResponse } from "@/lib/anidachi-auth/hosting-denial";
+import { readFree20HostingAdmission, type Free20HostingAdmission } from "@/lib/anidachi-auth/free20-admission";
 import {
   clientMediaProtocolVersion,
   negotiateRoomMediaLease,
@@ -96,8 +97,13 @@ export async function POST(
   const now = new Date();
   const user = await getUserById(session.userId);
 	let accountAccess;
+	let free20Access: Free20HostingAdmission | null = null;
 	try {
 		accountAccess = await resolveAccountEntitlements(session.userId, now);
+		if (room.hosting_time_mode === "daily_free20") {
+			free20Access = await readFree20HostingAdmission(room.host_user_id);
+			if (!free20Access) throw new Error("Missing Free20 authority");
+		}
 	} catch {
 		return NextResponse.json(
 			{ code: "ROOM_AUTHORITY_UNAVAILABLE" },
@@ -108,7 +114,7 @@ export async function POST(
 	// After T, its denial takes precedence over the retired daily quota while
 	// cutover delivery catches up. SQL admission still rechecks under locks.
 	const activationAt = accountAccess.hosting?.hostingActivationAt;
-	if (room.host_plan_code === "free" && activationAt &&
+	if (!free20Access && room.host_plan_code === "free" && activationAt &&
 		Date.parse(activationAt) <= Date.parse(accountAccess.history.serverTime)) {
 		return NextResponse.json(
 			hostingDeniedResponse(new URL("/pricing", request.nextUrl.origin).toString(), isHost),
@@ -128,9 +134,14 @@ export async function POST(
   const capabilities = roomCapabilitiesFromRoom(room);
   let tokenTtlSeconds = ROOM_TOKEN_TTL_SECONDS;
   let quotaSummary: { remainingSeconds: number; resetAt: string } | null = null;
+	if (free20Access && !canStartHostSession(free20Access.quota))
+		return NextResponse.json(quotaExhaustedResponseBody(free20Access.quota), { status: 403 });
 
   if (isHost) {
-    if (isMeteredPlan(userPlan)) {
+    if (free20Access) {
+      tokenTtlSeconds = hostRoomTokenTtlSeconds(free20Access.quota);
+      quotaSummary = quotaSummaryForResponse(free20Access.planCode, free20Access.quota);
+    } else if (isMeteredPlan(userPlan)) {
       const quota = await getHostQuotaView(session.userId, userPlan, now);
       if (!canStartHostSession(quota)) {
         return NextResponse.json(quotaExhaustedResponseBody(quota), {
@@ -153,6 +164,8 @@ export async function POST(
       participantSessionId: admissionInput.data.participantSessionId,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "QUOTA_EXHAUSTED" && free20Access)
+      return NextResponse.json(quotaExhaustedResponseBody(free20Access.quota), { status: 403 });
     if (error instanceof Error && error.message === "HOST_SUBSCRIPTION_REQUIRED")
       return NextResponse.json(
         hostingDeniedResponse(new URL("/pricing", request.nextUrl.origin).toString(), isHost),

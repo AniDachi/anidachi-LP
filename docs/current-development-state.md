@@ -5,13 +5,24 @@
 The owner-approved daily Free20 migration is tracked in the
 [active transition plan](superpowers/plans/2026-10-30-daily-free20-transition.md)
 and [contract/evidence record](daily-free20-contract.md). Blocks1A/2A/2B/3A
-reached staging through PRs476–479, last merge `50932ed1`; they do not activate
-Free20. Block4A now adds bounded account-confirmed unlimited time to the same
-room while retaining its pinned media capabilities and cumulative settlement.
-It is a local candidate until its PR receipt confirms staging delivery.
-Checkout/event delivery, actual Sandbox purchase, admission, public UI and
-old-client acceptance remain open. Production/main/Store and live flags are
-unchanged by this block; older launch permissions below are historical.
+reached staging through PRs476–479; block4A reached staging through PR480
+(`5bc4b215`). Graphify repair PR481 followed at `c4a4750c`.
+
+Block5A prepares default-off SQL/Web/Worker admission and renewal. The additive
+`hosting_commercial_policy.free20_enabled` defaults false; existing rooms retain
+null `hosting_time_mode`. New daily rooms pin `daily_free20`, and Worker admission
+uses that durable mode instead of inferring it from a Free media plan. Web and
+Worker still require exact `ANIDACHI_FREE20_ACCOUNTING_ENABLED=true`; neither
+runtime flag nor the SQL switch is enabled by deployment. SQL serializes account
+admission, keeps the active-room assignment through settlement, and rechecks
+1200-second UTC usage. Confirmed paid time can continue a pinned Free-capacity
+room; terminal deadlines and ended rooms are never revived.
+
+Local evidence and the exact staging delivery receipt belong in this block's PR.
+Checkout/event delivery, actual Sandbox purchase, stopping new trial offers,
+public account/quota/time UI and old Store acceptance remain open. This is not
+activation-ready; setting the flags alone is not an approved launch. Production,
+main and Store are outside this block; older launch permissions below are historical.
 
 ## Authorized production launch, October 19, 2026
 
