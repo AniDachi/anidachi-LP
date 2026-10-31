@@ -34,6 +34,35 @@ def read_json(path, default):
     return json.loads(path.read_text()) if path.exists() else default
 
 
+def normalize_import_modules(ast, root, ast_sources, base):
+    # Graphify's rescued JS imports emit module anchors whose source_file is
+    # the package specifier, not a file. Keep that identity without pretending
+    # to own/re-extract a source outside this batch (or resolving it by guess).
+    imported = {e["target"] for e in ast["edges"]
+                if e.get("relation") in {"imports", "dynamic_import", "re_exports"}
+                and e.get("source_file") in ast_sources}
+    previous = {n["id"]: n for n in base["nodes"]}
+    for node in ast["nodes"]:
+        source = node.get("source_file")
+        if not (node.get("type") == "module" and node.get("id") in imported
+                and isinstance(source, str) and source and node.get("label") == source):
+            continue
+        parts = source.split("/")
+        bare = (len(parts) == 1 or (len(parts) == 2 and source.startswith("@")))
+        if (not bare or source.startswith((".", "/", "\\")) or "\\" in source
+                or any(part in {"", ".", ".."} for part in parts)
+                or source in ast_sources or (root / source).exists()):
+            continue
+        old = previous.get(node["id"])
+        if old and not (old.get("type") == "module" and not old.get("source_file")
+                        and old.get("module_specifier") == source):
+            # Even a deleted file's ID can still have unchanged inbound edges.
+            # Never let a package adopt them, or guess an old stub's identity.
+            raise ValueError(f"Module identity collision: {node['id']} ({source})")
+        node["module_specifier"] = source
+        node["source_file"] = ""
+
+
 def render_report(graph, root, detection):
     # Analysis projection only. Never serialize this simple graph over the raw
     # graph: its parallel relationships are deliberately retained in graph.json.
@@ -124,6 +153,7 @@ def update(root, semantic_path=None, ast_sources_path=None):
                       resolution_context_nodes=context)
         if ast.get("failed_files") or ast.get("failed_sources"):
             raise ValueError("AST extraction incomplete; existing graph preserved")
+        normalize_import_modules(ast, root, ast_sources, base)
         # extract() resolves cross-file imports itself. Keep its raw records:
         # even a fresh DiGraph collapses parallel relations/provenance.
         known = {n["id"] for n in base["nodes"]}
