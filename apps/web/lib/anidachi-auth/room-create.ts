@@ -23,6 +23,7 @@ type RoomCreateFailure = {
 			| "INVALID_ROOM_SOURCE"
 			| "ROOM_UPDATE_REQUIRED"
 			| "HOST_SUBSCRIPTION_REQUIRED"
+			| "QUOTA_EXHAUSTED"
 			| "ROOM_AUTHORITY_UNAVAILABLE";
 		message?: string;
 		pricingUrl?: string;
@@ -46,6 +47,8 @@ export async function handleRoomCreateRequestBody<T>(params: {
 	try {
 		return { ok: true, value: await params.create(parsed.input) };
 	} catch (error) {
+		if (error instanceof Error && error.message === "QUOTA_EXHAUSTED")
+			return { ok: false, status: 403, body: { code: "QUOTA_EXHAUSTED", error: "Daily free watch-party time is used up" } };
 		if (
 			error instanceof Error &&
 			error.message === "HOST_SUBSCRIPTION_REQUIRED"

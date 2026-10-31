@@ -164,10 +164,10 @@ describe("watch history meaningful-progress controller", () => {
   });
 
   it.each([
-    ["Free", 13],
+    ["Free", 1],
     ["recording off", 1],
     ["YouTube opt-out", 1],
-    ["unavailable", 15],
+    ["unavailable", 1],
   ] as const)("limits a paused %s tab to %i authority requests in one hour", async (state, budget) => {
     let elapsed = 0;
     let requests = 0;
@@ -260,12 +260,13 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.local).toHaveLength(count);
   });
 
-  it("keeps a confirmed Free lease until its expiry instead of polling while paused", async () => {
+  it("does not renew an expired Free lease on idle heartbeats, but rechecks on playback", async () => {
     let requests = 0;
+    let playing = false;
     const authority = pollingAuthority();
     authority.accessLease.access.state = "plan_required";
     const fixture = createFixture({
-      isPlaying: () => false,
+      isPlaying: () => playing,
       loadPreferences: async () => { requests++; return authority; },
     });
     await fixture.controller.start();
@@ -277,8 +278,83 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.local).toHaveLength(0);
     fixture.advance(5_000);
     await fixture.controller.observe("heartbeat");
+    expect(requests).toBe(1);
+    playing = true;
+    await fixture.controller.notePlaybackInteraction();
     expect(requests).toBe(2);
     expect(fixture.local).toHaveLength(0);
+  });
+
+  it.each(["youtube", "netflix", "crunchyroll"] as const)(
+    "persists changed %s checkpoints and terminal events without repeated idle writes",
+    async provider => {
+      let playing = false;
+      const authority = pollingAuthority();
+      const fixture = createFixture({
+        isPlaying: () => playing,
+        getProvider: () => provider,
+        loadPreferences: async () => authority,
+        getObservation: (_preferences, observation) => ({ ...observation, provider }),
+      });
+      await fixture.controller.start();
+      for (let tick = 0; tick < 12; tick++) {
+        fixture.advance(5_000);
+        await fixture.controller.observe("heartbeat");
+      }
+      expect(fixture.local).toHaveLength(1);
+      fixture.setTime(12);
+      await fixture.controller.observe("heartbeat");
+      expect(fixture.local).toHaveLength(2);
+      playing = true;
+      await fixture.controller.observe("heartbeat");
+      fixture.setTime(13);
+      await fixture.controller.observe("heartbeat");
+      expect(fixture.local).toHaveLength(4);
+      expect(fixture.enqueued).toHaveLength(1);
+      playing = false;
+      await fixture.controller.observe("pause");
+      await fixture.controller.observe("heartbeat");
+      await fixture.controller.observe("seek");
+      await fixture.controller.observe("ended");
+      await fixture.controller.observe("pagehide");
+      expect(fixture.local.map(event => event.kind)).toEqual([
+        "heartbeat", "heartbeat", "heartbeat", "heartbeat", "pause", "seek", "ended", "pagehide",
+      ]);
+    },
+  );
+
+  it("retries an unchanged paused checkpoint when local persistence failed", async () => {
+    let failed = true;
+    const fixture = createFixture({
+      isPlaying: () => false,
+      observeResult: () => failed ? { ok: false, status: "retryable" } : { ok: true },
+    });
+    await fixture.controller.start();
+    failed = false;
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.localAttempts).toBe(2);
+  });
+
+  it("checks fresh capture authority before resuming after an hour paused", async () => {
+    let playing = false;
+    let now = 1_700_000_000_000;
+    const loadPreferences = vi.fn(async () => pollingAuthority(now));
+    const fixture = createFixture({ isPlaying: () => playing, loadPreferences });
+    await fixture.controller.start();
+    for (let tick = 0; tick < 720; tick++) {
+      now += 5_000;
+      fixture.advance(5_000);
+      await fixture.controller.observe("heartbeat");
+    }
+    expect(loadPreferences).toHaveBeenCalledTimes(1);
+    expect(fixture.local).toHaveLength(1);
+    playing = true;
+    await fixture.controller.notePlaybackInteraction();
+    expect(loadPreferences).toHaveBeenCalledTimes(2);
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.at(-1)).toMatchObject({ currentTime: 11 });
   });
 
   it.each(["recording off", "YouTube opt-out", "storage paused"] as const)(

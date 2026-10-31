@@ -11,6 +11,7 @@ import {
 } from "@anidachi/protocol";
 import type { BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import { parseRoomMeterState, type RoomMeterState } from "./room-metering";
+import { parseFree20AccountingState, type Free20AccountingState } from "./free20-room-accounting";
 import type { RoomStateSnapshot } from "./room-state";
 import { PARTICIPANT_DISCONNECT_STORAGE_KEY } from "./participant-disconnect";
 import {
@@ -34,6 +35,7 @@ export const ROOM_STATE_META_KEY = "room_state";
 export const NEXT_P2P_SERVER_SEQ_META_KEY = "next_p2p_server_seq";
 export const ROOM_ENDED_META_KEY = "room_ended";
 export const ROOM_METER_META_KEY = "room_meter";
+export const ROOM_FREE20_META_KEY = "room_free20_accounting_v1";
 export const P2P_REPLAY_TTL_MS = 45_000;
 export const P2P_REPLAY_MAX_EVENTS = 80;
 
@@ -173,6 +175,20 @@ export function writeStoredRoomMeter(
   writeMeta(storage, ROOM_METER_META_KEY, meter, updatedAt);
 }
 
+export function readStoredFree20Accounting(storage: DurableObjectStorage, meter: RoomMeterState): Free20AccountingState | null {
+  const row = storage.sql.exec<RoomMetaRow>("SELECT value_json, updated_at, key FROM room_meta WHERE key = ?", ROOM_FREE20_META_KEY).toArray()[0];
+  return row ? parseFree20AccountingState(JSON.parse(row.value_json), meter) : null;
+}
+
+/** Both rows commit or roll back together. Callers update their caches only on success. */
+export function writeStoredFree20Accounting(storage: DurableObjectStorage, meter: RoomMeterState, accounting: Free20AccountingState, updatedAt: number): void {
+  parseFree20AccountingState(accounting, meter);
+  storage.transactionSync(() => {
+    writeStoredRoomMeter(storage, meter, updatedAt);
+    writeMeta(storage, ROOM_FREE20_META_KEY, accounting, updatedAt);
+  });
+}
+
 export function readNextP2PServerSeq(
 	storage: DurableObjectStorage,
 ): number | null {
@@ -248,10 +264,11 @@ export function persistEndedRoomTombstoneAndClearRuntime(
  storage.sql.exec("DELETE FROM room_media_seat_denials");
     storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
     storage.sql.exec(
-      "DELETE FROM room_meta WHERE key IN (?, ?, ?)",
+      "DELETE FROM room_meta WHERE key IN (?, ?, ?, ?)",
       ROOM_STATE_META_KEY,
       NEXT_P2P_SERVER_SEQ_META_KEY,
       ROOM_METER_META_KEY,
+      ROOM_FREE20_META_KEY,
     );
   });
 }

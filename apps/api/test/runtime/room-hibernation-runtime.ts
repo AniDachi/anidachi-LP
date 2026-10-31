@@ -19,7 +19,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 import { observeRoomStorage } from "../helpers/room-storage-profile";
 import { readStoredRoomMeter } from "../../src/room-persistence";
-import { roomUsageSummary } from "../../src/room-metering";
+import { roomUsageSummary, type RoomMeterState } from "../../src/room-metering";
+import type { Free20AccountingState } from "../../src/free20-room-accounting";
+import type { RoomPolicyState } from "../../src/room-capability";
+import type { RoomTerminalIntent } from "../../src/room-terminal";
+import type { EndedRoomTombstone } from "../../src/room-lifecycle";
+import type { Env } from "../../src/index";
+
+// White-box recovery/storage probes; normal activity still goes through real WS handlers.
+function free20Room(instance: unknown) {
+ return instance as {
+  env: Env; roomMeter: RoomMeterState; roomPolicy: RoomPolicyState;
+  free20Accounting: Free20AccountingState; terminalIntent: RoomTerminalIntent;
+  endedTombstone: EndedRoomTombstone | null;
+  serviceRoomPolicy(now: number): Promise<void>; runAlarmExclusive(): Promise<void>;
+  currentRoomSnapshot(): Extract<ServerEvent, { type: "ROOM_SNAPSHOT" }>;
+ };
+}
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
@@ -33,11 +49,11 @@ beforeEach(() => stubWebFetch(runtimeFetch));
 
 // These tests isolate existing lifecycle callbacks. Admission has dedicated
 // denial, timeout and cutover-race coverage in paid-hosting-transition-runtime.
-function stubWebFetch(callback: typeof fetch) {
+function stubWebFetch(callback: typeof fetch, dailyRoomId?: string) {
  vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = new URL(String(input));
   const match = url.pathname.match(/^\/api\/internal\/rooms\/([^/]+)\/admission$/);
-  if (url.origin === "https://web.internal" && match) return Response.json({ roomId: decodeURIComponent(match[1]!), roomGeneration: 1, allowed: true });
+  if (url.origin === "https://web.internal" && match) return Response.json({ roomId: decodeURIComponent(match[1]!), roomGeneration: 1, allowed: true, ...(decodeURIComponent(match[1]!) === dailyRoomId ? { hostingTimeMode: "daily_free20" } : {}) });
   return callback(input, init);
  });
 }
@@ -3224,11 +3240,15 @@ function sleep(ms: number): Promise<void> {
 
 // Negotiated v2 rooms use real signed capabilities and the actual hibernating DO.
 describe("RoomDurableObject media v2", () => {
-	const hostId = "v2-host";
-	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2) {
+	const hostId = "11111111-1111-4111-8111-111111111111";
+	async function fixture(plan: "free" | "plus" | "pro" = "pro", version: 2 | 3 = 2, dailyLimit: 1200 | 1800 = 1800, free20 = false, dailyMode = free20) {
 		const roomId = `media-v2-${crypto.randomUUID()}`;
 		const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = ns.get(ns.idFromName(roomId));
+		if (free20) await runInDurableObject(stub, instance => {
+			const i = free20Room(instance);
+			i.env = { ...i.env, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true" };
+		});
 		let revision = 1;
 		const lease = () => {
 			const now = Date.now();
@@ -3269,10 +3289,30 @@ describe("RoomDurableObject media v2", () => {
     let settlementGate: Promise<void> | null = null;
     let releaseSettlement: (()=>void) | null = null;
 		const ledger = new Map<string, number>();
-		const calls: unknown[] = [];
+		const calls: Array<{ operation?: string; checkpointSequence?: number; settleOnly?: boolean; usage?: {day:string;seconds:number}[]; reason?: string }> = [];
+		let lostBudget = false;
+		let priorAccountSeconds = 0;
+		let unlimitedTime = false;
+		let beforeBudgetReply: (() => void) | null = null;
 		stubWebFetch(vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 				const body = JSON.parse(String(init?.body));
 				calls.push(body);
+				if (String(input).endsWith("/free20-budget")) {
+					if (fail && !lostBudget) return Response.json({error:"outage"},{status:503});
+					for (const usage of body.usage) ledger.set(usage.day, Math.max(ledger.get(usage.day) ?? 0, usage.seconds));
+					if (lostBudget) throw new Error("simulated response lost after commit");
+					beforeBudgetReply?.(); beforeBudgetReply = null;
+					const now = Date.now(); const day = new Date(now).toISOString().slice(0, 10);
+					revision++;
+					return Response.json({ checkpoint: {
+						...(unlimitedTime ? { roomTimeVersion: 1, kind: "confirmed_unlimited", authority: "account_entitlements_v1", planCode: "plus" } : { roomBudgetVersion: 1 }),
+						ownerUserId: hostId, roomId, roomGeneration: 1,
+						checkpointSequence: body.checkpointSequence, utcDay: day, serverTime: now,
+						resetAt: (Math.floor(now / 86400000) + 1) * 86400000,
+						refreshBy: Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
+						...(!unlimitedTime ? { budgetSeconds: 1200, committedSeconds: priorAccountSeconds + (ledger.get(day) ?? 0) } : {}), acknowledged: body.usage,
+					}, policy: { denied: false, roomToken: await token(hostId, "internal-capability-renewal") } });
+				}
 				if (String(input).endsWith("/source")) {
 					if (failSource) return Response.json({ code: "ROOM_ENDED" }, { status: 409 });
 					return Response.json({ ok: true, outcome: "persisted", sourceGeneration: body.sourceGeneration });
@@ -3304,7 +3344,7 @@ describe("RoomDurableObject media v2", () => {
 											? {
 													day,
 													remainingSeconds:
-														1800 - (ledger.get(day) ?? 0),
+														Math.max(0, dailyLimit - (ledger.get(day) ?? 0)),
 													resetAt: new Date(
 														(Math.floor(now / 86400000) + 1) * 86400000,
 													).toISOString(),
@@ -3324,7 +3364,7 @@ describe("RoomDurableObject media v2", () => {
 					usageFinalized: true,
 					accepted: true,
 				});
-			}),
+			}), dailyMode ? roomId : undefined,
 		);
 		async function join(i: number, sessionId = `v2-session-${i}`) {
 			const userId = i === 0 ? hostId : `v2-user-${i}`;
@@ -3351,6 +3391,10 @@ describe("RoomDurableObject media v2", () => {
 			stub,
 			join,
 			calls,
+			setPriorUsage: (seconds: number) => { priorAccountSeconds = seconds; },
+			setUnlimited: (value = true) => { unlimitedTime = value; },
+			loseBudgetReply: () => { lostBudget = true; },
+			beforeBudgetReply: (callback: () => void) => { beforeBudgetReply = callback; },
 			setSourceFailure: () => { failSource = true; },
       stallSettlement: () => { settlementGate=new Promise<void>(resolve=>{releaseSettlement=resolve;}); },
       releaseSettlement: () => {releaseSettlement?.();settlementGate=null;},
@@ -3363,6 +3407,243 @@ describe("RoomDurableObject media v2", () => {
 			},
 		};
 	}
+
+ it("Free20 status reads real live usage without settlement, writes or alarms", async () => {
+  let clock = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  f.setPriorUsage(420);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "status host");
+  const guest = await f.join(1);
+  await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "status guest");
+  let profile!: ReturnType<typeof observeRoomStorage>;
+  await runInDurableObject(f.stub, async (_i, ctx) => { await ctx.storage.sync(); profile = observeRoomStorage(ctx.storage); });
+  const calls = f.calls.length;
+  clock += 180_000;
+  const response = await f.stub.fetch("https://room.internal/internal/free20-status", {
+   method: "POST", headers: { Authorization: `Bearer ${INTERNAL_SECRET}`, "Content-Type": "application/json" },
+   body: JSON.stringify({ ownerUserId: hostId, roomId: f.roomId, roomGeneration: 1 }),
+  });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({ ownerUserId: hostId, roomId: f.roomId, serverTime: clock, access: { usedSeconds: 600, remainingSeconds: 600, metering: true } });
+  expect(f.calls).toHaveLength(calls);
+  expect(profile.snapshot()).toMatchObject({ sqlRowsWritten: 0, kvPuts: 0, kvDeletes: 0, alarmSets: 0, alarmDeletes: 0 });
+  profile.restore();
+  host.close(); guest.close();
+ });
+ it("Free20 status denies unauthenticated, mismatched and disabled reads", async () => {
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "status identity host");
+  const read = (owner = hostId, auth = true) => f.stub.fetch("https://room.internal/internal/free20-status", {
+   method: "POST", headers: { ...(auth ? { Authorization: `Bearer ${INTERNAL_SECRET}` } : {}), "Content-Type": "application/json" },
+   body: JSON.stringify({ ownerUserId: owner, roomId: f.roomId, roomGeneration: 1 }),
+  });
+  expect((await read(hostId, false)).status).toBe(401);
+  expect((await read("22222222-2222-4222-8222-222222222222")).status).toBe(503);
+  expect((await read()).status).toBe(200);
+  await runInDurableObject(f.stub, i => { free20Room(i).env = { ...free20Room(i).env, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "false" }; });
+  expect((await read()).status).toBe(404);
+  host.close();
+ });
+
+ it("Free20 status does not refresh expired authority during an internal read", async () => {
+  let clock = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "status expiry host");
+  const calls = f.calls.length;
+  clock += 300_001;
+  const response = await f.stub.fetch("https://room.internal/internal/free20-status", {
+   method: "POST", headers: { Authorization: `Bearer ${INTERNAL_SECRET}` },
+   body: JSON.stringify({ ownerUserId: hostId, roomId: f.roomId, roomGeneration: 1 }),
+  });
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({ code: "HOSTING_STATUS_UNAVAILABLE" });
+  expect(f.calls).toHaveLength(calls);
+  host.close();
+ });
+
+ it("server opt-in does not convert an unmarked legacy Free room", async () => {
+  const f = await fixture("free", 3, 1800, true, false);
+  const host = await f.join(0);
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).free20Accounting)).toBeNull();
+  expect(f.calls.some(call => call.checkpointSequence !== undefined)).toBe(false);
+  host.close();
+ });
+ it("marked Free20 admission fails before retaining a socket when the Worker is not enabled", async () => {
+  const f = await fixture("free", 3, 1200, false, true);
+  const now = Date.now();
+  const token = await signRoomTokenForTest({ sub: hostId, roomId: f.roomId, role: "host", participantSessionId: "disabled", hostUserId: hostId,
+   mediaLease: RoomMediaCapabilityLeaseSchema.parse({ roomId: f.roomId, roomGeneration: 1, issuedAt: new Date(now).toISOString(), paidUntil: null,
+    capabilities: { mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMediaSeats: 4, capabilityRevision: 1, capabilitiesValidUntil: new Date(now+1800000).toISOString() } }) }, TEST_SECRET_ENV);
+  const response = await f.stub.fetch(`https://room.test/?roomToken=${encodeURIComponent(token)}`, { headers: { Upgrade: "websocket" } });
+  expect(response.status).toBe(503);
+  expect(await runInDurableObject(f.stub, (_instance,state) => state.getWebSockets().length)).toBe(0);
+ });
+
+ it("Free20 paid time survives eviction with stale policy, retains pinned caps and settles the I/O tail once", async () => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  const day = new Date(start).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true); f.setPriorUsage(420);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "paid host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "paid guest");
+  const savedPolicy = await runInDurableObject(f.stub, async (_i, ctx) => ctx.storage.get<RoomPolicyState>("room_policy_v2"));
+  clock += 180000; f.setUnlimited(); f.beforeBudgetReply(() => { clock += 2000; });
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  const applied = await runInDurableObject(f.stub, instance => { const i = free20Room(instance); return { ended: i.endedTombstone, meter: i.roomMeter, right: i.free20Accounting.unlimited, caps: i.roomPolicy.lease.capabilities, quota: i.currentRoomSnapshot().quota }; });
+  expect(applied.ended).toBeNull(); expect(applied.right?.kind).toBe("confirmed_unlimited");
+  expect(applied.meter).toMatchObject({ accumulatedMs: 182000, activeSince: null, acknowledgedSeconds: 180 });
+  expect(applied.caps).toMatchObject({ hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMediaSeats: 4 });
+  expect(applied.quota).toBeUndefined(); expect(f.ledger.get(day)).toBe(180);
+  // Crash after SQL commit but before the new policy KV write: SQL wins on restore.
+  await runInDurableObject(f.stub, async (_i, ctx) => ctx.storage.put("room_policy_v2", savedPolicy));
+  await evictDurableObject(f.stub); clock += 300000;
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); await i.serviceRoomPolicy(clock); });
+  expect(f.ledger.get(day)).toBe(182);
+  const restored = await runInDurableObject(f.stub, instance => { const i = free20Room(instance); return { meter: i.roomMeter, quota: i.currentRoomSnapshot().quota, ended: i.endedTombstone }; });
+  expect(restored.ended).toBeNull(); expect(restored.quota).toBeUndefined(); expect(restored.meter.accumulatedMs).toBe(182000);
+  // A known Free account returns to its saved remainder, not a fresh allowance.
+  f.setUnlimited(false); clock += 60000;
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).currentRoomSnapshot().quota?.remainingSeconds)).toBe(598);
+ });
+
+ it.each(["before", "during", "stopped"])("Free20 paid confirmation cannot revive a room at quota zero: %s", async (boundary) => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  const day = new Date(start).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true); f.setPriorUsage(1140);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "boundary host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "boundary guest");
+  f.setUnlimited(); clock += boundary === "during" ? 59000 : 60000;
+  if (boundary === "during") f.beforeBudgetReply(() => { clock += 1000; });
+  if (boundary === "stopped") {
+   guest.close();
+   await vi.waitFor(async () => expect(await runInDurableObject(f.stub, instance => free20Room(instance).roomMeter.activeSince)).toBeNull());
+  }
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).endedTombstone)).toMatchObject({ reason: "quota_exhausted", endedAt: start + 60000, usageFinalized: true });
+  expect(f.ledger.get(day)).toBe(60);
+ });
+
+ it("Free20 paid room settles its frozen tail before finalization and never charges paid viewing", async () => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  const day = new Date(start).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "terminal paid host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "terminal paid guest");
+  clock += 180000; f.setUnlimited(); f.beforeBudgetReply(() => { clock += 2000; });
+  await runInDurableObject(f.stub, async instance => { const i = free20Room(instance); i.roomPolicy.refreshAt = clock; await i.serviceRoomPolicy(clock); });
+  clock += 60000;
+  const ended = await endRoom(f.stub, { endedAt: clock, reason: "host_ended" });
+  expect(ended.status).toBe(200); await ended.text();
+  expect(f.ledger.get(day)).toBe(182);
+  expect(f.calls.filter(c => c.settleOnly).at(-1)?.usage).toEqual([{ day, seconds: 182 }]);
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).endedTombstone?.usageFinalized)).toBe(true);
+  const before = f.calls.length;
+  await runInDurableObject(f.stub, async instance => free20Room(instance).serviceRoomPolicy(clock));
+  expect(f.calls).toHaveLength(before);
+ });
+
+ it("Free20 wiring persists the request before I/O and restores the ACK/budget after a torn policy write", async () => {
+  const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;
+  const clock=vi.spyOn(Date,"now").mockReturnValue(start);
+  const f=await fixture("free",3,1200,true);f.setPriorUsage(420);
+  const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","Free20 host");
+  const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"Free20 guest");
+  const before=await runInDurableObject(f.stub,async(instance,state)=>({policy:await state.storage.get("room_policy_v2"),meter:(free20Room(instance)).roomMeter}));
+  clock.mockReturnValue(start+180000);
+  await runInDurableObject(f.stub,async(instance,state)=>{
+   const i=free20Room(instance); i.roomPolicy.refreshAt=Date.now();
+   const fetchBefore=fetch;
+   const spy=vi.spyOn(globalThis,"fetch").mockImplementation(async(input,init)=>{
+    if(String(input).endsWith("/free20-budget")){
+     const pending=JSON.parse(state.storage.sql.exec<{value_json:string}>("SELECT value_json FROM room_meta WHERE key = ?","room_free20_accounting_v1").toArray()[0]?.value_json ?? "null");
+     expect(pending.pending).toEqual(JSON.parse(String(init?.body)));
+     expect(readStoredRoomMeter(state.storage)?.accumulatedMs).toBe(180000);
+    }
+    return fetchBefore(input,init);
+   });
+   try{await i.serviceRoomPolicy(Date.now());}finally{spy.mockRestore();}
+   expect(i.currentRoomSnapshot().quota?.remainingSeconds).toBe(600);
+   expect(i.roomMeter.acknowledgedSeconds).toBe(180);
+   // Simulate a crash after atomic accounting success but before legacy policy KV.
+   await state.storage.put("room_policy_v2",{...before.policy as RoomPolicyState,budget:null});
+  });
+  expect(f.calls.filter((c)=>c.checkpointSequence!==undefined).length).toBe(2);
+  expect(f.calls.filter((c)=>c.operation==="room_policy_v2")).toHaveLength(0);
+  await evictDurableObject(f.stub,{webSockets:"hibernate"});
+  const restored=await runInDurableObject(f.stub,instance=>{
+   const i=free20Room(instance);return {quota:i.currentRoomSnapshot().quota,ack:i.roomMeter.acknowledgedSeconds,sequence:i.free20Accounting.sequence};
+  });
+  expect(restored).toMatchObject({quota:{remainingSeconds:600},ack:180,sequence:2});
+  host.close();guest.close();
+ });
+
+ it.each([false, true])("Free20 wiring freezes a lost-response room and retries cumulative settlement before finalization after eviction: paid=%s",async(paid)=>{
+  const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;
+  const clock=vi.spyOn(Date,"now").mockReturnValue(start);vi.spyOn(Math,"random").mockReturnValue(0);
+  const f=await fixture("free",3,1200,true);const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
+  const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"guest");
+  clock.mockReturnValue(start+180000);f.setUnlimited(paid);f.loseBudgetReply();f.setFail();
+  await runInDurableObject(f.stub,async(instance)=>{const i=free20Room(instance);i.roomPolicy.refreshAt=Date.now();await i.serviceRoomPolicy(Date.now());});
+  expect(f.calls.filter((c)=>c.reason)).toHaveLength(0);
+  const frozen=await runInDurableObject(f.stub,instance=>{const i=free20Room(instance);return {meter:i.roomMeter,pending:i.free20Accounting.pending,retry:i.terminalIntent.nextAttemptAt};});
+  expect(frozen.meter).toMatchObject({accumulatedMs:180000,activeSince:null,acknowledgedSeconds:0});
+  expect(frozen.pending?.usage[0]?.seconds).toBe(180);
+  await evictDurableObject(f.stub,{webSockets:"hibernate"});
+  // Restore the existing settlement transport only; no budget may be issued to a terminal room.
+  stubWebFetch(async(_url,init)=>{const b=JSON.parse(String(init?.body));f.calls.push(b);return Response.json({ok:true,roomId:f.roomId,roomGeneration:1,acknowledged:b.usage??[],policy:null,usageFinalized:true});});
+  clock.mockReturnValue(frozen.retry);
+  await runInDurableObject(f.stub,async instance=>{await (free20Room(instance)).runAlarmExclusive();});
+  const settlement=f.calls.filter((c)=>c.settleOnly);
+  expect(settlement.at(-1)?.usage).toEqual(frozen.pending?.usage);
+  expect(f.calls.filter((c)=>c.checkpointSequence!==undefined)).toHaveLength(2);
+  expect(f.calls.filter((c)=>c.reason)).toHaveLength(1);
+  expect(await runInDurableObject(f.stub,instance=>(free20Room(instance)).endedTombstone?.usageFinalized)).toBe(true);
+ });
+
+ it.each([[false, false], [true, false], [false, true], [true, true]])("Free20 callback crossing midnight preserves an unexpired room and never revives an expired one: expired=%s paid=%s",async(expired, paid)=>{
+  const midnight=(Math.floor(Date.now()/86400000)+2)*86400000;
+  const start=midnight-120000;const clock=vi.spyOn(Date,"now").mockReturnValue(start);
+  const f=await fixture("free",3,1200,true);if(expired)f.setPriorUsage(1140);
+  const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
+  const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"guest");
+  clock.mockReturnValue(start+30000);f.setUnlimited(paid);f.beforeBudgetReply(()=>clock.mockReturnValue(midnight+10000));
+  await runInDurableObject(f.stub,async instance=>{const i=free20Room(instance);i.roomPolicy.refreshAt=Date.now();await i.serviceRoomPolicy(Date.now());});
+  const result=await runInDurableObject(f.stub,instance=>{const i=free20Room(instance);return {ended:i.endedTombstone,quota:i.endedTombstone?null:i.currentRoomSnapshot().quota};});
+  const previousDay=new Date(start).toISOString().slice(0,10),day=new Date(midnight).toISOString().slice(0,10);
+  if(expired){
+   expect(result.ended).toMatchObject({reason:"quota_exhausted",endedAt:midnight-60000,usageFinalized:true});
+   expect(f.ledger.get(previousDay)).toBe(60);expect(f.ledger.get(day)??0).toBe(0);
+   expect(f.calls.filter((c)=>c.checkpointSequence!==undefined)).toHaveLength(2);
+  }else{
+   expect(result.ended).toBeNull();if(paid)expect(result.quota).toBeUndefined();else expect(result.quota).toMatchObject({day,remainingSeconds:1190});
+   expect(f.ledger.get(previousDay)).toBe(120);expect(f.ledger.get(day)).toBe(10);
+   expect(f.calls.filter((c)=>c.checkpointSequence!==undefined)).toHaveLength(3);
+  }
+  host.close();guest.close();
+ });
+
+ it("Free20 alarm ends exactly at twenty minutes without selecting a five-minute warning",async()=>{
+  const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;const clock=vi.spyOn(Date,"now").mockReturnValue(start);
+  const f=await fixture("free",3,1200,true);const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
+  const guest=await f.join(1);await guest.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT"&&e.participants.length===2,"guest");
+  for(const seconds of [300,600,900,1190]){
+   clock.mockReturnValue(start+seconds*1000);
+   await runInDurableObject(f.stub,async instance=>{await (free20Room(instance)).serviceRoomPolicy(Date.now());});
+  }
+  expect(host.hasEvent(e=>e.type==="ERROR"&&e.code==="ROOM_QUOTA_WARNING")).toBe(false);
+  clock.mockReturnValue(start+1201000);
+  await runInDurableObject(f.stub,async instance=>{await (free20Room(instance)).runAlarmExclusive();});
+  expect(await runInDurableObject(f.stub,instance=>(free20Room(instance)).endedTombstone)).toMatchObject({reason:"quota_exhausted",endedAt:start+1200000,usageFinalized:true});
+  expect(f.ledger.get(new Date(start).toISOString().slice(0,10))).toBe(1200);
+ });
 
  it("caps failed settlement traffic while retaining frozen usage through eviction", async () => {
   const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;
@@ -3431,9 +3712,11 @@ describe("RoomDurableObject media v2", () => {
 	});
 
   it.each([
-    ["free", 1], ["free", 2], ["plus", 2], ["pro", 2],
-  ] as const)("storage write profile: %s with %i participants", async (plan, participants) => {
-    const f = await fixture(plan, 3);
+    ["free", 1, false, false], ["free", 2, false, false], ["plus", 2, false, false], ["pro", 2, false, false],
+    ["free", 1, true, false], ["free", 2, true, false], ["free", 2, true, true],
+  ] as const)("storage write profile: %s with %i participants, Free20=%s paid=%s", async (plan, participants, free20, paid = false) => {
+    const f = await fixture(plan, 3, 1800, free20);
+    f.setUnlimited(paid);
     const host = await f.join(0);
     await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "profile host joined");
     const observer = participants === 2 ? await f.join(1) : host;
@@ -3454,6 +3737,7 @@ describe("RoomDurableObject media v2", () => {
     const start = Date.now();
     const clock = vi.spyOn(Date, "now").mockReturnValue(start);
     const frames = 20;
+    const budgetCallsBefore = f.calls.filter(c => c.checkpointSequence !== undefined || c.operation === "room_policy_v2").length;
     try {
       for (let n = 1; n <= frames; n++) {
         clock.mockReturnValue(start + n * 1500);
@@ -3477,8 +3761,10 @@ describe("RoomDurableObject media v2", () => {
         return { seq: room.room.serverSeq, meter: room.roomMeter, counts: profile.snapshot() };
       });
       expect(final.seq).toBe(before + frames);
-      expect(final.meter.activeSince === null).toBe(plan !== "free" || participants === 1);
-      console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, frames, ...final.counts }));
+      expect(final.meter.activeSince === null).toBe(paid || plan !== "free" || participants === 1);
+      const budgetCalls = f.calls.filter(c => c.checkpointSequence !== undefined || c.operation === "room_policy_v2").length - budgetCallsBefore;
+      expect(budgetCalls).toBe(0);
+      console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, free20, paid, frames, budgetCalls, ...final.counts }));
       expect(final.counts, JSON.stringify({ plan, participants, frames, ...final.counts })).toMatchObject({
         sqlRowsWritten: frames,
         kvPuts: 0,
@@ -4120,12 +4406,12 @@ it.each([
 		);
 		expect((await replacement.waitFor(e => e.type === "ROOM_ENDED", "terminal cause")) as object).not.toHaveProperty("hostingCutover");
 	});
-	it("meters only actual host+guest sockets, preserves acknowledged600s on renewal, and ACKs before quota end", async () => {
+	it.each([1200, 1800] as const)("meters host+guest, preserves cumulative ACKs and settles before ending a %ss allowance", async (dailyLimit) => {
     // This scenario keeps 600 seconds in one UTC day; midnight rollover has dedicated cases below.
     const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
     const day = new Date(start).toISOString().slice(0, 10);
     vi.spyOn(Date, "now").mockReturnValue(start);
-		const f = await fixture("free");
+		const f = await fixture("free", 2, dailyLimit);
 		const host = await f.join(0);
 		await host.waitFor((e) => e.type === "ROOM_MEDIA_SNAPSHOT", "solo host");
 		expect(
@@ -4158,16 +4444,16 @@ it.each([
 				seconds: Math.floor(i.roomMeter.accumulatedMs / 1000),
 			};
 		});
-		expect(values.allowed - values.seconds).toBe(1200);
+		expect(values.allowed - values.seconds).toBe(dailyLimit - 600);
     expect(values.seconds).toBe(600);
     expect(f.ledger.get(day)).toBe(600);
-    const reconciled = await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.remainingSeconds === 1200, "published ACK-reconciled budget");
+    const reconciled = await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.remainingSeconds === dailyLimit - 600, "published ACK-reconciled budget");
     expect(reconciled.type === "ROOM_SNAPSHOT" && reconciled.quota?.metering).toBe(true);
 		await runInDurableObject(f.stub, async (instance) => {
 			const i = instance as any;
 			i.roomMeter = {
 				...i.roomMeter,
-				accumulatedMs: 1800000,
+				accumulatedMs: dailyLimit * 1000,
 				activeSince: Date.now(),
 			};
 			await i.serviceRoomPolicy(Date.now());
@@ -4183,6 +4469,37 @@ it.each([
 		expect((f.calls[terminal - 1] as any).operation).toBe("room_policy_v2");
 		expect((f.calls[terminal - 1] as any).settleOnly).toBe(true);
 	});
+  it.each([false, true])("preserves a 1200s allowance through paused playback, hibernation and reconnect, Free20=%s", async (free20) => {
+    // Both candidate and legacy authority are synthetic; real environment flags stay off.
+    const start = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
+    const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+    const f = await fixture("free", 3, 1200, free20);
+    const host = await f.join(0);
+    await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.metering === false, "solo host does not spend");
+    clock.mockReturnValue(start + 60_000);
+    const guest = await f.join(1);
+    await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "guest starts meter");
+    const paused = { ...playbackState("crunchyroll|watch/free20-paused", "https://www.crunchyroll.com/watch/free20-paused"), playing: false };
+    host.send({ type: "HOST_STATE", roomId: f.roomId, state: paused,
+      source: sourceDescriptor(paused.videoFingerprint, "Paused metering", paused.sourceUrl) });
+    await guest.waitFor(e => e.type === "HOST_STATE" && !e.state.playing, "paused playback");
+    clock.mockReturnValue(start + 120_000);
+    await evictDurableObject(f.stub, { webSockets: "hibernate" });
+    const restored = await runInDurableObject(f.stub, instance => {
+      const room = instance as any;
+      return { seconds: roomUsageSummary(room.roomMeter, Date.now()).seconds, budget: room.roomPolicy.budget };
+    });
+    expect(restored.seconds).toBe(60);
+    expect(restored.budget.allowedSeconds).toBe(1200);
+    guest.close();
+    await host.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.metering === false && e.participants.some(p => !p.connected), "guest leaves, meter stops");
+    clock.mockReturnValue(start + 180_000);
+    const replacement = await f.join(1);
+    await replacement.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.quota?.metering === true, "guest reconnects");
+    clock.mockReturnValue(start + 240_000);
+    const quota = await runInDurableObject(f.stub, instance => (instance as any).currentRoomSnapshot().quota);
+    expect(quota).toMatchObject({ remainingSeconds: 1080, metering: true });
+  });
   it("publishes paused v2 quota while a disconnected guest keeps a reservation", async () => {
     const f=await fixture("free"); const host=await f.join(0);
     await host.waitFor(e=>e.type==="ROOM_SNAPSHOT"&&e.quota?.metering===false,"solo paused quota");
@@ -4281,22 +4598,22 @@ it.each([
   expect(h.countEvents(e=>e.type==='ROOM_ENDED')).toBe(1);
  });
 
- it.each([
-  ['delayed midnight',1620,false,1740,180,false],
-  ['exact midnight exhaustion',1680,false,1800,180,false],
-  ['pre-midnight exhaustion',1740,false,1800,0,true],
-  ['new-day accounting unavailable',1620,true,1740,180,true],
- ] as const)('handles %s without extending yesterday quota',async(_name,used,fail,oldSeconds,newSeconds,ended)=>{
-  const f=await fixture('free');const h=await f.join(0);await h.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT','host');const g=await f.join(1);await g.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT'&&e.participants.length===2,'guest');
+ it.each(([1200, 1800] as const).flatMap(limit => [
+  [`delayed midnight (${limit})`,limit-180,false,limit-60,180,false,limit],
+  [`exact midnight exhaustion (${limit})`,limit-120,false,limit,180,false,limit],
+  [`pre-midnight exhaustion (${limit})`,limit-60,false,limit,0,true,limit],
+  [`new-day accounting unavailable (${limit})`,limit-180,true,limit-60,180,true,limit],
+ ] as const))('handles %s without extending yesterday quota',async(_name,used,fail,oldSeconds,newSeconds,ended,dailyLimit)=>{
+  const f=await fixture('free',2,dailyLimit);const h=await f.join(0);await h.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT','host');const g=await f.join(1);await g.waitFor(e=>e.type==='ROOM_MEDIA_SNAPSHOT'&&e.participants.length===2,'guest');
   const midnight=Math.floor(Date.now()/86400000)*86400000;const now=midnight+180000;
   const previousDay=new Date(midnight-1).toISOString().slice(0,10);const day=new Date(midnight).toISOString().slice(0,10);
   const clock=vi.spyOn(Date,'now').mockReturnValue(now);
   try {
    if(fail)f.setFail();
-   await runInDurableObject(f.stub,async(instance,state)=>{const i=instance as any;i.roomMeter={schemaVersion:2,day:previousDay,accumulatedMs:used*1000,activeSince:midnight-120000,acknowledgedSeconds:0,pending:[],accountingBlocked:false};i.roomPolicy.budget={day:previousDay,allowedSeconds:1800};i.roomPolicy.refreshAt=0;await state.storage.put('room_policy_v2',i.roomPolicy);await i.serviceRoomPolicy(now);});
+   await runInDurableObject(f.stub,async(instance,state)=>{const i=instance as any;i.roomMeter={schemaVersion:2,day:previousDay,accumulatedMs:used*1000,activeSince:midnight-120000,acknowledgedSeconds:0,pending:[],accountingBlocked:false};i.roomPolicy.budget={day:previousDay,allowedSeconds:dailyLimit};i.roomPolicy.refreshAt=0;await state.storage.put('room_policy_v2',i.roomPolicy);await i.serviceRoomPolicy(now);});
    const result=await runInDurableObject(f.stub,instance=>{const i=instance as any;return {ending:i.roomPolicy?.endingReason??i.endedTombstone?.reason??null,day:i.roomMeter.day,seconds:Math.floor(i.roomMeter.accumulatedMs/1000),pending:i.roomMeter.pending};});
    expect(!!result.ending).toBe(ended);
-   if(!ended){const renewed=await h.waitFor(e=>e.type==='ROOM_SNAPSHOT'&&e.quota?.day===day&&e.quota.measuredAt===now,'published new UTC budget');expect(renewed.type==='ROOM_SNAPSHOT'&&renewed.quota?.remainingSeconds).toBe(1800-newSeconds);expect(f.ledger.get(previousDay)).toBe(oldSeconds);expect(f.ledger.get(day)).toBe(newSeconds);expect(result.day).toBe(day);expect(result.seconds).toBe(newSeconds);}
+   if(!ended){const renewed=await h.waitFor(e=>e.type==='ROOM_SNAPSHOT'&&e.quota?.day===day&&e.quota.measuredAt===now,'published new UTC budget');expect(renewed.type==='ROOM_SNAPSHOT'&&renewed.quota?.remainingSeconds).toBe(dailyLimit-newSeconds);expect(f.ledger.get(previousDay)).toBe(oldSeconds);expect(f.ledger.get(day)).toBe(newSeconds);expect(result.day).toBe(day);expect(result.seconds).toBe(newSeconds);}
    else if(fail){expect(result.ending).toBe('accounting_unavailable');expect(result.pending).toContainEqual({day:previousDay,seconds:oldSeconds});await h.waitForClose(4004,'unsafe new-day accounting');}
    else {expect(f.ledger.get(previousDay)).toBe(oldSeconds);expect(f.ledger.get(day)??0).toBe(0);const event=await h.waitFor(e=>e.type==='ROOM_ENDED','old day exhaustion');expect(event.type==='ROOM_ENDED'&&event.endedAt).toBe(midnight-60000);}
   } finally {clock.mockRestore();}

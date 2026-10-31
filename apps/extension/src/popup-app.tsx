@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   accountInboxItemInstanceKey,
+  accountInboxSocialSignature,
   getCachedAccountInboxForUser,
   mergeAccountInboxResponses,
   publishAccountInboxForUser,
@@ -192,6 +193,9 @@ export function PopupApp() {
   const popupSyncGateRef = useRef(createAsyncGenerationGate());
   const socialLoadGateRef = useRef(createAsyncGenerationGate());
   const inboxLoadGateRef = useRef(createAsyncGenerationGate());
+  const socialInboxRef = useRef<{ owner: string; signature: string } | null>(null);
+  const [socialInboxRevision, setSocialInboxRevision] = useState(0);
+  const socialRevisionSeenRef = useRef(0);
   const socialMutationInFlightRef = useRef(false);
   const seenInboxSignatureRef = useRef<string | null>(null);
   const pendingSeenInboxItemsRef = useRef(new Set<string>());
@@ -201,7 +205,7 @@ export function PopupApp() {
     if (!userId && previousUserId) forgetPopupView();
     accountGateRef.current.activate(userId);
 
-    setSocialState((current) =>
+    if (previousUserId !== userId) setSocialState((current) =>
       userId ? accountLoadingState(userId, current) : signedOutAccountState(),
     );
     setInboxState((current) =>
@@ -235,7 +239,7 @@ export function PopupApp() {
   const peopleActionNotice = isPopupPeopleActionNotice(socialNotice) ? socialNotice : null;
 
   const loadSocialForTokens = useCallback(
-    async (tokens: ExtensionAuthTokens, parentIsCurrent: () => boolean = () => true) => {
+    async (tokens: ExtensionAuthTokens, parentIsCurrent: () => boolean = () => true, force = true) => {
       const request = accountGateRef.current.capture(tokens.user.id);
       if (!request) return false;
       const loadGeneration = socialLoadGateRef.current.begin();
@@ -260,6 +264,7 @@ export function PopupApp() {
                   error: null,
                 },
           );
+          if (!force && isSocialSnapshotCacheFresh(cached)) return true;
         }
 
         const [directory, invites] = await Promise.all([
@@ -346,6 +351,7 @@ export function PopupApp() {
       options: {
         interactive?: boolean;
         tokens?: ExtensionAuthTokens;
+        refreshSocial?: boolean;
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       const syncGeneration = popupSyncGateRef.current.begin();
@@ -379,7 +385,7 @@ export function PopupApp() {
         if (!request) return null;
         setAuthSession({ status: "ready", tokens, error: null });
         await Promise.all([
-          loadSocialForTokens(tokens, isCurrentSync),
+          options.refreshSocial ? loadSocialForTokens(tokens, isCurrentSync) : Promise.resolve(),
           loadInboxForTokens(tokens, isCurrentSync),
         ]);
         if (!isCurrentSync() || !accountGateRef.current.isCurrent(request)) return null;
@@ -637,6 +643,23 @@ export function PopupApp() {
   useEffect(() => {
     void syncPopupData();
   }, [syncPopupData]);
+
+  useEffect(() => {
+    if (!inboxState.data || !inboxState.ownerUserId) return;
+    const next = { owner: inboxState.ownerUserId, signature: accountInboxSocialSignature(inboxState.data) };
+    const previous = socialInboxRef.current;
+    socialInboxRef.current = next;
+    if (previous?.owner === next.owner && previous.signature !== next.signature)
+      setSocialInboxRevision(value => value + 1);
+  }, [inboxState.data, inboxState.ownerUserId]);
+
+  useEffect(() => {
+    if (activeTab !== "friends" || settingsOpen || !tokens) return;
+    let current = true;
+    void loadSocialForTokens(tokens, () => current, socialRevisionSeenRef.current !== socialInboxRevision)
+      .then(loaded => { if (current && loaded) socialRevisionSeenRef.current = socialInboxRevision; });
+    return () => { current = false; };
+  }, [activeTab, settingsOpen, tokens?.user.id, tokens?.accessToken, tokens?.refreshToken, socialInboxRevision, loadSocialForTokens]);
 
   useEffect(() => {
     if (authSession.status !== "ready") return;
@@ -904,7 +927,7 @@ export function PopupApp() {
           onRemoveFriend={removeFriendFromPeople}
           onDismissNotice={() => setSocialNotice(null)}
           onOpenDashboard={() => void openAccount("/account/friends")}
-          onRefresh={() => void syncPopupData()}
+          onRefresh={() => void syncPopupData({ refreshSocial: true })}
           onSignIn={() => void syncPopupData({ interactive: true })}
           state={peoplePresentationState}
         />

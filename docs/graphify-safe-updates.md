@@ -33,6 +33,19 @@ unchanged records, directed endpoints, parallel facts and historical metadata.
 If a legacy bundle has both top-level and nested hyperedges, the top-level list
 (Graphify's read precedence) is authoritative; the nested copy is synchronized.
 
+Graphify can represent a dynamic package import as a module node whose
+`source_file` contains a specifier such as `@anidachi/protocol` or `wxt`.
+The adapter keeps that module identity in `module_specifier` and clears its
+file ownership only when the node has an explicit module marker, a matching
+label and an import edge from the current AST batch. Real local files and
+relative paths are not normalized this way. This does not guess a package's
+entry point or classify a workspace package as a third-party dependency.
+Unknown cross-source definitions still fail before publication, and module
+names never receive file hashes in the manifest. An existing node ID is reusable
+only when its stored module identity matches exactly. Collisions with another
+package, an uncertain old stub or even a deleted file stop publication, so
+unchanged historical edges cannot be rebound to a different meaning.
+
 Each re-extracted source replaces only its own AST or semantic layer. A same-file
 ID used by both layers retains the historical record and gives the incoming
 layer an explicit `_ast` or `_semantic` ID; only that layer's fresh edges follow
@@ -68,7 +81,8 @@ The integration test uses a disposable corpus and proves document-concept
 preservation, parallel relationships, normalized imports, no-op stability,
 unextracted semantic hashes, and stale-fragment rejection before publication.
 Python regressions also exercise fresh parallel facts, source edits during
-manifest creation, nested hyperedge cleanup, tier aliases and source deletions.
+manifest creation, nested hyperedge cleanup, tier aliases, source deletions,
+dynamic package imports and rejection of falsely attributed module nodes.
 
 For an explicit repair of previously stamped code, pass `--ast-sources` with a
 JSON array of repository-relative code paths. The adapter accepts only files in

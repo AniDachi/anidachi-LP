@@ -113,6 +113,7 @@ export type SubscriptionRow = {
 };
 
 export type RoomRow = {
+	hosting_time_mode?: "daily_free20" | null;
 	media_lease?: unknown;
 	media_closing_at?: string | null;
   id: string;
@@ -689,9 +690,15 @@ export async function createRoomWithActiveSession(params: {
     p_can_send_push_invites: params.capabilities.canSendPushInvites,
   });
   if (result.error) {
+		if (result.error.message.includes("QUOTA_EXHAUSTED"))
+			throw new Error("QUOTA_EXHAUSTED");
 		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
 			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
-		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+		if (
+			result.error.message.includes("ROOM_AUTHORITY_UNAVAILABLE") ||
+			result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") ||
+			["55P03", "57014"].includes(result.error.code)
+		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
 		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
 			throw new Error("ROOM_UPDATE_REQUIRED");
@@ -720,9 +727,15 @@ export async function claimActiveRoomSession(params: {
     p_participant_session_id: params.participantSessionId,
   });
   if (result.error) {
+		if (result.error.message.includes("QUOTA_EXHAUSTED"))
+			throw new Error("QUOTA_EXHAUSTED");
 		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
 			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
-		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+		if (
+			result.error.message.includes("ROOM_AUTHORITY_UNAVAILABLE") ||
+			result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") ||
+			["55P03", "57014"].includes(result.error.code)
+		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
     if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
       throw new Error("ROOM_UPDATE_REQUIRED");

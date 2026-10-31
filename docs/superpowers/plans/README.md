@@ -1,5 +1,12 @@
 # Plans
 
+## Daily Free20: local inactive contract, October 30, 2026
+
+- [Approved rules](../specs/2026-10-30-daily-free20-design.md) — account-wide 20 minutes per UTC day; existing trial/paid rights preserved.
+- [Implementation plan](2026-10-30-daily-free20-transition.md) — only local Block 1A authorized; later implementation and delivery remain separately approved.
+- [Contract and verification record](../../daily-free20-contract.md) — new standalone format, legacy compatibility and remaining gates.
+- [Original handoff](2026-10-30-daily-free20-handoff.md) — historical planning checkpoint.
+
 Active integrated release preparation:
 
 1. [Vercel request-cost optimization](2026-10-14-vercel-cost-optimization.md) — approved isolated fixes and staging delivery; production unchanged.
