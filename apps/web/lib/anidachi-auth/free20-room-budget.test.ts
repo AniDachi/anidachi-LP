@@ -36,6 +36,7 @@ function fixture() {
 		room_id: "free20-room",
 		host_user_id: owner,
 		host_plan_code: "free" as const,
+		hosting_time_mode: "daily_free20" as const,
 	};
 	const deps = {
 		readRoom: async (roomId: string) => {
@@ -309,6 +310,13 @@ test("Free20 requires the immutable active Free room owner before committing", a
 	for (const room of [
 		null,
 		{
+			room_id: "free20-room",
+			host_user_id: owner,
+			host_plan_code: "free",
+			status: "live",
+			hosting_time_mode: null,
+		},
+		{
 			room_id: "wrong",
 			host_user_id: owner,
 			host_plan_code: "free",
@@ -326,13 +334,12 @@ test("Free20 requires the immutable active Free room owner before committing", a
 			host_plan_code: "plus",
 			status: "live",
 		},
-	]) {
+	] as const) {
 		const f = fixture();
 		await assert.rejects(
 			settleFree20RoomBudget(request(180), new Date(at), {
 				...f.deps,
-				readRoom: async () =>
-					room as Awaited<ReturnType<typeof f.deps.readRoom>>,
+				readRoom: async () => room,
 			}),
 		);
 		assert.equal(f.committed.get(day), 420);

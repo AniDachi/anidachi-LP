@@ -295,6 +295,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
+  create/rejoin/renewal candidate pins a daily room mode and reuses account locks,
+  active-host assignment, cumulative settlement and pinned media. Actual SQL
+  concurrency and preservation, HTTP/workerd and room checks are recorded in the
+  Free20 block PR. No media transport, live flag or production/Store change;
+  public consumer, checkout and enabled staging acceptance remain separate gates.
+
+
 - **2026-10-31, `codex/daily-free20-paid-time`:** approved disabled Free20 block4A
   adds a bounded time right independent of pinned room/media capabilities.
   Free usage, including the callback tail, stays durable until cumulative ACK;

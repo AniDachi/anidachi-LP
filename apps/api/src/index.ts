@@ -1524,6 +1524,14 @@ export class RoomDurableObject {
     if (authority.roomGeneration !== this.room.roomGeneration) {
       return Response.json({ error: "ROOM_PROTOCOL_MISMATCH" }, { status: 426 });
     }
+    const dailyFree20 = authority.hostingTimeMode === "daily_free20";
+    if (dailyFree20 && (!verified.mediaLease || verified.mediaLease.capabilities.hostPlanCode !== "free" ||
+        (!this.free20Accounting && this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true"))) {
+      return Response.json({ error: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
+    }
+    if (this.roomPolicy && dailyFree20 !== (this.free20Accounting !== null)) {
+      return Response.json({ error: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
+    }
 		if (this.room.mediaSnapshot && !verified.mediaLease)
 			return Response.json({ error: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
 		if (verified.mediaLease) {
@@ -1542,7 +1550,7 @@ export class RoomDurableObject {
 				if (verified.capabilities)
 					this.room.setCapabilities(verified.capabilities);
 				this.persistRoomState();
-				if (this.isFreeRoom() && this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true")
+				if (dailyFree20)
 					this.persistFree20Accounting(this.roomMeter, createFree20AccountingState(), Date.now());
 				await this.persistRoomPolicyDeadline(Date.now());
 			} else if (

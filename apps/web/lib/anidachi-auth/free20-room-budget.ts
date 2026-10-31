@@ -17,7 +17,7 @@ import { readFree20AccountBudget } from "./free20-account-budget";
 
 type Room = Pick<
 	RoomRow,
-	"room_id" | "host_user_id" | "host_plan_code" | "status"
+	"room_id" | "host_user_id" | "host_plan_code" | "hosting_time_mode" | "status"
 >;
 type Dependencies = {
 	readRoom: (roomId: string) => Promise<Room | null>;
@@ -50,6 +50,7 @@ export async function settleFree20RoomBudget(
 		!room ||
 		room.room_id !== request.roomId ||
 		room.status === "ended" ||
+		room.hosting_time_mode !== "daily_free20" ||
 		room.host_plan_code !== "free"
 	) {
 		throw new Error("Free20 room unavailable");
@@ -74,6 +75,7 @@ export async function settleFree20RoomBudget(
 		!current ||
 		current.room_id !== request.roomId ||
 		current.host_user_id !== owner ||
+		current.hosting_time_mode !== "daily_free20" ||
 		current.host_plan_code !== "free" ||
 		current.status === "ended"
 	) {

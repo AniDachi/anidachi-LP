@@ -52,6 +52,7 @@ beforeEach(() => {
 				room_id: "room-1",
 				host_user_id: owner,
 				host_plan_code: "free",
+				hosting_time_mode: "daily_free20",
 				status: "live",
 				max_participants: 4,
 				max_cameras: 4,
