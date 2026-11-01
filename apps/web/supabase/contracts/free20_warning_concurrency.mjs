@@ -186,7 +186,7 @@ try {
  insert into public.users(id,email,display_name) values ${users.map((u) => `('${u}','${u}@example.test','Warning race')`).join(",")};`);
 	for (const owner of users)
 		sql(
-			`set role service_role;select room_record->>'room_id' from public.create_room_with_active_session_v3('${owner}','warning-host',null,null,null,null,null,null,null,'${owner}','free',4,4,false,false,3);`,
+			`set role service_role;select room_record->>'room_id' from public.create_room_with_active_session_v4('${owner}','warning-host',null,null,null,null,null,null,null,'${owner}','free',4,4,false,false,3,1);`,
 		);
 	for (const rollback of [false, true]) {
 		const owner = users[rollback ? 1 : 0],

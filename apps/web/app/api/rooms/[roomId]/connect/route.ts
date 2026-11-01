@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { FREE20_CLIENT_HEADER, parseFree20ClientVersion, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { RoomUpdateRequiredError, roomUpdateRequiredBody } from "@/lib/anidachi-auth/room-update-required";
 import { activeRoomConflictResponse } from "@/lib/anidachi-auth/active-room-session";
 import { getSession } from "@/lib/anidachi-auth/session";
 import {
@@ -70,6 +71,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const free20ClientVersion = parseFree20ClientVersion(request.headers.get(FREE20_CLIENT_HEADER));
   const admissionInput = RoomSessionAdmissionInputSchema.safeParse(
     await request.json().catch(() => null),
   );
@@ -110,6 +112,8 @@ export async function POST(
 			{ status: 503 },
 		);
 	}
+	if (isHost && room.hosting_time_mode === "daily_free20" && free20ClientVersion !== 1)
+		return NextResponse.json(roomUpdateRequiredBody(true), { status: 426 });
 	// A room's Free capacity is frozen even if its host has since upgraded.
 	// After T, its denial takes precedence over the retired daily quota while
 	// cutover delivery catches up. SQL admission still rechecks under locks.
@@ -123,12 +127,12 @@ export async function POST(
 	}
 	const mediaProtocolVersion = clientMediaProtocolVersion(request.headers.get("x-anidachi-media-protocol"));
   if (mediaProtocolVersion === null)
-    return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+    return NextResponse.json(roomUpdateRequiredBody(), { status: 426 });
   let mediaLease;
   try {
     mediaLease = negotiateRoomMediaLease(room.media_lease, mediaProtocolVersion);
   } catch {
-    return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+    return NextResponse.json(roomUpdateRequiredBody(), { status: 426 });
   }
 	const userPlan = room.host_plan_code;
   const capabilities = roomCapabilitiesFromRoom(room);
@@ -159,6 +163,7 @@ export async function POST(
     admission = await claimActiveRoomSession({
       userId: session.userId,
       mediaProtocolVersion,
+      free20ClientVersion,
       roomId,
       role,
       participantSessionId: admissionInput.data.participantSessionId,
@@ -174,7 +179,7 @@ export async function POST(
     if (error instanceof Error && error.message === "ROOM_AUTHORITY_UNAVAILABLE")
       return NextResponse.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
     if (error instanceof Error && error.message === "ROOM_UPDATE_REQUIRED")
-      return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+      return NextResponse.json(roomUpdateRequiredBody(error instanceof RoomUpdateRequiredError && error.free20), { status: 426 });
     throw error;
   }
   if (admission.outcome === "conflict") {

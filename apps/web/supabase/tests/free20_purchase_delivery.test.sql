@@ -14,7 +14,7 @@ create temporary table purchase_proof(name text primary key,value jsonb);
 grant all on purchase_proof to service_role;
 create function pg_temp.owner(n integer) returns uuid language sql as $$select ('f6260000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid$$;
 create function pg_temp.create_purchase_room(n integer) returns jsonb language sql as $$
- select room_record from public.create_room_with_active_session_v3(pg_temp.owner(n),'host-session',null,null,null,null,null,null,null,'purchase-room-'||n,'free',4,4,false,false,3);
+ select room_record from public.create_room_with_active_session_v4(pg_temp.owner(n),'host-session',null,null,null,null,null,null,null,'purchase-room-'||n,'free',4,4,false,false,3,1);
 $$;
 create function pg_temp.purchase(n integer,trial jsonb default null,sub_status text default 'active') returns jsonb language plpgsql as $$
 declare lease jsonb; begin

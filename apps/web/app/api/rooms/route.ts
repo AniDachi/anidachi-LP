@@ -1,3 +1,5 @@
+import { FREE20_CLIENT_HEADER, parseFree20ClientVersion } from "@anidachi/protocol";
+import { roomUpdateRequiredBody } from "@/lib/anidachi-auth/room-update-required";
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
 import {
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const free20ClientVersion = parseFree20ClientVersion(request.headers.get(FREE20_CLIENT_HEADER));
   const mediaProtocolVersion = clientMediaProtocolVersion(request.headers.get("x-anidachi-media-protocol"));
   const user = await getUserById(session.userId);
 	let hostPlan;
@@ -60,13 +63,13 @@ export async function POST(request: NextRequest) {
 			);
 		hostPlan = free20Access?.planCode ?? access.policy.planCode;
 		if (mediaProtocolVersion === null)
-			return NextResponse.json({ code: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
+			return NextResponse.json(roomUpdateRequiredBody(), { status: 426 });
 		if (
 			(await getPersonalHistoryPolicyActive()) &&
 			mediaProtocolVersion === 1
 		)
 			return NextResponse.json(
-				{ code: "ROOM_UPDATE_REQUIRED" },
+				roomUpdateRequiredBody(),
 				{ status: 426 },
 			);
 	} catch {
@@ -80,7 +83,9 @@ export async function POST(request: NextRequest) {
   // PD2: free plans get a daily host-minutes quota instead of a room-count limit.
   const now = new Date();
   const quota = free20Access?.quota ?? await getHostQuotaView(session.userId, hostPlan, now);
-  if (!canStartHostSession(quota)) {
+  // Unsupported Free20 candidates must reach the locked target lookup in SQL:
+  // a same-request replay may target a marked room, even after a paid upgrade.
+  if (!canStartHostSession(quota) && !(free20Access && free20ClientVersion === null)) {
 		return NextResponse.json(quotaExhaustedResponseBody(quota), {
 			status: 403,
 		});
@@ -95,6 +100,7 @@ export async function POST(request: NextRequest) {
         admission: await createRoomWithActiveSession({
           hostUserId: session.userId,
 					mediaProtocolVersion,
+          free20ClientVersion,
           participantSessionId,
           capabilities,
           ...roomInput,

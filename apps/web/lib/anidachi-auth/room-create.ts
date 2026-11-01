@@ -1,4 +1,5 @@
 import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { RoomUpdateRequiredError, roomUpdateRequiredBody } from "./room-update-required";
 import { RoomSourcePersistenceError } from "./room-source";
 import { hostingDeniedResponse } from "./hosting-denial";
 
@@ -74,7 +75,7 @@ export async function handleRoomCreateRequestBody<T>(params: {
 			return {
 				ok: false,
 				status: 426,
-				body: { error: "Update required", code: "ROOM_UPDATE_REQUIRED" },
+				body: roomUpdateRequiredBody(error instanceof RoomUpdateRequiredError && error.free20),
 			};
 		if (
 			error instanceof RoomSourcePersistenceError &&

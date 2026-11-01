@@ -12,7 +12,7 @@ insert into public.users(id,email,display_name) values
 create function pg_temp.free20_create(owner_id uuid,request_id text,version integer default 3)
 returns jsonb language sql as $$
  select jsonb_build_object('outcome',outcome,'room',room_record,'activeRoom',active_room)
- from public.create_room_with_active_session_v3(owner_id,'host-session',null,null,null,null,null,null,null,request_id,'pro',15,8,true,true,version);
+ from public.create_room_with_active_session_v4(owner_id,'host-session',null,null,null,null,null,null,null,request_id,'pro',15,8,true,true,version,1);
 $$;
 create temporary table free20_results(name text primary key,value jsonb);
 grant all on free20_results to service_role;

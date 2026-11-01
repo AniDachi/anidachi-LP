@@ -1,5 +1,7 @@
 import {
   ActiveRoomConflictResponseSchema,
+  FREE20_CLIENT_HEADER,
+  FREE20_CLIENT_VERSION,
   ClientEventSchema,
   HOST_SUBSCRIPTION_REQUIRED,
   ROOM_CONNECT_REQUEST_TIMEOUT_MS,
@@ -576,7 +578,7 @@ export async function createWebsiteRoomFromApi(
   });
   const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
-    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3" },
+    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION) },
     body: JSON.stringify({
       ...(normalizedInput ?? {}),
       participantSessionId: admission.participantSessionId,
@@ -665,7 +667,7 @@ export async function connectWebsiteRoomFromApi(
       new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
       {
         method: "POST",
-        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3" },
+        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION) },
         body: JSON.stringify(admission),
         signal: abortController.signal,
       },

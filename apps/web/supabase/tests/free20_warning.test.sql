@@ -18,8 +18,8 @@ insert into public.users(id,email,display_name) values
  ('f6260000-0000-4000-8000-000000000001','warning@example.test','Warning fixture');
 update public.personal_history_policy set active=true;
 update public.hosting_commercial_policy set activation_at=clock_timestamp()-interval '1 minute',free20_enabled=true,trials_enabled=false;
-select room_record->>'room_id' as warning_room from public.create_room_with_active_session_v3(
- 'f6260000-0000-4000-8000-000000000001','warning-host',null,null,null,null,null,null,null,'warning-request','free',4,4,false,false,3) \gset
+select room_record->>'room_id' as warning_room from public.create_room_with_active_session_v4(
+ 'f6260000-0000-4000-8000-000000000001','warning-host',null,null,null,null,null,null,null,'warning-request','free',4,4,false,false,3,1) \gset
 create temporary table warning_state(name text primary key,value jsonb);
 grant all on warning_state to service_role;
 create function pg_temp.context() returns jsonb language sql as $$
@@ -101,8 +101,8 @@ select is(pg_temp.claim(c,pg_temp.live(c))->>'decision','already_claimed','new p
 savepoint new_room;
 update public.rooms set status='ended' where room_id=:'warning_room';
 delete from public.active_room_sessions where user_id='f6260000-0000-4000-8000-000000000001';
-select room_record->>'room_id' from public.create_room_with_active_session_v3(
- 'f6260000-0000-4000-8000-000000000001','warning-next-host',null,null,null,null,null,null,null,'warning-next-request','free',4,4,false,false,3);
+select room_record->>'room_id' from public.create_room_with_active_session_v4(
+ 'f6260000-0000-4000-8000-000000000001','warning-next-host',null,null,null,null,null,null,null,'warning-next-request','free',4,4,false,false,3,1);
 select is(pg_temp.claim(c,pg_temp.live(c))->>'decision','already_claimed','new room same day keeps marker') from (select pg_temp.context() c) q;
 rollback to new_room;
 -- Paid authority after live read is negative without an extra marker.
