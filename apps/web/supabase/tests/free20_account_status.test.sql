@@ -21,7 +21,7 @@ select ok(not has_function_privilege('authenticated','public.subscription_access
 select ok(not has_table_privilege('service_role','public.hosting_commercial_policy','UPDATE'),'status runtime cannot enable policy');
 reset role;
 update public.personal_history_policy set active=true;
-update public.hosting_commercial_policy set activation_at=clock_timestamp()-interval '1 minute',free20_enabled=true;
+update public.hosting_commercial_policy set activation_at=clock_timestamp()-interval '1 minute',free20_enabled=true,trials_enabled=false;
 insert into public.usage_daily(user_id,day,host_seconds) values
  ('f6250000-0000-4000-8000-000000000001',(now() at time zone 'UTC')::date,420),
  ('f6250000-0000-4000-8000-000000000005',(now() at time zone 'UTC')::date,1300);

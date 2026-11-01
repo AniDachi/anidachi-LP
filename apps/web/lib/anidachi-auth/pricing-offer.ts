@@ -73,6 +73,23 @@ export async function getPricingOffer(
 		const now = Date.parse(access.history.serverTime);
 		if (!Number.isFinite(now)) throw new Error("Offer authority unavailable");
 		const activation = Date.parse(access.hosting.hostingActivationAt ?? "");
+		const currentActivation = Date.parse(commercialPolicy.activation_at ?? "");
+		// Eligibility and offer terms are separate reads. Only the same
+		// policy revision and activation may be combined into an offer.
+		const offerAuthorityCurrent =
+			Number.isSafeInteger(commercialPolicy.revision) &&
+			(commercialPolicy.revision ?? 0) > 0 &&
+			commercialPolicy.revision === access.hosting.hostingPolicyVersion &&
+			((commercialPolicy.activation_at === null &&
+				access.hosting.hostingActivationAt === null) ||
+				(Number.isFinite(currentActivation) &&
+					currentActivation === activation));
+		const trialAvailable =
+			!manage &&
+			paidHostingActive &&
+			offerAuthorityCurrent &&
+			commercialPolicy.trials_enabled === true &&
+			access.hosting.trialEligibility === "eligible";
 		const expiry = Date.parse(access.selectedPlanExpiresAt ?? "");
 		const validForMs = Math.max(
 			0,
@@ -85,10 +102,13 @@ export async function getPricingOffer(
 			),
 		);
 		return {
-			...trialOfferFields(commercialPolicy, paidHostingActive),
+			...trialOfferFields(
+				commercialPolicy,
+				paidHostingActive && offerAuthorityCurrent,
+			),
 			...(pendingTrialActivation ? { pendingTrialActivation } : {}),
-			validForMs,
-			trialAvailable: !manage && access.hosting.trialEligibility === "eligible",
+			validForMs: !manage && !offerAuthorityCurrent ? 0 : validForMs,
+			trialAvailable,
 			ownerUserId: userId,
 			prices: { plus, pro },
 			yearlyPrices,
@@ -96,11 +116,7 @@ export async function getPricingOffer(
 				access.hosting.hostingActivationAt !== null &&
 				Date.parse(access.hosting.hostingActivationAt) <=
 					Date.parse(access.history.serverTime),
-			action: manage
-				? "manage"
-				: access.hosting.trialEligibility === "eligible"
-					? "trial"
-					: "subscribe",
+			action: manage ? "manage" : trialAvailable ? "trial" : "subscribe",
 		};
 	}
 	const data = await deps.policy();

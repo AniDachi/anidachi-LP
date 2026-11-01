@@ -29,7 +29,7 @@ select is((select value from free20_results where name='disabled'),'{"enabled":f
 select ok(not has_table_privilege('service_role','public.hosting_commercial_policy','UPDATE'),'runtime cannot enable Free20');
 select ok(not has_function_privilege('authenticated','public.resolve_free20_hosting_access_v1(uuid)','EXECUTE'),'browser cannot issue time authority');
 reset role;
-select lives_ok($$update public.hosting_commercial_policy set free20_enabled=true$$,'operator can enable candidate in this rollback-only transaction');
+select lives_ok($$update public.hosting_commercial_policy set free20_enabled=true,trials_enabled=false$$,'operator can enable candidate in this rollback-only transaction');
 set local role service_role;
 select lives_ok($$insert into free20_results values('access',public.resolve_free20_hosting_access_v1('f6200000-0000-4000-8000-000000000001'))$$,'Free20 reads confirmed daily usage');
 select is((select value->>'remainingSeconds' from free20_results where name='access'),'780','seven used minutes leave thirteen');
@@ -64,7 +64,7 @@ update public.hosting_commercial_policy set free20_enabled=false;
 set local role service_role;
 select throws_ok($$select public.require_room_hosting_admission_v1((select value#>>'{room,room_id}' from free20_results where name='room'),'f6200000-0000-4000-8000-000000000001')$$,'P0001','HOST_SUBSCRIPTION_REQUIRED','disabling policy stops new admission to marked rooms');
 reset role;
-update public.hosting_commercial_policy set free20_enabled=true;
+update public.hosting_commercial_policy set free20_enabled=true,trials_enabled=false;
 set local role service_role;
 select throws_ok($$insert into public.rooms(room_id,host_user_id,host_plan_code,max_participants,max_media_seats,status) values('forged-free20-paid','f6200000-0000-4000-8000-000000000001','pro',15,8,'lobby')$$,'P0001','HOST_SUBSCRIPTION_REQUIRED','raw insertion cannot forge paid capabilities');
 reset role;

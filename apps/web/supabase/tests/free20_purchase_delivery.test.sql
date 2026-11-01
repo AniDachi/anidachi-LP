@@ -9,7 +9,7 @@ select has_table('public','free20_room_refresh_outbox','durable purchase deliver
 insert into public.users(id,email,display_name)
  select ('f6260000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'purchase-'||n||'@example.test','Purchase fixture' from generate_series(1,7) n;
 update public.personal_history_policy set active=true;
-update public.hosting_commercial_policy set activation_at=now()-interval '5 days',free20_enabled=true,trials_enabled=true,cardless_trials_enabled=true;
+update public.hosting_commercial_policy set activation_at=now()-interval '5 days',free20_enabled=false,trials_enabled=true,cardless_trials_enabled=true;
 create temporary table purchase_proof(name text primary key,value jsonb);
 grant all on purchase_proof to service_role;
 create function pg_temp.owner(n integer) returns uuid language sql as $$select ('f6260000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid$$;
@@ -22,6 +22,12 @@ declare lease jsonb; begin
  return public.commit_stripe_subscription_refresh_v4('sub_purchase_'||n,(lease->>'fence')::bigint,(lease->>'token')::uuid,
   pg_temp.owner(n),'cus_purchase_'||n,'price_purchase','plus',sub_status,now()+interval '30 days',false,trial);
 end $$;
+-- Freeze the accepted operation before retirement; finalize it after Free20.
+insert into public.billing_customers(user_id,stripe_customer_id) values(pg_temp.owner(7),'cus_purchase_7');
+set local role service_role;
+insert into purchase_proof values('activation',public.reserve_cardless_trial_v1(pg_temp.owner(7),gen_random_uuid(),'plus','monthly','price_purchase','cus_purchase_7',1));
+reset role;
+update public.hosting_commercial_policy set free20_enabled=true,trials_enabled=false;
 set local role service_role;
 insert into purchase_proof select 'room-'||n,pg_temp.create_purchase_room(n) from generate_series(1,5) n;
 -- A valid service-role caller alone cannot choose an arbitrary enqueue target.
@@ -109,10 +115,8 @@ select is((select completed_revision from public.free20_room_refresh_outbox wher
 set local role service_role;
 reset role;
 -- Cardless v3 finalization is visible before enqueue, never the earlier v1 mirror.
-insert into public.billing_customers(user_id,stripe_customer_id) values(pg_temp.owner(7),'cus_purchase_7');
 set local role service_role;
 insert into purchase_proof values('room-7',pg_temp.create_purchase_room(7));
-insert into purchase_proof values('activation',public.reserve_cardless_trial_v1(pg_temp.owner(7),gen_random_uuid(),'plus','monthly','price_purchase','cus_purchase_7',1));
 insert into purchase_proof values('created',public.record_cardless_trial_created_v1(pg_temp.owner(7),(select (value->>'id')::uuid from purchase_proof where name='activation'),
  'cus_purchase_7','sched_purchase_7','sub_purchase_7','price_purchase',now(),now()+interval '72 hours'));
 insert into purchase_proof values('snapshot',jsonb_build_object('trialMode','cardless','trialActivationId',(select value->>'id' from purchase_proof where name='activation'),
