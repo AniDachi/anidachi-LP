@@ -20,7 +20,10 @@ type Claim = Extract<Free20WarningMessage, { command: "claim" }>;
 export type Free20WarningResult = { kind: "server"; response: Free20WarningResponse } | { kind: "suppressed" } | { kind: "failed"; retryable: boolean };
 export function isFree20WarningMessage(value: unknown): value is Free20WarningMessage { return MessageSchema.safeParse(value).success; }
 
-const EntrySchema = z.strictObject({ ownerUserId: z.uuid(), loginId: id, utcDay: Free20WarningRequestSchema.shape.utcDay, attempts: z.number().int().min(1).max(2), lastAttempt: z.number().finite(), sequence: z.number().int().nonnegative(), next: z.enum(["retry", "crossing", "done"]) });
+const EntrySchema = z.strictObject({ ownerUserId: z.uuid(), loginId: id, utcDay: Free20WarningRequestSchema.shape.utcDay, attempts: z.number().int().min(1).max(2), lastAttempt: z.number().finite(), sequence: z.number().int().nonnegative(), next: z.enum(["retry", "crossing", "done"]),
+  // Optional only to retain attempt counts from the preceding client build.
+  roomId: Free20WarningRequestSchema.shape.roomId.optional(), roomGeneration: Free20WarningRequestSchema.shape.roomGeneration.optional(),
+});
 type Entry = z.infer<typeof EntrySchema>;
 type Dependencies = {
   getSession(): Promise<ExtensionAuthTokens | null>;
@@ -65,12 +68,13 @@ export function createFree20WarningClient(dependencies: Dependencies) {
         if (all.some(entry => entry.utcDay > message.request.utcDay)) return false;
         const stored = all.filter(entry => entry.utcDay === message.request.utcDay);
         const previous = stored.find(key);
+        const sameStream = previous?.roomId === message.request.roomId && previous.roomGeneration === message.request.roomGeneration;
         const now = dependencies.now();
         if (previous && (previous.attempts >= 2 || now - previous.lastAttempt < 5_000 ||
           [...active.values()].some(item => item.message.requestId !== message.requestId && item.message.ownerUserId === message.ownerUserId && item.message.loginKey === message.loginKey && item.message.request.utcDay === message.request.utcDay) ||
-          !(previous.next === "retry" && message.reason === "retry" || previous.next === "crossing" && message.reason === "crossing" && message.snapshotSequence > previous.sequence))) return false;
+          !(previous.next === "retry" && message.reason === "retry" || previous.next === "crossing" && message.reason === "crossing" && (!sameStream || message.snapshotSequence > previous.sequence)))) return false;
         if (!previous && message.reason !== "initial") return false;
-        const entry: Entry = { ownerUserId: message.ownerUserId, loginId, utcDay: message.request.utcDay, attempts: (previous?.attempts ?? 0) + 1, lastAttempt: now, sequence: message.snapshotSequence, next: "retry" };
+        const entry: Entry = { ownerUserId: message.ownerUserId, loginId, utcDay: message.request.utcDay, attempts: (previous?.attempts ?? 0) + 1, lastAttempt: now, sequence: message.snapshotSequence, next: "retry", roomId: message.request.roomId, roomGeneration: message.request.roomGeneration };
         await dependencies.write([...stored.filter(item => !key(item)), entry].slice(-32));
         return true;
       });
@@ -110,7 +114,7 @@ export function createFree20WarningClient(dependencies: Dependencies) {
       await serialize(async () => {
         const stored = await entries();
         const own = stored.find(key);
-        if (own && own.sequence === message.snapshotSequence) {
+        if (own && own.roomId === message.request.roomId && own.roomGeneration === message.request.roomGeneration && own.sequence === message.snapshotSequence) {
           own.next = result.kind === "server" && result.response.decision === "not_eligible" ? "crossing" : result.kind === "failed" && result.retryable ? "retry" : "done";
           await dependencies.write(stored);
         }

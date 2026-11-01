@@ -10,7 +10,7 @@ export type Free20WarningInput = {
   reading: HostingTimeDisplay | null; readFresh(): HostingTimeDisplay | null;
   request?: typeof requestFree20Warning;
 };
-type Budget = { attempts: number; phase: "idle" | "pending" | "retry" | "crossing" | "done"; lastAttempt: number; sequence: number };
+type Budget = { attempts: number; phase: "idle" | "pending" | "retry" | "crossing" | "done"; lastAttempt: number; sequence: number; roomId: string | null; roomGeneration: number };
 function eligible(input: Free20WarningInput, time: HostingTimeDisplay | null): time is HostingTimeDisplay {
   return Boolean(input.ownerUserId && input.sessionKey && isFree20WarningLoginKey(input.ownerUserId, input.sessionKey) && input.credentialRevision && input.isHost && input.connected && input.roomId && document.visibilityState !== "hidden" && time &&
     time.snapshot.ownerUserId === input.ownerUserId && time.snapshot.roomId === input.roomId && time.snapshot.roomGeneration === input.roomGeneration && time.snapshot.access.kind === "daily_free" &&
@@ -50,12 +50,15 @@ export function useFree20Warning(input: Free20WarningInput) {
     if (!eligible(value, time) || time.snapshot.period.utcDay !== day) { stop(); setShown(previous => previous === null ? previous : null); return; }
     let budget = budgets.current.get(budgetKey);
     if (!budget) {
-      budget = { attempts: 0, phase: "idle", lastAttempt: Number.NEGATIVE_INFINITY, sequence: -1 };
+      budget = { attempts: 0, phase: "idle", lastAttempt: Number.NEGATIVE_INFINITY, sequence: -1, roomId: null, roomGeneration: 0 };
       budgets.current.set(budgetKey, budget);
       if (budgets.current.size > 8) budgets.current.delete(budgets.current.keys().next().value!);
     }
     if (active.current || budget.phase === "done" || budget.phase === "pending" || budget.attempts >= 2) return;
-    if (budget.phase === "crossing" && (time.snapshot.snapshotSequence <= budget.sequence || time.snapshot.access.kind !== "daily_free" || time.snapshot.access.remainingSeconds > FREE20_WARNING_THRESHOLD_SECONDS)) return;
+    // Sequences order one room/generation only. A different stream may use the
+    // remaining attempt after a fresh authoritative below-threshold observation.
+    const sameStream = budget.roomId === time.snapshot.roomId && budget.roomGeneration === time.snapshot.roomGeneration;
+    if (budget.phase === "crossing" && ((sameStream && time.snapshot.snapshotSequence <= budget.sequence) || time.snapshot.access.kind !== "daily_free" || time.snapshot.access.remainingSeconds > FREE20_WARNING_THRESHOLD_SECONDS)) return;
     const delay = budget.attempts ? Math.max(0, 5_000 - (performance.now() - budget.lastAttempt)) : 0;
     if (delay > 0) {
       if (retry.current === null) retry.current = setTimeout(() => { retry.current = null; drive.current(); }, delay);
@@ -67,6 +70,7 @@ export function useFree20Warning(input: Free20WarningInput) {
     const controller = new AbortController();
     const started = performance.now(), wall = Date.now();
     own.attempts++; own.phase = "pending"; own.lastAttempt = started; own.sequence = time.snapshot.snapshotSequence;
+    own.roomId = time.snapshot.roomId; own.roomGeneration = time.snapshot.roomGeneration;
     active.current = { controller, budget: own };
     void (value.request ?? requestFree20Warning)({
       ownerUserId: value.ownerUserId!, loginKey: value.sessionKey!, credentialRevision: value.credentialRevision!, reason,

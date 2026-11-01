@@ -59,6 +59,29 @@ describe("background Free20 warning claim budget", () => {
     s.advance(); expect(await s.client(message("crossing", 3))).toEqual({ kind: "suppressed" });
     expect(s.fetcher).toHaveBeenCalledTimes(2);
   });
+  it.each(["room", "generation"])("allows a lower-sequence crossing in a new %s without resetting the persisted two-attempt budget", async change => {
+    const s = setup(); s.fetcher.mockResolvedValueOnce(new Response(JSON.stringify(body("not_eligible"))));
+    expect((await s.client(message("initial", 50))).kind).toBe("server"); s.advance();
+    // The same sequence domain still requires a strictly newer observation.
+    expect(await s.client(message("crossing", 50))).toEqual({ kind: "suppressed" });
+    expect(await s.client(message("crossing", 49))).toEqual({ kind: "suppressed" });
+    const nextRequest = { ...request, ...(change === "room" ? { roomId: "room-b" } : { roomGeneration: 2 }) };
+    s.fetcher.mockResolvedValueOnce(new Response(JSON.stringify({ ...body(), ...nextRequest })));
+    const restarted = createFree20WarningClient(s.dependencies);
+    expect((await restarted({ ...message("crossing", 1), request: nextRequest })).kind).toBe("server");
+    expect(s.fetcher).toHaveBeenCalledTimes(2); s.advance();
+    expect(await restarted({ ...message("crossing", 2), request: nextRequest })).toEqual({ kind: "suppressed" });
+    expect(await restarted(message("crossing", 51))).toEqual({ kind: "suppressed" });
+    expect((s.stored() as { attempts: number }[])[0].attempts).toBe(2);
+  });
+  it("retains exhausted attempt budgets written before stream provenance was added", async () => {
+    const s = setup();
+    await s.dependencies.write([{ ownerUserId: owner, loginId: initial.authSessionId, utcDay: request.utcDay, attempts: 2, lastAttempt: at - 5000, sequence: 50, next: "crossing" }]);
+    const restarted = createFree20WarningClient(s.dependencies);
+    expect(await restarted(message())).toEqual({ kind: "suppressed" });
+    expect(await restarted({ ...message("crossing", 1), request: { ...request, roomId: "room-b" } })).toEqual({ kind: "suppressed" });
+    expect(s.fetcher).not.toHaveBeenCalled();
+  });
   it("uses guarded same-login 401 refresh and rejects a new login before any resend", async () => {
     const s = setup(); s.fetcher.mockResolvedValueOnce(new Response("", { status: 401 }));
     const rotated = { ...initial, authRevision: "revision-b", accessToken: "rotated" };

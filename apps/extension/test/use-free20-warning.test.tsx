@@ -45,6 +45,20 @@ describe("Free20 warning lifecycle", () => {
     await tick(5000); current.remainingSeconds = 295; await render(); expect(request).toHaveBeenCalledTimes(1);
     current = time(299, 2); input.reading = current; await render(); expect(request).toHaveBeenCalledTimes(2); expect(host.textContent).toBe("notice");
   });
+  it.each(["room", "generation"])("allows the remaining crossing attempt at a lower sequence in a new %s", async change => {
+    current = time(301, 50); current.remainingSeconds = 300; input.reading = current;
+    request.mockResolvedValueOnce(response("not_eligible")); await render(); await tick(5000);
+    current = time(299, 50); input.reading = current; await render();
+    current = time(299, 49); input.reading = current; await render(); expect(request).toHaveBeenCalledTimes(1);
+    if (change === "room") input.roomId = "room-b"; else input.roomGeneration = 2;
+    current = { ...time(299, 1), snapshot: { ...time(299, 1).snapshot, roomId: input.roomId!, roomGeneration: input.roomGeneration } };
+    input.reading = current;
+    const result = response() as Extract<Free20WarningResult, { kind: "server" }>;
+    request.mockResolvedValueOnce({ ...result, response: { ...result.response, roomId: input.roomId!, roomGeneration: input.roomGeneration } });
+    await render(); expect(request).toHaveBeenCalledTimes(2); expect(host.textContent).toBe("notice");
+    await act(async () => dismiss()); current = { ...current, snapshot: { ...current.snapshot, snapshotSequence: 2 } }; input.reading = current;
+    await tick(5000); await render(); expect(request).toHaveBeenCalledTimes(2); expect(host.textContent).toBe("hidden");
+  });
   it.each(["zero", "unknown", "paid", "guest", "disconnected", "hidden", "owner"])("does not claim or show for %s", async state => {
     if (state === "zero") current = time(0);
     if (state === "unknown") current = null;
