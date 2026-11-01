@@ -47944,7 +47944,7 @@
       "file_type": "code",
       "norm_label": "canbypassstaginggate()",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L240"
+      "source_location": "L242"
     },
     {
       "id": "apps_web_lib_staging_access_getstagingaccessconfig",
@@ -48028,7 +48028,7 @@
       "file_type": "code",
       "norm_label": "sanitizestagingaccessnextpath()",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L259"
+      "source_location": "L261"
     },
     {
       "id": "apps_web_lib_staging_access_sha256hex",
@@ -283405,7 +283405,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L72",
@@ -283417,10 +283416,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L246",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -283429,10 +283427,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L255",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -283441,7 +283438,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L45",
@@ -283453,7 +283449,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L47",
@@ -283465,7 +283460,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L56",
@@ -283477,7 +283471,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L83",
@@ -283489,7 +283482,6 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L66",
@@ -344165,7 +344157,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -344177,7 +344168,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -344189,7 +344179,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -344201,7 +344190,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -344213,7 +344201,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -344225,7 +344212,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -344237,7 +344223,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -383340,7 +383325,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L2",
@@ -383352,7 +383336,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L3",
@@ -455307,7 +455290,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L1",
       "weight": 1.0
@@ -455318,7 +455300,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L100",
       "weight": 1.0
@@ -455329,7 +455310,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L13",
       "weight": 1.0
@@ -455340,7 +455320,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L18",
       "weight": 1.0
@@ -455351,7 +455330,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L2",
       "weight": 1.0
@@ -455362,9 +455340,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L240",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -455373,9 +455350,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
-      "source_location": "L259",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
@@ -455384,7 +455360,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L26",
       "weight": 1.0
@@ -455395,7 +455370,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L32",
       "weight": 1.0
@@ -455406,7 +455380,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L38",
       "weight": 1.0
@@ -455417,7 +455390,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L4",
       "weight": 1.0
@@ -455428,7 +455400,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L62",
       "weight": 1.0
@@ -455439,7 +455410,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L69",
       "weight": 1.0
@@ -455450,7 +455420,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L78",
       "weight": 1.0
@@ -455461,7 +455430,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/web/lib/staging-access.ts",
       "source_location": "L86",
       "weight": 1.0
@@ -539837,7 +539805,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/web/lib/staging-access.test.ts",
       "source_location": "L1",
