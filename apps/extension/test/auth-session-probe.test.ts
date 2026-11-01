@@ -14,6 +14,7 @@ vi.mock("wxt/utils/storage", () => ({
 }));
 vi.mock("../src/diagnostic-log", () => ({ recordDiagnosticEvent: vi.fn() }));
 import {
+	getCachedExtensionSession,
 	getCurrentExtensionSession,
 	reconcileExtensionSessionAgainstWebsite,
 	handleAuthMessage,
@@ -140,6 +141,7 @@ describe("pending authenticated profile probes", () => {
 		);
 		const stored = await getStoredAuthTokens();
 		expect(stored).toMatchObject({
+			authSessionId: before?.authSessionId,
 			accessToken: "next-access",
 			refreshToken: "next-refresh",
 			user: tokens.user,
@@ -147,6 +149,7 @@ describe("pending authenticated profile probes", () => {
 		expect((stored as any)?.authRevision).not.toBe(
 			(before as any)?.authRevision,
 		);
+		expect(stored?.authSessionId).toEqual(expect.any(String));
 		expect(paths).toEqual([
 			"/api/me",
 			"/api/extension/auth/refresh",
@@ -391,6 +394,31 @@ describe("pending authenticated profile probes", () => {
 });
 
 describe("durable session revision", () => {
+  it.each(["unversioned", "credential-versioned"])("migrates %s legacy storage before the default fast session response and keeps read-only cache reads unchanged", async variant => {
+    const old = variant === "credential-versioned"
+      ? { ...tokens, authRevision: "existing-credential-family", profileRevision: 3 }
+      : tokens;
+    state.data.set(AUTH_TOKENS_KEY, old);
+    expect(await getCachedExtensionSession()).toEqual(old);
+    expect(state.authWrites).toHaveLength(0);
+    const gate = deferred<Response>();
+    const request = vi.fn().mockReturnValueOnce(gate.promise)
+      .mockImplementation(async () => Response.json({ user: tokens.user }));
+    vi.stubGlobal("fetch", request);
+
+    const fast = await handleAuthMessage({ type: "ANIDACHI_AUTH", command: "get-session-fast" });
+    expect(fast.ok).toBe(true);
+    expect.soft(fast.tokens?.authSessionId).toEqual(expect.any(String));
+    expect.soft(fast.tokens).toEqual(await getStoredAuthTokens());
+    expect.soft(fast.tokens).toMatchObject(old);
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    gate.resolve(Response.json({ user: tokens.user }));
+    const verified = await handleAuthMessage({ type: "ANIDACHI_AUTH", command: "get-session" });
+    expect(verified.ok).toBe(true);
+    expect.soft(verified.tokens?.authSessionId).toBe(fast.tokens?.authSessionId);
+    expect((await getStoredAuthTokens())?.authSessionId).toBe(verified.tokens?.authSessionId);
+  });
+
   it("refuses token-only clears once a durable revision exists", async () => {
     await setStoredAuthTokens(tokens);
     expect((await clearStoredAuthTokensIfRefreshToken("refresh")).committed).toBe(false);

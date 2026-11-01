@@ -59,6 +59,25 @@ Cross-socket/account leakage, stale time increasing a budget, old clients receiv
 unknown events, unbounded recovery traffic, public sequences lost at hibernation,
 unknown paid provenance, timer firing server actions, changed media controls.
 
+## Token refresh correction
+
+Review of PR486 reproduced a cleared live timer after same-user credential
+rotation: the connection stayed open but its callback retained the old credential
+key. The owner approved correcting this on staging and refreshing the unpacked
+extension. The correction separates local logical login identity (`authSessionId`)
+from credential freshness. Storage creates an ID for each login, preserves it on
+same-owner refresh/profile commits, and migrates existing records once. HTTP
+response fences still use the full credentials. The live room keeps its timer
+and ordering across refresh; actual logout/login or account replacement retires
+the old room callbacks synchronously, including batched storage notifications.
+
+Regression evidence must cover both-token/revision rotation, continued countdown,
+new and stale server events, server-owned exhaustion, same-owner replacement,
+logout/relogin, account switch, legacy fallback and durable storage migration.
+Exact RED/GREEN, full-suite, CI and artifact receipts belong in the correction PR.
+This changes no server protocol, financial authority, permissions or activation
+flags; loaded-browser acceptance and enabled Free20 rehearsal remain separate.
+
 ## Rollback
 
 Before activation revert this block through staging and rebuild the extension.
