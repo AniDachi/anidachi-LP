@@ -23,6 +23,7 @@ import {
 export interface PanelRoomActionsProps {
 	scopeKey: string;
 	roomId: string | null;
+	roomReady: boolean;
 	isHost: boolean;
 	label: string;
 	disabled: boolean;
@@ -54,7 +55,7 @@ type Notice = { action: "copy" | "sync"; error: boolean; message: string };
 export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const { roomId, remainingSeconds, busy } = props;
 	const active = roomId !== null;
-	const timed = remainingSeconds !== null && (!active || props.isHost);
+
 	const scope = `${props.scopeKey}:${roomId ?? "idle"}`;
 	const currentScope = useRef(scope);
 	currentScope.current = scope;
@@ -67,6 +68,16 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const stripRef = useRef<HTMLDivElement>(null);
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const start = useRef<PanelRoomStart | null>(null);
+	const startRoomId = useRef<string | null>(null);
+	const [startTime, setStartTime] = useState<number | null | undefined>(
+		undefined,
+	);
+	// Preserve the source geometry while admission precedes the live snapshot.
+	// This is the last idle observation, never a locally started allowance.
+	const waitingForRoom = active && startTime !== undefined && !props.roomReady;
+	const visibleActive = active && !waitingForRoom;
+	const displaySeconds = waitingForRoom ? startTime : remainingSeconds;
+	const timed = displaySeconds !== null && (!visibleActive || props.isHost);
 	const motion = useRef<ReturnType<typeof animatePanelRoomStart> | null>(null);
 	const descriptionId = useId();
 	const cancelTimers = () => {
@@ -90,8 +101,18 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	useLayoutEffect(() => {
 		if (!roomId || !stripRef.current || !buttonRef.current || !start.current)
 			return;
+		if (startRoomId.current && startRoomId.current !== roomId) {
+			start.current = null;
+			startRoomId.current = null;
+			setStartTime(undefined);
+			return;
+		}
+		startRoomId.current = roomId;
+		if (!props.roomReady) return;
 		const snapshot = start.current;
 		start.current = null;
+		startRoomId.current = null;
+		setStartTime(undefined);
 		motion.current = animatePanelRoomStart(
 			snapshot,
 			stripRef.current,
@@ -101,9 +122,13 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			motion.current?.cancel();
 			motion.current = null;
 		};
-	}, [roomId]);
+	}, [roomId, props.roomReady]);
 	useLayoutEffect(() => {
-		if (!busy && !roomId) start.current = null;
+		if (!busy && !roomId) {
+			start.current = null;
+			startRoomId.current = null;
+			setStartTime(undefined);
+		}
 	}, [busy, roomId]);
 
 	const begin = (action: "copy" | "sync") => {
@@ -170,24 +195,24 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	return (
 		<div
 			ref={stripRef}
-			className={`panel-actions panel-room-actions ${active ? "room-active" : "room-empty"}`}
+			className={`panel-actions panel-room-actions ${visibleActive ? "room-active" : "room-empty"}`}
 			data-timed={timed}
 		>
-			{!active && timed && (
+			{!visibleActive && timed && (
 				<div
 					className="panel-idle-time"
 					title="Free time remaining today"
 					role="timer"
-					aria-label={`${remainingSeconds} seconds of free time remaining today`}
+					aria-label={`${displaySeconds} seconds of free time remaining today`}
 					aria-live="off"
 				>
-					<PanelTimeCounter seconds={remainingSeconds!} />
+					<PanelTimeCounter seconds={displaySeconds!} />
 				</div>
 			)}
 			<button
 				ref={buttonRef}
 				type="button"
-				className={`button primary panel-primary-action${active ? " room-exit" : ""}${props.confirming ? " confirming" : ""}${busy ? " loading" : ""}`}
+				className={`button primary panel-primary-action${visibleActive ? " room-exit" : ""}${props.confirming ? " confirming" : ""}${busy ? " loading" : ""}`}
 				aria-label={props.label}
 				aria-describedby={active && timed ? descriptionId : undefined}
 				disabled={props.disabled}
@@ -197,29 +222,32 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 				onFocus={() => setShowAction(true)}
 				onBlur={() => setShowAction(false)}
 				onClick={(event) => {
-					if (!active && stripRef.current && buttonRef.current)
+					if (!active && stripRef.current && buttonRef.current) {
 						start.current = capturePanelRoomStart(
 							stripRef.current,
 							buttonRef.current,
 						);
+						startRoomId.current = null;
+						setStartTime(remainingSeconds);
+					}
 					props.onPrimaryAction(event);
 				}}
 			>
-				{active && timed && (
+				{visibleActive && timed && (
 					<span className="panel-action-timer">
-						<PanelTimeCounter seconds={remainingSeconds!} />
+						<PanelTimeCounter seconds={displaySeconds!} />
 					</span>
 				)}
 				<span className="panel-action-label" aria-live="polite">
 					{props.label}
 				</span>
 			</button>
-			{active && timed && (
+			{visibleActive && timed && (
 				<span id={descriptionId} className="sr-only" aria-live="off">
 					{remainingSeconds} seconds of free time remaining today
 				</span>
 			)}
-			{active && (
+			{visibleActive && (
 				<div
 					className="panel-action-icons"
 					role="group"
@@ -272,7 +300,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					</button>
 				</div>
 			)}
-			{active && (
+			{visibleActive && (
 				<div
 					className="panel-media-tooltip panel-action-feedback"
 					data-action={notice?.action}

@@ -6189,9 +6189,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					{quotaExhausted ? <>
 						<FreeQuotaNotice state={freeQuotaNotice.state!} onRetry={freeQuotaNotice.retry} compact />
 						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
-					</> : <PanelRoomActions
+					</> : <PanelRoomActions key={authSessionKey ?? "anonymous"}
 						scopeKey={`${authSessionKey}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
-						roomId={roomId} isHost={isHost} label={primaryRoomActionLabel}
+						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
 						remainingSeconds={roomId ? (isConnected && isHost ? quotaRemainingSeconds : null) : freeQuotaNotice.availableSeconds}

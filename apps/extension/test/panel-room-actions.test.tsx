@@ -38,6 +38,7 @@ describe("real room action feedback", () => {
 		props = {
 			scopeKey: "login-a:connection-1",
 			roomId: "room-a",
+			roomReady: true,
 			isHost: true,
 			label: "End room",
 			disabled: false,
@@ -57,6 +58,8 @@ describe("real room action feedback", () => {
 		await act(async () => root.unmount());
 		host.remove();
 		vi.useRealTimers();
+		vi.restoreAllMocks();
+		delete (HTMLElement.prototype as any).animate;
 	});
 	it("does not replace an unknown or guest allowance with a zero timer", async () => {
 		await render({ remainingSeconds: null });
@@ -125,5 +128,92 @@ describe("real room action feedback", () => {
 		await render({ scopeKey: "login-a:disconnected", syncDisabled: true });
 		await advance(650);
 		expect(host.textContent).not.toContain("Sync sent");
+	});
+	function emulateLayoutAndAnimation() {
+		vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(298);
+		vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue(
+			new DOMRect(0, 0, 298, 36),
+		);
+		Object.defineProperty(HTMLElement.prototype, "animate", {
+			configurable: true,
+			value: () => ({ finished: new Promise(() => {}), cancel: () => {} }),
+		});
+	}
+	it("waits for the asynchronous room snapshot before moving the idle timer", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({
+			roomId: "room-a",
+			roomReady: false,
+			busy: true,
+			remainingSeconds: null,
+			label: "Creating room",
+		});
+		expect(host.querySelector(".panel-idle-time")?.textContent).toContain(
+			"12:34",
+		);
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		await render({
+			roomReady: true,
+			busy: false,
+			remainingSeconds: 754,
+			label: "End room",
+		});
+		expect(host.querySelector(".panel-flying-counter")?.textContent).toContain(
+			"12:34",
+		);
+		await render({ roomId: null, roomReady: false });
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+	});
+	it("discards a failed start and never replays it for another login or restored room", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ busy: true });
+		await render({ busy: false });
+		await render({
+			roomId: "restored-room",
+			roomReady: true,
+			label: "End room",
+		});
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await act(async () =>
+			root.render(
+				<PanelRoomActions
+					key="another-login"
+					{...props}
+					roomId="other-room"
+					roomReady
+					remainingSeconds={600}
+				/>,
+			),
+		);
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+	});
+	it("finishes a pending transition for a confirmed untimed room without a fake timer", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({
+			roomId: "room-a",
+			roomReady: false,
+			busy: true,
+			remainingSeconds: null,
+		});
+		await render({
+			roomReady: true,
+			busy: false,
+			remainingSeconds: null,
+			label: "End room",
+		});
+		expect(
+			host.querySelector(
+				".panel-idle-time,.panel-flying-counter,.panel-action-timer",
+			),
+		).toBeNull();
+		expect(button("End room")).toBeDefined();
 	});
 });
