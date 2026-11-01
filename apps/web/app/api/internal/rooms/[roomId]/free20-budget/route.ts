@@ -1,11 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
+	FREE20_DISPLAY_VERSION_HEADER,
 	Free20RoomBudgetRequestSchema,
 	Free20RoomBudgetResponseSchema,
 } from "@anidachi/protocol";
 import { hasValidInternalServiceAuthorization } from "@/lib/internal-service-auth";
 import { settleFree20RoomBudget } from "@/lib/anidachi-auth/free20-room-budget";
 import { issueRoomPolicy } from "@/lib/anidachi-auth/room-capability";
+import { readFree20DisplayTime } from "@/lib/anidachi-auth/free20-display-time";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +41,19 @@ export async function POST(
 		const checkpoint = await settleFree20RoomBudget(input.data, new Date());
 		// Reuse pinned media authority, but never read or return the legacy quota.
 		const policy = await issueRoomPolicy(roomId, false);
+		const displayTime =
+			request.headers.get(FREE20_DISPLAY_VERSION_HEADER) === "1" &&
+			!policy.denied &&
+			"kind" in checkpoint &&
+			checkpoint.kind === "confirmed_unlimited"
+				? await readFree20DisplayTime(checkpoint)
+				: undefined;
 		return NextResponse.json(
-			Free20RoomBudgetResponseSchema.parse({ checkpoint, policy }),
+			Free20RoomBudgetResponseSchema.parse({
+				checkpoint,
+				policy,
+				...(displayTime ? { displayTime } : {}),
+			}),
 		);
 	} catch {
 		return NextResponse.json(

@@ -1,4 +1,5 @@
 import {
+  FREE20_DISPLAY_VERSION_HEADER,
   Free20RoomBudgetRequestSchema,
   Free20RoomBudgetResponseSchema,
   type Free20RoomBudgetRequest,
@@ -428,7 +429,7 @@ export async function notifyWebFree20Budget(
 		new URL(`/api/internal/rooms/${encodeURIComponent(request.roomId)}/free20-budget`, config.baseUrl),
 		{
 			method: "POST", redirect: "manual",
-			headers: { Authorization: `Bearer ${config.secret}`, "Content-Type": "application/json" },
+			headers: { Authorization: `Bearer ${config.secret}`, "Content-Type": "application/json", [FREE20_DISPLAY_VERSION_HEADER]: "1" },
 			body: JSON.stringify(request),
 		}, timeoutMs,
 	);

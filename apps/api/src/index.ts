@@ -9,7 +9,8 @@ import {
 } from "./room-capability";
 import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy, notifyWebFree20Budget } from "./internal-web-client";
 import { createFree20AccountingState, prepareFree20Accounting, acknowledgeFree20Accounting, settleFree20Accounting, type Free20AccountingState } from "./free20-room-accounting";
-import { readFree20LiveStatus } from "./free20-live-status";
+import { readFree20LiveStatus, projectHostingTime, hostingTimeChangeKey, type HostingDisplayContext } from "./free20-live-status";
+import { nextHostingTimeSequence, readHostingTimeRight, writeHostingTimeRight } from "./hosting-time-storage";
 import { Free20LiveStatusRequestSchema } from "@anidachi/protocol";
 import {
 	roomUsageBuckets,
@@ -600,6 +601,9 @@ export class RoomDurableObject {
   private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
   private roomMeter: RoomMeterState;
   private free20Accounting: Free20AccountingState | null;
+  private hostingTimeKey: string | null = null;
+  private hostingDisplayRight: HostingDisplayContext['displayTime'] = null;
+  private readonly hostingTimeRequestAt = new WeakMap<WebSocket,number>();
 	private roomPolicy: RoomPolicyState | null = null;
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
@@ -620,6 +624,7 @@ export class RoomDurableObject {
 		this.roomMeter =
 			readStoredRoomMeter(state.storage) ?? createRoomMeterState();
 		this.free20Accounting = readStoredFree20Accounting(state.storage, this.roomMeter);
+    this.hostingDisplayRight = readHostingTimeRight(state.storage);
 		this.room = new RoomState(
 			roomId,
 			undefined,
@@ -921,6 +926,35 @@ export class RoomDurableObject {
     return this.room.roomCapabilities.hostPlanCode === "free";
   }
 
+  private async publishHostingTime(force = false): Promise<void> {
+    const policy = this.roomPolicy;
+    if (!policy || !this.free20Accounting || this.endedTombstone || this.terminalIntent || policy.endingReason) return;
+    const recipients = [...this.participantsBySocket.keys()].filter(socket =>
+      socket.readyState === WebSocket.OPEN && this.getSocketAttachment(socket)?.hostingTimeVersion === 1);
+    if (recipients.length === 0) return;
+    const now = Date.now();
+    const context: HostingDisplayContext = {
+      binding:{ownerUserId:policy.hostId,roomId:this.room.roomId,roomGeneration:this.room.roomGeneration,
+        utcDay:new Date(now).toISOString().slice(0,10)},
+      accounting:this.free20Accounting,meter:this.roomMeter,
+      validUntil:Math.min(policy.refreshAt,Date.parse(policy.lease.capabilities.capabilitiesValidUntil)),
+      terminal:false,displayTime:this.hostingDisplayRight ?? null,
+    };
+    const key = hostingTimeChangeKey(context);
+    if (!force && key === this.hostingTimeKey) return;
+    try {
+      const event = projectHostingTime(context,0,now);
+      if (!event) return;
+      event.snapshot.snapshotSequence = nextHostingTimeSequence(this.state.storage,now);
+      await this.state.storage.sync();
+      this.hostingTimeKey=key;
+      for (const socket of recipients) this.send(socket,event);
+    } catch {
+      // Display failure cannot change accounting or grant time. The last
+      // observation expires locally; a subsequent lifecycle/recovery can retry.
+    }
+  }
+
   private shouldMeterRoom(): boolean {
 		if (!this.isFreeRoom() || this.roomPolicy?.endingReason || this.free20Accounting?.unlimited) return false;
     let hostJoined = false;
@@ -996,6 +1030,12 @@ export class RoomDurableObject {
       const checkpoint = result.state.unlimited ?? budget?.checkpoint;
       if (!checkpoint) throw new Error("Missing reconciled Free20 time authority");
       this.persistFree20Accounting(result.meter, result.state, acceptedAt);
+      this.hostingDisplayRight = response.displayTime && result.state.unlimited ? {
+        ...response.displayTime,ownerUserId:policy.hostId,roomId:this.room.roomId,
+        roomGeneration:this.room.roomGeneration,checkpointSequence:result.state.unlimited.checkpointSequence,
+      } : null;
+      try { writeHostingTimeRight(this.state.storage,this.hostingDisplayRight,acceptedAt); }
+      catch { this.hostingDisplayRight=null; }
       this.room.setMediaCapabilities(token.mediaLease.capabilities);
       return { ...updated, budget: budget ? { day: budget.checkpoint.utcDay, allowedSeconds: budget.allowedSeconds } : null,
         refreshAt: Math.min(updated.refreshAt, checkpoint.refreshBy) };
@@ -1295,6 +1335,7 @@ export class RoomDurableObject {
 		await this.persistRoomPolicyDeadline(Date.now());
     // Existing policy alarms also publish day/budget renewal to connected clients.
     this.broadcast(this.currentRoomSnapshot(Date.now()));
+    await this.publishHostingTime();
   }
 
   private stopRoomUsage(now: number): RoomUsageSummary | undefined {
@@ -2209,6 +2250,14 @@ export class RoomDurableObject {
     this.touchSocketAttachment(socket);
 
     switch (event.type) {
+		case "HOSTING_TIME_REQUEST": {
+      if (!this.participantsBySocket.has(socket) || this.getSocketAttachment(socket)?.hostingTimeVersion !== 1) return;
+      const now=Date.now();
+      if (now-(this.hostingTimeRequestAt.get(socket) ?? -Infinity)<5_000) return;
+      this.hostingTimeRequestAt.set(socket,now);
+      await this.runRoomEndExclusively(()=>this.publishHostingTime(true));
+      return;
+    }
 		case "SET_MEDIA_SEAT":
 			await this.runRoomEndExclusively(async () => {
 				const userId = this.participantsBySocket.get(socket);
@@ -2515,6 +2564,7 @@ export class RoomDurableObject {
       participant: joined,
       participantSessionId: event.participantSessionId,
     };
+    if (event.hostingTimeVersion === 1) patch.hostingTimeVersion=1;
     const joinedAttachment = updateRoomSocketAttachment(attachment, patch);
 
     try {
@@ -2661,6 +2711,7 @@ export class RoomDurableObject {
       ...this.currentRoomSnapshot(replayAt),
       ...(p2pResyncRequired ? { p2pResyncRequired: true } : {}),
     });
+    await this.publishHostingTime(true);
     await this.sendRoomHistoryAuthority(socket);
     this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
@@ -3400,6 +3451,7 @@ export class RoomDurableObject {
     this.persistRoomState();
     this.reconcileRoomUsage(Date.now());
     this.track("ws_close", { value: this.room.participants.length });
+    await this.publishHostingTime();
 
     if (participant) {
 			if (!this.room.mediaSnapshot)

@@ -1,5 +1,27 @@
 # Current Development State
 
+## Free20 extension time wiring, November 1, 2026
+
+The owner approved the next bounded block: authoritative time before a room,
+during a room and after quota exhaustion, with staging delivery and an updated
+unpacked extension. The [implementation plan](superpowers/plans/2026-11-01-free20-live-time.md)
+keeps commercial activation, new-trial retirement, payment push delivery and
+warning decisions outside this block.
+
+The candidate uses the separate account hosting-status read for idle state and
+negotiated `HOSTING_TIME` events for live rooms. The event carries bounded
+freshness and owner/room/generation/sequence fences. Socket opt-in survives
+hibernation; a separate durable display sequence is saved before sending.
+Presence, authority and UTC changes update the display; playback frames do not.
+Unlimited display provenance uses an opt-in internal HTTP header and a separate
+metadata row, preserving the previous strict accounting checkpoint and stored
+accounting shape. Missing provenance produces unknown display, not new rights.
+
+The accepted overlay layout remains the baseline. Exact local verification,
+staging deployment and installed-artifact receipts belong in the PR; source
+presence is not loaded-browser acceptance. Free20 flags remain off until the
+remaining trial, purchase, compatibility and enabled-flow gates are complete.
+
 ## Intermediate extension overlay design, November 1, 2026
 
 The owner authorized transferring the accepted Free20 mockup into a staging
@@ -11,9 +33,10 @@ Camera/microphone stay in their existing dock. Existing server-authoritative
 legacy quota data supplies finite time; unknown, paid and guest states do not
 receive a fabricated zero or a new 1200-second allowance.
 
-This is not Free20 activation or final design acceptance. Live Free20 event
-wiring, cessation of new trials, purchase delivery and enabled end-to-end testing
-remain separate. Server gates, main, production and Store are unchanged. The
+This design delivery was not Free20 activation or final design acceptance. The
+next time-wiring block is recorded above; cessation of new trials, purchase
+delivery and enabled end-to-end testing remain separate. Server gates, main,
+production and Store are unchanged. The
 staging PR and local artifact receipt carry delivery/verification evidence;
 source presence alone does not prove a browser has loaded that artifact.
 

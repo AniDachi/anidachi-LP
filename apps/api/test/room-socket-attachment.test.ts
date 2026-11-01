@@ -111,3 +111,10 @@ describe("room socket attachments", () => {
     expect(parseRoomSocketAttachment(legacyJoined, "room-1")).toBeNull();
   });
 });
+
+ it("retains negotiated hosting time support without invalidating old attachments",()=>{
+  const old=createRoomSocketAttachment("room-1",verified,1000);
+  expect(parseRoomSocketAttachment(old,"room-1")).not.toBeNull();
+  expect(parseRoomSocketAttachment({...old,hostingTimeVersion:1},"room-1")).toMatchObject({hostingTimeVersion:1});
+  expect(parseRoomSocketAttachment({...old,hostingTimeVersion:2},"room-1")).toBeNull();
+ });

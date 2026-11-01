@@ -8,12 +8,15 @@ const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
 const owner = "11111111-1111-4111-8111-111111111111";
 const context = { params: Promise.resolve({ roomId: "room-1" }) };
-const request = (body: unknown, secret = "rooms") =>
+const request = (body: unknown, secret = "rooms", displayVersion?: string) =>
 	new NextRequest("https://web.test/api/internal/rooms/room-1/free20-budget", {
 		method: "POST",
 		headers: {
 			authorization: `Bearer ${secret}`,
 			"content-type": "application/json",
+			...(displayVersion === undefined
+				? {}
+				: { "x-anidachi-hosting-time-version": displayVersion }),
 		},
 		body: JSON.stringify(body),
 	});
@@ -23,6 +26,8 @@ let failAuthority: boolean;
 let roomSeconds: number;
 let now: number;
 let accountPlan: "free" | "plus" | "pro";
+let displayAuthority: unknown;
+let denyPolicy: boolean;
 const input = () => ({
 	roomId: "room-1",
 	roomGeneration: 1,
@@ -43,10 +48,21 @@ beforeEach(() => {
 	failAuthority = false;
 	now = Date.now();
 	accountPlan = "free";
+	displayAuthority = null;
+	denyPolicy = false;
 	globalThis.fetch = async (url, init) => {
 		const path = new URL(String(url)).pathname;
 		calls.push(path);
 		const body = init?.body ? JSON.parse(String(init.body)) : null;
+		if (path.endsWith("read_free20_account_status_v1")) {
+			assert.equal(body.p_user_id, owner);
+			if (displayAuthority instanceof Error)
+				return Response.json(
+					{ message: "private display detail" },
+					{ status: 500 },
+				);
+			return Response.json(displayAuthority);
+		}
 		if (path.endsWith("/rooms"))
 			return Response.json({
 				room_id: "room-1",
@@ -94,7 +110,12 @@ beforeEach(() => {
 		}
 		if (path.endsWith("/usage_daily"))
 			return Response.json({ host_seconds: used });
-		if (path.endsWith("renew_room_media_lease_v3"))
+		if (path.endsWith("renew_room_media_lease_v3")) {
+			if (denyPolicy)
+				return Response.json({
+					denied: true,
+					closingAt: new Date(now + 5000).toISOString(),
+				});
 			return Response.json({
 				roomId: "room-1",
 				roomGeneration: 1,
@@ -110,6 +131,7 @@ beforeEach(() => {
 					capabilitiesValidUntil: new Date(now + 1800000).toISOString(),
 				},
 			});
+		}
 		throw new Error(`Unexpected database call ${path}`);
 	};
 });
@@ -196,5 +218,114 @@ test("confirmed account access removes only the time cap after settlement and re
 		const token = await verifyRoomToken(body.policy.roomToken);
 		assert.equal(token?.mediaLease?.capabilities.hostPlanCode, "free");
 		assert.equal(token?.mediaLease?.capabilities.maxParticipants, 4);
+	}
+});
+
+function displaySource(source: "paid" | "trial" | "manual") {
+	const resetAt = (Math.floor(now / 86_400_000) + 1) * 86_400_000;
+	return {
+		enabled: true,
+		ownerUserId: owner,
+		planCode: accountPlan,
+		serverTime: new Date(now).toISOString(),
+		refreshBy: new Date(Math.min(now + 60_000, resetAt)).toISOString(),
+		resetAt: new Date(resetAt).toISOString(),
+		accountGeneration: 1,
+		accessEpoch: 1,
+		committedSeconds: 600,
+		grant: {
+			source,
+			validUntil:
+				source === "manual" ? null : new Date(now + 120_000).toISOString(),
+		},
+		assignment: {
+			roomId: "room-1",
+			roomGeneration: 1,
+			role: "host",
+			sessionId: "host-tab",
+			hostingTimeMode: "daily_free20",
+			status: "live",
+			hostUserId: owner,
+		},
+	};
+}
+test("explicit display negotiation retains the actual paid, trial and manual source without changing accounting", async () => {
+	process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true";
+	accountPlan = "plus";
+	for (const source of ["paid", "trial", "manual"] as const) {
+		displayAuthority = displaySource(source);
+		const response = await POST(request(input(), "rooms", "1"), context);
+		assert.equal(response.status, 200);
+		const body = await response.json();
+		assert.deepEqual(body.displayTime, {
+			access: {
+				kind: "confirmed_unlimited",
+				source,
+				validUntil: source === "manual" ? null : now + 120_000,
+			},
+			validUntil: Math.min(now + 60_000, body.checkpoint.refreshBy),
+		});
+		assert.equal("source" in body.checkpoint, false);
+		assert.equal(used, 600);
+	}
+	assert.equal(
+		calls.filter((path) => path.endsWith("read_free20_account_status_v1"))
+			.length,
+		3,
+	);
+});
+test("old, unknown-version, finite and denied requests never add a display read or response field", async () => {
+	process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true";
+	accountPlan = "plus";
+	displayAuthority = displaySource("paid");
+	for (const version of [undefined, "0", "2", "01", "1, 2"]) {
+		const response = await POST(request(input(), "rooms", version), context);
+		assert.equal(response.status, 200);
+		assert.deepEqual(Object.keys(await response.json()), [
+			"checkpoint",
+			"policy",
+		]);
+	}
+	accountPlan = "free";
+	assert.deepEqual(
+		Object.keys(
+			await (await POST(request(input(), "rooms", "1"), context)).json(),
+		),
+		["checkpoint", "policy"],
+	);
+	accountPlan = "plus";
+	denyPolicy = true;
+	const denied = await POST(request(input(), "rooms", "1"), context);
+	assert.equal(denied.status, 200);
+	assert.deepEqual(Object.keys(await denied.json()), ["checkpoint", "policy"]);
+	assert.equal(
+		calls.some((path) => path.endsWith("read_free20_account_status_v1")),
+		false,
+	);
+});
+test("missing, expired or mismatched display provenance never turns an accounted paid room into 503", async () => {
+	process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true";
+	accountPlan = "plus";
+	const source = displaySource("paid");
+	for (const invalid of [
+		null,
+		{ enabled: false },
+		new Error("unavailable"),
+		{ ...source, grant: null },
+		{ ...source, ownerUserId: "22222222-2222-4222-8222-222222222222" },
+		{ ...source, planCode: "pro" },
+		{
+			...source,
+			grant: { source: "paid", validUntil: new Date(now).toISOString() },
+		},
+		{ ...source, assignment: { ...source.assignment, roomId: "other-room" } },
+	]) {
+		displayAuthority = invalid;
+		const response = await POST(request(input(), "rooms", "1"), context);
+		assert.equal(response.status, 200);
+		const body = await response.json();
+		assert.deepEqual(Object.keys(body), ["checkpoint", "policy"]);
+		assert.equal(body.checkpoint.kind, "confirmed_unlimited");
+		assert.equal(used, 600);
 	}
 });

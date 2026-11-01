@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { HostingTimeEventSchema } from "./hosting-time";
 import {
 	MediaIntentSchema,
 	HostMediaRevokeSchema,
@@ -301,6 +302,9 @@ export const ClientEventSchema = z
     sentAt: z.number().int().nonnegative(),
   }),
   RoomScopedSchema.extend({
+    type: z.literal("HOSTING_TIME_REQUEST"),
+  }),
+  RoomScopedSchema.extend({
     type: z.literal("JOIN"),
     participant: ParticipantSchema,
     videoFingerprint: VideoFingerprintSchema,
@@ -308,6 +312,7 @@ export const ClientEventSchema = z
     // Bound into the Web-issued token before admission. The Worker requires
     // this exact tab session on every initial JOIN and reconnect.
     participantSessionId: SessionIdSchema,
+    hostingTimeVersion: z.literal(1).optional(),
   }),
   RoomScopedSchema.extend({
     type: z.literal("HOST_STATE"),
@@ -374,6 +379,7 @@ export const ClientEventSchema = z
 });
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
+	HostingTimeEventSchema,
 	MediaSeatResultSchema,
 	MediaIntentAckSchema,
 	MediaIntentErrorSchema,
