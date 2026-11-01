@@ -25,7 +25,7 @@ import {
   claimPresence,
   acknowledgePresence,
 } from "./room-presence-evidence";
-import { scheduled } from "./notification-scheduler";
+import { scheduled } from "./recovery-scheduler";
 import {
   parseMaintenanceMode,
   maintenanceHttpResponse,

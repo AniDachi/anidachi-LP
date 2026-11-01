@@ -28,9 +28,9 @@ ANIDACHI_ENV = "staging"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://staging.anidachi.app"
 
 [env.staging.triggers]
-# Invitation recovery now runs from staging Supabase Cron; retain the Worker
-# handler for explicit rollback, without a second active staging timer.
-crons = []
+# Invitations stay on Supabase Cron. This distinct schedule only retries Free20
+# delivery, and makes no requests until the existing Free20 flag is enabled.
+crons = ["*/2 * * * *"]
 
 [[env.staging.durable_objects.bindings]]
 name = "ROOMS"
@@ -49,7 +49,7 @@ ANIDACHI_ENV = "production"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://www.anidachi.app"
 
 [env.production.triggers]
-crons = ["* * * * *"]
+crons = ["* * * * *", "*/2 * * * *"]
 
 [[env.production.durable_objects.bindings]]
 name = "ROOMS"
