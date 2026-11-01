@@ -329,3 +329,63 @@ test("missing, expired or mismatched display provenance never turns an accounted
 		assert.equal(used, 600);
 	}
 });
+
+test("slow accounting or an invalid elapsed clock skips optional display work and returns the settled response", async (t) => {
+	process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true";
+	accountPlan = "plus";
+	displayAuthority = displaySource("paid");
+	const databaseFetch = globalThis.fetch;
+	let elapsed = 0;
+	let accountingDuration = 0;
+	t.mock.method(performance, "now", () => elapsed);
+	globalThis.fetch = async (url, init) => {
+		if (new URL(String(url)).pathname.endsWith("renew_room_media_lease_v3"))
+			elapsed = accountingDuration;
+		return databaseFetch(url, init);
+	};
+	for (const duration of [5001, 7000, 8000, Number.NaN, Infinity, -1]) {
+		elapsed = 0;
+		accountingDuration = duration;
+		calls.length = 0;
+		const response = await POST(request(input(), "rooms", "1"), context);
+		assert.equal(response.status, 200);
+		const body = await response.json();
+		assert.deepEqual(Object.keys(body), ["checkpoint", "policy"]);
+		assert.equal(body.checkpoint.kind, "confirmed_unlimited");
+		assert.deepEqual(body.checkpoint.acknowledged, input().usage);
+		assert.equal(used, 600);
+		assert.equal(
+			calls.some((path) => path.endsWith("read_free20_account_status_v1")),
+			false,
+		);
+	}
+});
+
+test("accounting within five seconds can still use the existing bounded display read", async (t) => {
+	process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true";
+	accountPlan = "plus";
+	displayAuthority = displaySource("trial");
+	const databaseFetch = globalThis.fetch;
+	let elapsed = 0;
+	let accountingDuration = 0;
+	t.mock.method(performance, "now", () => elapsed);
+	globalThis.fetch = async (url, init) => {
+		if (new URL(String(url)).pathname.endsWith("renew_room_media_lease_v3"))
+			elapsed = accountingDuration;
+		return databaseFetch(url, init);
+	};
+	for (const duration of [0, 4999, 5000]) {
+		elapsed = 0;
+		accountingDuration = duration;
+		calls.length = 0;
+		const response = await POST(request(input(), "rooms", "1"), context);
+		assert.equal(response.status, 200);
+		const body = await response.json();
+		assert.equal(body.displayTime.access.source, "trial");
+		assert.equal(
+			calls.filter((path) => path.endsWith("read_free20_account_status_v1"))
+				.length,
+			1,
+		);
+	}
+});

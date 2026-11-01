@@ -29,9 +29,15 @@ describe("negotiated live hosting time", () => {
 	it("accepts explicit recovery requests scoped to the current room", () => {
 		expect(
 			ClientEventSchema.safeParse({
-				type: "HOSTING_TIME_REQUEST",
+				type: "HOSTING_TIME_REQUEST", requestId:"8fb7bc8d-49ef-4f43-9de3-1b6b31716c00",
 				roomId: free.roomId,
 			}).success,
 		).toBe(true);
 	});
+});
+
+it('binds recovery to a fresh correlated response',()=>{
+  const requestId='8fb7bc8d-49ef-4f43-9de3-1b6b31716c00';
+  expect(ClientEventSchema.parse({type:'HOSTING_TIME_REQUEST',roomId:free.roomId,requestId})).toMatchObject({requestId});
+  expect(ServerEventSchema.safeParse({...event,requestId}).success).toBe(true);
 });

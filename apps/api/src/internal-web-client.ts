@@ -434,7 +434,15 @@ export async function notifyWebFree20Budget(
 		}, timeoutMs,
 	);
 	if (response.status !== 200) throw internalWebCallbackFailure("Free20 budget callback failed", response);
-	const result = Free20RoomBudgetResponseSchema.parse(body);
+	let decoded = Free20RoomBudgetResponseSchema.safeParse(body);
+  if (!decoded.success && body && typeof body === "object" && !Array.isArray(body) && "displayTime" in body) {
+    // Optional presentation must not poison a valid signed accounting response.
+    // Every other field still passes the same strict schema and binding checks.
+    const { displayTime: _displayTime, ...accounting } = body;
+    decoded = Free20RoomBudgetResponseSchema.safeParse(accounting);
+  }
+  if (!decoded.success) throw new Error("Invalid Free20 budget response");
+  const result = decoded.data;
 	if (result.checkpoint.roomId !== request.roomId || result.checkpoint.roomGeneration !== request.roomGeneration ||
 		result.checkpoint.checkpointSequence !== request.checkpointSequence)
 		throw new Error("Free20 budget response binding mismatch");

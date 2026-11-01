@@ -127,6 +127,7 @@ export type HostingTimeSnapshot = z.infer<typeof HostingTimeSnapshotSchema>;
 export const HostingTimeEventSchema = z
 	.strictObject({
 		type: z.literal("HOSTING_TIME"),
+		requestId: z.uuid().optional(),
 		roomId: scope.roomId,
 		roomGeneration: scope.roomGeneration,
 		serverTime: Timestamp,

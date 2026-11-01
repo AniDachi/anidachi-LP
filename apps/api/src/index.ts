@@ -926,11 +926,11 @@ export class RoomDurableObject {
     return this.room.roomCapabilities.hostPlanCode === "free";
   }
 
-  private async publishHostingTime(force = false): Promise<void> {
+  private async publishHostingTime(force = false, recovery?: {socket:WebSocket;requestId:string}): Promise<void> {
     const policy = this.roomPolicy;
     if (!policy || !this.free20Accounting || this.endedTombstone || this.terminalIntent || policy.endingReason) return;
     const recipients = [...this.participantsBySocket.keys()].filter(socket =>
-      socket.readyState === WebSocket.OPEN && this.getSocketAttachment(socket)?.hostingTimeVersion === 1);
+      (!recovery || recovery.socket === socket) && socket.readyState === WebSocket.OPEN && this.getSocketAttachment(socket)?.hostingTimeVersion === 1);
     if (recipients.length === 0) return;
     const now = Date.now();
     const context: HostingDisplayContext = {
@@ -946,6 +946,7 @@ export class RoomDurableObject {
       const event = projectHostingTime(context,0,now);
       if (!event) return;
       event.snapshot.snapshotSequence = nextHostingTimeSequence(this.state.storage,now);
+      if (recovery) event.requestId = recovery.requestId;
       await this.state.storage.sync();
       this.hostingTimeKey=key;
       for (const socket of recipients) this.send(socket,event);
@@ -2251,11 +2252,12 @@ export class RoomDurableObject {
 
     switch (event.type) {
 		case "HOSTING_TIME_REQUEST": {
-      if (!this.participantsBySocket.has(socket) || this.getSocketAttachment(socket)?.hostingTimeVersion !== 1) return;
+      const participantId=this.participantsBySocket.get(socket);
+      if (!participantId || this.socketsByParticipant.get(participantId)!==socket || this.getSocketAttachment(socket)?.hostingTimeVersion !== 1) return;
       const now=Date.now();
       if (now-(this.hostingTimeRequestAt.get(socket) ?? -Infinity)<5_000) return;
       this.hostingTimeRequestAt.set(socket,now);
-      await this.runRoomEndExclusively(()=>this.publishHostingTime(true));
+      await this.runRoomEndExclusively(()=>this.publishHostingTime(true,{socket,requestId:event.requestId}));
       return;
     }
 		case "SET_MEDIA_SEAT":

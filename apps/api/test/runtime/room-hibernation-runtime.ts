@@ -3642,9 +3642,10 @@ describe("RoomDurableObject media v2", () => {
    expect(active.snapshot.snapshotSequence).toBeGreaterThan(initial.snapshot.snapshotSequence);
    expect(guest.hasEvent(e=>e.type==="HOSTING_TIME")).toBe(false);
    await evictDurableObject(f.stub,{webSockets:"hibernate"});
-   host.send({type:"HOSTING_TIME_REQUEST",roomId:f.roomId});
-   const restored=await host.waitFor(e=>e.type==="HOSTING_TIME" && e.snapshot.snapshotSequence>active.snapshot.snapshotSequence,"fresh after wake") as Extract<ServerEvent,{type:"HOSTING_TIME"}>;
+   host.send({type:"HOSTING_TIME_REQUEST",roomId:f.roomId,requestId:"8fb7bc8d-49ef-4f43-9de3-1b6b31716c00"});
+   const restored=await host.waitFor(e=>e.type==="HOSTING_TIME" && e.requestId==="8fb7bc8d-49ef-4f43-9de3-1b6b31716c00" && e.snapshot.snapshotSequence>active.snapshot.snapshotSequence,"correlated fresh reply after wake") as Extract<ServerEvent,{type:"HOSTING_TIME"}>;
    expect(restored.snapshot.access.kind).toBe("daily_free");
+   expect(restored.requestId).toBe("8fb7bc8d-49ef-4f43-9de3-1b6b31716c00");
    guest.close();
    await host.waitFor(e=>e.type==="HOSTING_TIME" && e.snapshot.snapshotSequence>restored.snapshot.snapshotSequence && e.snapshot.access.kind==="daily_free" && !e.snapshot.access.metering,"meter stops");
    host.close();

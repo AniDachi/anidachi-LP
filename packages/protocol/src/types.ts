@@ -303,6 +303,7 @@ export const ClientEventSchema = z
   }),
   RoomScopedSchema.extend({
     type: z.literal("HOSTING_TIME_REQUEST"),
+    requestId: z.uuid(),
   }),
   RoomScopedSchema.extend({
     type: z.literal("JOIN"),

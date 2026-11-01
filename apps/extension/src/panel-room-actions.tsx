@@ -30,6 +30,9 @@ export interface PanelRoomActionsProps {
 	busy: boolean;
 	confirming: boolean;
 	remainingSeconds: number | null;
+	/** Legacy starts may retain their idle animation value. Expiring server
+	 * observations must retire it as soon as the consumer passes null. */
+	retainIdleTimeWhileConnecting?: boolean;
 	onPrimaryAction(event: MouseEvent<HTMLButtonElement>): void;
 	onCopyInvite(): Promise<boolean>;
 	onSync(): boolean;
@@ -76,7 +79,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	// This is the last idle observation, never a locally started allowance.
 	const waitingForRoom = active && startTime !== undefined && !props.roomReady;
 	const visibleActive = active && !waitingForRoom;
-	const displaySeconds = waitingForRoom ? startTime : remainingSeconds;
+	const displaySeconds = waitingForRoom && props.retainIdleTimeWhileConnecting !== false ? startTime : remainingSeconds;
 	const timed = displaySeconds !== null && (!visibleActive || props.isHost);
 	const motion = useRef<ReturnType<typeof animatePanelRoomStart> | null>(null);
 	const descriptionId = useId();

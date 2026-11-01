@@ -5,6 +5,8 @@ import type { HostingPolicyMode } from "./use-hosting-access";
 export interface QuotaExhaustion {
   ownerUserId: string;
   resetAt?: string;
+  free20?: boolean;
+  sessionKey?: string;
 }
 export interface FreeQuotaNoticeState {
   ownerUserId: string;

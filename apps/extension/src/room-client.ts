@@ -1649,6 +1649,7 @@ export class RoomClient {
       publishStatus("connected");
       const joinEvent: ClientEvent = {
         type: "JOIN",
+        hostingTimeVersion: 1,
         roomId: options.roomId,
         participant: options.participant,
         videoFingerprint: options.videoFingerprint,
