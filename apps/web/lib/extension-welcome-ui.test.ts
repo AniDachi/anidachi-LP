@@ -93,10 +93,10 @@ test("verified trial waits for installation detection, then shows all three plat
 	assert.ok(el.querySelector('a[href="/account/billing"]'));
 });
 test("unavailable or older extension keeps install and manual platform choices usable", async () => {
-  await mount(trial);
-  assert.ok(el.querySelector('a[href*="chromewebstore"]'));
-  assert.ok(el.querySelector('a[href="https://www.youtube.com"]'));
-  assert.doesNotMatch(el.textContent!, /Extension ready/);
+	await mount(trial);
+	assert.ok(el.querySelector('a[href*="chromewebstore"]'));
+	assert.ok(el.querySelector('a[href="https://www.youtube.com"]'));
+	assert.doesNotMatch(el.textContent!, /Extension ready/);
 });
 test("inactive and failed verification never show a successful trial or paid plan", async () => {
 	for (const kind of ["inactive", "error", "sign_in"] as const) {
@@ -112,9 +112,9 @@ test("inactive and failed verification never show a successful trial or paid pla
 	}
 });
 test("paid and renewing trial do not promise no automatic charge", async () => {
-  await mount({ kind: "paid", plan: "pro" });
-  assert.match(el.textContent!, /Pro plan is active/);
-  assert.doesNotMatch(el.textContent!, /3-day|No automatic charge/);
+	await mount({ kind: "paid", plan: "pro" });
+	assert.match(el.textContent!, /Pro plan is active/);
+	assert.doesNotMatch(el.textContent!, /3-day|No automatic charge/);
 });
 test("expiry retires successful copy without a recurring API poll", async (t) => {
 	t.mock.timers.enable({ apis: ["setTimeout"] });
@@ -325,4 +325,125 @@ test("Free20 retires on departure and new snapshots do not create expiry polling
 	assert.equal(refreshes, 1, "one expiry recovery per visible activation");
 	await act(async () => window.dispatchEvent(new Event("blur")));
 	assert.equal(el.querySelector('a[href="https://www.youtube.com"]'), null);
+});
+
+const shortHostingWelcome: ExtensionWelcome = {
+	kind: "free20",
+	remainingSeconds: 600,
+	activeRoom: false,
+	resetAt: 1893542400000,
+	resetInMs: 700,
+	expiresInMs: 500,
+};
+async function rerenderWelcome(welcome: ExtensionWelcome) {
+	await act(async () =>
+		root!.render(
+			React.createElement(
+				AppRouterContext.Provider,
+				{ value: router },
+				React.createElement(
+					MobileInstallProvider,
+					null,
+					React.createElement(ExtensionWelcomeHero, {
+						welcome,
+						extensionId: "a".repeat(32),
+					}),
+				),
+			),
+		),
+	);
+}
+for (const departure of [
+	"blur",
+	"pagehide",
+	"hidden",
+	"anidachi:before-sign-out",
+]) {
+	test(`${departure} cancels pending expiry, UTC and delayed-focus recovery`, async (t) => {
+		t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+		t.mock.timers.setTime(10_000);
+		let now = 0;
+		t.mock.method(performance, "now", () => now);
+		await mount(shortHostingWelcome);
+		await act(async () => window.dispatchEvent(new Event("focus")));
+		const descriptor = Object.getOwnPropertyDescriptor(
+			document,
+			"visibilityState",
+		);
+		try {
+			await act(async () => {
+				if (departure === "hidden") {
+					Object.defineProperty(document, "visibilityState", {
+						value: "hidden",
+						configurable: true,
+					});
+					document.dispatchEvent(new Event("visibilitychange"));
+				} else window.dispatchEvent(new Event(departure));
+			});
+			now = 1000;
+			await act(async () => t.mock.timers.tick(1000));
+			assert.equal(
+				refreshes,
+				0,
+				"retired activation cannot reopen server reads",
+			);
+			assert.equal(el.querySelector('a[href="https://www.youtube.com"]'), null);
+			assert.doesNotMatch(el.textContent!, /Checking your access/);
+		} finally {
+			if (descriptor)
+				Object.defineProperty(document, "visibilityState", descriptor);
+			else Reflect.deleteProperty(document, "visibilityState");
+		}
+	});
+}
+test("a valid return fences the prior activation’s expiry and UTC callbacks", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+	t.mock.timers.setTime(10_000);
+	let now = 0;
+	t.mock.method(performance, "now", () => now);
+	await mount(shortHostingWelcome);
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	now = 150;
+	await act(async () => t.mock.timers.tick(150));
+	assert.equal(refreshes, 1);
+	now = 1000;
+	await act(async () => t.mock.timers.tick(850));
+	assert.equal(
+		refreshes,
+		1,
+		"prior timers cannot spend the return activation’s budget",
+	);
+});
+test("bounded expiry leaves an idle retry and explicit retry shows pending copy only while reading", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	let now = 0;
+	t.mock.method(performance, "now", () => now);
+	const welcome = { ...shortHostingWelcome, resetInMs: undefined };
+	await mount(welcome);
+	now = 500;
+	await act(async () => t.mock.timers.tick(500));
+	assert.equal(refreshes, 1);
+	assert.match(el.textContent!, /Checking your access/);
+	await rerenderWelcome({ ...welcome });
+	now = 1000;
+	await act(async () => t.mock.timers.tick(500));
+	assert.equal(refreshes, 1);
+	assert.doesNotMatch(el.textContent!, /Checking your access/);
+	const retry = [...el.querySelectorAll<HTMLButtonElement>("button")].find(
+		(button) => /Try again|Refresh|Check access/i.test(button.textContent!),
+	);
+	assert.ok(retry, "an idle expired observation needs explicit retry");
+	await act(async () => retry.click());
+	assert.equal(refreshes, 2);
+	assert.match(el.textContent!, /Checking your access/);
+	await act(async () => retry.click());
+	assert.equal(refreshes, 2, "pending retry is deduplicated");
+	await rerenderWelcome({ kind: "error" });
+	assert.doesNotMatch(el.textContent!, /Checking your access/);
+	assert.ok(
+		[...el.querySelectorAll("button")].find((button) =>
+			/Try again/.test(button.textContent!),
+		),
+	);
 });

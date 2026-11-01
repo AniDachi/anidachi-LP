@@ -28,33 +28,48 @@ export function ExtensionWelcomeHero({
 	const [present, setPresent] = useState<boolean | null>(null);
 	const [mobile, setMobile] = useState<boolean | null>(null);
 	const [expired, setExpired] = useState(false);
+	const [checking, setChecking] = useState(false);
+	const boundedHosting = welcome.kind === "free20" || welcome.kind === "manual";
+	const hostingDeparted = useRef(false);
+	const activationGeneration = useRef(0);
 	// Initial SSR uses document age; later snapshots use the refresh request age.
 	// Both clocks are monotonic and independent of the user's wall-clock setting.
 	const snapshotRequestStarted = useRef(0);
 	const refreshPending = useRef(false);
 	const refresh = useCallback(() => {
-		if (!refreshPending.current)
-			snapshotRequestStarted.current = performance.now();
+		if (
+			refreshPending.current ||
+			(boundedHosting &&
+				(hostingDeparted.current || document.visibilityState === "hidden"))
+		)
+			return;
+		snapshotRequestStarted.current = performance.now();
 		refreshPending.current = true;
+		setChecking(true);
 		router.refresh();
-	}, [router]);
+	}, [router, boundedHosting]);
 	const active =
 		!expired &&
 		(welcome.kind === "trial" ||
 			welcome.kind === "paid" ||
 			welcome.kind === "free20" ||
 			welcome.kind === "manual");
-	const boundedHosting = welcome.kind === "free20" || welcome.kind === "manual";
 	const expiredSnapshot = useRef<ExtensionWelcome | null>(null);
 	const hostingExpiryUsed = useRef(false);
-	const hostingDeparted = useRef(false);
 	const hostingResetUsed = useRef(false);
 	const expiresInMs =
 		"expiresInMs" in welcome ? welcome.expiresInMs : undefined;
 
 	useEffect(() => {
 		refreshPending.current = false;
+		setChecking(false);
 		setExpired(false);
+		const generation = activationGeneration.current;
+		const currentActivation = () =>
+			!boundedHosting ||
+			(generation === activationGeneration.current &&
+				!hostingDeparted.current &&
+				document.visibilityState !== "hidden");
 		if (
 			boundedHosting &&
 			(hostingDeparted.current || document.visibilityState === "hidden")
@@ -69,6 +84,7 @@ export function ExtensionWelcomeHero({
 				Math.max(0, performance.now() - snapshotRequestStarted.current),
 		);
 		if (remaining === 0) {
+			if (!currentActivation()) return;
 			setExpired(true);
 			if (
 				boundedHosting
@@ -84,6 +100,7 @@ export function ExtensionWelcomeHero({
 		const deadline = performance.now() + remaining;
 		let timer: ReturnType<typeof setTimeout>;
 		const checkBoundary = () => {
+			if (!currentActivation()) return;
 			const left = deadline - performance.now();
 			if (left <= 0) {
 				setExpired(true);
@@ -117,8 +134,14 @@ export function ExtensionWelcomeHero({
 			welcome.resetInMs -
 				Math.max(0, performance.now() - snapshotRequestStarted.current),
 		);
+		const generation = activationGeneration.current;
 		const timer = setTimeout(() => {
-			if (document.visibilityState === "hidden" || hostingResetUsed.current)
+			if (
+				generation !== activationGeneration.current ||
+				hostingDeparted.current ||
+				document.visibilityState === "hidden" ||
+				hostingResetUsed.current
+			)
 				return;
 			hostingResetUsed.current = true;
 			setExpired(true);
@@ -147,7 +170,11 @@ export function ExtensionWelcomeHero({
 		probe();
 		const retire = () => {
 			if (boundedHosting) {
+				activationGeneration.current++;
 				hostingDeparted.current = true;
+				clearTimeout(focusTimer);
+				refreshPending.current = false;
+				setChecking(false);
 				setExpired(true);
 				abort.abort();
 			}
@@ -159,7 +186,15 @@ export function ExtensionWelcomeHero({
 			}
 			if (Date.now() - lastFocus < 1000) return;
 			clearTimeout(focusTimer);
+			const generation = activationGeneration.current;
 			focusTimer = setTimeout(() => {
+				if (
+					generation !== activationGeneration.current ||
+					document.visibilityState === "hidden" ||
+					refreshPending.current
+				)
+					return;
+				if (boundedHosting) activationGeneration.current++;
 				lastFocus = Date.now();
 				hostingDeparted.current = false;
 				hostingExpiryUsed.current = false;
@@ -183,6 +218,15 @@ export function ExtensionWelcomeHero({
 			document.removeEventListener("visibilitychange", onFocus);
 		};
 	}, [active, boundedHosting, extensionId, refresh]);
+
+	const retry = () => {
+		if (refreshPending.current || document.visibilityState === "hidden") return;
+		activationGeneration.current++;
+		hostingDeparted.current = false;
+		hostingExpiryUsed.current = false;
+		hostingResetUsed.current = false;
+		refresh();
+	};
 
 	const plan =
 		"plan" in welcome ? (welcome.plan === "pro" ? "Pro" : "Plus") : "";
@@ -214,8 +258,10 @@ export function ExtensionWelcomeHero({
 							<> plan is active.</>
 						)}
 					</>
-				) : expired ? (
+				) : checking ? (
 					"Checking your access…"
+				) : expired ? (
+					"Check your current access."
 				) : welcome.kind === "sign_in" ? (
 					"Sign in to continue."
 				) : welcome.kind === "error" ? (
@@ -235,13 +281,15 @@ export function ExtensionWelcomeHero({
 						? welcome.kind === "trial" && welcome.cardlessWithoutRenewal
 							? "No card needed. No automatic charge."
 							: "You’re ready to watch with friends."
-						: expired
+						: checking
 							? "Your latest access status will appear here."
-							: welcome.kind === "sign_in"
-								? "Use the account you chose for your trial or subscription."
-								: welcome.kind === "error"
-									? "We couldn’t confirm your access. Try again in a moment."
-									: "There’s no active trial or subscription to confirm for this account."}
+							: expired
+								? "This access check has expired. Try again for your current status."
+								: welcome.kind === "sign_in"
+									? "Use the account you chose for your trial or subscription."
+									: welcome.kind === "error"
+										? "We couldn’t confirm your access. Try again in a moment."
+										: "There’s no active trial or subscription to confirm for this account."}
 			</p>
 			{active ? (
 				<>
@@ -354,9 +402,9 @@ export function ExtensionWelcomeHero({
 				</>
 			) : (
 				<div className={styles.action}>
-					{welcome.kind === "error" ? (
-						<Button variant="cream" onClick={refresh}>
-							Try again
+					{welcome.kind === "error" || expired || checking ? (
+						<Button variant="cream" onClick={retry} disabled={checking}>
+							{checking ? "Checking access…" : "Try again"}
 						</Button>
 					) : (
 						<Button asChild variant="cream">
