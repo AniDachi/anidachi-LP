@@ -16,6 +16,7 @@ import {
 	waitForMediaReady,
 } from "./playback-control";
 import { logDebug } from "./debug-log";
+import type { RoomSendDisposition } from "./media-types";
 import type { PlaybackSyncStatus } from "./playback-sync-status";
 import type {
 	AdapterPlaybackPhase,
@@ -43,7 +44,7 @@ export interface PlaybackSyncSession {
 }
 
 export interface PlaybackSyncTransport {
-	send(event: ClientEvent): void;
+	send(event: ClientEvent): RoomSendDisposition;
 }
 
 export interface PlaybackSyncControllerOptions {
@@ -493,12 +494,12 @@ export class PlaybackSyncController {
 		this.sendHostState(false);
 	}
 
-	broadcastHostState(): void {
+	broadcastHostState(): boolean {
 		const adapter = this.getActiveAdapter();
 		if (!adapter || this.refreshPlaybackPhase(adapter)) {
-			return;
+			return false;
 		}
-		this.sendHostState(true);
+		return this.sendHostState(true);
 	}
 
 	suppressLocalEventsForRemoteTransition(): void {
@@ -1444,13 +1445,12 @@ export class PlaybackSyncController {
 		const state = stateOverride
 			? { ...adapter.getState(), ...stateOverride }
 			: adapter.getState();
-		this.transport.send({
+		return this.transport.send({
 			type: "HOST_STATE",
 			roomId,
 			state,
 			source: adapter.getSourceDescriptor(),
-		});
-		return true;
+		}) === "sent";
 	}
 
 	private sendLocalControlEvent(

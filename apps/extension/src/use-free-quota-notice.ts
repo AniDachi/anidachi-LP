@@ -32,6 +32,7 @@ export function useFreeQuotaNotice(options: {
   request?: typeof requestRoomQuotaStatus;
 }) {
   const { ownerUserId, accessToken, sessionKey, visible, isFree, policyMode, onQuotaRetired, exhaustion, request = requestRoomQuotaStatus } = options;
+  const [available, setAvailable] = useState<{ ownerUserId: string; accessToken: string; sessionKey: string; seconds: number } | null>(null);
   const [state, setState] = useState<FreeQuotaNoticeState | null>(null);
   const stateTokenRef = useRef<string | null>(null);
   const stateSessionRef = useRef<string | null>(null);
@@ -42,6 +43,7 @@ export function useFreeQuotaNotice(options: {
   const retry = useCallback(() => refreshRef.current(), []);
 
   useEffect(() => {
+    setAvailable(null);
     if (policyMode !== "legacy" || quotaRetired) {
       contextRef.current = null;
       setState(null);
@@ -67,6 +69,7 @@ export function useFreeQuotaNotice(options: {
     let pending = false;
     let lastAttempt = Number.NEGATIVE_INFINITY;
     let anchor: { serverMs: number; monotonicMs: number; resetMs: number } | null = null;
+    let availableReset: { serverMs: number; monotonicMs: number; resetMs: number } | null = null;
     let checkedZero = false;
     let refreshQueued = false;
     let lastWall = Date.now();
@@ -78,6 +81,8 @@ export function useFreeQuotaNotice(options: {
     async function refresh() {
       if (!alive || document.visibilityState === "hidden") return;
       if (pending) { refreshQueued = true; return; }
+      setAvailable(null);
+      availableReset = null;
       const monotonic = performance.now();
       const requestWall = Date.now();
       if (monotonic - lastAttempt < 5_000) { refreshQueued = true; return; }
@@ -119,6 +124,15 @@ export function useFreeQuotaNotice(options: {
           else setState(null);
           context!.exhausted = false;
           context!.resetAt = undefined;
+          if (quota) {
+            availableReset = { serverMs, monotonicMs: monotonic, resetMs: Date.parse(quota.resetAt) };
+            if (serverMs + elapsed < availableReset.resetMs) {
+              setAvailable({ ownerUserId: ownerUserId!, accessToken: accessToken!, sessionKey: sessionKey!, seconds: quota.remainingSeconds });
+            } else {
+              availableReset = null;
+              refreshQueued = true;
+            }
+          }
         }
       } catch (error) {
         if (alive && error instanceof HostingQuotaRetiredError) {
@@ -150,6 +164,12 @@ export function useFreeQuotaNotice(options: {
       if (document.visibilityState === "hidden") return;
       if (discontinuity) { void refresh(); return; }
       if (refreshQueued && monotonic - lastAttempt >= 5_000) { void refresh(); return; }
+      if (availableReset && !pending && availableReset.serverMs + Math.max(0, monotonic - availableReset.monotonicMs) >= availableReset.resetMs) {
+        setAvailable(null);
+        availableReset = null;
+        void refresh();
+        return;
+      }
       if (!anchor || pending) return;
       const remaining = Math.max(0, Math.ceil((anchor.resetMs - anchor.serverMs - Math.max(0, monotonic - anchor.monotonicMs)) / 1000));
       if (remaining === 0) {
@@ -176,5 +196,8 @@ export function useFreeQuotaNotice(options: {
     };
   }, [ownerUserId, accessToken, sessionKey, visible, isFree, exhaustion, request, policyMode, onQuotaRetired, quotaRetired]);
 
-  return { state: policyMode === "legacy" && !quotaRetired && stateTokenRef.current === accessToken && stateSessionRef.current === sessionKey && state?.ownerUserId === ownerUserId ? state : null, retry };
+  const availableSeconds = visible && isFree && policyMode === "legacy" && !quotaRetired &&
+    available?.ownerUserId === ownerUserId && available?.accessToken === accessToken && available?.sessionKey === sessionKey
+      ? available.seconds : null;
+  return { availableSeconds, state: policyMode === "legacy" && !quotaRetired && stateTokenRef.current === accessToken && stateSessionRef.current === sessionKey && state?.ownerUserId === ownerUserId ? state : null, retry };
 }

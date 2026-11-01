@@ -99,7 +99,7 @@ function createHarness(isHost: boolean) {
 			reason: "unsupported-route",
 		}),
 		onStatus: () => undefined,
-		transport: { send: (event) => sent.push(event) },
+		transport: { send: (event) => { sent.push(event); return "sent"; } },
 	});
 	controller.bindAdapter(adapter);
 	controller.setSession({

@@ -1,3 +1,4 @@
+import { panelRoomActionsStyles } from "./panel-room-actions-styles";
 import { panelMatteGrain } from "./panel-matte-texture";
 import { extensionThemeTokens } from "./extension-theme";
 import { panelMediaControlStyles } from "./panel-media-controls-styles";
@@ -5062,4 +5063,5 @@ ${hostingNoticeStyles}
     font-size: 11px;
     line-height: 1.35;
   }
+${panelRoomActionsStyles}
 `;

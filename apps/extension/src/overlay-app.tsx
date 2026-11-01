@@ -15,15 +15,13 @@ import type {
 	WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import {
-	Check,
+	ArrowUpRight,
 	CircleHelp,
-	Copy,
 	Mic,
 	RefreshCw,
 	SendHorizontal,
 	Settings2,
 	SmilePlus,
-	UserPlus,
 	X,
 } from "lucide-react";
 import type {
@@ -49,7 +47,7 @@ import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { PlayerOnboarding } from "./player-onboarding";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
-import { ANIDACHI_BUILD_ID } from "./constants";
+import { ANIDACHI_BUILD_ID, WEB_HTTP_BASE } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { ANIDACHI_EMOJI_CATALOG } from "./emoji-catalog";
 import {
@@ -142,7 +140,6 @@ import {
 	copyRoomInviteText,
 	getPrimaryRoomActionKind,
 	getPrimaryRoomActionLabel,
-	isInviteCopiedFeedback,
 	ROOM_ACTION_FEEDBACK_DURATION_MS,
 	ROOM_END_CONFIRMATION_DURATION_MS,
 	type RoomActionFeedback,
@@ -159,6 +156,7 @@ import {
 	reduceVoiceSession,
 	shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "./overlay-voice-session";
+import { PanelRoomActions, PanelTimeCounter } from "./panel-room-actions";
 import { PanelAccountTitle } from "./panel-account-title";
 import { PanelMediaControls } from "./panel-media-controls";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
@@ -5078,7 +5076,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const copyInvite = async () => {
 		if (!roomId) {
 			logDebug("overlay.invite", "copy skipped without room");
-			return;
+			return false;
 		}
 
 		const invite =
@@ -5094,13 +5092,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			fallbackCopy,
 		);
 		if (!copied) {
-			setAuthMessage("Could not copy the invite link.");
 			logDebug("overlay.invite", "copy failed", { roomId });
-			return;
+			return false;
 		}
 
-		showRoomActionFeedback("invite-copied");
 		logDebug("overlay.invite", "copied", { roomId, invite });
+		return true;
 	};
 
 	const loadInviteTargetsForRoom = useCallback(async () => {
@@ -6017,15 +6014,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		stopMicrophonePublication: stopMicrophoneForUnmount,
 	});
 
-	const roomActionsClassName = [
-		"panel-actions",
-		roomId ? "room-active" : "room-empty",
-		roomCreatePending ? "creating" : "",
-		roomEndPending ? "ending" : "",
-		roomLeavePending ? "leaving" : "",
-	]
-		.filter(Boolean)
-		.join(" ");
 	const primaryRoomActionKind = getPrimaryRoomActionKind({
 		isHost,
 		roomExists: Boolean(roomId),
@@ -6039,7 +6027,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomExists: Boolean(roomId),
 		roomLeavePending,
 	});
-	const inviteCopied = isInviteCopiedFeedback(roomActionFeedback);
+	const quotaExhausted = !roomId && freeQuotaNotice.state?.kind === "exhausted";
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6130,9 +6118,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				>
 					<div className="panel-header">
 						<div className="panel-account">
-							<span className="mini-avatar panel-account-avatar">
+							<a className="mini-avatar panel-account-avatar panel-account-link" href={new URL("/account", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer" aria-label="Open your account in a new tab" title="Open your account">
 								{initials(accountAvatarLabel)}
-							</span>
+							</a>
 							<div className="panel-account-copy">
 								<PanelAccountTitle
 									displayName={accountDisplayName}
@@ -6140,6 +6128,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 										authAuthenticated ? hostingDisplay.state.access?.planCode ?? null : null
 									}
 								/>
+								{authAuthenticated && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
 								{roomId && !mediaV3 ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
@@ -6152,6 +6141,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							</div>
 						</div>
 						<div className="panel-header-actions">
+							{quotaExhausted ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
 							{!authAuthenticated ? (
 								<button
 									className="button compact panel-sign-in-button"
@@ -6196,107 +6186,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</p>
 					) : null}
 
-					<div className={roomActionsClassName}>
-						<button
-							className={[
-								"button",
-								"primary",
-								"panel-primary-action",
-								primaryRoomActionKind !== "create" ? "room-exit" : "",
-								roomEndConfirmationPending ? "confirming" : "",
-								roomCreatePending ||
-								roomEndPending ||
-								roomLeavePending
-									? "loading"
-									: "",
-							]
-								.filter(Boolean)
-								.join(" ")}
-							type="button"
-							onClick={
-								primaryRoomActionKind === "leave"
-									? handleLeaveRoom
-									: primaryRoomActionKind === "end"
-										? handleRequestEndRoom
-										: handleCreateRoom
-							}
-							disabled={
-								!participant ||
-								extensionContextInvalidated ||
-								roomCreatePending ||
-								roomEndPending ||
-								roomLeavePending
-							}
-						>
-							<span aria-live="polite">{primaryRoomActionLabel}</span>
-						</button>
-						{roomId ? (
-							<div
-								className="panel-action-icons"
-								role="group"
-								aria-label="Room actions"
-							>
-								<button
-									aria-label={inviteCopied ? "Invite copied" : "Copy invite"}
-									className={`panel-icon-action reveal-action${inviteCopied ? " success" : ""}`}
-									title={inviteCopied ? "Invite copied" : "Copy invite"}
-									type="button"
-									onClick={copyInvite}
-									disabled={
-										roomCreatePending || roomEndPending || roomLeavePending
-									}
-									style={{ "--action-index": 0 } as CSSProperties}
-								>
-									{inviteCopied ? <Check size={14} /> : <Copy size={14} />}
-									{inviteCopied ? (
-										<span className="sr-only" role="status">
-											Invite copied
-										</span>
-									) : null}
-								</button>
-								<button
-									aria-label={
-										invitePanelOpen
-											? "Close friends and groups"
-											: "Invite friends and groups"
-									}
-									className="panel-icon-action reveal-action"
-									title={
-										invitePanelOpen
-											? "Close friends and groups"
-											: "Invite friends and groups"
-									}
-									type="button"
-									onClick={toggleInvitePanel}
-									disabled={
-										!authAuthenticated ||
-										roomCreatePending ||
-										roomEndPending ||
-										roomLeavePending
-									}
-									style={{ "--action-index": 1 } as CSSProperties}
-								>
-									<UserPlus size={14} />
-								</button>
-								<button
-									aria-label="Sync now"
-									className="panel-icon-action reveal-action"
-									title={isHost ? "Sync now" : "Only the host can sync"}
-									type="button"
-									onClick={() => playbackSyncController.broadcastHostState()}
-									disabled={
-										!isHost ||
-										roomCreatePending ||
-										roomEndPending ||
-										roomLeavePending
-									}
-									style={{ "--action-index": 2 } as CSSProperties}
-								>
-									<RefreshCw size={14} />
-								</button>
-							</div>
-						) : null}
-					</div>
+					{quotaExhausted ? <>
+						<FreeQuotaNotice state={freeQuotaNotice.state!} onRetry={freeQuotaNotice.retry} compact />
+						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
+					</> : <PanelRoomActions key={authSessionKey ?? "anonymous"}
+						scopeKey={`${authSessionKey}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
+						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
+						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
+						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
+						remainingSeconds={roomId ? (isConnected && isHost ? quotaRemainingSeconds : null) : freeQuotaNotice.availableSeconds}
+						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : handleCreateRoom}
+						onCopyInvite={copyInvite} onSync={() => playbackSyncController.broadcastHostState()}
+						onToggleInvite={toggleInvitePanel} inviteOpen={invitePanelOpen} inviteDisabled={!authAuthenticated}
+						syncDisabled={!isConnected || !roomSnapshotReady || extensionContextInvalidated}
+					/>}
 					{transientPanelNotice ? (
 						<div
 							aria-live="polite"
@@ -6309,7 +6212,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					{!roomId && panelOpen && hostingPaywallOpen && hostingRequiredOwner === accountUser?.id ? (
 						<HostingPaywall key={`${hostingRequiredOwner}:${authGenerationRef.current}`} state={hostingDisplay.state} onRefresh={hostingDisplay.refresh} onClose={() => setHostingPaywallOpen(false)} />
 					) : null}
-					{!roomId && hostingRequiredOwner !== accountUser?.id && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
+					{!quotaExhausted && !roomId && hostingRequiredOwner !== accountUser?.id && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
 					{roomActionMessage ? (
 						<div className="auth-notice">
 							<span>{roomActionMessage}</span>
@@ -6324,14 +6227,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							) : null}
 						</div>
 					) : null}
-					{legacyQuotaEnabled && roomQuota ? (
-						<div className="quota-note">
-							<span>Free watch-party time today</span>
-							<strong>
-								{quotaRemainingSeconds === null ? "Checking room time…" : `${formatQuotaCountdown(quotaRemainingSeconds)} left`}
-							</strong>
-						</div>
-					) : null}
+
 					{invitePanelOpen ? (
 						<div className="invite-panel" aria-busy={inviteTargetsLoading}>
 							<div className="invite-panel-header">
@@ -7384,13 +7280,6 @@ function activeRoomConflictMessage(
 		return "You already have an active watch room on Crunchyroll.";
 	}
 	return "You already have an active watch room on another supported site.";
-}
-
-function formatQuotaCountdown(remainingSeconds: number | null): string {
-	const total = Math.max(0, Math.floor(remainingSeconds ?? 0));
-	const minutes = Math.floor(total / 60);
-	const seconds = total % 60;
-	return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function shouldOpenPanelForInitialRoom(
