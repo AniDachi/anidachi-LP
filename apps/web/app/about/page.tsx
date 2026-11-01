@@ -41,7 +41,7 @@ export default function AboutPage() {
             </p>
             <p className="mt-4">
               Each person streams with their own account on the supported
-              platform. Plus, Pro, and trial users can host; Free friends can
+              platform. Free, Plus, and Pro users can host; Free friends can
               join an active host. Recording personal history requires your own
               Plus/Pro access and permission, with YouTube recording enabled
               separately. Async catch-up and shared group progress are coming soon.

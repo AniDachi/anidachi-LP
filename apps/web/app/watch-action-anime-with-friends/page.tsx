@@ -175,7 +175,7 @@ export default function WatchActionAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
-          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
+          With active Free, Plus, or Pro access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">Agree on a live start time.</span>{" "}

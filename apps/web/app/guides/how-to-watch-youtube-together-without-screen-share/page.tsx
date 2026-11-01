@@ -70,7 +70,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: `Free accounts can join an active Plus or Pro host, including a trial host. ${PRICING_YT_PRICING_SNIPPET}`,
+    answer: `Friends join rooms for free. ${PRICING_YT_PRICING_SNIPPET}`,
   },
 ];
 

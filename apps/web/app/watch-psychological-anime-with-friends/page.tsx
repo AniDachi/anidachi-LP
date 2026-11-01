@@ -35,7 +35,7 @@ const faq = [
   {
     question: "How do I watch psychological anime with friends online?",
     answer:
-      "Install AniDachi on desktop Chrome and open the same episode on Crunchyroll. A Plus, Pro, or trial host creates a live room and invites Free friends. Share the twists through synced playback and live chat. Agree on a safe episode boundary before discussing theories; AniDachi does not automatically hide spoilers.",
+      "Install AniDachi on desktop Chrome and open the same episode on Crunchyroll. A Free, Plus, or Pro host creates a live room and invites Free friends. Share the twists through synced playback and live chat. Agree on a safe episode boundary before discussing theories; AniDachi does not automatically hide spoilers.",
   },
   {
     question: "What makes psychological anime good for watch parties?",
@@ -200,7 +200,7 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
-          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
+          With active Free, Plus, or Pro access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">

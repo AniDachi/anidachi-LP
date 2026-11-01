@@ -106,7 +106,7 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         <strong>
           Mystery anime is the ultimate group experience — theory-crafting
           together is half the show. Install AniDachi, open any series below
-          on Crunchyroll, and let a Plus, Pro, or trial host invite Free
+          on Crunchyroll, and let a Free, Plus, or Pro host invite Free
           friends to a live room. Keep theory notes in a separate chat.
         </strong>
       </p>

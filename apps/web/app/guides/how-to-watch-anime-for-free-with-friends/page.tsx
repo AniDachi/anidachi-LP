@@ -13,7 +13,7 @@ import {
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { PRICING_TRIAL_NOTE } from "@/lib/pricing-copy";
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 
 const PAGE_PATH = "/guides/how-to-watch-anime-for-free-with-friends";
 
@@ -60,7 +60,7 @@ const faq = [
   {
     question: "How can we watch anime together long distance for free?",
     answer:
-      "The free route is an official YouTube episode that plays in both countries plus a voice call and a countdown. For synced players, AniDachi lets friends join free, but the host needs Plus or Pro, including a 3-day trial for eligible accounts.",
+      `The free route is an official YouTube episode that plays in both countries plus a voice call and a countdown. For synced players, AniDachi lets friends join free. ${PRICING_FREE20_SUMMARY}`,
   },
   {
     question: "Is Crunchyroll free?",
@@ -70,7 +70,7 @@ const faq = [
   {
     question: "Is AniDachi free?",
     answer:
-      "Joining is free: a free AniDachi account can join a friend's room. Creating rooms needs Plus or Pro, including the trial. AniDachi does not provide any anime itself; each person plays the episode on YouTube, Crunchyroll or Netflix.",
+      `Joining is free: a free AniDachi account can join a friend's room. ${PRICING_FREE20_SUMMARY} AniDachi does not provide any anime itself; each person plays the episode on YouTube, Crunchyroll or Netflix.`,
   },
   {
     question: "Are anime streaming sites without a licence safe to use with friends?",
@@ -102,8 +102,8 @@ const howToSteps = [
     text: "Everyone adds the extension from the official Chrome Web Store listing, starting at /extension. Joining needs only a free account.",
   },
   {
-    name: "Choose a host with Plus, Pro or a trial",
-    text: "One person hosts. Eligible accounts can start a 3-day trial of Plus or Pro once; friends never need a plan to join.",
+    name: "Choose a host on Free, Plus, or Pro",
+    text: "One person hosts. Free includes 20 host minutes per UTC day for up to 4 people; friends never need a plan to join.",
   },
   {
     name: "Create the room on the episode",
@@ -180,7 +180,7 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
             such as Muse Asia and Ani-One Asia. Both mainly serve Asian
             countries, so check every friend can play the episode. Crunchyroll
             is paid, with a trial. To watch in sync, AniDachi lets friends join
-            free; one host needs Plus, Pro or a trial.
+            free; {PRICING_FREE20_SUMMARY}
           </strong>
         </SeoGuideAnswer>
 
@@ -292,8 +292,8 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
               body: "An official YouTube episode that plays in every friend's country, a voice call, and a countdown to press play. It works on any device. The catch: players drift after pauses, and nobody stays in sync on their own.",
             },
             {
-              title: "Free for friends, one host pays or trials",
-              body: "AniDachi keeps every player in sync with chat, reactions, voice and video. Friends join on free accounts. Creating a room needs Plus or Pro, which eligible accounts can try for 3 days.",
+              title: "Free daily hosting and free joining",
+              body: `AniDachi keeps every player in sync with chat, reactions, voice and video. Friends join on free accounts. ${PRICING_FREE20_SUMMARY}`,
             },
             {
               title: "Long distance across regions",
@@ -302,7 +302,7 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
           ]}
         />
         <p className="text-foreground/80 leading-relaxed mb-8">
-          {PRICING_TRIAL_NOTE} Ready to try a synced room?{" "}
+          {PRICING_FREE20_SUMMARY} Ready to try a synced room?{" "}
           <InstallLink href="/extension" className="text-brand-orange hover:underline">
             Add AniDachi to Chrome
           </InstallLink>
@@ -337,8 +337,8 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
               body: "It syncs players on YouTube, Crunchyroll and Netflix. It never streams video to friends and cannot unlock an episode.",
             },
             {
-              title: "Free accounts can't host",
-              body: "A free AniDachi account joins rooms. Hosting needs Plus or Pro, including the trial.",
+              title: "Free hosting has a daily allowance",
+              body: `A free AniDachi account joins rooms. ${PRICING_FREE20_SUMMARY}`,
             },
             {
               title: "Desktop only",

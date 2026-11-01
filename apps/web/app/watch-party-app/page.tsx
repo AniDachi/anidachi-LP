@@ -124,7 +124,7 @@ export default function WatchPartyAppPage() {
 					},
 					{
 						title: "Free watch party",
-						body: "Free friends can join an active Plus, Pro, or trial host. Hosting requires your own Plus/Pro access; personal history also needs your recording permission.",
+						body: "Free friends can join an active Free, Plus, or Pro host. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; recording personal history requires your own Plus or Pro access and recording permission.",
 					},
 				]}
 			/>

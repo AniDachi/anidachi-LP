@@ -134,7 +134,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
       <ol className="list-decimal pl-6 space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi (Crunchyroll and YouTube live rooms)</strong> — Auto
-          anime detection, live sync, chat, cameras, and microphones. Hosts need Plus or Pro access, including an active trial; friends can join on Free accounts. See{" "}
+          anime detection, live sync, chat, cameras, and microphones. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends can join on Free accounts. See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>

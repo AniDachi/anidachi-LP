@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -144,7 +145,7 @@ export default function RomanceAnimeDubbedPage() {
           <Link href="/guides/subbed-anime" className="text-brand-orange hover:underline">
             subbed anime
           </Link>
-          . Hosting needs Plus or Pro. See{" "}
+          . {PRICING_FREE20_SUMMARY} See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>

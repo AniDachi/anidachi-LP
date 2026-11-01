@@ -33,7 +33,7 @@ const faq = [
   {
     question: "How do long-distance couples watch anime together?",
     answer:
-      "A Plus, Pro, or trial host can create a live AniDachi room on Crunchyroll and invite a Free partner. Playback syncs while both are online. For different schedules, watch independently and discuss later in a separate chat; built-in async catch-up is coming soon.",
+      "A Free, Plus, or Pro host can create a live AniDachi room on Crunchyroll and invite a Free partner. Playback syncs while both are online. For different schedules, watch independently and discuss later in a separate chat; built-in async catch-up is coming soon.",
   },
   {
     question: "Can long-distance couples have a real anime date night?",

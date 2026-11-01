@@ -318,8 +318,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
         cannot play.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi has its own, separate plans: only the host needs Plus or Pro,
-        including a trial, and friends join on free accounts.{" "}
+        AniDachi has its own, separate plans: Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. Friends join on free accounts.{" "}
         <InstallLink href="/extension" className="text-brand-orange hover:underline">
           Install AniDachi for Chrome
         </InstallLink>{" "}

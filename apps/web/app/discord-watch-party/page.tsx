@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -277,7 +278,7 @@ export default function DiscordWatchPartyPage() {
 						values: {
 							activity: "No fee mentioned by Discord",
 							golive: "Free; Nitro for higher quality",
-							anidachi: `Friends free; host Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT} or trial`,
+							anidachi: `Friends free; Free host: 20 minutes per UTC day, up to 4 people; Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT}`,
 						},
 					},
 				]}
@@ -330,8 +331,7 @@ export default function DiscordWatchPartyPage() {
 			/>
 			<p className="mb-8 leading-relaxed text-ani-muted">
 				The honest limits of the third option: everyone needs desktop Chrome,
-				everyone needs their own access to the title, and the host needs Plus,
-				Pro or a trial. If your group mixes phones and computers, or watches
+				everyone needs their own access to the title, and Free hosts get 20 host minutes per UTC day for up to 4 people. If your group mixes phones and computers, or watches
 				on Disney+, Hulu or Max, AniDachi won&apos;t cover it. For the
 				feature-by-feature version, see{" "}
 				<Link href="/compare/anidachi-vs-discord-screen-share">
@@ -365,14 +365,14 @@ export default function DiscordWatchPartyPage() {
 						body: "AniDachi is a Chrome extension for computers. Friends on phones can stay in the Discord call, but they can't join the synced room from the phone.",
 					},
 					{
-						title: "One host with Plus, Pro or a trial",
-						body: "The person who creates the AniDachi room needs a paid plan or an eligible 3-day trial. Everyone else joins free and only needs the extension.",
+						title: "Free daily hosting, or Plus and Pro",
+						body: `${PRICING_FREE20_SUMMARY} Everyone else joins free and only needs the extension.`,
 					},
 				]}
 			/>
 			<p className="mb-8 leading-relaxed text-ani-muted">
 				So for a group of five watching Crunchyroll, the usual bill is five
-				Crunchyroll accounts and one AniDachi host plan. For a YouTube night with the activity, it is
+				Crunchyroll accounts and one AniDachi host on Free, Plus, or Pro. For a YouTube night with the activity, it is
 				nothing at all, with the activity&apos;s limits. Prices and room sizes
 				are on <Link href="/pricing">AniDachi pricing</Link>.
 			</p>

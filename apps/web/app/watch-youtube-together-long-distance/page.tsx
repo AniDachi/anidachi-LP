@@ -41,7 +41,7 @@ const faq = [
   {
     question:     "How do I watch YouTube together long distance?",
     answer:
-      "Add AniDachi from the Chrome Web Store via /extension and open a full YouTube watch page. A Plus, Pro, or trial host creates the room and invites a Free partner. Playback syncs live; async catch-up is coming soon. Watch2Gether and Teleparty remain free live-only options.",
+      "Add AniDachi from the Chrome Web Store via /extension and open a full YouTube watch page. A Free, Plus, or Pro host creates the room and invites a Free partner. Playback syncs live; async catch-up is coming soon. Watch2Gether and Teleparty remain free live-only options.",
   },
   {
     question: "Does YouTube have a watch party or co-watching feature?",
@@ -89,7 +89,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "With active Plus, Pro, or trial access, choose Create room in AniDachi and copy its invite link. A Free partner can join.",
+    text: "With active Free, Plus, or Pro access, choose Create room in AniDachi and copy its invite link. A Free partner can join.",
   },
   {
     name: "Share with your partner",

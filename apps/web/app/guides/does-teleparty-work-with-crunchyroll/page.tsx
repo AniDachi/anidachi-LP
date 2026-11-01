@@ -187,7 +187,7 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>{" "}
-        — hosts need Plus or Pro access, including an active trial; guests can join on Free.
+        — Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; guests can join on Free.
       </p>
 
       <h2 id="related" className="scroll-mt-24">

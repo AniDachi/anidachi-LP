@@ -309,7 +309,7 @@ export default function DiscordWatchTogetherPage() {
 				/>
 				<p className="mb-8 leading-relaxed text-ani-muted">
 					AniDachi runs in desktop Chrome, not inside Discord, so the Discord
-					call stays exactly where it is. A Plus, Pro or trial host creates the
+					call stays exactly where it is. A Free, Plus, or Pro host creates the
 					room and friends join free. To set it up,{" "}
 					<InstallLink href="/extension">add AniDachi to Chrome</InstallLink>,
 					open the video, and paste the room invite in the Discord chat. The

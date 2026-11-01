@@ -134,8 +134,7 @@ export default function ChromeWatchPartyPage() {
 				<Link href="/extension" className="text-brand-orange hover:underline">
 					the install page
 				</Link>
-				, then choose Add to Chrome on the official listing. Hosting a room
-				needs Plus or Pro, including a trial. Friends join on Free. Prices are
+				, then choose Add to Chrome on the official listing. Free includes 20 host minutes per UTC day for up to 4 people. Plus and Pro include hosting without a daily time limit. Friends join on Free. Prices are
 				on{" "}
 				<Link href="/pricing" className="text-brand-orange hover:underline">
 					pricing

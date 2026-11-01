@@ -70,7 +70,7 @@ const howToSteps = [
   },
   {
     name: "Create a dedicated room",
-    text: "A host with Plus or Pro access, including an active trial, creates the live room. Friends can join on Free accounts.",
+    text: "A host on Free, Plus, or Pro creates the live room. Friends can join on Free accounts.",
   },
   {
     name: "Agree on chat tags",

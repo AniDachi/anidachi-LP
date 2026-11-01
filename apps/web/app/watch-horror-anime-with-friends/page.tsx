@@ -35,7 +35,7 @@ const faq = [
   {
     question: "How do I watch horror anime with friends online?",
     answer:
-      "Install AniDachi on desktop Chrome and open the same horror episode on Crunchyroll. A Plus, Pro, or trial host creates a live room and invites Free friends. AniDachi syncs playback so you can share tense scenes through chat, reactions, and voice/video.",
+      "Install AniDachi on desktop Chrome and open the same horror episode on Crunchyroll. A Free, Plus, or Pro host creates a live room and invites Free friends. AniDachi syncs playback so you can share tense scenes through chat, reactions, and voice/video.",
   },
   {
     question: "What makes horror anime good for watch parties?",
@@ -189,7 +189,7 @@ export default function WatchHorrorAnimeWithFriendsPage() {
           <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
-          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
+          With active Free, Plus, or Pro access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">

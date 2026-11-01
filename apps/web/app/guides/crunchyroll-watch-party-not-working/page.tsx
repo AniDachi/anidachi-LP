@@ -49,7 +49,7 @@ const faq = [
   {
     question: "Why is my Crunchyroll watch party not working?",
     answer:
-      "Most failures come from four places: a guest on a phone or a browser other than desktop Chrome, a guest whose Crunchyroll account cannot play that episode in their region, a host without Plus, Pro or a trial, or a stale extension that needs an update. The message in the AniDachi panel tells you which one it is.",
+      "Most failures come from four places: a guest on a phone or a browser other than desktop Chrome, a guest whose Crunchyroll account cannot play that episode in their region, an exhausted Free hosting allowance or expired hosting access in a legacy room, or a stale extension that needs an update. The message in the AniDachi panel tells you which one it is.",
   },
   {
     question: "Why won't my Crunchyroll watch party sync?",
@@ -59,7 +59,7 @@ const faq = [
   {
     question: "Why can't my friend join the Crunchyroll watch party?",
     answer:
-      "Check the message they see. This watch room is full means the host's plan limit is reached (6 people on Plus, 15 on Pro, host included). A request to update AniDachi means their extension is out of date. A room that is no longer available has ended, so the host needs to send a new link.",
+      "Check the message they see. This watch room is full means the host's plan limit is reached (4 people on Free, 6 on Plus, 15 on Pro, host included). A request to update AniDachi means their extension is out of date. A room that is no longer available has ended, so the host needs to send a new link.",
   },
   {
     question: "Does a Crunchyroll watch party work on mobile?",
@@ -132,13 +132,13 @@ const messageRows = [
   },
   {
     message: "This watch room is full",
-    meaning: "The host's plan limit is reached: 6 people on Plus, 15 on Pro, host included.",
+    meaning: "The host's plan limit is reached: 4 people on Free, 6 on Plus, 15 on Pro, host included.",
     fix: "Someone leaves, or the host moves to Pro for larger groups.",
   },
   {
     message: "This room needs a host with Plus or Pro",
-    meaning: "The person who created the room no longer has hosting access.",
-    fix: "The host renews Plus or Pro, or another friend with access hosts.",
+    meaning: "In a legacy room, the person who created it no longer has the paid or existing-trial access required by that room.",
+    fix: "For a legacy room, restore its required hosting access or create a new Free20 room. Free20 allows up to 4 people and 20 host minutes per UTC day; exhausted time resets at 00:00 UTC. If asked to update AniDachi, update before joining the new room.",
   },
   {
     message: "Update AniDachi to join this room",
@@ -275,8 +275,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
             Add AniDachi to Chrome from the install page
           </InstallLink>
           , pin it from the puzzle-piece menu, and refresh any Crunchyroll tab
-          that was already open. Friends join free; only the host needs Plus or
-          Pro, including a trial.
+          that was already open. Friends join free; Free hosts have 20 host minutes per UTC day for up to 4 people.
         </p>
 
         <h3 className="text-xl font-semibold text-foreground mt-8 mb-3">

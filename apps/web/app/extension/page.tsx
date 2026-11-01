@@ -122,7 +122,7 @@ export default async function ExtensionInstallPage({
       />
       <HowToJsonLd
         name="How to Watch Together"
-        description="Host a live Crunchyroll, YouTube, or Netflix room with Plus or Pro, including during a trial. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
+        description="Host a live Crunchyroll, YouTube, or Netflix room on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
         steps={extensionUsingSteps.map(({ name, text }) => ({ name, text }))}
       />
       <main id="main-content" className="min-h-screen bg-ani-canvas">

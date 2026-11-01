@@ -70,7 +70,7 @@ const howToSteps = [
   },
   {
     name: "Create an AniDachi watchroom",
-    text: "Open the Crunchyroll episode; AniDachi detects it automatically. A host with Plus or Pro access, including an active trial, chooses Create room and shares the invite. Friends can join on Free accounts.",
+    text: "Open the Crunchyroll episode; AniDachi detects it automatically. A host on Free, Plus, or Pro chooses Create room and shares the invite. Friends can join on Free accounts.",
   },
   {
     name: "Pin logistics messages",
@@ -198,7 +198,7 @@ export default function HowToWatchAnimeWithAGroupPage() {
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Open /extension, then choose Add to Chrome from the official AniDachi Chrome Web Store listing on laptops guests use.</li>
           <li>Open the agreed Crunchyroll episode; AniDachi detects it automatically.</li>
-          <li>A host with Plus or Pro access, including an active trial, chooses Create room. Friends can join on Free accounts.</li>
+          <li>A host on Free, Plus, or Pro chooses Create room. Friends can join on Free accounts.</li>
           <li>
             Drop the invite link where calendars, Discord pins, and emails stay
             synchronized.

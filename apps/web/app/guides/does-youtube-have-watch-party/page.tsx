@@ -55,7 +55,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free for YouTube watch parties?",
-    answer: `Yes for joining an active Plus or Pro host, including a trial host. Free cannot create rooms. ${PRICING_YT_PRICING_SNIPPET} Full details on the free YouTube watch party guide.`,
+    answer: `Yes. Free includes 20 host minutes per UTC day for up to 4 people, including the host. Friends join free. ${PRICING_YT_PRICING_SNIPPET} Full details on the free YouTube watch party guide.`,
   },
   {
     question: "What is the best way to watch YouTube with friends?",

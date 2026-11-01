@@ -204,7 +204,7 @@ export default function BestAnimeWithFriendsPage() {
         <InstallLink href="/extension" className="text-brand-orange hover:underline">
           Start a watchroom in desktop Chrome
         </InstallLink>
-        : one person hosts with Plus or Pro, and friends join free on their own
+        : one person hosts on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro, and friends join free on their own
         accounts.
       </p>
 

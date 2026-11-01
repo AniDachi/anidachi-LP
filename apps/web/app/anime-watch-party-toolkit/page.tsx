@@ -33,7 +33,7 @@ const faq = [
   {
     question: "What is the best anime watch party setup for Crunchyroll?",
     answer:
-      "AniDachi is a desktop Chrome extension for live Crunchyroll rooms with sync, chat, reactions, and voice/video. Everyone installs it and opens the same episode. A Plus, Pro, or trial host creates the room and sends an invite; Free friends can join.",
+      "AniDachi is a desktop Chrome extension for live Crunchyroll rooms with sync, chat, reactions, and voice/video. Everyone installs it and opens the same episode. A Free, Plus, or Pro host creates the room and sends an invite; Free friends can join.",
   },
   {
     question: "Can you do an anime watch party without everyone being online at the same time?",

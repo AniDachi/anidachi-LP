@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -130,7 +131,7 @@ export default function VirtualMovieNightPage() {
 				<Link href="/extension" className="text-brand-orange hover:underline">
 					the install page
 				</Link>
-				. The host needs Plus or Pro, including a trial. Friends join on Free
+				. {PRICING_FREE20_SUMMARY} Friends join on Free
 				with their own access to the film. Crunchyroll setup is on{" "}
 				<Link
 					href="/watch-crunchyroll-together"

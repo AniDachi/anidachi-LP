@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import { INSTALL_HUB_PATH } from "./install-cta";
 
 /** Post-install overlay usage on /extension#using. Live sync only. */
@@ -23,7 +24,7 @@ export const extensionUsingSteps = [
   },
   {
     name: "Create a room",
-    text: "Choose Create room, then copy the invite to share it with friends. Hosting needs Plus or Pro, including an active trial.",
+    text: `Choose Create room, then copy the invite to share it with friends. ${PRICING_FREE20_SUMMARY}`,
   },
   {
     name: "Invite a friend",

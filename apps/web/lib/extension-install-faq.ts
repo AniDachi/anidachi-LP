@@ -7,7 +7,7 @@ export const extensionInstallFaq = [
   {
     question: "How do I finish setup after installing?",
     answer:
-      "Open Chrome’s extensions menu, pin AniDachi, then open a Crunchyroll episode, full YouTube watch page, or Netflix title and sign in when asked. Join a friend for free, or create your own room with Plus or Pro, including during a trial.",
+      "Open Chrome’s extensions menu, pin AniDachi, then open a Crunchyroll episode, full YouTube watch page, or Netflix title and sign in when asked. Join a friend for free, or create your own room on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro.",
   },
   {
     question: "How do I confirm the installation in Chrome?",

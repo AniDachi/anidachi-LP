@@ -301,7 +301,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         .
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        To create your own live rooms with Plus or Pro, including an active trial, review{" "}
+        For Free daily hosting or Plus and Pro without a daily hosting time limit, review{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>

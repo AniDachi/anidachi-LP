@@ -76,7 +76,7 @@ const howToSteps = [
   },
   {
     name: "Host the live session",
-    text: "A Plus, Pro, or trial host creates an AniDachi room and sends its invite link. Free friends can join at the agreed time.",
+    text: "A Free, Plus, or Pro host creates an AniDachi room and sends its invite link. Free friends can join at the agreed time.",
   },
   {
     name: "Arrange independent catch-up",

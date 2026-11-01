@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -142,7 +143,7 @@ export default function DiscordScreenShareNotWorkingPage() {
           </Link>
           . Once you can share, stop using it for the episode. Each person
           opens the same Crunchyroll catalog page or full YouTube watch page.
-          Hosting needs Plus or Pro. Friends can join free. Prices are on{" "}
+          {PRICING_FREE20_SUMMARY} Friends can join free. Prices are on{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>

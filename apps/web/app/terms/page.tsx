@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY, PRICING_FREE20_METERING_NOTE, PRICING_EXISTING_TRIAL_NOTE } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingArticle } from "@/components/marketing-article";
@@ -51,11 +52,11 @@ export default function TermsPage() {
                 AniDachi provides watchrooms for synchronized viewing on
                 supported platforms (Crunchyroll, YouTube, and Netflix), with chat,
                 reactions, and related social features through a Chrome
-                extension and website. Free accounts can join rooms hosted on
-                Plus or Pro, including rooms hosted during an active trial.
-                Creating your own room and recording or editing personal watch
-                progress require your own Plus or Pro access, including an
-                active trial. Recording also needs your permission in the
+                extension and website. {PRICING_FREE20_SUMMARY}{" "}
+                {PRICING_FREE20_METERING_NOTE} Friends join for free.
+                Recording and editing personal watch progress require your own
+                Plus or Pro access, including existing active trials.
+                Recording also needs your permission in the
                 extension, with a separate setting for YouTube. Saved history
                 remains available to read, resume and delete on Free. Planned
                 features may be described as coming soon and are not guaranteed
@@ -109,10 +110,7 @@ export default function TermsPage() {
                 .
               </p>
               <p className="mt-4">
-                New and existing Free accounts with an unused trial can try
-                Plus or Pro for three days, when offered on the pricing page.
-                There is one trial per account across both plans and billing
-                periods. A trial offered without a card lasts 72 hours and ends
+                {PRICING_EXISTING_TRIAL_NOTE} An existing trial offered without a card ends
                 without a payment unless you explicitly add a card and enable
                 renewal. Having a saved card alone does not enable renewal.
                 Before enabling it, you review the selected plan, billing period,

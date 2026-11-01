@@ -31,7 +31,7 @@ const faq = [
   {
     question: "How do I create a watchroom?",
     answer:
-      "Install AniDachi in desktop Chrome and sign in. With Plus or Pro, including during a trial, open a Crunchyroll episode or full YouTube watch page and click 'Create room' in the extension. Share the invite with friends, who join for free with their own access to the video.",
+      "Install AniDachi in desktop Chrome and sign in. On Free, Plus, or Pro, open a Crunchyroll episode or full YouTube watch page and click 'Create room' in the extension. Share the invite with friends, who join for free with their own access to the video.",
   },
   {
     question: "Can a watchroom work asynchronously?",
@@ -89,7 +89,7 @@ export default function WatchroomGlossaryPage() {
         How Watchrooms Work in AniDachi
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        A Plus, Pro or trial host creates the room from a Crunchyroll episode
+        A Free, Plus, or Pro host creates the room from a Crunchyroll episode
         or full YouTube watch page. Friends join for free using the extension
         and their own access to the video. Personal history is separate:
         recording it requires each viewer&apos;s own Plus or Pro access and

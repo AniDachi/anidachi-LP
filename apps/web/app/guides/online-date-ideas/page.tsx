@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -71,7 +72,7 @@ const faq = [
   {
     question: "Do we both need a paid AniDachi plan?",
     answer:
-      "The host needs Plus or Pro, including a trial, to create the room. The other person can join free and still needs their own streaming account.",
+      `${PRICING_FREE20_SUMMARY} The other person can join free and still needs their own streaming account.`,
   },
 ];
 
@@ -159,7 +160,7 @@ export default function OnlineDateIdeasPage() {
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
           Voice stays on FaceTime or Discord. The picture stays in Chrome.
-          Hosting the room needs Plus or Pro. See{" "}
+          {PRICING_FREE20_SUMMARY} See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>
