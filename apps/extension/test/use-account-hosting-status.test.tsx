@@ -59,6 +59,31 @@ describe("account Free20 display", () => {
     expect(current.exhausted).toBe(true); expect(current.remainingSeconds).toBe(0); expect(current.resetSeconds).toBeNull();
     await act(async () => vi.advanceTimersByTimeAsync(600_000)); expect(options.request).toHaveBeenCalledTimes(3);
   });
+  it.each(["resume", "remount"])("does not re-anchor another pending read after %s", async lifecycle => {
+    type Read = Awaited<ReturnType<NonNullable<Options["request"]>>>;
+    let resolveOld!: (value: Read) => void, resolveNew!: (value: Read) => void;
+    const oldRead = new Promise<Read>(resolve => { resolveOld = resolve; });
+    const newRead = new Promise<Read>(resolve => { resolveNew = resolve; });
+    let reads = 0;
+    options.request = vi.fn((_owner, fresh) => reads++ === 0 || !fresh ? oldRead : newRead);
+    await render();
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    if (lifecycle === "resume") {
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    } else { await act(async () => root.unmount()); root = createRoot(host); }
+    await act(async () => vi.advanceTimersByTimeAsync(4_000));
+    if (lifecycle === "resume") {
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+      await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    } else await render();
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    await act(async () => resolveOld({ mode: "free20", status: { ...status, validUntil: at + 5_000 } }));
+    expect(current.remainingSeconds).toBeNull();
+    await act(async () => resolveNew({ mode: "free20", status: { ...status, serverTime: at + 6_000, validUntil: at + 60_000 } }));
+    expect(current.remainingSeconds).toBe(780);
+    expect(options.request).toHaveBeenCalledTimes(2);
+  });
   it("hides a reading on sleep/visibility loss and requests one recovery on resume", async () => {
     await render(); vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
     await act(async () => document.dispatchEvent(new Event("visibilitychange"))); expect(current.remainingSeconds).toBeNull();

@@ -1,4 +1,4 @@
-import { acceptHostingTimeSnapshot, HostingTimeEventSchema, type HostingTimeBinding, type HostingTimeEvent, type HostingTimeSnapshot } from "@anidachi/protocol";
+import { acceptHostingTimeSnapshot, HostingTimeEventSchema, LegacyHostingTimeEventSchema, type HostingTimeBinding, type HostingTimeEvent, type HostingTimeSnapshot } from "@anidachi/protocol";
 
 type Scope = Omit<HostingTimeBinding, "utcDay">;
 export type HostingTimeDisplay = { remainingSeconds: number | null; resetSeconds: number; snapshot: HostingTimeSnapshot };
@@ -18,17 +18,26 @@ export class RoomHostingTime {
   private lastRequest = Number.NEGATIVE_INFINITY;
   private transportBound = false;
   observed = false;
+  legacy = false;
 
   bind(scope: Scope): void {
     if (this.scope && (this.scope.ownerUserId !== scope.ownerUserId || this.scope.roomId !== scope.roomId || this.scope.roomGeneration !== scope.roomGeneration)) {
       this.ordered = null; this.observation = null; this.observed = false;
+      this.legacy = false;
     }
     this.scope = scope;
     this.transportBound = true;
   }
+  acceptLegacy(value: unknown): boolean {
+    const parsed = LegacyHostingTimeEventSchema.safeParse(value);
+    if (!parsed.success || !this.scope || !this.transportBound || this.observed ||
+      parsed.data.roomId !== this.scope.roomId || parsed.data.roomGeneration !== this.scope.roomGeneration) return false;
+    this.legacy = true;
+    return true;
+  }
   accept(value: unknown, monotonic = performance.now()): boolean {
     const parsed = HostingTimeEventSchema.safeParse(value);
-    if (!this.scope || !this.transportBound || !parsed.success) return false;
+    if (!this.scope || !this.transportBound || this.legacy || !parsed.success) return false;
     const event = parsed.data;
     const recovery = this.pendingRecovery && event.requestId === this.pendingRecovery.requestId ? this.pendingRecovery : null;
     const snapshot = acceptHostingTimeSnapshot({ ...this.scope, utcDay: new Date(event.serverTime).toISOString().slice(0, 10) }, this.ordered, event.snapshot);
@@ -88,6 +97,7 @@ export class RoomHostingTime {
   }
   clear(): void {
     this.scope = null; this.ordered = null; this.observation = null; this.observed = false;
+    this.legacy = false;
     this.transportBound = false; this.lastRequest = Number.NEGATIVE_INFINITY;
     this.serverClock = null; this.transportStartedAt = null; this.pendingRecovery = null;
     this.requireCorrelatedRecovery = false; this.recoveryNeeded = false; this.clockSample = null;

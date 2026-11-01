@@ -3631,6 +3631,18 @@ describe("RoomDurableObject media v2", () => {
   host.close();guest.close();
  });
 
+ it("negotiated legacy mode survives restore and never reaches an old socket",async()=>{
+   const f=await fixture("free",3,1200,false);
+   const host=await f.join(0,"v2-session-0",true);
+   const mode=await host.waitFor(e=>e.type==="HOSTING_TIME_LEGACY","explicit legacy mode");
+   expect(mode).toEqual({type:"HOSTING_TIME_LEGACY",roomId:f.roomId,roomGeneration:1});
+   const guest=await f.join(1); await guest.waitFor(e=>e.type==="ROOM_SNAPSHOT","old guest");
+   expect(guest.hasEvent(e=>e.type==="HOSTING_TIME_LEGACY" || e.type==="HOSTING_TIME")).toBe(false);
+   await evictDurableObject(f.stub,{webSockets:"hibernate"});
+   const restored=await f.join(0,"v2-session-0",true);
+   await restored.waitFor(e=>e.type==="HOSTING_TIME_LEGACY","legacy after restore");
+   restored.close();host.close();guest.close();
+ });
  it("negotiated hosting time survives wake and never reaches legacy sockets",async()=>{
    const f=await fixture("free",3,1200,true);
    const host=await f.join(0,"v2-session-0",true);

@@ -53,7 +53,9 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, exha
       const ownGeneration = ++generation, wall = Date.now();
       show({ busy: true, error: false, status: null });
       try {
-        const result = await request(ownerUserId!);
+        // This consumer anchors age at this load's start. A shared older pending
+        // request has an earlier start and must never acquire this newer clock.
+        const result = await request(ownerUserId!, true);
         if (!alive || ownGeneration !== generation) return;
         const elapsed = Math.max(0, performance.now() - now);
         if (String(document.visibilityState) === "hidden" || Math.abs(Date.now() - wall - elapsed) > 2_000) throw new Error("Stale read");

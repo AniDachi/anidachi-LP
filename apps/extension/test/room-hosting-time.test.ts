@@ -57,3 +57,18 @@ describe("authoritative room hosting time", () => {
     expect(clock.accept({ ...event(2), requestId: request.requestId }, 1_100)).toBe(true);
   });
 });
+
+it('requires scoped explicit legacy mode and never downgrades a daily room',()=>{
+  const legacy={type:'HOSTING_TIME_LEGACY',roomId:'room',roomGeneration:1};
+  const clock=bound();
+  expect(clock.acceptLegacy({...legacy,roomId:'other'})).toBe(false);
+  expect(clock.acceptLegacy({...legacy,roomGeneration:2})).toBe(false);
+  expect(clock.legacy).toBe(false);
+  expect(clock.acceptLegacy(legacy)).toBe(true); expect(clock.legacy).toBe(true);
+  expect(clock.accept(event(),0)).toBe(false);
+  clock.beginTransport(); expect(clock.acceptLegacy(legacy)).toBe(false);
+  clock.bind({ownerUserId:owner,roomId:'room',roomGeneration:1}); expect(clock.acceptLegacy(legacy)).toBe(true);
+  clock.clear(); clock.bind({ownerUserId:owner,roomId:'room',roomGeneration:2});
+  expect(clock.legacy).toBe(false); expect(clock.acceptLegacy(legacy)).toBe(false);
+  const daily=bound(); daily.accept(event(),0); expect(daily.acceptLegacy(legacy)).toBe(false); expect(daily.legacy).toBe(false);
+});

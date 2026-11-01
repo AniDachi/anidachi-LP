@@ -811,7 +811,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
-		enabled: !roomId && (panelOpen || introductionActive),
+		// An older Worker cannot negotiate a room-mode event. Allow a bounded
+		// policy read until mode is known, without using account time as live time.
+		enabled: !roomId ? (panelOpen || introductionActive) : (!hostingTimeClock.observed && !hostingTimeClock.legacy),
 		exhaustion: quotaExhaustion,
 	});
 	const hostingDisplay = useHostingAccess({
@@ -819,7 +821,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		sessionKey: authSessionKey,
 		enabled: panelOpen || roomId !== null || introductionActive,
 	});
-	const legacyQuotaEnabled = accountHostingTime.mode === "legacy" && !hostingTimeClock.observed && hostingDisplay.state.mode === "legacy";
+	const legacyQuotaEnabled = !hostingTimeClock.observed && (hostingTimeClock.legacy ||
+		(accountHostingTime.mode === "legacy" && hostingDisplay.state.mode === "legacy"));
 	const freeQuotaNotice = useFreeQuotaNotice({
 		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
 		accessToken: authAccessToken,
@@ -3482,6 +3485,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 
 			switch (event.type) {
+				case "HOSTING_TIME_LEGACY": {
+					if (hostingTimeClock.acceptLegacy(event)) renderHostingTime(n => n + 1);
+					return;
+				}
 				case "HOSTING_TIME": {
 					hostingTimeClock.checkContinuity();
 					if (document.visibilityState === "hidden") hostingTimeClock.suspend();

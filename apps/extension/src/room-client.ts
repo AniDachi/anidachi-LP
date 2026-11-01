@@ -369,7 +369,7 @@ export type RoomAdmissionHandoff = RoomDepartureRetryOperation & {
   tabId: number;
 };
 
-export type RoomAdmissionHandoffMessage = {
+export type RoomAdmissionHandoffRequest = {
   type: typeof ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE;
   command: "acknowledge";
   handoff: RoomAdmissionHandoff;
@@ -534,7 +534,7 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
 
 export function roomAdmissionHandoffMessage(
   handoff: RoomAdmissionHandoff,
-): RoomAdmissionHandoffMessage {
+): RoomAdmissionHandoffRequest {
   if (!isRoomDepartureRetryOperation(handoff)) {
     throw new Error("Invalid room admission handoff");
   }
@@ -550,9 +550,9 @@ export function roomAdmissionHandoffMessage(
 
 export function isRoomAdmissionHandoffMessage(
   value: unknown,
-): value is RoomAdmissionHandoffMessage {
+): value is RoomAdmissionHandoffRequest {
   if (typeof value !== "object" || value === null) return false;
-  const message = value as Partial<RoomAdmissionHandoffMessage>;
+  const message = value as Partial<RoomAdmissionHandoffRequest>;
   return message.type === ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE &&
     message.command === "acknowledge" &&
     isRoomDepartureRetryOperation(message.handoff) &&
@@ -1373,14 +1373,14 @@ export async function acknowledgeRoomAdmissionHandoff(
   handoff: RoomAdmissionHandoff,
 ): Promise<boolean> {
   const response = await chrome.runtime.sendMessage<
-    RoomAdmissionHandoffMessage,
+    RoomAdmissionHandoffRequest,
     RoomAdmissionHandoffResponse
   >(roomAdmissionHandoffMessage(handoff));
   return response?.ok === true && response.acknowledged;
 }
 
 export async function handleRoomAdmissionHandoffMessage(
-  message: RoomAdmissionHandoffMessage,
+  message: RoomAdmissionHandoffRequest,
   sender: { tab?: { id?: number } },
   dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomAdmissionHandoffResponse> {

@@ -28,6 +28,21 @@ describe("account hosting status background bridge", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(accountStatus)));
     expect(await handleAccountHostingStatusMessage(message, deps)).toEqual({ ok: false });
   });
+  it("starts an independent freshness read instead of reusing another consumer's pending response", async () => {
+    const deps = dependencies();
+    let resolveOld!: (value: Response) => void, resolveNew!: (value: Response) => void;
+    const fetch = vi.fn().mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }))
+      .mockImplementationOnce(() => new Promise(resolve => { resolveNew = resolve; }));
+    vi.stubGlobal("fetch", fetch);
+    const oldRead = handleAccountHostingStatusMessage(message, deps);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    const freshRead = handleAccountHostingStatusMessage({ ...message, fresh: true }, deps);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    resolveOld(Response.json(accountStatus)); await oldRead;
+    const freshStatus = { ...accountStatus, serverTime: at + 5_000 };
+    resolveNew(Response.json(freshStatus));
+    expect(await freshRead).toEqual({ ok: true, mode: "free20", status: freshStatus });
+  });
   it("checks the refreshed session before sending its bearer", async () => {
     const deps = dependencies(); const fresh = { ...session, accessToken: "fresh", refreshToken: "rotated" };
     deps.refresh.mockImplementation(async () => { deps.getSession.mockResolvedValue({ ...fresh, authRevision: "new-login" }); return fresh; });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HostingTimeEventSchema } from "./hosting-time";
+import { HostingTimeEventSchema, LegacyHostingTimeEventSchema } from "./hosting-time";
 import {
 	MediaIntentSchema,
 	HostMediaRevokeSchema,
@@ -381,6 +381,7 @@ export const ClientEventSchema = z
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
 	HostingTimeEventSchema,
+	LegacyHostingTimeEventSchema,
 	MediaSeatResultSchema,
 	MediaIntentAckSchema,
 	MediaIntentErrorSchema,

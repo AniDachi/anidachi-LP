@@ -928,10 +928,20 @@ export class RoomDurableObject {
 
   private async publishHostingTime(force = false, recovery?: {socket:WebSocket;requestId:string}): Promise<void> {
     const policy = this.roomPolicy;
-    if (!policy || !this.free20Accounting || this.endedTombstone || this.terminalIntent || policy.endingReason) return;
+    if (this.endedTombstone || this.terminalIntent || policy?.endingReason) return;
     const recipients = [...this.participantsBySocket.keys()].filter(socket =>
       (!recovery || recovery.socket === socket) && socket.readyState === WebSocket.OPEN && this.getSocketAttachment(socket)?.hostingTimeVersion === 1);
     if (recipients.length === 0) return;
+    if (!this.free20Accounting) {
+      const key = `legacy:${this.room.roomId}:${this.room.roomGeneration}`;
+      if (!force && key === this.hostingTimeKey) return;
+      for (const socket of recipients) this.send(socket, {
+        type: "HOSTING_TIME_LEGACY", roomId: this.room.roomId, roomGeneration: this.room.roomGeneration,
+      });
+      this.hostingTimeKey = key;
+      return;
+    }
+    if (!policy) return;
     const now = Date.now();
     const context: HostingDisplayContext = {
       binding:{ownerUserId:policy.hostId,roomId:this.room.roomId,roomGeneration:this.room.roomGeneration,

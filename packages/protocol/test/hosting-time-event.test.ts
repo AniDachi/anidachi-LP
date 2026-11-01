@@ -41,3 +41,8 @@ it('binds recovery to a fresh correlated response',()=>{
   expect(ClientEventSchema.parse({type:'HOSTING_TIME_REQUEST',roomId:free.roomId,requestId})).toMatchObject({requestId});
   expect(ServerEventSchema.safeParse({...event,requestId}).success).toBe(true);
 });
+
+it('accepts an explicitly negotiated immutable legacy room mode without a time grant',()=>{
+  expect(ServerEventSchema.safeParse({type:'HOSTING_TIME_LEGACY',roomId:free.roomId,roomGeneration:1}).success).toBe(true);
+  expect(ServerEventSchema.safeParse({type:'HOSTING_TIME_LEGACY',roomId:free.roomId,roomGeneration:1,remainingSeconds:1200}).success).toBe(false);
+});

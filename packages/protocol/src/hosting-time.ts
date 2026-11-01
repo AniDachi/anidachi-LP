@@ -122,6 +122,14 @@ export const HostingTimeSnapshotSchema = z
 	});
 export type HostingTimeSnapshot = z.infer<typeof HostingTimeSnapshotSchema>;
 
+/** Opt-in immutable room-mode signal, never an allowance. A legacy room keeps
+ * its existing quota protocol even after the account policy switches to Free20. */
+export const LegacyHostingTimeEventSchema = z.strictObject({
+	type: z.literal("HOSTING_TIME_LEGACY"),
+	roomId: scope.roomId,
+	roomGeneration: scope.roomGeneration,
+});
+
 /** Sent only to sockets opting into hostingTimeVersion:1. The envelope binds a
  * bounded display lifetime; no client may grant time or close a room from it. */
 export const HostingTimeEventSchema = z

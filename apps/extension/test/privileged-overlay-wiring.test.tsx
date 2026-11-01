@@ -1891,18 +1891,19 @@ describe("privileged overlay wiring", () => {
       expect(view.container.querySelector(".panel-idle-time strong")?.textContent).toBe("13:00");
       await click(button(view.container, "Create room")); await vi.waitFor(() => expect(options).toBeDefined());
       const snapshot: Extract<import("@anidachi/protocol").ServerEvent, { type: "ROOM_SNAPSHOT" }> = { type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }, guestParticipant()] };
-      let mono = performance.now(); vi.spyOn(performance, "now").mockImplementation(() => mono);
+      const mono = performance.now(), wall = Date.now();
       vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+      vi.spyOn(performance, "now").mockImplementation(() => mono + Date.now() - wall);
       await act(async () => options.onEvent(snapshot));
       const time = (sequence: number, access: import("@anidachi/protocol").HostingTimeSnapshot["access"]): import("@anidachi/protocol").HostingTimeEvent => ({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000, snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: sequence, serverTime: at, period: status.period, access } });
       const finite = { kind: "daily_free" as const, budgetSeconds: 1200 as const, usedSeconds: 1190, remainingSeconds: 10, metering: true };
       await act(async () => options.onEvent(time(1, finite)));
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("00:10");
       // Playback is paused throughout; presence alone determines metering.
-      await act(async () => { mono += 3_000; await vi.advanceTimersByTimeAsync(3_000); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(3_000); });
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("00:07");
       await act(async () => options.onEvent(time(2, { ...finite, metering: false })));
-      await act(async () => { mono += 3_000; await vi.advanceTimersByTimeAsync(3_000); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(3_000); });
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("00:10");
       await act(async () => options.onEvent(time(3, { kind: "unknown" })));
       expect(view.container.querySelector(".panel-action-timer")).toBeNull();
@@ -1923,14 +1924,24 @@ describe("privileged overlay wiring", () => {
     } finally { vi.useRealTimers(); await unmount(view.root); }
   });
 
-  it("preserves legacy quota subtraction, reanchoring and exhaustion with a real media helper lifecycle", async () => {
+  it.each(["before", "delayed", "unavailable", "restored", "restored-old-worker", "delayed-old-worker"])("preserves legacy quota lifecycle independently of account policy: %s", async scenario => {
     installActiveHostRoomRuntime();
+    const restoring = scenario.startsWith("restored");
+    const policy = deferred<{mode:"legacy"}>();
+    if (scenario.startsWith("delayed")) vi.mocked(accountHostingClient.requestAccountHostingStatus).mockReturnValue(policy.promise);
+    if (scenario === "unavailable" || scenario === "restored") vi.mocked(accountHostingClient.requestAccountHostingStatus).mockRejectedValue(new Error("legacy host assignment"));
     let client!: RoomClient;
     let options!: Parameters<RoomClient["connect"]>[0];
     const capabilities = {hostPlanCode:"free" as const,maxParticipants:4,maxMediaSeats:4,canNameRoom:false,canSendPushInvites:false};
     const send = vi.mocked(chrome.runtime.sendMessage);
     const original = send.getMockImplementation()!;
     send.mockImplementation(async (...args: any[]) => {
+      if(restoring && args[0]?.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+        if(args[0].command === "legacy-prefix") return {ok:true,record:null,legacyPrefix:null};
+        if(args[0].command === "recovery-scope") return {ok:true,record:null,recoveryScope:null};
+        if(args[0].command === "migrate" || args[0].command === "load") return {ok:true,record:confirmedRoomSession()};
+      }
+      if(restoring && args[0]?.command === "connect-room") return {ok:true,connection:{roomToken:"restore-token",roomSession:confirmedRoomSession(),capabilities,quota:{remainingSeconds:1500,resetAt:"2026-09-09T00:00:00Z"},privilegedRoomAuthority:roomAuthority()}};
       if(args[0]?.action === "quota-end-room") return {ok:true};
       const result = await (original as any)(...args);
       if(args[0]?.command === "create-room") return {...result,room:{...result.room,capabilities,quota:{remainingSeconds:1500,resetAt:"2026-09-09T00:00:00Z"}}};
@@ -1947,8 +1958,8 @@ describe("privileged overlay wiring", () => {
     try {
       await click(button(view.container,"Open Anidachi controls"));
       vi.useFakeTimers({toFake:["setInterval","clearInterval","Date"]});
-      await click(button(view.container,"Create room"));
-      await vi.waitFor(()=>expect(options).toBeDefined());
+      if(!restoring) await click(button(view.container,"Create room"));
+      await act(async()=>{ await vi.waitFor(()=>expect(options).toBeDefined()); });
       expect(client.media).toBeInstanceOf(RoomMediaSession);
       expect(client.media!.snapshot).toBeNull();
       const snapshot=(seconds:number,serverSeq:number):Extract<import("@anidachi/protocol").ServerEvent,{type:"ROOM_SNAPSHOT"}> => ({
@@ -1956,6 +1967,12 @@ describe("privileged overlay wiring", () => {
         participants:[{...hostParticipant(),participantSessionId:options.participantSessionId,connected:true},{...guestParticipant(),connected:true}],roomUsage:{day:"2026-09-08",seconds},
       });
       await act(async()=>options.onEvent(snapshot(300,1)));
+      if(scenario !== "before" && !scenario.endsWith("old-worker")) {
+        expect(view.container.querySelector(".panel-action-timer")).toBeNull();
+        await act(async()=>options.onEvent({type:"HOSTING_TIME_LEGACY",roomId:"room-a",roomGeneration:1}));
+        if(scenario === "delayed") await act(async()=>policy.resolve({mode:"legacy"}));
+      }
+      if(scenario === "delayed-old-worker") await act(async()=>policy.resolve({mode:"legacy"}));
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toContain("20:00");
       await act(async()=>vi.advanceTimersByTimeAsync(3000));
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toContain("19:57");
