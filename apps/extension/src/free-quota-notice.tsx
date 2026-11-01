@@ -2,7 +2,11 @@ import { Clock3, Check, RefreshCw, ArrowUpRight } from "lucide-react";
 import { WEB_HTTP_BASE } from "./constants";
 import type { FreeQuotaNoticeState } from "./use-free-quota-notice";
 
-export function FreeQuotaNotice({ state, onRetry }: { state: FreeQuotaNoticeState; onRetry: () => void }) {
+export function FreeQuotaNotice({ state, onRetry, compact = false }: { state: FreeQuotaNoticeState; onRetry: () => void; compact?: boolean }) {
+  if (compact) return <section className="panel-limit-copy" aria-label="Free watch-party limit">
+    <strong>Today's free time is used up</strong>
+    <p>{state.remainingSeconds !== null ? `Renews in ${formatResetCountdown(state.remainingSeconds)}. You can still join a friend's room.` : "Checking your limit…"}</p>
+  </section>;
   const ready = state.kind === "ready";
   return <section className="free-quota-notice" data-state={state.kind} aria-label="Free watch-party limit">
     <div className="free-quota-heading" role="status">

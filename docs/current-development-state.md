@@ -1,5 +1,22 @@
 # Current Development State
 
+## Intermediate extension overlay design, November 1, 2026
+
+The owner authorized transferring the accepted Free20 mockup into a staging
+extension for continued design iteration. See the bounded
+[overlay delivery plan](superpowers/plans/2026-11-01-free20-overlay-design-staging.md).
+The candidate adds account/plan links, scoped clipboard feedback, icon-only sync
+motion with honest `Sync sent` feedback, and the accepted finite-time action row.
+Camera/microphone stay in their existing dock. Existing server-authoritative
+legacy quota data supplies finite time; unknown, paid and guest states do not
+receive a fabricated zero or a new 1200-second allowance.
+
+This is not Free20 activation or final design acceptance. Live Free20 event
+wiring, cessation of new trials, purchase delivery and enabled end-to-end testing
+remain separate. Server gates, main, production and Store are unchanged. The
+staging PR and local artifact receipt carry delivery/verification evidence;
+source presence alone does not prove a browser has loaded that artifact.
+
 ## Free20 disabled server candidate, October 31, 2026
 
 The owner-approved daily Free20 migration is tracked in the

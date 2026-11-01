@@ -163,6 +163,18 @@ describe("PlaybackSyncController", () => {
 		expect(harness.sent).toEqual([]);
 	});
 
+	it.each(["sent", "queued", "dropped"] as const)("manual sync reports actual %s transport outcome", (disposition) => {
+		const harness = createHarness({ isHost: true, disposition });
+		expect(harness.controller.broadcastHostState()).toBe(disposition === "sent");
+	});
+	it("does not confirm manual sync for guests or a detached video", () => {
+		const guest = createHarness({ isHost: false });
+		expect(guest.controller.broadcastHostState()).toBe(false);
+		const host = createHarness({ isHost: true });
+		host.controller.bindAdapter(null);
+		expect(host.controller.broadcastHostState()).toBe(false);
+	});
+
 	it("broadcasts an explicit host state even during remote-event suppression", () => {
 		const harness = createHarness({ isHost: true });
 
@@ -963,6 +975,7 @@ describe("PlaybackSyncController", () => {
 });
 
 interface HarnessOptions {
+	disposition?: "sent" | "queued" | "dropped";
 	ensureRemoteSource?: (
 		source: WatchSourceDescriptor,
 		context: SourceNavigationContext,
@@ -987,7 +1000,7 @@ function createHarness(options: HarnessOptions) {
 			})),
 		onStatus: (status) => statuses.push(status),
 		transport: {
-			send: (event) => sent.push(event),
+			send: (event) => { sent.push(event); return options.disposition ?? "sent"; },
 		},
 	});
 	controller.bindAdapter(adapter);
