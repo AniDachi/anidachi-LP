@@ -125,7 +125,8 @@ export const Free20AccountAuthoritySchema = z.strictObject({
 	refreshBy: AuthorityDate,
 	resetAt: AuthorityDate,
 	accountGeneration: AuthorityCounter.positive(),
-	accessEpoch: AuthorityCounter.positive(),
+	// Fresh Free accounts may never have enabled history; their epoch is zero.
+	accessEpoch: AuthorityCounter,
 	committedSeconds: AuthorityCounter,
 	grant: z
 		.strictObject({

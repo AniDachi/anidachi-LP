@@ -32,3 +32,4 @@ export * from "./free20-room-budget";
 export * from "./hosting-time-snapshot";
 
 export * from "./free20-room-refresh";
+export * from "./free20-warning";
