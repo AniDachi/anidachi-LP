@@ -447,3 +447,130 @@ test("bounded expiry leaves an idle retry and explicit retry shows pending copy 
 		),
 	);
 });
+
+function retryButton() {
+	return [...el.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+		/Try again|Checking access/.test(button.textContent!),
+	)!;
+}
+for (const entry of ["automatic", "manual"] as const) {
+	test(`${entry} refresh without replacement props restores retry after the 10-second presentation deadline`, async (t) => {
+		t.mock.timers.enable({ apis: ["setTimeout"] });
+		let now = 0;
+		t.mock.method(performance, "now", () => now);
+		await mount(
+			entry === "automatic"
+				? { ...shortHostingWelcome, resetInMs: undefined }
+				: { kind: "error" },
+		);
+		if (entry === "automatic") {
+			now = 500;
+			await act(async () => t.mock.timers.tick(500));
+		} else await act(async () => retryButton().click());
+		assert.equal(refreshes, 1);
+		assert.equal(retryButton().disabled, true);
+		now += 9999;
+		await act(async () => t.mock.timers.tick(9999));
+		assert.equal(retryButton().disabled, true);
+		now++;
+		await act(async () => t.mock.timers.tick(1));
+		assert.equal(retryButton().disabled, false);
+		assert.doesNotMatch(el.textContent!, /Checking your access/);
+		now += 120000;
+		await act(async () => t.mock.timers.tick(120000));
+		assert.equal(refreshes, 1, "deadline cannot create a refresh loop");
+		await act(async () => retryButton().click());
+		assert.equal(refreshes, 2);
+		assert.equal(retryButton().disabled, true);
+	});
+}
+for (const outcome of ["error", "success"] as const) {
+	test(`replacement ${outcome} retires the previous pending deadline`, async (t) => {
+		t.mock.timers.enable({ apis: ["setTimeout"] });
+		let now = 0;
+		t.mock.method(performance, "now", () => now);
+		await mount({ ...shortHostingWelcome, resetInMs: undefined });
+		now = 500;
+		await act(async () => t.mock.timers.tick(500));
+		assert.equal(refreshes, 1);
+		now = 1000;
+		await act(async () => t.mock.timers.tick(500));
+		await rerenderWelcome(
+			outcome === "error"
+				? { kind: "error" }
+				: { ...shortHostingWelcome, resetInMs: undefined, expiresInMs: 60000 },
+		);
+		now = 10500;
+		await act(async () => t.mock.timers.tick(9500));
+		assert.equal(refreshes, 1);
+		assert.doesNotMatch(
+			el.textContent!,
+			/This access check has expired|Checking your access/,
+		);
+		if (outcome === "success")
+			assert.ok(el.querySelector('a[href="https://www.youtube.com"]'));
+		else assert.equal(retryButton().disabled, false);
+	});
+}
+test("an already queued stale deadline cannot unlock a newer manual attempt", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	t.mock.method(performance, "now", () => 0);
+	const deadlines: Array<() => void> = [],
+		schedule = globalThis.setTimeout;
+	t.mock.method(globalThis, "setTimeout", ((
+		callback: () => void,
+		delay?: number,
+	) => {
+		if (delay === 10000) deadlines.push(callback);
+		return schedule(callback, delay);
+	}) as typeof setTimeout);
+	await mount({ kind: "error" });
+	await act(async () => retryButton().click());
+	assert.equal(deadlines.length, 1);
+	await rerenderWelcome({ kind: "error" });
+	await act(async () => retryButton().click());
+	assert.equal(deadlines.length, 2);
+	await act(async () => deadlines[0]());
+	assert.equal(retryButton().disabled, true);
+	assert.equal(refreshes, 2);
+	await act(async () => deadlines[1]());
+	assert.equal(retryButton().disabled, false);
+});
+test("departure and unmount clear pending deadlines without claiming to cancel router work", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	t.mock.method(performance, "now", () => 0);
+	const deadlines: Array<{
+			callback: () => void;
+			timer: ReturnType<typeof setTimeout>;
+		}> = [],
+		cleared: unknown[] = [];
+	const schedule = globalThis.setTimeout,
+		cancel = globalThis.clearTimeout;
+	t.mock.method(globalThis, "setTimeout", ((
+		callback: () => void,
+		delay?: number,
+	) => {
+		const timer = schedule(callback, delay);
+		if (delay === 10000) deadlines.push({ callback, timer });
+		return timer;
+	}) as typeof setTimeout);
+	t.mock.method(globalThis, "clearTimeout", ((timer) => {
+		cleared.push(timer);
+		cancel(timer);
+	}) as typeof clearTimeout);
+	await mount({ ...shortHostingWelcome, resetInMs: undefined, expiresInMs: 0 });
+	assert.equal(refreshes, 1);
+	await act(async () => window.dispatchEvent(new Event("blur")));
+	assert.ok(cleared.includes(deadlines[0].timer));
+	await act(async () => deadlines[0].callback());
+	assert.equal(retryButton().disabled, false);
+	assert.equal(refreshes, 1);
+	await act(async () => retryButton().click());
+	assert.equal(refreshes, 2);
+	const pending = deadlines.at(-1)!;
+	await act(async () => root!.unmount());
+	root = undefined;
+	assert.ok(cleared.includes(pending.timer));
+	await act(async () => pending.callback());
+	assert.equal(refreshes, 2);
+});

@@ -36,6 +36,15 @@ export function ExtensionWelcomeHero({
 	// Both clocks are monotonic and independent of the user's wall-clock setting.
 	const snapshotRequestStarted = useRef(0);
 	const refreshPending = useRef(false);
+	const pendingRequestGeneration = useRef(0);
+	const pendingDeadline = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const clearPending = useCallback(() => {
+		pendingRequestGeneration.current++;
+		if (pendingDeadline.current !== null) clearTimeout(pendingDeadline.current);
+		pendingDeadline.current = null;
+		refreshPending.current = false;
+	}, []);
+	useEffect(() => () => clearPending(), [clearPending]);
 	const refresh = useCallback(() => {
 		if (
 			refreshPending.current ||
@@ -46,8 +55,22 @@ export function ExtensionWelcomeHero({
 		snapshotRequestStarted.current = performance.now();
 		refreshPending.current = true;
 		setChecking(true);
+		const requestGeneration = ++pendingRequestGeneration.current;
+		const activation = activationGeneration.current;
+		// router.refresh() returns void. Retire only this presentation lock if no
+		// replacement props arrive; Next's underlying request is not cancelled.
+		pendingDeadline.current = setTimeout(() => {
+			if (
+				requestGeneration !== pendingRequestGeneration.current ||
+				activation !== activationGeneration.current
+			)
+				return;
+			clearPending();
+			setChecking(false);
+			setExpired(true);
+		}, 10_000);
 		router.refresh();
-	}, [router, boundedHosting]);
+	}, [router, boundedHosting, clearPending]);
 	const active =
 		!expired &&
 		(welcome.kind === "trial" ||
@@ -61,7 +84,7 @@ export function ExtensionWelcomeHero({
 		"expiresInMs" in welcome ? welcome.expiresInMs : undefined;
 
 	useEffect(() => {
-		refreshPending.current = false;
+		clearPending();
 		setChecking(false);
 		setExpired(false);
 		const generation = activationGeneration.current;
@@ -120,7 +143,7 @@ export function ExtensionWelcomeHero({
 		};
 		checkBoundary();
 		return () => clearTimeout(timer);
-	}, [welcome, expiresInMs, boundedHosting, refresh]);
+	}, [welcome, expiresInMs, boundedHosting, refresh, clearPending]);
 
 	useEffect(() => {
 		if (
@@ -173,7 +196,7 @@ export function ExtensionWelcomeHero({
 				activationGeneration.current++;
 				hostingDeparted.current = true;
 				clearTimeout(focusTimer);
-				refreshPending.current = false;
+				clearPending();
 				setChecking(false);
 				setExpired(true);
 				abort.abort();
@@ -217,7 +240,7 @@ export function ExtensionWelcomeHero({
 			window.removeEventListener("focus", onFocus);
 			document.removeEventListener("visibilitychange", onFocus);
 		};
-	}, [active, boundedHosting, extensionId, refresh]);
+	}, [active, boundedHosting, extensionId, refresh, clearPending]);
 
 	const retry = () => {
 		if (refreshPending.current || document.visibilityState === "hidden") return;
