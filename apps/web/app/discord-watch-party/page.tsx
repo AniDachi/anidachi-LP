@@ -372,7 +372,9 @@ export default function DiscordWatchPartyPage() {
 			/>
 			<p className="mb-8 leading-relaxed text-ani-muted">
 				So for a group of five watching Crunchyroll, the usual bill is five
-				Crunchyroll accounts and one AniDachi host on Free, Plus, or Pro. For a YouTube night with the activity, it is
+				Crunchyroll accounts and one AniDachi host who needs Plus or Pro. Free&apos;s
+				four-person cap includes the host, so it is too small for this group.
+				For a YouTube night with the activity, it is
 				nothing at all, with the activity&apos;s limits. Prices and room sizes
 				are on <Link href="/pricing">AniDachi pricing</Link>.
 			</p>

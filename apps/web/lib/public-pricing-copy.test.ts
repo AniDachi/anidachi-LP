@@ -18,6 +18,7 @@ const retiredOffers = [
   /Free(?: hosting| accounts?| includes?|:)?[^.!?;]{0,45}30[ -](?:host[ -])?minutes?/i,
   /30[ -]minute Free/i,
   /Choose Plus[^.!?]{0,100}or Pro to host\./i,
+  /Choose Plus(?:\s*\([^)]*\))?\s+or Pro(?:\s*\([^)]*\))?\s+to create (?:your own )?(?:rooms?|watchrooms?)/i,
 ];
 
 function violations(source: string, relativePath = ""): string[] {
@@ -74,6 +75,9 @@ test("the copy guard catches offer regressions across prose, metadata and JSON-L
     '{ "description": "Hosting needs Plus or Pro, with a 3-day trial." }',
     "Eligible Free accounts can try Plus or Pro free for 3 days.",
     "Free includes 30-minute hosting.",
+    "Choose Plus ($7.99/mo) or Pro ($11.99/mo) to create rooms.",
+    `Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro (
+      {PRICING_PRO_SHORT} on monthly billing) to create rooms.{" "}`,
   ]) assert.ok(violations(text).length > 0, text);
 });
 
@@ -85,6 +89,7 @@ test("provider trials, paid size examples and existing-trial rights remain valid
     "Existing trials keep their original end date and renewal terms.",
     "Privacy: trial abuse protections retain limited eligibility records.",
     "Discord Watch Together allows 30 minutes alone.",
+    "Choose Plus or Pro for larger rooms and hosting without a daily time limit.",
   ]) assert.deepEqual(violations(text), [], text);
 });
 
@@ -97,4 +102,15 @@ test("shared Free20 copy distinguishes metering, media permission and personal h
   assert.match(copy.PRICING_HISTORY_NOTE, /Recording and editing.*each viewer's own Plus or Pro/);
   assert.match(copy.PRICING_ROOM_SIZE_RANGE, /4 people on Free, 6 people with a Plus host or 15 with a Pro host/);
   assert.match(copy.PRICING_EXISTING_TRIAL_NOTE, /New trials are no longer offered/);
+});
+
+test("the five-person Discord example requires paid capacity beyond Free's four-person cap", () => {
+  const source = readFileSync(path.join(webRoot, "app/discord-watch-party/page.tsx"), "utf8");
+  const paragraph = [...source.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g)]
+    .map((match) => normalize(match[1]!))
+    .find((text) => /group of five/i.test(text));
+  assert.ok(paragraph, "Keep the concrete five-person capacity example");
+  assert.match(paragraph, /(?:needs?|requires?) Plus or Pro/i);
+  assert.match(paragraph, /Free.{0,40}(?:four|4)[ -]person (?:cap|limit)/i);
+  assert.doesNotMatch(paragraph, /host (?:on|with) Free/i);
 });

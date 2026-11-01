@@ -169,7 +169,8 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         </p>
         <p className="text-foreground/80 leading-relaxed mb-8">
           Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro (
-          {PRICING_PRO_SHORT} on monthly billing) to create rooms.{" "}
+          {PRICING_PRO_SHORT} on monthly billing) for larger rooms and hosting
+          without a daily time limit.{" "}
           {PRICING_FREE20_SUMMARY} See pricing for yearly options and renewal terms.
         </p>
 
