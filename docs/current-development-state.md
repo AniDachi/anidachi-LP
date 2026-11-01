@@ -1,5 +1,29 @@
 # Current Development State
 
+## Free20 purchase delivery candidate, November 1, 2026
+
+The owner approved connecting confirmed subscription synchronization to the still
+active Free20 room. The [bounded delivery plan](superpowers/plans/2026-11-01-free20-purchase-delivery.md)
+adds an atomic SQL refresh outbox after the existing final subscription/trial
+commit, a targeted post-commit delivery, and independent retry recovery. The
+Worker receives only an owner/room/generation/revision-bound request to revalidate
+current authority; the command carries no paid grant or allowance.
+
+The existing serialized accounting transition retains pending ACKs, UTC and quota
+fences. It preserves link, participants and original seats/media caps. Completed
+revisions survive eviction; stale replies cannot consume a newer queued revision.
+Confirmed terminal targets can retire; late payment never revives a room.
+
+The existing exact server flag selects the new v4 billing commit; while off, Web
+retains v2/v3. Additive SQL must be present before activation. A distinct two-minute
+Worker cron retries the outbox using existing internal service authorization.
+Staging config contains only that trigger; its invitations stay on Supabase Cron.
+The existing production notification trigger is preserved in source configuration.
+No flag, price, renewal rule, trial-start policy or production deployment changes
+are part of this candidate. The PR carries exact tests, review and staging receipt.
+Real Sandbox purchase, enabled-flow acceptance, trial retirement, old-client
+transition and final interface work remain separate activation/release gates.
+
 ## Free20 extension time wiring, November 1, 2026
 
 PR486 follow-up: same-user token refresh cleared the live timer and fenced out
