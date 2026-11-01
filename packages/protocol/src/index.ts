@@ -30,3 +30,5 @@ export * from "./hosting-time";
 export * from "./account-hosting-status";
 export * from "./free20-room-budget";
 export * from "./hosting-time-snapshot";
+
+export * from "./free20-room-refresh";

@@ -11,7 +11,7 @@ import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy, n
 import { createFree20AccountingState, prepareFree20Accounting, acknowledgeFree20Accounting, settleFree20Accounting, type Free20AccountingState } from "./free20-room-accounting";
 import { readFree20LiveStatus, projectHostingTime, hostingTimeChangeKey, type HostingDisplayContext } from "./free20-live-status";
 import { nextHostingTimeSequence, readHostingTimeRight, writeHostingTimeRight } from "./hosting-time-storage";
-import { Free20LiveStatusRequestSchema } from "@anidachi/protocol";
+import { Free20LiveStatusRequestSchema, Free20RoomRefreshRequestSchema, type Free20RoomRefreshRequest, type Free20RoomRefreshReceipt } from "@anidachi/protocol";
 import {
 	roomUsageBuckets,
 	acknowledgeRoomUsageDay,
@@ -187,6 +187,27 @@ app.get("/", (c) => {
     );
   }
   return c.json({ ok: true, service: "anidachi-api" });
+});
+
+app.post("/internal/rooms/:roomId/free20-refresh", async (c) => {
+  const headers = { "Cache-Control": "private, no-store" };
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(authorization, c.env.ANIDACHI_INTERNAL_API_SECRET))
+    return c.json({ code: "UNAUTHORIZED" }, 401, headers);
+  if (c.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+    return c.json({ code: "FREE20_DISABLED" }, 404, headers);
+  const command = Free20RoomRefreshRequestSchema.safeParse(await c.req.json().catch(() => null));
+  if (!command.success || command.data.roomId !== c.req.param("roomId"))
+    return c.json({ code: "INVALID_REFRESH_REQUEST" }, 400, headers);
+  try {
+    const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(command.data.roomId));
+    return await stub.fetch(new Request("https://room.internal/internal/free20-refresh", {
+      method: "POST", headers: { Authorization: authorization!, "Content-Type": "application/json" },
+      body: JSON.stringify(command.data),
+    }));
+  } catch {
+    return c.json({ code: "FREE20_REFRESH_UNAVAILABLE" }, 503, headers);
+  }
 });
 
 app.post("/internal/rooms/:roomId/free20-status", async (c) => {
@@ -1134,7 +1155,7 @@ export class RoomDurableObject {
 			return false;
 		}
 	}
-	private async serviceRoomPolicy(now: number): Promise<void> {
+	private async serviceRoomPolicy(now: number, forceFree20Refresh = false): Promise<void> {
 		let policy = this.roomPolicy;
 		if (!policy || this.endedTombstone || this.terminalIntent) return;
     if (policy.endingReason && policy.closingAt !== null) {
@@ -1193,7 +1214,7 @@ export class RoomDurableObject {
 			});
 			return;
 		}
-		if (this.free20Accounting && (now >= policy.refreshAt || needsBudget || this.free20Accounting.pending)) {
+		if (this.free20Accounting && (forceFree20Refresh || now >= policy.refreshAt || needsBudget || this.free20Accounting.pending)) {
 			try {
 				policy = await this.refreshFree20RoomPolicy(policy);
 				now = Date.now();
@@ -1482,8 +1503,56 @@ export class RoomDurableObject {
     }
   }
 
+  private async refreshFree20RoomExclusive(request: Free20RoomRefreshRequest): Promise<Response> {
+    const headers = { "Cache-Control": "private, no-store" };
+    const receipt = (outcome: Free20RoomRefreshReceipt["outcome"]) => Response.json({ request, outcome } satisfies Free20RoomRefreshReceipt, { headers });
+    const terminal = () => !!(this.endedTombstone || this.terminalIntent || this.roomEndInProgress || this.roomPolicy?.endingReason || this.roomPolicy?.closingAt != null);
+    try {
+      const policy = this.roomPolicy;
+      if (policy && (policy.hostId !== request.ownerUserId || policy.lease.roomGeneration !== request.roomGeneration))
+        return receipt("stale");
+      if (terminal()) return receipt("terminal");
+      if (!policy || !this.isFreeRoom() || !this.free20Accounting)
+        throw new Error("Missing marked Free20 room authority");
+      const stored = await this.state.storage.get<unknown>("free20_refresh_completed_v1");
+      if (stored !== undefined) {
+        const completed = Free20RoomRefreshRequestSchema.parse(stored);
+        if (completed.ownerUserId !== request.ownerUserId || completed.roomId !== request.roomId || completed.roomGeneration !== request.roomGeneration)
+          throw new Error("Free20 refresh completion binding mismatch");
+        // This ACK says the command was processed, not that its time right is current.
+        if (completed.revision >= request.revision) return receipt("applied");
+      }
+      const previousRevision = policy.lease.capabilities.capabilityRevision;
+      await this.serviceRoomPolicy(Date.now(), true);
+      if (this.terminalIntent?.reason === "accounting_unavailable" || this.endedTombstone?.reason === "accounting_unavailable")
+        throw new Error("Free20 refresh authority unavailable");
+      if (terminal()) return receipt("terminal");
+      if (this.free20Accounting.pending || !this.roomPolicy || this.roomPolicy.lease.capabilities.capabilityRevision <= previousRevision)
+        throw new Error("Free20 refresh did not complete");
+      // Policy, cumulative ACK and meter must commit before the independent command
+      // high-water mark. A crash in between can repeat idempotent settlement safely.
+      await this.state.storage.sync();
+      await this.state.storage.put("free20_refresh_completed_v1", request);
+      await this.state.storage.sync();
+      return receipt("applied");
+    } catch {
+      return Response.json({ code: "FREE20_REFRESH_UNAVAILABLE" }, { status: 503, headers });
+    }
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname === "/internal/free20-refresh") {
+      const headers = { "Cache-Control": "private, no-store" };
+      if (!hasValidInternalAuthorization(request.headers.get("authorization"), this.env.ANIDACHI_INTERNAL_API_SECRET))
+        return Response.json({ code: "UNAUTHORIZED" }, { status: 401, headers });
+      if (this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+        return Response.json({ code: "FREE20_DISABLED" }, { status: 404, headers });
+      const command = Free20RoomRefreshRequestSchema.safeParse(await request.json().catch(() => null));
+      if (!command.success || command.data.roomId !== this.room.roomId)
+        return Response.json({ code: "INVALID_REFRESH_REQUEST" }, { status: 400, headers });
+      return this.runRoomEndExclusively(() => this.refreshFree20RoomExclusive(command.data));
+    }
     if (request.method === "POST" && url.pathname === "/internal/free20-status") {
       const headers = { "Cache-Control": "private, no-store" };
       if (!hasValidInternalAuthorization(request.headers.get("authorization"), this.env.ANIDACHI_INTERNAL_API_SECRET))

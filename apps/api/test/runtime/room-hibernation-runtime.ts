@@ -3311,7 +3311,10 @@ describe("RoomDurableObject media v2", () => {
 						resetAt: (Math.floor(now / 86400000) + 1) * 86400000,
 						refreshBy: Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
 						...(!unlimitedTime ? { budgetSeconds: 1200, committedSeconds: priorAccountSeconds + (ledger.get(day) ?? 0) } : {}), acknowledged: body.usage,
-					}, policy: { denied: false, roomToken: await token(hostId, "internal-capability-renewal") } });
+					}, ...(unlimitedTime ? { displayTime: {
+       access: { kind: "confirmed_unlimited", source: "paid", validUntil: now + 3600000 },
+       validUntil: Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
+      } } : {}), policy: { denied: false, roomToken: await token(hostId, "internal-capability-renewal") } });
 				}
 				if (String(input).endsWith("/source")) {
 					if (failSource) return Response.json({ code: "ROOM_ENDED" }, { status: 409 });
@@ -3408,6 +3411,225 @@ describe("RoomDurableObject media v2", () => {
 			},
 		};
 	}
+
+ function refreshRequest(roomId: string, revision = 7) {
+  return { refreshVersion: 1, ownerUserId: hostId, roomId, roomGeneration: 1, revision };
+ }
+ function refreshRoom(stub: DurableObjectStub, request: unknown) {
+  return stub.fetch("https://room.internal/internal/free20-refresh", {
+   method: "POST", headers: { Authorization: `Bearer ${INTERNAL_SECRET}` }, body: JSON.stringify(request),
+  });
+ }
+
+ it("Free20 refresh authenticates and validates again inside the real DO", async () => {
+  const f = await fixture("free", 3, 1200, true);
+  const command = refreshRequest(f.roomId);
+  for (const [authorization, value, status] of [
+   [undefined, command, 401], ["Bearer wrong", command, 401],
+   [`Bearer ${INTERNAL_SECRET}`, { ...command, roomId: "wrong" }, 400],
+   [`Bearer ${INTERNAL_SECRET}`, { ...command, allowance: 1200 }, 400],
+   [`Bearer ${INTERNAL_SECRET}`, { ...command, revision: 0 }, 400],
+  ] as const) {
+   const response = await f.stub.fetch("https://room.internal/internal/free20-refresh", {
+    method: "POST", headers: authorization ? { Authorization: authorization } : {}, body: JSON.stringify(value),
+   });
+   expect(response.status).toBe(status);
+   expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+   await response.text();
+  }
+  for (const flag of [undefined, "false", "TRUE"]) {
+   await runInDurableObject(f.stub, instance => { if (flag === undefined) delete free20Room(instance).env.ANIDACHI_FREE20_ACCOUNTING_ENABLED;
+    else free20Room(instance).env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = flag; });
+   const response = await refreshRoom(f.stub, command); expect(response.status).toBe(404); await response.text();
+  }
+  expect(f.calls).toHaveLength(0);
+ });
+
+ it.each([false, true])("Free20 refresh fences known owner/generation and rejects unknown/unmarked authority: marked=%s", async marked => {
+  const unknown = await fixture("free", 3, 1200, true);
+  const unavailable = await refreshRoom(unknown.stub, refreshRequest(unknown.roomId));
+  expect(unavailable.status).toBe(503); await unavailable.text();
+  const f = await fixture("free", 3, 1200, true, marked);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "binding refresh host");
+  const calls = f.calls.length;
+  for (const request of [
+   { ...refreshRequest(f.roomId), ownerUserId: "22222222-2222-4222-8222-222222222222" },
+   { ...refreshRequest(f.roomId), roomGeneration: 2 },
+  ]) {
+   const response = await refreshRoom(f.stub, request);
+   expect(await response.json()).toEqual({ request, outcome: "stale" });
+  }
+  if (!marked) {
+   const unmarked = await refreshRoom(f.stub, refreshRequest(f.roomId));
+   expect(unmarked.status).toBe(503); await unmarked.text();
+  }
+  expect(f.calls).toHaveLength(calls); host.close();
+ });
+
+ it("Free20 refresh immediately applies paid time, broadcasts negotiated time and keeps pinned participants/caps", async () => {
+  let clock = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0, "refresh-host", true);
+  await host.waitFor(e => e.type === "HOSTING_TIME", "initial refresh display");
+  const guest = await f.join(1);
+  await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "refresh guest");
+  clock += 30000; f.setUnlimited();
+  const before = await runInDurableObject(f.stub, instance => free20Room(instance).roomPolicy.refreshAt);
+  expect(before).toBeGreaterThan(clock);
+  const calls = f.calls.filter(call => call.checkpointSequence !== undefined).length;
+  const request = refreshRequest(f.roomId);
+  const response = await refreshRoom(f.stub, request);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ request, outcome: "applied" });
+  const display = await host.waitFor(e => e.type === "HOSTING_TIME" && e.snapshot.access.kind === "confirmed_unlimited", "paid refresh display");
+  expect(display).toMatchObject({ snapshot: { access: { source: "paid" } } });
+  const state = await runInDurableObject(f.stub, instance => {
+   const i = free20Room(instance); return { caps: i.roomPolicy.lease.capabilities, meter: i.roomMeter, snapshot: i.currentRoomSnapshot() };
+  });
+  expect(state.caps).toMatchObject({ hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMediaSeats: 4 });
+  expect(state.snapshot.participants).toHaveLength(2); expect(state.snapshot.quota).toBeUndefined();
+  expect(state.meter).toMatchObject({ accumulatedMs: 30000, acknowledgedSeconds: 30, activeSince: null });
+  expect(f.calls.filter(call => call.checkpointSequence !== undefined)).toHaveLength(calls + 1);
+  expect(guest.hasEvent(e => e.type === "HOSTING_TIME")).toBe(false);
+  host.close(); guest.close();
+ });
+
+ it("Free20 refresh coalesces concurrent deliveries and preserves completion across lost receipt/eviction", async () => {
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "dedupe host");
+  const calls = f.calls.filter(call => call.checkpointSequence !== undefined).length;
+  const request = refreshRequest(f.roomId);
+  const responses = await Promise.all([refreshRoom(f.stub, request), refreshRoom(f.stub, request)]);
+  for (const response of responses) expect(await response.json()).toEqual({ request, outcome: "applied" });
+  expect(f.calls.filter(call => call.checkpointSequence !== undefined)).toHaveLength(calls + 1);
+  await evictDurableObject(f.stub, { webSockets: "hibernate" });
+  await runInDurableObject(f.stub, instance => {
+   const i = free20Room(instance); i.env = { ...i.env, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true" };
+  });
+  for (const revision of [7, 6]) {
+   const retry = refreshRequest(f.roomId, revision);
+   const response = await refreshRoom(f.stub, retry);
+   expect(await response.json()).toEqual({ request: retry, outcome: "applied" });
+  }
+  expect(f.calls.filter(call => call.checkpointSequence !== undefined)).toHaveLength(calls + 1);
+  const newer = refreshRequest(f.roomId, 8);
+  expect(await (await refreshRoom(f.stub, newer)).json()).toEqual({ request: newer, outcome: "applied" });
+  expect(f.calls.filter(call => call.checkpointSequence !== undefined)).toHaveLength(calls + 2);
+  host.close();
+ });
+
+ it.each(["closing", "ending"])("Free20 refresh acknowledges %s without refreshing or reviving", async boundary => {
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "closing refresh host");
+  const calls = f.calls.length;
+  await runInDurableObject(f.stub, instance => {
+   const policy = free20Room(instance).roomPolicy;
+   if (boundary === "closing") policy.closingAt = Date.now() + 300000;
+   else policy.endingReason = "host_ended";
+  });
+  const request = refreshRequest(f.roomId);
+  expect(await (await refreshRoom(f.stub, request)).json()).toEqual({ request, outcome: "terminal" });
+  expect(f.calls).toHaveLength(calls); host.close();
+ });
+
+ it("Free20 refresh safely retries after policy commit but before command completion", async () => {
+  let clock = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "gap refresh host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "gap refresh guest");
+  clock += 30000; f.setUnlimited();
+  await runInDurableObject(f.stub, (_instance, ctx) => {
+   const put = ctx.storage.put.bind(ctx.storage);
+   vi.spyOn(ctx.storage, "put").mockImplementation((...args: Parameters<typeof put>) => {
+    const key: unknown = args[0];
+    if (key === "free20_refresh_completed_v1") {
+     vi.mocked(ctx.storage.put).mockRestore();
+     return Promise.reject(new Error("command completion write failed"));
+    }
+    return put(...args);
+   });
+  });
+  const request = refreshRequest(f.roomId);
+  const first = await refreshRoom(f.stub, request); expect(first.status).toBe(503); await first.text();
+  expect(await runInDurableObject(f.stub, async (instance, ctx) => ({
+   completed: await ctx.storage.get("free20_refresh_completed_v1"),
+   right: free20Room(instance).free20Accounting.unlimited?.kind,
+  }))).toEqual({ completed: undefined, right: "confirmed_unlimited" });
+  await evictDurableObject(f.stub, { webSockets: "hibernate" });
+  await runInDurableObject(f.stub, instance => {
+   const i = free20Room(instance); i.env = { ...i.env, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true" };
+  });
+  const second = await refreshRoom(f.stub, request);
+  expect(await second.json()).toEqual({ request, outcome: "applied" });
+  expect(f.ledger.get(new Date(clock).toISOString().slice(0, 10))).toBe(30);
+  expect(f.calls.filter(c => c.checkpointSequence !== undefined).slice(-2).map(c => c.usage)).toEqual([
+   [{ day: new Date(clock).toISOString().slice(0, 10), seconds: 30 }],
+   [], // Already committed cumulative ACK is not charged again after recovery.
+  ]);
+  host.close(); guest.close();
+ });
+
+ it.each(["before", "during", "stopped"])("Free20 refresh cannot revive quota exhaustion: %s", async boundary => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000; let clock = start;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true); f.setPriorUsage(1140);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "quota refresh host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "quota refresh guest");
+  f.setUnlimited(); clock += boundary === "during" ? 59000 : 60000;
+  if (boundary === "during") f.beforeBudgetReply(() => { clock += 1000; });
+  if (boundary === "stopped") {
+   guest.close();
+   await vi.waitFor(async () => expect(await runInDurableObject(f.stub, instance => free20Room(instance).roomMeter.activeSince)).toBeNull());
+  }
+  const request = refreshRequest(f.roomId);
+  expect(await (await refreshRoom(f.stub, request)).json()).toEqual({ request, outcome: "terminal" });
+  expect(await runInDurableObject(f.stub, instance => free20Room(instance).endedTombstone)).toMatchObject({ reason: "quota_exhausted", endedAt: start + 60000, usageFinalized: true });
+  expect(f.ledger.get(new Date(start).toISOString().slice(0, 10))).toBe(60);
+  const calls = f.calls.length; await evictDurableObject(f.stub, { webSockets: "hibernate" });
+  await runInDurableObject(f.stub, instance => {
+   const i = free20Room(instance); i.env = { ...i.env, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true" };
+  });
+  expect(await (await refreshRoom(f.stub, request)).json()).toEqual({ request, outcome: "terminal" });
+  expect(f.calls).toHaveLength(calls);
+ });
+
+ it.each(["unavailable", "lost-budget-ACK"])("Free20 refresh preserves durable settlement on %s authority", async failure => {
+  let clock = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "failed refresh host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "failed refresh guest");
+  clock += 30000;
+  if (failure === "unavailable") f.setFail(); else f.loseBudgetReply();
+  const request = refreshRequest(f.roomId);
+  const response = await refreshRoom(f.stub, request); expect(response.status).toBe(503); await response.text();
+  const state = await runInDurableObject(f.stub, async (instance, ctx) => ({
+   terminal: free20Room(instance).terminalIntent, completed: await ctx.storage.get("free20_refresh_completed_v1"),
+  }));
+  expect(state.terminal).toMatchObject({ reason: "accounting_unavailable", usage: { seconds: 30 } });
+  expect(state.completed).toBeUndefined();
+  const retry = await refreshRoom(f.stub, request);
+  expect(await retry.json()).toEqual({ request, outcome: "terminal" });
+  if (failure === "lost-budget-ACK") expect(f.ledger.get(new Date(clock).toISOString().slice(0, 10))).toBe(30);
+ });
+
+ it("Free20 refresh reconciles UTC rollover during authority I/O before completing", async () => {
+  const start = (Math.floor(Date.now() / 86400000) + 2) * 86400000 - 2000; let clock = start;
+  vi.spyOn(Date, "now").mockImplementation(() => clock);
+  const f = await fixture("free", 3, 1200, true);
+  const host = await f.join(0); await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "UTC refresh host");
+  const guest = await f.join(1); await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "UTC refresh guest");
+  clock += 1000; f.setUnlimited(); f.beforeBudgetReply(() => { clock += 2000; });
+  const request = refreshRequest(f.roomId);
+  expect(await (await refreshRoom(f.stub, request)).json()).toEqual({ request, outcome: "applied" });
+  const state = await runInDurableObject(f.stub, instance => ({ accounting: free20Room(instance).free20Accounting, ended: free20Room(instance).endedTombstone }));
+  expect(state.ended).toBeNull(); expect(state.accounting.unlimited?.utcDay).toBe(new Date(clock).toISOString().slice(0, 10));
+  expect(f.ledger.get(new Date(start).toISOString().slice(0, 10))).toBe(2);
+  expect(f.ledger.get(new Date(clock).toISOString().slice(0, 10))).toBe(1);
+  host.close(); guest.close();
+ });
 
  it("Free20 status reads real live usage without settlement, writes or alarms", async () => {
   let clock = (Math.floor(Date.now() / 86_400_000) + 1) * 86_400_000 + 43_200_000;
