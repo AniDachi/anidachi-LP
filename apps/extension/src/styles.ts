@@ -3,8 +3,10 @@ import { panelMatteGrain } from "./panel-matte-texture";
 import { extensionThemeTokens } from "./extension-theme";
 import { panelMediaControlStyles } from "./panel-media-controls-styles";
 import { hostingNoticeStyles } from "./hosting-notice-styles";
+import { free20WarningStyles } from "./free20-warning-styles";
 
 export const overlayStyles = `
+${free20WarningStyles}
   :host {
     color-scheme: dark;
   }

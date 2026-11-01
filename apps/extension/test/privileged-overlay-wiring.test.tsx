@@ -14,6 +14,7 @@ import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences"
 import * as overlayApp from "../src/overlay-app";
 import * as hostingAccessClient from "../src/hosting-access-client";
 import * as accountHostingClient from "../src/account-hosting-status-client";
+import * as free20WarningClient from "../src/free20-warning-client";
 import { P2PMediaController } from "../src/p2p-media";
 import type { PrivilegedOverlayContext } from "../src/privileged-overlay-intent";
 import {
@@ -1867,6 +1868,52 @@ describe("privileged overlay wiring", () => {
 		expect(view.container.textContent).not.toContain("Pending");
 		await unmount(view.root);
 	});
+
+  it("keeps the low-time notice visible beside the closed capsule without moving media docks", async () => {
+    const at = Date.parse("2026-11-01T12:00:00Z");
+    const pending = deferred<free20WarningClient.Free20WarningResult>();
+    const claim = vi.spyOn(free20WarningClient, "requestFree20Warning").mockReturnValue(pending.promise);
+    const authorization: free20WarningClient.Free20WarningResult = { kind: "server", response: {
+      hostingWarningVersion: 1, ownerUserId: "22222222-2222-4222-8222-222222222222", roomId: "room-a", roomGeneration: 1,
+      utcDay: "2026-11-01", serverTime: at, validUntil: at + 10000, decision: "show", thresholdSeconds: 300, claimId: "11111111-1111-4111-8111-111111111111",
+    } };
+    const room = await renderActiveFree20Timer();
+    try {
+      const dock = room.view.container.querySelector(".panel-media-dock");
+      expect(dock).not.toBeNull();
+      expect(claim).toHaveBeenCalledTimes(1);
+      expect(claim.mock.calls[0][1].aborted).toBe(false);
+      await act(async () => pending.resolve(authorization));
+      const notice = room.view.container.querySelector(".free20-warning-notice")!;
+      expect(notice).not.toBeNull();
+      expect(notice.parentElement?.classList.contains("anidachi-overlay")).toBe(true);
+      expect(notice.closest(".mini-panel, .top-bubble-reveal")).toBeNull();
+      expect(room.view.container.querySelector(".panel-media-dock")).toBe(dock);
+      await click(button(room.view.container, "Close Anidachi controls"));
+      expect(room.view.container.querySelector(".mini-panel")).toBeNull();
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBe(notice);
+      expect(claim).toHaveBeenCalledTimes(1);
+      await click(button(room.view.container, "Dismiss hosting time warning"));
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
+      await act(async () => room.options.onEvent(room.time(2, 8)));
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
+      expect(claim).toHaveBeenCalledTimes(1);
+      room.setSession({ ...room.session!, authRevision: "credential-revision-2", accessToken: "rotated-access", refreshToken: "rotated-refresh" });
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
+      await flushMountedWork();
+      await act(async () => room.options.onEvent({ ...room.snapshot, serverSeq: 2, sourceGeneration: 2 }));
+      await act(async () => room.options.onEvent(room.time(3, 7)));
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
+      expect(claim).toHaveBeenCalledTimes(1);
+      room.setSession({ ...room.session!, authSessionId: "login-b" });
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
+      await flushMountedWork();
+      // A real new login retires the connection and its pending warning context.
+      await act(async () => room.options.onEvent(room.time(4, 6)));
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
+      expect(claim).toHaveBeenCalledTimes(1);
+    } finally { vi.useRealTimers(); await unmount(room.view.root); }
+  });
 
   it.each(["access token", "both tokens"])("keeps Free20 live time across same-login rotation of %s", async rotation => {
     const room = await renderActiveFree20Timer();
