@@ -6141,7 +6141,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					!identityLoaded ? undefined : authAuthenticated ? accountUser?.plan ?? "free" : null
 				}
 				hosting={hostingDisplay.state}
-				onRefreshHosting={hostingDisplay.refresh}
+				accountHostingTime={accountHostingTime}
+				onRefreshHosting={accountHostingTime.mode === "legacy" ? hostingDisplay.refresh : accountHostingTime.refresh}
 				onActiveChange={setIntroductionActive}
 			/>
 			<div

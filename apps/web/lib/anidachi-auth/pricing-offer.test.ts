@@ -370,3 +370,35 @@ test("coherent inactive policy keeps ordinary paid offers usable without new tri
 		);
 	}
 });
+
+test("Free20 mode needs exact server flag and SQL policy, without changing paid hosting", async () => {
+	const previous = process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED;
+	try {
+		for (const flag of ["false", "TRUE", "true"]) {
+			process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = flag;
+			for (const free20_enabled of [false, true])
+				for (const user of [null, "owner"]) {
+					const result = await getPricingOffer(user, {
+						...deps,
+						policy: async () => ({
+							activation_at: time,
+							trials_enabled: false,
+							revision: 1,
+							free20_enabled,
+						}),
+					});
+					assert.equal(
+						result.hostingModel,
+						flag === "true" && free20_enabled ? "daily_free20" : "paid_hosting",
+					);
+					assert.equal(result.paidHostingActive, true);
+					assert.equal(result.trialAvailable, false);
+					assert.equal("remainingSeconds" in result, false);
+				}
+		}
+	} finally {
+		if (previous === undefined)
+			delete process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED;
+		else process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = previous;
+	}
+});

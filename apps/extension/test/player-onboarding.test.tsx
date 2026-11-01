@@ -13,7 +13,10 @@ import {
 	PLAYER_INTRODUCTION_MESSAGE,
 } from "../src/player-onboarding-storage";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
-import { useHostingAccess, type HostingDisplayState } from "../src/use-hosting-access";
+import {
+	useHostingAccess,
+	type HostingDisplayState,
+} from "../src/use-hosting-access";
 import type { HostingAccountAccess } from "../src/hosting-access-client";
 
 (
@@ -137,12 +140,16 @@ it("opens onboarding checkout with a return token without leaving the current st
 	await render();
 	await click("Open AniDachi controls");
 	send.mockResolvedValue({ opened: true });
-	await act(async () => host.querySelector<HTMLAnchorElement>(".tour-plan-link")!.click());
-	expect(send).toHaveBeenCalledWith(expect.objectContaining({
-		type: "ANIDACHI_ONBOARDING_CHECKOUT_OPEN",
-		offer: "check",
-		token: expect.stringMatching(/^[a-f0-9-]{36}$/),
-	}));
+	await act(async () =>
+		host.querySelector<HTMLAnchorElement>(".tour-plan-link")!.click(),
+	);
+	expect(send).toHaveBeenCalledWith(
+		expect.objectContaining({
+			type: "ANIDACHI_ONBOARDING_CHECKOUT_OPEN",
+			offer: "check",
+			token: expect.stringMatching(/^[a-f0-9-]{36}$/),
+		}),
+	);
 	expect(host.textContent).toContain("starts here.");
 	expect(playing).toBe(false);
 });
@@ -647,9 +654,7 @@ it("walks through the same short scenario with the existing panel styling", asyn
 	);
 	expect(offer?.target).toBe("_blank");
 	expect(offer?.rel).toBe("noopener noreferrer");
-	expect(host.textContent).not.toMatch(
-		/Choose a plan|Pro subscription/,
-	);
+	expect(host.textContent).not.toMatch(/Choose a plan|Pro subscription/);
 });
 it("opens trial confirmation for eligible accounts, ordinary plans for used trials and hides paid offers", async () => {
 	const hosting: HostingDisplayState = {
@@ -687,7 +692,9 @@ it("opens trial confirmation for eligible accounts, ordinary plans for used tria
 		hosting: { mode: "unknown", busy: false, error: false },
 	});
 	await click("Open AniDachi controls");
-	const pending = host.querySelector<HTMLButtonElement>("button.tour-plan-link");
+	const pending = host.querySelector<HTMLButtonElement>(
+		"button.tour-plan-link",
+	);
 	expect(pending?.disabled).toBe(true);
 	expect(pending?.getAttribute("aria-label")).toBe("Loading plan options");
 	expect(host.querySelector("a.tour-plan-link")).toBeNull();
@@ -733,33 +740,57 @@ it("retries a failed offer read without offering purchase or navigating away", a
 		entitlementsVersion: 1,
 		planCode: "free",
 		hostingOffer: { trialMode: "cardless", trialDays: 3, policyRevision: 3 },
-		hosting: { hostingPolicyVersion: 2, hostingActivationAt: "2026-10-01T00:00:00Z",
-			canHost: false, trialEligibility: "eligible", trialEndsAt: null },
+		hosting: {
+			hostingPolicyVersion: 2,
+			hostingActivationAt: "2026-10-01T00:00:00Z",
+			canHost: false,
+			trialEligibility: "eligible",
+			trialEndsAt: null,
+		},
 	};
 	let resolve!: (access: HostingAccountAccess) => void;
 	let reads = 0;
 	const load = () => {
 		reads += 1;
-		return reads === 1 ? Promise.reject(new Error("offline"))
-			: new Promise<HostingAccountAccess>(done => { resolve = done; });
+		return reads === 1
+			? Promise.reject(new Error("offline"))
+			: new Promise<HostingAccountAccess>((done) => {
+					resolve = done;
+				});
 	};
 	function ConnectedTour() {
-		const display = useHostingAccess({ ownerUserId: trialAccess.ownerUserId,
-			sessionKey: "same-session", enabled: true, request: load });
-		return <PlayerOnboarding {...props} accountPlan="free" hosting={display.state}
-			onRefreshHosting={display.refresh} />;
+		const display = useHostingAccess({
+			ownerUserId: trialAccess.ownerUserId,
+			sessionKey: "same-session",
+			enabled: true,
+			request: load,
+		});
+		return (
+			<PlayerOnboarding
+				{...props}
+				accountPlan="free"
+				hosting={display.state}
+				onRefreshHosting={display.refresh}
+			/>
+		);
 	}
 	await act(async () => root.render(<ConnectedTour />));
 	await advance(2_000);
 	await click("Open AniDachi controls");
 	expect(host.querySelector("a.tour-plan-link")).toBeNull();
-	expect(host.textContent).not.toMatch(/Continue with Plus|View plans|Try 3 days free/);
+	expect(host.textContent).not.toMatch(
+		/Continue with Plus|View plans|Try 3 days free/,
+	);
 	await click("Try again");
-	expect(host.querySelector("button.tour-plan-link")?.getAttribute("aria-busy")).toBe("true");
+	expect(
+		host.querySelector("button.tour-plan-link")?.getAttribute("aria-busy"),
+	).toBe("true");
 	await click("Loading plan options");
 	expect(reads).toBe(2);
 	await act(async () => resolve(trialAccess));
-	expect(host.querySelector("a.tour-plan-link")?.textContent).toBe("Try 3 days free");
+	expect(host.querySelector("a.tour-plan-link")?.textContent).toBe(
+		"Try 3 days free",
+	);
 	expect(host.querySelector<HTMLAnchorElement>("a.tour-plan-link")?.href).toBe(
 		"http://localhost:3003/checkout?plan=plus&billing=monthly&confirm=trial",
 	);
@@ -770,10 +801,17 @@ it("keeps unresolved identity neutral before the account offer loads", async () 
 	await render({ accountPlan: undefined });
 	await click("Open AniDachi controls");
 	expect(host.querySelector("a.tour-plan-link")).toBeNull();
-	expect(host.querySelector("button.tour-plan-link")?.getAttribute("aria-busy")).toBe("true");
-	await render({ accountPlan: "free", hosting: { mode: "unknown", busy: false, error: false } });
+	expect(
+		host.querySelector("button.tour-plan-link")?.getAttribute("aria-busy"),
+	).toBe("true");
+	await render({
+		accountPlan: "free",
+		hosting: { mode: "unknown", busy: false, error: false },
+	});
 	expect(host.querySelector("a.tour-plan-link")).toBeNull();
-	expect(host.textContent).not.toMatch(/Continue with Plus|View plans|Try 3 days free|Sign in/);
+	expect(host.textContent).not.toMatch(
+		/Continue with Plus|View plans|Try 3 days free|Sign in/,
+	);
 });
 it("allows keyboard activation of the plans link without triggering player keys", async () => {
 	await render();
@@ -1150,4 +1188,49 @@ it("does not claim on storage failure", async () => {
 		},
 	});
 	expect(await claim()).toBe(false);
+});
+
+it("Free20 onboarding uses current status ahead of cached legacy/trial offers", () => {
+	const status = {
+		activeRoom: null,
+		canCreateRoom: true,
+		access: { kind: "daily_free", remainingSeconds: 600 },
+	};
+	const current = {
+		mode: "free20",
+		status,
+		exhausted: false,
+		remainingSeconds: 600,
+		busy: false,
+		error: false,
+	} as unknown as NonNullable<
+		React.ComponentProps<typeof PlayerOnboarding>["accountHostingTime"]
+	>;
+	expect(getPlayerIntroductionOffer("free", undefined, current)).toBe(
+		"daily-free",
+	);
+	expect(
+		getPlayerIntroductionOffer("plus", undefined, {
+			...current,
+			status: null,
+			error: true,
+		}),
+	).toBe("retry");
+	expect(
+		getPlayerIntroductionOffer("free", undefined, {
+			...current,
+			exhausted: true,
+			remainingSeconds: 0,
+		}),
+	).toBe("exhausted");
+	expect(
+		getPlayerIntroductionOffer("free", undefined, {
+			...current,
+			status: {
+				...current.status!,
+				activeRoom: { roomId: "existing", role: "member" },
+				canCreateRoom: false,
+			},
+		}),
+	).toBe("active-room");
 });

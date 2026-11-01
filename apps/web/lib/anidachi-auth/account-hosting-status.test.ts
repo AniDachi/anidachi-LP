@@ -323,3 +323,33 @@ test("fresh Free account epoch zero supports idle and live hosting status", asyn
 		assert.equal(value.access.remainingSeconds, assignment ? 600 : 1200);
 	}
 });
+
+test("shared reader gates authority work and includes elapsed identity work", async () => {
+	const { readAccountHostingStatus } = await import("./account-hosting-status");
+	let reads = 0;
+	const deps = {
+		enabled: () => false,
+		readAuthority: async () => {
+			reads++;
+			return authority();
+		},
+		clock: () => 0,
+	};
+	assert.deepEqual(await readAccountHostingStatus(owner, deps), {
+		mode: "legacy",
+	});
+	assert.equal(reads, 0);
+	assert.equal(
+		(await readAccountHostingStatus(owner, { ...deps, enabled: () => true }))
+			.mode,
+		"free20",
+	);
+	await assert.rejects(
+		readAccountHostingStatus(
+			owner,
+			{ ...deps, enabled: () => true, clock: () => 300_000 },
+			0,
+		),
+		/expired/,
+	);
+});

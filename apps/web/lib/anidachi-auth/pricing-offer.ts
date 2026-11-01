@@ -15,7 +15,9 @@ const defaults = {
 	async policy() {
 		const { data, error } = await db()
 			.from("hosting_commercial_policy")
-			.select("activation_at,trials_enabled,cardless_trials_enabled,revision")
+			.select(
+				"activation_at,trials_enabled,cardless_trials_enabled,revision,free20_enabled",
+			)
 			.eq("singleton", true)
 			.abortSignal(AbortSignal.timeout(8000))
 			.single();
@@ -24,6 +26,7 @@ const defaults = {
 			activation_at: string | null;
 			trials_enabled: boolean;
 			cardless_trials_enabled?: boolean;
+			free20_enabled?: boolean;
 			revision?: number;
 		};
 	},
@@ -107,6 +110,9 @@ export async function getPricingOffer(
 				paidHostingActive && offerAuthorityCurrent,
 			),
 			...(pendingTrialActivation ? { pendingTrialActivation } : {}),
+			hostingModel: offerAuthorityCurrent
+				? publicHostingModel(commercialPolicy, paidHostingActive)
+				: undefined,
 			validForMs: !manage && !offerAuthorityCurrent ? 0 : validForMs,
 			trialAvailable,
 			ownerUserId: userId,
@@ -134,6 +140,7 @@ export async function getPricingOffer(
 			data.activation_at && Date.parse(data.activation_at) > now
 				? Math.min(60_000, Date.parse(data.activation_at) - now)
 				: 60_000,
+		hostingModel: publicHostingModel(data, paidHostingActive),
 		ownerUserId: null,
 		prices: { plus, pro },
 		yearlyPrices: await yearly,
@@ -164,4 +171,18 @@ function trialOfferFields(
 			? { trialOfferRevision: String(policy.revision) }
 			: {}),
 	};
+}
+
+function publicHostingModel(
+	policy: { free20_enabled?: boolean },
+	paidHostingActive: boolean,
+): PricingOffer["hostingModel"] {
+	if (typeof policy.free20_enabled !== "boolean") return undefined;
+	return paidHostingActive &&
+		policy.free20_enabled === true &&
+		process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true"
+		? "daily_free20"
+		: paidHostingActive
+			? "paid_hosting"
+			: "legacy";
 }
