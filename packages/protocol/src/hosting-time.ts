@@ -2,7 +2,7 @@ import { z } from "zod";
 import { MAX_ROOM_ID_CHARS } from "./limits";
 
 // Independent of legacy PlanPolicy/HostingAccess/RoomQuota* versions. No runtime
-// currently issues this contract; it is not a new room event or admission claim.
+// issues this contract without explicit negotiation; it is never admission authority.
 const SafeInteger = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const Timestamp = SafeInteger.max(8_640_000_000_000_000);
 const UtcDay = z
@@ -121,3 +121,38 @@ export const HostingTimeSnapshotSchema = z
 		}
 	});
 export type HostingTimeSnapshot = z.infer<typeof HostingTimeSnapshotSchema>;
+
+/** Opt-in immutable room-mode signal, never an allowance. A legacy room keeps
+ * its existing quota protocol even after the account policy switches to Free20. */
+export const LegacyHostingTimeEventSchema = z.strictObject({
+	type: z.literal("HOSTING_TIME_LEGACY"),
+	roomId: scope.roomId,
+	roomGeneration: scope.roomGeneration,
+});
+
+/** Sent only to sockets opting into hostingTimeVersion:1. The envelope binds a
+ * bounded display lifetime; no client may grant time or close a room from it. */
+export const HostingTimeEventSchema = z
+	.strictObject({
+		type: z.literal("HOSTING_TIME"),
+		requestId: z.uuid().optional(),
+		roomId: scope.roomId,
+		roomGeneration: scope.roomGeneration,
+		serverTime: Timestamp,
+		validUntil: Timestamp,
+		snapshot: HostingTimeSnapshotSchema,
+	})
+	.refine(
+		(event) =>
+			event.roomId === event.snapshot.roomId &&
+			event.roomGeneration === event.snapshot.roomGeneration &&
+			event.serverTime === event.snapshot.serverTime &&
+			event.validUntil > event.serverTime &&
+			event.validUntil <=
+				Math.min(event.serverTime + 300_000, event.snapshot.period.resetAt) &&
+			(event.snapshot.access.kind !== "confirmed_unlimited" ||
+				event.snapshot.access.validUntil === null ||
+				event.validUntil <= event.snapshot.access.validUntil),
+		"Inconsistent hosting time envelope",
+	);
+export type HostingTimeEvent = z.infer<typeof HostingTimeEventSchema>;

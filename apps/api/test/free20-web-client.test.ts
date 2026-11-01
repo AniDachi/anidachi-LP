@@ -83,3 +83,8 @@ describe("bounded internal Free20 transport", () => {
 		expect(cancelled).toBe(true);
 	});
 });
+
+it('optional display metadata cannot invalidate a valid accounting checkpoint',async()=>{
+  const response={...body,displayTime:{access:{kind:'confirmed_unlimited',source:'not-authority'},validUntil:0}};
+  expect(await notifyWebFree20Budget(env,request,async()=>Response.json(response))).toEqual(body);
+});

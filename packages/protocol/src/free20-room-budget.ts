@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { HostingTimeBindingSchema } from "./hosting-time";
+import {
+	ConfirmedUnlimitedHostingTimeSchema,
+	HostingTimeBindingSchema,
+} from "./hosting-time";
 import { RoomUsageSummarySchema } from "./types";
 
 const Counter = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
@@ -112,14 +115,45 @@ export const Free20RoomTimeCheckpointSchema = z.union([
 	Free20RoomUnlimitedCheckpointSchema,
 ]);
 
-/** Internal transport only; the signed lease retains its existing verifier. */
-export const Free20RoomBudgetResponseSchema = z.strictObject({
-	checkpoint: Free20RoomTimeCheckpointSchema,
-	policy: z.discriminatedUnion("denied", [
-		z.strictObject({ denied: z.literal(false), roomToken: z.string().min(1) }),
-		z.strictObject({ denied: z.literal(true), closingAt: z.iso.datetime() }),
-	]),
+/** Opt-in transport capability only; this header never changes hosting rights. */
+export const FREE20_DISPLAY_VERSION_HEADER = "x-anidachi-hosting-time-version";
+export const Free20DisplayTimeSchema = z.strictObject({
+	access: ConfirmedUnlimitedHostingTimeSchema,
+	validUntil: Timestamp,
 });
+export type Free20DisplayTime = z.infer<typeof Free20DisplayTimeSchema>;
+
+/** Internal transport only; the signed lease retains its existing verifier.
+ * Display provenance is independent of the unchanged accounting checkpoints. */
+export const Free20RoomBudgetResponseSchema = z
+	.strictObject({
+		checkpoint: Free20RoomTimeCheckpointSchema,
+		displayTime: Free20DisplayTimeSchema.optional(),
+		policy: z.discriminatedUnion("denied", [
+			z.strictObject({
+				denied: z.literal(false),
+				roomToken: z.string().min(1),
+			}),
+			z.strictObject({ denied: z.literal(true), closingAt: z.iso.datetime() }),
+		]),
+	})
+	.superRefine(({ checkpoint, displayTime, policy }, ctx) => {
+		if (!displayTime) return;
+		if (
+			!("kind" in checkpoint) ||
+			checkpoint.kind !== "confirmed_unlimited" ||
+			policy.denied ||
+			displayTime.validUntil <= checkpoint.serverTime ||
+			displayTime.validUntil > checkpoint.refreshBy ||
+			(displayTime.access.validUntil !== null &&
+				displayTime.validUntil > displayTime.access.validUntil)
+		)
+			ctx.addIssue({
+				code: "custom",
+				path: ["displayTime"],
+				message: "Invalid display authority window",
+			});
+	});
 export type Free20RoomBudgetResponse = z.infer<
 	typeof Free20RoomBudgetResponseSchema
 >;

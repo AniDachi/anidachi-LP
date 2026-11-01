@@ -7,6 +7,7 @@ import {
   PLAYER_INTRODUCTION_MESSAGE,
 } from "../src/player-onboarding-storage";
 import { handleHostingAccessMessage, isHostingAccessMessage } from "../src/hosting-access-client";
+import { handleAccountHostingStatusMessage, isAccountHostingStatusMessage } from "../src/account-hosting-status-client";
 import { defineBackground } from "wxt/utils/define-background";
 import { handleRoomQuotaStatusMessage, isRoomQuotaStatusMessage } from "../src/room-quota-status-client";
 import {
@@ -312,6 +313,10 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (isAccountHostingStatusMessage(message)) {
+      void handleAccountHostingStatusMessage(message).then(sendResponse);
+      return true;
+    }
     if (isHostingAccessMessage(message)) {
       void handleHostingAccessMessage(message).then(sendResponse);
       return true;

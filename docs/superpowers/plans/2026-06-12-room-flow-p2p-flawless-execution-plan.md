@@ -19,6 +19,16 @@
 
 ---
 
+## Follow-up: Free20 live display, 2026-11-01
+
+The approved [time wiring block](2026-11-01-free20-live-time.md) adds a negotiated,
+freshness-bounded display event without altering media signaling or caps. It
+preserves legacy sockets, durable accounting and ordering across hibernation;
+ordinary playback does not produce new time writes/events. Its PR records the
+protocol/API/runtime/room-harness checks, extension artifact and staging receipt.
+Free20 activation, physical two-device/provider acceptance and production remain
+separate; local runtime checks are not those acceptance results.
+
 ## Follow-up: Free quota reset notice, 2026-09-15
 
 The overlay now consumes `ROOM_ENDED.reason` to distinguish host quota exhaustion

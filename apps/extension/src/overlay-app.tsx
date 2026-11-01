@@ -207,6 +207,9 @@ import {
 import { FreeQuotaNotice } from "./free-quota-notice";
 import { HostingPaywall } from "./hosting-paywall";
 import { useHostingAccess } from "./use-hosting-access";
+import { useAccountHostingStatus } from "./use-account-hosting-status";
+import { RoomHostingTime } from "./room-hosting-time";
+import { useRoomHostingTime } from "./use-room-hosting-time";
 import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
@@ -606,6 +609,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const announcedRoomClosingRef = useRef<string | null>(null);
 	const [, setMediaRevision] = useState(0);
 	const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
+	const [hostingTimeClock] = useState(() => new RoomHostingTime());
+	const [, renderHostingTime] = useState(0);
 	const quotaMeteredMsRef = useRef(0);
 	const quotaTickAtRef = useRef<number | null>(null);
 	const quotaEndTriggeredRef = useRef(false);
@@ -799,27 +804,38 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
+	const hostingTimeSessionKey = authAuthenticated ? JSON.stringify([accountUser?.id, authRevision, authAccessToken, authSessionKey]) : null;
+	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
+	if (hostingTimeSessionKeyRef.current !== hostingTimeSessionKey) hostingTimeClock.clear();
+	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
+	const accountHostingTime = useAccountHostingStatus({
+		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
+		sessionKey: hostingTimeSessionKey,
+		// An older Worker cannot negotiate a room-mode event. Allow a bounded
+		// policy read until mode is known, without using account time as live time.
+		enabled: !roomId ? (panelOpen || introductionActive) : (!hostingTimeClock.observed && !hostingTimeClock.legacy),
+		exhaustion: quotaExhaustion,
+	});
 	const hostingDisplay = useHostingAccess({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: authSessionKey,
 		enabled: panelOpen || roomId !== null || introductionActive,
 	});
-	const legacyQuotaEnabled = hostingDisplay.state.mode === "legacy";
-	const hostingPolicyModeRef = useRef(hostingDisplay.state.mode);
-	hostingPolicyModeRef.current = hostingDisplay.state.mode;
+	const legacyQuotaEnabled = !hostingTimeClock.observed && (hostingTimeClock.legacy ||
+		(accountHostingTime.mode === "legacy" && hostingDisplay.state.mode === "legacy"));
 	const freeQuotaNotice = useFreeQuotaNotice({
 		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
 		accessToken: authAccessToken,
 		sessionKey: authSessionKey,
 		visible: panelOpen && !roomId,
 		isFree: hostingDisplay.state.access?.planCode === "free",
-		policyMode: hostingDisplay.state.mode,
+		policyMode: accountHostingTime.mode === "legacy" ? hostingDisplay.state.mode : "unknown",
 		onQuotaRetired: hostingDisplay.invalidate,
 		exhaustion: quotaExhaustion,
 	});
-	const showFreeQuotaNotice = useCallback((resetAt?: string) => {
+	const showFreeQuotaNotice = useCallback((resetAt?: string, free20 = false) => {
 		const ownerUserId = authUserIdRef.current;
-		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt });
+		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt, free20, sessionKey: hostingTimeSessionKeyRef.current ?? undefined });
 		setAuthMessage(null);
 		setPanelOpen(true);
 	}, []);
@@ -1366,6 +1382,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		inviteActionIdsRef.current.clear();
 		inviteStatusRequestEpochRef.current += 1;
 		if (!roomId) {
+			hostingTimeClock.clear();
 			setPrivilegedRoomAuthority(null);
 			setRoomCapabilities(null);
 			setInvitePanelOpen(false);
@@ -2236,6 +2253,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	]);
 	// Worker snapshots own accumulated room usage. The local interval only keeps
 	// the display moving between snapshots while host and guest are both live.
+	const sendHostingTimeRecovery = useCallback((event: ClientEvent) => clientRef.current.send(event), []);
+	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
 	const quotaMeteringActive =
 		legacyQuotaEnabled && isConnected && isHost && roomQuota !== null &&
     (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
@@ -2295,6 +2314,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				connectionGenerationRef.current += 1;
 			}
 			if (nextStatus !== "connected") selfSeatDefaultsRef.current = null;
+			if (nextStatus !== "connected") hostingTimeClock.beginTransport();
 			statusRef.current = nextStatus;
 			setStatus(nextStatus);
 			if (nextStatus === "connected") {
@@ -3465,6 +3485,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 
 			switch (event.type) {
+				case "HOSTING_TIME_LEGACY": {
+					if (hostingTimeClock.acceptLegacy(event)) renderHostingTime(n => n + 1);
+					return;
+				}
+				case "HOSTING_TIME": {
+					hostingTimeClock.checkContinuity();
+					if (document.visibilityState === "hidden") hostingTimeClock.suspend();
+					hostingTimeClock.accept(event);
+					renderHostingTime(n => n + 1);
+					return;
+				}
 				case "MEDIA_SEAT_RESULT":
 				case "ROOM_MEDIA_SNAPSHOT":
 				case "MEDIA_INTENT_ACK":
@@ -3496,11 +3527,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				case "ROOM_ENDED": {
 					if (event.roomId !== roomIdRef.current) return;
-					if (event.reason === "quota_exhausted" && hostingPolicyModeRef.current === "legacy") {
+					if (event.reason === "quota_exhausted") {
 						if (isCurrentHost()) {
 							const ended = new Date(event.endedAt);
 							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
-							showFreeQuotaNotice(resetAt);
+								showFreeQuotaNotice(resetAt, hostingTimeClock.observed);
 							terminateRoomSession("");
 						} else {
 							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
@@ -3580,6 +3611,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					setSourceGeneration(event.sourceGeneration);
 					setRoomSourceProvider(snapshotProvider);
 					setParticipants(event.participants);
+					const timeSession = storedRoomSessionRef.current;
+					const localTimeParticipant = event.participants.find(p => p.id === timeSession?.ownerUserId);
+					const timeHost = event.participants.find(p => p.role === "host");
+					if (timeSession && localTimeParticipant?.participantSessionId === timeSession.participantSessionId && timeHost) {
+						hostingTimeClock.bind({ ownerUserId: timeHost.id, roomId: event.roomId, roomGeneration: event.roomGeneration });
+					} else hostingTimeClock.beginTransport();
           if (event.quota) {
             const previous = authoritativeQuotaRef.current;
             const next = acceptAuthoritativeQuota(previous, event.quota, event.serverSeq);
@@ -3893,9 +3930,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			const sameRoomReconnect = roomIdRef.current === nextRoomId;
       const priorSession = storedRoomSessionRef.current;
       if (!priorSession || !roomSessionIdentityMatches(priorSession, nextStoredRoomSession)) {
+        hostingTimeClock.clear();
         authoritativeQuotaRef.current = null;
         setAuthoritativeQuota(null);
       }
+      hostingTimeClock.beginTransport();
       const eventOwner = {};
       roomEventOwnerRef.current = eventOwner;
 			if (!sameRoomReconnect) {
@@ -3950,6 +3989,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				fingerprint: adapter.getFingerprint(),
 				video: videoDebugSnapshot(adapter.video),
 			});
+			const timeAuthSessionKey = hostingTimeSessionKeyRef.current;
 			clientRef.current.connect({
 				...(admissionHandoff ? { admissionHandoff } : {}),
 				lastSeenP2PServerSeq: sameRoomReconnect
@@ -3966,6 +4006,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           if (roomEventOwnerRef.current !== eventOwner || !current || !roomSessionIdentityMatches(current, nextStoredRoomSession) ||
               roomIdRef.current !== nextRoomId || participantRef.current?.id !== activeParticipant.id ||
               ("roomId" in event && event.roomId !== nextRoomId)) return;
+          if (event.type === "HOSTING_TIME" && hostingTimeSessionKeyRef.current !== timeAuthSessionKey) return;
           handleServerEventRef.current(event);
         },
 				onStatus: setRoomStatus,
@@ -6027,7 +6068,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomExists: Boolean(roomId),
 		roomLeavePending,
 	});
-	const quotaExhausted = !roomId && freeQuotaNotice.state?.kind === "exhausted";
+	const free20QuotaNotice = accountHostingTime.exhausted && accountUser ? {
+		ownerUserId: accountUser.id, kind: "exhausted" as const, remainingSeconds: accountHostingTime.resetSeconds,
+	} : null;
+	const displayedQuotaNotice = accountHostingTime.mode === "legacy" ? freeQuotaNotice.state : free20QuotaNotice;
+	const refreshDisplayedQuota = accountHostingTime.mode === "legacy" ? freeQuotaNotice.retry : accountHostingTime.refresh;
+	const quotaExhausted = !roomId && displayedQuotaNotice?.kind === "exhausted";
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6187,14 +6233,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					) : null}
 
 					{quotaExhausted ? <>
-						<FreeQuotaNotice state={freeQuotaNotice.state!} onRetry={freeQuotaNotice.retry} compact />
+						<FreeQuotaNotice state={displayedQuotaNotice!} onRetry={refreshDisplayedQuota} compact />
 						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
 					</> : <PanelRoomActions key={authSessionKey ?? "anonymous"}
 						scopeKey={`${authSessionKey}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
-						remainingSeconds={roomId ? (isConnected && isHost ? quotaRemainingSeconds : null) : freeQuotaNotice.availableSeconds}
+						remainingSeconds={roomId ? (isConnected && isHost ? (hostingTimeClock.observed ? liveHostingTime?.remainingSeconds ?? null : quotaRemainingSeconds) : null) : (accountHostingTime.mode === "legacy" ? freeQuotaNotice.availableSeconds : accountHostingTime.remainingSeconds)}
+						retainIdleTimeWhileConnecting={accountHostingTime.mode === "legacy" && !hostingTimeClock.observed}
 						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : handleCreateRoom}
 						onCopyInvite={copyInvite} onSync={() => playbackSyncController.broadcastHostState()}
 						onToggleInvite={toggleInvitePanel} inviteOpen={invitePanelOpen} inviteDisabled={!authAuthenticated}
@@ -6212,7 +6259,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					{!roomId && panelOpen && hostingPaywallOpen && hostingRequiredOwner === accountUser?.id ? (
 						<HostingPaywall key={`${hostingRequiredOwner}:${authGenerationRef.current}`} state={hostingDisplay.state} onRefresh={hostingDisplay.refresh} onClose={() => setHostingPaywallOpen(false)} />
 					) : null}
-					{!quotaExhausted && !roomId && hostingRequiredOwner !== accountUser?.id && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
+					{!quotaExhausted && !roomId && hostingRequiredOwner !== accountUser?.id && displayedQuotaNotice ? <FreeQuotaNotice state={displayedQuotaNotice} onRetry={refreshDisplayedQuota} /> : null}
 					{roomActionMessage ? (
 						<div className="auth-notice">
 							<span>{roomActionMessage}</span>

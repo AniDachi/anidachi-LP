@@ -166,6 +166,13 @@ describe("real room action feedback", () => {
 		await render({ roomId: null, roomReady: false });
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 	});
+
+	it("hides a retired authoritative idle observation while waiting for a room snapshot", async () => {
+		await render({ roomId: null, roomReady: false, label: "Create room", retainIdleTimeWhileConnecting: false });
+		await click("Create room");
+		await render({ roomId: "new-room", roomReady: false, label: "End room", remainingSeconds: null });
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+	});
 	it("discards a failed start and never replays it for another login or restored room", async () => {
 		emulateLayoutAndAnimation();
 		await render({ roomId: null, roomReady: false, label: "Create room" });

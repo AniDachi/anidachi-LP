@@ -37,6 +37,7 @@ function authorityFor(owner: string, raw: unknown): Authority | null {
 		throw new Error("Inconsistent account authority");
 	return value;
 }
+export { authorityFor as validateFree20StatusAuthority };
 
 export async function readFree20StatusAuthority(
 	userId: string,

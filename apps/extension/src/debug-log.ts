@@ -176,6 +176,12 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
 
 function roomEventDebugSnapshotRaw(event: ClientEvent | ServerEvent): Record<string, unknown> {
   switch (event.type) {
+    case "HOSTING_TIME_LEGACY":
+      return { type: event.type, roomId: event.roomId, roomGeneration: event.roomGeneration };
+    case "HOSTING_TIME":
+      return { type: event.type, roomId: event.roomId, roomGeneration: event.roomGeneration, snapshotSequence: event.snapshot.snapshotSequence, accessKind: event.snapshot.access.kind };
+    case "HOSTING_TIME_REQUEST":
+      return { type: event.type, roomId: event.roomId };
     case "SET_MEDIA_SEAT":
       return {type: event.type, enabled: event.enabled, expectedSeatRevision: event.expectedSeatRevision};
     case "MEDIA_SEAT_RESULT":

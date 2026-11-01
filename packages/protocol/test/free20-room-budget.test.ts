@@ -28,6 +28,67 @@ const checkpoint = {
 };
 
 describe("inactive Free20 room accounting contract", () => {
+	it("accepts source-labelled display metadata only inside the unlimited authority window", () => {
+		const {
+			roomBudgetVersion: _version,
+			budgetSeconds: _budget,
+			committedSeconds: _used,
+			...context
+		} = checkpoint;
+		const unlimited = {
+			...context,
+			roomTimeVersion: 1,
+			kind: "confirmed_unlimited",
+			authority: "account_entitlements_v1",
+			planCode: "plus",
+		};
+		const policy = { denied: false, roomToken: "synthetic-signed-token" };
+		for (const source of ["paid", "trial", "manual"]) {
+			const displayTime = {
+				access: {
+					kind: "confirmed_unlimited",
+					source,
+					validUntil: source === "manual" ? null : at + 120_000,
+				},
+				validUntil: at + 60_000,
+			};
+			const response = { checkpoint: unlimited, policy, displayTime };
+			expect(Free20RoomBudgetResponseSchema.safeParse(response).success).toBe(
+				true,
+			);
+			for (const invalid of [
+				{ ...response, checkpoint },
+				{
+					...response,
+					policy: { denied: true, closingAt: new Date(at).toISOString() },
+				},
+				{ ...response, unexpected: true },
+				{ ...response, displayTime: { ...displayTime, unexpected: true } },
+				{ ...response, displayTime: { ...displayTime, validUntil: at } },
+				{
+					...response,
+					displayTime: { ...displayTime, validUntil: at + 300_001 },
+				},
+				{
+					...response,
+					displayTime: {
+						...displayTime,
+						access: { ...displayTime.access, validUntil: at + 59_999 },
+					},
+				},
+				{
+					...response,
+					displayTime: {
+						...displayTime,
+						access: { ...displayTime.access, source: "plan" },
+					},
+				},
+			])
+				expect(Free20RoomBudgetResponseSchema.safeParse(invalid).success).toBe(
+					false,
+				);
+		}
+	});
 	it("requires an explicit bounded account authority for unlimited time and rejects mixed finite grants", () => {
 		const {
 			roomBudgetVersion: _version,

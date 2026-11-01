@@ -3366,7 +3366,7 @@ describe("RoomDurableObject media v2", () => {
 				});
 			}), dailyMode ? roomId : undefined,
 		);
-		async function join(i: number, sessionId = `v2-session-${i}`) {
+		async function join(i: number, sessionId = `v2-session-${i}`, hostingTime = false) {
 			const userId = i === 0 ? hostId : `v2-user-${i}`;
 			const t = await token(userId, sessionId);
 			const response = await stub.fetch(
@@ -3383,6 +3383,7 @@ describe("RoomDurableObject media v2", () => {
 				participant: participant(userId, i === 0 ? "host" : "viewer"),
 				participantSessionId: sessionId,
 				videoFingerprint: "runtime-initial",
+        ...(hostingTime ? {hostingTimeVersion:1} : {}),
 			});
 			return client;
 		}
@@ -3630,6 +3631,52 @@ describe("RoomDurableObject media v2", () => {
   host.close();guest.close();
  });
 
+ it("negotiated legacy mode survives restore and never reaches an old socket",async()=>{
+   const f=await fixture("free",3,1200,false);
+   const host=await f.join(0,"v2-session-0",true);
+   const mode=await host.waitFor(e=>e.type==="HOSTING_TIME_LEGACY","explicit legacy mode");
+   expect(mode).toEqual({type:"HOSTING_TIME_LEGACY",roomId:f.roomId,roomGeneration:1});
+   const guest=await f.join(1); await guest.waitFor(e=>e.type==="ROOM_SNAPSHOT","old guest");
+   expect(guest.hasEvent(e=>e.type==="HOSTING_TIME_LEGACY" || e.type==="HOSTING_TIME")).toBe(false);
+   await evictDurableObject(f.stub,{webSockets:"hibernate"});
+   const restored=await f.join(0,"v2-session-0",true);
+   await restored.waitFor(e=>e.type==="HOSTING_TIME_LEGACY","legacy after restore");
+   restored.close();host.close();guest.close();
+ });
+ it("negotiated hosting time survives wake and never reaches legacy sockets",async()=>{
+   const f=await fixture("free",3,1200,true);
+   const host=await f.join(0,"v2-session-0",true);
+   const initial=await host.waitFor(e=>e.type==="HOSTING_TIME","solo hosting time") as Extract<ServerEvent,{type:"HOSTING_TIME"}>;
+   expect(initial.snapshot.access).toMatchObject({kind:"daily_free",remainingSeconds:1200,metering:false});
+   const guest=await f.join(1);
+   await guest.waitFor(e=>e.type==="ROOM_SNAPSHOT","legacy guest");
+   const active=await host.waitFor(e=>e.type==="HOSTING_TIME" && e.snapshot.access.kind==="daily_free" && e.snapshot.access.metering,"meter starts") as Extract<ServerEvent,{type:"HOSTING_TIME"}>;
+   expect(active.snapshot.snapshotSequence).toBeGreaterThan(initial.snapshot.snapshotSequence);
+   expect(guest.hasEvent(e=>e.type==="HOSTING_TIME")).toBe(false);
+   await evictDurableObject(f.stub,{webSockets:"hibernate"});
+   host.send({type:"HOSTING_TIME_REQUEST",roomId:f.roomId,requestId:"8fb7bc8d-49ef-4f43-9de3-1b6b31716c00"});
+   const restored=await host.waitFor(e=>e.type==="HOSTING_TIME" && e.requestId==="8fb7bc8d-49ef-4f43-9de3-1b6b31716c00" && e.snapshot.snapshotSequence>active.snapshot.snapshotSequence,"correlated fresh reply after wake") as Extract<ServerEvent,{type:"HOSTING_TIME"}>;
+   expect(restored.snapshot.access.kind).toBe("daily_free");
+   expect(restored.requestId).toBe("8fb7bc8d-49ef-4f43-9de3-1b6b31716c00");
+   guest.close();
+   await host.waitFor(e=>e.type==="HOSTING_TIME" && e.snapshot.snapshotSequence>restored.snapshot.snapshotSequence && e.snapshot.access.kind==="daily_free" && !e.snapshot.access.metering,"meter stops");
+   host.close();
+ });
+ it("hosting display corruption never resets durable ordering or ends accounting",async()=>{
+   const f=await fixture("free",3,1200,true);
+   const host=await f.join(0,"v2-session-0",true);
+   await host.waitFor(e=>e.type==="HOSTING_TIME","initial hosting display");
+   const before=host.countEvents(e=>e.type==="HOSTING_TIME");
+   const result=await runInDurableObject(f.stub,async(instance,state)=>{
+     state.storage.sql.exec("UPDATE room_meta SET value_json = ? WHERE key = ?","null","room_hosting_display_sequence_v1");
+     await (instance as any).publishHostingTime(true);
+     return {row:state.storage.sql.exec<{value_json:string}>("SELECT value_json FROM room_meta WHERE key = ?","room_hosting_display_sequence_v1").toArray()[0]?.value_json,
+       ended:(instance as any).endedTombstone};
+   });
+   expect(result).toEqual({row:"null",ended:null});
+   expect(host.countEvents(e=>e.type==="HOSTING_TIME")).toBe(before);
+   host.close();
+ });
  it("Free20 alarm ends exactly at twenty minutes without selecting a five-minute warning",async()=>{
   const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;const clock=vi.spyOn(Date,"now").mockReturnValue(start);
   const f=await fixture("free",3,1200,true);const host=await f.join(0);await host.waitFor(e=>e.type==="ROOM_MEDIA_SNAPSHOT","host");
@@ -3717,7 +3764,7 @@ describe("RoomDurableObject media v2", () => {
   ] as const)("storage write profile: %s with %i participants, Free20=%s paid=%s", async (plan, participants, free20, paid = false) => {
     const f = await fixture(plan, 3, 1800, free20);
     f.setUnlimited(paid);
-    const host = await f.join(0);
+    const host = await f.join(0,"v2-session-0",free20);
     await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "profile host joined");
     const observer = participants === 2 ? await f.join(1) : host;
     await observer.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === participants, "profile ready");
@@ -3734,6 +3781,8 @@ describe("RoomDurableObject media v2", () => {
       profile = observeRoomStorage(state.storage);
       return (instance as any).room.serverSeq as number;
     });
+    const displayEventsBefore = host.countEvents(e=>e.type==="HOSTING_TIME");
+    if(free20) expect(displayEventsBefore).toBeGreaterThan(0);
     const start = Date.now();
     const clock = vi.spyOn(Date, "now").mockReturnValue(start);
     const frames = 20;
@@ -3764,6 +3813,7 @@ describe("RoomDurableObject media v2", () => {
       expect(final.meter.activeSince === null).toBe(paid || plan !== "free" || participants === 1);
       const budgetCalls = f.calls.filter(c => c.checkpointSequence !== undefined || c.operation === "room_policy_v2").length - budgetCallsBefore;
       expect(budgetCalls).toBe(0);
+      expect(host.countEvents(e=>e.type==="HOSTING_TIME")).toBe(displayEventsBefore);
       console.info("ROOM_STORAGE_PROFILE", JSON.stringify({ plan, participants, free20, paid, frames, budgetCalls, ...final.counts }));
       expect(final.counts, JSON.stringify({ plan, participants, frames, ...final.counts })).toMatchObject({
         sqlRowsWritten: frames,
