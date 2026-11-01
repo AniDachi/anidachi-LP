@@ -596,8 +596,13 @@ export async function commitStripeSubscriptionRefresh(
 	params: StripeSubscriptionCommit,
 	lease: StripeRefreshLease,
 ): Promise<PlanCode> {
+	const rpc = process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true"
+		? "commit_stripe_subscription_refresh_v4"
+		: params.trial?.trialMode === "cardless"
+			? "commit_stripe_subscription_refresh_v3"
+			: "commit_stripe_subscription_refresh_v2";
 	const { data, error } = await db()
-		.rpc(params.trial?.trialMode === "cardless" ? "commit_stripe_subscription_refresh_v3" : "commit_stripe_subscription_refresh_v2", {
+		.rpc(rpc, {
 			p_subscription_id: params.stripeSubscriptionId,
 			p_fence: lease.fence,
 			p_token: lease.token,
