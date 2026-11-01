@@ -261,7 +261,7 @@ export default function AniDachiVsTelepartyPage() {
       </h2>
       <SeoGuideRelated
         links={[
-          { href: "/pricing", label: "See pricing — Free to join, Plus from $7.99/mo to host" },
+          { href: "/pricing", label: "See pricing — Free daily hosting; Plus from $7.99/mo" },
                     { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
                     { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives for anime" },
                     { href: "/guides/teleparty-not-working-crunchyroll", label: "Teleparty not working on Crunchyroll" },

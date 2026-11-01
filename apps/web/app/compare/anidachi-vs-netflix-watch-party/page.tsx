@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallLink } from "@/components/install-link";
@@ -64,7 +65,7 @@ const faq = [
   {
     question: "Which is cheapest for a Netflix night?",
     answer:
-      "A countdown or screen share costs nothing beyond Netflix. AniDachi is free to join, and the host needs Plus or Pro, with a 3-day trial for eligible accounts.",
+      `A countdown or screen share costs nothing beyond Netflix. AniDachi is free to join. ${PRICING_FREE20_SUMMARY}`,
   },
 ];
 

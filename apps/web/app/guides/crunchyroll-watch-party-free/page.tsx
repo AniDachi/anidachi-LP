@@ -15,7 +15,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_IS_ANIDACHI_FREE_ANSWER,
   PRICING_PLUS_SHORT,
-  PRICING_TRIAL_NOTE,
+  PRICING_FREE20_SUMMARY,
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
@@ -25,7 +25,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Free Crunchyroll Watch Party Options",
   description:
-    "Free Crunchyroll watch party options. AniDachi guests join free; hosts need Plus or Pro, including a trial. Covers Crunchyroll Party and Discord too.",
+    `Free Crunchyroll watch party options. AniDachi guests join free; ${PRICING_FREE20_SUMMARY} Covers Crunchyroll Party and Discord too.`,
   alternates: { canonical: "/guides/crunchyroll-watch-party-free" },
   openGraph: {
     title: "Free Crunchyroll Watch Party Options",
@@ -47,7 +47,7 @@ const faq = [
   {
     question: "Is there a free Crunchyroll watch party?",
     answer:
-      "You can join an AniDachi room on a Free account when its host has active Plus or Pro access, including a trial. Creating your own room requires that access. Crunchyroll Party and Discord Go Live offer other options with different tradeoffs.",
+      "AniDachi supports Free daily hosting and free joining. Free hosts get 20 host minutes per UTC day for up to 4 people, including the host. Crunchyroll Party and Discord Go Live offer other options with different tradeoffs.",
   },
   {
     question: "Is AniDachi free for Crunchyroll watch parties?",
@@ -56,7 +56,7 @@ const faq = [
   {
     question: "What is the best free Crunchyroll watch party app?",
     answer:
-      "Choose AniDachi when a host has Plus or Pro access and friends want to join free with their own full-quality streams. Compare Crunchyroll Party for basic live sync. Discord works well for voice, while screen sharing may reduce video quality.",
+      "Choose AniDachi for Free daily hosting or Plus and Pro while friends join free with their own full-quality streams. Compare Crunchyroll Party for basic live sync. Discord works well for voice, while screen sharing may reduce video quality.",
   },
   {
     question: "Does Crunchyroll itself offer a free watch party?",
@@ -65,7 +65,7 @@ const faq = [
   },
   {
     question: "When should the host upgrade from Free?",
-    answer: `Choose Plus (${PRICING_PLUS_SHORT} on monthly billing) or Pro to create your own rooms. ${PRICING_TRIAL_NOTE} Guests can stay on Free; see pricing for renewal and cancellation terms.`,
+    answer: `Host on Free with 20 host minutes per UTC day for up to 4 people, or choose Plus (${PRICING_PLUS_SHORT} on monthly billing) or Pro without a daily hosting time limit. Guests can stay on Free; see pricing for renewal and cancellation terms.`,
   },
 ];
 
@@ -113,10 +113,9 @@ export default function CrunchyrollWatchPartyFreePage() {
       <SeoGuideAnswer>
 
         <strong>
-          AniDachi is free to join when the room host has Plus or Pro access,
-          including an active trial. Free accounts cannot create rooms.
+          {PRICING_FREE20_SUMMARY}
         </strong>{" "}
-        To host your own live watch party, choose a plan on{" "}
+        See current hosting options on{" "}
         <Link href="/pricing">
           /pricing
         </Link>{" "}
@@ -138,8 +137,7 @@ export default function CrunchyrollWatchPartyFreePage() {
       </h2>
       <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi Free:</strong> Join an active Plus or Pro host, including
-          a trial host. Creating rooms requires your own Plus or Pro access.
+          <strong>AniDachi Free:</strong> 20 host minutes per UTC day for up to 4 people, including the host. Friends join free.
         </li>
         <li>
           <strong>Crunchyroll Party:</strong> Free live sync on Crunchyroll —
@@ -165,8 +163,7 @@ export default function CrunchyrollWatchPartyFreePage() {
         What “Free” Usually Means
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Free access differs by tool. On AniDachi it covers joining a host&apos;s
-        live room. Each person still needs their own Crunchyroll access — AniDachi and
+        Free access differs by tool. On AniDachi it covers joining rooms and 20 host minutes per UTC day for up to 4 people, including the host. Each person still needs their own Crunchyroll access — AniDachi and
         similar tools sync the room; they do not replace streaming subscriptions.
       </p>
 
@@ -178,8 +175,8 @@ export default function CrunchyrollWatchPartyFreePage() {
         When Hosts Upgrade
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro to host.{" "}
-        {PRICING_TRIAL_NOTE} Guests keep Free accounts.
+        Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro for larger rooms and hosting without a daily time limit.{" "}
+        {PRICING_FREE20_SUMMARY} Guests keep Free accounts.
         Full plan details:{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
           pricing

@@ -1,3 +1,10 @@
+import {
+	PRICING_FREE20_SUMMARY,
+	PRICING_FREE20_METERING_NOTE,
+	PRICING_FREE20_MEDIA_NOTE,
+	PRICING_HISTORY_NOTE,
+	PRICING_EXISTING_TRIAL_NOTE,
+} from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 
 import Link from "next/link";
@@ -10,9 +17,9 @@ import { getPlanPolicy } from "@anidachi/protocol";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-	title: { absolute: "AniDachi Pricing — Free to Join, Plus or Pro to Host" },
+	title: { absolute: "AniDachi Pricing — Free Daily Hosting, Plus and Pro" },
 	description:
-		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms, and check your trial availability.",
+		PRICING_FREE20_SUMMARY,
 	alternates: { canonical: "/pricing" },
 	openGraph: {
 		images: [
@@ -26,7 +33,7 @@ export const metadata: Metadata = {
 
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms.",
+			PRICING_FREE20_SUMMARY,
 		url: "/pricing",
 	},
 	twitter: {
@@ -35,15 +42,19 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free, or host your own room with Plus or Pro.",
+			PRICING_FREE20_SUMMARY,
 	},
 };
 
 const faq = [
 	{
+		question: "How does Free daily hosting work?",
+		answer: `${PRICING_FREE20_SUMMARY} ${PRICING_FREE20_METERING_NOTE} ${PRICING_FREE20_MEDIA_NOTE}`,
+	},
+	{
 		question: "Is AniDachi free?",
 		answer:
-			"Yes. Install the extension and join a Plus, Pro or trial host for free. Plus and Pro include hosting and personal watch history. The plan cards above show the current hosting options.",
+			`Yes. ${PRICING_FREE20_SUMMARY} ${PRICING_FREE20_METERING_NOTE} ${PRICING_HISTORY_NOTE}`,
 	},
 	{
 		question: "Do my friends need a paid AniDachi subscription?",
@@ -55,9 +66,9 @@ const faq = [
 		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll, YouTube, and Netflix.`,
 	},
 	{
-		question: "How does the free trial work?",
+		question: "What happens to existing trials?",
 		answer:
-			"If your account is eligible, you can try Plus or Pro once for 3 days. The plan cards show your current offer. A trial without a card ends automatically unless you add a card and explicitly enable renewal in Account → Subscription. You review the plan, price and first payment date before confirming. A trial started with a card keeps its original checkout terms and renews unless canceled. Switching plans does not restart the trial.",
+			`${PRICING_EXISTING_TRIAL_NOTE} An existing trial without a card ends automatically unless you explicitly enable renewal in Account → Subscription. Trials started with a card retain their original checkout terms and renew unless canceled. Switching plans does not restart the trial.`,
 	},
 	{
 		question: "How do I cancel my subscription?",

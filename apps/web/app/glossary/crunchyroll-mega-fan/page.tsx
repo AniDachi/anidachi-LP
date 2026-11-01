@@ -81,8 +81,8 @@ export default function CrunchyrollMegaFanGlossaryPage() {
           Crunchyroll directly for the exact feature list in your region.
         </strong>{" "}
         Watch party hosts care because everyone in the room still needs their own
-        access to the video before AniDachi can sync their players. The AniDachi
-        host needs Plus or Pro, including during a trial; friends join for free.
+        access to the video before AniDachi can sync their players. AniDachi
+        Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join for free.
       </p>
 
       <h2

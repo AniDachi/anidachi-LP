@@ -1,4 +1,5 @@
 "use client";
+import { pricingFreeTier, pricingMatrixRows } from "@/lib/pricing-tiers";
 
 import { InstallLink } from "@/components/install-link";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +16,6 @@ import {
 } from "@/lib/conversion-events";
 import {
 	PRICING_PLAN_MATRIX_COLUMNS,
-	PRICING_PLAN_MATRIX_ROWS,
 	PRICING_TIERS,
 	PUBLISHED_PRICING,
 	type CheckoutTier,
@@ -37,7 +37,10 @@ import {
 	checkoutReturnPath,
 } from "@/lib/checkout-selection";
 import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
-import { readOnboardingCheckout, rememberOnboardingCheckout } from "@/lib/onboarding-return-client";
+import {
+	readOnboardingCheckout,
+	rememberOnboardingCheckout,
+} from "@/lib/onboarding-return-client";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -469,7 +472,11 @@ export function Pricing({
 			});
 
 			if (data.kind !== "manage_subscription" && currentOffer.ownerUserId)
-				rememberOnboardingCheckout(returnToken, currentOffer.ownerUserId, data.sessionId);
+				rememberOnboardingCheckout(
+					returnToken,
+					currentOffer.ownerUserId,
+					data.sessionId,
+				);
 			window.location.href =
 				data.kind === "manage_subscription" ? "/account/billing" : data.url;
 		} catch (error) {
@@ -513,9 +520,9 @@ export function Pricing({
 					titleAs={headingLevel === 1 ? "h1" : "h2"}
 					title="Watch together. Choose your plan."
 					description={
-						offerFresh && offer?.paidHostingActive === false
-							? "Join friends for free. Choose Plus or Pro for more hosting and personal watch history."
-							: "Join friends for free, or host your own room with Plus or Pro."
+						offerFresh && offer?.hostingModel === "daily_free20"
+							? "Free includes 20 host minutes per UTC day. Plus and Pro include hosting without a daily time limit."
+							: "Join friends for free. Compare hosting and personal watch history options."
 					}
 				/>
 				<div
@@ -565,19 +572,8 @@ export function Pricing({
 				<div className="pricing-plans__grid">
 					{PRICING_TIERS.map((baseTier) => {
 						const tier =
-							baseTier.id === "free" &&
-							(!offerFresh || offer?.paidHostingActive !== false)
-								? {
-										...baseTier,
-										audience: "Join a friend’s room for free.",
-										summary: "Join a Plus, Pro or trial host for free.",
-										features: [
-											"Join rooms on Crunchyroll, YouTube, Netflix",
-											"Synced video, chat & reactions",
-											"Voice & video within your host’s limits",
-											"Read saved history & resume",
-										],
-									}
+							baseTier.id === "free"
+								? pricingFreeTier(offerFresh ? offer?.hostingModel : undefined)
 								: baseTier;
 						const highlighted = isHighlighted(tier.id);
 						const paidTier = tier.id !== "free" ? tier.id : null;
@@ -630,7 +626,9 @@ export function Pricing({
 						</h3>
 						<ResponsiveCompareTable
 							columns={[...PRICING_PLAN_MATRIX_COLUMNS]}
-							rows={PRICING_PLAN_MATRIX_ROWS.map((row) =>
+							rows={pricingMatrixRows(
+								offerFresh ? offer?.hostingModel : undefined,
+							).map((row) =>
 								row.feature === "Price"
 									? {
 											...row,
@@ -648,26 +646,7 @@ export function Pricing({
 													: "—",
 											},
 										}
-									: !offerFresh || offer?.paidHostingActive !== false
-										? {
-												...row,
-												values: {
-													...row.values,
-													free:
-														row.feature === "Host your own room"
-															? offer
-																? "Join only"
-																: "Included with Plus / Pro"
-															: [
-																		"People in room (incl. host)",
-																		"Cameras at once",
-																		"Mics at once",
-																	].includes(row.feature)
-																? "Host’s plan"
-																: row.values.free,
-												},
-											}
-										: row,
+									: row,
 							)}
 						/>
 					</div>
@@ -872,7 +851,11 @@ function TierCardBody({
 			<div className="pricing-plans__details">
 				<p className="pricing-plans__feature-heading">
 					{tier.id === "free" ? (
-						"Everything you need to join"
+						offerFresh && offer?.hostingModel === "daily_free20" ? (
+							"Host or join with Free"
+						) : (
+							"Everything you need to join"
+						)
 					) : (
 						<>
 							Up to <strong>{policy.maxParticipants - 1} friends</strong> join
@@ -883,7 +866,8 @@ function TierCardBody({
 				<div>
 					<FeatureList features={features} />
 					{tier.id === "free" &&
-					(!offerFresh || offer?.paidHostingActive !== false) ? (
+					offerFresh &&
+					offer?.hostingModel === "paid_hosting" ? (
 						<p className="pricing-plans__free-note">
 							{offer
 								? "Creating rooms and saving new watch progress require Plus or Pro."

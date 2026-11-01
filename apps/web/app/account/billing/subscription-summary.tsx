@@ -361,14 +361,24 @@ export function SubscriptionPresentation({
 }
 
 /** Shown only when the account is Free and has no unresolved subscription. */
-export function EndedTrialSummary() {
+export function EndedTrialSummary({
+	hostingMode = "unknown",
+}: {
+	hostingMode?: "unknown" | "legacy" | "free20";
+}) {
 	return (
 		<section className="billing-ended" aria-label="Trial ended">
 			<div className="billing-ended-message">
 				<h2>
 					Your <span>trial</span> has ended.
 				</h2>
-				<p>Choose Plus or Pro to create rooms again.</p>
+				<p>
+					{hostingMode === "free20"
+						? "Free includes daily host time. Choose Plus or Pro for hosting without a daily time limit."
+						: hostingMode === "legacy"
+							? "Choose Plus or Pro to create rooms again."
+							: "Check your current hosting access, or explore Plus and Pro."}
+				</p>
 				<Link
 					className="billing-summary-button billing-ended-button"
 					href="/pricing"

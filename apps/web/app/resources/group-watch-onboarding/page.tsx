@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout } from "@/components/seo-page-layout";
@@ -37,7 +38,7 @@ const faq = [
   {
     question: "Should new groups start with Discord or per-user streams?",
     answer:
-      "With AniDachi, everyone plays the video in their own browser instead of watching a shared screen. Each person needs the extension and access to the episode; only the host needs Plus or Pro, including during a trial.",
+      `With AniDachi, everyone plays the video in their own browser instead of watching a shared screen. Each person needs the extension and access to the episode; ${PRICING_FREE20_SUMMARY}`,
   },
 ];
 

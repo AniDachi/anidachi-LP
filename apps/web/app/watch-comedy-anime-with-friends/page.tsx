@@ -173,7 +173,7 @@ export default function WatchComedyAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the invite.</span>{" "}
-          A Plus, Pro, or trial host creates the room; Free friends can join. Keep favorite timestamps in a separate chat.
+          A Free, Plus, or Pro host creates the room; Free friends can join. Keep favorite timestamps in a separate chat.
         </li>
         <li>
           <span className="font-medium text-foreground">Set a casual cadence.</span>{" "}

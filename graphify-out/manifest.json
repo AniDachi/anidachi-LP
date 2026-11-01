@@ -216,9 +216,9 @@
     "semantic_hash": "f71dc685935a53b4651782cd99f80685"
   },
   "apps/extension/entrypoints/background.ts": {
-    "mtime": 1793513763.491338,
-    "seen": 1793514924.177867,
-    "ast_hash": "a0c608c6334396e42758a582e64fccb2",
+    "mtime": 1793527493.5372503,
+    "seen": 1793533463.160865,
+    "ast_hash": "0c8a1e6df811491586962fcd20a4ad54",
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/content.tsx": {
@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793517289.7482524,
-    "seen": 1793517559.4475489,
-    "ast_hash": "4e4d7a8666b33e64e5f68f7f28e545c4",
+    "mtime": 1793530430.6007223,
+    "seen": 1793533463.160872,
+    "ast_hash": "aa048cfdedb38cd24d82ca0620889be4",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
-    "mtime": 1793514907.812017,
-    "seen": 1793514924.177871,
-    "ast_hash": "a5b16608d58731533be2fa8fc2f89c88",
+    "mtime": 1793528833.0988228,
+    "seen": 1793533463.160874,
+    "ast_hash": "221a3f2a7a1f538ce81525d7ad4f2c26",
     "semantic_hash": ""
   },
   "apps/extension/src/room-quota-display.ts": {
@@ -456,9 +456,9 @@
     "semantic_hash": "e2ca5a2b0c455ec0aeb9a1acff897bcd"
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1793510705.855975,
-    "seen": 1793510991.531975,
-    "ast_hash": "7605d88dbfa04098262321f4b4af41b2",
+    "mtime": 1793527681.712701,
+    "seen": 1793533463.160874,
+    "ast_hash": "c0ddc5facd509b5ee9ed0ff63684b5bc",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -564,10 +564,10 @@
     "semantic_hash": "6880c590956fc235cf8f9b0915dbef78"
   },
   "apps/extension/test/room-client-auth.test.ts": {
-    "mtime": 1789490458.9019446,
-    "seen": 1789807056.4365802,
-    "ast_hash": "5f80944b1e9251d39a46843f898012b2",
-    "semantic_hash": "5f80944b1e9251d39a46843f898012b2"
+    "mtime": 1793529607.3830628,
+    "seen": 1793533463.1608791,
+    "ast_hash": "63dbc4b06d8396f9b4fea50970a8c141",
+    "semantic_hash": ""
   },
   "apps/extension/test/room-quota-display.test.ts": {
     "mtime": 1789490458.903207,
@@ -690,15 +690,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/anime-watch-party-toolkit/page.tsx": {
-    "mtime": 1793355774.4440866,
-    "seen": 1793424347.672214,
-    "ast_hash": "66f9d0f5116866f9a80fc19ee11fc326",
+    "mtime": 1793532534.2457564,
+    "seen": 1793533463.160884,
+    "ast_hash": "bca34d38323506b405e21c8c0825d913",
     "semantic_hash": ""
   },
   "apps/web/app/anime-watch-party/page.tsx": {
-    "mtime": 1793355774.4442062,
-    "seen": 1793424347.672215,
-    "ast_hash": "150075117e9be7fc30586f908c838cf1",
+    "mtime": 1793532534.246014,
+    "seen": 1793533463.160884,
+    "ast_hash": "0b38ec8e8151d9e5ac24043355f0c9b4",
     "semantic_hash": ""
   },
   "apps/web/app/api/auth/callback/discord/route.ts": {
@@ -1068,9 +1068,9 @@
     "semantic_hash": "4a948a548d52873cdcfc0f50f307b16f"
   },
   "apps/web/app/api/rooms/[roomId]/connect/route.ts": {
-    "mtime": 1793433370.2661104,
-    "seen": 1793435376.517308,
-    "ast_hash": "678bdb41bffadabf219dc282360d6470",
+    "mtime": 1793529136.096055,
+    "seen": 1793533463.160885,
+    "ast_hash": "7e933db7a0d9d31507e7d302a758d668",
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/[roomId]/end/route.ts": {
@@ -1092,9 +1092,9 @@
     "semantic_hash": "d89d27795dc099f928113dcf071eee2b"
   },
   "apps/web/app/api/rooms/route.ts": {
-    "mtime": 1793433267.6301873,
-    "seen": 1793435376.517309,
-    "ast_hash": "d77a8b9851617b9b867512a3e04d1c8b",
+    "mtime": 1793528833.100065,
+    "seen": 1793533463.160886,
+    "ast_hash": "094c54c3b2fa8b2814f7524cfcc153e8",
     "semantic_hash": ""
   },
   "apps/web/app/api/save-discord-credentials/route.ts": {
@@ -1140,15 +1140,15 @@
     "semantic_hash": "03d70ad2149f912e9311cd569201d712"
   },
   "apps/web/app/best-anime-for-long-distance-relationships/page.tsx": {
-    "mtime": 1793355774.4603994,
-    "seen": 1793424347.67222,
-    "ast_hash": "69fc7b40d1d40553e31b516142079474",
+    "mtime": 1793532534.2465494,
+    "seen": 1793533463.160887,
+    "ast_hash": "331a13384968861a61ca3078f4d9f89f",
     "semantic_hash": ""
   },
   "apps/web/app/best-apps-watch-anime-together-long-distance/page.tsx": {
-    "mtime": 1793355774.4605634,
-    "seen": 1793424347.67222,
-    "ast_hash": "c37a9a7aa7dcc9bbcd2fcb1e6d8d0d07",
+    "mtime": 1793532534.247017,
+    "seen": 1793533463.160887,
+    "ast_hash": "fe477de6bd25da51f392422baed508fe",
     "semantic_hash": ""
   },
   "apps/web/app/blou/login/blou-login-form.tsx": {
@@ -1206,15 +1206,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx": {
-    "mtime": 1793355774.461771,
-    "seen": 1793424347.672223,
-    "ast_hash": "c4c4d3ce5459ace0232113ca5b898565",
+    "mtime": 1793532534.2471356,
+    "seen": 1793533463.160888,
+    "ast_hash": "4373165ab07c5525492bff534041c914",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-crunchyroll-party/page.tsx": {
-    "mtime": 1793355774.461934,
-    "seen": 1793424347.672224,
-    "ast_hash": "af2349ac220bb5f9add9472c10eb5885",
+    "mtime": 1793532534.2473981,
+    "seen": 1793533463.160888,
+    "ast_hash": "ed9228f50b43b32e2c1ba99064ccbc3b",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-discord-screen-share/page.tsx": {
@@ -1230,15 +1230,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-netflix-watch-party/page.tsx": {
-    "mtime": 1793355774.4627435,
-    "seen": 1793424347.6722271,
-    "ast_hash": "d2b6cf9e24536fac1069f68fd49c599a",
+    "mtime": 1793532534.2479098,
+    "seen": 1793533463.16089,
+    "ast_hash": "a0cbc2a8b6f7372935f5c8d8aec559cb",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-rave/page.tsx": {
-    "mtime": 1793355774.462917,
-    "seen": 1793424347.672228,
-    "ast_hash": "7bda93d7505bcf828be4f0f24531d8f5",
+    "mtime": 1793532534.2480156,
+    "seen": 1793533463.16089,
+    "ast_hash": "a51c50c3d2ce7fd999a5e2c56abfa115",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-roll-together/page.tsx": {
@@ -1260,9 +1260,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-teleparty/page.tsx": {
-    "mtime": 1793355774.4637377,
-    "seen": 1793424347.672231,
-    "ast_hash": "9ca10b7367c656afd24753b146ea272e",
+    "mtime": 1793532534.2483585,
+    "seen": 1793533463.1608908,
+    "ast_hash": "987432f487d60f59be53f067519b41d8",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-watch2gether/page.tsx": {
@@ -1272,9 +1272,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/compare/crunchyroll-party-vs-teleparty-for-anime/page.tsx": {
-    "mtime": 1793355774.4641092,
-    "seen": 1793424347.6722329,
-    "ast_hash": "530f11e3adc258c8ca1d057c3424f242",
+    "mtime": 1793532534.2485206,
+    "seen": 1793533463.160892,
+    "ast_hash": "ce2525945ffb8827efc8fa42084b49c5",
     "semantic_hash": ""
   },
   "apps/web/app/extension/connect/extension-connect-mobile-confirm.tsx": {
@@ -1326,15 +1326,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/glossary/anime-marathon/page.tsx": {
-    "mtime": 1793355774.4679933,
-    "seen": 1793424347.672242,
-    "ast_hash": "8f1c69f32bd49f4ae88ed2c15193d5c4",
+    "mtime": 1793532534.2490134,
+    "seen": 1793533463.1608949,
+    "ast_hash": "9e1c204e6ef9b517869d13051f44c4e9",
     "semantic_hash": ""
   },
   "apps/web/app/glossary/anime-simulcast/page.tsx": {
-    "mtime": 1793355774.4680989,
-    "seen": 1793424347.6722429,
-    "ast_hash": "b71c2ac465881a13757c93becc597280",
+    "mtime": 1793532534.249126,
+    "seen": 1793533463.1608949,
+    "ast_hash": "3d83fb7610395aeafab0f99fa91f410a",
     "semantic_hash": ""
   },
   "apps/web/app/glossary/asynchronous-watching/page.tsx": {
@@ -1344,9 +1344,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx": {
-    "mtime": 1793355774.468404,
-    "seen": 1793424347.672244,
-    "ast_hash": "ccd65c562d08e55beeb58b6591e9b889",
+    "mtime": 1793533110.822187,
+    "seen": 1793533463.160896,
+    "ast_hash": "694e17af762e59d72eae84fed87de98c",
     "semantic_hash": ""
   },
   "apps/web/app/glossary/dub-vs-sub-watch-party/page.tsx": {
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/glossary/watchroom/page.tsx": {
-    "mtime": 1793355774.469041,
-    "seen": 1793424347.672247,
-    "ast_hash": "8a821801860d47b9ef4cc4bd1de89613",
+    "mtime": 1793532534.249355,
+    "seen": 1793533463.160897,
+    "ast_hash": "4325d37300c84acc1931eab925fec992",
     "semantic_hash": ""
   },
   "apps/web/app/guides/anime-watch-party-app/page.tsx": {
@@ -1440,9 +1440,9 @@
     "semantic_hash": "0434bedcfbdecf1dc56b386f3b0865fe"
   },
   "apps/web/app/guides/best-anime-to-watch-on-crunchyroll-with-friends/page.tsx": {
-    "mtime": 1793355774.4716105,
-    "seen": 1793424347.672255,
-    "ast_hash": "bb4c2d84128237440181789c62202d49",
+    "mtime": 1793532534.2494967,
+    "seen": 1793533463.160897,
+    "ast_hash": "45a831428f3e541295cca3addb53b8d6",
     "semantic_hash": ""
   },
   "apps/web/app/guides/best-anime-to-watch-online-together/page.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": "eead4e05dea13ed675fd2ebe36ff043b"
   },
   "apps/web/app/guides/best-anime-to-watch-with-friends/page.tsx": {
-    "mtime": 1793355774.472326,
-    "seen": 1793424347.672256,
-    "ast_hash": "29045f3836b1aaac7d03a3ef8c70e587",
+    "mtime": 1793532534.2497458,
+    "seen": 1793533463.160898,
+    "ast_hash": "567725fc27527e45f80dea8abab55bae",
     "semantic_hash": ""
   },
   "apps/web/app/guides/best-anime-to-watch-with-girlfriend/page.tsx": {
@@ -1554,27 +1554,27 @@
     "semantic_hash": "4812334fbfc6449bc70569ae8cf93b51"
   },
   "apps/web/app/guides/crunchyroll-watch-party-chrome-extension/page.tsx": {
-    "mtime": 1793355774.4784791,
-    "seen": 1793424347.672269,
-    "ast_hash": "d99c81268172a457b364079f175fa9ad",
+    "mtime": 1793532534.250552,
+    "seen": 1793533463.1609018,
+    "ast_hash": "15d3802cded2b6211988799af4dc788a",
     "semantic_hash": ""
   },
   "apps/web/app/guides/crunchyroll-watch-party-free/page.tsx": {
-    "mtime": 1793355774.4788735,
-    "seen": 1793424347.67227,
-    "ast_hash": "900c9a9e739500dcf35ad98793d13362",
+    "mtime": 1793532534.250665,
+    "seen": 1793533463.1609018,
+    "ast_hash": "67a3adb7edca22ff53d1cda131d140f8",
     "semantic_hash": ""
   },
   "apps/web/app/guides/crunchyroll-watch-party-not-working/page.tsx": {
-    "mtime": 1793355774.478991,
-    "seen": 1793424347.672271,
-    "ast_hash": "ed450c6f285b1eff27273c6832e554aa",
+    "mtime": 1793532534.2508237,
+    "seen": 1793533463.160903,
+    "ast_hash": "a122d972b4d5a94bcf408c1367b57b41",
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-crunchyroll-have-watch-party/page.tsx": {
-    "mtime": 1793355774.4803417,
-    "seen": 1793424347.672276,
-    "ast_hash": "e7b139f2661ac000943d15721d66e432",
+    "mtime": 1793532534.251168,
+    "seen": 1793533463.160905,
+    "ast_hash": "ead4de9c21b0f53b3b3ebf4fad95e377",
     "semantic_hash": ""
   },
   "apps/web/app/guides/first-anime-watch-party-checklist/page.tsx": {
@@ -1584,9 +1584,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-create-an-anime-watch-party/page.tsx": {
-    "mtime": 1790840693.4315426,
-    "seen": 1790844799.9131122,
-    "ast_hash": "a9e88c57774e8e57c414107c232922aa",
+    "mtime": 1793532534.2517505,
+    "seen": 1793533463.160908,
+    "ast_hash": "737873f5a44d7861ffe818808ff889f8",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-fix-watch-party-audio-delay/page.tsx": {
@@ -1608,39 +1608,39 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-sync-crunchyroll-with-friends/page.tsx": {
-    "mtime": 1793355774.484178,
-    "seen": 1793424347.672284,
-    "ast_hash": "e6e5f815e674d7746c33daaf5541c801",
+    "mtime": 1793532534.2522438,
+    "seen": 1793533463.1609101,
+    "ast_hash": "3435f8b270a90a6e5bd51addf8822f26",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-for-free-with-friends/page.tsx": {
-    "mtime": 1793355774.484795,
-    "seen": 1793424347.6722848,
-    "ast_hash": "e6daa0adc1740fa22defcc38a2e43b6b",
+    "mtime": 1793532534.2524765,
+    "seen": 1793533463.1609118,
+    "ast_hash": "0c878f47a16c44619817c85ec166fe1f",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-long-distance/page.tsx": {
-    "mtime": 1790840693.4313443,
-    "seen": 1790844799.913114,
-    "ast_hash": "cb9dc45040ed6d5c47cdcacf2476c3aa",
+    "mtime": 1793532534.2525797,
+    "seen": 1793533463.1609118,
+    "ast_hash": "8db11c7e8634c1926bc4bed427ef375e",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx": {
-    "mtime": 1791807045.47577,
-    "seen": 1791807185.0519428,
-    "ast_hash": "b6e55938226569c791cd4835dedd46ba",
+    "mtime": 1793532534.2527168,
+    "seen": 1793533463.160913,
+    "ast_hash": "bdee639141835c225010902eda1eb552",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-with-a-group/page.tsx": {
-    "mtime": 1793355774.485894,
-    "seen": 1793424347.672286,
-    "ast_hash": "6ba79c8d5bf558153958b12feb50b213",
+    "mtime": 1793532534.252851,
+    "seen": 1793533463.160913,
+    "ast_hash": "26efa96d7d738a4c0ab54b96a7817f5b",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-with-friends-in-different-time-zones/page.tsx": {
-    "mtime": 1793355774.4863367,
-    "seen": 1793424347.672286,
-    "ast_hash": "5d63ff6e0e1d3b0cdc96ea0f9b018200",
+    "mtime": 1793532534.252978,
+    "seen": 1793533463.160914,
+    "ast_hash": "172895085c474abfcc292815a0e5c214",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-with-friends-on-discord/page.tsx": {
@@ -1650,15 +1650,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-with-friends-online/page.tsx": {
-    "mtime": 1790840618.9367628,
-    "seen": 1790844799.913117,
-    "ast_hash": "a3f9963c3e00b6bc1851e9178fa6ebe3",
+    "mtime": 1793532534.2531006,
+    "seen": 1793533463.160914,
+    "ast_hash": "181d7c456913d9025bdc384ddb7f20c9",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-without-spoilers/page.tsx": {
-    "mtime": 1790840508.085365,
-    "seen": 1790844799.913117,
-    "ast_hash": "71d96c9dd3174a01d65c5067a0eb2f28",
+    "mtime": 1793532534.253224,
+    "seen": 1793533463.160915,
+    "ast_hash": "4cc8b4b8cda77394225f088f6afd98a1",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-crunchyroll-on-two-screens/page.tsx": {
@@ -1668,15 +1668,15 @@
     "semantic_hash": "32d2a2cfa0c90c893b65b00e7699181a"
   },
   "apps/web/app/guides/how-to-watch-crunchyroll-with-friends/page.tsx": {
-    "mtime": 1793355774.4884124,
-    "seen": 1793424347.672288,
-    "ast_hash": "1ff935b1e401e4bd18272128ab5a5052",
+    "mtime": 1793532534.2535856,
+    "seen": 1793533463.160917,
+    "ast_hash": "28f0dfd4c6e226e28bc1d30c2d91bd71",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-seasonal-anime-together/page.tsx": {
-    "mtime": 1793355774.4887342,
-    "seen": 1793424347.6722891,
-    "ast_hash": "cf9173027441e800c12f66d1116efa23",
+    "mtime": 1793532534.2538812,
+    "seen": 1793533463.160918,
+    "ast_hash": "7e5d6ec2b5aae3648bb56dcc0470699a",
     "semantic_hash": ""
   },
   "apps/web/app/guides/watch-party-app-for-crunchyroll/page.tsx": {
@@ -1752,9 +1752,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/long-distance-anime-date-night-ideas/page.tsx": {
-    "mtime": 1793355774.4960616,
-    "seen": 1793424347.67231,
-    "ast_hash": "9c81ab92faa8e8d540cb29647416cc39",
+    "mtime": 1793532534.2558904,
+    "seen": 1793533463.160929,
+    "ast_hash": "a2e17b1eeda92038b7aa4e77894e2665",
     "semantic_hash": ""
   },
   "apps/web/app/opengraph-image.tsx": {
@@ -1776,9 +1776,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/resources/group-watch-onboarding/page.tsx": {
-    "mtime": 1793355774.4972348,
-    "seen": 1793424347.6723142,
-    "ast_hash": "fee63d3525522eeba2e279062dd9b5c7",
+    "mtime": 1793532534.2564173,
+    "seen": 1793533463.160931,
+    "ast_hash": "f959fee8062006d077677286747e4f37",
     "semantic_hash": ""
   },
   "apps/web/app/robots.ts": {
@@ -1830,69 +1830,69 @@
     "semantic_hash": ""
   },
   "apps/web/app/terms/page.tsx": {
-    "mtime": 1793355774.4983654,
-    "seen": 1793424347.672318,
-    "ast_hash": "85856bc4be6cc34792deca8ddbabce90",
+    "mtime": 1793532534.2565396,
+    "seen": 1793533463.160932,
+    "ast_hash": "e6d2d522ce0628a348b3dc6196b192b9",
     "semantic_hash": ""
   },
   "apps/web/app/timezone-friendly-anime-watch-parties/page.tsx": {
-    "mtime": 1793355774.4984899,
-    "seen": 1793424347.672319,
-    "ast_hash": "1e7cdbf5f92e6ba11237787c3b6af75f",
+    "mtime": 1793532534.2566864,
+    "seen": 1793533463.160933,
+    "ast_hash": "3d0f48bd30a2e7ee36c7393b98c0f29b",
     "semantic_hash": ""
   },
   "apps/web/app/watch-action-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.500217,
-    "seen": 1793424347.6723268,
-    "ast_hash": "ce9bd531b821e1fbc094b7881fb8dc6d",
+    "mtime": 1793532534.2572126,
+    "seen": 1793533463.1609359,
+    "ast_hash": "0b108e11e11bc29a681aa49701a5ef4e",
     "semantic_hash": ""
   },
   "apps/web/app/watch-anime-long-distance-boyfriend-girlfriend/page.tsx": {
-    "mtime": 1793355774.5004754,
-    "seen": 1793424347.672328,
-    "ast_hash": "d2958958ff136ce908c72ef82e960c63",
+    "mtime": 1793532534.2573612,
+    "seen": 1793533463.1609359,
+    "ast_hash": "0b7b04689bb507edbb7885c8a1e496ca",
     "semantic_hash": ""
   },
   "apps/web/app/watch-anime-together/page.tsx": {
-    "mtime": 1793355774.5005803,
-    "seen": 1793424347.672328,
-    "ast_hash": "7feeef7c9a66db5c3723ab455534c683",
+    "mtime": 1793532534.2575095,
+    "seen": 1793533463.160937,
+    "ast_hash": "38285483e78f8c6361e958112e563f05",
     "semantic_hash": ""
   },
   "apps/web/app/watch-comedy-anime-with-friends/page.tsx": {
-    "mtime": 1791806604.7230663,
-    "seen": 1791807185.0519722,
-    "ast_hash": "8be27608a911438b49ac7d513432fa2b",
+    "mtime": 1793532534.2576163,
+    "seen": 1793533463.160937,
+    "ast_hash": "924c9554b6b86925a10e41cdace12477",
     "semantic_hash": ""
   },
   "apps/web/app/watch-crunchyroll-together-long-distance/page.tsx": {
-    "mtime": 1793355774.5009782,
-    "seen": 1793424347.672329,
-    "ast_hash": "2eec3846220522b947934e954850897c",
+    "mtime": 1793532534.257758,
+    "seen": 1793533463.160938,
+    "ast_hash": "8974eee3f1a8b536b71a4398283be03a",
     "semantic_hash": ""
   },
   "apps/web/app/watch-crunchyroll-together/page.tsx": {
-    "mtime": 1793355774.501076,
-    "seen": 1793424347.67233,
-    "ast_hash": "ef9c9e6ef86192928ae54b4ac1a3b5ca",
+    "mtime": 1793532534.2578945,
+    "seen": 1793533463.160938,
+    "ast_hash": "a4bd772749fe4a2b3aefc511106b3f0c",
     "semantic_hash": ""
   },
   "apps/web/app/watch-fantasy-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5011775,
-    "seen": 1793424347.67233,
-    "ast_hash": "415f590ada0cf2951e2768c7c3a7a780",
+    "mtime": 1793532534.2579937,
+    "seen": 1793533463.160939,
+    "ast_hash": "6b318bfcd823989074cb3a147a1c291d",
     "semantic_hash": ""
   },
   "apps/web/app/watch-horror-anime-with-friends/page.tsx": {
-    "mtime": 1791806604.7234766,
-    "seen": 1791807185.051973,
-    "ast_hash": "556c7b8acc31e527d7dee8080e631f9d",
+    "mtime": 1793532534.2581298,
+    "seen": 1793533463.160939,
+    "ast_hash": "651582b0132e3938cc10678c674113ed",
     "semantic_hash": ""
   },
   "apps/web/app/watch-isekai-anime-with-friends/page.tsx": {
-    "mtime": 1791806604.7235906,
-    "seen": 1791807185.0519738,
-    "ast_hash": "5702483dc5dffbe07b5307405972ac6b",
+    "mtime": 1793532534.2582412,
+    "seen": 1793533463.160939,
+    "ast_hash": "9865d378170d72921291d8fe42ee78be",
     "semantic_hash": ""
   },
   "apps/web/app/watch-kdrama-together-long-distance/page.tsx": {
@@ -1902,81 +1902,81 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch-mecha-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5020123,
-    "seen": 1793424347.672331,
-    "ast_hash": "f40a0cc6f94163f4f4f7882749240a09",
+    "mtime": 1793532534.2583802,
+    "seen": 1793533463.16094,
+    "ast_hash": "8cb64ca525dbf48c55c672cf8e14b20d",
     "semantic_hash": ""
   },
   "apps/web/app/watch-movies-together-long-distance/page.tsx": {
-    "mtime": 1793355774.5024514,
-    "seen": 1793424347.672332,
-    "ast_hash": "82be7f493f98f741bf6d20dea6b409a0",
+    "mtime": 1793532534.2584934,
+    "seen": 1793533463.1609411,
+    "ast_hash": "aef2a5f24b3dfd0ad544b212365cfe62",
     "semantic_hash": ""
   },
   "apps/web/app/watch-mystery-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5025842,
-    "seen": 1793424347.672332,
-    "ast_hash": "f945047b97a35d35828bc8bf0f7fea47",
+    "mtime": 1793532534.2585962,
+    "seen": 1793533463.1609411,
+    "ast_hash": "d32a1697d814a2989c17d39a59af3c64",
     "semantic_hash": ""
   },
   "apps/web/app/watch-netflix-together-long-distance/page.tsx": {
-    "mtime": 1793355774.5026965,
-    "seen": 1793424347.672333,
-    "ast_hash": "f2c546139bd9f872f10cf8b64f05e230",
+    "mtime": 1793532534.2587223,
+    "seen": 1793533463.160942,
+    "ast_hash": "3dc680417cbfa2bb53e4ac2c32667ffd",
     "semantic_hash": ""
   },
   "apps/web/app/watch-psychological-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.50289,
-    "seen": 1793424347.6723342,
-    "ast_hash": "0c33990d8fa5a7b33ea923bda2a1ccdd",
+    "mtime": 1793532534.258962,
+    "seen": 1793533463.160943,
+    "ast_hash": "58939647fe9d5424930573c9b878b529",
     "semantic_hash": ""
   },
   "apps/web/app/watch-romance-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.503017,
-    "seen": 1793424347.6723351,
-    "ast_hash": "c359036ca7cde42700efd35b5bf0785f",
+    "mtime": 1793532534.2590816,
+    "seen": 1793533463.160943,
+    "ast_hash": "58f39d02a94ae8dcb5cbdd6dd9e75ecd",
     "semantic_hash": ""
   },
   "apps/web/app/watch-sci-fi-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5031316,
-    "seen": 1793424347.6723351,
-    "ast_hash": "4e83ab4901d5af37e91f7bd02b426211",
+    "mtime": 1793532534.2592125,
+    "seen": 1793533463.1609442,
+    "ast_hash": "e6c23b8df6386a6963780faf17a57a23",
     "semantic_hash": ""
   },
   "apps/web/app/watch-shonen-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5032544,
-    "seen": 1793424347.6723351,
-    "ast_hash": "f120230904c9abb78d2cdac5356bb704",
+    "mtime": 1793532534.2593384,
+    "seen": 1793533463.1609442,
+    "ast_hash": "96a8a886a2d76f528795af0fefc62071",
     "semantic_hash": ""
   },
   "apps/web/app/watch-shoujo-anime-with-friends/page.tsx": {
-    "mtime": 1791806604.7271967,
-    "seen": 1791807185.0519779,
-    "ast_hash": "43b533db65975639c5387cc9cdf546fb",
+    "mtime": 1793532534.2594686,
+    "seen": 1793533463.160945,
+    "ast_hash": "9f321948285829b06a541c79f795a6e0",
     "semantic_hash": ""
   },
   "apps/web/app/watch-slice-of-life-anime-with-friends/page.tsx": {
-    "mtime": 1791806604.7272983,
-    "seen": 1791807185.0519779,
-    "ast_hash": "e5fc6305e4c0967e1243245d86c52145",
+    "mtime": 1793532534.2596052,
+    "seen": 1793533463.160945,
+    "ast_hash": "fb0c98c76d4352d4e996bfd76043110e",
     "semantic_hash": ""
   },
   "apps/web/app/watch-sports-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5037467,
-    "seen": 1793424347.6723359,
-    "ast_hash": "b5050baaa7aeea82bfa7ccad63cfe91b",
+    "mtime": 1793532534.2597165,
+    "seen": 1793533463.160946,
+    "ast_hash": "5101df3ec5c306e628dee9e61318cb50",
     "semantic_hash": ""
   },
   "apps/web/app/watch-supernatural-anime-with-friends/page.tsx": {
-    "mtime": 1793355774.5039663,
-    "seen": 1793424347.6723368,
-    "ast_hash": "d439e63424dd2a7c61e05f7474380547",
+    "mtime": 1793532534.2598429,
+    "seen": 1793533463.160946,
+    "ast_hash": "ebed81c2d0976cd58f0b0e5e115c21d9",
     "semantic_hash": ""
   },
   "apps/web/app/watch-youtube-together-long-distance/page.tsx": {
-    "mtime": 1793355774.5041075,
-    "seen": 1793424347.6723368,
-    "ast_hash": "9a45e8eb006da4892c3a4d8f546e1dfa",
+    "mtime": 1793532534.259977,
+    "seen": 1793533463.1609468,
+    "ast_hash": "bb15742858b1c3033683cf4f3d41b5f4",
     "semantic_hash": ""
   },
   "apps/web/app/watch/[slug]/page.tsx": {
@@ -2088,9 +2088,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/how-it-works.tsx": {
-    "mtime": 1793355774.5082204,
-    "seen": 1793424347.672348,
-    "ast_hash": "536ab19ff75b226f511ad20c4a795a6e",
+    "mtime": 1793532534.260196,
+    "seen": 1793533463.160949,
+    "ast_hash": "95f21741f74f9f7b07ead62e569e0740",
     "semantic_hash": ""
   },
   "apps/web/components/join-discord-button.tsx": {
@@ -2100,15 +2100,15 @@
     "semantic_hash": ""
   },
   "apps/web/components/json-ld.tsx": {
-    "mtime": 1793355774.5084608,
-    "seen": 1793424347.672349,
-    "ast_hash": "79ad6f774b83e8980fd169c2b764640d",
+    "mtime": 1793532534.2602973,
+    "seen": 1793533463.160949,
+    "ast_hash": "771b4413864c7c8720ce4b94e7a71d17",
     "semantic_hash": ""
   },
   "apps/web/components/main-app-features.tsx": {
-    "mtime": 1790714816.0362468,
-    "seen": 1790714883.26352,
-    "ast_hash": "10c1d4034d3cde9f3bdb0dbd89a868dc",
+    "mtime": 1793532534.2604933,
+    "seen": 1793533463.16095,
+    "ast_hash": "d03518d318103eb7ec79a4d0b28169bd",
     "semantic_hash": ""
   },
   "apps/web/components/nav-bar-client.tsx": {
@@ -2136,15 +2136,15 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1793355774.5102286,
-    "seen": 1793424347.6723561,
-    "ast_hash": "af70e647f3737eb1df9f94f9d1b175af",
+    "mtime": 1793530717.0049226,
+    "seen": 1793533463.1609511,
+    "ast_hash": "a1c19550ed1a10eb484867d4c1a5776f",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
-    "mtime": 1793355774.510319,
-    "seen": 1793424347.6723561,
-    "ast_hash": "d1e2e41347d24d504c8012d84b81d08d",
+    "mtime": 1793532579.1851656,
+    "seen": 1793533463.160952,
+    "ast_hash": "b3dc56f3a9372590e38256ce00f75887",
     "semantic_hash": ""
   },
   "apps/web/components/responsive-compare-table.tsx": {
@@ -2232,9 +2232,9 @@
     "semantic_hash": "1828197cc2e734653c06fe7fde317041"
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1793521833.5959752,
-    "seen": 1793522091.866966,
-    "ast_hash": "f613b167e4a933f797c6514b5b199421",
+    "mtime": 1793529136.095686,
+    "seen": 1793533463.160955,
+    "ast_hash": "d658bde11e3f4ab4073c1c09998bff4b",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-codes.ts": {
@@ -2562,9 +2562,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/home-faq.ts": {
-    "mtime": 1793355774.538998,
-    "seen": 1793424347.672406,
-    "ast_hash": "399a29e9d80d221a1a40452d4e7cfc61",
+    "mtime": 1793532534.260948,
+    "seen": 1793533463.1609669,
+    "ast_hash": "72e464fb5d679d871a12621dbd50a5fc",
     "semantic_hash": ""
   },
   "apps/web/lib/home-survey.ts": {
@@ -2730,21 +2730,21 @@
     "semantic_hash": "cffb11dc2326bd8d4bc611e389411875"
   },
   "apps/web/lib/pricing-copy.ts": {
-    "mtime": 1793355774.5437932,
-    "seen": 1793424347.672412,
-    "ast_hash": "cdad939bb670b7828782c5bb2e7e95dc",
+    "mtime": 1793532534.2610562,
+    "seen": 1793533463.1609678,
+    "ast_hash": "2fba4c365b8b2154805c9858a15e0577",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-tiers.ts": {
-    "mtime": 1793355774.5439987,
-    "seen": 1793424347.672414,
-    "ast_hash": "c34a9166f36ff48189f6dbc302334a20",
+    "mtime": 1793530493.1622543,
+    "seen": 1793533463.160969,
+    "ast_hash": "b7b5b14bf7067bfbe5e37a816651e1e2",
     "semantic_hash": ""
   },
   "apps/web/lib/pseo-new-guides.tsx": {
-    "mtime": 1793355774.5445423,
-    "seen": 1793424347.672414,
-    "ast_hash": "62a6110b238dffc4eeb1a77791cf1bb8",
+    "mtime": 1793532534.261214,
+    "seen": 1793533463.16097,
+    "ast_hash": "28a17312aaf9664dfbb3ae7c46a12dab",
     "semantic_hash": ""
   },
   "apps/web/lib/public-origin.ts": {
@@ -2856,9 +2856,9 @@
     "semantic_hash": "5a6fd53fdcf2be529e9cc0b718fde352"
   },
   "apps/web/lib/watch-page-rich-content.ts": {
-    "mtime": 1793355774.5493596,
-    "seen": 1793424347.672425,
-    "ast_hash": "bd3e4ebc4a00e3e06de882ca1393bc2f",
+    "mtime": 1793532534.2614312,
+    "seen": 1793533463.160972,
+    "ast_hash": "5af42e8fb2a13953a6eac83398fd6d62",
     "semantic_hash": ""
   },
   "apps/web/lib/watch-season-inference.ts": {
@@ -3120,9 +3120,9 @@
     "semantic_hash": "008cbb7aa3e7e7917fd1e68946868fb6"
   },
   "packages/protocol/src/index.ts": {
-    "mtime": 1793520701.7598875,
-    "seen": 1793522091.8669739,
-    "ast_hash": "a2e3fabb7c6e8ba08a6a9314541f1f6e",
+    "mtime": 1793528833.098365,
+    "seen": 1793533463.160984,
+    "ast_hash": "5c13b78a833b21f2a9e59ab07d870ac7",
     "semantic_hash": ""
   },
   "packages/protocol/src/limits.ts": {
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793521669.9118054,
-    "seen": 1793522091.966866,
+    "mtime": 1793532397.6431499,
+    "seen": 1793533463.2373629,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "b7269de8d06d8f928920d6e776c4c4da"
+    "semantic_hash": "4e692f88643b7cc2edfcf811c50298c9"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3510,10 +3510,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1793434637.1561437,
-    "seen": 1793435376.5896032,
+    "mtime": 1793532275.2829847,
+    "seen": 1793533463.237366,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "5491978909cfee9cda0c139b94228f0d"
+    "semantic_hash": "d74d7011b81ea5f481d270239ab66d7a"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -3552,10 +3552,10 @@
     "semantic_hash": "74a0b81767a7bcfc393c9ae7075aacfd"
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1791421373.766445,
-    "seen": 1791422111.398015,
+    "mtime": 1793528790.0829706,
+    "seen": 1793533463.2373672,
     "ast_hash": "79179d527c1ce337a05b019f1a6b3647",
-    "semantic_hash": "cf141234fe54dc245ec6619eceea965f"
+    "semantic_hash": "81953308bfe656810461fb387c7d5457"
   },
   "docs/release-and-rollback-runbook.md": {
     "mtime": 1789490459.006036,
@@ -3576,10 +3576,10 @@
     "semantic_hash": "297535b2a1e217a5aec894d4937eeb74"
   },
   "docs/social-pricing-model.md": {
-    "mtime": 1791788638.7100172,
-    "seen": 1791789033.003752,
+    "mtime": 1793528554.514666,
+    "seen": 1793533463.2373672,
     "ast_hash": "24a8c5405395a7a64e8aec2f8b7dfe11",
-    "semantic_hash": "fccfe3a2e00e9c82a4365cb7ab901fc7"
+    "semantic_hash": "6a2989d2874e89cdb1ad4fed0f2a5662"
   },
   "docs/staging-acceptance-checklist.md": {
     "mtime": 1789490459.0094938,
@@ -3618,16 +3618,16 @@
     "semantic_hash": "4b3e69f7c66be6dd5977d22cbf37e980"
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1793521669.955543,
-    "seen": 1793522091.96687,
+    "mtime": 1793530055.5803864,
+    "seen": 1793533463.237368,
     "ast_hash": "1a64e025a5001eede8fbb97c9ba09961",
-    "semantic_hash": "5ea1c9c2dab982cf382c425ce04fd359"
+    "semantic_hash": "9b345421e3c0d97ec2b5451023537e83"
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1793521669.9763255,
-    "seen": 1793522091.966871,
+    "mtime": 1793530055.6003208,
+    "seen": 1793533463.237369,
     "ast_hash": "b81540bec45f6eed4f4c2307cefbd7dc",
-    "semantic_hash": "16aa6502ae477df3c90865b82e1e714c"
+    "semantic_hash": "61f8766ecb27bee647dd31a551b5a933"
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
     "mtime": 1789490459.0109992,
@@ -4194,9 +4194,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/best-teleparty-alternatives-for-anime/page.tsx": {
-    "mtime": 1793355774.4764705,
-    "seen": 1793424347.672263,
-    "ast_hash": "4a5309d0b1e3b27e2f459de1c3789472",
+    "mtime": 1793532534.2500596,
+    "seen": 1793533463.1608992,
+    "ast_hash": "219f788ede93d847d94966003573d2d4",
     "semantic_hash": ""
   },
   "apps/web/app/guides/best-watch-party-apps-for-anime/page.tsx": {
@@ -4212,45 +4212,45 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/can-you-screen-share-crunchyroll-on-discord/page.tsx": {
-    "mtime": 1793355774.4775813,
-    "seen": 1793424347.672267,
-    "ast_hash": "07b8a35255ce6046d90c3a8c832c02ff",
+    "mtime": 1793532534.2501917,
+    "seen": 1793533463.1609,
+    "ast_hash": "c02508e698fccd74baa61f87b6593d52",
     "semantic_hash": ""
   },
   "apps/web/app/guides/crunchyroll-party-alternative/page.tsx": {
-    "mtime": 1793355774.4783616,
-    "seen": 1793424347.672269,
-    "ast_hash": "984927d39809e2b5194e9f190a120bdb",
+    "mtime": 1793532534.2503946,
+    "seen": 1793533463.160901,
+    "ast_hash": "8ac3fa1ec105465969468d83c1581a67",
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-teleparty-work-with-crunchyroll/page.tsx": {
-    "mtime": 1793355774.4811957,
-    "seen": 1793424347.672278,
-    "ast_hash": "ded1958617ac642e77d617739d9c8866",
+    "mtime": 1793532534.2515213,
+    "seen": 1793533463.160907,
+    "ast_hash": "e55b579a9b8dd00caea9b9dc4a1c5f2c",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-host-a-crunchyroll-watch-party/page.tsx": {
-    "mtime": 1793355774.482618,
-    "seen": 1793424347.672281,
-    "ast_hash": "4cf8a0f4b32d91e86424cc0928799f25",
+    "mtime": 1793533110.8220336,
+    "seen": 1793533463.160908,
+    "ast_hash": "99c32d2903d3e61c9f3cefef577ac4c9",
     "semantic_hash": ""
   },
   "apps/web/app/guides/rave-alternatives-for-anime/page.tsx": {
-    "mtime": 1791807045.4708214,
-    "seen": 1791807185.0519521,
-    "ast_hash": "6c181f09a367b606456a03943b08d0dd",
+    "mtime": 1793532534.2547667,
+    "seen": 1793533463.1609228,
+    "ast_hash": "badafbc74d6bbc4ae65aee7fc71dbf81",
     "semantic_hash": ""
   },
   "apps/web/app/guides/switch-from-discord-screen-share/page.tsx": {
-    "mtime": 1793355774.4917283,
-    "seen": 1793424347.672299,
-    "ast_hash": "10dc225d57602920549ef07673649a80",
+    "mtime": 1793532534.255099,
+    "seen": 1793533463.160925,
+    "ast_hash": "44f893bc40ce5d758a1c404609aef322",
     "semantic_hash": ""
   },
   "apps/web/app/pricing/page.tsx": {
-    "mtime": 1793355774.4969592,
-    "seen": 1793424347.672313,
-    "ast_hash": "1b43c4f8e5180d9402ac48da08649e0e",
+    "mtime": 1793532534.2562363,
+    "seen": 1793533463.160931,
+    "ast_hash": "b13dfebb1e4f11337618644bd5ef529f",
     "semantic_hash": ""
   },
   "apps/web/lib/force-index-urls.ts": {
@@ -4476,21 +4476,21 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx": {
-    "mtime": 1793355774.48058,
-    "seen": 1793424347.672276,
-    "ast_hash": "1341e1c10047348da24271dd703116fd",
+    "mtime": 1793532579.1853502,
+    "seen": 1793533463.160905,
+    "ast_hash": "4989c32e6808f5c2076b8df2c7141475",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx": {
-    "mtime": 1793355774.4880152,
-    "seen": 1793424347.672288,
-    "ast_hash": "b98616527c864226948a08eca22b16ff",
+    "mtime": 1793532579.1855083,
+    "seen": 1793533463.1609159,
+    "ast_hash": "0611a6497a62fddff9851020f2110af8",
     "semantic_hash": ""
   },
   "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx": {
-    "mtime": 1791807045.4794042,
-    "seen": 1791807185.051947,
-    "ast_hash": "5ccdfc9ca9e33a8c8de2eebca24ed8c7",
+    "mtime": 1793532534.2540703,
+    "seen": 1793533463.160919,
+    "ast_hash": "dd69b8c28d9fb16024c2dcb0317c858e",
     "semantic_hash": ""
   },
   "apps/web/app/guides/kast-alternatives-for-anime/page.tsx": {
@@ -4500,9 +4500,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx": {
-    "mtime": 1793355774.4923213,
-    "seen": 1793424347.6723,
-    "ast_hash": "bc98118412b43a750eeed730ca7cb17e",
+    "mtime": 1793532534.2552333,
+    "seen": 1793533463.160925,
+    "ast_hash": "65c05796dc38d826943741a9089a8254",
     "semantic_hash": ""
   },
   "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx": {
@@ -4572,9 +4572,9 @@
     "semantic_hash": "14fd05d7d16415db896f2dc8cb0229cb"
   },
   "apps/web/app/guides/best-apps-to-watch-youtube-together/page.tsx": {
-    "mtime": 1793355774.473754,
-    "seen": 1793424347.672257,
-    "ast_hash": "369122a14fb2355ec3d4d272d6acef01",
+    "mtime": 1793532534.2498467,
+    "seen": 1793533463.160898,
+    "ast_hash": "76f7e87786ab7fa29490127d05be99b8",
     "semantic_hash": ""
   },
   "apps/web/app/guides/best-teleparty-alternatives-for-youtube/page.tsx": {
@@ -4596,27 +4596,27 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-youtube-have-watch-party/page.tsx": {
-    "mtime": 1793355774.4814892,
-    "seen": 1793424347.672278,
-    "ast_hash": "abe3bc15ecf73a13a1d5de733c0b6310",
+    "mtime": 1793532534.2516422,
+    "seen": 1793533463.160907,
+    "ast_hash": "dfd0644dada5543c42918a9cb85b41d7",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-host-a-youtube-watch-party/page.tsx": {
-    "mtime": 1793355774.4827304,
-    "seen": 1793424347.672281,
-    "ast_hash": "69ccc9bc89e5fa982b477354b0c12b06",
+    "mtime": 1793532534.2520049,
+    "seen": 1793533463.160909,
+    "ast_hash": "77013712d39251a20d629f81607eec83",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx": {
-    "mtime": 1791807045.4699044,
-    "seen": 1791807185.0519419,
-    "ast_hash": "dfbaf664f9add0591b9e7d945abe8876",
+    "mtime": 1793532534.2523432,
+    "seen": 1793533463.160911,
+    "ast_hash": "f6d60467dab3dbfef9cff778fb799977",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-youtube-together-without-screen-share/page.tsx": {
-    "mtime": 1791807045.4750032,
-    "seen": 1791807185.051946,
-    "ast_hash": "54aafd6983fb6831d747e1fea6ef7849",
+    "mtime": 1793532534.2539666,
+    "seen": 1793533463.160918,
+    "ast_hash": "0d74f3650f65633b74eb6edbadfab5ed",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-youtube-with-friends/page.tsx": {
@@ -4644,15 +4644,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/watch2gether-alternatives-for-youtube/page.tsx": {
-    "mtime": 1793355774.4939458,
-    "seen": 1793424347.6723049,
-    "ast_hash": "248f4b661fedf9bfbff61fff1b7dcd69",
+    "mtime": 1793532534.2555518,
+    "seen": 1793533463.160927,
+    "ast_hash": "946c20b0cebf474f3234be41f7dcdf35",
     "semantic_hash": ""
   },
   "apps/web/app/guides/youtube-group-watch/page.tsx": {
-    "mtime": 1793355774.4941576,
-    "seen": 1793424347.6723058,
-    "ast_hash": "9bfe486b4ee05551746b9bfec1e2cad1",
+    "mtime": 1793532534.2556567,
+    "seen": 1793533463.160928,
+    "ast_hash": "d3f2286822edbce0d7d4c2080ef41479",
     "semantic_hash": ""
   },
   "apps/web/app/guides/youtube-watch-party-chrome-extension/page.tsx": {
@@ -4662,9 +4662,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/youtube-watch-party-free/page.tsx": {
-    "mtime": 1793355774.4945962,
-    "seen": 1793424347.672307,
-    "ast_hash": "ef9939349ed6043291b62850c9752709",
+    "mtime": 1793532534.2557647,
+    "seen": 1793533463.160929,
+    "ast_hash": "4072aef8abeadbece9a3da4f18b4f33c",
     "semantic_hash": ""
   },
   "apps/web/app/guides/youtube-watch-party-with-discord/page.tsx": {
@@ -4674,9 +4674,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch-youtube-together/page.tsx": {
-    "mtime": 1793355774.5044956,
-    "seen": 1793424347.6723368,
-    "ast_hash": "ed4bce04ffc58d9744882b61b586900f",
+    "mtime": 1793532534.2601004,
+    "seen": 1793533463.1609468,
+    "ast_hash": "d3d68798158b3698dd57eb55a54c08f4",
     "semantic_hash": ""
   },
   ".cursor/plans/yt-seo-conversion-polish.plan.md": {
@@ -4770,9 +4770,9 @@
     "semantic_hash": "eeed6e03eb629160aa4d6665ac4c6310"
   },
   "apps/web/app/about/page.tsx": {
-    "mtime": 1793355774.4397442,
-    "seen": 1793424347.672207,
-    "ast_hash": "a51a39c7bf2a337ed2f91bdab3c9b27a",
+    "mtime": 1793532534.2452419,
+    "seen": 1793533463.1608808,
+    "ast_hash": "b120530ce202c692b10bd46be2b357fd",
     "semantic_hash": ""
   },
   "apps/web/app/contact/page.tsx": {
@@ -5100,9 +5100,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-crunchyroll-together-without-screen-share/page.tsx": {
-    "mtime": 1791807045.4758818,
-    "seen": 1791807185.051944,
-    "ast_hash": "e9eed471cf71f5d67e2beab94a4065ff",
+    "mtime": 1793532534.2533474,
+    "seen": 1793533463.160915,
+    "ast_hash": "7ca28aafd6760ace2e6f4bac223d8939",
     "semantic_hash": ""
   },
   "apps/web/app/guides/netflix-party-for-crunchyroll/page.tsx": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793517165.732116,
-    "seen": 1793517559.447552,
-    "ast_hash": "29bd1547fb4f65ff32c1eb007d7e42b6",
+    "mtime": 1793528024.6428642,
+    "seen": 1793533463.1608791,
+    "ast_hash": "fae93d266319c7e49b16f8579135808e",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -5760,16 +5760,16 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-create.ts": {
-    "mtime": 1793433267.6124566,
-    "seen": 1793435376.517314,
-    "ast_hash": "f5d1c6b4bac4ddeb8e0ff738dd628331",
+    "mtime": 1793529136.0957859,
+    "seen": 1793533463.160961,
+    "ast_hash": "8346451fdb5ea34e39f5ad01c41d1c86",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-source-wiring.test.ts": {
-    "mtime": 1789490458.9680772,
-    "seen": 1789807056.437095,
-    "ast_hash": "b7744e0f1ee0981fb34c86d082a7d467",
-    "semantic_hash": "b7744e0f1ee0981fb34c86d082a7d467"
+    "mtime": 1793528833.1012075,
+    "seen": 1793533463.160961,
+    "ast_hash": "9797d46649cd9672bb96542407b0f504",
+    "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-source.test.ts": {
     "mtime": 1791926591.6457384,
@@ -5898,9 +5898,9 @@
     "semantic_hash": "48a622503ef75403046b81b4a2dc04a7"
   },
   "apps/web/lib/anidachi-auth/active-room-session.test.ts": {
-    "mtime": 1791418091.8705542,
-    "seen": 1791422025.237386,
-    "ast_hash": "86e7d4280c7cd14c94ad022f2ef12025",
+    "mtime": 1793528833.1008527,
+    "seen": 1793533463.160955,
+    "ast_hash": "97e73923d9f4c785d46c1b136467b7a8",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/active-room-session.ts": {
@@ -7224,9 +7224,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1793355774.4403563,
-    "seen": 1793424347.6722078,
-    "ast_hash": "bdfde0271951f8cb831a055c1721b26e",
+    "mtime": 1793530411.8501408,
+    "seen": 1793533463.1608808,
+    "ast_hash": "df58bed82f5a2f291717c73543417a44",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
@@ -7302,9 +7302,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-client.test.ts": {
-    "mtime": 1793355774.5350778,
-    "seen": 1793424347.6723928,
-    "ast_hash": "b261f6cb9aafdcc5eb981ef98debe97f",
+    "mtime": 1793530411.860551,
+    "seen": 1793533463.160963,
+    "ast_hash": "2b72804e20414d5c720576b42f12c1f1",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
@@ -7458,9 +7458,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/help/page.tsx": {
-    "mtime": 1793355774.4412704,
-    "seen": 1793424347.67221,
-    "ast_hash": "0371b5636ce59ff4931f1f7883d763a6",
+    "mtime": 1793532534.2454948,
+    "seen": 1793533463.160883,
+    "ast_hash": "4cf44b3b780e7b99d19d44b6c5dbae8a",
     "semantic_hash": ""
   },
   "apps/web/app/account/profile/page.tsx": {
@@ -8124,9 +8124,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/extension/page.tsx": {
-    "mtime": 1793355774.46669,
-    "seen": 1793424347.672241,
-    "ast_hash": "f8e9c5c05028464f98db019e81208fe5",
+    "mtime": 1793532534.2488885,
+    "seen": 1793533463.160894,
+    "ast_hash": "871e0fddbf511f420d02dd75096df7db",
     "semantic_hash": ""
   },
   "apps/web/components/chrome-extension-async-demo.tsx": {
@@ -8238,9 +8238,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/extension-install-faq.ts": {
-    "mtime": 1793355774.5368626,
-    "seen": 1793424347.672401,
-    "ast_hash": "b3c5fb0ef03680de2eb762d0d171dc33",
+    "mtime": 1793532534.260763,
+    "seen": 1793533463.160964,
+    "ast_hash": "b1ffde7ea477eea739e043b387e26383",
     "semantic_hash": ""
   },
   "apps/web/lib/extension-using-examples.test.ts": {
@@ -8250,9 +8250,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/extension-using-guide.ts": {
-    "mtime": 1793355774.5371578,
-    "seen": 1793424347.6724029,
-    "ast_hash": "6ea019cbcfa8f3ff9f74e49527bac0b4",
+    "mtime": 1793532534.2608604,
+    "seen": 1793533463.160964,
+    "ast_hash": "f6797e88aeb8e3a988f2eb95cdce6d9b",
     "semantic_hash": ""
   },
   "apps/web/lib/home-scroll-assist.test.ts": {
@@ -8286,9 +8286,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-tiers.test.ts": {
-    "mtime": 1793355774.54392,
-    "seen": 1793424347.6724129,
-    "ast_hash": "a51f9ab1bc902f9bba1b5f754b6fdd22",
+    "mtime": 1793530493.151124,
+    "seen": 1793533463.160969,
+    "ast_hash": "b3bc1453bb9b4cbce6e897a3867c577c",
     "semantic_hash": ""
   },
   "apps/web/lib/test-helpers/account-client-dom.ts": {
@@ -8496,9 +8496,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/discord-watch-party/page.tsx": {
-    "mtime": 1793355774.466014,
-    "seen": 1793424347.672239,
-    "ast_hash": "9c42f242a977d28b43988db1c2ae87f9",
+    "mtime": 1793533110.8218908,
+    "seen": 1793533463.160893,
+    "ast_hash": "868118cfdc9654b2595a851b47b1368c",
     "semantic_hash": ""
   },
   "apps/web/app/guides/anime-checklist/page.tsx": {
@@ -8526,9 +8526,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-watch-together/page.tsx": {
-    "mtime": 1793355774.480205,
-    "seen": 1793424347.6722748,
-    "ast_hash": "a4d4de0e3ce3e4c2e2408f0157d7a4ea",
+    "mtime": 1793532534.251038,
+    "seen": 1793533463.160904,
+    "ast_hash": "197599d2c672f4ac6b74aa641febdc52",
     "semantic_hash": ""
   },
   "apps/web/app/guides/dubbed-anime-on-crunchyroll/page.tsx": {
@@ -8574,9 +8574,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/watch-movies-together-online/page.tsx": {
-    "mtime": 1793355774.493325,
-    "seen": 1793424347.6723042,
-    "ast_hash": "a498aed4eccb66ac711cec108ac211fa",
+    "mtime": 1793532534.2553432,
+    "seen": 1793533463.1609259,
+    "ast_hash": "0fa3799e8f7d8cc7c9b5fd05124abfa3",
     "semantic_hash": ""
   },
   "apps/web/app/sub-vs-dub/page.tsx": {
@@ -8586,9 +8586,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch-party-app/page.tsx": {
-    "mtime": 1793355774.5027878,
-    "seen": 1793424347.672333,
-    "ast_hash": "219b3a4a534d0a1cf86fde67b9bbefc6",
+    "mtime": 1793532534.2588375,
+    "seen": 1793533463.160942,
+    "ast_hash": "9d3de97e64fe84218684b4af620b92f6",
     "semantic_hash": ""
   },
   "apps/web/components/overlay-using-guide.tsx": {
@@ -8892,33 +8892,33 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.test.ts": {
-    "mtime": 1791734986.9626758,
-    "seen": 1791737251.412147,
-    "ast_hash": "1db823bca543e4022243b05a274a8ca0",
+    "mtime": 1793530411.852455,
+    "seen": 1793533463.160959,
+    "ast_hash": "dcc104dd4dbd38d335f884ba905d8d11",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/pricing-offer.ts": {
-    "mtime": 1791734986.9622004,
-    "seen": 1791737251.412147,
-    "ast_hash": "902c5b4eeb6b9ac071e7a1596e912a62",
+    "mtime": 1793530477.464583,
+    "seen": 1793533463.16096,
+    "ast_hash": "ee0b7fed461c1b9a0aa91ddf4f7c61b6",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
-    "mtime": 1793355774.5436547,
-    "seen": 1793424347.672411,
-    "ast_hash": "4e78e722b839051807fbd90e2e2c9abe",
+    "mtime": 1793530411.858464,
+    "seen": 1793533463.1609669,
+    "ast_hash": "93a9e2b981cdf3636bd0a6aeb441a7d2",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
-    "mtime": 1793355774.5438554,
-    "seen": 1793424347.672412,
-    "ast_hash": "fa687233e3e31867c460c86cb709203b",
+    "mtime": 1793530105.114769,
+    "seen": 1793533463.1609678,
+    "ast_hash": "1ad00b23d0de909a96ad74e6e5c676dc",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-connect-route.test.ts": {
-    "mtime": 1790617194.7812228,
-    "seen": 1790618764.027526,
-    "ast_hash": "2f6cc3f124ff131f3d324dbcadac65c0",
+    "mtime": 1793528833.1014006,
+    "seen": 1793533463.16096,
+    "ast_hash": "c6a9ef095070f892b6093242c421a4ad",
     "semantic_hash": ""
   },
   "docs/releases/paid-hosting-trial/staging-preflight-2026-09-29.md": {
@@ -9552,9 +9552,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/chrome-watch-party/page.tsx": {
-    "mtime": 1793355774.4780943,
-    "seen": 1793424347.672268,
-    "ast_hash": "bbf2a286e745c21dcbc043a25c5beb18",
+    "mtime": 1793532534.2502844,
+    "seen": 1793533463.1609,
+    "ast_hash": "02f067c4a7e4d8e527246f20e962b491",
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-go-live/page.tsx": {
@@ -9570,9 +9570,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-screen-share-not-working/page.tsx": {
-    "mtime": 1793355774.4798346,
-    "seen": 1793424347.6722739,
-    "ast_hash": "e19b54bc1d07cfe7d60cd47d8b4e56cd",
+    "mtime": 1793532534.25093,
+    "seen": 1793533463.160903,
+    "ast_hash": "2f7dc168443c39251ee23afb267f8d43",
     "semantic_hash": ""
   },
   "apps/web/app/guides/discord-watch-together-activity/page.tsx": {
@@ -9594,15 +9594,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/long-distance-date-night-ideas/page.tsx": {
-    "mtime": 1793355774.4901736,
-    "seen": 1793424347.672292,
-    "ast_hash": "18e59fe8ce2feaa9ef34397774a6ddeb",
+    "mtime": 1793532534.254312,
+    "seen": 1793533463.1609201,
+    "ast_hash": "572bc5a6b20f8d58f298af591f9e24ab",
     "semantic_hash": ""
   },
   "apps/web/app/guides/online-date-ideas/page.tsx": {
-    "mtime": 1793355774.4909337,
-    "seen": 1793424347.672296,
-    "ast_hash": "be19cdfdbcf3e91e1f658b9d9f9cbe2c",
+    "mtime": 1793532534.2546532,
+    "seen": 1793533463.160922,
+    "ast_hash": "aead638d0e404cc656b7a0b4b541f001",
     "semantic_hash": ""
   },
   "apps/web/app/guides/resume-anime/page.tsx": {
@@ -9612,21 +9612,21 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/romance-anime-dubbed/page.tsx": {
-    "mtime": 1793355774.491413,
-    "seen": 1793424347.672298,
-    "ast_hash": "422d59887e66c91a39a12aaaae8e4531",
+    "mtime": 1793532534.2548873,
+    "seen": 1793533463.160924,
+    "ast_hash": "ece2fef1fcda174f3d94e6a33a77bcbc",
     "semantic_hash": ""
   },
   "apps/web/app/guides/subbed-anime/page.tsx": {
-    "mtime": 1793355774.4916387,
-    "seen": 1793424347.672299,
-    "ast_hash": "7b95d4dd695be013c38fedad87463927",
+    "mtime": 1793532534.2549922,
+    "seen": 1793533463.160924,
+    "ast_hash": "5762acfc6226655a9bab01e1f0709a18",
     "semantic_hash": ""
   },
   "apps/web/app/virtual-movie-night/page.tsx": {
-    "mtime": 1793355774.4998205,
-    "seen": 1793424347.6723268,
-    "ast_hash": "31fee19ca4c01008d517f9dc91b2182b",
+    "mtime": 1793532534.2571025,
+    "seen": 1793533463.160935,
+    "ast_hash": "a6fdf0e476ea22b66d93740231fecdbe",
     "semantic_hash": ""
   },
   "apps/web/components/marketing-article.tsx": {
@@ -9642,33 +9642,33 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-netflix-have-a-watch-party/page.tsx": {
-    "mtime": 1793355774.4807084,
-    "seen": 1793424347.672277,
-    "ast_hash": "02adb099dd78494226d84333c7c57f7f",
+    "mtime": 1793532534.2513912,
+    "seen": 1793533463.160906,
+    "ast_hash": "179f737e2d37efd52ffe540c8408fb3c",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-screen-share-netflix-on-discord/page.tsx": {
-    "mtime": 1793355774.4833527,
-    "seen": 1793424347.672283,
-    "ast_hash": "6b029c42710894e0e79c30712c715fc4",
+    "mtime": 1793532534.2521517,
+    "seen": 1793533463.1609101,
+    "ast_hash": "646af5973338d145f363f9ac9d67218c",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-netflix-with-friends/page.tsx": {
-    "mtime": 1793355774.488523,
-    "seen": 1793424347.6722891,
-    "ast_hash": "69568416161be12a25289435ca0b87d6",
+    "mtime": 1793532534.2537224,
+    "seen": 1793533463.160917,
+    "ast_hash": "bba2cd9d4b0c870432990530984c84e4",
     "semantic_hash": ""
   },
   "apps/web/app/guides/netflix-group-watch/page.tsx": {
-    "mtime": 1793355774.4902816,
-    "seen": 1793424347.6722932,
-    "ast_hash": "8ea3bcbd7cd1801634fa5e9b762d2805",
+    "mtime": 1793532534.2544236,
+    "seen": 1793533463.160921,
+    "ast_hash": "e06ad10b60f1fdcfd8d8b8a32fbf5f5c",
     "semantic_hash": ""
   },
   "apps/web/app/guides/netflix-movie-night/page.tsx": {
-    "mtime": 1793355774.4905221,
-    "seen": 1793424347.6722932,
-    "ast_hash": "99eb8e37cb4e843bff07fa3e727401fa",
+    "mtime": 1793532534.2545285,
+    "seen": 1793533463.160922,
+    "ast_hash": "e06e0af50d936487b5e93070a40e2ae3",
     "semantic_hash": ""
   },
   "apps/web/app/guides/teleparty-netflix/page.tsx": {
@@ -9678,21 +9678,21 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/watch-netflix-together/page.tsx": {
-    "mtime": 1793355774.4935973,
-    "seen": 1793424347.6723042,
-    "ast_hash": "0d92bbef30209304e0b6734de3eee412",
+    "mtime": 1793532534.2554538,
+    "seen": 1793533463.160927,
+    "ast_hash": "7481de98d158e4afea7634c7eb24dfa5",
     "semantic_hash": ""
   },
   "apps/web/app/netflix-party/page.tsx": {
-    "mtime": 1793355774.4963114,
-    "seen": 1793424347.67231,
-    "ast_hash": "ae763d0249486df3ff446ede6484117b",
+    "mtime": 1793532534.2560039,
+    "seen": 1793533463.1609302,
+    "ast_hash": "f921e4ebf12573e145bae1943edd5da5",
     "semantic_hash": ""
   },
   "apps/web/app/netflix-watch-party/page.tsx": {
-    "mtime": 1793355774.4965684,
-    "seen": 1793424347.672311,
-    "ast_hash": "c80840525bfe3812b549eec872a9cd20",
+    "mtime": 1793532534.25615,
+    "seen": 1793533463.1609302,
+    "ast_hash": "6dfcce6308247ea66bd39b1cb58e6e21",
     "semantic_hash": ""
   },
   "apps/web/scripts/stripe/cardless-trial-proof.test.ts": {
@@ -10008,9 +10008,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/subscription-summary.tsx": {
-    "mtime": 1793355774.440706,
-    "seen": 1793424347.6722088,
-    "ast_hash": "17d1168ebe175a5a04e9276b2ce4fa26",
+    "mtime": 1793530411.8469071,
+    "seen": 1793533463.160882,
+    "ast_hash": "30dd76a444b50dffd30b6a10eb8a79bb",
     "semantic_hash": ""
   },
   "apps/web/app/not-found.tsx": {
@@ -10032,9 +10032,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/tools/crunchyroll-schedule/page.tsx": {
-    "mtime": 1793355774.4990904,
-    "seen": 1793424347.672322,
-    "ast_hash": "e4b2606926a37f56209283083f9e4ac6",
+    "mtime": 1793532534.256917,
+    "seen": 1793533463.160934,
+    "ast_hash": "2663c8280bcdd9c23406e06e7ab66e32",
     "semantic_hash": ""
   },
   "apps/web/app/tools/fate-watch-order/page.tsx": {
@@ -10074,9 +10074,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/tools/random-anime-generator/page.tsx": {
-    "mtime": 1793355774.4997325,
-    "seen": 1793424347.6723258,
-    "ast_hash": "58130ff02ed6fc2cf33acc3ae8f2e823",
+    "mtime": 1793532534.257011,
+    "seen": 1793533463.160935,
+    "ast_hash": "a7219ad37dafd7267022eca1d37cebcc",
     "semantic_hash": ""
   },
   "apps/web/components/tools/anime-spin.tsx": {
@@ -10380,9 +10380,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/player-onboarding.tsx": {
-    "mtime": 1793355774.4018407,
-    "seen": 1793424347.672171,
-    "ast_hash": "99618a2fdaf5e345ab2674b2689d0bff",
+    "mtime": 1793530492.9537697,
+    "seen": 1793533463.160873,
+    "ast_hash": "bce1c83c02549ae7b9468e2e4e85574f",
     "semantic_hash": ""
   },
   "apps/extension/src/provider-logo.tsx": {
@@ -10428,9 +10428,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/player-onboarding.test.tsx": {
-    "mtime": 1793355774.42561,
-    "seen": 1793424347.672193,
-    "ast_hash": "21e2b9e5f473563f433b646c44ac4edf",
+    "mtime": 1793530411.8506866,
+    "seen": 1793533463.1608782,
+    "ast_hash": "529720665acd688742412cf31a526f75",
     "semantic_hash": ""
   },
   "apps/extension/test/trial-installation.test.ts": {
@@ -10488,15 +10488,15 @@
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-kosmi/page.tsx": {
-    "mtime": 1793355774.4624898,
-    "seen": 1793424347.672226,
-    "ast_hash": "5f6664a417e57b29112617dff9abb898",
+    "mtime": 1793532534.2477896,
+    "seen": 1793533463.1608891,
+    "ast_hash": "87dbcea43c003e952c8b91499e4f99ba",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-syncup/page.tsx": {
-    "mtime": 1793355774.4635959,
-    "seen": 1793424347.67223,
-    "ast_hash": "8b8291fc113bd2b2966d17f4d4417b6a",
+    "mtime": 1793532534.248149,
+    "seen": 1793533463.1608908,
+    "ast_hash": "5280b20ab9ec4d4c6358791ea1989e4a",
     "semantic_hash": ""
   },
   "apps/web/app/compare/page.tsx": {
@@ -10536,9 +10536,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/is-teleparty-free/page.tsx": {
-    "mtime": 1793355774.489257,
-    "seen": 1793424347.672291,
-    "ast_hash": "f5827589b3fe87323fb3c806667d73e6",
+    "mtime": 1793532534.2542226,
+    "seen": 1793533463.1609201,
+    "ast_hash": "51df8430d99fd117c837b19655e656ba",
     "semantic_hash": ""
   },
   "apps/web/app/guides/page.tsx": {
@@ -10548,9 +10548,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/tools/crunchyroll-dub-schedule/page.tsx": {
-    "mtime": 1793355774.498961,
-    "seen": 1793424347.672321,
-    "ast_hash": "eca4f769e44c0a9e31a9e2247d2e50ed",
+    "mtime": 1793532534.2568157,
+    "seen": 1793533463.160933,
+    "ast_hash": "a52ac0c7a7e8143f765ef5f8ce026e7b",
     "semantic_hash": ""
   },
   "apps/web/app/tools/page.tsx": {
@@ -10578,9 +10578,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/extension-welcome-hero.tsx": {
-    "mtime": 1793355774.5074282,
-    "seen": 1793424347.6723452,
-    "ast_hash": "afffaa1b606f7796d1fcb92c44abf08b",
+    "mtime": 1793531700.481866,
+    "seen": 1793533463.160948,
+    "ast_hash": "489446676d898c476323bd986c23d4ed",
     "semantic_hash": ""
   },
   "apps/web/components/install-link.tsx": {
@@ -10608,9 +10608,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing-selection.tsx": {
-    "mtime": 1793355774.5100672,
-    "seen": 1793424347.6723552,
-    "ast_hash": "fe3652a44d0035aa973dd0f4aad658fd",
+    "mtime": 1793530493.0200276,
+    "seen": 1793533463.1609511,
+    "ast_hash": "f95668eb12f93d4b50eec3bd8a47ba1c",
     "semantic_hash": ""
   },
   "apps/web/components/section-index-page.tsx": {
@@ -10800,21 +10800,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/extension-welcome-ui.test.ts": {
-    "mtime": 1793355774.537237,
-    "seen": 1793424347.672404,
-    "ast_hash": "7ae7d43acb03a559cee6e5a63e82b8d8",
+    "mtime": 1793531700.482469,
+    "seen": 1793533463.1609652,
+    "ast_hash": "0b5958630ab660fc55d0502e4e7d978d",
     "semantic_hash": ""
   },
   "apps/web/lib/extension-welcome.test.ts": {
-    "mtime": 1793355774.5372922,
-    "seen": 1793424347.672404,
-    "ast_hash": "2b17f31708c79b348ad0c23e9c68d1d6",
+    "mtime": 1793530493.1086867,
+    "seen": 1793533463.1609652,
+    "ast_hash": "6d0000375b60f6c7bc5a791a7513fc9c",
     "semantic_hash": ""
   },
   "apps/web/lib/extension-welcome.ts": {
-    "mtime": 1793355774.5374787,
-    "seen": 1793424347.672405,
-    "ast_hash": "666691a02074216685f5280ef1863161",
+    "mtime": 1793530411.8580217,
+    "seen": 1793533463.160966,
+    "ast_hash": "88a7eab336e701f08221b5b7540a813a",
     "semantic_hash": ""
   },
   "apps/web/lib/internal-free20-budget-route.test.ts": {
@@ -11088,27 +11088,27 @@
     "semantic_hash": ""
   },
   "docs/daily-free20-contract.md": {
-    "mtime": 1793521710.2254374,
-    "seen": 1793522091.966868,
+    "mtime": 1793532145.4891062,
+    "seen": 1793533463.237365,
     "ast_hash": "",
-    "semantic_hash": "32c7011080ac40793bb4d49ef965c6e0"
+    "semantic_hash": "e506571c1f53777818df6ab0d90e9b18"
   },
   "docs/superpowers/plans/2026-10-30-daily-free20-transition.md": {
-    "mtime": 1793521669.9319458,
-    "seen": 1793522091.966872,
+    "mtime": 1793526272.5864875,
+    "seen": 1793533463.237369,
     "ast_hash": "",
-    "semantic_hash": "d07e29c63fb1c0d3da3862aa592cc9ab"
+    "semantic_hash": "df9d17163a285f0bb68122c4bd2f8973"
   },
   "docs/superpowers/specs/2026-10-30-daily-free20-design.md": {
-    "mtime": 1793420630.2221746,
-    "seen": 1793424652.736376,
+    "mtime": 1793526272.564394,
+    "seen": 1793533463.237372,
     "ast_hash": "",
-    "semantic_hash": "7e96798f5e82bd78deb2125aba762eed"
+    "semantic_hash": "16e9030d94f14a408b3029130c3e00b6"
   },
   "apps/web/lib/anidachi-auth/free20-admission.test.ts": {
-    "mtime": 1793437506.9230096,
-    "seen": 1793437564.783285,
-    "ast_hash": "1bd704873e3b9464caec4cef86b5488f",
+    "mtime": 1793529292.5914524,
+    "seen": 1793533463.1609569,
+    "ast_hash": "21cf6f8b3325a0e4b33713b2d51f8fdd",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/free20-admission.ts": {
@@ -11118,9 +11118,9 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/free20_admission_contract.mjs": {
-    "mtime": 1793434560.9707308,
-    "seen": 1793435376.5173151,
-    "ast_hash": "a18537436ac2642d03c9b9d9cb52c486",
+    "mtime": 1793529023.5079522,
+    "seen": 1793533463.160973,
+    "ast_hash": "e4454bf3ab6e51669598abd7788aa888",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20261031074738_daily_free20_room_admission.sql": {
@@ -11130,9 +11130,9 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/tests/daily_free20_admission.test.sql": {
-    "mtime": 1793433572.2405486,
-    "seen": 1793435376.517316,
-    "ast_hash": "23fcd000271a5045d3b0a5a41173adb5",
+    "mtime": 1793529023.5051844,
+    "seen": 1793533463.1609778,
+    "ast_hash": "db0b2246eff4e47e4fc28a186286f59f",
     "semantic_hash": ""
   },
   "packages/protocol/test/free20-admission.test.ts": {
@@ -11160,15 +11160,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/account-hosting-status.test.ts": {
-    "mtime": 1793441731.7096434,
-    "seen": 1793442625.956672,
-    "ast_hash": "bbd969698bfe9b529ed6dc612b88bc50",
+    "mtime": 1793530411.8505614,
+    "seen": 1793533463.160953,
+    "ast_hash": "62e4b738a261164a449f68c21a4ec934",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/account-hosting-status.ts": {
-    "mtime": 1793513510.0594058,
-    "seen": 1793514924.177879,
-    "ast_hash": "aa7039842095a77b76485dad94b400d7",
+    "mtime": 1793530411.8514345,
+    "seen": 1793533463.160954,
+    "ast_hash": "2726f838e2e2e71acf80e03bc396deb8",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20261031100000_free20_account_status.sql": {
@@ -11178,15 +11178,15 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/tests/free20_account_status.test.sql": {
-    "mtime": 1793442019.331403,
-    "seen": 1793442625.9566789,
-    "ast_hash": "419770d86433111de9d7219d02a4dbe6",
+    "mtime": 1793529023.5057962,
+    "seen": 1793533463.160979,
+    "ast_hash": "a5e4347bf4453885323d9c81249a2433",
     "semantic_hash": ""
   },
   "packages/protocol/src/account-hosting-status.ts": {
-    "mtime": 1793442591.2692614,
-    "seen": 1793442625.9566798,
-    "ast_hash": "970247416b66305fd77f7eb39855d221",
+    "mtime": 1793526744.1939516,
+    "seen": 1793533463.1609821,
+    "ast_hash": "6092d35476e968e5a4dddb3cf8ab649d",
     "semantic_hash": ""
   },
   "packages/protocol/test/account-hosting-status.test.ts": {
@@ -11358,9 +11358,9 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/free20_purchase_delivery_concurrency.mjs": {
-    "mtime": 1793521833.596227,
-    "seen": 1793522091.86697,
-    "ast_hash": "66b92ef14913f111282a79c614b048fb",
+    "mtime": 1793529023.5086045,
+    "seen": 1793533463.160974,
+    "ast_hash": "87d2fa100f0b60843595b40a8b68808a",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20261101081311_free20_purchase_delivery.sql": {
@@ -11370,9 +11370,9 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/tests/free20_purchase_delivery.test.sql": {
-    "mtime": 1793521833.597108,
-    "seen": 1793522091.866972,
-    "ast_hash": "2fa0cc46e4cd3ff1d8bbb737724188ae",
+    "mtime": 1793529023.5065386,
+    "seen": 1793533463.16098,
+    "ast_hash": "45a48ee0c7a645cd35eeba4ee5aedae2",
     "semantic_hash": ""
   },
   "packages/protocol/src/free20-room-refresh.test.ts": {
@@ -11392,5 +11392,221 @@
     "seen": 1793522091.9668732,
     "ast_hash": "",
     "semantic_hash": "3252d7a29223d543653f32cfa2734330"
+  },
+  "apps/extension/src/free20-warning-client.ts": {
+    "mtime": 1793528517.4838865,
+    "seen": 1793533463.1608682,
+    "ast_hash": "56f9f25fa44ea52d01d3d3bb9ef49dc7",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/free20-warning-notice.tsx": {
+    "mtime": 1793527928.8173144,
+    "seen": 1793533463.1608698,
+    "ast_hash": "098bbeac61ebc1a9cb921b135d19344a",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/free20-warning-styles.ts": {
+    "mtime": 1793527681.693525,
+    "seen": 1793533463.160871,
+    "ast_hash": "8f1be17355a8c69cc86b7867605e45cd",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/use-free20-warning.ts": {
+    "mtime": 1793528560.0836155,
+    "seen": 1793533463.160875,
+    "ast_hash": "80be914648316464a3cfd8194d2718e1",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/free20-warning-client.test.ts": {
+    "mtime": 1793528560.063043,
+    "seen": 1793533463.160876,
+    "ast_hash": "799d4517570158b7671bbae3798eb1dc",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/free20-warning-notice.test.tsx": {
+    "mtime": 1793527922.5025268,
+    "seen": 1793533463.160877,
+    "ast_hash": "94ad2bf1e6aa48b790e08e96a83a4aad",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/use-free20-warning.test.tsx": {
+    "mtime": 1793528500.5161543,
+    "seen": 1793533463.16088,
+    "ast_hash": "94f387d11b1e0b1a092ff015749bc5c9",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/me/hosting-warning/claim/route.ts": {
+    "mtime": 1793526178.1217377,
+    "seen": 1793533463.160885,
+    "ast_hash": "61938834af96a90ca4e3cb240b70173a",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/account-hosting-status-client.test.ts": {
+    "mtime": 1793530411.8483777,
+    "seen": 1793533463.160952,
+    "ast_hash": "22850f66ae1c2dbe556fa8241abcaaf2",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/account-hosting-status-client.ts": {
+    "mtime": 1793530411.8485086,
+    "seen": 1793533463.160953,
+    "ast_hash": "d5588e548ce31cd1128e6779bc7c7d0e",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/extension-welcome-snapshot.test.ts": {
+    "mtime": 1793530411.8492475,
+    "seen": 1793533463.160956,
+    "ast_hash": "ad6bf07090f20f2cddbd165665cb53eb",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/extension-welcome-snapshot.ts": {
+    "mtime": 1793530411.850231,
+    "seen": 1793533463.160956,
+    "ast_hash": "decf2f96a02901216a1892a53809525e",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/free20-warning.test.ts": {
+    "mtime": 1793526897.5921319,
+    "seen": 1793533463.160958,
+    "ast_hash": "ac17ae6b9456e9b0d8b43b66ef2b4bc8",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/free20-warning.ts": {
+    "mtime": 1793526808.6001277,
+    "seen": 1793533463.160958,
+    "ast_hash": "92ed9aad4ae9db1a52fd0dce0d34f0e1",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/room-update-required.ts": {
+    "mtime": 1793529292.5906012,
+    "seen": 1793533463.160962,
+    "ast_hash": "8b8fd4e96560547e1989881dbf6d511a",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/public-pricing-copy.test.ts": {
+    "mtime": 1793533140.018935,
+    "seen": 1793533463.16097,
+    "ast_hash": "99d4cf5c1c041aca4755dabbcbf90125",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/use-account-hosting-status.test.ts": {
+    "mtime": 1793530698.7190292,
+    "seen": 1793533463.160971,
+    "ast_hash": "b0223f647c3ec94b3169bad2d9861ac2",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/use-account-hosting-status.ts": {
+    "mtime": 1793530698.718903,
+    "seen": 1793533463.160972,
+    "ast_hash": "174092eec9db0144297e1c128c0a824c",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/free20_client_admission_concurrency.mjs": {
+    "mtime": 1793529292.5914629,
+    "seen": 1793533463.160974,
+    "ast_hash": "7fb2c30a5bfe11aed03622b4ca7dd3eb",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/free20_trial_retirement_concurrency.mjs": {
+    "mtime": 1793525395.1131222,
+    "seen": 1793533463.1609752,
+    "ast_hash": "c7d9a8c80b944fe234243322eaf3c285",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/free20_warning_concurrency.mjs": {
+    "mtime": 1793529023.509144,
+    "seen": 1793533463.160976,
+    "ast_hash": "7b9b6ff04039978378baa522391dc400",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261101092311_free20_trial_retirement_guard.sql": {
+    "mtime": 1793525322.7366629,
+    "seen": 1793533463.160976,
+    "ast_hash": "39725bbaf572a22be4c6ae3e1cec1408",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261101094401_free20_daily_warning.sql": {
+    "mtime": 1793526721.203626,
+    "seen": 1793533463.160977,
+    "ast_hash": "00e9243dec375b8d3ecb1177dfec0138",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261101102723_free20_client_admission.sql": {
+    "mtime": 1793528908.9062216,
+    "seen": 1793533463.160977,
+    "ast_hash": "94114f6d78af79e4275ecb6cc908c88e",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/free20_client_admission.test.sql": {
+    "mtime": 1793529183.1421714,
+    "seen": 1793533463.160979,
+    "ast_hash": "0d0cc654ac43a61b183a2b476b3635f7",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/free20_trial_retirement.test.sql": {
+    "mtime": 1793525265.6315475,
+    "seen": 1793533463.16098,
+    "ast_hash": "feef1cc98b7938a6ff7a4117e2e4d06e",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/free20_warning.test.sql": {
+    "mtime": 1793529023.507231,
+    "seen": 1793533463.160981,
+    "ast_hash": "0374bede3f8b4be710f9cf195b84cfcc",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/free20-client.test.ts": {
+    "mtime": 1793529292.5900636,
+    "seen": 1793533463.1609821,
+    "ast_hash": "c014e198517b46d876776adc0ec5db59",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/free20-client.ts": {
+    "mtime": 1793529292.5899951,
+    "seen": 1793533463.160983,
+    "ast_hash": "d3dbb2dfe072f0cfe3f0e4306a7ee386",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/free20-warning.test.ts": {
+    "mtime": 1793526808.6005986,
+    "seen": 1793533463.160983,
+    "ast_hash": "5dee4f02390896d0791333a269b0150c",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/free20-warning.ts": {
+    "mtime": 1793526853.6856415,
+    "seen": 1793533463.160984,
+    "ast_hash": "7c8f2e377617024533a05d1e53a476e0",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-01-free20-staging-activation-runbook.md": {
+    "mtime": 1793531072.2971382,
+    "seen": 1793533463.23737,
+    "ast_hash": "",
+    "semantic_hash": "c66816f0d931276955329531d2c6fdc8"
+  },
+  "docs/superpowers/plans/2026-11-01-free20-staging-readiness.md": {
+    "mtime": 1793533298.317109,
+    "seen": 1793533463.237371,
+    "ast_hash": "",
+    "semantic_hash": "16f0d9014864400768a8e71dd4bf915e"
+  },
+  "docs/superpowers/plans/2026-11-01-free20-trial-retirement.md": {
+    "mtime": 1793530442.7363849,
+    "seen": 1793533463.237371,
+    "ast_hash": "",
+    "semantic_hash": "5294dd534204ebfef2c406701bd3a979"
+  },
+  "docs/superpowers/specs/2026-11-01-free20-client-admission-design.md": {
+    "mtime": 1793526272.8242688,
+    "seen": 1793533463.2373729,
+    "ast_hash": "",
+    "semantic_hash": "3f1e6ebef5aaf2f5f42782cead3bcfaa"
+  },
+  "docs/superpowers/specs/2026-11-01-free20-presentation-design.md": {
+    "mtime": 1793530241.4310734,
+    "seen": 1793533463.2373729,
+    "ast_hash": "",
+    "semantic_hash": "6ce363224ce6262379ea3df20328f16c"
   }
 }

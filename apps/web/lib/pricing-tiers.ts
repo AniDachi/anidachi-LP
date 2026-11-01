@@ -215,7 +215,71 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
 ];
 
 export function pricingTierById(id: PricingTierId): PricingTierMarketing {
-  const tier = PRICING_TIERS.find((entry) => entry.id === id);
-  if (!tier) throw new Error(`Unknown pricing tier: ${id}`);
-  return tier;
+	const tier = PRICING_TIERS.find((entry) => entry.id === id);
+	if (!tier) throw new Error(`Unknown pricing tier: ${id}`);
+	return tier;
+}
+
+/** Public policy presentation; never an account allowance or creation grant. */
+export function pricingFreeTier(
+	mode: import("./pricing-offer").PricingOffer["hostingModel"],
+): PricingTierMarketing {
+	const base = PRICING_TIERS[0]!;
+	if (mode === "legacy") return base;
+	const common = [
+		"Crunchyroll, YouTube, Netflix",
+		"Join friends’ rooms",
+		"Sync, chat & reactions",
+		"Read, Resume and delete saved history",
+		"Recording & editing require Plus or Pro",
+	];
+	if (mode === "daily_free20")
+		return {
+			...base,
+			audience: "Host a small room or join friends free",
+			summary: "20 host minutes per UTC day, shared across your account",
+			features: [
+				"20 host minutes per UTC day",
+				"Up to 4 people (incl. host)",
+				"4 media seats and up to 4 cameras",
+				"Resets at 00:00 UTC; no carryover",
+				...common,
+			],
+		};
+	return {
+		...base,
+		audience: "Join friends for free",
+		summary:
+			mode === "paid_hosting"
+				? "Join a friend’s room for free"
+				: "Check current hosting availability",
+		features: common,
+	};
+}
+export function pricingMatrixRows(
+	mode: import("./pricing-offer").PricingOffer["hostingModel"],
+): CompareTableRow[] {
+	if (mode === "legacy") return PRICING_PLAN_MATRIX_ROWS;
+	return PRICING_PLAN_MATRIX_ROWS.map((row) => ({
+		...row,
+		values: {
+			...row.values,
+			free:
+				row.feature === "Host your own room"
+					? mode === "daily_free20"
+						? "20 min/UTC day"
+						: mode === "paid_hosting"
+							? "Join only"
+							: "Check availability"
+					: [
+								"People in room (incl. host)",
+								"Cameras at once",
+								"Mics at once",
+							].includes(row.feature)
+						? mode === "daily_free20"
+							? row.values.free
+							: "Host’s plan"
+						: row.values.free,
+		},
+	}));
 }

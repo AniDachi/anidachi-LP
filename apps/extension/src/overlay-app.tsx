@@ -210,6 +210,8 @@ import { useHostingAccess } from "./use-hosting-access";
 import { useAccountHostingStatus } from "./use-account-hosting-status";
 import { RoomHostingTime } from "./room-hosting-time";
 import { useRoomHostingTime } from "./use-room-hosting-time";
+import { useFree20Warning } from "./use-free20-warning";
+import { Free20WarningNotice } from "./free20-warning-notice";
 import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
@@ -2270,6 +2272,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// the display moving between snapshots while host and guest are both live.
 	const sendHostingTimeRecovery = useCallback((event: ClientEvent) => clientRef.current.send(event), []);
 	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
+	const readFreshHostingTime = useCallback(() => { hostingTimeClock.checkContinuity(); return hostingTimeClock.read(); }, [hostingTimeClock]);
+	const free20Warning = useFree20Warning({
+		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
+		sessionKey: roomAuthSessionKeyRef.current, credentialRevision: authRevision,
+		isHost, connected: Boolean(isConnected && roomSnapshotReady), roomId,
+		roomGeneration, sourceGeneration, connectionGeneration: connectionGenerationRef.current,
+		reading: liveHostingTime, readFresh: readFreshHostingTime,
+	});
 	const quotaMeteringActive =
 		legacyQuotaEnabled && isConnected && isHost && roomQuota !== null &&
     (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
@@ -6131,7 +6141,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					!identityLoaded ? undefined : authAuthenticated ? accountUser?.plan ?? "free" : null
 				}
 				hosting={hostingDisplay.state}
-				onRefreshHosting={hostingDisplay.refresh}
+				accountHostingTime={accountHostingTime}
+				onRefreshHosting={accountHostingTime.mode === "legacy" ? hostingDisplay.refresh : accountHostingTime.refresh}
 				onActiveChange={setIntroductionActive}
 			/>
 			<div
@@ -6172,6 +6183,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					<span className="bubble-count">{participantCount}</span>
 				</button>
 			</div>
+
+			{free20Warning.visible ? <Free20WarningNotice onDismiss={free20Warning.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}
 
 			{panelOpen ? (
 				<section

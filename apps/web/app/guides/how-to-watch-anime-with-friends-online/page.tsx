@@ -74,7 +74,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "With your own Plus or Pro access, including an active trial, choose Create room and copy the invite link. Friends can join on Free accounts.",
+    text: "On Free, Plus, or Pro, choose Create room and copy the invite link. Friends can join on Free accounts.",
   },
   {
     name: "Invite friends",
@@ -129,7 +129,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
           Method 1: AniDachi (Crunchyroll watchrooms)
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          AniDachi lets friends in different cities meet in a live watchroom. A host with Plus or Pro access, including an active trial, creates the room and shares its invite. Friends can join on Free accounts. Playback and chat run live; viewers with their own Plus or Pro access can enable personal history. Async catch-up and replayed chat are planned.
+          AniDachi lets friends in different cities meet in a live watchroom. A host on Free, Plus, or Pro creates the room and shares its invite. Friends can join on Free accounts. Playback and chat run live; viewers with their own Plus or Pro access can enable personal history. Async catch-up and replayed chat are planned.
         </p>
         <p className="text-foreground/80 leading-relaxed mb-4">
           Everyone keeps their own{" "}

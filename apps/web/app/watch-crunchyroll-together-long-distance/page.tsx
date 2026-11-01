@@ -31,7 +31,7 @@ const faq = [
   {
     question: "How do I watch Crunchyroll together long distance?",
     answer:
-      "Install AniDachi on both desktop Chrome browsers and open the same Crunchyroll episode. A Plus, Pro, or trial host creates a room and shares its invite; a Free partner can join. For different schedules, catch up independently before the next live session. Async catch-up is coming soon.",
+      "Install AniDachi on both desktop Chrome browsers and open the same Crunchyroll episode. A Free, Plus, or Pro host creates a room and shares its invite; a Free partner can join. For different schedules, catch up independently before the next live session. Async catch-up is coming soon.",
   },
   {
     question: "Can my long-distance girlfriend or boyfriend watch Crunchyroll with me?",
@@ -82,7 +82,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "A Plus, Pro, or trial host chooses Create room in AniDachi and copies the invite link. A Free partner can join.",
+    text: "A Free, Plus, or Pro host chooses Create room in AniDachi and copies the invite link. A Free partner can join.",
   },
   {
     name: "Share the invite link",

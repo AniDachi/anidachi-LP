@@ -12,7 +12,10 @@ import {
 	UserPlus,
 	X,
 } from "lucide-react";
-import { ONBOARDING_CHECKOUT_OPEN, ONBOARDING_RETURN_PROBE } from "@anidachi/protocol";
+import {
+	ONBOARDING_CHECKOUT_OPEN,
+	ONBOARDING_RETURN_PROBE,
+} from "@anidachi/protocol";
 import {
 	type CSSProperties,
 	useEffect,
@@ -44,6 +47,7 @@ import { PracticePanel } from "./player-onboarding-panel";
 import { PLAYER_INTRODUCTION_MESSAGE } from "./player-onboarding-storage";
 import { playerOnboardingStyles } from "./player-onboarding-styles";
 import type { VideoAdapter } from "./source-adapters/core/types";
+import type { useAccountHostingStatus } from "./use-account-hosting-status";
 import type { HostingDisplayState } from "./use-hosting-access";
 
 type Step = "launcher" | "create" | "invite" | "chat" | "camera" | "settings";
@@ -59,6 +63,7 @@ export interface PlayerOnboardingProps {
 	resource: CurrentResourceDisplay | null;
 	accountPlan?: AuthenticatedUserPlan | null;
 	hosting?: HostingDisplayState;
+	accountHostingTime?: ReturnType<typeof useAccountHostingStatus>;
 	onRefreshHosting: () => void;
 	onActiveChange: (active: boolean) => void;
 }
@@ -67,7 +72,23 @@ export interface PlayerOnboardingProps {
 export function getPlayerIntroductionOffer(
 	accountPlan: AuthenticatedUserPlan | null | undefined,
 	hosting?: HostingDisplayState,
-): Exclude<HostingEntry, "check"> | "sign-in" | "loading" | "retry" | null {
+	current?: ReturnType<typeof useAccountHostingStatus>,
+):
+	| Exclude<HostingEntry, "check">
+	| "sign-in"
+	| "loading"
+	| "retry"
+	| "daily-free"
+	| "exhausted"
+	| "active-room"
+	| null {
+	if (current && current.mode !== "legacy") {
+		if (accountPlan === null) return "sign-in";
+		if (!current.status) return current.busy ? "loading" : "retry";
+		if (current.status.activeRoom) return "active-room";
+		if (current.exhausted || current.remainingSeconds === 0) return "exhausted";
+		return current.status.access.kind === "daily_free" ? "daily-free" : null;
+	}
 	const plan = hosting?.access?.planCode ?? accountPlan;
 	if (plan === "plus" || plan === "pro" || hosting?.access?.hosting?.canHost)
 		return null;
@@ -163,17 +184,31 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 		cue?: CSSProperties;
 	} | null>(null);
 	const active = step !== null;
-	const checkoutReturn = useRef<{ token: string; fingerprint: string } | null>(null);
+	const checkoutReturn = useRef<{ token: string; fingerprint: string } | null>(
+		null,
+	);
 	const checkoutOpening = useRef(false);
 	useEffect(() => {
-		if (!active) { checkoutReturn.current = null; return; }
-		const probe = (message: unknown, sender: chrome.runtime.MessageSender, respond: (value: unknown) => void) => {
+		if (!active) {
+			checkoutReturn.current = null;
+			return;
+		}
+		const probe = (
+			message: unknown,
+			sender: chrome.runtime.MessageSender,
+			respond: (value: unknown) => void,
+		) => {
 			const value = message as { type?: string; token?: string } | null;
 			if (value?.type !== ONBOARDING_RETURN_PROBE || sender.id !== chrome.runtime.id) return false;
 			const pending = checkoutReturn.current;
-			respond({ ready: !!pending && value.token === pending.token &&
-				latest.current.ready && !latest.current.roomId &&
-				latest.current.adapter.getFingerprint() === pending.fingerprint });
+			respond({
+				ready:
+					!!pending &&
+					value.token === pending.token &&
+					latest.current.ready &&
+					!latest.current.roomId &&
+					latest.current.adapter.getFingerprint() === pending.fingerprint,
+			});
 			return false;
 		};
 		chrome.runtime.onMessage?.addListener(probe);
@@ -183,10 +218,18 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 		if (checkoutOpening.current) return;
 		checkoutOpening.current = true;
 		const token = crypto.randomUUID();
-		checkoutReturn.current = { token, fingerprint: props.adapter.getFingerprint() };
+		checkoutReturn.current = {
+			token,
+			fingerprint: props.adapter.getFingerprint(),
+		};
 		try {
-			const result = await chrome.runtime.sendMessage({ type: ONBOARDING_CHECKOUT_OPEN, token, offer });
-			if (result?.opened !== true) window.open(getHostingOfferUrl(offer), "_blank", "noopener,noreferrer");
+			const result = await chrome.runtime.sendMessage({
+				type: ONBOARDING_CHECKOUT_OPEN,
+				token,
+				offer,
+			});
+			if (result?.opened !== true)
+				window.open(getHostingOfferUrl(offer), "_blank", "noopener,noreferrer");
 		} catch {
 			window.open(getHostingOfferUrl(offer), "_blank", "noopener,noreferrer");
 		} finally { checkoutOpening.current = false; }
@@ -560,7 +603,11 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 		step === "camera" ||
 		step === "settings";
 	const details = step ? copy[step] : null;
-	const offer = getPlayerIntroductionOffer(props.accountPlan, props.hosting);
+	const offer = getPlayerIntroductionOffer(
+		props.accountPlan,
+		props.hosting,
+		props.accountHostingTime,
+	);
 	const h = layout?.hole;
 	const chatClosed = step === "chat" && chatPhase === "closed";
 	// Dim the surrounding controls as well as the video. The visual masks
@@ -846,11 +893,20 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 										</>
 									) : (
 										<p>
-											{step === "create" && !offer
-												? "Your plan includes room creation.\nYour friends join free."
-												: step === "create" && offer === "trial"
-													? "Try Plus free for 3 days. No card required.\nYour friends join free."
-													: details.text}
+											{step === "create" && offer === "daily-free"
+												? `Free includes 20 host minutes per UTC day.\n${Math.ceil((props.accountHostingTime?.remainingSeconds ?? 0) / 60)} minutes remaining; up to 4 people.`
+												: step === "create" && offer === "exhausted"
+													? "Today’s hosting time is used. Resets at 00:00 UTC.\nJoin friends free, or upgrade for no daily host limit."
+													: step === "create" && offer === "active-room"
+														? "You’re already in a room.\nReturn to it before creating another."
+														: step === "create" &&
+																(offer === "retry" || offer === "loading")
+															? "Check your current hosting access.\nYour friends join free."
+															: step === "create" && !offer
+																? "Your plan includes room creation.\nYour friends join free."
+																: step === "create" && offer === "trial"
+																	? "Try Plus free for 3 days. No card required.\nYour friends join free."
+																	: details.text}
 										</p>
 									)}
 									{step === "create" && offer === "loading" ? (
@@ -873,15 +929,29 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 											<RefreshCw size={17} aria-hidden />
 										</button>
 									) : step === "create" &&
-										offer && offer !== "loading" && offer !== "retry" ? (
+										offer &&
+										offer !== "loading" &&
+										offer !== "retry" &&
+										offer !== "daily-free" &&
+										offer !== "active-room" ? (
 										<a
 											className="tour-plan-link"
 											href={getHostingOfferUrl(
-												offer === "sign-in" ? "check" : offer,
+												offer === "sign-in"
+													? "check"
+													: offer === "exhausted"
+														? "plans"
+														: offer,
 											)}
 											onClick={(event) => {
 												event.preventDefault();
-												void openCheckout(offer === "sign-in" ? "check" : offer);
+												void openCheckout(
+													offer === "sign-in"
+														? "check"
+														: offer === "exhausted"
+															? "plans"
+															: offer,
+												);
 											}}
 											target="_blank"
 											rel="noopener noreferrer"

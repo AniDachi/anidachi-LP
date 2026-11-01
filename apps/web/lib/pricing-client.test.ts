@@ -15,6 +15,7 @@ const yearlyPrices = {
 const offer = {
 	ownerUserId: "owner",
 	paidHostingActive: true,
+	hostingModel: "paid_hosting",
 	trialAvailable: true,
 	action: "trial",
 	validForMs: 60000,
@@ -38,6 +39,7 @@ test("an open pricing tab retires pre-cutover hosting at the server deadline", a
 		Response.json({
 			...offer,
 			paidHostingActive: ++requests > 1,
+			hostingModel: requests > 1 ? "paid_hosting" : "legacy",
 			validForMs: 1000,
 		});
 	const el = await mount();
@@ -570,7 +572,12 @@ test("expired availability disables stale trial and hosting promises without era
 	let reads = 0;
 	globalThis.fetch = async () =>
 		++reads === 1
-			? Response.json({ ...offer, paidHostingActive: false, validForMs: 1000 })
+			? Response.json({
+					...offer,
+					paidHostingActive: false,
+					hostingModel: "legacy",
+					validForMs: 1000,
+				})
 			: new Promise<Response>(() => {});
 	const el = await mount();
 	assert.match(el.textContent!, /30 min/);
@@ -997,3 +1004,23 @@ for (const phase of ["proof", "response"] as const)
 			else Reflect.deleteProperty(globalThis, "chrome");
 		}
 	});
+
+test("explicit Free20 offer paints daily hosting while retired trials stay absent", async () => {
+	globalThis.fetch = async () =>
+		Response.json({
+			...offer,
+			hostingModel: "daily_free20",
+			trialAvailable: false,
+			action: "subscribe",
+		});
+	const el = await mount({ showPlanMatrix: true });
+	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
+	assert.match(free.textContent!, /20 host minutes per UTC day/);
+	assert.match(free.textContent!, /4 media seats/);
+	assert.doesNotMatch(
+		free.textContent!,
+		/Creating rooms.*require Plus|30 min|trial host/,
+	);
+	assert.doesNotMatch(el.textContent!, /3.day free trial|Try 3 days free/);
+	assert.match(el.textContent!, /20 min\/UTC day/);
+});

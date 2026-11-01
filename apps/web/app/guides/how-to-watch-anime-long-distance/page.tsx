@@ -81,7 +81,7 @@ const howToSteps = [
   },
   {
     name: "Create a shared watchroom",
-    text: "Open the episode; AniDachi detects it automatically. With your own Plus or Pro access, including an active trial, choose Create room. Your partner can join on Free.",
+    text: "Open the episode; AniDachi detects it automatically. On Free, Plus, or Pro, choose Create room. Your partner can join on Free.",
   },
   {
     name: "Share the invite",

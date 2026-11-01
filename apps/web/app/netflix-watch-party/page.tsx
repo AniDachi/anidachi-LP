@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallLink } from "@/components/install-link";
@@ -63,7 +64,7 @@ const howToSteps = [
   },
   {
     name: "Create the room",
-    text: "Click the AniDachi capsule at the top-right of the player and choose Create room. Hosting needs Plus or Pro, including a 3-day trial for eligible accounts.",
+    text: `Click the AniDachi capsule at the top-right of the player and choose Create room. ${PRICING_FREE20_SUMMARY}`,
   },
   {
     name: "Share the invite link",
@@ -80,7 +81,7 @@ const faq = [
   {
     question: "How do I start a Netflix watch party?",
     answer:
-      "Install AniDachi from /extension in desktop Chrome, open the Netflix movie or episode on your own account, click the AniDachi capsule on the player and choose Create room, then send the invite link. Hosting needs Plus or Pro, including a trial; friends join free.",
+      "Install AniDachi from /extension in desktop Chrome, open the Netflix movie or episode on your own account, click the AniDachi capsule on the player and choose Create room, then send the invite link. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join free.",
   },
   {
     question: "Does everyone need Netflix for a watch party?",
@@ -110,7 +111,7 @@ const faq = [
   {
     question: "Is a Netflix watch party free?",
     answer:
-      "Joining an AniDachi room is free. Hosting needs Plus or Pro, with a 3-day trial for eligible accounts. Teleparty hosts Netflix parties on its free tier with sync and text chat; its voice and video chat need Premium. Everyone still needs Netflix.",
+      `Joining an AniDachi room is free. ${PRICING_FREE20_SUMMARY} Teleparty hosts Netflix parties on its free tier with sync and text chat; its voice and video chat need Premium. Everyone still needs Netflix.`,
   },
 ];
 
@@ -190,7 +191,7 @@ export default function NetflixWatchPartyPage() {
               episode across desktop Chrome: everyone plays it on their own Netflix
               account, and friends join free.
             </strong>{" "}
-            The host needs Plus or Pro (a 3-day trial counts). Rooms add chat,
+            {PRICING_FREE20_SUMMARY} Rooms add chat,
             reactions, voice and video, with push-to-talk on the V key.
           </p>
           <p>
@@ -229,7 +230,7 @@ export default function NetflixWatchPartyPage() {
             },
             {
               name: "Create the room",
-              text: "Click the AniDachi capsule at the top-right of the player and choose Create room. Creating rooms needs Plus or Pro, including a 3-day trial for eligible accounts.",
+              text: `Click the AniDachi capsule at the top-right of the player and choose Create room. ${PRICING_FREE20_SUMMARY}`,
             },
             {
               name: "Share the invite link",
@@ -322,9 +323,8 @@ export default function NetflixWatchPartyPage() {
         </p>
         <p className="mb-6 leading-relaxed text-ani-muted">
           AniDachi accounts are a separate question. Friends join an AniDachi room on
-          a Free account. Only the host needs Plus or Pro. So for a group of five, you
-          pay for Netflix as usual, and one person pays for AniDachi hosting or uses a
-          trial.
+          a Free account. {PRICING_FREE20_SUMMARY} For a group of five, Free&apos;s four-person cap is too small: one person needs Plus or Pro to host.
+          Everyone still pays for Netflix as usual.
         </p>
 
         <h2 id="not-working" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -402,7 +402,7 @@ export default function NetflixWatchPartyPage() {
             {
               feature: "Cost to host a Netflix party",
               values: {
-                anidachi: "Plus or Pro (3-day trial); friends join free",
+                anidachi: "Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
                 teleparty: "Free tier",
               },
             },

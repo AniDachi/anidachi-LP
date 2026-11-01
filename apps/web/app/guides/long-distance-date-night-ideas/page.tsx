@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -70,7 +71,7 @@ const faq = [
   {
     question: "Who pays for AniDachi?",
     answer:
-      "The person who creates the room needs Plus or Pro, including a trial. The other person can join free and still needs their own streaming account.",
+      `${PRICING_FREE20_SUMMARY} The other person can join free and still needs their own streaming account.`,
   },
 ];
 
@@ -155,7 +156,7 @@ export default function LongDistanceDateNightIdeasPage() {
           >
             watch movies together online
           </Link>
-          . Hosting needs Plus or Pro, on{" "}
+          . Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>

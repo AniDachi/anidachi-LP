@@ -28,7 +28,7 @@ const faq = [
   {
     question: "How do I watch Netflix together long distance?",
     answer:
-      "Install AniDachi in desktop Chrome and sign in. Each person opens the same Netflix title using their own access. A Plus, Pro, or trial host creates a room and shares its invite; the other person joins for free. Playback stays in sync with chat, reactions, and calls beside the player.",
+      "Install AniDachi in desktop Chrome and sign in. Each person opens the same Netflix title using their own access. A Free, Plus, or Pro host creates a room and shares its invite; the other person joins for free. Playback stays in sync with chat, reactions, and calls beside the player.",
   },
   {
     question: "Does Netflix have a built-in watch party feature?",
@@ -165,7 +165,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
       <p className="text-foreground/80 leading-relaxed mb-4">
         AniDachi syncs Netflix, Crunchyroll, and YouTube, with
         live sync, chat, reactions, and voice/video beside each person’s player.
-        A Plus, Pro, or trial host creates the room and Free friends can join.
+        A Free, Plus, or Pro host creates the room and Free friends can join.
         Personal history needs your own Plus/Pro access and recording permission.
         Choose a shared live time; async catch-up is coming soon. The full setup is
         in{" "}
@@ -187,7 +187,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Install AniDachi in desktop Chrome and sign in.</li>
         <li>Each person opens the same Netflix title with their own Netflix access.</li>
-        <li>A Plus, Pro, or trial host creates a room and shares its invite. Friends join for free.</li>
+        <li>A Free, Plus, or Pro host creates a room and shares its invite. Friends join for free.</li>
         <li>Use live sync, chat, reactions and calls beside your own player. Netflix subscription, household and regional access rules still apply.</li>
       </ol>
 

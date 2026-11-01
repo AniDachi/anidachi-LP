@@ -144,7 +144,7 @@ export default function SubbedAnimePage() {
           >
             dub vs sub glossary
           </Link>
-          . Hosting the room needs Plus or Pro, on{" "}
+          . Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing
           </Link>

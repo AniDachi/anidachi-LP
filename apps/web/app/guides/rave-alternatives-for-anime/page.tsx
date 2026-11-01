@@ -128,8 +128,7 @@ export default function RaveAlternativesForAnimePage() {
         microphones. Your group still needs a shared viewing time.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        AniDachi is not affiliated with Rave or Crunchyroll. For Plus, Pro, and
-        trial hosting requirements, check{" "}
+        AniDachi is not affiliated with Rave or Crunchyroll. For Free daily hosting and Plus / Pro hosting limits, check{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>

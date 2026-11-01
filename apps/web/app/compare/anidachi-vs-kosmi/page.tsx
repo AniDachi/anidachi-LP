@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
@@ -52,7 +53,7 @@ const faq = [
   {
     question: "Is Kosmi free?",
     answer:
-      "Kosmi says rooms, syncing, video chat and its games are free, with an optional Premium plan for extras such as 1080p screen sharing. The pages we checked did not list a Premium price. On AniDachi, friends join free and hosting needs the host's Plus (up to 6 people) or Pro (up to 15), including a 3-day trial for eligible accounts.",
+      "Kosmi says rooms, syncing, video chat and its games are free, with an optional Premium plan for extras such as 1080p screen sharing. The pages we checked did not list a Premium price. On AniDachi, friends join free. Hosting on Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit.",
   },
   {
     question: "When is Kosmi the better choice than AniDachi?",
@@ -232,7 +233,7 @@ export default function AniDachiVsKosmiPage() {
         <li>
           Friends join from phones or tablets. AniDachi runs in desktop Chrome only.
         </li>
-        <li>You want to host for free. AniDachi hosts need Plus or Pro.</li>
+        <li>You want free hosting without a daily time limit. {PRICING_FREE20_SUMMARY}</li>
         <li>
           You want to watch Disney+, Hulu or Prime Video together, which AniDachi does
           not support.
@@ -261,7 +262,7 @@ export default function AniDachiVsKosmiPage() {
         <li>You want chat and reactions on the player you are watching.</li>
         <li>You want a personal watch history of what you watched together.</li>
         <li>
-          One host pays and friends join free, in rooms of up to 6 (Plus) or 15 (Pro).
+          Free hosts get 20 host minutes per UTC day for up to 4 people. Plus supports 6 people and Pro 15, with no daily hosting time limit. Friends join free.
         </li>
       </ul>
 

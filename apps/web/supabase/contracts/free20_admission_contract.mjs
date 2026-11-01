@@ -64,7 +64,7 @@ const owner = randomUUID();
 let room;
 const create = (request, session = request) => `set role service_role;
  select jsonb_build_object('outcome',outcome,'roomId',room_record->>'room_id')
- from public.create_room_with_active_session_v3('${owner}','${session}',null,null,null,null,null,null,null,'${request}','pro',15,8,true,true,3);`;
+ from public.create_room_with_active_session_v4('${owner}','${session}',null,null,null,null,null,null,null,'${request}','pro',15,8,true,true,3,1);`;
 try {
 	await sql(`insert into public.users(id,email,display_name) values('${owner}','${owner}@example.test','Concurrent Free20');
  update public.personal_history_policy set active=true;

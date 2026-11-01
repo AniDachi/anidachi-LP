@@ -202,7 +202,7 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
     },
     {
       name: "Create and share a watchroom",
-      text: `With active Plus, Pro, or trial access, choose Create room for ${anime.title} and share its invite link. Free friends can join.`,
+      text: `With active Free, Plus, or Pro access, choose Create room for ${anime.title} and share its invite link. Free friends can join.`,
     },
     {
       name: "Watch live together",
@@ -315,7 +315,7 @@ export function buildWatchPageFaq(
   if (epClass === "movie") {
     slotA = {
       question: `Can we watch ${anime.title} together in one sitting?`,
-      answer: `Yes — ${anime.title} is a feature-length film for a single group movie night. Install AniDachi and open it on Crunchyroll. A Plus, Pro, or trial host creates the room and invites Free friends before pressing play.`,
+      answer: `Yes — ${anime.title} is a feature-length film for a single group movie night. Install AniDachi and open it on Crunchyroll. A Free, Plus, or Pro host creates the room and invites Free friends before pressing play.`,
     };
   } else if (epClass === "long") {
     slotA = {

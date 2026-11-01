@@ -21,7 +21,7 @@ select ok(not has_function_privilege('authenticated','public.subscription_access
 select ok(not has_table_privilege('service_role','public.hosting_commercial_policy','UPDATE'),'status runtime cannot enable policy');
 reset role;
 update public.personal_history_policy set active=true;
-update public.hosting_commercial_policy set activation_at=clock_timestamp()-interval '1 minute',free20_enabled=true;
+update public.hosting_commercial_policy set activation_at=clock_timestamp()-interval '1 minute',free20_enabled=true,trials_enabled=false;
 insert into public.usage_daily(user_id,day,host_seconds) values
  ('f6250000-0000-4000-8000-000000000001',(now() at time zone 'UTC')::date,420),
  ('f6250000-0000-4000-8000-000000000005',(now() at time zone 'UTC')::date,1300);
@@ -46,8 +46,8 @@ select ok((select (value->>'refreshBy')::timestamptz<=(value->>'serverTime')::ti
 select is((select (value->>'resetAt')::timestamptz from status_results where name='free'),(((now() at time zone 'UTC')::date+1)::timestamp at time zone 'UTC'),'reset is UTC midnight');
 select is((select value->'assignment' from status_results where name='free'),'null'::jsonb,'idle account has no active assignment');
 select throws_ok($$select public.read_free20_account_status_v1('f6250000-0000-4000-8000-000000000099')$$,'P0001','HISTORY_ACCESS_UNAVAILABLE','missing account never becomes Free20');
-insert into status_results select 'created',room_record from public.create_room_with_active_session_v3(
- 'f6250000-0000-4000-8000-000000000001','status-host',null,null,null,null,null,null,null,'status-request','free',4,4,false,false,3);
+insert into status_results select 'created',room_record from public.create_room_with_active_session_v4(
+ 'f6250000-0000-4000-8000-000000000001','status-host',null,null,null,null,null,null,null,'status-request','free',4,4,false,false,3,1);
 insert into status_results values('hosting',pg_temp.status_for(1));
 select is((select value#>>'{assignment,roomId}' from status_results where name='hosting'),(select value->>'room_id' from status_results where name='created'),'reader identifies the assigned room to read its live time');
 select is((select value#>>'{assignment,role}' from status_results where name='hosting'),'host','host assignment is explicit');

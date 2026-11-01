@@ -42,7 +42,7 @@ const faq = [
   {
     question: "Is Crunchyroll Party free compared to AniDachi?",
     answer:
-      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi Free accounts can join an active Plus, Pro, or trial host. Hosting and editing personal progress require your own active Plus/Pro access, including a trial. Automatic recording also needs your permission; saved history, Resume, and deletion remain available on Free.",
+      "Crunchyroll Party is a free Chrome extension for live, synchronized watching. AniDachi Free accounts can join an active Free, Plus, or Pro host. Free hosting includes 20 host minutes per UTC day for up to 4 people. Editing personal progress requires your own active Plus/Pro access. Automatic recording also needs your permission; saved history, Resume, and deletion remain available on Free.",
   },
   {
     question: "Do we still need Crunchyroll accounts for both tools?",
@@ -186,8 +186,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         Migration path
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Each person opens Crunchyroll in their own browser. A Plus, Pro, or trial
-        host creates a live room and invites Free friends. Progress stays personal: each
+        Each person opens Crunchyroll in their own browser. A Free, Plus, or Pro host creates a live room and invites Free friends. Progress stays personal: each
         viewer needs their own Plus or Pro subscription to record and edit it,
         including when joining a paid host. Automatic recording also needs their permission. Start with{" "}
         <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">

@@ -120,7 +120,7 @@ try {
 	const create = async (who) =>
 		JSON.parse(
 			await sql(`set role service_role;
- select room_record from public.create_room_with_active_session_v3('${who}','fixture-host',null,null,null,null,null,null,null,'fixture-${who}','free',4,4,false,false,3);`),
+ select room_record from public.create_room_with_active_session_v4('${who}','fixture-host',null,null,null,null,null,null,null,'fixture-${who}','free',4,4,false,false,3,1);`),
 		);
 	room = (await create(owner)).room_id;
 	await create(rollbackOwner);

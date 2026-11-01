@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import { Chrome, LogIn, Play, Users, MessageSquare, Clock3 } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import Link from "next/link";
@@ -24,7 +25,7 @@ const steps = [
     icon: Users,
     title: "Create or join a room",
     description:
-      "Host with Plus or Pro and share the link. Friends join free.",
+      `${PRICING_FREE20_SUMMARY} Share the link; friends join free.`,
   },
   {
     icon: MessageSquare,

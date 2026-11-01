@@ -209,7 +209,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
       <p className="text-foreground/80 leading-relaxed mb-4">
         If your movie nights include anime on Crunchyroll, AniDachi is the
         option for live sync, chat, reactions, and voice/video beside your
-        own player. A Plus, Pro, or trial host can invite Free friends.
+        own player. A Free, Plus, or Pro host can invite Free friends.
         Personal history needs each viewer’s own Plus/Pro access and recording permission.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">

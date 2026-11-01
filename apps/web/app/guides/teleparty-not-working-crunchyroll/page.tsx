@@ -90,7 +90,7 @@ const howToSteps = [
   },
   {
     name: "Switch to per-user Crunchyroll sync",
-    text: "If Teleparty keeps failing, try AniDachi for live sync on each person’s Crunchyroll stream, with chat, cameras, and microphones. Hosting requires Plus or Pro access, including an active trial; guests can join on Free.",
+    text: "If Teleparty keeps failing, try AniDachi for live sync on each person’s Crunchyroll stream, with chat, cameras, and microphones. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; guests can join on Free.",
   },
 ];
 

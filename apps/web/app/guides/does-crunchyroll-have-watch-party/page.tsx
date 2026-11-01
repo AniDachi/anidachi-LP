@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
@@ -60,12 +61,12 @@ const faq = [
   {
     question: "Can you watch Crunchyroll together with friends online?",
     answer:
-      "Yes, with a third-party tool. AniDachi syncs each viewer's own Crunchyroll player in desktop Chrome and adds live chat, voice and video. Everyone needs their own Crunchyroll access. Friends join AniDachi free; the host needs Plus, Pro or a trial.",
+      `Yes, with a third-party tool. AniDachi syncs each viewer's own Crunchyroll player in desktop Chrome and adds live chat, voice and video. Everyone needs their own Crunchyroll access. Friends join AniDachi free; ${PRICING_FREE20_SUMMARY}`,
   },
   {
     question: "Does Teleparty work with Crunchyroll?",
     answer:
-      "Yes. Teleparty's Crunchyroll page, checked 20 Oct 2026, says hosting a Crunchyroll party needs Teleparty Premium, which has a free trial, and that guests join free. Its support FAQ says voice and video chat also need Premium. AniDachi rooms include voice and video calls; only the host needs a paid plan.",
+      "Yes. Teleparty's Crunchyroll page, checked 20 Oct 2026, says hosting a Crunchyroll party needs Teleparty Premium, which has a free trial, and that guests join free. Its support FAQ says voice and video chat also need Premium. AniDachi rooms include voice and video calls, with 20 host minutes per UTC day on Free for up to 4 people, including the host.",
   },
   {
     question: "Did Funimation have its own watch party?",
@@ -106,7 +107,7 @@ const howToSteps = [
   },
   {
     name: "Create a room",
-    text: "The host, with Plus, Pro or a trial, clicks the AniDachi capsule on the player and chooses Create room.",
+    text: "The host, on Free, Plus, or Pro, clicks the AniDachi capsule on the player and chooses Create room.",
   },
   {
     name: "Share the invite",
@@ -269,7 +270,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
         />
         <p className="text-foreground/80 leading-relaxed mb-4">
           AniDachi works in desktop Chrome on Crunchyroll, YouTube and Netflix.
-          Guests join free; the host needs Plus, Pro or a trial.{" "}
+          Guests join free; {PRICING_FREE20_SUMMARY}{" "}
           <InstallLink href="/extension" className="text-brand-orange hover:underline">
             Add AniDachi to Chrome
           </InstallLink>{" "}

@@ -4,7 +4,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getSeoSiteOrigin } from "@/lib/site-url";
-import { PRICING_TRIAL_NOTE } from "@/lib/pricing-copy";
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
@@ -240,7 +240,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 		ogDescription:
 			"Long-distance anime picks for couples, friend groups, and live Crunchyroll watchrooms.",
 		intro:
-			"The best anime to watch long distance gives your group clear episode checkpoints, strong reactions, and enough flexibility for missed nights. AniDachi keeps live playback in sync. A host with Plus or Pro, including an active trial, can invite friends who join on Free accounts.",
+			"The best anime to watch long distance gives your group clear episode checkpoints, strong reactions, and enough flexibility for missed nights. AniDachi keeps live playback in sync. A host on Free, Plus, or Pro can invite friends who join on Free accounts.",
 		sectionIntro:
 			"These picks favor emotional payoffs, clean stopping points, and Crunchyroll-friendly group watching.",
 		picks: sharedPicks.longDistance,
@@ -261,7 +261,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 				question:
 					"Do friends need to pay to join a long-distance AniDachi room?",
 				answer:
-					`Friends can join on Free accounts. Creating a room requires the host's own Plus or Pro access, including an active trial. ${PRICING_TRIAL_NOTE}`,
+					`Friends can join on Free accounts. ${PRICING_FREE20_SUMMARY}`,
 			},
 		],
 	},
@@ -320,7 +320,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 			{
 				question: "What is a good long-distance anime date night setup?",
 				answer:
-					"A host with Plus or Pro, including an active trial, creates an AniDachi room. Open the same Crunchyroll episode and pick a clear stop point. If one person misses the time, watch independently and arrange a later conversation.",
+					"A host on Free, Plus, or Pro creates an AniDachi room. Open the same Crunchyroll episode and pick a clear stop point. If one person misses the time, watch independently and arrange a later conversation.",
 			},
 			{
 				question: "Do couples both need Crunchyroll?",
@@ -357,7 +357,7 @@ export const listiclePages: Record<string, ListiclePage> = {
 			{
 				question: "Who needs a paid AniDachi plan for couples?",
 				answer:
-					"The host needs Plus or Pro access, including an active trial. The other person can join on Free. Recording and editing personal history requires each viewer's own Plus or Pro access.",
+					`${PRICING_FREE20_SUMMARY} The other person can join on Free. Recording and editing personal history requires each viewer's own Plus or Pro access.`,
 			},
 		],
 	},
@@ -384,7 +384,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Create the watchroom",
-				text: "Open the Crunchyroll episode or movie; AniDachi detects it automatically. With your own Plus or Pro access, including an active trial, choose Create room.",
+				text: "Open the Crunchyroll episode or movie; AniDachi detects it automatically. On Free, Plus, or Pro, choose Create room.",
 			},
 			{
 				name: "Share the invite",
@@ -405,7 +405,7 @@ export const guidePages: Record<string, GuidePage> = {
 				title: "Cozy one-episode date",
 				body: [
 					"Pick a comforting episode of Spy x Family, Frieren, or Fruits Basket and keep the plan intentionally small. A good long-distance date does not need a four-hour marathon.",
-					"This format works well on weeknights: a partner with Plus or Pro, including an active trial, hosts and the other joins free. Keep the live session short enough for both schedules.",
+					"This format works well on weeknights: a partner on Free, Plus, or Pro hosts and the other joins free. Keep the live session short enough for both schedules.",
 				],
 			},
 			{
@@ -487,7 +487,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "options",
 				title: "Best Crunchyroll watch party app options",
 				body: [
-					"AniDachi fits Crunchyroll-first groups that want anime detection, live playback sync, chat, cameras, and microphones. The host needs Plus or Pro access, including an active trial; friends can join on Free accounts.",
+					"AniDachi fits Crunchyroll-first groups that want anime detection, live playback sync, chat, cameras, and microphones. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends can join on Free accounts.",
 					"Teleparty and Crunchyroll Party are useful for simpler live sessions. Discord is best when speed matters more than quality, because screen share can reduce resolution and does not give everyone their own synced stream.",
 				],
 				bullets: [
@@ -545,7 +545,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Start AniDachi",
-				text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room and share the invite.",
+				text: "AniDachi detects the episode automatically. On Free, Plus, or Pro, choose Create room and share the invite.",
 			},
 			{ name: "Invite the group", text: "Share the room link with friends." },
 			{
@@ -584,7 +584,7 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Is Crunchyroll group watch free?",
 				answer:
-					"Friends can join AniDachi rooms on Free accounts. Hosting requires Plus or Pro access, including an active trial. Everyone still needs their own access to the Crunchyroll episode.",
+					`Friends can join AniDachi rooms on Free accounts. ${PRICING_FREE20_SUMMARY} Everyone still needs their own access to the Crunchyroll episode.`,
 			},
 			{
 				question: "Is group watch better than Discord screen share?",
@@ -602,7 +602,7 @@ export const guidePages: Record<string, GuidePage> = {
 		ogDescription:
 			"Free and paid Crunchyroll watch party options for anime groups.",
 		intro:
-			"A Crunchyroll watch party can be free to join, but each tool has different requirements. With AniDachi, friends join on Free accounts and the host needs Plus or Pro access, including an active trial. Compare other sync tools and screen sharing if nobody wants to host with a subscription.",
+			`A Crunchyroll watch party can be free to join, but each tool has different requirements. With AniDachi, friends join on Free accounts. ${PRICING_FREE20_SUMMARY} Compare other sync tools and screen sharing for different session lengths and devices.`,
 		howToName: "How to run a free Crunchyroll watch party",
 		howToDescription:
 			"Compare free watch party options and choose the setup with the right quality and room limits.",
@@ -625,7 +625,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Check hosting access",
-				text: "AniDachi hosts need Plus or Pro, including an active trial. Review pricing and trial terms before creating a room.",
+				text: `${PRICING_FREE20_SUMMARY} Review current hosting limits on the pricing page.`,
 			},
 		],
 		sections: [
@@ -634,7 +634,7 @@ export const guidePages: Record<string, GuidePage> = {
 				title: "Free Crunchyroll watch party options",
 				body: [
 					"Discord screen share is the lowest-friction free option, but it can reduce video quality and does not sync everyone's own Crunchyroll player.",
-					"AniDachi is built around a host model: the host needs Plus or Pro access, including an active trial, while friends can join free.",
+					"AniDachi is built around a host model: Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit, while friends can join free.",
 				],
 				bullets: [
 					"Best free quick test: Discord screen share.",
@@ -646,7 +646,7 @@ export const guidePages: Record<string, GuidePage> = {
 				id: "when-upgrade",
 				title: "When free stops being enough",
 				body: [
-					`Free lets you join a friend's active room. To create your own, choose Plus or Pro. ${PRICING_TRIAL_NOTE}`,
+					`Free lets you join a friend's active room. ${PRICING_FREE20_SUMMARY}`,
 				],
 			},
 		],
@@ -655,12 +655,12 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Can I make a Crunchyroll watch party for free?",
 				answer:
-					"You can join an AniDachi room free when its host has active Plus or Pro access, including a trial. Creating your own AniDachi room requires that access. Other tools may offer free hosting with different limitations.",
+					"AniDachi supports Free daily hosting and free joining. Free hosts get 20 host minutes per UTC day for up to 4 people, including the host. Other tools may offer free hosting with different limitations.",
 			},
 			{
 				question: "Do friends pay to join AniDachi?",
 				answer:
-					"Friends can join with Free accounts. The host needs active Plus or Pro access, including a trial, to create the room.",
+					`Friends can join with Free accounts. ${PRICING_FREE20_SUMMARY}`,
 			},
 			{
 				question: "What is the catch with free screen sharing?",
@@ -693,7 +693,7 @@ export const guidePages: Record<string, GuidePage> = {
 			},
 			{
 				name: "Create a watchroom",
-				text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room and share the invite.",
+				text: "AniDachi detects the episode automatically. On Free, Plus, or Pro, choose Create room and share the invite.",
 			},
 			{ name: "Share the invite", text: "Send the room link to friends." },
 			{
@@ -817,7 +817,7 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Can friends join an anime watch party app for free?",
 				answer:
-					"With AniDachi, friends can join rooms on Free accounts when the host has active Plus or Pro access, including a trial. Free accounts cannot create their own rooms.",
+					"AniDachi supports Free daily hosting and free joining. Free hosts get 20 host minutes per UTC day for up to 4 people, including the host.",
 			},
 		],
 	},
@@ -947,7 +947,7 @@ export function PseoListiclePage({
 				<li>Open the episode on Crunchyroll.</li>
 				<li>Create an AniDachi watchroom and share the invite link.</li>
 				<li>
-						The host needs Plus or Pro access, including an active trial;
+						Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit;
 						friends can join on Free accounts.
 				</li>
 				<li>

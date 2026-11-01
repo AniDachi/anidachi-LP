@@ -16,7 +16,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Anime Watch Party on Crunchyroll With Friends",
   description:
-    "Start a live anime watch party on Crunchyroll with AniDachi. A Plus, Pro, or trial host invites Free friends for synced playback, chat, and reactions.",
+    "Start a live anime watch party on Crunchyroll with AniDachi. A Free, Plus, or Pro host invites Free friends for synced playback, chat, and reactions.",
   alternates: { canonical: "/anime-watch-party" },
   openGraph: {
     title: "Anime Watch Party — Crunchyroll Group Watching (2026)",
@@ -38,7 +38,7 @@ const faq = [
   {
     question: "What is the best way to host an anime watch party?",
     answer:
-      "Install AniDachi on desktop Chrome and open the same Crunchyroll episode. A Plus, Pro, or trial host creates a room and shares its invite link; Free friends can join. Each person streams from their own account while playback stays synced, with live chat, reactions, and voice/video.",
+      "Install AniDachi on desktop Chrome and open the same Crunchyroll episode. A Free, Plus, or Pro host creates a room and shares its invite link; Free friends can join. Each person streams from their own account while playback stays synced, with live chat, reactions, and voice/video.",
   },
   {
     question: "Do you need Crunchyroll for an anime watch party?",
@@ -112,7 +112,7 @@ export default function AnimeWatchPartyPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
-          With Plus, Pro, or trial access, open a Crunchyroll episode in
+          With Free, Plus, or Pro access, open a Crunchyroll episode in
           AniDachi, create a live room, and share the link. Free friends can
           join for synchronized playback, chat, reactions, and voice/video.
         </strong>{" "}
@@ -123,7 +123,7 @@ export default function AnimeWatchPartyPage() {
       <p className="text-foreground/80 mb-8">
         Ready to host?{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          See AniDachi pricing — Free to join, Plus from {PRICING_STARTING_AT} to host
+          See AniDachi pricing — Free daily hosting; Plus from {PRICING_STARTING_AT}
         </Link>
         .
       </p>
@@ -145,7 +145,7 @@ export default function AnimeWatchPartyPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom</span>{" "}
-          with active Plus, Pro, or trial access and copy the invite link.
+          with active Free, Plus, or Pro access and copy the invite link.
         </li>
         <li>
           <span className="font-medium text-foreground">Share the link</span>{" "}

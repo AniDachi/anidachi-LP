@@ -98,7 +98,7 @@ function sameAuthority(a: Authority, b: Authority) {
 
 async function resolveStatus(
 	owner: string,
-	deps: Dependencies,
+	deps: Omit<Dependencies, "getSession">,
 ): Promise<AccountHostingStatus | null> {
 	const first = authorityFor(owner, await deps.readAuthority(owner));
 	if (!first) return null;
@@ -171,6 +171,38 @@ async function resolveStatus(
 	});
 }
 
+export type AccountHostingRead =
+	| { mode: "legacy" }
+	| { mode: "free20"; status: AccountHostingStatus };
+
+/** Caller supplies an already authenticated owner. Includes the enabled gate and
+ * the entire read lifetime; SSR callers may include earlier identity work. */
+export async function readAccountHostingStatus(
+	owner: string,
+	overrides: Partial<Omit<Dependencies, "getSession">> = {},
+	startedAt?: number,
+): Promise<AccountHostingRead> {
+	const deps = {
+		enabled: () => process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true",
+		readAuthority: readFree20StatusAuthority,
+		readLive: readLiveFree20Status,
+		clock: () => performance.now(),
+		...overrides,
+	};
+	const started = startedAt ?? deps.clock();
+	if (!deps.enabled()) return { mode: "legacy" };
+	const status = await resolveStatus(owner, deps);
+	if (!status) return { mode: "legacy" };
+	const elapsed = deps.clock() - started;
+	if (
+		!Number.isFinite(elapsed) ||
+		elapsed < 0 ||
+		status.validUntil - status.serverTime <= elapsed
+	)
+		throw new Error("Hosting status expired during read");
+	return { mode: "free20", status };
+}
+
 /** Explicit on-demand display read; existing clients/requests do not call it.
  * Unknown data denies a successful snapshot. All room actions recheck authority.
  */
@@ -198,19 +230,13 @@ export function createAccountHostingStatusHandler(
 			if (!session) return failure("UNAUTHORIZED", 401);
 			if (request.headers.get(ACCOUNT_HOSTING_OWNER_HEADER) !== session.userId)
 				return failure("HOSTING_OWNER_CHANGED", 409);
-			if (!deps.enabled()) return failure("FREE20_DISABLED", 404);
-			const status = await resolveStatus(session.userId, deps);
-			if (!status) return failure("FREE20_DISABLED", 404);
-			// Conservatively include all work, even before the authority measured its
-			// clock, so a short-lived grant cannot expire during response assembly.
-			const elapsed = deps.clock() - started;
-			if (
-				!Number.isFinite(elapsed) ||
-				elapsed < 0 ||
-				status.validUntil - status.serverTime <= elapsed
-			)
-				throw new Error("Hosting status expired during read");
-			return NextResponse.json(status, { headers });
+			const result = await readAccountHostingStatus(
+				session.userId,
+				deps,
+				started,
+			);
+			if (result.mode === "legacy") return failure("FREE20_DISABLED", 404);
+			return NextResponse.json(result.status, { headers });
 		} catch {
 			return failure("HOSTING_STATUS_UNAVAILABLE", 503);
 		}

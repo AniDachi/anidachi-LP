@@ -21,6 +21,15 @@
 
 ## Follow-up: Free20 live display, 2026-11-01
 
+The owner-authorized [staging readiness plan](2026-11-01-free20-staging-readiness.md)
+continues with a once-per-UTC-day host warning at300seconds and explicit current
+host-client capability. Candidate `14997bf6` gates only new HTTP/SQL admissions
+to marked rooms, including marked rooms upgraded to paid time. Existing sockets,
+renewals, guests and media controllers keep their contracts. Independent review
+and local room harness39/API325/protocol283/extension2588 plus SQL role/race
+checks passed. This is local proof; actual loaded and two-participant staging
+rehearsal remains separate and is not implied by the candidate.
+
 The subsequent owner-approved [purchase delivery block](2026-11-01-free20-purchase-delivery.md)
 connects confirmed billing state to that display through the existing Worker
 accounting transition. An atomic outbox, bound revision receipt and independent

@@ -1,5 +1,13 @@
 # Daily Free 20: поэтапный план реализации
 
+**Текущее разрешение 2026-11-01:** владелец поручил довести staging до готового
+Free20 и выбрал предупреждение за 5 минут. Выполнение продолжается по
+[плану готовности staging](2026-11-01-free20-staging-readiness.md): новые trial,
+совместимость, необходимые экраны, контролируемое включение и Sandbox-проверки.
+Исторические default-off ограничения отдельных блоков ниже не отменяют это
+разрешение для staging. Main, production, Store, Stripe LIVE и новые кампании
+по-прежнему требуют отдельного решения. Финальный дизайн доводится на staging.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Статус на 2026-10-31:** правила согласованы в пределах

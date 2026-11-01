@@ -1,5 +1,5 @@
 import { getPlanPolicy } from "@anidachi/protocol";
-import { PRICING_TRIAL_NOTE } from "./pricing-copy";
+import { PRICING_FREE20_SUMMARY, PRICING_FREE20_METERING_NOTE, PRICING_HISTORY_NOTE } from "./pricing-copy";
 
 export const homeFAQ = [
   {
@@ -15,12 +15,12 @@ export const homeFAQ = [
   {
     question: "How do I watch Crunchyroll with friends using AniDachi?",
     answer:
-      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. With Plus or Pro, including during a trial, open the AniDachi panel, click 'Create room,' and share the invite link. Friends join for free with the extension and their own access to the episode.",
+      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. On Free, Plus, or Pro, open the AniDachi panel, click 'Create room,' and share the invite link. Friends join for free with the extension and their own access to the episode.",
   },
   {
     question: "Can I watch YouTube together with AniDachi?",
     answer:
-      "Yes. Open a full youtube.com/watch page in desktop Chrome. A Plus, Pro or trial host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
+      "Yes. Open a full youtube.com/watch page in desktop Chrome. A Free, Plus, or Pro host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
   },
   {
     question: "Can I watch anime with friends asynchronously?",
@@ -35,12 +35,12 @@ export const homeFAQ = [
   {
     question: "Is AniDachi free?",
     answer:
-      `Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. ${PRICING_TRIAL_NOTE}`,
+      `Yes. ${PRICING_FREE20_SUMMARY} ${PRICING_FREE20_METERING_NOTE} ${PRICING_HISTORY_NOTE}`,
   },
   {
     question: "Do all my friends need an AniDachi subscription?",
     answer:
-      "No. Only the host needs Plus or Pro, including during a trial. Friends join with Free accounts, and the host's plan sets the room size. Everyone needs the AniDachi extension and their own access to the video. Recording personal watch progress requires each viewer's own Plus or Pro plan.",
+      `No. ${PRICING_FREE20_SUMMARY} Friends join with Free accounts, and the host's plan sets the room size. Everyone needs the AniDachi extension and their own access to the video. Recording personal watch progress requires each viewer's own Plus or Pro plan.`,
   },
   {
     question: "What's the difference between Plus and Pro?",

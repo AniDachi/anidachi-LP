@@ -12,11 +12,15 @@ import { ACCESS_TOKEN_COOKIE } from "./cookies";
 import { signAccessToken } from "./jwt";
 
 const owner = "f6200000-0000-4000-8000-000000000001";
-async function request(kind: "create" | "connect") {
+async function request(
+	kind: "create" | "connect",
+	version: string | null = "1",
+	caller = owner,
+) {
 	const path =
 		kind === "create" ? "/api/rooms" : "/api/rooms/daily-room/connect";
 	const cookie = await signAccessToken({
-		sub: owner,
+		sub: caller,
 		email: "free20@example.test",
 		plan: "free",
 	});
@@ -25,6 +29,7 @@ async function request(kind: "create" | "connect") {
 		headers: {
 			"content-type": "application/json",
 			"x-anidachi-media-protocol": "3",
+			...(version === null ? {} : { "x-anidachi-free20-client": version }),
 			cookie: `${ACCESS_TOKEN_COOKIE}=${cookie}`,
 		},
 		body: JSON.stringify({
@@ -71,6 +76,10 @@ type Options = {
 	paid?: boolean;
 	invalid?: boolean;
 	sqlZero?: boolean;
+	sqlUpdate?: boolean;
+	member?: boolean;
+	roomPlan?: "free" | "plus";
+	sqlErrorCode?: string;
 	sqlAuthorityUnavailable?: boolean;
 	conflict?: boolean;
 };
@@ -79,6 +88,8 @@ async function fixture(
 	run: (state: {
 		creates: number;
 		claims: number;
+		updates: number;
+		versions: unknown[];
 		legacyQuotaReads: number;
 		accessReads: number;
 	}) => Promise<void>,
@@ -94,7 +105,14 @@ async function fixture(
 		Object.keys(env).map((key) => [key, process.env[key]]),
 	);
 	Object.assign(process.env, env);
-	const state = { creates: 0, claims: 0, legacyQuotaReads: 0, accessReads: 0 };
+	const state = {
+		creates: 0,
+		claims: 0,
+		updates: 0,
+		versions: [] as unknown[],
+		legacyQuotaReads: 0,
+		accessReads: 0,
+	};
 	const now = new Date();
 	const until = new Date(now.getTime() + 300_000).toISOString();
 	const resetAt = new Date(
@@ -104,7 +122,7 @@ async function fixture(
 	const row = {
 		room_id: "daily-room",
 		host_user_id: owner,
-		host_plan_code: "free",
+		host_plan_code: options.roomPlan ?? "free",
 		status: "lobby",
 		host_connected_at: now.toISOString(),
 		hosting_time_mode: options.marked === false ? null : "daily_free20",
@@ -138,20 +156,29 @@ async function fixture(
 				display_name: "Host",
 				avatar_url: null,
 			});
-		if (url.pathname === "/rest/v1/rooms")
+		if (url.pathname === "/rest/v1/rooms") {
+			if (req.method === "PATCH") state.updates++;
 			return Response.json(
 				req.method === "PATCH" ? [{ room_id: "daily-room" }] : row,
 			);
+		}
 		if (url.pathname === "/rest/v1/personal_history_policy")
 			return Response.json({ active: true });
-		if (url.pathname.endsWith("/resolve_watch_history_access_v1"))
+		if (url.pathname === "/rest/v1/room_members")
+			return Response.json(
+				options.member
+					? { user_id: "f6200000-0000-4000-8000-000000000002" }
+					: null,
+			);
+		if (url.pathname.endsWith("/resolve_watch_history_access_v1")) {
+			const caller = (await req.json()).p_user_id;
 			return Response.json({
 				planCode: plan,
 				paidUntil: options.paid ? until : null,
 				selectedPlanExpiresAt: options.paid ? until : null,
 				history: {
 					accessVersion: 1,
-					ownerUserId: owner,
+					ownerUserId: caller,
 					accountGeneration: 1,
 					accessEpoch: 1,
 					youtubeConsentEpoch: 1,
@@ -169,6 +196,7 @@ async function fixture(
 					trialEndsAt: null,
 				},
 			});
+		}
 		if (url.pathname.endsWith("/resolve_free20_hosting_access_v1")) {
 			state.accessReads++;
 			assert.deepEqual(await req.json(), { p_user_id: owner });
@@ -192,14 +220,25 @@ async function fixture(
 			return Response.json({ host_seconds: options.used ?? 420 });
 		}
 		if (
-			url.pathname.endsWith("/create_room_with_active_session_v3") ||
-			url.pathname.endsWith("/claim_active_room_session_v3")
+			url.pathname.endsWith("/create_room_with_active_session_v4") ||
+			url.pathname.endsWith("/claim_active_room_session_v4")
 		) {
 			const creating = url.pathname.endsWith(
-				"/create_room_with_active_session_v3",
+				"/create_room_with_active_session_v4",
 			);
 			if (creating) state.creates++;
 			else state.claims++;
+			state.versions.push((await req.json()).p_free20_client_version);
+			if (options.sqlErrorCode)
+				return Response.json(
+					{ code: options.sqlErrorCode, message: "lock or statement timeout" },
+					{ status: 400 },
+				);
+			if (options.sqlUpdate)
+				return Response.json(
+					{ code: "P0001", message: "ROOM_UPDATE_REQUIRED_FREE20" },
+					{ status: 400 },
+				);
 			if (options.sqlZero)
 				return Response.json(
 					{ code: "P0001", message: "QUOTA_EXHAUSTED" },
@@ -322,3 +361,77 @@ test("paid right reconnects the same Free-capacity room after its daily quota is
 		assert.equal(body.mediaCapabilities.maxParticipants, 4);
 		assert.equal(state.legacyQuotaReads, 0);
 	}));
+
+for (const kind of ["create", "connect"] as const) {
+	test(`${kind} passes the independent capability to SQL`, async () =>
+		fixture({}, async (state) => {
+			assert.equal((await request(kind)).status, 200);
+			assert.deepEqual(state.versions, [1]);
+		}));
+	test(`${kind} returns friendly426 without token or room touch for unsupported marked host`, async () => {
+		for (const version of [null, "0", "2", "01", "1, 1"])
+			await fixture({ sqlUpdate: true }, async (state) => {
+				const response = await request(kind, version);
+				const body = await response.json();
+				assert.equal(response.status, 426);
+				assert.equal(body.code, "ROOM_UPDATE_REQUIRED");
+				assert.equal(
+					body.message,
+					"Update AniDachi to use your daily free hosting time. You can still join friends' rooms.",
+				);
+				assert.equal("roomToken" in body, false);
+				assert.equal(state.updates, 0);
+				if (kind === "create") assert.deepEqual(state.versions, [null]);
+				else assert.equal(state.claims, 0);
+			});
+	});
+	test(`${kind} unsupported marked host426 precedes exhausted budget`, async () =>
+		fixture({ used: 1200, sqlUpdate: true }, async (state) => {
+			const response = await request(kind, null);
+			assert.equal(response.status, 426);
+			assert.equal(state.updates, 0);
+		}));
+	test(`${kind} paid-upgraded marked room still rejects old host`, async () =>
+		fixture({ paid: true, sqlUpdate: true }, async (state) => {
+			const response = await request(kind, null);
+			assert.equal(response.status, 426);
+			assert.equal(state.updates, 0);
+		}));
+}
+
+test("old guest can connect to marked room without the host capability", async () =>
+	fixture({ member: true }, async (state) => {
+		const response = await request(
+			"connect",
+			null,
+			"f6200000-0000-4000-8000-000000000002",
+		);
+		assert.equal(response.status, 200, JSON.stringify(await response.json()));
+		assert.deepEqual(state.versions, [null]);
+		assert.equal(state.claims, 1);
+	}));
+test("capability cannot turn an outsider into a room member", async () =>
+	fixture({}, async (state) => {
+		const response = await request(
+			"connect",
+			"1",
+			"f6200000-0000-4000-8000-000000000002",
+		);
+		assert.equal(response.status, 403);
+		assert.equal(state.claims + state.updates, 0);
+	}));
+for (const kind of ["create", "connect"] as const) {
+	test(`${kind} retains ordinary old paid client behavior`, async () =>
+		fixture({ paid: true, marked: false, roomPlan: "plus" }, async (state) => {
+			const response = await request(kind, null);
+			assert.equal(response.status, 200, JSON.stringify(await response.json()));
+			assert.deepEqual(state.versions, [null]);
+		}));
+	for (const code of ["55P03", "57014"])
+		test(`${kind} SQL ${code} stays unavailable503`, async () =>
+			fixture({ sqlErrorCode: code }, async (state) => {
+				const response = await request(kind);
+				assert.equal(response.status, 503);
+				assert.equal(state.updates, 0);
+			}));
+}

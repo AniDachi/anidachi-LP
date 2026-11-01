@@ -39,7 +39,7 @@ const faq = [
   {
     question: "Can you watch Crunchyroll together with friends?",
     answer:
-      "Yes. AniDachi adds live synchronized playback, chat, cameras, and microphones to Crunchyroll. Each person needs their own access to the episode. A host with Plus or Pro access, including an active trial, creates the room; friends can join on Free accounts.",
+      "Yes. AniDachi adds live synchronized playback, chat, cameras, and microphones to Crunchyroll. Each person needs their own access to the episode. A host on Free, Plus, or Pro creates the room; friends can join on Free accounts.",
   },
   {
     question: "Does Crunchyroll have a watch party feature?",

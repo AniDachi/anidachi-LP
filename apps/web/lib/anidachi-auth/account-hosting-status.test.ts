@@ -307,3 +307,49 @@ test("the Worker transport authenticates, never caches or follows redirects, and
 	await assert.rejects(readLiveFree20Status(input), /not configured/);
 	assert.equal(fetcher.mock.callCount(), before);
 });
+
+test("fresh Free account epoch zero supports idle and live hosting status", async () => {
+	for (const assignment of [null, assigned()]) {
+		const f = fixture({
+			...authority(),
+			accessEpoch: 0,
+			committedSeconds: 0,
+			assignment,
+		});
+		const response = await f.request();
+		assert.equal(response.status, 200);
+		const value = await response.json();
+		assert.equal(value.access.kind, "daily_free");
+		assert.equal(value.access.remainingSeconds, assignment ? 600 : 1200);
+	}
+});
+
+test("shared reader gates authority work and includes elapsed identity work", async () => {
+	const { readAccountHostingStatus } = await import("./account-hosting-status");
+	let reads = 0;
+	const deps = {
+		enabled: () => false,
+		readAuthority: async () => {
+			reads++;
+			return authority();
+		},
+		clock: () => 0,
+	};
+	assert.deepEqual(await readAccountHostingStatus(owner, deps), {
+		mode: "legacy",
+	});
+	assert.equal(reads, 0);
+	assert.equal(
+		(await readAccountHostingStatus(owner, { ...deps, enabled: () => true }))
+			.mode,
+		"free20",
+	);
+	await assert.rejects(
+		readAccountHostingStatus(
+			owner,
+			{ ...deps, enabled: () => true, clock: () => 300_000 },
+			0,
+		),
+		/expired/,
+	);
+});

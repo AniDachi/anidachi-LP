@@ -54,6 +54,7 @@ import {
 	EndedTrialSummary,
 } from "./subscription-summary";
 
+import { useAccountHostingStatus } from "@/lib/use-account-hosting-status";
 import { useBillingTimeZone } from "./use-billing-time-zone";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
@@ -828,6 +829,11 @@ export function BillingView({
 	const current =
 		owned?.subscriptions.filter((s) => !isPastSubscription(s)) ?? [];
 	const previous = owned?.subscriptions.filter(isPastSubscription) ?? [];
+	const hostingTime = useAccountHostingStatus(
+		ownerUserId,
+		undefined,
+		owned?.planCode === "free" && current.length === 0,
+	);
 	const endedTrial =
 		owned?.planCode === "free" &&
 		current.length === 0 &&
@@ -927,7 +933,37 @@ export function BillingView({
 							</BillingSummaryCard>
 						</section>
 					)}
-					{endedTrial && <EndedTrialSummary />}
+					{owned.planCode === "free" && current.length === 0 && (
+						<section
+							className="billing-access"
+							aria-label="Current hosting time"
+						>
+							<h2>Hosting time</h2>
+							<p aria-live="polite">
+								{hostingTime.status
+									? hostingTime.status.activeRoom
+										? "You’re already in a room. Return to it before creating another."
+										: hostingTime.status.access.kind === "daily_free"
+											? `${Math.ceil((hostingTime.remainingSeconds ?? 0) / 60)} host minutes remaining today. Resets at 00:00 UTC.${hostingTime.remainingSeconds === 0 ? " Join friends free, or upgrade for no daily host limit." : " Up to 4 people, including you."}`
+											: "Your hosting access has no daily time limit."
+									: hostingTime.mode === "legacy"
+										? "Your current plan’s hosting rules apply."
+										: hostingTime.busy
+											? "Checking current hosting time…"
+											: "Hosting time is unavailable. Try again to check your access."}
+							</p>
+							{hostingTime.mode !== "legacy" && (
+								<button
+									type="button"
+									onClick={hostingTime.refresh}
+									disabled={hostingTime.busy}
+								>
+									Refresh hosting time
+								</button>
+							)}
+						</section>
+					)}
+					{endedTrial && <EndedTrialSummary hostingMode={hostingTime.mode} />}
 					{!endedTrial &&
 						!owned.pendingTrialActivation &&
 						current.length === 0 && (
@@ -952,7 +988,11 @@ export function BillingView({
 									}
 									actionDescription={
 										owned.planCode === "free"
-											? "Explore Plus and Pro for your own rooms and more."
+											? hostingTime.mode === "free20"
+												? "Explore Plus and Pro for hosting without a daily time limit and personal watch history."
+												: hostingTime.mode === "legacy"
+													? "Explore Plus and Pro for your own rooms and more."
+													: "Check your hosting access and explore plan options."
 											: "See available subscription options."
 									}
 								>
@@ -973,11 +1013,21 @@ export function BillingView({
 											<ChevronDown size={16} aria-hidden />
 										</summary>
 										<ul className="ac-plan-limits">
-											{owned.hosting &&
-											owned.serverTime &&
-											owned.hosting.hostingActivationAt &&
-											Date.parse(owned.hosting.hostingActivationAt) <=
-												Date.parse(owned.serverTime) ? (
+											{hostingTime.mode === "free20" ? (
+												<li>
+													Free includes 20 host minutes per UTC day for up to 4
+													people. Time counts with a guest present, including
+													while paused; waiting alone uses no time. Resets at
+													00:00 UTC with no carryover. Joining friends does not
+													spend your own hosting time.
+												</li>
+											) : hostingTime.mode !== "legacy" ? (
+												<li>Refresh to check your current hosting access.</li>
+											) : owned.hosting &&
+												owned.serverTime &&
+												owned.hosting.hostingActivationAt &&
+												Date.parse(owned.hosting.hostingActivationAt) <=
+													Date.parse(owned.serverTime) ? (
 												<li>
 													Join a Plus, Pro or trial host for free. Creating your
 													own room needs Plus or Pro.

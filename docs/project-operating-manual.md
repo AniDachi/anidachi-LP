@@ -450,6 +450,16 @@ artifacts still deliver from `staging`. This does not authorize a general
 feature-ref release or production migration. See
 [the exact staging procedure](netflix-staging-verification.md#ordered-staging-delivery).
 
+The owner-authorized November1 Free20 staging cutover has the same narrowly
+bounded schema-first requirement: after its exact readiness PR head is reviewed
+and CI is green, only `db-staging.yml` may run from that frozen feature ref to
+install additive v4 admission dependencies before Web switches callers. Verify
+the run SHA, fixed staging target, pending migration list and deployed grants.
+Web/Worker/extension still deliver from `staging`; runtime flags and SQL policy
+activation follow separate checks. This is not a general feature-ref release
+permission or production approval. See the
+[Free20 activation runbook](superpowers/plans/2026-11-01-free20-staging-activation-runbook.md).
+
 Never push risky changes directly to `main`. Never mix unrelated P2P, billing,
 auth, UI, and migration changes in one large PR unless the change cannot be split.
 

@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallLink } from "@/components/install-link";
@@ -88,7 +89,7 @@ const faq = [
   {
     question: "Is there a Netflix Party extension with video chat for free?",
     answer:
-      "Teleparty limits voice and video chat to Premium. In AniDachi, voice and video are part of every room and friends join free, but the host needs Plus or Pro, including a 3-day trial for eligible accounts.",
+      `Teleparty limits voice and video chat to Premium. In AniDachi, voice and video are part of every room and friends join free. ${PRICING_FREE20_SUMMARY}`,
   },
 ];
 
@@ -242,7 +243,7 @@ export default function NetflixPartyPage() {
             feature: "Cost to host",
             values: {
               teleparty: "Free; Premium $6.59/mo",
-              anidachi: "Plus or Pro (3-day trial); friends join free",
+              anidachi: "Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
               syncup: "Free up to 5 people; Plus $3.99/mo",
               kosmi: "Free",
               rave: "Not stated",
@@ -310,7 +311,7 @@ export default function NetflixPartyPage() {
           },
           {
             name: "Create a room",
-            text: "Click the AniDachi capsule on the player and choose Create room. The host needs Plus or Pro; eligible accounts can start a 3-day trial.",
+            text: `Click the AniDachi capsule on the player and choose Create room. ${PRICING_FREE20_SUMMARY}`,
           },
           {
             name: "Send the link",

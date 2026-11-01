@@ -45,7 +45,7 @@ const faq = [
 	{
 		question: "How do I watch Crunchyroll with friends online?",
 		answer:
-			"Install AniDachi from /extension and open the Crunchyroll episode. AniDachi detects it automatically. With your own Plus or Pro access, including an active trial, choose Create room and share the invite. Friends can join on Free accounts with their own access to the episode.",
+			"Install AniDachi from /extension and open the Crunchyroll episode. AniDachi detects it automatically. On Free, Plus, or Pro, choose Create room and share the invite. Friends can join on Free accounts with their own access to the episode.",
 	},
 	{
 		question: "How do two people watch Crunchyroll at the same time?",
@@ -99,7 +99,7 @@ const howToSteps = [
 	},
 	{
 		name: "Create a watchroom",
-		text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, open the overlay and choose Create room.",
+		text: "AniDachi detects the episode automatically. On Free, Plus, or Pro, open the overlay and choose Create room.",
 	},
 	{
 		name: "Invite friends",

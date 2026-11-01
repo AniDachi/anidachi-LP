@@ -124,7 +124,7 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
         If your group watches occasionally and always live, start simple. For weekly
-        anime nights, AniDachi offers hosting with Plus or Pro, including a trial,
+        anime nights, AniDachi offers Free daily hosting or Plus and Pro without a daily hosting time limit,
         while Free friends can join. Pricing and checkout live on{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           the homepage

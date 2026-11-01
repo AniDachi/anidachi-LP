@@ -19,10 +19,9 @@ import { getSession } from "@/lib/anidachi-auth/session";
 import { REFRESH_TOKEN_COOKIE } from "@/lib/anidachi-auth/cookies";
 import { resolveWebsiteSession } from "@/lib/anidachi-auth/website-session";
 import { createBillingService } from "@/lib/anidachi-auth/billing";
-import { loadBillingSnapshot } from "@/lib/anidachi-auth/billing-snapshot";
+import { loadExtensionWelcome } from "@/lib/anidachi-auth/extension-welcome-snapshot";
 import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
-import { resolveExtensionWelcome, type ExtensionWelcome } from "@/lib/extension-welcome";
-import { billingDisplayValidityMs } from "@/lib/billing-view";
+import { type ExtensionWelcome } from "@/lib/extension-welcome";
 
 export const dynamic = "force-dynamic";
 
@@ -71,32 +70,41 @@ const howToSteps = [
   },
 ];
 
-type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
-export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
-  return (await searchParams)?.welcome === "1"
-    ? { ...metadata, robots: { index: false, follow: false } }
-    : metadata;
+type PageProps = {
+	searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+export async function generateMetadata({
+	searchParams,
+}: PageProps): Promise<Metadata> {
+	return (await searchParams)?.welcome === "1"
+		? { ...metadata, robots: { index: false, follow: false } }
+		: metadata;
 }
 
-export default async function ExtensionInstallPage({ searchParams }: PageProps) {
-  const artifact = toPublicExtensionArtifact(getExtensionArtifact());
-  let welcome: ExtensionWelcome | undefined;
-  let owner: string | undefined;
-  if ((await searchParams)?.welcome === "1") {
-    try {
-      const session = await getSession();
-      owner = session?.userId;
-      if (!session) welcome = { kind: "sign_in" };
-      else {
-        const snapshot = await loadBillingSnapshot(session.userId, {
-          websiteUser: async () => resolveWebsiteSession((await cookies()).get(REFRESH_TOKEN_COOKIE)?.value),
-          overview: userId => createBillingService().overview(userId),
-        });
-        welcome = snapshot ? resolveExtensionWelcome(snapshot.overview,
-          billingDisplayValidityMs(snapshot.overview) - snapshot.remainingMs) : { kind: "error" };
-      }
-    } catch { welcome = { kind: "error" }; }
-  }
+export default async function ExtensionInstallPage({
+	searchParams,
+}: PageProps) {
+	const artifact = toPublicExtensionArtifact(getExtensionArtifact());
+	let welcome: ExtensionWelcome | undefined;
+	let owner: string | undefined;
+	if ((await searchParams)?.welcome === "1") {
+		try {
+			const session = await getSession();
+			owner = session?.userId;
+			if (!session) welcome = { kind: "sign_in" };
+			else {
+				welcome = await loadExtensionWelcome(session.userId, {
+					websiteUser: async () =>
+						resolveWebsiteSession(
+							(await cookies()).get(REFRESH_TOKEN_COOKIE)?.value,
+						),
+					overview: (userId) => createBillingService().overview(userId),
+				});
+			}
+		} catch {
+			welcome = { kind: "error" };
+		}
+	}
 
   return (
     <>
@@ -114,7 +122,7 @@ export default async function ExtensionInstallPage({ searchParams }: PageProps) 
       />
       <HowToJsonLd
         name="How to Watch Together"
-        description="Host a live Crunchyroll, YouTube, or Netflix room with Plus or Pro, including during a trial. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
+        description="Host a live Crunchyroll, YouTube, or Netflix room on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join for free. Use the overlay for invites, calls, reactions, and room settings."
         steps={extensionUsingSteps.map(({ name, text }) => ({ name, text }))}
       />
       <main id="main-content" className="min-h-screen bg-ani-canvas">

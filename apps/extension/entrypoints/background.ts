@@ -8,6 +8,7 @@ import {
 } from "../src/player-onboarding-storage";
 import { handleHostingAccessMessage, isHostingAccessMessage } from "../src/hosting-access-client";
 import { handleAccountHostingStatusMessage, isAccountHostingStatusMessage } from "../src/account-hosting-status-client";
+import { handleFree20WarningMessage, isFree20WarningMessage } from "../src/free20-warning-client";
 import { defineBackground } from "wxt/utils/define-background";
 import { handleRoomQuotaStatusMessage, isRoomQuotaStatusMessage } from "../src/room-quota-status-client";
 import {
@@ -315,6 +316,10 @@ export default defineBackground(() => {
 
     if (isAccountHostingStatusMessage(message)) {
       void handleAccountHostingStatusMessage(message).then(sendResponse);
+      return true;
+    }
+    if (isFree20WarningMessage(message)) {
+      void handleFree20WarningMessage(message).then(sendResponse);
       return true;
     }
     if (isHostingAccessMessage(message)) {

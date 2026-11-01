@@ -181,8 +181,7 @@ export default function CrunchyrollDubSchedulePage() {
             <InstallLink href="/extension" className={linkClass}>
               Add AniDachi to desktop Chrome
             </InstallLink>
-            , open the dub on Crunchyroll and share the room link. One person hosts with Plus or Pro,
-            including a trial; friends join free on their own Crunchyroll accounts.
+            , open the dub on Crunchyroll and share the room link. One person hosts on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro; friends join free on their own Crunchyroll accounts.
           </p>
         </div>
 

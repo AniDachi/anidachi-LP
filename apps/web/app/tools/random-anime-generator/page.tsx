@@ -61,7 +61,7 @@ const faq = [
   {
     question: "How do we start episode 1 together?",
     answer:
-      "One person hosts with Plus or Pro, including a trial. Friends join free. Everyone opens the same episode in desktop Chrome. AniDachi syncs the room. It does not re-stream the video.",
+      "One person hosts on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join free. Everyone opens the same episode in desktop Chrome. AniDachi syncs the room. It does not re-stream the video.",
   },
 ];
 

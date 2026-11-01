@@ -9,7 +9,11 @@ const time = "2030-01-01T00:00:00Z";
 const access = {
 	policy: { planCode: "free" },
 	history: { serverTime: time },
-	hosting: { hostingActivationAt: time, trialEligibility: "eligible" },
+	hosting: {
+		hostingActivationAt: time,
+		hostingPolicyVersion: 1,
+		trialEligibility: "eligible",
+	},
 } as AccountEntitlements;
 const deps = {
 	priceId: (plan: string, period: BillingPeriod = "monthly") =>
@@ -29,7 +33,11 @@ const deps = {
 	access: async () => access,
 	subscriptions: async () => [] as SubscriptionRow[],
 	pendingActivation: async () => null,
-	policy: async () => ({ activation_at: time, trials_enabled: true }),
+	policy: async () => ({
+		activation_at: time,
+		trials_enabled: true,
+		revision: 1,
+	}),
 	now: () => Date.parse(time),
 };
 test("only verified eligible Free gets a trial; no registration-date split", async () => {
@@ -191,6 +199,10 @@ test("cardless mode and revision require every launch flag while keeping the exi
 	for (const user of [null, "owner"]) {
 		const offer = await getPricingOffer(user, {
 			...deps,
+			access: async () => ({
+				...access,
+				hosting: { ...access.hosting!, hostingPolicyVersion: 7 },
+			}),
 			policy: async () => ({
 				activation_at: time,
 				trials_enabled: true,
@@ -229,6 +241,11 @@ test("durable pending activation leads to recovery even after flag off", async (
 	};
 	const result = await getPricingOffer("owner", {
 		...deps,
+		policy: async () => ({
+			activation_at: time,
+			trials_enabled: false,
+			revision: 2,
+		}),
 		pendingActivation: async (owner: string) => {
 			assert.equal(owner, "owner");
 			return pending;
@@ -238,4 +255,150 @@ test("durable pending activation leads to recovery even after flag off", async (
 	assert.equal(result.action, "manage");
 	assert.equal(result.trialAvailable, false);
 	assert.deepEqual(result.pendingTrialActivation, pending);
+});
+
+test("current retirement policy overrides an old eligible account read", async () => {
+	const result = await getPricingOffer("owner", {
+		...deps,
+		policy: async () => ({
+			activation_at: time,
+			trials_enabled: false,
+			revision: 2,
+		}),
+	});
+	assert.equal(result.action, "subscribe");
+	assert.equal(result.trialAvailable, false);
+});
+
+test("mixed, missing or inactive policy authority never advertises a new trial", async () => {
+	for (const override of [
+		{ revision: 2 },
+		{ revision: undefined },
+		{ revision: 0 },
+		{ activation_at: "2029-12-31T00:00:00Z" },
+		{ activation_at: null },
+		{ activation_at: "2030-01-02T00:00:00Z" },
+		{ activation_at: "invalid" },
+	]) {
+		const result = await getPricingOffer("owner", {
+			...deps,
+			policy: async () => ({
+				activation_at: time,
+				trials_enabled: true,
+				revision: 1,
+				...override,
+			}),
+		});
+		assert.equal(result.action, "subscribe", JSON.stringify(override));
+		assert.equal(result.trialAvailable, false, JSON.stringify(override));
+		assert.equal(
+			result.validForMs,
+			0,
+			"Mixed authority requires a fresh check before purchase",
+		);
+	}
+	const result = await getPricingOffer("owner", {
+		...deps,
+		access: async () => ({
+			...access,
+			hosting: {
+				...access.hosting!,
+				hostingPolicyVersion: undefined as unknown as number,
+			},
+		}),
+	});
+	assert.equal(result.action, "subscribe");
+	assert.equal(result.trialAvailable, false);
+});
+
+test("retirement and mixed authority preserve accepted recovery and existing management", async () => {
+	const policy = async () => ({
+		activation_at: time,
+		trials_enabled: false,
+		revision: 2,
+	});
+	const pending = {
+		id: "accepted",
+		planCode: "pro" as const,
+		billingPeriod: "yearly" as const,
+	};
+	const recovery = await getPricingOffer("owner", {
+		...deps,
+		policy,
+		pendingActivation: async () => pending,
+	});
+	assert.equal(recovery.action, "manage");
+	assert.deepEqual(recovery.pendingTrialActivation, pending);
+	assert.equal(recovery.trialAvailable, false);
+	for (const status of ["active", "trialing", "past_due", "incomplete"]) {
+		const offer = await getPricingOffer("owner", {
+			...deps,
+			policy,
+			subscriptions: async () =>
+				[{ user_id: "owner", status }] as SubscriptionRow[],
+		});
+		assert.equal(offer.action, "manage");
+		assert.equal(offer.trialAvailable, false);
+	}
+});
+
+test("coherent inactive policy keeps ordinary paid offers usable without new trials", async () => {
+	for (const activation_at of [null, "2030-01-02T00:00:00Z"]) {
+		const offer = await getPricingOffer("owner", {
+			...deps,
+			policy: async () => ({
+				activation_at,
+				trials_enabled: false,
+				revision: 1,
+			}),
+			access: async () => ({
+				...access,
+				hosting: {
+					...access.hosting!,
+					hostingActivationAt: activation_at,
+					trialEligibility: "unavailable",
+				},
+			}),
+		});
+		assert.equal(offer.action, "subscribe");
+		assert.equal(offer.trialAvailable, false);
+		assert.equal(offer.paidHostingActive, false);
+		assert.equal(
+			offer.validForMs,
+			60_000,
+			"Coherent paid offer remains available before hosting cutover",
+		);
+	}
+});
+
+test("Free20 mode needs exact server flag and SQL policy, without changing paid hosting", async () => {
+	const previous = process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED;
+	try {
+		for (const flag of ["false", "TRUE", "true"]) {
+			process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = flag;
+			for (const free20_enabled of [false, true])
+				for (const user of [null, "owner"]) {
+					const result = await getPricingOffer(user, {
+						...deps,
+						policy: async () => ({
+							activation_at: time,
+							trials_enabled: false,
+							revision: 1,
+							free20_enabled,
+						}),
+					});
+					assert.equal(
+						result.hostingModel,
+						flag === "true" && free20_enabled ? "daily_free20" : "paid_hosting",
+					);
+					assert.equal(result.paidHostingActive, true);
+					assert.equal(result.trialAvailable, false);
+					assert.equal("remainingSeconds" in result, false);
+				}
+		}
+	} finally {
+		if (previous === undefined)
+			delete process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED;
+		else process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED = previous;
+	}
 });

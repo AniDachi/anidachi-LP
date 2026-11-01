@@ -1,5 +1,6 @@
 "use client";
 
+import { PRICING_FREE20_SUMMARY, PRICING_HISTORY_NOTE } from "@/lib/pricing-copy";
 import { useCallback, useEffect, useRef } from "react";
 import { InstallLink } from "@/components/install-link";
 import { Button } from "@/components/ui/button";
@@ -16,25 +17,25 @@ const COPY = {
     body: "Install the Chrome extension in about 2 minutes — Crunchyroll, YouTube, and Netflix watchrooms.",
   },
   guide: {
-    body: "Install AniDachi in Chrome. Join friends for free, or host with Plus or Pro on Crunchyroll, YouTube, and Netflix.",
+    body: `Install AniDachi in Chrome for Crunchyroll, YouTube, and Netflix. ${PRICING_FREE20_SUMMARY}`,
   },
   compare: {
     body: "Add AniDachi from the Chrome Web Store, then compare Crunchyroll, YouTube, and Netflix watchrooms.",
   },
   anime: {
-    body: "Install AniDachi and open the video. Host with Plus or Pro, including during a trial; friends join free.",
+    body: `Install AniDachi and open the video. ${PRICING_FREE20_SUMMARY} Friends join free.`,
   },
   listicle: {
-    body: "Get the Chrome extension. Only the host needs Plus or Pro, including during a trial; friends join free.",
+    body: `Get the Chrome extension. ${PRICING_FREE20_SUMMARY} Friends join free.`,
   },
   glossary: {
-    body: "Install on desktop Chrome. Join for free; choose Plus or Pro to host and record your own watch history.",
+    body: `Install on desktop Chrome. ${PRICING_FREE20_SUMMARY} ${PRICING_HISTORY_NOTE}`,
   },
   pillar: {
-    body: "Add AniDachi from the Chrome Web Store. Create a room with Plus or Pro, or join a friend for free.",
+    body: `Add AniDachi from the Chrome Web Store. ${PRICING_FREE20_SUMMARY} Friends join free.`,
   },
   animePillar: {
-    body: "Add AniDachi to Chrome, then open the episode on Crunchyroll, YouTube, or Netflix. Host with Plus or Pro; friends join free.",
+    body: `Add AniDachi to Chrome, then open the episode on Crunchyroll, YouTube, or Netflix. ${PRICING_FREE20_SUMMARY}`,
   },
 } as const;
 

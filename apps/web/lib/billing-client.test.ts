@@ -60,29 +60,31 @@ for (const stage of ["trial", "processing"] as const) {
 	test(`a focused billing tab retires ${stage} claims at the server boundary`, async (t) => {
 		t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
 		let requests = 0;
-		globalThis.fetch = async () =>
-			Response.json(
-				++requests === 1
-					? {
-							...active,
-							selectedPlanExpiresAt: "2030-01-01T00:00:01Z",
-							subscriptions: [
-								{
-									...active.subscriptions[0],
-									canChangeTrialPlan: stage === "trial",
-									trial: {
-										stage,
-										endsAt:
-											stage === "trial"
-												? "2030-01-01T00:00:01Z"
-												: "2029-12-31T22:00:01Z",
-										pendingUntil: "2030-01-01T00:00:01Z",
-									},
-								},
-							],
-						}
-					: { ...active, planCode: "free", subscriptions: [] },
-			);
+		globalThis.fetch = async (path) =>
+			String(path) === "/api/me/hosting-status"
+				? Response.json({ code: "HOSTING_STATUS_UNAVAILABLE" }, { status: 503 })
+				: Response.json(
+						++requests === 1
+							? {
+									...active,
+									selectedPlanExpiresAt: "2030-01-01T00:00:01Z",
+									subscriptions: [
+										{
+											...active.subscriptions[0],
+											canChangeTrialPlan: stage === "trial",
+											trial: {
+												stage,
+												endsAt:
+													stage === "trial"
+														? "2030-01-01T00:00:01Z"
+														: "2029-12-31T22:00:01Z",
+												pendingUntil: "2030-01-01T00:00:01Z",
+											},
+										},
+									],
+								}
+							: { ...active, planCode: "free", subscriptions: [] },
+					);
 		await mount();
 		assert.match(
 			container.textContent!,
@@ -1075,14 +1077,16 @@ test("return from Stripe refreshes status and shows scheduled end without anothe
 });
 
 test("Free account without billing has no cancellation action", async () => {
-	globalThis.fetch = async () =>
-		Response.json({
-			ownerUserId: "owner",
-			planCode: "free",
-			serverTime: "2030-01-01T00:00:00Z",
-			hosting: { hostingActivationAt: null },
-			subscriptions: [],
-		});
+	globalThis.fetch = async (path) =>
+		String(path) === "/api/me/hosting-status"
+			? Response.json({ code: "FREE20_DISABLED" }, { status: 404 })
+			: Response.json({
+					ownerUserId: "owner",
+					planCode: "free",
+					serverTime: "2030-01-01T00:00:00Z",
+					hosting: { hostingActivationAt: null },
+					subscriptions: [],
+				});
 	await mount();
 	assert.match(container.textContent ?? "", /30 minutes a day/);
 	assert.match(container.textContent ?? "", /Up to 4 people/);
@@ -1098,23 +1102,25 @@ test("Free account without billing has no cancellation action", async () => {
 });
 
 test("Free account with a canceled subscription still shows host limits", async () => {
-	globalThis.fetch = async () =>
-		Response.json({
-			ownerUserId: "owner",
-			planCode: "free",
-			serverTime: "2030-01-01T00:00:00Z",
-			hosting: { hostingActivationAt: null },
-			subscriptions: [
-				{
-					id: "ended-sub",
-					planCode: "plus",
-					status: "canceled",
-					currentPeriodEnd: "2020-02-01T12:00:00.000Z",
-					cancelAtPeriodEnd: true,
-					canCancel: false,
-				},
-			],
-		});
+	globalThis.fetch = async (path) =>
+		String(path) === "/api/me/hosting-status"
+			? Response.json({ code: "FREE20_DISABLED" }, { status: 404 })
+			: Response.json({
+					ownerUserId: "owner",
+					planCode: "free",
+					serverTime: "2030-01-01T00:00:00Z",
+					hosting: { hostingActivationAt: null },
+					subscriptions: [
+						{
+							id: "ended-sub",
+							planCode: "plus",
+							status: "canceled",
+							currentPeriodEnd: "2020-02-01T12:00:00.000Z",
+							cancelAtPeriodEnd: true,
+							canCancel: false,
+						},
+					],
+				});
 	await mount();
 	assert.match(container.textContent ?? "", /30 minutes a day/);
 	assert.match(container.textContent ?? "", /Plus subscription/);
@@ -1955,7 +1961,15 @@ for (const state of ["trial", "paid", "ended", "processing"] as const) {
 			planCode: state === "ended" ? "free" : "plus",
 			subscriptions: [subscription],
 		};
-		globalThis.fetch = async () => {
+		const hostingReads: string[] = [];
+		globalThis.fetch = async (path) => {
+			if (String(path) === "/api/me/hosting-status") {
+				hostingReads.push(String(path));
+				return Response.json(
+					{ code: "HOSTING_STATUS_UNAVAILABLE" },
+					{ status: 503 },
+				);
+			}
 			reads++;
 			return Response.json(overview);
 		};
@@ -1980,6 +1994,11 @@ for (const state of ["trial", "paid", "ended", "processing"] as const) {
 			assert.deepEqual(recoveries.map(String), []);
 			assert.equal(container.firstElementChild, serverTree);
 			assert.equal(reads, 0, "local date hydration must not refetch billing");
+			assert.equal(
+				hostingReads.length,
+				state === "ended" ? 1 : 0,
+				"hosting status is a separate bounded read",
+			);
 			assert.match(
 				container.textContent!,
 				state === "ended"
@@ -1992,5 +2011,92 @@ for (const state of ["trial", "paid", "ended", "processing"] as const) {
 			if (previousZone === undefined) delete process.env.TZ;
 			else process.env.TZ = previousZone;
 		}
+	});
+}
+
+for (const scenario of [
+	"available",
+	"exhausted",
+	"active-room",
+	"unavailable",
+] as const) {
+	test(`Free billing uses current owner status: ${scenario}, independent from legacy fields`, async () => {
+		const owner = "f6250000-0000-4000-8000-000000000001",
+			at = Date.parse("2030-01-01T12:00:00Z");
+		const overview: BillingOverview = {
+			ownerUserId: owner,
+			planCode: "free",
+			serverTime: new Date(at).toISOString(),
+			subscriptions: [],
+			hosting: {
+				hostingActivationAt: "2029-01-01T00:00:00Z",
+			} as BillingOverview["hosting"],
+		};
+		let hostingReads = 0;
+		globalThis.fetch = async (path, init) => {
+			assert.equal(
+				String(path),
+				"/api/me/hosting-status",
+				"SSR billing must not duplicate or reconcile Stripe",
+			);
+			hostingReads++;
+			assert.equal(
+				new Headers(init?.headers).get("x-anidachi-hosting-owner"),
+				owner,
+			);
+			if (scenario === "unavailable")
+				return Response.json(
+					{ code: "HOSTING_STATUS_UNAVAILABLE" },
+					{ status: 503 },
+				);
+			const exhausted = scenario === "exhausted",
+				active = scenario === "active-room";
+			return Response.json({
+				accountHostingVersion: 1,
+				ownerUserId: owner,
+				planCode: "free",
+				serverTime: at,
+				validUntil: at + 60_000,
+				period: { utcDay: "2030-01-01", resetAt: at + 43_200_000 },
+				activeRoom: active ? { roomId: "existing", role: "member" } : null,
+				canCreateRoom: !exhausted && !active,
+				access: {
+					kind: "daily_free",
+					budgetSeconds: 1200,
+					usedSeconds: exhausted ? 1200 : 600,
+					remainingSeconds: exhausted ? 0 : 600,
+					metering: false,
+				},
+			});
+		};
+		container = document.createElement("div");
+		document.body.append(container);
+		root = createRoot(container);
+		await act(async () =>
+			root!.render(
+				React.createElement(BillingClient, {
+					ownerUserId: owner,
+					returnedFromPortal: false,
+					initial: { overview, remainingMs: 60_000 },
+				}),
+			),
+		);
+		assert.equal(hostingReads, 1);
+		const row = container.querySelector('[aria-label="Current hosting time"]')!;
+		assert.match(
+			row.textContent!,
+			scenario === "available"
+				? /10 host minutes remaining/
+				: scenario === "exhausted"
+					? /0 host minutes.*00:00 UTC/
+					: scenario === "active-room"
+						? /already in a room/
+						: /unavailable/,
+		);
+		assert.doesNotMatch(
+			container.textContent!,
+			/Creating your own room needs Plus or Pro|30 minutes a day/,
+		);
+		assert.match(container.textContent!, /Your saved history stays available/);
 	});
 }

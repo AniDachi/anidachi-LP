@@ -1,3 +1,4 @@
+import { RoomUpdateRequiredError } from "./room-update-required";
 import type {
   ActiveRoomConflictResponse,
   ActiveRoomRole,
@@ -663,6 +664,7 @@ export async function createRoomWithActiveSession(params: {
   participantSessionId: string;
   capabilities: RoomCapabilities;
 	mediaProtocolVersion?: number;
+	free20ClientVersion?: 1 | null;
   showId?: string;
   episodeId?: string;
   sourceProvider?: unknown;
@@ -676,8 +678,9 @@ export async function createRoomWithActiveSession(params: {
     sourceUrl: params.sourceUrl,
     videoFingerprint: params.videoFingerprint,
   });
-	const result = await db().rpc("create_room_with_active_session_v3", {
+	const result = await db().rpc("create_room_with_active_session_v4", {
 		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
+		p_free20_client_version: params.free20ClientVersion ?? null,
     p_host_user_id: params.hostUserId,
     p_participant_session_id: params.participantSessionId,
     p_show_id: params.showId ?? null,
@@ -705,7 +708,9 @@ export async function createRoomWithActiveSession(params: {
 			["55P03", "57014"].includes(result.error.code)
 		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
-		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
+		if (result.error.message.includes("ROOM_UPDATE_REQUIRED_FREE20"))
+      throw new RoomUpdateRequiredError(true);
+    if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
 			throw new Error("ROOM_UPDATE_REQUIRED");
     throw new Error(`Failed to create active room: ${result.error.message}`);
   }
@@ -723,9 +728,11 @@ export async function claimActiveRoomSession(params: {
   role: ActiveRoomRole;
   participantSessionId: string;
 	mediaProtocolVersion?: number;
+	free20ClientVersion?: 1 | null;
 }): Promise<ActiveRoomClaimResult> {
-	const result = await db().rpc("claim_active_room_session_v3", {
+	const result = await db().rpc("claim_active_room_session_v4", {
 		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
+		p_free20_client_version: params.free20ClientVersion ?? null,
     p_user_id: params.userId,
     p_room_id: params.roomId,
     p_role: params.role,
@@ -742,6 +749,8 @@ export async function claimActiveRoomSession(params: {
 			["55P03", "57014"].includes(result.error.code)
 		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+    if (result.error.message.includes("ROOM_UPDATE_REQUIRED_FREE20"))
+      throw new RoomUpdateRequiredError(true);
     if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
       throw new Error("ROOM_UPDATE_REQUIRED");
     throw new Error(`Failed to claim active room: ${result.error.message}`);

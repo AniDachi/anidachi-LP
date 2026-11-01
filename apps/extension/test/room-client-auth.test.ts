@@ -11,6 +11,7 @@ import {
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isQuotaExhaustedError,
+  isHostingSubscriptionRequiredError,
   isTerminalRoomJoinError,
   isRoomHttpMessage,
   RoomApiError,
@@ -268,6 +269,7 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
           "X-Anidachi-Media-Protocol": "3",
+          "x-anidachi-free20-client": "1",
         },
         body: JSON.stringify({
           sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
@@ -380,6 +382,7 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
           "X-Anidachi-Media-Protocol": "3",
+          "x-anidachi-free20-client": "1",
         },
         body: JSON.stringify({ participantSessionId: "participant-session-1" }),
         signal: expect.any(AbortSignal),
@@ -1787,4 +1790,114 @@ describe("negotiated media transport", () => {
   client.close();
  });
  it("treats update-required HTTP426 as terminal",()=>{expect(isTerminalRoomJoinError(new RoomApiError("Update required","ROOM_UPDATE_REQUIRED",undefined,426))).toBe(true);});
+});
+
+
+describe("Free20 admission errors and repeated producers", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+	it("preserves426 through background and content bridges without admission handoff", async () => {
+		const message =
+			"Update AniDachi to use your daily free hosting time. You can still join friends' rooms.";
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () =>
+				Response.json(
+					{ code: "ROOM_UPDATE_REQUIRED", error: "Update required", message },
+					{ status: 426 },
+				),
+			),
+		);
+		const confirm = vi.fn(),
+			issue = vi.fn();
+		for (const input of [
+			createRoomHttpMessage("access-1", preparedRoomSession),
+			connectRoomHttpMessage(
+				"room-1",
+				"access-1",
+				preparedRoomSessionFor("room-1"),
+			),
+		]) {
+			const response = await handleRoomHttpMessage(
+				input,
+				{},
+				{ confirmRoomSession: confirm, issueAuthority: issue },
+			);
+			expect(response).toMatchObject({
+				ok: false,
+				code: "ROOM_UPDATE_REQUIRED",
+				status: 426,
+				error: message + " (426)",
+			});
+			vi.stubGlobal("chrome", {
+				runtime: { sendMessage: vi.fn().mockResolvedValue(response) },
+			});
+			const error = await createRoom("access-1", preparedRoomSession).catch(
+				(error) => error,
+			);
+			expect(error).toBeInstanceOf(RoomApiError);
+			expect(error.status).toBe(426);
+			expect(isTerminalRoomJoinError(error)).toBe(true);
+		}
+		expect(confirm).not.toHaveBeenCalled();
+		expect(issue).not.toHaveBeenCalled();
+	});
+
+	it("sends capability on every create retry and connect/restore request", async () => {
+		const fetchMock = vi.fn(async () =>
+			Response.json({
+				roomId: "room-1",
+				roomToken: "token",
+				shareableLink: "http://localhost:3003/room/room-1",
+			}),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		for (let i = 0; i < 2; i++)
+			await createWebsiteRoomFromApi("access-1", "session-1", {
+				clientRequestId: "same-request",
+			});
+		for (let i = 0; i < 2; i++)
+			await connectWebsiteRoomFromApi("room-1", "access-1", "session-1");
+		for (const call of fetchMock.mock.calls as unknown as [
+			unknown,
+			RequestInit,
+		][]) {
+			const headers = new Headers(call[1].headers);
+			expect(headers.get("x-anidachi-free20-client")).toBe("1");
+			expect(headers.get("x-anidachi-media-protocol")).toBe("3");
+		}
+	});
+	it("keeps426 terminal without quota or subscription classification", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () =>
+				Response.json(
+					{
+						code: "ROOM_UPDATE_REQUIRED",
+						error: "Update required",
+						message:
+							"Update AniDachi to use your daily free hosting time. You can still join friends' rooms.",
+					},
+					{ status: 426 },
+				),
+			),
+		);
+		for (const run of [
+			() => createWebsiteRoomFromApi("access-1", "session-1"),
+			() => connectWebsiteRoomFromApi("room-1", "access-1", "session-1"),
+		]) {
+			const error = await run().then(
+				() => null,
+				(error) => error,
+			);
+			expect(error).toBeInstanceOf(RoomApiError);
+			expect(error.status).toBe(426);
+			expect(error.code).toBe("ROOM_UPDATE_REQUIRED");
+			expect(isQuotaExhaustedError(error)).toBe(false);
+			expect(isHostingSubscriptionRequiredError(error)).toBe(false);
+			expect(isTerminalRoomJoinError(error)).toBe(true);
+		}
+	});
 });

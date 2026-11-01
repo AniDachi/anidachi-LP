@@ -30,7 +30,7 @@ const faq = [
   {
     question: "How do I watch anime with my long-distance boyfriend or girlfriend?",
     answer:
-      "Install AniDachi on both desktop Chrome browsers and open the same Crunchyroll episode. A Plus, Pro, or trial host creates a live room and shares the invite; a Free partner can join. If schedules differ, catch up independently and discuss afterward in a separate chat.",
+      "Install AniDachi on both desktop Chrome browsers and open the same Crunchyroll episode. A Free, Plus, or Pro host creates a live room and shares the invite; a Free partner can join. If schedules differ, catch up independently and discuss afterward in a separate chat.",
   },
   {
     question: "Can my long-distance girlfriend and I watch anime together even in different time zones?",
@@ -77,7 +77,7 @@ const howToSteps = [
   },
   {
     name: "Create a shared watchroom",
-    text: "With active Plus, Pro, or trial access, open episode 1, create a room, and copy its invite link.",
+    text: "With active Free, Plus, or Pro access, open episode 1, create a room, and copy its invite link.",
   },
   {
     name: "Send the link to your partner",
@@ -129,7 +129,7 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
           <strong>
             The best way to watch anime with a long-distance partner is
             AniDachi — install it on both Chrome browsers, open the same
-            Crunchyroll series, and let a Plus, Pro, or trial host create a
+            Crunchyroll series, and let a Free, Plus, or Pro host create a
             room. Join together for a live session; a Free partner can join.
           </strong>{" "}
           If schedules do not overlap, watch independently and discuss later.

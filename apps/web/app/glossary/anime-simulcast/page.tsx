@@ -63,7 +63,7 @@ const faq = [
   {
     question: "Can I watch simulcast episodes with friends using AniDachi?",
     answer:
-      "Yes. A Plus, Pro or trial host creates an AniDachi room once the episode is out on Crunchyroll. Friends join free with their own Crunchyroll access, in desktop Chrome. Anyone who misses the session watches on their own before the next one.",
+      "Yes. A Free, Plus, or Pro host creates an AniDachi room once the episode is out on Crunchyroll. Friends join free with their own Crunchyroll access, in desktop Chrome. Anyone who misses the session watches on their own before the next one.",
   },
 ];
 
@@ -198,8 +198,7 @@ export default function AnimeSimulcastGlossaryPage() {
       </h2>
       <p className="mb-10 leading-relaxed text-ani-muted">
         A weekly slot gives a group a natural meeting time: everyone watches the new episode
-        together, reacts live and talks theories until next week. With Plus or Pro, including
-        during a trial, you can create an AniDachi room in desktop Chrome and invite friends for
+        together, reacts live and talks theories until next week. On Free, Plus, or Pro, you can create an AniDachi room in desktop Chrome and invite friends for
         free. Everyone needs their own access to the episode on{" "}
         <Link href="/watch-crunchyroll-together" className={linkClass}>
           Crunchyroll
