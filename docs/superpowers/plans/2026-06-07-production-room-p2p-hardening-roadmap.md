@@ -31,6 +31,14 @@
 
 ## Progress Log
 
+- **2026-11-01, `codex/free20-purchase-delivery`:** the approved
+  [purchase delivery candidate](2026-11-01-free20-purchase-delivery.md) requests
+  serialized revalidation after an atomic billing/outbox commit. It preserves
+  pinned room caps, cumulative accounting, terminal deadlines and existing P2P.
+  Local API/protocol/runtime/room checks and SQL concurrency evidence belong in
+  its PR, together with staging deployment and rollback. Free20 activation,
+  real Sandbox checkout, loaded-client acceptance and production remain separate.
+
 - **2026-10-17, `codex/netflix-input-media-fixes`:** the [player input/media repair](2026-10-17-netflix-input-media-fixes.md) preserves reported v2/v3 camera publication across hibernation without treating a grant as capture, and routes held-key releases before composer/provider handlers. Regression evidence includes real forced-wake Worker snapshots and all-provider overlay keyboard fixtures. Exact full-suite/CI/staging results are recorded in the PR; loaded-artifact and cross-network media acceptance are still separate release gates.
 
 - 2026-10-14 — `codex/vercel-request-followup`: approved candidate work adds a

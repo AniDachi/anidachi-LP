@@ -21,6 +21,13 @@
 
 ## Follow-up: Free20 live display, 2026-11-01
 
+The subsequent owner-approved [purchase delivery block](2026-11-01-free20-purchase-delivery.md)
+connects confirmed billing state to that display through the existing Worker
+accounting transition. An atomic outbox, bound revision receipt and independent
+recovery protect lost/duplicate delivery without changing room link, participants,
+media caps or terminal deadlines. Its PR records local/staging evidence; disabled
+candidate checks do not establish an enabled purchase or real-media acceptance.
+
 The approved [time wiring block](2026-11-01-free20-live-time.md) adds a negotiated,
 freshness-bounded display event without altering media signaling or caps. It
 preserves legacy sockets, durable accounting and ordering across hibernation;

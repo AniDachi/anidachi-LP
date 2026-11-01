@@ -42,6 +42,48 @@ function trackingRooms() {
 }
 
 describe("worker routes", () => {
+  it("guards Free20 refresh commands before resolving a Durable Object", async () => {
+    const rooms = trackingRooms();
+    const body = { refreshVersion: 1, revision: 1, ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "refresh-room", roomGeneration: 1 };
+    for (const [authorization, enabled, value, expected] of [
+      [undefined, "true", body, 401], ["Bearer incorrect", "true", body, 401],
+      ["Bearer internal-secret", undefined, body, 404], ["Bearer internal-secret", "TRUE", body, 404],
+      ["Bearer internal-secret", "false", body, 404],
+      ["Bearer internal-secret", "true", { ...body, roomId: "different" }, 400],
+      ["Bearer internal-secret", "true", { ...body, revision: 0 }, 400],
+      ["Bearer internal-secret", "true", { ...body, allowance: 1200 }, 400],
+    ] as const) {
+      const response = await app.request("/internal/rooms/refresh-room/free20-refresh", {
+        method: "POST", headers: authorization ? { Authorization: authorization } : {}, body: JSON.stringify(value),
+      }, { ...internalEnv, ANIDACHI_FREE20_ACCOUNTING_ENABLED: enabled, ROOMS: rooms.namespace });
+      expect(response.status).toBe(expected);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    }
+    expect(rooms.calls).toEqual([]);
+  });
+
+  it("forwards a bound refresh and returns retryable failure after lost DO transport", async () => {
+    const body = { refreshVersion: 1, revision: 7, ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "refresh-room", roomGeneration: 1 };
+    const fetch = vi.fn(async (request: Request) => {
+      expect(request.url).toBe("https://room.internal/internal/free20-refresh");
+      expect(request.headers.get("authorization")).toBe("Bearer internal-secret");
+      expect(await request.json()).toEqual(body);
+      return Response.json({ request: body, outcome: "applied" }, { headers: { "Cache-Control": "private, no-store" } });
+    });
+    const env = { ...internalEnv, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true", ROOMS: {
+      idFromName: (name: string) => { expect(name).toBe("refresh-room"); return name; }, get: () => ({ fetch }),
+    } };
+    const refresh = () => app.request("/internal/rooms/refresh-room/free20-refresh", {
+      method: "POST", headers: { Authorization: "Bearer internal-secret" }, body: JSON.stringify(body),
+    }, env);
+    const receipt = await refresh();
+    expect(await receipt.json()).toEqual({ request: body, outcome: "applied" });
+    fetch.mockRejectedValueOnce(new Error("lost DO response"));
+    const unavailable = await refresh();
+    expect(unavailable.status).toBe(503);
+    expect(unavailable.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
   it("guards Free20 status reads before resolving any Durable Object", async () => {
     const rooms = trackingRooms();
     const body = { ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "status-room", roomGeneration: 1 };
