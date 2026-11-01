@@ -46,7 +46,7 @@ import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { PlayerOnboarding } from "./player-onboarding";
-import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
+import { AUTH_TOKENS_KEY, normalizeExtensionAuthTokens, type AuthenticatedUser, type ExtensionAuthTokens } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, WEB_HTTP_BASE } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { ANIDACHI_EMOJI_CATALOG } from "./emoji-catalog";
@@ -515,6 +515,15 @@ export async function runOverlayPrivilegedAction(
 	await afterApproval();
 }
 
+function roomAuthSessionKey(tokens: ExtensionAuthTokens | null): string | null {
+	if (!tokens) return null;
+	// Credential rotation does not replace a login. Older backgrounds without a
+	// logical ID retain the conservative credential fence until they migrate.
+	return JSON.stringify(tokens.authSessionId
+		? [tokens.user.id, "login", tokens.authSessionId]
+		: [tokens.user.id, "credentials", tokens.authRevision, tokens.accessToken, tokens.refreshToken]);
+}
+
 export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
@@ -549,6 +558,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
 	const authGenerationRef = useRef(0);
+	const roomAuthSessionKeyRef = useRef<string | null>(null);
 	const authSessionKeyRef = useRef<string | null>(null);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
@@ -806,7 +816,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
 	const hostingTimeSessionKey = authAuthenticated ? JSON.stringify([accountUser?.id, authRevision, authAccessToken, authSessionKey]) : null;
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
-	if (hostingTimeSessionKeyRef.current !== hostingTimeSessionKey) hostingTimeClock.clear();
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
@@ -1677,19 +1686,25 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const syncAuthUserScopedState = useCallback(
-		(nextAuthUserId: string | null, reason: string) => {
+		(nextAuthUserId: string | null, reason: string, nextRoomAuthSessionKey: string | null) => {
 			const previousAuthUserId = authUserIdRef.current;
+			const previousRoomAuthSessionKey = roomAuthSessionKeyRef.current;
 			const wasInitialized = authUserIdInitializedRef.current;
 			authUserIdInitializedRef.current = true;
 
-			if (previousAuthUserId === nextAuthUserId) {
+			if (previousAuthUserId === nextAuthUserId && previousRoomAuthSessionKey === nextRoomAuthSessionKey) {
 				return;
 			}
 
 			authUserIdRef.current = nextAuthUserId;
+			roomAuthSessionKeyRef.current = nextRoomAuthSessionKey;
+			hostingTimeClock.clear();
+			roomEventOwnerRef.current = null;
 			setRoomTerminalMessage(null);
-			setHostingRequiredOwner(null);
-			setHostingPaywallOpen(false);
+			if (previousAuthUserId !== nextAuthUserId) {
+				setHostingRequiredOwner(null);
+				setHostingPaywallOpen(false);
+			}
 			authGenerationRef.current += 1;
 			inviteStatusRequestEpochRef.current += 1;
 			inviteActionIdsRef.current.clear();
@@ -1702,7 +1717,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				return;
 			}
 
-			logDebug("identity", "auth user changed; clearing local room session", {
+			logDebug("identity", "auth login changed; clearing local room session", {
 				reason,
 				previousAuthUserId,
 				nextAuthUserId,
@@ -1717,7 +1732,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
 		const result = await createCurrentParticipant({ requireVerified: true });
 		setRoomTerminalMessage(null);
-		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason, roomAuthSessionKey(result.tokens));
 		authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 		authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 		participantRef.current = result.participant;
@@ -3989,7 +4004,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				fingerprint: adapter.getFingerprint(),
 				video: videoDebugSnapshot(adapter.video),
 			});
-			const timeAuthSessionKey = hostingTimeSessionKeyRef.current;
+			const timeAuthSessionKey = roomAuthSessionKeyRef.current;
 			clientRef.current.connect({
 				...(admissionHandoff ? { admissionHandoff } : {}),
 				lastSeenP2PServerSeq: sameRoomReconnect
@@ -4006,7 +4021,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           if (roomEventOwnerRef.current !== eventOwner || !current || !roomSessionIdentityMatches(current, nextStoredRoomSession) ||
               roomIdRef.current !== nextRoomId || participantRef.current?.id !== activeParticipant.id ||
               ("roomId" in event && event.roomId !== nextRoomId)) return;
-          if (event.type === "HOSTING_TIME" && hostingTimeSessionKeyRef.current !== timeAuthSessionKey) return;
+          if (event.type === "HOSTING_TIME" && roomAuthSessionKeyRef.current !== timeAuthSessionKey) return;
           handleServerEventRef.current(event);
         },
 				onStatus: setRoomStatus,
@@ -4476,7 +4491,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			reconnectActiveRoom: boolean,
 		) => {
 			const activeRoomId = roomIdRef.current;
-			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason, roomAuthSessionKey(result.tokens));
 			if (authSessionKeyRef.current !== (result.tokens?.refreshToken ?? null)) {
 				setRoomTerminalMessage(null);
 			}
@@ -4556,13 +4571,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		const unwatch = storage.watch(AUTH_TOKENS_KEY, (nextValue, previousValue) => {
 			invalidateWatchHistoryOnAuthStorageChange(watchHistoryControllerRef.current, nextValue, previousValue);
+			// Retire old room callbacks synchronously. A rapid logout/login can make
+			// the async identity refresh skip the intermediate signed-out result.
+			const tokens = normalizeExtensionAuthTokens(nextValue);
+			syncAuthUserScopedState(tokens?.user.id ?? null, "auth-storage", roomAuthSessionKey(tokens));
 			refreshIdentityFromStorage("auth-storage");
 		});
 		return () => {
 			disposed = true;
 			unwatch();
 		};
-	}, []);
+	}, [syncAuthUserScopedState]);
 
 	useEffect(() => {
 		if (!panelOpen || !identityLoaded) {

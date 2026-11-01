@@ -2,6 +2,14 @@
 
 ## Free20 extension time wiring, November 1, 2026
 
+PR486 follow-up: same-user token refresh cleared the live timer and fenced out
+new time events on the still-open connection. The approved correction adds a
+stable local logical login ID while retaining credential freshness for HTTP.
+Ordinary refresh preserves the room timer; real logout or login replacement
+retires the previous room synchronously. Scope and regression requirements are
+in the [time-wiring plan](superpowers/plans/2026-11-01-free20-live-time.md#token-refresh-correction).
+The correction does not activate Free20.
+
 The owner approved the next bounded block: authoritative time before a room,
 during a room and after quota exhaustion, with staging delivery and an updated
 unpacked extension. The [implementation plan](superpowers/plans/2026-11-01-free20-live-time.md)

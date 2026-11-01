@@ -1868,6 +1868,67 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
+  it.each(["access token", "both tokens"])("keeps Free20 live time across same-login rotation of %s", async rotation => {
+    const room = await renderActiveFree20Timer();
+    try {
+      await act(async () => { await vi.advanceTimersByTimeAsync(2_000); });
+      expect(room.timer()).toBe("00:08");
+      room.setSession({ ...room.session!, authRevision: "credential-revision-2", accessToken: "access-token-rotated",
+        ...(rotation === "both tokens" ? { refreshToken: "refresh-token-rotated" } : {}) });
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
+      await flushMountedWork();
+      expect.soft(room.timer(), "credential rotation must neither clear nor restart the timer").toBe("00:08");
+      expect(RoomClient.prototype.connect).toHaveBeenCalledTimes(1);
+      await act(async () => room.options.onEvent(room.time(2, 7, 2_000)));
+      expect.soft(room.timer(), "the existing connection must accept fresh time").toBe("00:07");
+      await act(async () => room.options.onEvent(room.time(1, 100, 2_000)));
+      expect.soft(room.timer(), "rotation must preserve the sequence high-water mark").toBe("00:07");
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+      expect.soft(room.timer()).toBe("00:06");
+      expect(room.wire.mock.calls.some(([event]) => event.type === "HOSTING_TIME_REQUEST")).toBe(false);
+      await act(async () => room.options.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: room.at + 3_000, reason: "quota_exhausted" }));
+      expect.soft(room.view.container.textContent).toContain("Today's free time is used up");
+      expect.soft(room.view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
+      expect(room.send.mock.calls.some(([message]: any) => message.action === "quota-end-room")).toBe(false);
+    } finally { vi.useRealTimers(); await unmount(room.view.root); }
+  });
+
+  it.each(["same-owner replacement", "logout and relogin", "batched logout and relogin", "account switch", "legacy credential replacement"])(
+    "retires Free20 live time and old callbacks after %s", async transition => {
+      const room = await renderActiveFree20Timer(transition === "legacy credential replacement");
+      try {
+        const previous = room.session!;
+        const next = transition === "account switch"
+          ? { ...previous, user: { ...previous.user, id: "33333333-3333-4333-8333-333333333333" }, authSessionId: "login-b" }
+          : transition === "legacy credential replacement"
+            ? { ...previous, accessToken: "legacy-replacement-token" }
+            : { ...previous, authSessionId: "login-b" };
+        if (transition === "logout and relogin" || transition === "batched logout and relogin") {
+          // Two storage notifications can arrive before either identity read resolves.
+          await act(async () => {
+            room.setSession(null);
+            await extensionStorage.storage.removeItem(AUTH_TOKENS_KEY);
+            if (transition === "batched logout and relogin") {
+              room.setSession(next);
+              await extensionStorage.storage.setItem(AUTH_TOKENS_KEY, next);
+            }
+          });
+          if (transition === "logout and relogin") await flushMountedWork();
+        }
+        if (transition !== "batched logout and relogin") {
+          room.setSession(next);
+          await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, next));
+        }
+        await flushMountedWork();
+        expect.soft(room.timer(), "new login must not inherit the old timer").toBeUndefined();
+        // A late snapshot must not let the retired connection restore its time.
+        await act(async () => room.options.onEvent({ ...room.snapshot, serverSeq: 2 }));
+        await act(async () => room.options.onEvent(room.time(2, 9)));
+        expect.soft(room.timer(), "retired callback must not repopulate the clock").toBeUndefined();
+      } finally { vi.useRealTimers(); await unmount(room.view.root); }
+    },
+  );
+
   it("shows authoritative Free20 idle/live time despite legacy canHost false, retires unknown, and only exhausts on server termination", async () => {
     const owner = "22222222-2222-4222-8222-222222222222";
     installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
@@ -4155,6 +4216,60 @@ function createAdapter(
 			title: null,
 		}),
 	} as unknown as VideoAdapter;
+}
+
+type Free20TimerTestSession = ReturnType<typeof sessionFor> & { authSessionId?: string; authRevision?: string };
+
+async function renderActiveFree20Timer(legacy = false) {
+  const owner = "22222222-2222-4222-8222-222222222222";
+  let currentSession: Free20TimerTestSession | null = { ...sessionFor(owner),
+    ...(legacy ? {} : { authSessionId: "login-a", authRevision: "credential-revision-1" }) };
+  installActiveHostRoomRuntime({ getSession: () => currentSession });
+  const at = Date.parse("2026-11-01T12:00:00Z"), resetAt = Date.parse("2026-11-02T00:00:00Z");
+  const status: import("@anidachi/protocol").AccountHostingStatus = {
+    accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000,
+    period: { utcDay: "2026-11-01", resetAt },
+    access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false },
+    activeRoom: null, canCreateRoom: true,
+  };
+  vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status });
+  const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+  send.mockImplementation(async (...args: any[]) => {
+    const result = await (original as any)(...args);
+    if (args[0]?.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner } };
+    if (args[0]?.command === "create-room") return { ...result, room: { ...result.room,
+      roomSession: { ...result.room.roomSession, ownerUserId: owner },
+      privilegedRoomAuthority: { ...roomAuthority(), accountUserId: owner } } };
+    return result;
+  });
+  let options!: Parameters<RoomClient["connect"]>[0];
+  vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { options = next; next.onStatus("connected"); });
+  const wire = vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+  const view = await renderOverlay();
+  await click(button(view.container, "Open Anidachi controls"));
+  await click(button(view.container, "Create room"));
+  await vi.waitFor(() => expect(options).toBeDefined());
+  const snapshot: Extract<import("@anidachi/protocol").ServerEvent, { type: "ROOM_SNAPSHOT" }> = {
+    type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+    participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }, guestParticipant()],
+  };
+  const mono = performance.now(), wall = Date.now();
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+  vi.spyOn(performance, "now").mockImplementation(() => mono + Date.now() - wall);
+  const time = (sequence: number, remainingSeconds: number, offset = 0): import("@anidachi/protocol").HostingTimeEvent => ({
+    type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at + offset, validUntil: at + offset + 60_000,
+    snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1,
+      snapshotSequence: sequence, serverTime: at + offset, period: status.period,
+      access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 1200 - remainingSeconds, remainingSeconds, metering: true } },
+  });
+  await act(async () => options.onEvent(snapshot));
+  await act(async () => options.onEvent(time(1, 10)));
+  const timer = () => view.container.querySelector(".panel-action-timer strong")?.textContent;
+  expect(timer()).toBe("00:10");
+  return { at, view, options, snapshot, time, timer, wire, send,
+    get session() { return currentSession; },
+    setSession(next: Free20TimerTestSession | null) { currentSession = next; },
+  };
 }
 
 function sessionFor(userId: string) {

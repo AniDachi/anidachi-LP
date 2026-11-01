@@ -1150,7 +1150,7 @@ export async function signOutWithWebsite(
 }
 
 export async function getFastSessionAndRefreshInBackground({
-  getCached = getCachedExtensionSession,
+  getCached = getBackgroundAuthSession,
   refresh = getCurrentExtensionSession,
 }: {
   getCached?: () => Promise<ExtensionAuthTokens | null>;
