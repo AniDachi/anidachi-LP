@@ -31,6 +31,16 @@
 
 ## Progress Log
 
+- **2026-11-01, `codex/free20-staging-readiness`, `14997bf6`:** the
+  [readiness candidate](2026-11-01-free20-staging-readiness.md) adds explicit
+  current-client negotiation at HTTP/SQL host admission for marked Free20 rooms.
+  Final canonical create checks and sorted claim locks close legacy RPC bypasses
+  without modifying existing sockets, renewals, media caps or P2P behavior.
+  Independent task review approved; protocol283, API325, Web1486, extension2588,
+  SQL539, eight new race groups and room harness39 pass. New warning server/client
+  blocks are also reviewed locally. Hosted enablement, exact loaded artifact and
+  two-participant acceptance remain pending; the owner has no second tester now.
+
 - **2026-11-01, `codex/free20-purchase-delivery`:** the approved
   [purchase delivery candidate](2026-11-01-free20-purchase-delivery.md) requests
   serialized revalidation after an atomic billing/outbox commit. It preserves
