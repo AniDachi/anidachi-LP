@@ -1,6 +1,6 @@
 # Current Development State
 
-## Free20 staging readiness in progress, November 1, 2026
+## Free20 staging delivery and controlled activation, November 1, 2026
 
 The owner authorized completing the necessary staging transition and rehearsal:
 retire new trials, finish current entry screens, add supported-client admission
@@ -8,6 +8,17 @@ and the once-per-day warning, then enable and test Free20 on staging. Production
 main, Store publication, LIVE Stripe and discount campaigns remain separate.
 The [active readiness plan](superpowers/plans/2026-11-01-free20-staging-readiness.md)
 defines the cross-plane contracts, delivery gates and rollback limits.
+
+Readiness implementation was independently reviewed and merged through
+[PR490](https://github.com/AniDachi/anidachi-LP/pull/490) at staging commit
+`86873422a8e890a1329c35cdf0d2c2e838a55b9c`. Its schema-first workflow
+`41305002458` succeeded from the frozen feature head before runtime merge;
+89 migration versions and all 14 checked function bodies/signatures match the
+repository, including historical wrappers. Exact runtime deployments, extension
+artifact and the later conditional SQL cutover are tracked by that PR's
+execution receipts. Source configuration is not proof that SQL is enabled.
+The [activation runbook](superpowers/plans/2026-11-01-free20-staging-activation-runbook.md)
+keeps compatible runtime flags first and the policy update last.
 
 The owner selected one warning at **300 seconds** remaining, beside the capsule,
 with View plans and dismiss. It must not pause/dim video or move camera/microphone
@@ -18,10 +29,11 @@ and manual access, usage and pinned room capacities remain intact.
 The dormant trial-retirement guard is committed at `2997ddb6` and independently
 approved: 463 SQL assertions, five real concurrency scenario groups, Web check
 and 1457 passing Web tests with six preexisting external-artifact skips. This is
-local candidate evidence, not hosted activation. At the latest readiness
-inventory, staging policy revision3 still has Free20=false/trials=true and both
-runtime opt-ins absent. Warning server `6a28f9e0` and client `2a0090f0` plus
-room-sequence correction `7ce01f48` are independently reviewed local candidates.
+implementation evidence, not hosted activation. The initial November1 pre-cutover
+inventory had policy revision3, Free20=false/trials=true and both runtime opt-ins
+absent; this is a historical baseline, not the current activation receipt.
+Warning server `6a28f9e0` and client `2a0090f0` plus room-sequence correction
+`7ce01f48` were independently reviewed before their PR490 delivery.
 Server evidence: protocol281, Web1470/six existing skips, SQL211/five concurrency
 groups. Client evidence:2581 full-suite tests, then45 focused fix tests/check.
 Supported-host admission `14997bf6` is independently approved: new marked-room
@@ -45,11 +57,14 @@ records the website's observable owner/lifecycle/expiry boundary, including
 unobservable same-owner relogin. Web1502/six existing skips and extension2590
 pass; later fixes pass29 focused tests, all three reviewer probes and Web check.
 
-Public-copy alignment belongs to the same coordinated release candidate,
-using the plan's exact inventory while preserving third-party facts and existing
-trial terms. The final reviewed artifact, hosted configuration and enabled
-acceptance are separate Task6 gates; do not treat source or this authorization
-as a release. The owner currently has no second participant. Available solo
+Public-copy alignment was reviewed and included in the same PR490 delivery:
+107 pages and 10 shared sources preserve third-party facts and existing trial
+terms. The final reviewed artifact, hosted configuration and enabled acceptance
+are separate Task6 gates; do not treat source or this authorization as a release.
+The owner chose to inspect the interface himself after the unpacked-folder
+update. Validated artifact delivery precedes controlled staging enablement;
+Chrome Reload and visible acceptance follow and remain production gates.
+The owner currently has no second participant. Available solo
 checks may proceed, but joint metering/pause/warning, upgrade while spending
 and loaded mixed-client acceptance remain explicitly pending. A solo Sandbox
 checkout, if a suitable normally authenticated test account is available,

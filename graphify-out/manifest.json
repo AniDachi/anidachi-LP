@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793532397.6431499,
-    "seen": 1793533463.2373629,
+    "mtime": 1793537029.0686483,
+    "seen": 1793537291.6934159,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "4e692f88643b7cc2edfcf811c50298c9"
+    "semantic_hash": "0855eb6174edea714ea6d2a1ba61525e"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3510,10 +3510,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1793532275.2829847,
-    "seen": 1793533463.237366,
+    "mtime": 1793537009.7337754,
+    "seen": 1793537291.69342,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "d74d7011b81ea5f481d270239ab66d7a"
+    "semantic_hash": "8c4f82e3f8639439e7e29a06172a5283"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -11580,10 +11580,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-staging-activation-runbook.md": {
-    "mtime": 1793531072.2971382,
-    "seen": 1793533463.23737,
+    "mtime": 1793537009.6971304,
+    "seen": 1793537291.6934211,
     "ast_hash": "",
-    "semantic_hash": "c66816f0d931276955329531d2c6fdc8"
+    "semantic_hash": "00bfa2811e0f345feacd7d29fa9a8ab7"
   },
   "docs/superpowers/plans/2026-11-01-free20-staging-readiness.md": {
     "mtime": 1793533298.317109,
