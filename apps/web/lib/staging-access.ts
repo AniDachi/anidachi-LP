@@ -106,9 +106,11 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (method === "GET" && [
     "/api/me/entitlements",
     "/api/me/room-quota",
+    "/api/me/hosting-status",
     "/api/watch-history/v3/access",
     "/api/watch-history/v3/capacity",
   ].includes(pathname)) return true;
+  if (pathname === "/api/me/hosting-warning/claim" && method === "POST") return true;
   if (pathname === "/api/me/profile" && method === "PATCH") return true;
   if (pathname === "/api/friends" && method === "GET") return true;
   if (pathname === "/api/friends/requests" && method === "POST") return true;

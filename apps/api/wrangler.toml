@@ -26,6 +26,7 @@ workers_dev = true
 [env.staging.vars]
 ANIDACHI_ENV = "staging"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://staging.anidachi.app"
+ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true"
 
 [env.staging.triggers]
 # Invitations stay on Supabase Cron. This distinct schedule only retries Free20
