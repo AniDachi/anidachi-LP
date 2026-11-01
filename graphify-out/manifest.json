@@ -252,9 +252,9 @@
     "semantic_hash": "fc9524adadd9ee19555afe1cc56fef7f"
   },
   "apps/extension/src/auth-client.ts": {
-    "mtime": 1793517391.2292888,
-    "seen": 1793517559.447544,
-    "ast_hash": "97fd04c875e243aefc02eed2c685ba9a",
+    "mtime": 1793518331.743839,
+    "seen": 1793518393.703317,
+    "ast_hash": "66894c079004fb596bfdeaf9aea5d9d8",
     "semantic_hash": ""
   },
   "apps/extension/src/auth-tokens.ts": {
@@ -10410,9 +10410,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/auth-session-probe.test.ts": {
-    "mtime": 1793517380.968486,
-    "seen": 1793517559.447551,
-    "ast_hash": "0fb60d85749f9a909dc2d0cb84fa711c",
+    "mtime": 1793518374.7617116,
+    "seen": 1793518393.703323,
+    "ast_hash": "3f7135986d1046e46b02a524eda10a57",
     "semantic_hash": ""
   },
   "apps/extension/test/hosting-time-compatibility.test.ts": {
@@ -11298,10 +11298,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-live-time.md": {
-    "mtime": 1793517261.4204874,
-    "seen": 1793517559.520405,
+    "mtime": 1793518247.3380263,
+    "seen": 1793518394.020971,
     "ast_hash": "",
-    "semantic_hash": "aec5f46934dd4a911d922cd503818459"
+    "semantic_hash": "17b0fc457c500f4c5f8cc099b2e750ae"
   },
   "apps/extension/test/auth-logical-session.test.ts": {
     "mtime": 1793517144.7700572,

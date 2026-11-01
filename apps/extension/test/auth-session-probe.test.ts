@@ -18,6 +18,7 @@ import {
 	getCurrentExtensionSession,
 	reconcileExtensionSessionAgainstWebsite,
 	handleAuthMessage,
+	handleWebsiteAuthCookieChange,
 	requestCurrentExtensionSession,
 	exchangeExtensionAuthCode,
 	refreshExtensionSession,
@@ -482,6 +483,114 @@ describe("review regressions at the production session boundary", () => {
     return launch;
   }
 
+  const cookieSet = {
+    removed: false,
+    cause: "explicit",
+    cookie: { name: "anidachi_refresh_token", domain: "localhost" },
+  };
+
+  function enableWebsiteRepair() {
+    const launch = enableWebsiteAdoption();
+    Object.assign(chrome, { cookies: { get: vi.fn(async () => ({ value: "website-refresh" })) } });
+    return launch;
+  }
+
+  it.each(["same-owner", "different-owner"] as const)("cookie browser repair preserves logical login only for %s", async scenario => {
+    await setStoredAuthTokens(tokens);
+    const before = (await getStoredAuthTokens())!;
+    const launch = enableWebsiteRepair();
+    const repaired = { ...tokens, accessToken: "repaired-access", refreshToken: "repaired-refresh",
+      user: scenario === "same-owner" ? tokens.user : { ...tokens.user, id: "two", email: "two@example.com" } };
+    const paths: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const path = new URL(url).pathname;
+      paths.push(path);
+      if (path.endsWith("/website-session")) return new Response(null, { status: 401 });
+      if (path.endsWith("/exchange")) return Response.json(repaired);
+      if (path.endsWith("/logout")) return new Response(null, { status: 200 });
+      throw new Error(`Unexpected request ${path}`);
+    }));
+    await handleWebsiteAuthCookieChange(cookieSet);
+    const after = (await getStoredAuthTokens())!;
+    expect(after).toMatchObject(repaired);
+    expect(after.authRevision).not.toBe(before.authRevision);
+    if (scenario === "same-owner") expect(after.authSessionId).toBe(before.authSessionId);
+    else expect(after.authSessionId).not.toBe(before.authSessionId);
+    expect(launch).toHaveBeenCalledOnce();
+    expect(paths).toEqual(["/api/extension/auth/website-session", "/api/extension/auth/exchange", "/api/extension/auth/logout"]);
+  });
+
+  it.each([
+    ["probe", "logout"], ["probe", "relogin"],
+    ["browser", "logout"], ["browser", "relogin"],
+    ["exchange", "logout"], ["exchange", "relogin"],
+    ["probe", "refresh"], ["exchange", "refresh"],
+  ] as const)("cookie browser repair cannot overwrite %s-stage %s", async (stage, replacement) => {
+    await setStoredAuthTokens(tokens);
+    const launch = enableWebsiteRepair();
+    const probe = deferred<Response>();
+    const browser = deferred<string>();
+    const exchange = deferred<Response>();
+    let callbackUrl = "";
+    if (stage === "browser") launch.mockImplementationOnce(async ({ url }) => {
+      callbackUrl = `https://${"a".repeat(32)}.chromiumapp.org/auth?code=${"c".repeat(32)}&state=${new URL(url).searchParams.get("state")}`;
+      return browser.promise;
+    });
+    const paths: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const path = new URL(url).pathname;
+      paths.push(path);
+      if (path.endsWith("/website-session")) return stage === "probe" ? probe.promise : new Response(null, { status: 401 });
+      if (path.endsWith("/exchange")) return stage === "exchange" ? exchange.promise : Response.json({ ...tokens, accessToken: "stale-repair-access", refreshToken: "stale-repair-refresh" });
+      if (path.endsWith("/logout")) return new Response(null, { status: 200 });
+      if (path === "/api/me") return Response.json({ user: tokens.user });
+      throw new Error(`Unexpected request ${path}`);
+    }));
+    const pending = handleWebsiteAuthCookieChange(cookieSet);
+    if (stage === "probe") await vi.waitFor(() => expect(paths).toContain("/api/extension/auth/website-session"));
+    else if (stage === "browser") await vi.waitFor(() => expect(launch).toHaveBeenCalledOnce());
+    else await vi.waitFor(() => expect(paths).toContain("/api/extension/auth/exchange"));
+    if (replacement === "refresh") {
+      const current = (await getStoredAuthTokens())!;
+      await commitStoredAuthTokensIfCurrent(current, {
+        ...current, accessToken: "newer-refresh-access", refreshToken: "newer-refresh-token",
+      });
+    } else {
+      await clearStoredAuthTokens();
+      if (replacement === "relogin") await setStoredAuthTokens(tokens);
+    }
+    const expected = await getStoredAuthTokens();
+    probe.resolve(new Response(null, { status: 401 }));
+    browser.resolve(callbackUrl);
+    exchange.resolve(Response.json({ ...tokens, accessToken: "stale-repair-access", refreshToken: "stale-repair-refresh" }));
+    await pending;
+    expect(await getStoredAuthTokens()).toEqual(expected);
+    if (stage === "probe") expect(launch).not.toHaveBeenCalled();
+    expect(paths).not.toContain("/api/extension/auth/logout");
+  });
+
+  it.each(["sign-in", "sign-in-silent"] as const)("ordinary %s remains a new logical login even for the same owner", async command => {
+    await setStoredAuthTokens(tokens);
+    const before = (await getStoredAuthTokens())!;
+    enableWebsiteAdoption();
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json(tokens)));
+    const result = await handleAuthMessage({ type: "ANIDACHI_AUTH", command });
+    expect(result.ok).toBe(true);
+    expect(result.tokens?.authSessionId).not.toBe(before.authSessionId);
+    expect(result.tokens?.authSessionId).toEqual(expect.any(String));
+  });
+
+  it("cancelled cookie repair keeps the verified existing session", async () => {
+    await setStoredAuthTokens(tokens);
+    const before = (await getStoredAuthTokens())!;
+    const launch = enableWebsiteRepair();
+    launch.mockRejectedValueOnce(new Error("Interaction required"));
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => new URL(url).pathname.endsWith("/website-session")
+      ? new Response(null, { status: 401 }) : Response.json({ user: tokens.user })));
+    await handleWebsiteAuthCookieChange(cookieSet);
+    expect(await getStoredAuthTokens()).toEqual(before);
+  });
+
   it.each(["invalid", "success"] as const)(
     "does not silently reauthenticate logout after a late %s refresh",
     async (result) => {
@@ -511,12 +620,14 @@ describe("review regressions at the production session boundary", () => {
 
   it("keeps legitimate invalid-family website recovery available", async () => {
     await setStoredAuthTokens(tokens);
+    const before = (await getStoredAuthTokens())!;
     const launch = enableWebsiteAdoption();
     vi.stubGlobal("fetch", vi.fn(async (url: string) => new URL(url).pathname.endsWith("/exchange")
       ? Response.json(tokens)
       : new Response(null, { status: 401 })));
     expect(await getCurrentExtensionSession()).toMatchObject(tokens);
     expect(launch).toHaveBeenCalledOnce();
+    expect((await getStoredAuthTokens())?.authSessionId).not.toBe(before.authSessionId);
   });
 
   it.each(["browser", "exchange"] as const)("logout while fallback %s adoption is pending remains signed out", async stage => {

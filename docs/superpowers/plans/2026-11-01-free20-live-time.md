@@ -71,6 +71,12 @@ response fences still use the full credentials. The live room keeps its timer
 and ordering across refresh; actual logout/login or account replacement retires
 the old room callbacks synchronously, including batched storage notifications.
 
+Cookie-blocked website reconciliation is also a continuation when its browser
+exchange confirms the same owner: it retains the captured login ID through the
+full original-credential CAS. A different owner starts a new login; a late repair
+cannot replace a newer login. This exception is restricted to reconciliation;
+ordinary interactive/silent sign-in and invalid-session recovery remain new logins.
+
 Regression evidence must cover both-token/revision rotation, continued countdown,
 new and stale server events, server-owned exhaustion, same-owner replacement,
 logout/relogin, account switch, legacy fallback and durable storage migration.

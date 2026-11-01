@@ -104,7 +104,7 @@ export interface ExtensionSessionDependencies {
 export interface WebsiteSessionReconciliationDependencies {
   getStored: () => Promise<ExtensionAuthTokens | null>;
   ensureMatches: (stored: ExtensionAuthTokens) => Promise<WebsiteSessionMatchResult>;
-  signInSilently: () => Promise<ExtensionAuthTokens | null>;
+  signInSilently: (continuation?: ExtensionAuthTokens) => Promise<ExtensionAuthTokens | null>;
   getCurrent: () => Promise<ExtensionAuthTokens | null>;
   revokeRefreshToken: (refreshToken: string) => Promise<void>;
 }
@@ -306,6 +306,7 @@ export function normalizeExtensionRefreshResponse(
 export async function exchangeExtensionAuthCode(
   request: ExtensionAuthExchangeRequest,
   expectedRevision?: string | null,
+  continuation?: ExtensionAuthTokens,
 ): Promise<ExtensionAuthTokens> {
   const parsed = ExtensionAuthExchangeRequestSchema.parse(request);
   const revision =
@@ -325,7 +326,17 @@ export async function exchangeExtensionAuthCode(
 
   const tokens = normalizeExtensionAuthTokens(await response.json());
   if (!tokens) throw new Error("Extension auth exchange returned malformed tokens");
-  const commit = await replaceStoredAuthTokensIfRevision(revision, tokens);
+  if (continuation) {
+    const current = await getBackgroundAuthSession();
+    if (revision !== continuation.authRevision || !isSameExtensionAuthSession(continuation, current)) {
+      if (current) throw new ExtensionAuthTemporarilyUnavailableError(current);
+      throw new Error("Extension auth session changed during browser repair");
+    }
+  }
+  // Only a guarded same-owner cookie repair continues an existing logical login.
+  const commit = continuation && tokens.user.id === continuation.user.id
+    ? await commitStoredAuthTokensIfCurrent(continuation, tokens)
+    : await replaceStoredAuthTokensIfRevision(revision, tokens);
   if (!commit.committed || !commit.current) {
     if (commit.current)
       throw new ExtensionAuthTemporarilyUnavailableError(commit.current);
@@ -831,7 +842,7 @@ const defaultWebsiteReconciliationDependencies: WebsiteSessionReconciliationDepe
   {
     getStored: getBackgroundAuthSession,
     ensureMatches: ensureWebsiteSessionStillMatches,
-    signInSilently: signInWithWebsiteSilently,
+    signInSilently: continuation => signInWithWebsiteSilently(undefined, continuation),
     getCurrent: getCurrentExtensionSession,
     revokeRefreshToken: revokeExtensionRefreshToken,
   };
@@ -858,7 +869,7 @@ async function performWebsiteSessionReconciliation(
 
   const matchResult = await dependencies.ensureMatches(stored);
   if (matchResult === "browser-flow-required") {
-    const adopted = await dependencies.signInSilently();
+    const adopted = await dependencies.signInSilently(stored);
     if (!adopted) return dependencies.getCurrent();
     if (adopted.refreshToken !== stored.refreshToken) {
       await dependencies.revokeRefreshToken(stored.refreshToken).catch(() => undefined);
@@ -941,6 +952,7 @@ function finishWebsiteSessionReconciliationPass(
 async function runWebsiteAuthFlow(
   interactive: boolean,
   recoveryRevision?: string,
+  continuation?: ExtensionAuthTokens,
 ): Promise<ExtensionAuthTokens | null> {
   if (!chrome.identity?.getRedirectURL || !chrome.identity?.launchWebAuthFlow) {
     if (interactive) throw new Error("Chrome Identity API is unavailable");
@@ -949,7 +961,8 @@ async function runWebsiteAuthFlow(
 
   const currentRevision = await getBackgroundAuthRevision();
   if (recoveryRevision !== undefined && currentRevision !== recoveryRevision) return null;
-  const expectedRevision = recoveryRevision ?? currentRevision;
+  if (continuation && currentRevision !== continuation.authRevision) return null;
+  const expectedRevision = continuation?.authRevision ?? recoveryRevision ?? currentRevision;
   const redirectUri = chrome.identity.getRedirectURL(AUTH_CALLBACK_PATH);
   const clientId = chrome.runtime.id;
   const transaction = await createExtensionAuthTransaction();
@@ -983,6 +996,7 @@ async function runWebsiteAuthFlow(
       codeVerifier: transaction.codeVerifier,
     },
     expectedRevision,
+    continuation,
   );
 }
 
@@ -1000,9 +1014,12 @@ export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
  * website session exists, the flow needs interaction and we resolve to null
  * instead of throwing, leaving the overlay signed out.
  */
-export async function signInWithWebsiteSilently(recoveryRevision?: string): Promise<ExtensionAuthTokens | null> {
+export async function signInWithWebsiteSilently(
+  recoveryRevision?: string,
+  continuation?: ExtensionAuthTokens,
+): Promise<ExtensionAuthTokens | null> {
   try {
-    const tokens = await runWebsiteAuthFlow(false, recoveryRevision);
+    const tokens = await runWebsiteAuthFlow(false, recoveryRevision, continuation);
     recordDiagnosticEvent(
       "auth.silent",
       tokens ? "succeeded" : "no website session",
