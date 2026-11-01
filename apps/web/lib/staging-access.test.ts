@@ -17,6 +17,31 @@ test("room quota only bypasses staging for authenticated GET", () => {
   assert.equal(canBypassStagingGate({ pathname, method: "POST", authorization: "Bearer token" }), false);
 });
 
+for (const { pathname, method } of [
+  { pathname: "/api/me/hosting-status", method: "GET" },
+  { pathname: "/api/me/hosting-warning/claim", method: "POST" },
+]) {
+  test(`${method} ${pathname} reaches route authentication with an extension bearer`, () => {
+    assert.equal(canBypassStagingGate({ pathname, method, authorization: "Bearer token" }), true);
+  });
+
+  test(`${method} ${pathname} keeps the staging gate without a bearer`, () => {
+    for (const authorization of [undefined, null, "", "Basic token", "bearer token"]) {
+      assert.equal(canBypassStagingGate({ pathname, method, authorization }), false);
+    }
+  });
+
+  test(`${pathname} does not broaden the bearer bypass to other methods or paths`, () => {
+    for (const otherMethod of ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]) {
+      if (otherMethod === method) continue;
+      assert.equal(canBypassStagingGate({ pathname, method: otherMethod, authorization: "Bearer token" }), false);
+    }
+    for (const otherPath of [`${pathname}/extra`, `${pathname}-other`]) {
+      assert.equal(canBypassStagingGate({ pathname: otherPath, method, authorization: "Bearer token" }), false);
+    }
+  });
+}
+
 test("capacity metadata only bypasses staging for authenticated GET", () => {
   const pathname = "/api/watch-history/v3/capacity";
   assert.equal(canBypassStagingGate({ pathname, method: "GET", authorization: "Bearer token" }), true);
