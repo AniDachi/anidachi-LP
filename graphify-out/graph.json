@@ -2257,7 +2257,7 @@
       "file_type": "code",
       "norm_label": "conditionalsessioncleardependencies",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L550"
+      "source_location": "L561"
     },
     {
       "id": "apps_extension_src_auth_client_extensionauthredirect",
@@ -2351,7 +2351,7 @@
       "file_type": "code",
       "norm_label": "websiterefreshcookielookup",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L658"
+      "source_location": "L669"
     },
     {
       "id": "apps_extension_src_auth_client_websitesessionmatchresult",
@@ -2403,7 +2403,7 @@
       "file_type": "code",
       "norm_label": "websitesessionreconciliationpass",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L839"
+      "source_location": "L850"
     },
     {
       "id": "apps_extension_src_auth_client_websitesessionrequest",
@@ -2416,7 +2416,7 @@
       "file_type": "code",
       "norm_label": "websitesessionrequest",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L657"
+      "source_location": "L668"
     },
     {
       "id": "apps_extension_src_auth_client_websitesignoutsequenceactions",
@@ -2429,7 +2429,7 @@
       "file_type": "code",
       "norm_label": "websitesignoutsequenceactions",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1019"
+      "source_location": "L1036"
     },
     {
       "id": "apps_extension_src_auth_tokens_authenticateduser",
@@ -19740,7 +19740,18 @@
       "file_type": "code",
       "norm_label": "assertextensionlogoutredirect()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L267"
+      "source_location": "L267",
+      "metadata": {
+        "unresolved_calls": [
+          {
+            "callee": "toString",
+            "receiver_type": "ExtensionAuthTokens",
+            "lang": "typescript",
+            "line": "L277",
+            "file": "apps/extension/src/auth-client.ts"
+          }
+        ]
+      }
     },
     {
       "id": "apps_extension_src_auth_client_attemptwebsitelogoutflow",
@@ -19752,7 +19763,7 @@
       "file_type": "code",
       "norm_label": "attemptwebsitelogoutflow()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1086"
+      "source_location": "L1103"
     },
     {
       "id": "apps_extension_src_auth_client_buildextensionconnecturl",
@@ -19800,7 +19811,7 @@
       "file_type": "code",
       "norm_label": "clearextensionsessionifcurrent()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L560"
+      "source_location": "L571"
     },
     {
       "id": "apps_extension_src_auth_client_configuredwebhost",
@@ -19836,7 +19847,7 @@
       "file_type": "code",
       "norm_label": "createwebsitesessionreconciliationpass()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L898"
+      "source_location": "L909"
     },
     {
       "id": "apps_extension_src_auth_client_deriveextensionpkcechallenge",
@@ -19872,7 +19883,7 @@
       "file_type": "code",
       "norm_label": "ensurewebsitesessionstillmatches()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L738"
+      "source_location": "L749"
     },
     {
       "id": "apps_extension_src_auth_client_exchangeextensionauthcode",
@@ -19908,7 +19919,7 @@
       "file_type": "code",
       "norm_label": "fetchauthenticateduser()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L650"
+      "source_location": "L661"
     },
     {
       "id": "apps_extension_src_auth_client_fetchwebsitesessionprobe",
@@ -19920,7 +19931,7 @@
       "file_type": "code",
       "norm_label": "fetchwebsitesessionprobe()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L674"
+      "source_location": "L685"
     },
     {
       "id": "apps_extension_src_auth_client_finishwebsitesessionreconciliationpass",
@@ -19932,7 +19943,7 @@
       "file_type": "code",
       "norm_label": "finishwebsitesessionreconciliationpass()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L924"
+      "source_location": "L935"
     },
     {
       "id": "apps_extension_src_auth_client_getfastsessionandrefreshinbackground",
@@ -19944,7 +19955,7 @@
       "file_type": "code",
       "norm_label": "getfastsessionandrefreshinbackground()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1152"
+      "source_location": "L1169"
     },
     {
       "id": "apps_extension_src_auth_client_handleauthmessage",
@@ -19956,7 +19967,7 @@
       "file_type": "code",
       "norm_label": "handleauthmessage()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1199"
+      "source_location": "L1216"
     },
     {
       "id": "apps_extension_src_auth_client_handlewebsiteauthcookiechange",
@@ -19968,7 +19979,7 @@
       "file_type": "code",
       "norm_label": "handlewebsiteauthcookiechange()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1166"
+      "source_location": "L1183"
     },
     {
       "id": "apps_extension_src_auth_client_isconfiguredwebsitecookie",
@@ -20004,7 +20015,18 @@
       "file_type": "code",
       "norm_label": "parseextensionauthredirect()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L242"
+      "source_location": "L242",
+      "metadata": {
+        "unresolved_calls": [
+          {
+            "callee": "toString",
+            "receiver_type": "ExtensionAuthTokens",
+            "lang": "typescript",
+            "line": "L252",
+            "file": "apps/extension/src/auth-client.ts"
+          }
+        ]
+      }
     },
     {
       "id": "apps_extension_src_auth_client_performextensionsessionrefresh",
@@ -20016,7 +20038,7 @@
       "file_type": "code",
       "norm_label": "performextensionsessionrefresh()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L386"
+      "source_location": "L397"
     },
     {
       "id": "apps_extension_src_auth_client_performwebsitesessionreconciliation",
@@ -20028,7 +20050,7 @@
       "file_type": "code",
       "norm_label": "performwebsitesessionreconciliation()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L850"
+      "source_location": "L861"
     },
     {
       "id": "apps_extension_src_auth_client_randombase64url",
@@ -20052,7 +20074,7 @@
       "file_type": "code",
       "norm_label": "reconcileextensionsessionagainstwebsite()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L875"
+      "source_location": "L886"
     },
     {
       "id": "apps_extension_src_auth_client_refreshextensionsession",
@@ -20064,7 +20086,7 @@
       "file_type": "code",
       "norm_label": "refreshextensionsession()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L520"
+      "source_location": "L531"
     },
     {
       "id": "apps_extension_src_auth_client_requestextensionsessionrefresh",
@@ -20076,7 +20098,7 @@
       "file_type": "code",
       "norm_label": "requestextensionsessionrefresh()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L341"
+      "source_location": "L352"
     },
     {
       "id": "apps_extension_src_auth_client_revokeextensionrefreshtoken",
@@ -20088,7 +20110,7 @@
       "file_type": "code",
       "norm_label": "revokeextensionrefreshtoken()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L527"
+      "source_location": "L538"
     },
     {
       "id": "apps_extension_src_auth_client_runremotesignoutstage",
@@ -20100,7 +20122,7 @@
       "file_type": "code",
       "norm_label": "runremotesignoutstage()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1030"
+      "source_location": "L1047"
     },
     {
       "id": "apps_extension_src_auth_client_runwebsiteauthflow",
@@ -20112,7 +20134,7 @@
       "file_type": "code",
       "norm_label": "runwebsiteauthflow()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L941"
+      "source_location": "L952"
     },
     {
       "id": "apps_extension_src_auth_client_runwebsitesignoutsequence",
@@ -20124,7 +20146,7 @@
       "file_type": "code",
       "norm_label": "runwebsitesignoutsequence()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1062"
+      "source_location": "L1079"
     },
     {
       "id": "apps_extension_src_auth_client_shouldclearextensionsessionforwebsitecookiechange",
@@ -20148,7 +20170,7 @@
       "file_type": "code",
       "norm_label": "shouldclearextensionsessionforwebsiteprobe()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L729"
+      "source_location": "L740"
     },
     {
       "id": "apps_extension_src_auth_client_shouldsyncextensionsessionforwebsitecookiechange",
@@ -20172,7 +20194,7 @@
       "file_type": "code",
       "norm_label": "signinwithwebsite()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L989"
+      "source_location": "L1003"
     },
     {
       "id": "apps_extension_src_auth_client_signinwithwebsitesilently",
@@ -20184,7 +20206,7 @@
       "file_type": "code",
       "norm_label": "signinwithwebsitesilently()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1003"
+      "source_location": "L1017"
     },
     {
       "id": "apps_extension_src_auth_client_signoutwithwebsite",
@@ -20196,7 +20218,7 @@
       "file_type": "code",
       "norm_label": "signoutwithwebsite()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1115"
+      "source_location": "L1132"
     },
     {
       "id": "apps_extension_src_auth_client_startwebsitesessionreconciliationpass",
@@ -20208,7 +20230,7 @@
       "file_type": "code",
       "norm_label": "startwebsitesessionreconciliationpass()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L911"
+      "source_location": "L922"
     },
     {
       "id": "apps_extension_src_auth_client_websiterefreshcookieexists",
@@ -20220,7 +20242,7 @@
       "file_type": "code",
       "norm_label": "websiterefreshcookieexists()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L660"
+      "source_location": "L671"
     },
     {
       "id": "apps_extension_src_auth_tokens_clearstoredauthtokens",
@@ -28425,7 +28447,7 @@
       "file_type": "code",
       "norm_label": "sendauthcommand()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1237"
+      "source_location": "L1254"
     },
     {
       "id": "apps_extension_src_silent_session_adoption_adoptwebsitesessionwithretry",
@@ -36539,7 +36561,7 @@
       "file_type": "code",
       "norm_label": "getcurrentextensionsession()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L785"
+      "source_location": "L796"
     },
     {
       "id": "apps_extension_src_auth_tokens_getstoredauthtokens",
@@ -59522,7 +59544,7 @@
       "file_type": "code",
       "norm_label": "clearcachedaccountdataforuser()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L576"
+      "source_location": "L587"
     },
     {
       "id": "apps_extension_src_auth_client_getcachedextensionsession",
@@ -59534,7 +59556,7 @@
       "file_type": "code",
       "norm_label": "getcachedextensionsession()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L772"
+      "source_location": "L783"
     },
     {
       "id": "apps_extension_src_auth_client_requestauthtokens",
@@ -59546,7 +59568,7 @@
       "file_type": "code",
       "norm_label": "requestauthtokens()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1241"
+      "source_location": "L1258"
     },
     {
       "id": "apps_extension_src_auth_client_requestcurrentextensionsession",
@@ -59558,7 +59580,7 @@
       "file_type": "code",
       "norm_label": "requestcurrentextensionsession()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1253"
+      "source_location": "L1270"
     },
     {
       "id": "apps_extension_src_auth_client_requestsilentwebsitesignin",
@@ -59570,7 +59592,7 @@
       "file_type": "code",
       "norm_label": "requestsilentwebsitesignin()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1263"
+      "source_location": "L1280"
     },
     {
       "id": "apps_extension_src_auth_client_requestwebsitesignin",
@@ -59582,7 +59604,7 @@
       "file_type": "code",
       "norm_label": "requestwebsitesignin()",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1257"
+      "source_location": "L1274"
     },
     {
       "id": "apps_extension_src_popup_app_getinitials",
@@ -88129,7 +88151,7 @@
       "file_type": "code",
       "norm_label": "defaultconditionalcleardependencies",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L555"
+      "source_location": "L566"
     },
     {
       "id": "apps_extension_src_auth_client_defaultrefreshdependencies",
@@ -88140,7 +88162,7 @@
       "file_type": "code",
       "norm_label": "defaultrefreshdependencies",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L370"
+      "source_location": "L381"
     },
     {
       "id": "apps_extension_src_auth_client_defaultsessiondependencies",
@@ -88151,7 +88173,7 @@
       "file_type": "code",
       "norm_label": "defaultsessiondependencies",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L776"
+      "source_location": "L787"
     },
     {
       "id": "apps_extension_src_auth_client_defaultwebsitereconciliationdependencies",
@@ -88162,7 +88184,7 @@
       "file_type": "code",
       "norm_label": "defaultwebsitereconciliationdependencies",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L830"
+      "source_location": "L841"
     },
     {
       "id": "apps_extension_src_auth_tokens",
@@ -198287,7 +198309,7 @@
       "label": "ExtensionRefreshOutcome",
       "file_type": "code",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L379",
+      "source_location": "L390",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -198297,7 +198319,7 @@
       "label": "refreshExtensionSessionOutcome()",
       "file_type": "code",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L485",
+      "source_location": "L496",
       "_callable": true,
       "_origin": "ast"
     },
@@ -198306,7 +198328,7 @@
       "label": "AuthenticatedUserProbe",
       "file_type": "code",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L583",
+      "source_location": "L594",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -198316,7 +198338,7 @@
       "label": "pendingProfileProbes",
       "file_type": "code",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L589",
+      "source_location": "L600",
       "_origin": "ast"
     },
     {
@@ -198324,7 +198346,7 @@
       "label": "requestAuthenticatedUser()",
       "file_type": "code",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L591",
+      "source_location": "L602",
       "_callable": true,
       "_origin": "ast"
     },
@@ -198333,7 +198355,7 @@
       "label": "probeAuthenticatedUser()",
       "file_type": "code",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L630",
+      "source_location": "L641",
       "_callable": true,
       "_origin": "ast"
     },
@@ -199421,7 +199443,7 @@
       "label": "tokens",
       "file_type": "code",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -199429,7 +199451,7 @@
       "label": "deferred()",
       "file_type": "code",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "_callable": true,
       "_origin": "ast"
     },
@@ -199438,7 +199460,7 @@
       "label": "enableWebsiteAdoption()",
       "file_type": "code",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L469",
+      "source_location": "L470",
       "_callable": true,
       "_origin": "ast"
     },
@@ -214718,7 +214740,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Review of PR486 reproduced a cleared live timer after same-user credential rotation: the connection stayed open but its callback retained the old credential key. The owner approved correcting this on staging and refreshing the unpacked extension. The correction separates local logical login identity (`authSessionId`) from credential freshness. Storage creates an ID for each login, preserves it on same-owner refresh/profile commits, and migrates existing records once. HTTP response fences still use the full credentials. The live room keeps its timer and ordering across refresh; actual logout/login or account replacement retires the old room callbacks synchronously, including batched storage notifications. Regression evidence must cover both-token/revision rotation, continued countdown, new and stale server events, server-owned exhaustion, same-owner replacement, logout/relogin, account switch, legacy fallback and durable storage migration. Exact RED/GREEN, full-suite, CI and artifact receipts belong in the correction PR. This changes no server protocol, financial authority, permissions or activation flags; loaded-browser acceptance and enabled Free20 rehearsal remain separate.",
+      "description": "Review of PR486 reproduced a cleared live timer after same-user credential rotation: the connection stayed open but its callback retained the old credential key. The owner approved correcting this on staging and refreshing the unpacked extension. The correction separates local logical login identity (`authSessionId`) from credential freshness. Storage creates an ID for each login, preserves it on same-owner refresh/profile commits, and migrates existing records once. HTTP response fences still use the full credentials. The live room keeps its timer and ordering across refresh; actual logout/login or account replacement retires the old room callbacks synchronously, including batched storage notifications. Cookie-blocked website reconciliation is also a continuation when its browser exchange confirms the same owner: it retains the captured login ID through the full original-credential CAS. A different owner starts a new login; a late repair cannot replace a newer login. This exception is restricted to reconciliation; ordinary interactive/silent sign-in and invalid-session recovery remain new logins.",
       "status": "owner_approved_bounded_implementation_plan",
       "_origin": "semantic"
     },
@@ -214727,7 +214749,7 @@
       "label": "Rollback",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L81",
+      "source_location": "L87",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -215560,7 +215582,7 @@
       "label": "Token rotation regression matrix",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L74",
+      "source_location": "L80",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -215574,7 +215596,7 @@
       "label": "Activation-aware rollback",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L84",
+      "source_location": "L90",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -215642,6 +215664,29 @@
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
       "source_location": "L4223",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_01_free20_live_time_cookie_blocked_same_owner_reconciliation_continuation",
+      "label": "Cookie-blocked same-owner reconciliation continuation",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
+      "source_location": "L74",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "A cookie-blocked website reconciliation exchange that confirms the captured owner retains that logical login ID through a full original-credential compare-and-swap. A different owner starts a new login. Ordinary interactive or silent sign-in and invalid-session recovery remain new logins.",
+      "rationale": "Repair of the same verified login must not clear its timer, while a delayed repair cannot replace a newer login. Continuation is restricted to reconciliation.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_extension_test_auth_session_probe_test_enablewebsiterepair",
+      "label": "enableWebsiteRepair()",
+      "file_type": "code",
+      "source_file": "apps/extension/test/auth-session-probe.test.ts",
+      "source_location": "L492",
       "_callable": true,
       "_origin": "ast"
     }
@@ -219950,7 +219995,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1092",
+      "source_location": "L1109",
       "weight": 1.0
     },
     {
@@ -219961,7 +220006,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1093",
+      "source_location": "L1110",
       "weight": 1.0
     },
     {
@@ -219972,7 +220017,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1106",
+      "source_location": "L1123",
       "weight": 1.0
     },
     {
@@ -219983,7 +220028,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L578",
+      "source_location": "L589",
       "weight": 1.0
     },
     {
@@ -219994,7 +220039,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L579",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -220038,7 +220083,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L741",
+      "source_location": "L752",
       "weight": 1.0
     },
     {
@@ -220049,7 +220094,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L745",
+      "source_location": "L756",
       "weight": 1.0
     },
     {
@@ -220060,7 +220105,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L749",
+      "source_location": "L760",
       "weight": 1.0
     },
     {
@@ -220071,7 +220116,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L763",
+      "source_location": "L774",
       "weight": 1.0
     },
     {
@@ -220082,7 +220127,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L769",
+      "source_location": "L780",
       "weight": 1.0
     },
     {
@@ -220093,7 +220138,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L315",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -220104,7 +220149,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L322",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -220115,7 +220160,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L326",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -220126,7 +220171,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L680",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -220137,7 +220182,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L685",
+      "source_location": "L696",
       "weight": 1.0
     },
     {
@@ -220148,7 +220193,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L720",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -220159,7 +220204,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L935",
+      "source_location": "L946",
       "weight": 1.0
     },
     {
@@ -220170,7 +220215,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L773",
+      "source_location": "L784",
       "weight": 1.0
     },
     {
@@ -220181,7 +220226,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1202",
+      "source_location": "L1219",
       "weight": 1.0
     },
     {
@@ -220192,7 +220237,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1205",
+      "source_location": "L1222",
       "weight": 1.0
     },
     {
@@ -220203,7 +220248,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1208",
+      "source_location": "L1225",
       "weight": 1.0
     },
     {
@@ -220214,7 +220259,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1211",
+      "source_location": "L1228",
       "weight": 1.0
     },
     {
@@ -220225,7 +220270,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1215",
+      "source_location": "L1232",
       "weight": 1.0
     },
     {
@@ -220236,7 +220281,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1218",
+      "source_location": "L1235",
       "weight": 1.0
     },
     {
@@ -220247,7 +220292,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1171",
+      "source_location": "L1188",
       "weight": 1.0
     },
     {
@@ -220258,7 +220303,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1172",
+      "source_location": "L1189",
       "weight": 1.0
     },
     {
@@ -220269,7 +220314,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1181",
+      "source_location": "L1198",
       "weight": 1.0
     },
     {
@@ -220280,7 +220325,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1194",
+      "source_location": "L1211",
       "weight": 1.0
     },
     {
@@ -220302,7 +220347,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L391",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -220313,7 +220358,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L420",
+      "source_location": "L431",
       "weight": 1.0
     },
     {
@@ -220324,7 +220369,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L405",
+      "source_location": "L416",
       "weight": 1.0
     },
     {
@@ -220335,7 +220380,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L881",
+      "source_location": "L892",
       "weight": 1.0
     },
     {
@@ -220346,7 +220391,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L882",
+      "source_location": "L893",
       "weight": 1.0
     },
     {
@@ -220357,7 +220402,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1244",
+      "source_location": "L1261",
       "weight": 1.0
     },
     {
@@ -220368,7 +220413,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1254",
+      "source_location": "L1271",
       "weight": 1.0
     },
     {
@@ -220379,7 +220424,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L346",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
@@ -220390,7 +220435,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L362",
+      "source_location": "L373",
       "weight": 1.0
     },
     {
@@ -220401,7 +220446,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1264",
+      "source_location": "L1281",
       "weight": 1.0
     },
     {
@@ -220412,7 +220457,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1258",
+      "source_location": "L1275",
       "weight": 1.0
     },
     {
@@ -220423,7 +220468,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L530",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -220434,7 +220479,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L536",
+      "source_location": "L547",
       "weight": 1.0
     },
     {
@@ -220445,7 +220490,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1053",
+      "source_location": "L1070",
       "weight": 1.0
     },
     {
@@ -220456,7 +220501,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L955",
+      "source_location": "L968",
       "weight": 1.0
     },
     {
@@ -220467,7 +220512,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L956",
+      "source_location": "L969",
       "weight": 1.0
     },
     {
@@ -220478,7 +220523,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L972",
+      "source_location": "L985",
       "weight": 1.0
     },
     {
@@ -220489,7 +220534,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L977",
+      "source_location": "L990",
       "weight": 1.0
     },
     {
@@ -220500,7 +220545,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1072",
+      "source_location": "L1089",
       "weight": 1.0
     },
     {
@@ -220511,7 +220556,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1238",
+      "source_location": "L1255",
       "weight": 1.0
     },
     {
@@ -220544,7 +220589,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L990",
+      "source_location": "L1004",
       "weight": 1.0
     },
     {
@@ -220555,7 +220600,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1005",
+      "source_location": "L1022",
       "weight": 1.0
     },
     {
@@ -220566,7 +220611,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1006",
+      "source_location": "L1023",
       "weight": 1.0
     },
     {
@@ -220577,7 +220622,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1121",
+      "source_location": "L1138",
       "weight": 1.0
     },
     {
@@ -220588,7 +220633,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1124",
+      "source_location": "L1141",
       "weight": 1.0
     },
     {
@@ -220599,7 +220644,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1131",
+      "source_location": "L1148",
       "weight": 1.0
     },
     {
@@ -220610,7 +220655,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1147",
+      "source_location": "L1164",
       "weight": 1.0
     },
     {
@@ -220621,7 +220666,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L915",
+      "source_location": "L926",
       "weight": 1.0
     },
     {
@@ -285056,7 +285101,7 @@
       "confidence": "EXTRACTED",
       "context": "generic_arg",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1020",
+      "source_location": "L1037",
       "weight": 1.0
     },
     {
@@ -286458,7 +286503,7 @@
       "confidence": "EXTRACTED",
       "context": "generic_arg",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L551",
+      "source_location": "L562",
       "weight": 1.0
     },
     {
@@ -286714,7 +286759,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1134",
+      "source_location": "L1151",
       "weight": 1.0
     },
     {
@@ -388891,7 +388936,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1199",
+      "source_location": "L1216",
       "weight": 1.0
     },
     {
@@ -388911,7 +388956,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1237",
+      "source_location": "L1254",
       "weight": 1.0
     },
     {
@@ -388921,7 +388966,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1241",
+      "source_location": "L1258",
       "weight": 1.0
     },
     {
@@ -388931,7 +388976,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1253",
+      "source_location": "L1270",
       "weight": 1.0
     },
     {
@@ -388941,7 +388986,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1257",
+      "source_location": "L1274",
       "weight": 1.0
     },
     {
@@ -388951,7 +388996,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1263",
+      "source_location": "L1280",
       "weight": 1.0
     },
     {
@@ -389151,7 +389196,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L370",
+      "source_location": "L381",
       "weight": 1.0
     },
     {
@@ -389161,7 +389206,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L386",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -389191,7 +389236,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L550",
+      "source_location": "L561",
       "weight": 1.0
     },
     {
@@ -389201,7 +389246,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L555",
+      "source_location": "L566",
       "weight": 1.0
     },
     {
@@ -389211,7 +389256,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L560",
+      "source_location": "L571",
       "weight": 1.0
     },
     {
@@ -389231,7 +389276,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L657",
+      "source_location": "L668",
       "weight": 1.0
     },
     {
@@ -389241,7 +389286,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L658",
+      "source_location": "L669",
       "weight": 1.0
     },
     {
@@ -389251,7 +389296,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L660",
+      "source_location": "L671",
       "weight": 1.0
     },
     {
@@ -389261,7 +389306,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L674",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
@@ -389271,7 +389316,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L729",
+      "source_location": "L740",
       "weight": 1.0
     },
     {
@@ -389291,7 +389336,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L772",
+      "source_location": "L783",
       "weight": 1.0
     },
     {
@@ -389301,7 +389346,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L776",
+      "source_location": "L787",
       "weight": 1.0
     },
     {
@@ -389311,7 +389356,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L830",
+      "source_location": "L841",
       "weight": 1.0
     },
     {
@@ -389331,7 +389376,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L839",
+      "source_location": "L850",
       "weight": 1.0
     },
     {
@@ -389341,7 +389386,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L850",
+      "source_location": "L861",
       "weight": 1.0
     },
     {
@@ -389361,7 +389406,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L875",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -389371,7 +389416,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L898",
+      "source_location": "L909",
       "weight": 1.0
     },
     {
@@ -389391,7 +389436,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L911",
+      "source_location": "L922",
       "weight": 1.0
     },
     {
@@ -389401,7 +389446,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L924",
+      "source_location": "L935",
       "weight": 1.0
     },
     {
@@ -389411,7 +389456,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L941",
+      "source_location": "L952",
       "weight": 1.0
     },
     {
@@ -389421,7 +389466,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L989",
+      "source_location": "L1003",
       "weight": 1.0
     },
     {
@@ -389431,7 +389476,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1019",
+      "source_location": "L1036",
       "weight": 1.0
     },
     {
@@ -389451,7 +389496,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1030",
+      "source_location": "L1047",
       "weight": 1.0
     },
     {
@@ -389461,7 +389506,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1062",
+      "source_location": "L1079",
       "weight": 1.0
     },
     {
@@ -389471,7 +389516,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1086",
+      "source_location": "L1103",
       "weight": 1.0
     },
     {
@@ -389481,7 +389526,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1115",
+      "source_location": "L1132",
       "weight": 1.0
     },
     {
@@ -389501,7 +389546,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1152",
+      "source_location": "L1169",
       "weight": 1.0
     },
     {
@@ -389511,7 +389556,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1166",
+      "source_location": "L1183",
       "weight": 1.0
     },
     {
@@ -491189,7 +491234,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L373",
+      "source_location": "L384",
       "weight": 1.0
     },
     {
@@ -491201,7 +491246,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L374",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -491213,7 +491258,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L375",
+      "source_location": "L386",
       "weight": 1.0
     },
     {
@@ -491225,7 +491270,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L376",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
@@ -491237,7 +491282,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L556",
+      "source_location": "L567",
       "weight": 1.0
     },
     {
@@ -491249,7 +491294,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L781",
+      "source_location": "L792",
       "weight": 1.0
     },
     {
@@ -491261,7 +491306,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L782",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -491273,7 +491318,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L833",
+      "source_location": "L844",
       "weight": 1.0
     },
     {
@@ -491285,7 +491330,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L835",
+      "source_location": "L846",
       "weight": 1.0
     },
     {
@@ -491297,7 +491342,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L836",
+      "source_location": "L847",
       "weight": 1.0
     },
     {
@@ -491309,7 +491354,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1139",
+      "source_location": "L1156",
       "weight": 1.0
     },
     {
@@ -491321,7 +491366,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1140",
+      "source_location": "L1157",
       "weight": 1.0
     },
     {
@@ -622015,7 +622060,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L341",
+      "source_location": "L352",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622025,7 +622070,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L379",
+      "source_location": "L390",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622035,7 +622080,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L485",
+      "source_location": "L496",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622045,7 +622090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L520",
+      "source_location": "L531",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622055,7 +622100,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L527",
+      "source_location": "L538",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622065,7 +622110,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L576",
+      "source_location": "L587",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622075,7 +622120,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L583",
+      "source_location": "L594",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622085,7 +622130,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L589",
+      "source_location": "L600",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622095,7 +622140,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L591",
+      "source_location": "L602",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622105,7 +622150,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L630",
+      "source_location": "L641",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622115,7 +622160,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L650",
+      "source_location": "L661",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622125,7 +622170,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L738",
+      "source_location": "L749",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622135,7 +622180,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L785",
+      "source_location": "L796",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622145,7 +622190,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1003",
+      "source_location": "L1017",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622156,7 +622201,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L331",
+      "source_location": "L332",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622167,7 +622212,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L500",
+      "source_location": "L511",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622178,7 +622223,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L507",
+      "source_location": "L518",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622189,7 +622234,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L509",
+      "source_location": "L520",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622200,7 +622245,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L524",
+      "source_location": "L535",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622211,7 +622256,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L597",
+      "source_location": "L608",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622222,7 +622267,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L642",
+      "source_location": "L653",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622233,7 +622278,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L653",
+      "source_location": "L664",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622244,7 +622289,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L762",
+      "source_location": "L773",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622255,7 +622300,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L768",
+      "source_location": "L779",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622266,7 +622311,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L804",
+      "source_location": "L815",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622277,7 +622322,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L819",
+      "source_location": "L830",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622288,7 +622333,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L823",
+      "source_location": "L834",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622299,7 +622344,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L919",
+      "source_location": "L930",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622310,7 +622355,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1247",
+      "source_location": "L1264",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -622322,7 +622367,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L372",
+      "source_location": "L383",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625754,7 +625799,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L460",
+      "source_location": "L461",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625842,7 +625887,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625853,7 +625898,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625864,7 +625909,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625875,7 +625920,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625886,7 +625931,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625897,7 +625942,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625908,7 +625953,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625919,7 +625964,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625930,7 +625975,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625941,7 +625986,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625952,7 +625997,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625962,7 +626007,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625972,7 +626017,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625982,7 +626027,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L469",
+      "source_location": "L470",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -625993,7 +626038,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L69",
+      "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -626004,7 +626049,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L489",
+      "source_location": "L575",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -626016,7 +626061,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-session-probe.test.ts",
-      "source_location": "L549",
+      "source_location": "L660",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651501,7 +651546,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L313",
+      "source_location": "L314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651512,7 +651557,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L328",
+      "source_location": "L339",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651523,7 +651568,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L493",
+      "source_location": "L504",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651534,7 +651579,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L609",
+      "source_location": "L620",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651545,7 +651590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L759",
+      "source_location": "L770",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651556,7 +651601,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L799",
+      "source_location": "L810",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651567,7 +651612,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L800",
+      "source_location": "L811",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -651578,7 +651623,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L950",
+      "source_location": "L962",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -654295,7 +654340,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L1021",
+      "source_location": "L1038",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -654669,7 +654714,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L371",
+      "source_location": "L382",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -681008,7 +681053,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L81",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681679,7 +681724,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L74",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681690,7 +681735,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L84",
+      "source_location": "L90",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681702,28 +681747,6 @@
       "confidence_score": 1.0,
       "source_file": "docs/current-development-state.md",
       "source_location": "L10",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_current_development_state_presentation_versus_authorization_freshness",
-      "target": "docs_superpowers_plans_2026_11_01_free20_live_time_credential_fenced_account_http_responses",
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L68",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_current_development_state_popup_session_isolation",
-      "target": "docs_superpowers_plans_2026_11_01_free20_live_time_synchronous_auth_boundary_retirement",
-      "relation": "semantically_similar_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
-      "source_location": "L72",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -682049,6 +682072,115 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/auth-logical-session.test.ts",
       "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_01_free20_live_time_token_refresh_correction",
+      "target": "docs_superpowers_plans_2026_11_01_free20_live_time_cookie_blocked_same_owner_reconciliation_continuation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_01_free20_live_time_cookie_blocked_same_owner_reconciliation_continuation",
+      "target": "docs_superpowers_plans_2026_11_01_free20_live_time_authsessionid_logical_login_identity",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_01_free20_live_time_cookie_blocked_same_owner_reconciliation_continuation",
+      "target": "docs_superpowers_plans_2026_11_01_free20_live_time_credential_fenced_account_http_responses",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-live-time.md",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_test_auth_session_probe_test",
+      "target": "apps_extension_src_auth_client_handlewebsiteauthcookiechange",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/auth-session-probe.test.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_auth_session_probe_test",
+      "target": "apps_extension_test_auth_session_probe_test_enablewebsiterepair",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/auth-session-probe.test.ts",
+      "source_location": "L492",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_auth_session_probe_test_enablewebsiterepair",
+      "target": "apps_extension_test_auth_session_probe_test_enablewebsiteadoption",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/auth-session-probe.test.ts",
+      "source_location": "L493",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_auth_session_probe_test",
+      "target": "apps_extension_test_auth_session_probe_test_enablewebsiterepair",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/auth-session-probe.test.ts",
+      "source_location": "L501",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
+      "target": "apps_extension_src_auth_tokens_getbackgroundauthsession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L330",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
+      "target": "apps_extension_src_auth_tokens_issameextensionauthsession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L331",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
+      "target": "apps_extension_src_auth_tokens_commitstoredauthtokensifcurrent",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L338",
       "weight": 1.0,
       "_origin": "ast"
     }
