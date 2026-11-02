@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
 	PanelRoomActions,
+	ROOM_START_PRESENTATION_TIMEOUT_MS,
 	type PanelRoomActionsProps,
 } from "../src/panel-room-actions";
 
@@ -159,7 +160,7 @@ describe("real room action feedback", () => {
 			roomReady: false,
 			busy: true,
 			remainingSeconds: null,
-			label: "Creating room",
+			label: "Create room",
 		});
 		expect(host.querySelector(".panel-idle-time")?.textContent).toContain(
 			"12:34",
@@ -200,6 +201,30 @@ describe("real room action feedback", () => {
 		await render({ remainingSeconds: 741 });
 		expect(host.querySelector(".panel-flying-counter")).toBe(flight);
 		expect(flight?.textContent).toContain("12:21");
+	});
+	it("bounds a stalled initial snapshot without cancelling the room or locking its leave action", async () => {
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", label: "Leave room", isHost: false, remainingSeconds: null });
+		expect(button("Create room").disabled).toBe(true);
+		await advance(ROOM_START_PRESENTATION_TIMEOUT_MS - 1);
+		expect(button("Create room").disabled).toBe(true);
+		await advance(1);
+		expect(button("Leave room").disabled).toBe(false);
+		await click("Leave room");
+		expect(props.onPrimaryAction).toHaveBeenCalledTimes(2);
+	});
+	it("shows a quiet timer placeholder for delayed time, with confirmation still available", async () => {
+		await render({ remainingSeconds: null, awaitingHostingTime: true });
+		expect(host.querySelector(".panel-action-time-pending")).not.toBeNull();
+		expect(button("End room").dataset.showAction).toBe("false");
+		expect(button("End room").disabled).toBe(false);
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		await render({ confirming: true, label: "Press again to end" });
+		expect(button("Press again to end").dataset.showAction).toBe("true");
+		await render({ confirming: false, label: "End room", remainingSeconds: 742, awaitingHostingTime: false });
+		expect(host.querySelector(".panel-action-time-pending")).toBeNull();
+		expect(button("End room").textContent).toContain("12:22");
 	});
 	it("accepts the first fresh timer after the button transition has already finished", async () => {
 		const animations = emulateLayoutAndAnimation();

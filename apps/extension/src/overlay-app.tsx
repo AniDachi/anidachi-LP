@@ -4953,10 +4953,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		setAuthMessage(null);
 		try {
 			await waitForOverlayPaint();
-			const created = await createAndConnectRoom("manual");
-			if (created) {
-				showRoomActionFeedback("room-created");
-			}
+			await createAndConnectRoom("manual");
 		} catch (error) {
 			if (showActiveRoomConflict(error)) {
 				logDebug("overlay.room", "create found another active room");
@@ -6267,9 +6264,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					{quotaExhausted ? <>
 						<FreeQuotaNotice state={displayedQuotaNotice!} onRetry={refreshDisplayedQuota} compact />
 						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
-					</> : <PanelRoomActions key={authSessionKey ?? "anonymous"}
-						scopeKey={`${authSessionKey}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
+					</> : <PanelRoomActions key={roomAuthSessionKeyRef.current ?? "anonymous"}
+						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
+						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
 						remainingSeconds={roomId ? (isConnected && isHost ? (hostingTimeClock.observed ? liveHostingTime?.remainingSeconds ?? null : quotaRemainingSeconds) : null) : (accountHostingTime.mode === "legacy" ? freeQuotaNotice.availableSeconds : accountHostingTime.remainingSeconds)}
