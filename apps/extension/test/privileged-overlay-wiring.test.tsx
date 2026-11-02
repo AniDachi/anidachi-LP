@@ -1977,6 +1977,91 @@ describe("privileged overlay wiring", () => {
     },
   );
 
+  it.each(["ready", "credential-rotation", "connection-error", "admission-error"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "stable-login" };
+    installActiveHostRoomRuntime({ getSession: () => session });
+    const at = Date.parse("2026-11-01T12:00:00Z");
+    const period = { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") };
+    const access = { kind: "daily_free" as const, budgetSeconds: 1200 as const, usedSeconds: 420, remainingSeconds: 780, metering: false };
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: {
+      accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000,
+      period, access, activeRoom: null, canCreateRoom: true,
+    } });
+    const admission = deferred<boolean>();
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      if (args[0]?.type === "ANIDACHI_ROOM_DEPARTURE") return { ok: true, outcome: "departed" };
+      if (args[0]?.command === "create-room" && !await admission.promise) throw new Error("Creation unavailable. Try again.");
+      const result = await (original as any)(...args);
+      if (args[0]?.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner } };
+      if (args[0]?.command === "create-room") return { ...result, room: { ...result.room, roomSession: { ...result.room.roomSession, ownerUserId: owner } } };
+      return result;
+    });
+    let options!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { options = next; next.onStatus("connecting"); });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      const initialAction = primaryRoomAction(view.container);
+      if (outcome === "credential-rotation") session = { ...session, accessToken: "rotated-access", refreshToken: "rotated-refresh", authRevision: "rotated-revision" };
+      await click(button(view.container, "Create room"));
+      await vi.waitFor(() => expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1));
+      const expectPending = () => {
+        const action = primaryRoomAction(view.container);
+        expect(action.textContent).toBe("Create room");
+        expect(action.getAttribute("aria-label")).toBe("Create room");
+        expect(action.disabled).toBe(true);
+        expect(action.classList.contains("room-exit")).toBe(false);
+      };
+      expectPending();
+      expect(primaryRoomAction(view.container)).toBe(initialAction);
+      await click(primaryRoomAction(view.container));
+      expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1);
+      if (outcome === "admission-error") {
+        await act(async () => admission.resolve(false));
+        await flushMountedWork();
+        expect(view.container.textContent).toContain("Creation unavailable. Try again.");
+        expect(primaryRoomAction(view.container).disabled).toBe(false);
+        expect(primaryRoomAction(view.container).textContent).toBe("Create room");
+        expect(options).toBeUndefined();
+        return;
+      }
+      await act(async () => admission.resolve(true));
+      await vi.waitFor(() => expect(options).toBeDefined());
+      await flushMountedWork();
+      expectPending(); // HTTP success must not flash Room created or End room.
+      await click(primaryRoomAction(view.container));
+      expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1);
+      if (outcome === "connection-error") {
+        await act(async () => options.onStatus("error"));
+        expect(primaryRoomAction(view.container).disabled).toBe(false);
+        expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("Leave room");
+        await trustedClick(primaryRoomAction(view.container));
+        await flushRoomActionWork();
+        expect(view.container.querySelector(".panel-primary-action.room-exit")).toBeNull();
+        return; // Before membership arrives, the existing escape action is leave.
+      }
+      await act(async () => options.onStatus("connected"));
+      expectPending(); // Socket open is not yet authoritative membership.
+      await act(async () => options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+        participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }],
+      }));
+      // A distinct render before HOSTING_TIME must not flash the End label.
+      expect(view.container.querySelector(".panel-action-time-pending")).not.toBeNull();
+      expect(primaryRoomAction(view.container).dataset.showAction).toBe("false");
+      expect(view.container.querySelector(".panel-time-counter")).toBeNull();
+      await act(async () => options.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
+        snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, serverTime: at, period, access },
+      }));
+      expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("End room");
+      expect(primaryRoomAction(view.container).disabled).toBe(false);
+      expect(primaryRoomAction(view.container).classList.contains("room-exit")).toBe(true);
+      expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
+      expect(view.container.textContent).not.toMatch(/Creating room|Room created/);
+    } finally { await unmount(view.root); }
+  });
+
   it("shows authoritative Free20 idle/live time despite legacy canHost false, retires unknown, and only exhausts on server termination", async () => {
     const owner = "22222222-2222-4222-8222-222222222222";
     installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
