@@ -23,7 +23,7 @@ export function Free20WarningNotice({ onDismiss, restoreFocus }: { onDismiss(): 
     }}>
     <div role="status" aria-live="polite" aria-atomic="true">Free hosting time is running low</div>
     <div className="free20-warning-actions">
-      <a href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer" onClick={onDismiss}>View plans</a>
+      <a href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer" onClick={onDismiss}>View plans</a>
       <button type="button" aria-label="Dismiss hosting time warning" onClick={dismiss}>Dismiss</button>
     </div>
   </aside>;

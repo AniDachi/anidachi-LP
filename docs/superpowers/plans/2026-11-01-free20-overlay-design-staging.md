@@ -14,7 +14,10 @@ remain unfinished, so this change does not activate it.
 ## Task 1: Preserve real action outcomes
 
 - Keep camera/microphone controls and room/invite/people/settings behavior.
-- Avatar opens the channel account page; View plans below name/plan opens billing.
+- Avatar opens the channel account page. View plans opens the channel `/pricing`
+  page, including the low-time warning and exhausted-limit action. The header
+  link is shown only when the server confirms the current account's Free plan;
+  hide it for Plus, Pro and an unknown plan (owner correction, November 2).
 - Copy uses the current room invitation and shows microphone-style feedback only
   after clipboard success. Scope late results to the room/login/connection.
 - Rotate only the sync icon. Report `Sync sent` only when the existing controller

@@ -19,7 +19,7 @@ export function FreeQuotaNotice({ state, onRetry, compact = false }: { state: Fr
     {!ready && <div className="free-quota-footer">
       <span>You can still join someone else's room.</span>
       {state.kind === "unavailable" ? <button type="button" className="free-quota-retry" onClick={onRetry}><RefreshCw size={13} aria-hidden="true" />Retry</button> : null}
-      <a className="free-quota-plans" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={13} aria-hidden="true" /></a>
+      <a className="free-quota-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={13} aria-hidden="true" /></a>
     </div>}
   </section>;
 }

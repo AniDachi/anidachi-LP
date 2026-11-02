@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793530430.6007223,
-    "seen": 1793533463.160872,
-    "ast_hash": "aa048cfdedb38cd24d82ca0620889be4",
+    "mtime": 1793590529.4185991,
+    "seen": 1793590718.2582688,
+    "ast_hash": "b3e19200c63d5962b0bf0b37fafd3d08",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793528024.6428642,
-    "seen": 1793533463.1608791,
-    "ast_hash": "fae93d266319c7e49b16f8579135808e",
+    "mtime": 1793590482.6860669,
+    "seen": 1793590718.258271,
+    "ast_hash": "eb2540df0d84758689b9135ab3e94590",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -8052,9 +8052,9 @@
     "semantic_hash": "c307336ae0f5e780ca38cb148337f3b4"
   },
   "apps/extension/src/free-quota-notice.tsx": {
-    "mtime": 1793510705.8576336,
-    "seen": 1793510991.531958,
-    "ast_hash": "fcb3304f3a666edc273b273ca0c8b146",
+    "mtime": 1793590529.4397042,
+    "seen": 1793590718.258264,
+    "ast_hash": "ccd0d7ca77c8e96c7e58a5375aa38155",
     "semantic_hash": ""
   },
   "apps/extension/src/room-quota-status-client.ts": {
@@ -11220,10 +11220,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793510529.1458962,
-    "seen": 1793511280.794296,
+    "mtime": 1793590580.23701,
+    "seen": 1793590781.72058,
     "ast_hash": "",
-    "semantic_hash": "79ad2f24b59165f37153b52d4121e03c"
+    "semantic_hash": "7a4fad9cc032bc1157c375b0d4ea8bc0"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11400,9 +11400,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/free20-warning-notice.tsx": {
-    "mtime": 1793527928.8173144,
-    "seen": 1793533463.1608698,
-    "ast_hash": "098bbeac61ebc1a9cb921b135d19344a",
+    "mtime": 1793590529.4578364,
+    "seen": 1793590718.258267,
+    "ast_hash": "8dfd4766a488c7fa84e4f01eff7c7e7c",
     "semantic_hash": ""
   },
   "apps/extension/src/free20-warning-styles.ts": {
@@ -11424,9 +11424,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/free20-warning-notice.test.tsx": {
-    "mtime": 1793527922.5025268,
-    "seen": 1793533463.160877,
-    "ast_hash": "94ad2bf1e6aa48b790e08e96a83a4aad",
+    "mtime": 1793590482.663628,
+    "seen": 1793590718.258271,
+    "ast_hash": "f2d34b1a372bdfee497e990bbfd6d415",
     "semantic_hash": ""
   },
   "apps/extension/test/use-free20-warning.test.tsx": {
@@ -11608,5 +11608,11 @@
     "seen": 1793533463.2373729,
     "ast_hash": "",
     "semantic_hash": "6ce363224ce6262379ea3df20328f16c"
+  },
+  "apps/extension/test/free-quota-notice.test.tsx": {
+    "mtime": 1793590482.7054012,
+    "seen": 1793590718.25827,
+    "ast_hash": "2809cb599178ecf8ce6fcf0318e037ff",
+    "semantic_hash": ""
   }
 }

@@ -6206,7 +6206,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 										authAuthenticated ? hostingDisplay.state.access?.planCode ?? null : null
 									}
 								/>
-								{authAuthenticated && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
+								{authAuthenticated && hostingDisplay.state.access?.planCode === "free" && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
 								{roomId && !mediaV3 ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
@@ -6266,7 +6266,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{quotaExhausted ? <>
 						<FreeQuotaNotice state={displayedQuotaNotice!} onRetry={refreshDisplayedQuota} compact />
-						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/account/billing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
+						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
 					</> : <PanelRoomActions key={authSessionKey ?? "anonymous"}
 						scopeKey={`${authSessionKey}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
