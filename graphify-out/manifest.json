@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793590529.4185991,
-    "seen": 1793590718.2582688,
-    "ast_hash": "b3e19200c63d5962b0bf0b37fafd3d08",
+    "mtime": 1793592833.8138113,
+    "seen": 1793593718.151436,
+    "ast_hash": "13bc9d6c41a83795a78f6bdb2ae09005",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -11196,34 +11196,34 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions-styles.ts": {
-    "mtime": 1793510795.496675,
-    "seen": 1793510991.531967,
-    "ast_hash": "5485fec66634a803da7a8d55dab4d9f3",
+    "mtime": 1793593690.1823735,
+    "seen": 1793593718.1514392,
+    "ast_hash": "7f3799c8e45da0a3e568efd0f8322996",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
-    "mtime": 1793514608.0982773,
-    "seen": 1793514924.17787,
-    "ast_hash": "7390edc88fea2baa373972db8d2235e3",
+    "mtime": 1793593690.1610725,
+    "seen": 1793593718.1514409,
+    "ast_hash": "df2d5ddf6b7d083693b2e119d8d4f997",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-start-motion.ts": {
-    "mtime": 1793510870.5178938,
-    "seen": 1793510991.5319722,
-    "ast_hash": "78dcb0d3733b3ae127a4d6d24c221acc",
+    "mtime": 1793593569.5784242,
+    "seen": 1793593718.1514418,
+    "ast_hash": "4f0d6d1c77de827192e86ad102af1f6e",
     "semantic_hash": ""
   },
   "apps/extension/test/panel-room-actions.test.tsx": {
-    "mtime": 1793514607.2706726,
-    "seen": 1793514924.177875,
-    "ast_hash": "e24608b508fa77ad0e9fd9ec91f1bc26",
+    "mtime": 1793593451.0092046,
+    "seen": 1793593718.1514418,
+    "ast_hash": "ab0a32da05a7b4992bb30a6c90fd2d59",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793590580.23701,
-    "seen": 1793590781.72058,
+    "mtime": 1793594288.081443,
+    "seen": 1793594580.2725499,
     "ast_hash": "",
-    "semantic_hash": "7a4fad9cc032bc1157c375b0d4ea8bc0"
+    "semantic_hash": "727e5820471ba454296a29be98265015"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,

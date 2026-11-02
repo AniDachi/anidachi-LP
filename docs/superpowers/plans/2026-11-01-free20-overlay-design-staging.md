@@ -11,6 +11,11 @@ permission to activate Free20 applies only when the whole system is ready;
 live time events, trial transition, purchase delivery and enabled acceptance
 remain unfinished, so this change does not activate it.
 
+That boundary describes the initial November 1 design delivery. Subsequent live
+time wiring and controlled staging activation are tracked in the
+[readiness plan](2026-11-01-free20-staging-readiness.md). The November 2 correction
+below uses those existing live time observations and does not change activation.
+
 ## Task 1: Preserve real action outcomes
 
 - Keep camera/microphone controls and room/invite/people/settings behavior.
@@ -59,3 +64,31 @@ of animation/feedback after closing the panel or changing the room.
 
 Revert this UI commit on staging and rebuild the narrow staging artifact. No
 server schema, accounting, commercial switches or production artifacts change.
+
+## November 2: Room-start timer motion correction
+
+The owner approved the local component rehearsal and requested delivery through
+a staging PR into the same unpacked extension folder for real-room inspection.
+
+- Room readiness and the first valid `HOSTING_TIME` can arrive in separate
+  renders. Start the button transition when the room is ready, then move the
+  first fresh finite counter into End without replaying the button transition.
+- Reserve the idle action geometry during admission without retaining expired
+  digits. Keep the button height, width and baseline; fade the original orange
+  surface and Create label into the red End state using the accepted easing.
+- A pending time observation is distinct from confirmed unlimited access. Never
+  animate the old account number as if it were current room authority; update
+  in-flight digits from current props and retire them immediately on unknown
+  access, source/connection change, confirmation, cancellation or unmount.
+- Respect reduced motion. Native hover and keyboard focus reveal End; end
+  confirmation must be visible immediately even during the transition.
+- Preserve camera/microphone placement, existing media controls, room actions,
+  accounting, capacity, shared contracts and server flags.
+
+The local rehearsal renders source components and CSS with simulated replies.
+It covers simultaneous/delayed/changed/unknown/unlimited/failed responses,
+multiple preview scales, hover/end, reduced motion and quota exhaustion. This is
+not a loaded-extension or live-room acceptance result. Exact suite counts,
+independent review, CI, staging artifact identity, backup and folder verification
+belong in the delivery PR/receipt. The owner checks the updated extension after
+Chrome Reload; main, production and Store remain a separate decision.
