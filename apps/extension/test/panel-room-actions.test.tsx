@@ -130,14 +130,25 @@ describe("real room action feedback", () => {
 		expect(host.textContent).not.toContain("Sync sent");
 	});
 	function emulateLayoutAndAnimation() {
+		const animations: { finish(): void }[] = [];
 		vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(298);
 		vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue(
 			new DOMRect(0, 0, 298, 36),
 		);
 		Object.defineProperty(HTMLElement.prototype, "animate", {
 			configurable: true,
-			value: () => ({ finished: new Promise(() => {}), cancel: () => {} }),
+			value: () => {
+				let finish!: () => void;
+				let reject!: (reason: Error) => void;
+				const finished = new Promise<void>((resolve, rejectPromise) => {
+					finish = resolve;
+					reject = rejectPromise;
+				});
+				animations.push({ finish });
+				return { finished, cancel: () => reject(new Error("Animation cancelled")) };
+			},
 		});
+		return animations;
 	}
 	it("waits for the asynchronous room snapshot before moving the idle timer", async () => {
 		emulateLayoutAndAnimation();
@@ -172,6 +183,86 @@ describe("real room action feedback", () => {
 		await click("Create room");
 		await render({ roomId: "new-room", roomReady: false, label: "End room", remainingSeconds: null });
 		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		expect(host.querySelector<HTMLElement>(".panel-room-actions")?.dataset.timedLayout).toBe("true");
+	});
+	it("moves the fresh timer into an already confirmed room when time arrives after the room snapshot", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room", retainIdleTimeWhileConnecting: false });
+		await click("Create room");
+		await render({ roomId: "room-a", roomReady: false, busy: true, remainingSeconds: null });
+		await render({ roomReady: true, busy: false, label: "End room", awaitingHostingTime: true });
+		expect(button("End room").disabled).toBe(false);
+		expect(button("Copy invite")).toBeDefined();
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		await render({ remainingSeconds: 742, awaitingHostingTime: false });
+		const flight = host.querySelector(".panel-flying-counter");
+		expect(flight?.textContent).toContain("12:22");
+		await render({ remainingSeconds: 741 });
+		expect(host.querySelector(".panel-flying-counter")).toBe(flight);
+		expect(flight?.textContent).toContain("12:21");
+	});
+	it("accepts the first fresh timer after the button transition has already finished", async () => {
+		const animations = emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", roomReady: true, label: "End room", remainingSeconds: null, awaitingHostingTime: true });
+		await act(async () => animations.forEach(animation => animation.finish()));
+		expect(host.querySelector("[data-room-motion]")).toBeNull();
+		await render({ remainingSeconds: 742, awaitingHostingTime: false });
+		expect(host.querySelector(".panel-flying-counter")?.textContent).toContain("12:22");
+		await act(async () => animations.forEach(animation => animation.finish()));
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		expect(host.querySelector("[data-room-motion]")).toBeNull();
+		expect(button("End room").textContent).toContain("12:22");
+	});
+	it("shows end confirmation immediately even during the start transition", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", roomReady: true, label: "End room" });
+		await render({ confirming: true, label: "Press again to end" });
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		expect(host.querySelector("[data-room-motion]")).toBeNull();
+		expect(button("Press again to end").dataset.showAction).toBe("true");
+	});
+	it("uses the final state directly when reduced motion is requested", async () => {
+		emulateLayoutAndAnimation();
+		vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", roomReady: true, label: "End room", remainingSeconds: 742 });
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		expect(host.querySelector("[data-room-motion]")).toBeNull();
+		expect(button("End room").textContent).toContain("12:22");
+	});
+	it("uses the current server time for the flight instead of the pre-create value", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", roomReady: true, label: "End room", remainingSeconds: 742 });
+		expect(host.querySelector(".panel-flying-counter")?.textContent).toContain("12:22");
+	});
+	it("retires flying digits as soon as live time becomes unknown and does not replay on recovery", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", roomReady: true, label: "End room" });
+		expect(host.querySelector(".panel-flying-counter")).not.toBeNull();
+		await render({ remainingSeconds: null, awaitingHostingTime: true });
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		await render({ remainingSeconds: 742, awaitingHostingTime: false });
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+	});
+	it("discards a pending timer flight on unlimited access or a different source", async () => {
+		emulateLayoutAndAnimation();
+		for (const boundary of ["unlimited", "source"] as const) {
+			await render({ roomId: null, roomReady: false, label: "Create room", remainingSeconds: 754 });
+			await click("Create room");
+			await render({ roomId: "room-a", roomReady: true, label: "End room", remainingSeconds: null, awaitingHostingTime: true });
+			await render(boundary === "unlimited" ? { awaitingHostingTime: false } : { scopeKey: "login-a:source-2" });
+			await render({ remainingSeconds: 742, awaitingHostingTime: false });
+			expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		}
 	});
 	it("discards a failed start and never replays it for another login or restored room", async () => {
 		emulateLayoutAndAnimation();
