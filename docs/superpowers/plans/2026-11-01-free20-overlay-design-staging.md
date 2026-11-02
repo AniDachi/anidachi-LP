@@ -210,3 +210,29 @@ loaded-extension acceptance. Extension checks/tests, narrow artifact validation,
 independent review and staging PR/CI delivery are required before updating the
 same owner extension folder. There is no backend, protocol, permission, policy,
 main, production or Store change; rollback is an extension commit revert/rebuild.
+
+## November 2: Closing presentation waits for ready account time
+
+The owner chose to keep a red `Closing room` action until end completion and a
+fresh account read, then animate directly to `Create room` with the ready timer.
+This supersedes any proposal to hold the old live-room digits in the idle slot.
+
+- Actual room termination and media shutdown remain immediate. A separate,
+  login/room-scoped presentation holds only the disabled red action, without
+  actionable room controls, old timer values or a skeleton strip.
+- The post-terminal room epoch and post-HTTP settlement revision must each have
+  a completed account read. An earlier response/error cannot release this view.
+  Confirmed unlimited access has no finite timer; exhaustion keeps its existing
+  terminal screen. Failure offers the existing retry. The presentation is capped
+  at twelve seconds and is retired by a different login or room.
+- Use the same 640 ms easing for the reverse button movement/color blend and
+  introduction of the freshly confirmed timer. Preserve action-row geometry,
+  reduced motion, camera/microphone behavior and existing room-end confirmation.
+  The idle action reads `Create room` directly, without `Room closed` flicker.
+- Validate complete OverlayApp with delayed settlement/read, paid access,
+  exhausted/failed reads, reopening and reduced motion. Source simulation and
+  automated checks do not replace the owner's loaded staging extension check.
+
+Scope remains extension presentation; no accounting, server contract, protocol,
+permissions, policy gates or production rollout changes. Rollback is a staging
+extension revert/rebuild and restoration of the previous verified folder.

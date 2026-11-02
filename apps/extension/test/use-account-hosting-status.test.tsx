@@ -71,6 +71,27 @@ describe("account Free20 display", () => {
     await act(async () => early({ mode: "free20", status }));
     expect(current.remainingSeconds).toBe(600);
   });
+  it("does not mark an old failure complete for the post-settlement read", async () => {
+    vi.mocked(options.request!).mockRejectedValue(new Error("settling"));
+    await render({ roomId: "room-a" }); await render({ roomId: null });
+    await act(async () => vi.advanceTimersByTimeAsync(2_100));
+    expect(current.readComplete).toBe(true); expect(current.error).toBe(true);
+    let resolve!: (value: any) => void;
+    vi.mocked(options.request!).mockImplementation(() => new Promise(r => { resolve = r; }));
+    await render({ settlementRevision: 1 });
+    expect(current.readComplete).toBe(false);
+    await act(async () => resolve({ mode: "free20", status }));
+    expect(current.readComplete).toBe(true); expect(current.remainingSeconds).toBe(780);
+  });
+  it("never returns early digits as the result of a failed post-settlement read", async () => {
+    await render(); await render({ roomId: "room-a" }); await render({ roomId: null });
+    expect(current.remainingSeconds).toBe(780);
+    vi.mocked(options.request!).mockRejectedValue(new Error("offline"));
+    await render({ settlementRevision: 1 }); expect(current.remainingSeconds).toBeNull();
+    await act(async () => vi.advanceTimersByTimeAsync(2_100));
+    expect(current.readComplete).toBe(true); expect(current.error).toBe(true);
+    expect(current.remainingSeconds).toBeNull(); expect(current.planCode).toBe("free");
+  });
   it("accepts a fresh active-room account observation after this tab was taken over", async () => {
     await render(); await render({ roomId: "room-a" });
     vi.mocked(options.request!).mockResolvedValueOnce({ mode: "free20", status: { ...status, activeRoom: { roomId: "room-a", role: "host" }, canCreateRoom: false } })
@@ -106,6 +127,7 @@ describe("account Free20 display", () => {
     await act(async () => vi.advanceTimersByTimeAsync(5_500));
     expect(options.request).toHaveBeenCalledTimes(1);
     expect(current.error).toBe(true); expect(current.busy).toBe(false);
+    expect(current.readComplete).toBe(true);
   });
   it("runs an explicit retry immediately after bounded recovery fails", async () => {
     vi.mocked(options.request!).mockRejectedValue(new Error("offline"));

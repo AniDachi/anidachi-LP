@@ -2312,7 +2312,7 @@ describe("privileged overlay wiring", () => {
     { role: "viewer", trigger: "event" },
     { role: "host", trigger: "socket" },
     { role: "viewer", trigger: "socket" },
-  ] as const)("expires ordinary room-end feedback inside the button ($role, $trigger)", async ({role, trigger}) => {
+  ] as const)("returns directly to Create after an ordinary room end ($role, $trigger)", async ({role, trigger}) => {
     installActiveHostRoomRuntime();
     let connection!: Parameters<RoomClient["connect"]>[0];
     vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
@@ -2336,11 +2336,11 @@ describe("privileged overlay wiring", () => {
         if (trigger === "event") connection.onEvent({type:"ROOM_ENDED",roomId:"room-a",endedAt:Date.now(),reason:"host_ended"});
         else connection.onTerminalClose?.(4004);
       });
-      expect(primaryRoomAction(view.container).textContent).toBe("Room closed");
+      expect(primaryRoomAction(view.container).textContent).toBe("Create room");
       expect(view.container.querySelector(".auth-notice")).toBeNull();
       expect(location.hash.includes("anidachiRoom")).toBe(false);
       await act(async () => vi.advanceTimersByTimeAsync(1999));
-      expect(primaryRoomAction(view.container).textContent).toBe("Room closed");
+      expect(primaryRoomAction(view.container).textContent).toBe("Create room");
       await act(async () => vi.advanceTimersByTimeAsync(1));
       expect(primaryRoomAction(view.container).textContent).toBe("Create room");
       expect(primaryRoomAction(view.container).disabled).toBe(false);
@@ -3805,7 +3805,7 @@ describe("privileged overlay wiring", () => {
 		await click(await waitForButton(view.container, "Turn camera on"));
 		await click(await waitForButton(view.container, "Turn camera off"));
 		await trustedClick(primaryRoomAction(view.container));
-		await waitForText(view.container, "Room closed");
+		await waitForText(view.container, "Create room");
 		const nextCameraRoomAction = await waitForEnabledPrimaryRoomAction(
 			view.container,
 		);
@@ -3952,7 +3952,7 @@ describe("privileged overlay wiring", () => {
 		await selectQuickMicrophoneMode(view.container, "push-to-talk");
 		await selectQuickMicrophoneMode(view.container, "open-mic");
 		await trustedClick(primaryRoomAction(view.container));
-		await waitForText(view.container, "Room closed");
+		await waitForText(view.container, "Create room");
 		const nextVoiceRoomAction = await waitForEnabledPrimaryRoomAction(
 			view.container,
 		);

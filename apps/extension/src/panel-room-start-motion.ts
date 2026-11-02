@@ -30,6 +30,7 @@ export function animatePanelRoomStart(
 	from: PanelRoomStart,
 	strip: HTMLElement,
 	button: HTMLElement,
+	direction: "start" | "end" = "start",
 ) {
 	const animations = new Set<Animation>();
 	const ghosts = new Set<HTMLElement>();
@@ -67,6 +68,9 @@ export function animatePanelRoomStart(
 	if (!Number.isFinite(scale) || scale <= 0) return noMotion;
 	document.addEventListener("visibilitychange", onVisibilityChange);
 	window.addEventListener("resize", cancel);
+	// Read final layout, not a partially running CSS left/width transition.
+	strip.setAttribute("data-room-motion", "true");
+	strip.setAttribute("data-room-motion-direction", direction);
 	const to = button.getBoundingClientRect();
 	const targetStyle = getComputedStyle(button);
 	const animate = (
@@ -140,13 +144,21 @@ export function animatePanelRoomStart(
 
 	// Move the existing DOM counter once with the button. Its text can change
 	// from the bounded last observation to live time without another mount/flight.
-	const counter = strip.querySelector<HTMLElement>(".panel-action-timer .panel-time-counter");
-	if (from.counter && counter) {
+	const counter = strip.querySelector<HTMLElement>(".panel-time-counter");
+	if ((from.counter || direction === "end") && counter) {
 		const target = counter.getBoundingClientRect();
+		const source = from.counter?.rect ?? {
+			left: from.button.left + (from.button.width - target.width) / 2,
+			top: from.button.top + (from.button.height - target.height) / 2,
+		};
 		animate(counter, [
-			{ transform: `translate(${(from.counter.rect.left - target.left) / scale}px,${(from.counter.rect.top - target.top) / scale}px)` },
-			{ transform: "translate(0,0)" },
+			{ transform: `translate(${(source.left - target.left) / scale}px,${(source.top - target.top) / scale}px)`, opacity: direction === "end" ? 0 : 1 },
+			{ transform: "translate(0,0)", opacity: 1 },
 		], 640);
+	}
+	if (direction === "end") {
+		const targetLabel = button.querySelector<HTMLElement>(".panel-action-label");
+		if (targetLabel) animate(targetLabel, [{ opacity: 0 }, { opacity: 1 }], 240, 150);
 	}
 	// Let the moving button clear the action slots before revealing them. Their
 	// own entry animations finish behind this fade, so no icon slides over it.
