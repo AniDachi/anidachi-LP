@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793610923.8597407,
-    "seen": 1793611214.927606,
-    "ast_hash": "7bbf4931de30aefe4fc82d4cb1fd9333",
+    "mtime": 1793618111.9394126,
+    "seen": 1793618217.000942,
+    "ast_hash": "d33500f6bda0afb3b9956e78389e86aa",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793537029.0686483,
-    "seen": 1793537291.6934159,
+    "mtime": 1793619052.7385142,
+    "seen": 1793619957.272842,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "0855eb6174edea714ea6d2a1ba61525e"
+    "semantic_hash": "7f48b373d6d5d5b1e105985800d0ac21"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793610805.7787411,
-    "seen": 1793611214.927615,
-    "ast_hash": "c08b1ffd7c279bea7ff98afa5689fd74",
+    "mtime": 1793618081.1595626,
+    "seen": 1793618217.000948,
+    "ast_hash": "1ce5f185c5054b07e98e1e40a668315f",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -11196,15 +11196,15 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions-styles.ts": {
-    "mtime": 1793610684.385602,
-    "seen": 1793611214.9276102,
-    "ast_hash": "b855a153131193e9e7c3c810d060335b",
+    "mtime": 1793616965.4555,
+    "seen": 1793618217.0009458,
+    "ast_hash": "e7bf6c7af61ba829b617ba6771b7a12e",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
-    "mtime": 1793610923.8362355,
-    "seen": 1793611214.9276109,
-    "ast_hash": "a246f50460839f97042b0e1043741190",
+    "mtime": 1793618111.9647598,
+    "seen": 1793618217.000947,
+    "ast_hash": "78e378a12a4dd63521ba54a7b5457083",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-start-motion.ts": {
@@ -11220,10 +11220,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793610719.913119,
-    "seen": 1793611215.001982,
+    "mtime": 1793619052.7580333,
+    "seen": 1793619957.272845,
     "ast_hash": "",
-    "semantic_hash": "724abdef2d585217a8d74c7ffc88d1f1"
+    "semantic_hash": "230d3e1005c1fca6a25270c656dcd5b7"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11238,21 +11238,21 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-hosting-time.ts": {
-    "mtime": 1793515242.9162753,
-    "seen": 1793515400.804001,
-    "ast_hash": "372a42a2f1027842f4102856a359f051",
+    "mtime": 1793612974.4233565,
+    "seen": 1793613423.098624,
+    "ast_hash": "e37f11268dd3bfe50236eda94374d56f",
     "semantic_hash": ""
   },
   "apps/extension/src/use-account-hosting-status.ts": {
-    "mtime": 1793610805.6122987,
-    "seen": 1793611214.927613,
-    "ast_hash": "0a6ee04341855a258677674d782b2a36",
+    "mtime": 1793613382.6719122,
+    "seen": 1793613423.0986261,
+    "ast_hash": "c8375d2732f7752d30990fda46927329",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-hosting-time.ts": {
-    "mtime": 1793514303.5282757,
-    "seen": 1793514924.1778738,
-    "ast_hash": "d603b9d803864adfb89d9e67d819f32c",
+    "mtime": 1793613343.5049143,
+    "seen": 1793613423.098627,
+    "ast_hash": "7359df859a06a92021ce6b7c7ec5bcb9",
     "semantic_hash": ""
   },
   "apps/extension/test/account-hosting-status-client.test.ts": {
@@ -11262,21 +11262,21 @@
     "semantic_hash": ""
   },
   "apps/extension/test/room-hosting-time.test.ts": {
-    "mtime": 1793515183.785912,
-    "seen": 1793515400.804009,
-    "ast_hash": "82069160f88459349fbaed6c2f2e8efd",
+    "mtime": 1793613059.52431,
+    "seen": 1793613423.098628,
+    "ast_hash": "7088276a75a965f599b51e848ad3cbe4",
     "semantic_hash": ""
   },
   "apps/extension/test/use-account-hosting-status.test.tsx": {
-    "mtime": 1793610806.0742817,
-    "seen": 1793611214.927616,
-    "ast_hash": "8f3afe68af8e49796c72d20ab0d3415d",
+    "mtime": 1793613371.9896054,
+    "seen": 1793613423.098628,
+    "ast_hash": "984ccccf0532100c7778d327739b38d5",
     "semantic_hash": ""
   },
   "apps/extension/test/use-room-hosting-time.test.tsx": {
-    "mtime": 1793514163.6820767,
-    "seen": 1793514924.177878,
-    "ast_hash": "a24e61f8f3286a65cef98ba812492dba",
+    "mtime": 1793613332.40287,
+    "seen": 1793613423.0986292,
+    "ast_hash": "15db87493b1d0e5faa1965d05288df09",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/free20-display-time.test.ts": {

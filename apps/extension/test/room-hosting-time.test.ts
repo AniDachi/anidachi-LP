@@ -56,6 +56,16 @@ describe("authoritative room hosting time", () => {
     const request = clock.requestRecovery(1_000)!; expect(request).not.toBeNull();
     expect(clock.accept({ ...event(2), requestId: request.requestId }, 1_100)).toBe(true);
   });
+  it("keeps the age of fresh display through throttling but still fences buffered replies", () => {
+    const clock = bound(); clock.accept(event(1), 0); clock.checkContinuity(0, at);
+    clock.checkContinuity(6_000, at + 6_000);
+    expect(clock.read(6_000)?.remainingSeconds).toBe(4);
+    expect(clock.accept(event(2), 6_000)).toBe(false);
+    clock.suspend({ preserveDisplay: true });
+    expect(clock.read(60_000)).toBeNull();
+    clock.checkContinuity(6_100, at + 80_000);
+    expect(clock.read(6_100)).toBeNull(); // a true clock discontinuity is different
+  });
 });
 
 it('requires scoped explicit legacy mode and never downgrades a daily room',()=>{

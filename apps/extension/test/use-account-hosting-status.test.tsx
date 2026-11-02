@@ -60,6 +60,21 @@ describe("account Free20 display", () => {
     expect(options.request).toHaveBeenCalledTimes(2);
     expect(current.remainingSeconds).toBe(780);
   });
+  it("keeps the original fresh display while a tab return revalidates slowly", async () => {
+    await render();
+    let reply!: (value: any) => void;
+    vi.mocked(options.request!).mockImplementation(() => new Promise(resolve => { reply = resolve; }));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    expect(current.remainingSeconds).toBe(780); expect(current.planCode).toBe("free");
+    await act(async () => vi.advanceTimersByTimeAsync(6_000));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")); window.dispatchEvent(new Event("focus")); });
+    expect(current.remainingSeconds).toBe(780); expect(current.planCode).toBe("free");
+    expect(current.busy).toBe(true); expect(options.request).toHaveBeenCalledTimes(2);
+    await act(async () => reply({ mode: "free20", status: { ...status, serverTime: at + 6_000, validUntil: at + 66_000, access: { ...status.access, usedSeconds: 450, remainingSeconds: 750 } } }));
+    expect(current.remainingSeconds).toBe(750);
+  });
   it("supersedes an early room-end read as soon as the end HTTP operation settles", async () => {
     await render(); await render({ roomId: "room-a" });
     let early!: (value: any) => void;
@@ -245,11 +260,55 @@ describe("account Free20 display", () => {
     expect(current.remainingSeconds).toBe(780);
     expect(options.request).toHaveBeenCalledTimes(2);
   });
-  it("hides a reading on sleep/visibility loss and requests one recovery on resume", async () => {
+  it("retires a reading on a real sleep clock discontinuity and requests fresh data", async () => {
     await render(); vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
-    await act(async () => document.dispatchEvent(new Event("visibilitychange"))); expect(current.remainingSeconds).toBeNull();
-    await act(async () => vi.advanceTimersByTimeAsync(6_000));
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    vi.setSystemTime(Date.now() + 60_000); // wall advances while monotonic clock is paused
+    vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible"); await act(async () => { document.dispatchEvent(new Event("visibilitychange")); window.dispatchEvent(new Event("focus")); });
-    expect(options.request).toHaveBeenCalledTimes(2); expect(current.remainingSeconds).toBe(780);
+    expect(options.request).toHaveBeenCalledTimes(2); expect(current.remainingSeconds).toBeNull(); expect(current.planCode).toBeNull();
+  });
+  it.each(["expiry", "UTC reset"])("does not revive the old account display after hidden %s", async boundary => {
+    const nearBoundary = boundary === "expiry" ? { ...status, validUntil: at + 5_000 } : {
+      ...status, serverTime: status.period.resetAt - 5_000, validUntil: status.period.resetAt,
+    };
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: nearBoundary });
+    await render(); expect(current.remainingSeconds).toBe(780);
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    await act(async () => vi.advanceTimersByTimeAsync(6_000));
+    vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    expect(current.remainingSeconds).toBeNull(); expect(current.planCode).toBeNull();
+  });
+  it("does not refresh the observation age when a visible tab's timers were throttled", async () => {
+    await render();
+    const monotonic = performance.now(), wall = Date.now();
+    vi.spyOn(performance, "now").mockReturnValue(monotonic + 10_000);
+    vi.spyOn(Date, "now").mockReturnValue(wall + 10_000);
+    vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(current.remainingSeconds).toBe(780); expect(current.planCode).toBe("free");
+    expect(options.request).toHaveBeenCalledTimes(2);
+    vi.mocked(performance.now).mockReturnValue(monotonic + 60_000);
+    vi.mocked(Date.now).mockReturnValue(wall + 60_000);
+    await render(); expect(current.remainingSeconds).toBeNull();
+  });
+  it("replaces an expiry read invalidated by a subsequent clock discontinuity", async () => {
+    await render();
+    const replies: ((value: any) => void)[] = [];
+    vi.mocked(options.request!).mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(options.request).toHaveBeenCalledTimes(2);
+    vi.setSystemTime(Date.now() + 60_000);
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(options.request).toHaveBeenCalledTimes(3); expect(current.busy).toBe(true);
+    await act(async () => replies[0]({ mode: "free20", status }));
+    expect(current.remainingSeconds).toBeNull();
+    await act(async () => replies[1]({ mode: "free20", status: { ...status, serverTime: at + 121_000, validUntil: at + 181_000 } }));
+    expect(current.remainingSeconds).toBe(780);
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(options.request).toHaveBeenCalledTimes(3);
   });
 });

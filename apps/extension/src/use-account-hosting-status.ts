@@ -112,15 +112,18 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
         }
       } finally { if (ownGeneration === generation) pending = false; }
     }
-    const suspend = () => {
+    const suspend = (preserveDisplay = false) => {
       generation++; pending = false; cancelRetry();
-      // A visibility boundary cancels the read, not just its UI. On return
-      // there is no usable observation to justify the ordinary click cooldown.
+      // Cancel in-flight reads across visibility boundaries, but keep the last
+      // confirmed display with its ORIGINAL age, expiry and room/login scope.
       lastAttempt = Number.NEGATIVE_INFINITY;
-      show({ status: null, periodClock: null, busy: false });
+      show({ ...(!preserveDisplay ? { status: null, periodClock: null } : {}), busy: false });
     };
     const resume = () => {
-      if (document.visibilityState === "hidden") { suspend(); return; }
+      if (document.visibilityState === "hidden") { suspend(true); return; }
+      const now = performance.now(), wall = Date.now();
+      if (now < lastMonotonic || Math.abs(wall - lastWall - (now - lastMonotonic)) > 2_000) suspend();
+      lastMonotonic = now; lastWall = wall;
       if (pending || (current.status && performance.now() - lastAttempt < 5_000)) return;
       expiryRecheckUsed = false; resetRecheckUsed = false;
       void load();
@@ -147,10 +150,15 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
     };
     const interval = setInterval(() => {
       const now = performance.now(), wall = Date.now();
-      const discontinuity = now - lastMonotonic > 5_000 || Math.abs(wall - lastWall - (now - lastMonotonic)) > 2_000;
+      const clockChanged = now < lastMonotonic || Math.abs(wall - lastWall - (now - lastMonotonic)) > 2_000;
+      const discontinuity = now - lastMonotonic > 5_000 || clockChanged;
       lastMonotonic = now; lastWall = wall;
       if (document.visibilityState === "hidden") return;
-      if (discontinuity) { suspend(); if (!expiryRecheckUsed) { expiryRecheckUsed = true; void load(); } return; }
+      if (discontinuity) {
+        // This lifecycle boundary invalidated any pending request. Replace it
+        // even if an earlier expiry already used this activation's recheck.
+        suspend(!clockChanged); expiryRecheckUsed = true; void load(); return;
+      }
       if (!resetRecheckUsed && current.periodClock && current.periodClock.serverTime + Math.max(0, now - current.periodClock.monotonic) >= current.periodClock.resetAt) {
         resetRecheckUsed = true;
         // The UTC boundary retires the observation. Only this fresh read may
@@ -176,7 +184,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
   useEffect(() => { if (visible) openRef.current(); }, [visible]);
   const scoped = state.ownerUserId === ownerUserId && state.sessionKey === sessionKey ? state : empty(ownerUserId, sessionKey);
   const elapsed = Math.max(0, performance.now() - scoped.monotonic);
-  const observation = enabled && scoped.status && document.visibilityState !== "hidden" &&
+  const observation = enabled && scoped.status &&
     Math.abs(Date.now() - scoped.wall - elapsed) < 2_000 &&
     scoped.status.serverTime + elapsed < scoped.status.validUntil &&
     (scoped.status.access.kind !== "daily_free" || scoped.status.serverTime + elapsed < scoped.status.period.resetAt)

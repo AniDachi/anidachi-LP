@@ -35,7 +35,10 @@ export interface PanelRoomActionsProps {
 	roomReady: boolean;
 	/** Owned by OverlayApp so closing the panel cannot retire an in-flight start. */
 	creating?: boolean;
+	/** An invite/restored room is resolving; the personal hosting quota is unrelated. */
+	joining?: boolean;
 	closing?: boolean;
+	closingLabel?: "Closing room" | "Leaving room";
 	idleTimePending?: boolean;
 	idleTimeUnavailable?: boolean;
 	onRetryHosting?(): void;
@@ -83,6 +86,7 @@ export const ROOM_START_PRESENTATION_TIMEOUT_MS = 8_000;
 export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const { roomId, remainingSeconds, busy } = props;
 	const active = roomId !== null;
+	const joining = Boolean(props.joining) && !props.closing;
 
 	const scope = `${props.scopeKey}:${roomId ?? "idle"}`;
 	const currentScope = useRef(scope);
@@ -94,6 +98,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const [pending, setPending] = useState<"copy" | "sync" | null>(null);
 	const stripRef = useRef<HTMLDivElement>(null);
 	const buttonRef = useRef<HTMLButtonElement>(null);
+	const [createPointer, setCreatePointer] = useState<{ x: number; y: number } | null>(null);
 	const start = useRef<PanelRoomStart | null>(null);
 	const startRoomId = useRef<string | null>(null);
 	const [startTime, setStartTime] = useState<number | null | undefined>(
@@ -112,19 +117,19 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	// Preserve the source geometry while admission precedes the live snapshot.
 	// This is the last idle observation, never a locally started allowance.
 	const waitingForRoom = active && (props.creating ?? startTime !== undefined) && !props.roomReady && !props.roomStartInterrupted;
-	const startInterrupted = Boolean(props.roomStartInterrupted || (props.creating === false && !props.roomReady));
-	const visibleActive = Boolean(props.closing) || (active && !waitingForRoom);
+	const startInterrupted = Boolean(props.roomStartInterrupted || (!joining && props.creating === false && !props.roomReady));
+	const visibleActive = Boolean(props.closing) || (active && !waitingForRoom && !joining);
 	// HTTP admission can finish before the first room snapshot. Keep the same
 	// disabled create action throughout that gap; never relabel it as success.
-	const label = props.closing ? "Closing room" : !visibleActive ? "Create room" : waitingForRoom ? "Create room" : props.label;
-	const actionBusy = busy || waitingForRoom || Boolean(props.closing);
+	const label = props.closing ? props.closingLabel ?? "Closing room" : joining ? "Joining room" : !visibleActive ? "Create room" : waitingForRoom ? "Create room" : props.label;
+	const actionBusy = busy || waitingForRoom || joining || Boolean(props.closing);
 	const continuingStart = !startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime));
-	const displaySeconds = props.closing || (!active && props.idleTimeUnavailable) ? null : remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
+	const displaySeconds = joining || props.closing || (!active && props.idleTimeUnavailable) ? null : remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
 		(waitingForRoom && props.retainIdleTimeWhileConnecting !== false ? startTime : null);
 	const timed = typeof displaySeconds === "number" && Number.isFinite(displaySeconds) && (!visibleActive || props.isHost);
 	const awaitingTimer = !props.closing && visibleActive && props.isHost && !timed && Boolean(props.awaitingHostingTime) && !props.roomStartInterrupted;
 	// Reserve the original slot while connecting, without retaining stale digits.
-	const timedLayout = visibleActive || timed || Boolean(props.idleTimePending) || (!visibleActive && (props.idleTimeUnavailable || startTime != null));
+	const timedLayout = !joining && (visibleActive || timed || Boolean(props.idleTimePending) || (!visibleActive && (props.idleTimeUnavailable || startTime != null)));
 	const motion = useRef<ReturnType<typeof animatePanelRoomStart> | null>(null);
 	const exitSnapshot = useRef<PanelRoomStart | null>(null);
 	const descriptionId = useId();
@@ -145,10 +150,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	}, [startingTime?.capturedAt, startDeadline]);
 	useLayoutEffect(() => {
 		// Reopening during admission recaptures the still-visible Create layout.
-		if (!visibleActive && props.creating && stripRef.current && buttonRef.current) {
+		if (!visibleActive && (props.creating || joining) && stripRef.current && buttonRef.current) {
 			start.current = capturePanelRoomStart(stripRef.current, buttonRef.current);
 		}
-	}, [visibleActive, props.creating]);
+	}, [visibleActive, props.creating, joining]);
 
 	useLayoutEffect(() => {
 		++sequence.current;
@@ -209,12 +214,13 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 		if (props.confirming) motion.current?.cancel();
 	}, [props.confirming]);
 	useLayoutEffect(() => {
-		if (!busy && !roomId) {
+		if (!busy && !roomId && !joining) {
 			start.current = null;
 			startRoomId.current = null;
 			setStartTime(undefined);
+			setCreatePointer(null);
 		}
-	}, [busy, roomId]);
+	}, [busy, roomId, joining]);
 	useLayoutEffect(() => {
 		const strip = stripRef.current, button = buttonRef.current;
 		if (!strip || !button) return;
@@ -296,6 +302,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			data-timed={timed}
 			data-timed-layout={timedLayout}
 			data-awaiting-time={awaitingTimer}
+			data-joining={joining}
 		>
 			{!visibleActive && !timed && timedLayout && (
 				<div className="panel-idle-time panel-time-loading" aria-label="Remaining time unavailable">
@@ -313,10 +320,18 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 				aria-label={label}
 				aria-busy={actionBusy}
 				aria-describedby={active && timed ? descriptionId : undefined}
-				disabled={props.disabled || waitingForRoom || props.closing}
+				disabled={props.disabled || waitingForRoom || joining || props.closing}
 				data-show-action={showLabel}
+				data-suppress-start-hover={createPointer !== null}
+				onPointerMove={(event) => {
+					// Moving the button under a stationary cursor is not a new hover.
+					// Only intentional movement in the ready room reveals its action.
+					if (active && props.roomReady && createPointer &&
+						(event.clientX !== createPointer.x || event.clientY !== createPointer.y)) setCreatePointer(null);
+				}}
 				onClick={(event) => {
 					if (!active && stripRef.current && buttonRef.current) {
+						setCreatePointer({ x: event.clientX, y: event.clientY });
 						start.current = capturePanelRoomStart(
 							stripRef.current,
 							buttonRef.current,
