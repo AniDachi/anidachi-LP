@@ -81,10 +81,16 @@ export class RoomHostingTime {
   checkContinuity(monotonic = performance.now(), wall = Date.now()): void {
     const previous = this.clockSample;
     this.clockSample = { monotonic, wall };
-    if (previous && (monotonic < previous.monotonic || monotonic - previous.monotonic > 5_000 || Math.abs(wall - previous.wall - (monotonic - previous.monotonic)) > 2_000)) this.suspend();
+    if (!previous) return;
+    const clockChanged = monotonic < previous.monotonic || Math.abs(wall - previous.wall - (monotonic - previous.monotonic)) > 2_000;
+    if (clockChanged) this.suspend();
+    else if (monotonic - previous.monotonic > 5_000) this.suspend({ preserveDisplay: true });
   }
-  suspend(): void {
-    this.invalidate(); this.serverClock = null; this.pendingRecovery = null;
+  suspend({ preserveDisplay = false }: { preserveDisplay?: boolean } = {}): void {
+    // A tab/focus change fences buffered replies, not the age-bounded display.
+    // A discontinuous clock, transport or identity still invalidates it fully.
+    if (!preserveDisplay) this.invalidate();
+    this.serverClock = null; this.pendingRecovery = null;
     this.requireCorrelatedRecovery = true; this.recoveryNeeded = this.observed;
   }
   needsExpiryRecovery(monotonic = performance.now()): boolean {

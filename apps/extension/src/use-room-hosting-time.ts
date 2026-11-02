@@ -15,19 +15,29 @@ export function useRoomHostingTime(clock: RoomHostingTime, ready: boolean, send:
       if (document.visibilityState === "hidden" || recoveryTimer !== null) return;
       const command = clock.requestRecovery();
       if (command) send(command);
-      else if (clock.observed && recoveryTimer === null) recoveryTimer = setTimeout(() => { recoveryTimer = null; const retry = clock.requestRecovery(); if (retry && document.visibilityState !== "hidden") send(retry); }, 5_000);
+      else if (clock.observed) recoveryTimer = setTimeout(() => { recoveryTimer = null; recover(); }, 5_000);
     };
     const resume = () => {
       const now = performance.now();
       if (document.visibilityState !== "hidden" && now - lastResume < 1_000) return;
-      clock.suspend(); render(n => n + 1);
-      if (document.visibilityState !== "hidden") { lastResume = now; expiryRecheckUsed = false; recover(); }
+      clock.checkContinuity();
+      clock.suspend({ preserveDisplay: true }); render(n => n + 1);
+      if (document.visibilityState === "hidden") lastResume = Number.NEGATIVE_INFINITY;
+      if (document.visibilityState !== "hidden") {
+        lastResume = now;
+        // This recovery also covers expiry of the retained display while its
+        // reply is pending. Do not issue another request for that same gap.
+        expiryRecheckUsed = clock.observed;
+        recover();
+      }
     };
     const interval = setInterval(() => {
       clock.checkContinuity();
-      const needsRecovery = clock.needsExpiryRecovery() || clock.recoveryNeeded;
-      if (document.visibilityState === "hidden") clock.suspend();
-      if (needsRecovery && !expiryRecheckUsed && document.visibilityState !== "hidden") { expiryRecheckUsed = true; recover(); }
+      // A new continuity loss cancels the previous request and needs its own
+      // recovery, even if that earlier request consumed the expiry budget.
+      const needsRecovery = clock.recoveryNeeded || (!expiryRecheckUsed && clock.needsExpiryRecovery());
+      if (document.visibilityState === "hidden") clock.suspend({ preserveDisplay: true });
+      if (needsRecovery && document.visibilityState !== "hidden") { expiryRecheckUsed = true; recover(); }
       render(n => n + 1);
     }, 1_000);
     window.addEventListener("focus", resume); window.addEventListener("pageshow", resume); window.addEventListener("online", resume);
@@ -39,5 +49,5 @@ export function useRoomHostingTime(clock: RoomHostingTime, ready: boolean, send:
     };
   }, [clock, ready, send]);
   clock.checkContinuity();
-  return ready && document.visibilityState !== "hidden" ? clock.read() : null;
+  return ready ? clock.read() : null;
 }

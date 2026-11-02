@@ -90,6 +90,8 @@ describe("privileged overlay wiring", () => {
 		vi.restoreAllMocks();
 		vi.unstubAllGlobals();
 		vi.unstubAllEnvs();
+		history.replaceState(null, "", location.href.split("#")[0]);
+		sessionStorage.clear();
 		document.body.replaceChildren();
 		extensionStorage.values.clear();
 		vi.mocked(listInviteTargets).mockReset();
@@ -2114,6 +2116,142 @@ describe("privileged overlay wiring", () => {
       expect(primaryRoomAction(view.container).classList.contains("room-exit")).toBe(true);
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
       expect(view.container.textContent).not.toMatch(/Creating room|Room created/);
+    } finally { await unmount(view.root); }
+  });
+
+  it.each(["free-invite", "paid-invite", "exhausted-invite", "restored-guest", "rejected-invite", "storage-failure", "slow-snapshot", "guest-leave"])("does not show hosting controls while entering another room: %s", async scenario => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
+    const at = Date.parse("2026-11-01T12:00:00Z");
+    const period = { utcDay: "2026-11-01", resetAt: at + 43_200_000 };
+    const paid = scenario === "paid-invite", exhausted = scenario === "exhausted-invite";
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: {
+      accountHostingVersion: 1, ownerUserId: owner, planCode: paid ? "plus" : "free", serverTime: at, validUntil: at + 60_000, period,
+      access: paid ? { kind: "confirmed_unlimited", source: "paid", validUntil: at + 60_000 }
+        : { kind: "daily_free", budgetSeconds: 1200, usedSeconds: exhausted ? 1200 : 420, remainingSeconds: exhausted ? 0 : 780, metering: false },
+      activeRoom: null, canCreateRoom: !exhausted,
+    } });
+    const record = { ...confirmedRoomSession(), ownerUserId: owner };
+    const caps = { mediaProtocolVersion: 3, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMediaSeats: 8, capabilityRevision: 1, capabilitiesValidUntil: new Date(at + 60_000).toISOString() };
+    const admission = deferred<unknown>();
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      const m = args[0];
+      if (m.type === "ANIDACHI_ROOM_HTTP" && m.command === "connect-room") return admission.promise;
+      if (m.type === "ANIDACHI_ROOM_DEPARTURE") return { ok: true, outcome: "departed" };
+      if (m.type === "ANIDACHI_ROOM_SESSION_STORAGE" && m.command === "clear-if-match") return { ok: true, record: null };
+      if (m.type === "ANIDACHI_ROOM_SESSION_STORAGE" && m.command === "legacy-prefix") return { ok: true, record: null, legacyPrefix: null };
+      if (m.type === "ANIDACHI_ROOM_SESSION_STORAGE" && m.command === "recovery-scope") return { ok: true, record: null, recoveryScope: null };
+      if (m.type === "ANIDACHI_ROOM_SESSION_STORAGE" && m.command === "migrate") return scenario === "storage-failure"
+        ? { ok: false, error: "session storage unavailable" } : { ok: true, record: scenario === "restored-guest" ? record : null };
+      if (scenario === "restored-guest" && m.type === "ANIDACHI_ROOM_SESSION_STORAGE" && ["load", "migrate"].includes(m.command)) return { ok: true, record };
+      const result = await (original as any)(...args);
+      if (m.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner, roomId: "room-a" } };
+      return result;
+    });
+    const priorUrl = location.href;
+    if (scenario !== "restored-guest") history.replaceState(null, "", "#anidachiRoom=room-a");
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { connection = next; next.onStatus("connecting"); });
+    if (scenario === "slow-snapshot") vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance", "Date"] });
+    const view = await renderOverlay();
+    const noHosting = () => {
+      expect(view.container.querySelector('.panel-idle-time,.panel-action-timer,.panel-action-time-pending,.panel-limit-plans,.free-quota-notice,.panel-room-summary')).toBeNull();
+      expect(view.container.querySelector('button[aria-label="Create room"]')).toBeNull();
+    };
+    try {
+      await flushMountedWork();
+      if (view.container.querySelector('button[aria-label="Open Anidachi controls"]')) await click(button(view.container, "Open Anidachi controls"));
+      if (scenario === "storage-failure") {
+        await act(async () => { await vi.waitFor(() => expect(view.container.textContent).toContain("session storage unavailable")); });
+        expect(view.container.querySelector('button[aria-label="Joining room"]')).toBeNull();
+        expect(button(view.container, "Create room").disabled).toBe(false);
+        expect(send.mock.calls.some(([m]: any) => m.command === "connect-room")).toBe(false);
+        return;
+      }
+      await act(async () => { await vi.waitFor(() => expect(send.mock.calls.some(([m]: any) => m.command === "connect-room")).toBe(true)); });
+      if (view.container.querySelector('button[aria-label="Open Anidachi controls"]')) await click(button(view.container, "Open Anidachi controls"));
+      noHosting(); expect(button(view.container, "Joining room").disabled).toBe(true);
+      if (scenario === "rejected-invite") {
+        await act(async () => admission.resolve({ ok: false, status: 404, code: "ROOM_ENDED", error: "Room ended" }));
+        await flushMountedWork();
+        expect(view.container.querySelector('button[aria-label="Joining room"]')).toBeNull();
+        expect(view.container.textContent).toContain("This watch room is no longer available");
+        expect(button(view.container, "Create room").disabled).toBe(false);
+        return;
+      }
+      await act(async () => admission.resolve({ ok: true, connection: { roomToken: "join-token", roomSession: record, capabilities: caps, privilegedRoomAuthority: { ...roomAuthority(), accountUserId: owner, role: "viewer" } } }));
+      await vi.waitFor(() => expect(connection).toBeDefined()); noHosting();
+      await act(async () => connection.onStatus("connected")); noHosting();
+      expect(button(view.container, "Joining room").disabled).toBe(true);
+      if (scenario === "slow-snapshot") {
+        await act(async () => { await vi.advanceTimersByTimeAsync(8_001); });
+        expect(view.container.querySelector('button[aria-label="Joining room"]')).toBeNull();
+        expect(button(view.container, "Leave room").disabled).toBe(false);
+        noHosting();
+      }
+      await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+        participants: [{ ...hostParticipant(), id: owner, role: "viewer", participantSessionId: connection.participantSessionId }, { ...guestParticipant(), role: "host" }] }));
+      noHosting(); expect(button(view.container, "Leave room").disabled).toBe(false);
+      if (scenario === "guest-leave") {
+        const result = await vi.mocked(accountHostingClient.requestAccountHostingStatus).mock.results[0].value;
+        const refreshed = deferred<Awaited<ReturnType<typeof accountHostingClient.requestAccountHostingStatus>>>();
+        vi.mocked(accountHostingClient.requestAccountHostingStatus).mockReturnValue(refreshed.promise);
+        await click(button(view.container, "Leave room")); await flushMountedWork();
+        expect(button(view.container, "Leaving room").disabled).toBe(true);
+        expect(view.container.querySelector('.panel-time-placeholder,.panel-idle-time')).toBeNull();
+        await act(async () => refreshed.resolve(result)); await flushMountedWork();
+        expect(button(view.container, "Create room").disabled).toBe(false);
+        expect(view.container.querySelector('.panel-idle-time strong')?.textContent).toBe("13:00");
+      }
+    } finally { admission.resolve({ ok: false, status: 404, code: "ROOM_ENDED", error: "Room ended" }); await unmount(view.root); vi.useRealTimers(); history.replaceState(null, "", priorUrl); }
+  });
+
+  it.each(["plus", "pro"] as const)("keeps the paid creation flow free of quota UI while account and room reads are pending: %s", async planCode => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) }); // Cached auth profile is Free.
+    const at = Date.parse("2026-11-01T12:00:00Z");
+    const period = { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") };
+    const access = { kind: "confirmed_unlimited" as const, source: "paid" as const, validUntil: at + 3_600_000 };
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: {
+      accountHostingVersion: 1, ownerUserId: owner, planCode, serverTime: at, validUntil: at + 60_000,
+      period, access, activeRoom: null, canCreateRoom: true,
+    } });
+    const capabilities = { mediaProtocolVersion: 3, hostPlanCode: planCode, maxParticipants: planCode === "pro" ? 15 : 6,
+      maxCameras: 4, maxMediaSeats: planCode === "pro" ? 8 : 6, capabilityRevision: 1, capabilitiesValidUntil: new Date(at + 60_000).toISOString() };
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      const result = await (original as any)(...args);
+      if (args[0]?.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner } };
+      if (args[0]?.command === "create-room") return { ...result, room: { ...result.room, capabilities,
+        roomSession: { ...result.room.roomSession, ownerUserId: owner } } };
+      return result;
+    });
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { connection = next; next.onStatus("connecting"); });
+    const view = await renderOverlay();
+    const expectPaid = () => {
+      expect(view.container.querySelector(`.plan-badge.${planCode}`)).not.toBeNull();
+      expect(view.container.querySelector(".panel-idle-time,.panel-action-timer,.panel-action-time-pending,.panel-plan-link,.free-quota-notice,.panel-room-summary")).toBeNull();
+    };
+    try {
+      await click(button(view.container, "Open Anidachi controls")); expectPaid();
+      vi.mocked(accountHostingClient.requestAccountHostingStatus).mockImplementation(() => new Promise(() => {}));
+      await click(button(view.container, "Create room"));
+      await vi.waitFor(() => expect(connection).toBeDefined()); await flushMountedWork();
+      expectPaid();
+      await act(async () => connection.onStatus("connected")); expectPaid();
+      await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+        participants: [{ ...hostParticipant(), id: owner, participantSessionId: connection.participantSessionId }] }));
+      expectPaid(); expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("End room");
+      await act(async () => connection.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
+        snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, serverTime: at, period, access } }));
+      expectPaid();
+      // A later authoritative downgrade still supersedes paid presentation.
+      await act(async () => connection.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
+        snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 2, serverTime: at, period,
+          access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false } } }));
+      expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
     } finally { await unmount(view.root); }
   });
 
@@ -4540,6 +4678,9 @@ function confirmedRoomSession() {
 }
 
 function roomSessionStorageResponse(command: string | undefined) {
+	if (command === "legacy-prefix") return { ok: true, record: null, legacyPrefix: null };
+	if (command === "recovery-scope") return { ok: true, record: null, recoveryScope: null };
+	if (command === "migrate") return { ok: true, record: null };
 	if (command === "load") return { ok: true, record: null };
 	if (command === "prepare") {
 		return { ok: true, record: null, prepared: preparedRoomSession() };

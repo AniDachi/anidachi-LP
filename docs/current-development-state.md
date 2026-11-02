@@ -1,5 +1,24 @@
 # Current Development State
 
+## Accepted Free20 overlay lifecycle corrections, November 2, 2026
+
+The owner tested the successive local staging-channel builds and authorized
+merging their accumulated corrections into `staging`. The
+[overlay plan](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-2-accepted-local-lifecycle-corrections)
+records the final behavior: fresh time/plan continuity on tab/window return,
+intentional hover after creation, paid presentation without quota placeholders,
+guest entry without personal hosting controls, and a ready-data transition after
+guest departure. Room-session initialization errors remain owner-scoped even
+when a later identity refresh clears ordinary auth messages.
+
+Local verification includes 2666 extension tests, typecheck, narrow staging
+artifact validation, isolated source-browser scenarios and independent review.
+The owner reported that the delivered UI now works normally. The staging PR
+records final CI/merge and rebuilt-folder evidence; that delivery is not a
+production promotion or a substitute for outstanding two-participant, purchase,
+mixed-client and UTC-reset acceptance. Server accounting, policy flags, shared
+protocol, permissions and media grants are unchanged by these corrections.
+
 ## Free20 staging delivery and controlled activation, November 1, 2026
 
 The owner authorized completing the necessary staging transition and rehearsal:

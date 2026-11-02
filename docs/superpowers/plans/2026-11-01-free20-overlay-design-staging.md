@@ -236,3 +236,51 @@ This supersedes any proposal to hold the old live-room digits in the idle slot.
 Scope remains extension presentation; no accounting, server contract, protocol,
 permissions, policy gates or production rollout changes. Rollback is a staging
 extension revert/rebuild and restoration of the previous verified folder.
+
+## November 2: Accepted local lifecycle corrections
+
+The owner requested local iteration in the same unpacked staging-channel folder,
+then tested the successive builds and explicitly authorized merging the complete
+set into staging. This supersedes the earlier requirement to merge every visual
+iteration before updating that folder. The final PR must still pass the normal
+gates, preserve unrelated work, and deliver a rebuild from the merged staging SHA.
+
+- On tab/window return, retain still-fresh account and room observations with
+  their original monotonic/wall anchors, owner/login/room scope, TTL and UTC
+  boundary. Cancel old requests across visibility loss, fence buffered room
+  events until correlated recovery, and replace canceled recovery after a new
+  continuity loss. Do not extend validity, grant access or introduce polling.
+- A stationary cursor left by Create must not reveal End as the red button moves
+  underneath it. Intentional pointer movement, keyboard focus and confirmation
+  still reveal the action; reduced-motion behavior remains supported.
+- Fresh validated Plus/Pro account metadata suppresses quota placeholders during
+  room-scoped reads. This does not supply live time or override a later finite
+  room observation. Paid capacity and camera/microphone controls are preserved.
+- Invite/restored-room entry has its own neutral joining presentation. Personal
+  hosting time, Create and the exhausted-hosting screen must not appear during
+  admission. Use real membership before showing guest/host actions; preserve
+  the existing escape action if the first snapshot takes longer than eight
+  seconds. A failed request or session initialization must not leave a false
+  pending state. Owner-scoped initialization errors survive unrelated identity
+  refresh, and restoration never closes controls the user opened himself.
+- After explicit guest departure, retain only the disabled red `Leaving room`
+  action until the current idle account read completes or fails, then reuse the
+  reverse animation. The existing twelve-second bound and login/room retirement
+  apply. Departure, media shutdown and server work are not delayed by animation.
+
+Before delivery, all 2666 extension tests and typecheck passed. Regression probes
+failed against the previous delivered source and passed with the corrections.
+The final isolated full-source browser pass covered 15 entry/exit, paid/free,
+exhaustion, delayed/error and reduced-motion scenarios. Invite variants had zero
+idle-hosting frames, actual transition animation and less than one pixel of
+vertical action-row movement; the guest exit's loading-strip frames fell from
+61 to zero. Earlier local checks cover focus/visibility continuity and hover.
+Independent review found and verified fixes for bounded pending/recovery and
+session-error cases. Exact suite outputs, source hashes and folder backups are
+local execution artifacts; final CI and merge evidence belong in the staging PR.
+
+The owner's visual acceptance does not waive the remaining production gates.
+No Web/Worker/schema, accounting, grant, permission or policy change is included.
+Rollback is a staging revert and rebuild into the same unpacked folder; keep the
+previous verified folder backup. Main, production and Store publication remain
+separate actions.
