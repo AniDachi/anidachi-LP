@@ -34,11 +34,6 @@ export function animatePanelRoomStart(
 	const animations = new Set<Animation>();
 	const ghosts = new Set<HTMLElement>();
 	let cancelled = false;
-	let counterStarted = false;
-	let transitionFinished = false;
-	let counterRetired = false;
-	let counterGhost: HTMLElement | null = null;
-	let counterAnimation: Animation | null = null;
 	const clearMotionFlag = () => {
 		if (!cancelled && animations.size === 0)
 			strip.removeAttribute("data-room-motion");
@@ -61,7 +56,7 @@ export function animatePanelRoomStart(
 	const onVisibilityChange = () => {
 		if (document.visibilityState === "hidden") cancel();
 	};
-	const noMotion = { cancel, updateCounter: (_awaitingTime: boolean) => {} };
+	const noMotion = { cancel };
 	if (
 		!button.animate ||
 		window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
@@ -74,7 +69,6 @@ export function animatePanelRoomStart(
 	window.addEventListener("resize", cancel);
 	const to = button.getBoundingClientRect();
 	const targetStyle = getComputedStyle(button);
-	const startedAt = performance.now();
 	const animate = (
 		node: HTMLElement,
 		frames: Keyframe[],
@@ -115,8 +109,6 @@ export function animatePanelRoomStart(
 			},
 		],
 		640,
-		0,
-		() => { transitionFinished = true; },
 	);
 	const surface = document.createElement("span");
 	surface.className = "panel-start-surface";
@@ -146,70 +138,19 @@ export function animatePanelRoomStart(
 		removeGhost(label),
 	);
 
-	// Room readiness and the authoritative time can arrive in different renders.
-	// Keep the button's transition independent; only fresh digits may join it.
-	const updateCounter = (awaitingTime: boolean) => {
-		if (cancelled || counterRetired || !from.counter) return;
-		const counter = button.querySelector<HTMLElement>(".panel-time-counter");
-		if (!counter) {
-			if (counterStarted || !awaitingTime) {
-				counterRetired = true;
-				if (counterAnimation) {
-					counterAnimation.cancel();
-					animations.delete(counterAnimation);
-				}
-				if (counterGhost) removeGhost(counterGhost);
-				clearMotionFlag();
-			}
-			return;
-		}
-		if (counterStarted) {
-			const digits = counterGhost?.querySelector("strong");
-			if (digits)
-				digits.textContent = counter.querySelector("strong")?.textContent ?? "";
-			return;
-		}
-		// A late response fills the final slot. Never replay the old idle flight
-		// after the button has already settled into its active position.
-		if (transitionFinished || performance.now() - startedAt >= 640) {
-			counterRetired = true;
-			return;
-		}
-		counterStarted = true;
-		const targetCounter = counter.getBoundingClientRect();
-		const currentButton = button.getBoundingClientRect();
-		const currentStrip = strip.getBoundingClientRect();
-		// Remove the in-flight button transform/width from the measured destination.
-		const targetLeft =
-			targetCounter.left + to.left - currentButton.left +
-			(to.width - currentButton.width) / 2;
-		const ghost = counter.cloneNode(true) as HTMLElement;
-		counterGhost = ghost;
-		ghost.classList.add("panel-flying-counter");
-		ghost.setAttribute("aria-hidden", "true");
-		Object.assign(ghost.style, {
-			left: `${(from.counter.rect.left - currentStrip.left) / scale}px`,
-			top: `${(from.counter.rect.top - currentStrip.top) / scale}px`,
-		});
-		strip.append(ghost);
-		ghosts.add(ghost);
-		const elapsed = Math.max(0, performance.now() - startedAt);
-		const delay = Math.max(0, 30 - elapsed);
-		counterAnimation = animate(
-			ghost,
-			[
-				{ transform: "translate(0,0)" },
-				{
-					transform: `translate(${(targetLeft - from.counter.rect.left) / scale}px,${(targetCounter.top - from.counter.rect.top) / scale}px)`,
-				},
-			],
-			Math.max(260, 640 - elapsed - delay),
-			delay,
-			() => {
-				removeGhost(ghost);
-				counterGhost = null;
-			},
-		);
-	};
-	return { cancel, updateCounter };
+	// Move the existing DOM counter once with the button. Its text can change
+	// from the bounded last observation to live time without another mount/flight.
+	const counter = strip.querySelector<HTMLElement>(".panel-action-timer .panel-time-counter");
+	if (from.counter && counter) {
+		const target = counter.getBoundingClientRect();
+		animate(counter, [
+			{ transform: `translate(${(from.counter.rect.left - target.left) / scale}px,${(from.counter.rect.top - target.top) / scale}px)` },
+			{ transform: "translate(0,0)" },
+		], 640);
+	}
+	// Let the moving button clear the action slots before revealing them. Their
+	// own entry animations finish behind this fade, so no icon slides over it.
+	const actions = strip.querySelector<HTMLElement>(".panel-action-icons");
+	if (actions) animate(actions, [{ opacity: 0 }, { opacity: 1 }], 160, 360);
+	return { cancel };
 }

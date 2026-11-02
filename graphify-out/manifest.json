@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793601503.5489419,
-    "seen": 1793601835.8986208,
-    "ast_hash": "69395d8f398f06fd4d8ef9509b23ff9a",
+    "mtime": 1793605080.8347301,
+    "seen": 1793605624.1298602,
+    "ast_hash": "b3a23243c1e9058c4a7370a6b53cb143",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
-    "mtime": 1793528833.0988228,
-    "seen": 1793533463.160874,
-    "ast_hash": "221a3f2a7a1f538ce81525d7ad4f2c26",
+    "mtime": 1793604173.557553,
+    "seen": 1793605624.129867,
+    "ast_hash": "8fade5e25ad912e49d2fa0b152b77c05",
     "semantic_hash": ""
   },
   "apps/extension/src/room-quota-display.ts": {
@@ -564,9 +564,9 @@
     "semantic_hash": "6880c590956fc235cf8f9b0915dbef78"
   },
   "apps/extension/test/room-client-auth.test.ts": {
-    "mtime": 1793529607.3830628,
-    "seen": 1793533463.1608791,
-    "ast_hash": "63dbc4b06d8396f9b4fea50970a8c141",
+    "mtime": 1793605080.8604283,
+    "seen": 1793605624.1298702,
+    "ast_hash": "b20822098ed342de9ad31f1eee6f54e0",
     "semantic_hash": ""
   },
   "apps/extension/test/room-quota-display.test.ts": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793601322.4301672,
-    "seen": 1793601835.8986292,
-    "ast_hash": "ec3e2f96a5359a6b9ba03d6ff239e2d8",
+    "mtime": 1793604975.282316,
+    "seen": 1793605624.129869,
+    "ast_hash": "6d3fb88f9cf7eb8e67d9cc41ad858502",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -11196,34 +11196,34 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions-styles.ts": {
-    "mtime": 1793601941.5476928,
-    "seen": 1793601995.6368508,
-    "ast_hash": "c161c533fb70159597b484b7f0a26d99",
+    "mtime": 1793605956.6302602,
+    "seen": 1793605966.6915,
+    "ast_hash": "ef7df9033ca4040dad63fc74b75253e3",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
-    "mtime": 1793601322.4100573,
-    "seen": 1793601835.898626,
-    "ast_hash": "af195e13bf1c00eec583e7eaa606a378",
+    "mtime": 1793605080.8056414,
+    "seen": 1793605624.129866,
+    "ast_hash": "6f056ea5ce99b3d0716a5e80cc6e1a10",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-start-motion.ts": {
-    "mtime": 1793600832.2520852,
-    "seen": 1793601835.898627,
-    "ast_hash": "5e2899b880fb07b1b182286987a2824d",
+    "mtime": 1793605956.6536832,
+    "seen": 1793605966.6915042,
+    "ast_hash": "48afa2d6b8ae055ae9cbc78e92a90b27",
     "semantic_hash": ""
   },
   "apps/extension/test/panel-room-actions.test.tsx": {
-    "mtime": 1793601355.0893204,
-    "seen": 1793601835.8986292,
-    "ast_hash": "2a4ecf0981ffa627e8eb1e9cc4ca37e6",
+    "mtime": 1793604975.2528179,
+    "seen": 1793605624.129869,
+    "ast_hash": "d5a5d7aa858b06f267f69c7997010629",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793601776.201131,
-    "seen": 1793601995.737569,
+    "mtime": 1793605314.284731,
+    "seen": 1793605789.999785,
     "ast_hash": "",
-    "semantic_hash": "09123fcb8c5e6a3998be19789f823f8b"
+    "semantic_hash": "8d5cbada13c5bd91a9065c42ade059c6"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11244,9 +11244,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/use-account-hosting-status.ts": {
-    "mtime": 1793601355.0286334,
-    "seen": 1793601835.898628,
-    "ast_hash": "60de046163b4afe853ed60f0420184e4",
+    "mtime": 1793604173.5774682,
+    "seen": 1793605624.129868,
+    "ast_hash": "24afabd861e72c877dd7aed4abf6dc7b",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-hosting-time.ts": {

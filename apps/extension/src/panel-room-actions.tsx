@@ -20,6 +20,15 @@ import {
 	type PanelRoomStart,
 } from "./panel-room-start-motion";
 
+/** A bounded visual continuation of the last account observation, never a grant
+ * or a running local clock. The first live observation supersedes it. */
+export type PanelStartingTime = {
+	seconds: number;
+	capturedAt: number;
+	wall: number;
+	expiresAt: number;
+};
+
 export interface PanelRoomActionsProps {
 	scopeKey: string;
 	roomId: string | null;
@@ -27,6 +36,7 @@ export interface PanelRoomActionsProps {
 	/** Owned by OverlayApp so closing the panel cannot retire an in-flight start. */
 	creating?: boolean;
 	idleTimePending?: boolean;
+	startingTime?: PanelStartingTime | null;
 	/** A failed initial connection must expose the existing end/leave action. */
 	roomStartInterrupted?: boolean;
 	isHost: boolean;
@@ -86,6 +96,16 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const [startTime, setStartTime] = useState<number | null | undefined>(
 		undefined,
 	);
+	const [retiredStart, setRetiredStart] = useState<number | null>(null);
+	const startingTime = props.startingTime;
+	const now = performance.now();
+	const startDeadline = startingTime
+		? Math.min(startingTime.expiresAt, startingTime.capturedAt + ROOM_START_PRESENTATION_TIMEOUT_MS)
+		: null;
+	const freshStart = startingTime && retiredStart !== startingTime.capturedAt &&
+		document.visibilityState !== "hidden" && now >= startingTime.capturedAt && now < startDeadline! &&
+		Math.abs(Date.now() - startingTime.wall - (now - startingTime.capturedAt)) < 2_000
+		? startingTime : null;
 	// Preserve the source geometry while admission precedes the live snapshot.
 	// This is the last idle observation, never a locally started allowance.
 	const waitingForRoom = active && (props.creating ?? startTime !== undefined) && !props.roomReady && !props.roomStartInterrupted;
@@ -95,10 +115,9 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	// disabled create action throughout that gap; never relabel it as success.
 	const label = waitingForRoom ? "Create room" : props.label;
 	const actionBusy = busy || waitingForRoom;
-	const displaySeconds =
-		waitingForRoom && props.retainIdleTimeWhileConnecting !== false
-			? startTime
-			: remainingSeconds;
+	const continuingStart = !startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime));
+	const displaySeconds = remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
+		(waitingForRoom && props.retainIdleTimeWhileConnecting !== false ? startTime : null);
 	const timed = typeof displaySeconds === "number" && Number.isFinite(displaySeconds) && (!visibleActive || props.isHost);
 	const awaitingTimer = visibleActive && props.isHost && !timed && Boolean(props.awaitingHostingTime) && !props.roomStartInterrupted;
 	// Reserve the original slot while connecting, without retaining stale digits.
@@ -109,6 +128,23 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 		timers.current.forEach(clearTimeout);
 		timers.current = [];
 	};
+	useLayoutEffect(() => {
+		if (!startingTime) return;
+		const retire = () => setRetiredStart(startingTime.capturedAt);
+		const hide = () => { if (document.visibilityState === "hidden") retire(); };
+		const timeout = setTimeout(retire, Math.max(0, startDeadline! - performance.now()));
+		document.addEventListener("visibilitychange", hide);
+		return () => {
+			clearTimeout(timeout);
+			document.removeEventListener("visibilitychange", hide);
+		};
+	}, [startingTime?.capturedAt, startDeadline]);
+	useLayoutEffect(() => {
+		// Reopening during admission recaptures the still-visible Create layout.
+		if (!visibleActive && props.creating && stripRef.current && buttonRef.current) {
+			start.current = capturePanelRoomStart(stripRef.current, buttonRef.current);
+		}
+	}, [visibleActive, props.creating]);
 
 	useLayoutEffect(() => {
 		++sequence.current;
@@ -165,17 +201,6 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			motion.current = null;
 		};
 	}, [roomId, props.roomReady, startInterrupted]);
-	useLayoutEffect(() => {
-		motion.current?.updateCounter(
-			Boolean(props.awaitingHostingTime && props.isHost),
-		);
-	}, [
-		roomId,
-		props.roomReady,
-		remainingSeconds,
-		props.isHost,
-		props.awaitingHostingTime,
-	]);
 	useLayoutEffect(() => {
 		if (props.confirming) motion.current?.cancel();
 	}, [props.confirming]);
@@ -256,17 +281,6 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			data-timed-layout={timedLayout}
 			data-awaiting-time={awaitingTimer}
 		>
-			{!visibleActive && timed && (
-				<div
-					className="panel-idle-time"
-					title="Free time remaining today"
-					role="timer"
-					aria-label={`${displaySeconds} seconds of free time remaining today`}
-					aria-live="off"
-				>
-					<PanelTimeCounter seconds={displaySeconds!} />
-				</div>
-			)}
 			{!visibleActive && !timed && timedLayout && (
 				<div className="panel-idle-time panel-time-loading" aria-label="Remaining time unavailable">
 					<Timer size={20} strokeWidth={1.8} aria-hidden="true" />
@@ -296,11 +310,6 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					props.onPrimaryAction(event);
 				}}
 			>
-				{visibleActive && timed && (
-					<span className="panel-action-timer">
-						<PanelTimeCounter seconds={displaySeconds!} />
-					</span>
-				)}
 				{awaitingTimer && (
 					<span className="panel-action-time-pending" aria-hidden="true">
 						<Timer size={20} strokeWidth={1.8} />
@@ -310,9 +319,16 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					{label}
 				</span>
 			</button>
+			{timed && (
+				<div key="time" className={visibleActive ? "panel-action-timer" : "panel-idle-time"}
+					title="Free time remaining today" role="timer" aria-live="off"
+					aria-label={`${displaySeconds} seconds of free time remaining today`}>
+					<PanelTimeCounter seconds={displaySeconds!} />
+				</div>
+			)}
 			{visibleActive && timed && (
 				<span id={descriptionId} className="sr-only" aria-live="off">
-					{remainingSeconds} seconds of free time remaining today
+					{displaySeconds} seconds of free time remaining today
 				</span>
 			)}
 			{visibleActive && (

@@ -78,7 +78,7 @@ describe("real room action feedback", () => {
 	});
 	it("keeps the end action accessible while showing real time and confirmation", async () => {
 		await render();
-		expect(button("End room").textContent).toContain("12:34");
+		expect(host.querySelector(".panel-action-timer")?.textContent).toContain("12:34");
 		await click("End room");
 		expect(props.onPrimaryAction).toHaveBeenCalledTimes(1);
 		await render({ confirming: true, label: "Press again to end" });
@@ -178,11 +178,53 @@ describe("real room action feedback", () => {
 			remainingSeconds: 754,
 			label: "End room",
 		});
-		expect(host.querySelector(".panel-flying-counter")?.textContent).toContain(
+		expect(host.querySelector(".panel-action-timer")?.textContent).toContain(
 			"12:34",
 		);
 		await render({ roomId: null, roomReady: false });
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+	});
+	it("keeps one counter through admission, movement and the first live observation", async () => {
+		emulateLayoutAndAnimation();
+		const startingTime = { seconds: 754, capturedAt: performance.now(), wall: Date.now(), expiresAt: performance.now() + 8_000 };
+		await render({ roomId: null, roomReady: false, label: "Create room", retainIdleTimeWhileConnecting: false });
+		const counter = host.querySelector(".panel-time-counter");
+		await click("Create room");
+		await render({ roomId: "room-a", creating: true, remainingSeconds: null, startingTime });
+		expect(host.querySelector(".panel-time-counter")).toBe(counter);
+		expect(counter?.textContent).toContain("12:34");
+		await render({ roomReady: true, creating: false, label: "End room", awaitingHostingTime: true });
+		expect(host.querySelector(".panel-action-timer .panel-time-counter")).toBe(counter);
+		expect(host.querySelector(".panel-action-time-pending")).toBeNull();
+		await render({ startingTime: null, remainingSeconds: 742, awaitingHostingTime: false });
+		expect(host.querySelector(".panel-time-counter")).toBe(counter);
+		expect(counter?.textContent).toContain("12:22");
+	});
+	it.each([2_000, 60_000])("keeps the starting number still and retires it at its original deadline or eight seconds: %s", async validFor => {
+		const capturedAt = performance.now(), wall = Date.now();
+		vi.spyOn(performance, "now").mockImplementation(() => capturedAt + Date.now() - wall);
+		await render({ remainingSeconds: null, creating: false, awaitingHostingTime: true,
+			startingTime: { seconds: 754, capturedAt, wall, expiresAt: capturedAt + validFor } });
+		const counter = host.querySelector(".panel-time-counter");
+		await advance(1_000);
+		expect(counter?.textContent).toBe("12:34"); // No allowance or countdown is started locally.
+		await advance(Math.min(validFor, ROOM_START_PRESENTATION_TIMEOUT_MS) - 1_001);
+		expect(host.querySelector(".panel-time-counter")).toBe(counter);
+		await advance(1);
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		expect(button("End room").disabled).toBe(false);
+	});
+	it("retires the starting number on clock discontinuity and never substitutes it for live time", async () => {
+		const capturedAt = performance.now();
+		vi.spyOn(performance, "now").mockReturnValue(capturedAt);
+		await render({ remainingSeconds: null, creating: false, awaitingHostingTime: true,
+			startingTime: { seconds: 754, capturedAt, wall: Date.now(), expiresAt: capturedAt + 8_000 } });
+		expect(host.querySelector(".panel-time-counter")?.textContent).toBe("12:34");
+		vi.setSystemTime(Date.now() + 10_000);
+		await render();
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		await render({ startingTime: null, remainingSeconds: 742, awaitingHostingTime: false });
+		expect(host.querySelector(".panel-time-counter")?.textContent).toBe("12:22");
 	});
 
 	it("hides a retired authoritative idle observation while waiting for a room snapshot", async () => {
@@ -192,7 +234,7 @@ describe("real room action feedback", () => {
 		expect(host.querySelector(".panel-time-counter")).toBeNull();
 		expect(host.querySelector<HTMLElement>(".panel-room-actions")?.dataset.timedLayout).toBe("true");
 	});
-	it("moves the fresh timer into an already confirmed room when time arrives after the room snapshot", async () => {
+	it("fills the final timer slot in place when no valid starting observation exists", async () => {
 		emulateLayoutAndAnimation();
 		await render({ roomId: null, roomReady: false, label: "Create room", retainIdleTimeWhileConnecting: false });
 		await click("Create room");
@@ -202,10 +244,10 @@ describe("real room action feedback", () => {
 		expect(button("Copy invite")).toBeDefined();
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 		await render({ remainingSeconds: 742, awaitingHostingTime: false });
-		const flight = host.querySelector(".panel-flying-counter");
+		const flight = host.querySelector(".panel-time-counter");
 		expect(flight?.textContent).toContain("12:22");
 		await render({ remainingSeconds: 741 });
-		expect(host.querySelector(".panel-flying-counter")).toBe(flight);
+		expect(host.querySelector(".panel-time-counter")).toBe(flight);
 		expect(flight?.textContent).toContain("12:21");
 	});
 	it("bounds a stalled initial snapshot without cancelling the room or locking its leave action", async () => {
@@ -230,7 +272,7 @@ describe("real room action feedback", () => {
 		expect(button("Press again to end").dataset.showAction).toBe("true");
 		await render({ confirming: false, label: "End room", remainingSeconds: 742, awaitingHostingTime: false });
 		expect(host.querySelector(".panel-action-time-pending")).toBeNull();
-		expect(button("End room").textContent).toContain("12:22");
+		expect(host.querySelector(".panel-action-timer")?.textContent).toContain("12:22");
 	});
 	it("fills late time in place instead of replaying a completed transition", async () => {
 		const animations = emulateLayoutAndAnimation();
@@ -244,7 +286,7 @@ describe("real room action feedback", () => {
 		await act(async () => animations.forEach(animation => animation.finish()));
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 		expect(host.querySelector("[data-room-motion]")).toBeNull();
-		expect(button("End room").textContent).toContain("12:22");
+		expect(host.querySelector(".panel-action-timer")?.textContent).toContain("12:22");
 	});
 	it("shows end confirmation immediately even during the start transition", async () => {
 		emulateLayoutAndAnimation();
@@ -264,23 +306,23 @@ describe("real room action feedback", () => {
 		await render({ roomId: "room-a", roomReady: true, label: "End room", remainingSeconds: 742 });
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 		expect(host.querySelector("[data-room-motion]")).toBeNull();
-		expect(button("End room").textContent).toContain("12:22");
+		expect(host.querySelector(".panel-action-timer")?.textContent).toContain("12:22");
 	});
 	it("uses the current server time for the flight instead of the pre-create value", async () => {
 		emulateLayoutAndAnimation();
 		await render({ roomId: null, roomReady: false, label: "Create room" });
 		await click("Create room");
 		await render({ roomId: "room-a", roomReady: true, label: "End room", remainingSeconds: 742 });
-		expect(host.querySelector(".panel-flying-counter")?.textContent).toContain("12:22");
+		expect(host.querySelector(".panel-action-timer")?.textContent).toContain("12:22");
 	});
-	it("retires flying digits as soon as live time becomes unknown and does not replay on recovery", async () => {
+	it("retires the real counter as soon as live time becomes unknown and does not replay on recovery", async () => {
 		emulateLayoutAndAnimation();
 		await render({ roomId: null, roomReady: false, label: "Create room" });
 		await click("Create room");
 		await render({ roomId: "room-a", roomReady: true, label: "End room" });
-		expect(host.querySelector(".panel-flying-counter")).not.toBeNull();
+		expect(host.querySelector(".panel-time-counter")).not.toBeNull();
 		await render({ remainingSeconds: null, awaitingHostingTime: true });
-		expect(host.querySelector(".panel-flying-counter")).toBeNull();
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
 		await render({ remainingSeconds: 742, awaitingHostingTime: false });
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 	});
