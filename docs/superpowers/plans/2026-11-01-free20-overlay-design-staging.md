@@ -69,6 +69,8 @@ server schema, accounting, commercial switches or production artifacts change.
 
 The owner approved the local component rehearsal and requested delivery through
 a staging PR into the same unpacked extension folder for real-room inspection.
+The separate counter-flight mechanism below was superseded by the continuous
+counter correction at the end of this document after real-extension feedback.
 
 - Room readiness and the first valid `HOSTING_TIME` can arrive in separate
   renders. Start the button transition when the room is ready, then move the
@@ -118,9 +120,9 @@ their existing authority.
   participants within a smoothly growing section, preserving all media controls.
 - Own pending creation above the conditional panel mount. Closing/reopening
   cannot flash Leave or produce invalid digits. Keep the existing bounded escape
-  after connection failure/timeout. Animate the button once on readiness; only
-  time arriving during that transition can join the counter flight. Later time
-  fades into the final button. Pending and unlimited states retain a visible
+  after connection failure/timeout. Animate the button once on readiness. The
+  continuous-counter correction below replaces the separate delayed counter
+  flight. Pending and unlimited states retain a visible
   clock or action during the transition; reduced motion remains immediate.
 
 Verification includes the complete source `OverlayApp` and styles in isolated
@@ -130,3 +132,43 @@ and reduced motion. This is component-level browser evidence, not an authenticat
 staging room or two-participant acceptance. The delivery PR records regression
 results, review and exact staging artifact; the owner reloads that artifact in
 the existing test folder for the next real-room visual pass.
+
+## November 2: Continuous counter and negotiated media presentation
+
+The owner still observed a missing timer during creation and a temporary media
+seats line under the account name. A full-component replay with the actual HTTP
+payload shape reproduced both: legacy `capabilities` and modern
+`mediaCapabilities` coexist in create/connect responses, but the extension read
+only the former. The earlier fixture had incorrectly normalized that response
+before exercising its parser.
+
+- Keep one counter DOM element from idle through admission and the move into
+  End. Move that element with the button once membership is ready; update its
+  text in place when live time arrives. No counter clone, second flight, changing
+  Create label, intermediate success label, or vertical shift is required.
+- Capture the last fresh account number only for this visual handoff. It stays
+  still, never starts metering, never becomes a live-clock snapshot or admission
+  grant, and expires at the earliest of its original validity, UTC reset, or
+  eight seconds after the click. Bind it to the logical login and admitted room.
+  Accepted live observations, including unknown/unlimited, supersede it. Hidden
+  pages, wall-clock discontinuity, failure, transport restart and room/source
+  generation changes retire it. Closing the panel alone preserves the bounded
+  handoff; it does not extend its deadline.
+- Read the existing schema-validated negotiated media metadata from HTTP create
+  and connect. Keep the legacy fallback for old/malformed responses. This only
+  selects the correct media protocol presentation early: actual media readiness,
+  seats, capture and defaults still require accepted WebSocket state and grants.
+  Reveal modern participant details after both membership and media state are
+  ready, avoiding provisional legacy controls. Keep native camera/microphone
+  controls in place.
+- Keep unknown/unlimited states honest and preserve hover, keyboard focus, end
+  confirmation, cancellation and reduced-motion behavior. Slow or failed
+  admission never becomes a successful room solely because an animation ran.
+
+Verification must use the real HTTP parser with both capability fields, the full
+OverlayApp and its real styles, plus delayed/changed/unknown/paid replies,
+reopening, failure, expiry and reduced motion. Source browser simulation is
+separate from loaded-extension acceptance. Extension checks/tests, room harness,
+versioned-media WebRTC harness, narrow staging artifact validation, independent
+review and normal PR/CI delivery precede updating the owner's existing folder.
+No schema, server policy, activation flags, main, production or Store change.

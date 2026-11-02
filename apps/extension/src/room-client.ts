@@ -596,6 +596,7 @@ export async function createWebsiteRoomFromApi(
     shareableLink?: unknown;
     reused?: unknown;
     capabilities?: unknown;
+    mediaCapabilities?: unknown;
     quota?: unknown;
   };
   if (typeof payload.roomToken !== "string" || typeof payload.shareableLink !== "string") {
@@ -611,7 +612,7 @@ export async function createWebsiteRoomFromApi(
     roomToken: payload.roomToken,
     shareableLink: payload.shareableLink,
     reused: payload.reused === true,
-    capabilities: parseRoomCapabilities(payload.capabilities),
+    capabilities: parseRoomCapabilities(payload.mediaCapabilities) ?? parseRoomCapabilities(payload.capabilities),
     quota: parseQuotaSummary(payload.quota),
   };
 }
@@ -681,6 +682,7 @@ export async function connectWebsiteRoomFromApi(
     const payload = (await response.json()) as {
       roomToken?: unknown;
       capabilities?: unknown;
+      mediaCapabilities?: unknown;
       quota?: unknown;
     };
     if (typeof payload.roomToken !== "string") {
@@ -688,7 +690,7 @@ export async function connectWebsiteRoomFromApi(
     }
     return {
       roomToken: payload.roomToken,
-      capabilities: parseRoomCapabilities(payload.capabilities),
+      capabilities: parseRoomCapabilities(payload.mediaCapabilities) ?? parseRoomCapabilities(payload.capabilities),
       quota: parseQuotaSummary(payload.quota),
     };
   } finally {

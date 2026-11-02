@@ -2007,7 +2007,7 @@ describe("privileged overlay wiring", () => {
     } finally { await unmount(view.root); }
   });
 
-  it.each(["ready", "reopen", "credential-rotation", "connection-error", "admission-error"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
+  it.each(["ready", "reopen", "credential-rotation", "connection-error", "admission-error", "unknown-live", "generation-change", "transport-restart", "hidden-reopen"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
     const owner = "22222222-2222-4222-8222-222222222222";
     let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "stable-login" };
     installActiveHostRoomRuntime({ getSession: () => session });
@@ -2025,7 +2025,9 @@ describe("privileged overlay wiring", () => {
       if (args[0]?.command === "create-room" && !await admission.promise) throw new Error("Creation unavailable. Try again.");
       const result = await (original as any)(...args);
       if (args[0]?.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner } };
-      if (args[0]?.command === "create-room") return { ...result, room: { ...result.room, roomSession: { ...result.room.roomSession, ownerUserId: owner } } };
+      if (args[0]?.command === "create-room") return { ...result, room: { ...result.room,
+        capabilities: { mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxCameras: 4, maxMediaSeats: 4, capabilityRevision: 1, capabilitiesValidUntil: new Date(at + 60_000).toISOString() },
+        roomSession: { ...result.room.roomSession, ownerUserId: owner } } };
       return result;
     });
     let options!: Parameters<RoomClient["connect"]>[0];
@@ -2061,6 +2063,7 @@ describe("privileged overlay wiring", () => {
       await vi.waitFor(() => expect(options).toBeDefined());
       await flushMountedWork();
       expectPending(); // HTTP success must not flash Room created or End room.
+      expect(view.container.querySelector(".panel-room-summary")).toBeNull(); // Negotiated v3 must never briefly show legacy media seats.
       if (outcome === "reopen") {
         await click(button(view.container, "Close Anidachi controls"));
         await click(button(view.container, "Open Anidachi controls"));
@@ -2082,10 +2085,27 @@ describe("privileged overlay wiring", () => {
       await act(async () => options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
         participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }],
       }));
-      // A distinct render before HOSTING_TIME must not flash the End label.
-      expect(view.container.querySelector(".panel-action-time-pending")).not.toBeNull();
+      // Keep the bounded last confirmed number through the separate live reply.
+      expect(view.container.querySelector(".panel-action-time-pending")).toBeNull();
       expect(primaryRoomAction(view.container).dataset.showAction).toBe("false");
-      expect(view.container.querySelector(".panel-time-counter")).toBeNull();
+      expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
+      if (outcome === "unknown-live" || outcome === "generation-change" || outcome === "transport-restart" || outcome === "hidden-reopen") {
+        if (outcome === "unknown-live") await act(async () => options.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
+          snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, serverTime: at, period, access: { kind: "unknown" } } }));
+        if (outcome === "generation-change") await act(async () => options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 2, sourceGeneration: 2, serverSeq: 2,
+          participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }] }));
+        if (outcome === "transport-restart") await act(async () => options.onStatus("connecting"));
+        if (outcome === "hidden-reopen") {
+          await click(button(view.container, "Close Anidachi controls"));
+          vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+          await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+          vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+          await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+          await click(button(view.container, "Open Anidachi controls"));
+        }
+        expect(view.container.querySelector(".panel-time-counter")).toBeNull();
+        return;
+      }
       await act(async () => options.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
         snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, serverTime: at, period, access },
       }));

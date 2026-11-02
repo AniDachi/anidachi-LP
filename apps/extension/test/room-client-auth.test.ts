@@ -284,6 +284,21 @@ describe("authenticated room client", () => {
     );
   });
 
+  it.each(["create", "connect"])("uses negotiated HTTP media capabilities before the first socket snapshot: %s", async operation => {
+    const capabilities = { hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, canNameRoom: false, canSendPushInvites: false };
+    const mediaCapabilities = { mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-11-02T12:30:00Z" };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ roomId: "room-1", roomToken: "room-token-1", shareableLink: "http://localhost:3003/room/room-1", capabilities, mediaCapabilities })));
+    const result = operation === "create" ? await createWebsiteRoomFromApi("access-1", "participant-session-1") : await connectWebsiteRoomFromApi("room-1", "access-1", "participant-session-1");
+    expect(result.capabilities).toEqual(mediaCapabilities);
+  });
+  it.each(["create", "connect"])("preserves legacy admission when negotiated metadata is absent or invalid: %s", async operation => {
+    const capabilities = { hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, canNameRoom: false, canSendPushInvites: false };
+    for (const mediaCapabilities of [undefined, { mediaProtocolVersion: 3, maxParticipants: "unknown" }]) {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ roomId: "room-1", roomToken: "room-token-1", shareableLink: "http://localhost:3003/room/room-1", capabilities, mediaCapabilities })));
+      const result = operation === "create" ? await createWebsiteRoomFromApi("access-1", "participant-session-1") : await connectWebsiteRoomFromApi("room-1", "access-1", "participant-session-1");
+      expect(result.capabilities).toEqual(capabilities);
+    }
+  });
   it("canonicalizes the exact current youtu.be fingerprint alias before room creation", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       Response.json({

@@ -156,7 +156,7 @@ import {
 	reduceVoiceSession,
 	shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "./overlay-voice-session";
-import { PanelRoomActions, PanelTimeCounter } from "./panel-room-actions";
+import { PanelRoomActions, PanelTimeCounter, ROOM_START_PRESENTATION_TIMEOUT_MS, type PanelStartingTime } from "./panel-room-actions";
 import { PanelAccountTitle } from "./panel-account-title";
 import { PanelMediaControls } from "./panel-media-controls";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
@@ -634,6 +634,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
 	const [roomStartPending, setRoomStartPending] = useState(false);
+	const [roomStartTime, setRoomStartTime] = useState<(PanelStartingTime & { sessionKey: string | null; roomId: string | null }) | null>(null);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
 		useState(false);
 	const [roomEndPending, setRoomEndPending] = useState(false);
@@ -2277,12 +2278,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
 	useEffect(() => {
 		if (!roomStartPending) return;
-		const timeout = setTimeout(() => setRoomStartPending(false), 8_000);
+		const timeout = setTimeout(() => setRoomStartPending(false), ROOM_START_PRESENTATION_TIMEOUT_MS);
 		return () => clearTimeout(timeout);
 	}, [roomStartPending]);
 	useEffect(() => {
 		if ((!roomCreatePending && !roomId) || (isConnected && roomSnapshotReady) ||
 			(!roomCreatePending && (status === "closed" || status === "error"))) setRoomStartPending(false);
+		if (!roomCreatePending && (!roomId || status === "closed" || status === "error")) setRoomStartTime(null);
 	}, [roomCreatePending, roomId, isConnected, roomSnapshotReady, status]);
 	const readFreshHostingTime = useCallback(() => { hostingTimeClock.checkContinuity(); return hostingTimeClock.read(); }, [hostingTimeClock]);
 	const free20Warning = useFree20Warning({
@@ -2351,6 +2353,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				connectionGenerationRef.current += 1;
 			}
 			if (nextStatus !== "connected") selfSeatDefaultsRef.current = null;
+			if (nextStatus !== "connected" && previousStatus === "connected") setRoomStartTime(null);
 			if (nextStatus !== "connected") hostingTimeClock.beginTransport();
 			statusRef.current = nextStatus;
 			setStatus(nextStatus);
@@ -3529,7 +3532,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				case "HOSTING_TIME": {
 					hostingTimeClock.checkContinuity();
 					if (document.visibilityState === "hidden") hostingTimeClock.suspend();
-					hostingTimeClock.accept(event);
+					if (hostingTimeClock.accept(event)) setRoomStartTime(null);
 					renderHostingTime(n => n + 1);
 					return;
 				}
@@ -3617,6 +3620,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							toRoomGeneration: event.roomGeneration,
 							toSourceGeneration: event.sourceGeneration,
 						});
+						setRoomStartTime(null);
 					}
           if (roomGenerationRef.current > 0 && roomGenerationRef.current !== event.roomGeneration) {
             authoritativeQuotaRef.current = null;
@@ -3730,6 +3734,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							source: event.source,
 							previousSource: event.previousSource,
 						});
+						setRoomStartTime(null);
 					}
 					roomGenerationRef.current = event.roomGeneration;
 					sourceGenerationRef.current = event.sourceGeneration;
@@ -4383,6 +4388,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 
 		function handleVisibilityChange(): void {
+			if (document.visibilityState === "hidden") setRoomStartTime(null);
 			if (document.visibilityState === "visible") {
 				scheduleRoomReconnect("visible");
 			}
@@ -4394,6 +4400,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		// browser to tear the socket down. A real navigation discards the page; a
 		// bfcache freeze resumes via pageshow/visibility below.
 		function handlePageHide(): void {
+			setRoomStartTime(null);
 			if (roomIdRef.current) {
 				clientRef.current.close();
 			}
@@ -4755,6 +4762,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (roomIdRef.current) {
 				return null;
 			}
+			setRoomStartTime(current => current?.sessionKey === roomAuthSessionKeyRef.current ? { ...current, roomId: created.roomId } : null);
 
 			const nextRoomToken = created.roomToken;
 			const nextShareableLink =
@@ -4961,6 +4969,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 
 		clearRoomActionFeedback();
+		const capturedAt = performance.now();
+		setRoomStartTime(accountHostingTime.remainingSeconds !== null && accountHostingTime.displayExpiresAt !== null ? {
+			seconds: accountHostingTime.remainingSeconds, capturedAt, wall: Date.now(),
+			expiresAt: Math.min(accountHostingTime.displayExpiresAt, capturedAt + ROOM_START_PRESENTATION_TIMEOUT_MS),
+			sessionKey: roomAuthSessionKeyRef.current, roomId: null,
+		} : null);
 		setRoomCreatePending(true);
 		setRoomStartPending(true);
 		setPanelOpen(true);
@@ -6290,6 +6304,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
+						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
+							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}
 						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
@@ -6538,8 +6554,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</div>
 					) : null}
 
-					<div className="panel-people-reveal" data-visible={Boolean(roomId && visibleParticipants.length)}><div>
-					{roomId && visibleParticipants.length ? (
+					<div className="panel-people-reveal" data-visible={Boolean(roomId && (!versionedMedia || (roomSnapshotReady && mediaReady)) && visibleParticipants.length)}><div>
+					{roomId && (!versionedMedia || (roomSnapshotReady && mediaReady)) && visibleParticipants.length ? (
 						<RoomPeopleSection
 							expanded={expandedPeopleRoomId === roomId}
 							onExpandedChange={(expanded) => setExpandedPeopleRoomId(expanded ? roomId : null)}
