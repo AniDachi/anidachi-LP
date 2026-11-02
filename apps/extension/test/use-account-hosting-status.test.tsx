@@ -24,10 +24,57 @@ describe("account Free20 display", () => {
     await act(async () => vi.advanceTimersByTimeAsync(30_000)); expect(current.remainingSeconds).toBe(780); expect(options.request).toHaveBeenCalledTimes(1);
     await act(async () => vi.advanceTimersByTimeAsync(180_000)); expect(options.request).toHaveBeenCalledTimes(2); expect(current.remainingSeconds).toBeNull();
   });
+  it.each([true, false])("keeps a fresh plan but fences idle seconds across a room round trip (room read completed: %s)", async completed => {
+    await render();
+    const replies: ((value: any) => void)[] = [];
+    vi.mocked(options.request!).mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+    await render({ roomId: "room-a" });
+    expect(current.remainingSeconds).toBeNull();
+    expect(current.planCode).toBe("free");
+    const roomReply = replies.shift()!;
+    if (completed) await act(async () => roomReply({ mode: "free20", status }));
+    await render({ roomId: null });
+    expect(current.remainingSeconds).toBeNull();
+    expect(current.planCode).toBe("free");
+    if (!completed) {
+      await act(async () => roomReply({ mode: "free20", status }));
+      expect(current.remainingSeconds).toBeNull();
+    }
+    await act(async () => replies.shift()!({ mode: "free20", status: { ...status, access: { ...status.access, remainingSeconds: 600, usedSeconds: 600 } } }));
+    expect(current.remainingSeconds).toBe(600);
+    await render({ sessionKey: "different-login" });
+    expect(current.planCode).toBeNull();
+    expect(current.remainingSeconds).toBeNull();
+  });
+  it("prefetches once, reuses fresh warm opens, and recovers once on opening after expiry", async () => {
+    await render({ visible: false });
+    await render({ visible: true }); await render({ visible: false });
+    expect(options.request).toHaveBeenCalledTimes(1);
+    await act(async () => vi.advanceTimersByTimeAsync(180_000));
+    expect(current.remainingSeconds).toBeNull(); expect(options.request).toHaveBeenCalledTimes(2);
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: { ...status, serverTime: at + 180_000, validUntil: at + 240_000 } });
+    await render({ visible: true });
+    expect(current.remainingSeconds).toBe(780); expect(options.request).toHaveBeenCalledTimes(3);
+    await render({ visible: false }); await render({ visible: true });
+    expect(options.request).toHaveBeenCalledTimes(3);
+  });
   it("keeps explicit disabled policy through outages and panel reopening but never shares it with another login", async () => {
     vi.mocked(options.request!).mockResolvedValue({ mode: "legacy" }); await render(); expect(current.mode).toBe("legacy");
     vi.mocked(options.request!).mockRejectedValue(new Error("offline")); await render({ enabled: false }); await render({ enabled: true }); expect(current.mode).toBe("legacy");
     await render({ sessionKey: "login-b" }); expect(current.mode).toBe("unknown"); expect(current.remainingSeconds).toBeNull();
+  });
+  it("retires the displayed plan and an older pending read on authoritative admission denial", async () => {
+    await render();
+    let reply!: (value: any) => void;
+    vi.mocked(options.request!).mockImplementationOnce(() => new Promise(resolve => { reply = resolve; }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_000); current.refresh(); });
+    expect(current.planCode).toBe("free");
+    await act(async () => current.invalidate());
+    expect(current.planCode).toBeNull(); expect(current.remainingSeconds).toBeNull();
+    await act(async () => reply({ mode: "free20", status }));
+    expect(current.planCode).toBeNull();
+    await act(async () => vi.advanceTimersByTimeAsync(5_000));
+    expect(current.planCode).toBe("free");
   });
   it("never treats failures as disabled policy or returns a late old session answer", async () => {
     let resolve!: (value: Awaited<ReturnType<NonNullable<Options["request"]>>>) => void;

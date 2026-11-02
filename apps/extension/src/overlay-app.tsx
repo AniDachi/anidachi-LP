@@ -633,6 +633,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [introductionActive, setIntroductionActive] = useState(false);
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
+	const [roomStartPending, setRoomStartPending] = useState(false);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
 		useState(false);
 	const [roomEndPending, setRoomEndPending] = useState(false);
@@ -822,15 +823,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
-		// An older Worker cannot negotiate a room-mode event. Allow a bounded
-		// policy read until mode is known, without using account time as live time.
-		enabled: !roomId ? (panelOpen || introductionActive) : (!hostingTimeClock.observed && !hostingTimeClock.legacy),
+		// Opening/closing the panel is presentation, not a new data session.
+		// Prefetch for the active player; account seconds never supply live time.
+		enabled: adapterActive || panelOpen || introductionActive || roomId !== null,
+		visible: panelOpen || introductionActive,
+		roomId,
 		exhaustion: quotaExhaustion,
 	});
 	const hostingDisplay = useHostingAccess({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: authSessionKey,
-		enabled: panelOpen || roomId !== null || introductionActive,
+		enabled: (accountHostingTime.mode === "legacy" && (panelOpen || roomId !== null || introductionActive)) || hostingPaywallOpen,
 	});
 	const legacyQuotaEnabled = !hostingTimeClock.observed && (hostingTimeClock.legacy ||
 		(accountHostingTime.mode === "legacy" && hostingDisplay.state.mode === "legacy"));
@@ -2272,6 +2275,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// the display moving between snapshots while host and guest are both live.
 	const sendHostingTimeRecovery = useCallback((event: ClientEvent) => clientRef.current.send(event), []);
 	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
+	useEffect(() => {
+		if (!roomStartPending) return;
+		const timeout = setTimeout(() => setRoomStartPending(false), 8_000);
+		return () => clearTimeout(timeout);
+	}, [roomStartPending]);
+	useEffect(() => {
+		if ((!roomCreatePending && !roomId) || (isConnected && roomSnapshotReady) ||
+			(!roomCreatePending && (status === "closed" || status === "error"))) setRoomStartPending(false);
+	}, [roomCreatePending, roomId, isConnected, roomSnapshotReady, status]);
 	const readFreshHostingTime = useCallback(() => { hostingTimeClock.checkContinuity(); return hostingTimeClock.read(); }, [hostingTimeClock]);
 	const free20Warning = useFree20Warning({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
@@ -4724,6 +4736,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (authSessionKeyRef.current !== refreshed.sessionKey) return null;
 				if (isHostingSubscriptionRequiredError(error)) {
 					hostingDisplay.invalidate();
+					accountHostingTime.invalidate();
 					setHostingRequiredOwner(activeParticipant.id);
 					setHostingPaywallOpen(true);
 					setPanelOpen(true);
@@ -4949,11 +4962,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		clearRoomActionFeedback();
 		setRoomCreatePending(true);
+		setRoomStartPending(true);
 		setPanelOpen(true);
 		setAuthMessage(null);
 		try {
 			await waitForOverlayPaint();
-			await createAndConnectRoom("manual");
+			const created = await createAndConnectRoom("manual");
+			if (!created) setRoomStartPending(false);
 		} catch (error) {
 			if (showActiveRoomConflict(error)) {
 				logDebug("overlay.room", "create found another active room");
@@ -6100,6 +6115,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const displayedQuotaNotice = accountHostingTime.mode === "legacy" ? freeQuotaNotice.state : free20QuotaNotice;
 	const refreshDisplayedQuota = accountHostingTime.mode === "legacy" ? freeQuotaNotice.retry : accountHostingTime.refresh;
 	const quotaExhausted = !roomId && displayedQuotaNotice?.kind === "exhausted";
+	const panelPlan = authAuthenticated
+		? accountHostingTime.mode === "legacy" ? hostingDisplay.state.access?.planCode ?? null : accountHostingTime.planCode
+		: null;
+	const idleTimePending = !identityLoaded || (authAuthenticated && accountHostingTime.mode !== "legacy" &&
+		accountHostingTime.remainingSeconds === null && accountHostingTime.status?.access.kind !== "confirmed_unlimited");
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6194,30 +6214,32 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					<div className="panel-header">
 						<div className="panel-account">
 							<a className="mini-avatar panel-account-avatar panel-account-link" href={new URL("/account", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer" aria-label="Open your account in a new tab" title="Open your account">
-								{initials(accountAvatarLabel)}
+								{identityLoaded ? initials(accountAvatarLabel) : null}
 							</a>
 							<div className="panel-account-copy">
 								<PanelAccountTitle
 									displayName={accountDisplayName}
-									plan={
-										authAuthenticated ? hostingDisplay.state.access?.planCode ?? null : null
-									}
+									plan={panelPlan}
+									loading={!identityLoaded || (authAuthenticated && panelPlan === null)}
+									loadingIdentity={!identityLoaded}
 								/>
-								{authAuthenticated && hostingDisplay.state.access?.planCode === "free" && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
+								<div className="panel-account-secondary">
+								{panelPlan === "free" && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
 								{roomId && !mediaV3 ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
 									</div>
-								) : !authAuthenticated ? (
+								) : identityLoaded && !authAuthenticated ? (
 									<div className="panel-account-helper">
 										{accountHelperText}
 									</div>
 								) : null}
+								</div>
 							</div>
 						</div>
 						<div className="panel-header-actions">
 							{quotaExhausted ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
-							{!authAuthenticated ? (
+							{identityLoaded && !authAuthenticated ? (
 								<button
 									className="button compact panel-sign-in-button"
 									type="button"
@@ -6226,7 +6248,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 										authBusy || !identityLoaded || extensionContextInvalidated
 									}
 								>
-									{authBusy || !identityLoaded ? "Wait" : "Sign in"}
+									Sign in
 								</button>
 							) : null}
 							{roomId && currentParticipant ? (
@@ -6267,6 +6289,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					</> : <PanelRoomActions key={roomAuthSessionKeyRef.current ?? "anonymous"}
 						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
+						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
 						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
@@ -6515,6 +6538,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</div>
 					) : null}
 
+					<div className="panel-people-reveal" data-visible={Boolean(roomId && visibleParticipants.length)}><div>
 					{roomId && visibleParticipants.length ? (
 						<RoomPeopleSection
 							expanded={expandedPeopleRoomId === roomId}
@@ -6547,6 +6571,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							roomPeopleCountText={roomPeopleCountText}
 						/>
 					) : null}
+					</div></div>
 
 					<div className="settings-surface">
 						<div className="section-title settings-section-title">

@@ -92,3 +92,41 @@ not a loaded-extension or live-room acceptance result. Exact suite counts,
 independent review, CI, staging artifact identity, backup and folder verification
 belong in the delivery PR/receipt. The owner checks the updated extension after
 Chrome Reload; main, production and Store remain a separate decision.
+
+## November 2: Whole-panel lifecycle correction
+
+The owner's subsequent real-extension feedback requires checking the complete
+panel lifecycle, including delayed account data and reopening, rather than only
+the isolated action row. This correction is confined to extension presentation
+and display-data lifecycle; room admission, accounting and server flags retain
+their existing authority.
+
+- Prefetch the account observation for an active player after identity is known.
+  Opening/closing the panel does not discard a still-fresh observation. Plan and
+  idle Free20 time come from that same response; legacy hosting reads remain for
+  explicitly legacy policy and the existing paywall.
+- Preserve original monotonic/wall-clock anchors and validity/UTC boundaries.
+  Keep bounded expiry recovery, with an additional stale-only read on reopening;
+  no polling loop or persistent account cache is introduced. A room-boundary
+  epoch fences idle seconds even for a pending `idle -> room -> idle` round trip.
+  Credential changes and authoritative admission denial retire affected reads.
+  Fresh plan metadata may survive the room read; account seconds never fill live
+  `HOSTING_TIME`, and unavailable data never becomes a fabricated allowance.
+- Reserve header and timer slots while data is unavailable. Use quiet neutral
+  placeholders instead of temporary account/status words. Keep the action row
+  baseline and height fixed; interpolate paid/unlimited width changes. Reveal
+  participants within a smoothly growing section, preserving all media controls.
+- Own pending creation above the conditional panel mount. Closing/reopening
+  cannot flash Leave or produce invalid digits. Keep the existing bounded escape
+  after connection failure/timeout. Animate the button once on readiness; only
+  time arriving during that transition can join the counter flight. Later time
+  fades into the final button. Pending and unlimited states retain a visible
+  clock or action during the transition; reduced motion remains immediate.
+
+Verification includes the complete source `OverlayApp` and styles in isolated
+Chromium with explicit background/HTTP/transport fixtures, covering cold/warm
+open, delayed identity/time, paid/unknown access, pending reopen, failure, hover
+and reduced motion. This is component-level browser evidence, not an authenticated
+staging room or two-participant acceptance. The delivery PR records regression
+results, review and exact staging artifact; the owner reloads that artifact in
+the existing test folder for the next real-room visual pass.

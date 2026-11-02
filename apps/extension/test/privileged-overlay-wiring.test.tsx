@@ -1977,7 +1977,37 @@ describe("privileged overlay wiring", () => {
     },
   );
 
-  it.each(["ready", "credential-rotation", "connection-error", "admission-error"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
+  it("prepares one coherent Free20 header and timer before opening, and retains them on warm reopen", async () => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    installActiveHostRoomRuntime({ getSession: () => ({ ...sessionFor(owner), authSessionId: "warm-login" }) });
+    const pending = deferred<Awaited<ReturnType<typeof accountHostingClient.requestAccountHostingStatus>>>();
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockReturnValue(pending.promise);
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockReturnValue(new Promise(() => {}));
+    const view = await renderOverlay();
+    try {
+      await vi.waitFor(() => expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(1));
+      await click(button(view.container, "Open Anidachi controls"));
+      expect(view.container.querySelector(".panel-time-placeholder")).not.toBeNull();
+      const at = Date.parse("2026-11-01T12:00:00Z");
+      await act(async () => pending.resolve({ mode: "free20", status: {
+        accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000,
+        period: { utcDay: "2026-11-01", resetAt: at + 43_200_000 },
+        access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 446, remainingSeconds: 754, metering: false }, activeRoom: null, canCreateRoom: true,
+      } }));
+      const expectLoaded = () => {
+        expect(view.container.querySelector(".plan-badge")?.textContent).toBe("Free");
+        expect(view.container.querySelector(".panel-idle-time strong")?.textContent).toBe("12:34");
+        expect(view.container.querySelector(".panel-plan-link")?.textContent).toContain("View plans");
+      };
+      expectLoaded();
+      await click(button(view.container, "Close Anidachi controls"));
+      await click(button(view.container, "Open Anidachi controls"));
+      expectLoaded();
+      expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(1);
+    } finally { await unmount(view.root); }
+  });
+
+  it.each(["ready", "reopen", "credential-rotation", "connection-error", "admission-error"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
     const owner = "22222222-2222-4222-8222-222222222222";
     let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "stable-login" };
     installActiveHostRoomRuntime({ getSession: () => session });
@@ -2031,6 +2061,11 @@ describe("privileged overlay wiring", () => {
       await vi.waitFor(() => expect(options).toBeDefined());
       await flushMountedWork();
       expectPending(); // HTTP success must not flash Room created or End room.
+      if (outcome === "reopen") {
+        await click(button(view.container, "Close Anidachi controls"));
+        await click(button(view.container, "Open Anidachi controls"));
+        expectPending();
+      }
       await click(primaryRoomAction(view.container));
       expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1);
       if (outcome === "connection-error") {
@@ -2110,13 +2145,14 @@ describe("privileged overlay wiring", () => {
       expect(view.container.querySelector(".panel-primary-action")?.textContent).not.toBe("Create room");
       await act(async () => options.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: at, reason: "quota_exhausted" }));
       expect(view.container.textContent).toContain("Today's free time is used up");
-      expect(view.container.textContent).toContain("Renews in 12:00:00");
+      // Reusing the original server clock must not restart the reset countdown.
+      expect(view.container.textContent).toContain("Renews in 11:59:54");
       expect(view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
       expect(view.container.querySelector<HTMLAnchorElement>(".panel-limit-plans")?.href).toBe(new URL("/pricing", WEB_HTTP_BASE).href);
       expect(view.container.querySelector(".panel-plan-link")).toBeNull();
       // The positive account response above is still unsettled; it must not
       // resurrect the create button on the exhausted server UTC day.
-      expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(2);
+      expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(3);
     } finally { vi.useRealTimers(); await unmount(view.root); }
   });
 

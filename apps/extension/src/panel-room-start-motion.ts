@@ -35,6 +35,7 @@ export function animatePanelRoomStart(
 	const ghosts = new Set<HTMLElement>();
 	let cancelled = false;
 	let counterStarted = false;
+	let transitionFinished = false;
 	let counterRetired = false;
 	let counterGhost: HTMLElement | null = null;
 	let counterAnimation: Animation | null = null;
@@ -114,6 +115,8 @@ export function animatePanelRoomStart(
 			},
 		],
 		640,
+		0,
+		() => { transitionFinished = true; },
 	);
 	const surface = document.createElement("span");
 	surface.className = "panel-start-surface";
@@ -164,6 +167,12 @@ export function animatePanelRoomStart(
 			const digits = counterGhost?.querySelector("strong");
 			if (digits)
 				digits.textContent = counter.querySelector("strong")?.textContent ?? "";
+			return;
+		}
+		// A late response fills the final slot. Never replay the old idle flight
+		// after the button has already settled into its active position.
+		if (transitionFinished || performance.now() - startedAt >= 640) {
+			counterRetired = true;
 			return;
 		}
 		counterStarted = true;

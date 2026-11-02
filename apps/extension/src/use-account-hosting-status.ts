@@ -7,27 +7,38 @@ type State = {
   ownerUserId: string | null; sessionKey: string | null;
   mode: "unknown" | "legacy" | "free20";
   status: AccountHostingStatus | null;
-  monotonic: number; exhaustedUntil: number | null;
+  roomEpoch: number; monotonic: number; wall: number; exhaustedUntil: number | null;
   exhaustionEvent: QuotaExhaustion | null;
   periodClock: { serverTime: number; monotonic: number; resetAt: number } | null;
   busy: boolean; error: boolean;
 };
-const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, monotonic: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
+const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
  * activation or user resume; a successful recovery never starts a polling loop. */
-export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, exhaustion, request = requestAccountHostingStatus }: {
+export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visible = enabled, roomId = null, exhaustion, request = requestAccountHostingStatus }: {
   ownerUserId: string | null; sessionKey: string | null; enabled: boolean;
+  /** Opening the panel recovers expired data without discarding fresh prefetch. */
+  visible?: boolean;
+  /** Room boundaries require a new account read before idle seconds can return. */
+  roomId?: string | null;
   exhaustion: QuotaExhaustion | null; request?: typeof requestAccountHostingStatus;
 }) {
   const stateRef = useRef<State>(empty(ownerUserId, sessionKey));
   const [state, setState] = useState(stateRef.current);
+  const [roomScope, setRoomScope] = useState({ roomId, epoch: 0 });
+  // A return to null is a new idle period, even if the room's read never finished.
+  if (roomScope.roomId !== roomId) setRoomScope({ roomId, epoch: roomScope.epoch + 1 });
   const [, tick] = useState(0);
   const refreshRef = useRef<() => void>(() => {});
+  const openRef = useRef<() => void>(() => {});
+  const invalidateRef = useRef<() => void>(() => {});
   const refresh = useCallback(() => refreshRef.current(), []);
+  const invalidate = useCallback(() => invalidateRef.current(), []);
   useEffect(() => {
     if (stateRef.current.ownerUserId !== ownerUserId || stateRef.current.sessionKey !== sessionKey) stateRef.current = empty(ownerUserId, sessionKey);
-    let current: State = { ...stateRef.current, status: null, periodClock: null, busy: false };
+    let current: State = { ...stateRef.current, busy: false,
+      ...(!enabled ? { status: null, periodClock: null } : {}) };
     const exhaustedUntil = exhaustion?.ownerUserId === ownerUserId && (exhaustion.sessionKey === undefined || exhaustion.sessionKey === sessionKey) ? Date.parse(exhaustion.resetAt ?? "") : NaN;
     if (Number.isFinite(exhaustedUntil) && current.exhaustionEvent !== exhaustion) {
       current.exhaustionEvent = exhaustion;
@@ -51,7 +62,9 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, exha
       }
       cancelRetry(); lastAttempt = now; pending = true;
       const ownGeneration = ++generation, wall = Date.now();
-      show({ busy: true, error: false, status: null });
+      // Keep only the originally anchored observation during revalidation.
+      // The room scope below fences seconds; its fresh plan can stay visible.
+      show({ busy: true, error: false });
       try {
         // This consumer anchors age at this load's start. A shared older pending
         // request has an earlier start and must never acquire this newer clock.
@@ -70,7 +83,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, exha
         let exhaustedUntil = current.exhaustedUntil;
         if (access.kind === "confirmed_unlimited" || (exhaustedUntil !== null && status.serverTime >= exhaustedUntil)) exhaustedUntil = null;
         if (access.kind === "daily_free" && access.remainingSeconds === 0) exhaustedUntil = status.period.resetAt;
-        show({ mode: "free20", status, monotonic, exhaustedUntil,
+        show({ mode: "free20", status, roomEpoch: roomScope.epoch, monotonic, wall: wall - (now - monotonic), exhaustedUntil,
           periodClock: access.kind === "daily_free" ? { serverTime: status.serverTime, monotonic, resetAt: status.period.resetAt } : null,
           busy: false, error: false });
       } catch {
@@ -85,6 +98,20 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, exha
       void load();
     };
     refreshRef.current = () => { expiryRecheckUsed = false; resetRecheckUsed = false; void load(); };
+    invalidateRef.current = () => {
+      // A newer admission denial supersedes both the display and pending reads.
+      generation++; pending = false; cancelRetry(); show({ status: null, busy: false });
+      refreshRef.current();
+    };
+    openRef.current = () => {
+      const elapsed = Math.max(0, performance.now() - current.monotonic);
+      const reading = current.status;
+      if (reading && current.roomEpoch === roomScope.epoch &&
+        Math.abs(Date.now() - current.wall - elapsed) < 2_000 &&
+        reading.serverTime + elapsed < reading.validUntil &&
+        (reading.access.kind !== "daily_free" || reading.serverTime + elapsed < reading.period.resetAt)) return;
+      refreshRef.current();
+    };
     const interval = setInterval(() => {
       const now = performance.now(), wall = Date.now();
       const discontinuity = now - lastMonotonic > 5_000 || Math.abs(wall - lastWall - (now - lastMonotonic)) > 2_000;
@@ -108,19 +135,25 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, exha
     window.addEventListener("focus", resume); window.addEventListener("pageshow", resume); window.addEventListener("online", resume);
     document.addEventListener("visibilitychange", resume);
     return () => {
-      alive = false; cancelRetry(); clearInterval(interval); refreshRef.current = () => {};
+      alive = false; cancelRetry(); clearInterval(interval); refreshRef.current = () => {}; openRef.current = () => {}; invalidateRef.current = () => {};
       window.removeEventListener("focus", resume); window.removeEventListener("pageshow", resume); window.removeEventListener("online", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [ownerUserId, sessionKey, enabled, exhaustion, request]);
+  }, [ownerUserId, sessionKey, enabled, roomScope, exhaustion, request]);
+  useEffect(() => { if (visible) openRef.current(); }, [visible]);
   const scoped = state.ownerUserId === ownerUserId && state.sessionKey === sessionKey ? state : empty(ownerUserId, sessionKey);
   const elapsed = Math.max(0, performance.now() - scoped.monotonic);
-  const status = enabled && scoped.status && document.visibilityState !== "hidden" && scoped.status.serverTime + elapsed < scoped.status.validUntil ? scoped.status : null;
+  const observation = enabled && scoped.status && document.visibilityState !== "hidden" &&
+    Math.abs(Date.now() - scoped.wall - elapsed) < 2_000 &&
+    scoped.status.serverTime + elapsed < scoped.status.validUntil &&
+    (scoped.status.access.kind !== "daily_free" || scoped.status.serverTime + elapsed < scoped.status.period.resetAt)
+    ? scoped.status : null;
+  const status = scoped.roomEpoch === roomScope.epoch && roomScope.roomId === roomId ? observation : null;
   const exhausted = scoped.mode === "free20" && scoped.exhaustedUntil !== null;
   return {
-    mode: scoped.mode, status, busy: scoped.busy, error: scoped.error, exhausted,
+    mode: scoped.mode, status, planCode: observation?.planCode ?? null, busy: scoped.busy, error: scoped.error, exhausted,
     remainingSeconds: exhausted ? 0 : status?.access.kind === "daily_free" ? Math.max(0, status.access.remainingSeconds - (status.access.metering ? Math.floor(elapsed / 1000) : 0)) : null,
     resetSeconds: exhausted && enabled && scoped.periodClock && document.visibilityState !== "hidden" ? Math.max(0, Math.ceil((scoped.periodClock.resetAt - scoped.periodClock.serverTime - Math.max(0, performance.now() - scoped.periodClock.monotonic)) / 1000)) : null,
-    refresh,
+    refresh, invalidate,
   };
 }
