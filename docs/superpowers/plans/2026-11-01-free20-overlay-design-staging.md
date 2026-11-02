@@ -172,3 +172,41 @@ separate from loaded-extension acceptance. Extension checks/tests, room harness,
 versioned-media WebRTC harness, narrow staging artifact validation, independent
 review and normal PR/CI delivery precede updating the owner's existing folder.
 No schema, server policy, activation flags, main, production or Store change.
+
+## November 2: Account-status recovery and room settlement
+
+The owner reported long-lived plan and time placeholders, especially after
+closing a room. Source tracing confirmed that the Worker's terminal socket event
+precedes usage settlement and the web finalization callback. The overlay returned
+to idle and immediately read the account while that operation could still be in
+progress. A temporary failure erased even fresh plan metadata and had no automatic
+recovery. A short visibility interruption also imposed the ordinary five-second
+refresh cooldown despite having discarded the previous observation.
+
+- Retain an already confirmed display observation through a transient read
+  failure, with its original owner/credentials, monotonic/wall anchors, TTL and
+  UTC reset. The room epoch still fences pre-room seconds; this is not an
+  authorization cache or a source for live room time.
+- Recover a quick failed read with at most two retries, after 500 and 1500 ms.
+  Validate each reply afresh without extending observation validity, and never
+  start another attempt after a five-second recovery window. Successful recovery
+  does not start polling.
+  Owner/session/room changes, suspension and unmount cancel queued recovery.
+- Successful end HTTP completion supersedes an earlier pending account read
+  immediately, scoped to the same logical login and room. A late completion
+  cannot clear a newer room/login. Local detachment is not proof of room closure:
+  a fresh account response may still describe its active room in another tab.
+- A resume after visibility loss requests fresh data immediately. A final read
+  error exposes a compact retry in the existing timer slot and stops showing a
+  plan-loading skeleton. Explicit retry is immediate; unknown time never becomes
+  zero, unlimited access or a locally restored budget.
+
+Verification uses hook regressions plus the complete source OverlayApp, real
+account-status message handler and response validation in isolated Chromium.
+Fixtures reproduce terminal-event-before-settlement, a slow settlement, first
+read failure, paid access, full outage and short visibility loss. This is source
+browser evidence, not an authenticated staging account timing measurement or
+loaded-extension acceptance. Extension checks/tests, narrow artifact validation,
+independent review and staging PR/CI delivery are required before updating the
+same owner extension folder. There is no backend, protocol, permission, policy,
+main, production or Store change; rollback is an extension commit revert/rebuild.

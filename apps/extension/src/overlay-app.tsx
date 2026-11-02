@@ -638,6 +638,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
 		useState(false);
 	const [roomEndPending, setRoomEndPending] = useState(false);
+	const [roomSettlementRevision, setRoomSettlementRevision] = useState(0);
 	const [roomLeavePending, setRoomLeavePending] = useState(false);
 	const [roomActionFeedback, setRoomActionFeedback] =
 		useState<RoomActionFeedback | null>(null);
@@ -829,6 +830,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		enabled: adapterActive || panelOpen || introductionActive || roomId !== null,
 		visible: panelOpen || introductionActive,
 		roomId,
+		settlementRevision: roomSettlementRevision,
 		exhaustion: quotaExhaustion,
 	});
 	const hostingDisplay = useHostingAccess({
@@ -5017,6 +5019,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		clearRoomActionFeedback();
 		clearRoomEndConfirmation();
 		setRoomEndPending(true);
+		const endingLogin = roomAuthSessionKeyRef.current;
 		try {
 			const activeRoomId = roomIdRef.current;
 			if (!activeRoomId || !isHost) {
@@ -5028,6 +5031,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				"end-room",
 				privilegedRoomContext,
 				() => {
+					// ROOM_ENDED can already have returned this panel to idle while
+					// the end request was still settling. Its successful response is
+					// the point to replace that early read, never a newer login/room.
+					if (roomAuthSessionKeyRef.current !== endingLogin ||
+						(roomIdRef.current !== null && roomIdRef.current !== activeRoomId)) return;
+					setRoomSettlementRevision(revision => revision + 1);
 					roomReconnectSuppressedRef.current = true;
 					clearRoomReconnectTimer();
 					clientRef.current.close();
@@ -6234,7 +6243,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								<PanelAccountTitle
 									displayName={accountDisplayName}
 									plan={panelPlan}
-									loading={!identityLoaded || (authAuthenticated && panelPlan === null)}
+									loading={!identityLoaded || (authAuthenticated && panelPlan === null && !accountHostingTime.error)}
 									loadingIdentity={!identityLoaded}
 								/>
 								<div className="panel-account-secondary">
@@ -6304,6 +6313,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
+						idleTimeUnavailable={accountHostingTime.error && !accountHostingTime.busy}
+						onRetryHosting={accountHostingTime.refresh}
 						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
 							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}
 						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}

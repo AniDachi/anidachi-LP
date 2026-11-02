@@ -76,6 +76,17 @@ describe("real room action feedback", () => {
 		expect(button("Leave room").textContent).toContain("Leave room");
 		expect(host.textContent).not.toContain("12:34");
 	});
+	it("offers a compact retry after a failed idle read without inventing a time value", async () => {
+		const retry = vi.fn();
+		await render({ roomId: null, roomReady: false, remainingSeconds: null, idleTimePending: true, idleTimeUnavailable: true, onRetryHosting: retry });
+		expect(host.querySelector(".panel-time-placeholder")).toBeNull();
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		await click("Retry loading remaining time");
+		expect(retry).toHaveBeenCalledTimes(1);
+		expect(props.onPrimaryAction).not.toHaveBeenCalled();
+		await render({ idleTimeUnavailable: false });
+		expect(host.querySelector(".panel-time-placeholder")).not.toBeNull();
+	});
 	it("keeps the end action accessible while showing real time and confirmation", async () => {
 		await render();
 		expect(host.querySelector(".panel-action-timer")?.textContent).toContain("12:34");
