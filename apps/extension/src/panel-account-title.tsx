@@ -5,6 +5,8 @@ import { loadPanelFont } from "./panel-font";
 interface PanelAccountTitleProps {
 	displayName: string;
 	plan: AuthenticatedUserPlan | null;
+	loading?: boolean;
+	loadingIdentity?: boolean;
 }
 
 const PLAN_LABELS: Record<AuthenticatedUserPlan, string> = {
@@ -16,6 +18,8 @@ const PLAN_LABELS: Record<AuthenticatedUserPlan, string> = {
 export function PanelAccountTitle({
 	displayName,
 	plan,
+	loading = false,
+	loadingIdentity = false,
 }: PanelAccountTitleProps) {
 	const nameRef = useRef<HTMLElement>(null);
 	const planRef = useRef<HTMLSpanElement>(null);
@@ -66,14 +70,14 @@ export function PanelAccountTitle({
 
 	return (
 		<div className="panel-account-title-row">
-			<strong className="panel-account-name" ref={nameRef} title={displayName}>
+			{loadingIdentity ? <span className="panel-account-name-placeholder" aria-label="Loading account" /> : <strong className="panel-account-name" ref={nameRef} title={displayName}>
 				{displayName}
-			</strong>
+			</strong>}
 			{plan && planText ? (
 				<span className={`plan-badge ${plan}`} ref={planRef}>
 					{planText}
 				</span>
-			) : null}
+			) : loading ? <span className="panel-plan-placeholder" aria-label="Loading plan" /> : null}
 		</div>
 	);
 }

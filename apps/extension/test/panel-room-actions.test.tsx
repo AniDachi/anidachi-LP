@@ -62,6 +62,12 @@ describe("real room action feedback", () => {
 		vi.restoreAllMocks();
 		delete (HTMLElement.prototype as any).animate;
 	});
+	it("reopens a pending legacy start without a captured allowance or NaN digits", async () => {
+		await render({ roomReady: false, creating: true, remainingSeconds: null, retainIdleTimeWhileConnecting: true });
+		expect(button("Create room").disabled).toBe(true);
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		expect(host.textContent).not.toContain("NaN");
+	});
 	it("does not replace an unknown or guest allowance with a zero timer", async () => {
 		await render({ remainingSeconds: null });
 		expect(button("End room").textContent).toContain("End room");
@@ -226,7 +232,7 @@ describe("real room action feedback", () => {
 		expect(host.querySelector(".panel-action-time-pending")).toBeNull();
 		expect(button("End room").textContent).toContain("12:22");
 	});
-	it("accepts the first fresh timer after the button transition has already finished", async () => {
+	it("fills late time in place instead of replaying a completed transition", async () => {
 		const animations = emulateLayoutAndAnimation();
 		await render({ roomId: null, roomReady: false, label: "Create room" });
 		await click("Create room");
@@ -234,7 +240,7 @@ describe("real room action feedback", () => {
 		await act(async () => animations.forEach(animation => animation.finish()));
 		expect(host.querySelector("[data-room-motion]")).toBeNull();
 		await render({ remainingSeconds: 742, awaitingHostingTime: false });
-		expect(host.querySelector(".panel-flying-counter")?.textContent).toContain("12:22");
+		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 		await act(async () => animations.forEach(animation => animation.finish()));
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 		expect(host.querySelector("[data-room-motion]")).toBeNull();
