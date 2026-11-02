@@ -36,6 +36,8 @@ export interface PanelRoomActionsProps {
 	/** Owned by OverlayApp so closing the panel cannot retire an in-flight start. */
 	creating?: boolean;
 	idleTimePending?: boolean;
+	idleTimeUnavailable?: boolean;
+	onRetryHosting?(): void;
 	startingTime?: PanelStartingTime | null;
 	/** A failed initial connection must expose the existing end/leave action. */
 	roomStartInterrupted?: boolean;
@@ -284,7 +286,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			{!visibleActive && !timed && timedLayout && (
 				<div className="panel-idle-time panel-time-loading" aria-label="Remaining time unavailable">
 					<Timer size={20} strokeWidth={1.8} aria-hidden="true" />
-					<span className="panel-time-placeholder" aria-hidden="true" />
+					{props.idleTimeUnavailable ? <button type="button" className="panel-time-retry"
+						onClick={props.onRetryHosting} aria-label="Retry loading remaining time" title="Time unavailable. Try again">
+						<span aria-hidden="true">—:—</span><RefreshCw size={14} aria-hidden="true" />
+					</button> : <span className="panel-time-placeholder" aria-hidden="true" />}
 				</div>
 			)}
 			<button

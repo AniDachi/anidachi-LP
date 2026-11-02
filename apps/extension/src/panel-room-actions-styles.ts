@@ -23,6 +23,9 @@ export const panelRoomActionsStyles = `
   .panel-time-counter strong { display:block; color:#f5f3ef; font-size:28px; line-height:1; font-weight:760; letter-spacing:-.7px; font-variant-numeric:tabular-nums; }
   .panel-time-loading { gap:4px; color:#c4b9ad; }
   .panel-time-placeholder { width:76px; height:17px; border-radius:5px; background:rgba(255,255,255,.10); }
+  .panel-time-retry { display:inline-flex; align-items:center; justify-content:space-between; gap:7px; width:76px; height:32px; padding:0; border:0; border-radius:4px; background:transparent; color:#a9a8ac; font:inherit; font-size:20px; cursor:pointer; }
+  .panel-time-retry:hover { color:#f5f3ef; }
+  .panel-time-retry:focus-visible { outline:2px solid #edac72; outline-offset:3px; }
   .panel-idle-time > .panel-time-counter, .panel-action-timer > .panel-time-counter { animation:panel-content-in 160ms ease-out both; }
   .panel-room-actions { position:relative; height:36px; min-height:36px; }
   .panel-room-actions .panel-primary-action { font-size:14px; }

@@ -6,7 +6,7 @@ import type { AccountHostingStatus } from "@anidachi/protocol";
 
 const owner = "11111111-1111-4111-8111-111111111111";
 const at = Date.parse("2026-11-01T12:00:00Z");
-const status: AccountHostingStatus = { accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000, period: { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") }, access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false }, activeRoom: null, canCreateRoom: true };
+const status = { accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000, period: { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") }, access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false }, activeRoom: null, canCreateRoom: true } satisfies AccountHostingStatus;
 type Options = Parameters<typeof useAccountHostingStatus>[0];
 let options: Options, current: ReturnType<typeof useAccountHostingStatus>, root: Root, host: HTMLElement;
 function Harness() { current = useAccountHostingStatus(options); return <output>{current.remainingSeconds}</output>; }
@@ -23,6 +23,98 @@ describe("account Free20 display", () => {
     await render(); expect(current.remainingSeconds).toBe(780);
     await act(async () => vi.advanceTimersByTimeAsync(30_000)); expect(current.remainingSeconds).toBe(780); expect(options.request).toHaveBeenCalledTimes(1);
     await act(async () => vi.advanceTimersByTimeAsync(180_000)); expect(options.request).toHaveBeenCalledTimes(2); expect(current.remainingSeconds).toBeNull();
+  });
+  it("retains the fresh plan and retries an unsettled room close without restoring pre-room seconds", async () => {
+    await render();
+    await render({ roomId: "room-a" });
+    vi.mocked(options.request!).mockRejectedValueOnce(new Error("HOSTING_STATUS_UNAVAILABLE"))
+      .mockResolvedValue({ mode: "free20", status: { ...status, access: { ...status.access, remainingSeconds: 600, usedSeconds: 600 } } });
+    await render({ roomId: null });
+    expect(current.planCode).toBe("free");
+    expect(current.remainingSeconds).toBeNull();
+    expect(current.busy).toBe(true);
+    await act(async () => vi.advanceTimersByTimeAsync(500));
+    expect(current.remainingSeconds).toBe(600);
+    expect(current.error).toBe(false);
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(options.request).toHaveBeenCalledTimes(4);
+  });
+  it("bounds outage recovery and exposes failure instead of perpetual loading", async () => {
+    vi.mocked(options.request!).mockRejectedValue(new Error("offline"));
+    await render();
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(options.request).toHaveBeenCalledTimes(3);
+    expect(current.busy).toBe(false);
+    expect(current.error).toBe(true);
+    expect(current.remainingSeconds).toBeNull();
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(options.request).toHaveBeenCalledTimes(3);
+  });
+  it("reads immediately after a short visibility loss without the old five-second cooldown", async () => {
+    await render();
+    await act(async () => vi.advanceTimersByTimeAsync(100));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    expect(options.request).toHaveBeenCalledTimes(2);
+    expect(current.remainingSeconds).toBe(780);
+  });
+  it("supersedes an early room-end read as soon as the end HTTP operation settles", async () => {
+    await render(); await render({ roomId: "room-a" });
+    let early!: (value: any) => void;
+    vi.mocked(options.request!).mockImplementationOnce(() => new Promise(resolve => { early = resolve; }));
+    await render({ roomId: null });
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: { ...status, access: { ...status.access, remainingSeconds: 600, usedSeconds: 600 } } });
+    await render({ settlementRevision: 1 });
+    expect(current.remainingSeconds).toBe(600);
+    await act(async () => early({ mode: "free20", status }));
+    expect(current.remainingSeconds).toBe(600);
+  });
+  it("accepts a fresh active-room account observation after this tab was taken over", async () => {
+    await render(); await render({ roomId: "room-a" });
+    vi.mocked(options.request!).mockResolvedValueOnce({ mode: "free20", status: { ...status, activeRoom: { roomId: "room-a", role: "host" }, canCreateRoom: false } })
+      .mockResolvedValue({ mode: "free20", status });
+    await render({ roomId: null });
+    expect(current.remainingSeconds).toBe(780);
+    expect(current.status?.activeRoom?.roomId).toBe("room-a");
+    expect(current.planCode).toBe("free");
+  });
+  it("does not repeat a long timeout and retires its fresh metadata at the original expiry", async () => {
+    await render();
+    vi.mocked(options.request!).mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 10_000)));
+    await render({ roomId: "room-a" });
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(current.planCode).toBe("free"); expect(current.error).toBe(true);
+    expect(options.request).toHaveBeenCalledTimes(2);
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(current.planCode).toBeNull(); expect(current.remainingSeconds).toBeNull();
+  });
+  it("cancels a queued recovery when the owner changes", async () => {
+    vi.mocked(options.request!).mockRejectedValueOnce(new Error("offline"));
+    await render();
+    const otherOwner = "22222222-2222-4222-8222-222222222222";
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: { ...status, ownerUserId: otherOwner } });
+    await render({ ownerUserId: otherOwner, sessionKey: "other-login" });
+    await act(async () => vi.advanceTimersByTimeAsync(2_000));
+    expect(options.request).toHaveBeenCalledTimes(2);
+    expect(current.status?.ownerUserId).toBe(otherOwner);
+  });
+  it("does not start a queued retry beyond its recovery window", async () => {
+    vi.mocked(options.request!).mockImplementation(() => new Promise((_, reject) => setTimeout(() => reject(new Error("slow failure")), 4_900)));
+    await render();
+    await act(async () => vi.advanceTimersByTimeAsync(5_500));
+    expect(options.request).toHaveBeenCalledTimes(1);
+    expect(current.error).toBe(true); expect(current.busy).toBe(false);
+  });
+  it("runs an explicit retry immediately after bounded recovery fails", async () => {
+    vi.mocked(options.request!).mockRejectedValue(new Error("offline"));
+    await render(); await act(async () => vi.advanceTimersByTimeAsync(2_100));
+    expect(current.error).toBe(true);
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status });
+    await act(async () => current.refresh());
+    expect(current.remainingSeconds).toBe(780); expect(current.error).toBe(false);
+    expect(options.request).toHaveBeenCalledTimes(4);
   });
   it.each([true, false])("keeps a fresh plan but fences idle seconds across a room round trip (room read completed: %s)", async completed => {
     await render();
@@ -102,9 +194,9 @@ describe("account Free20 display", () => {
     await render(); expect(current.exhausted).toBe(true);
     await act(async () => vi.advanceTimersByTimeAsync(121_000)); expect(options.request).toHaveBeenCalledTimes(2);
     vi.mocked(options.request!).mockRejectedValue(new Error("unavailable after reset"));
-    await act(async () => vi.advanceTimersByTimeAsync(120_000)); expect(options.request).toHaveBeenCalledTimes(3);
+    await act(async () => vi.advanceTimersByTimeAsync(120_000)); expect(options.request).toHaveBeenCalledTimes(5);
     expect(current.exhausted).toBe(true); expect(current.remainingSeconds).toBe(0); expect(current.resetSeconds).toBeNull();
-    await act(async () => vi.advanceTimersByTimeAsync(600_000)); expect(options.request).toHaveBeenCalledTimes(3);
+    await act(async () => vi.advanceTimersByTimeAsync(600_000)); expect(options.request).toHaveBeenCalledTimes(5);
   });
   it.each(["resume", "remount"])("does not re-anchor another pending read after %s", async lifecycle => {
     type Read = Awaited<ReturnType<NonNullable<Options["request"]>>>;

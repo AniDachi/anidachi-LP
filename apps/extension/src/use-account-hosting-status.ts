@@ -13,15 +13,19 @@ type State = {
   busy: boolean; error: boolean;
 };
 const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
+const RECOVERY_DELAYS_MS = [500, 1_500] as const;
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
  * activation or user resume; a successful recovery never starts a polling loop. */
-export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visible = enabled, roomId = null, exhaustion, request = requestAccountHostingStatus }: {
+export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visible = enabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus }: {
   ownerUserId: string | null; sessionKey: string | null; enabled: boolean;
   /** Opening the panel recovers expired data without discarding fresh prefetch. */
   visible?: boolean;
   /** Room boundaries require a new account read before idle seconds can return. */
   roomId?: string | null;
+  /** A successful end HTTP response arrives after the earlier terminal socket
+   * event. Retire its possibly-unsettled read and read the completed ledger. */
+  settlementRevision?: number;
   exhaustion: QuotaExhaustion | null; request?: typeof requestAccountHostingStatus;
 }) {
   const stateRef = useRef<State>(empty(ownerUserId, sessionKey));
@@ -53,10 +57,14 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
     let lastMonotonic = performance.now(), lastWall = Date.now();
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
     const cancelRetry = () => { if (retryTimer !== null) clearTimeout(retryTimer); retryTimer = null; };
-    async function load() {
+    async function load(recovery = 0, recoveryStartedAt = performance.now()) {
       if (!alive || pending || document.visibilityState === "hidden") return;
       const now = performance.now();
-      if (now - lastAttempt < 5_000) {
+      if (recovery > 0 && now - recoveryStartedAt >= 5_000) {
+        show({ busy: false, error: true });
+        return;
+      }
+      if (recovery === 0 && now - lastAttempt < 5_000) {
         if (retryTimer === null) retryTimer = setTimeout(() => { retryTimer = null; void load(); }, 5_000 - (now - lastAttempt));
         return;
       }
@@ -65,11 +73,13 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
       // Keep only the originally anchored observation during revalidation.
       // The room scope below fences seconds; its fresh plan can stay visible.
       show({ busy: true, error: false });
+      let retryable = true;
       try {
         // This consumer anchors age at this load's start. A shared older pending
         // request has an earlier start and must never acquire this newer clock.
         const result = await request(ownerUserId!, true);
         if (!alive || ownGeneration !== generation) return;
+        retryable = false;
         const elapsed = Math.max(0, performance.now() - now);
         if (String(document.visibilityState) === "hidden" || Math.abs(Date.now() - wall - elapsed) > 2_000) throw new Error("Stale read");
         if (result.mode === "legacy") { show({ mode: "legacy", status: null, periodClock: null, exhaustedUntil: null, busy: false }); return; }
@@ -87,17 +97,36 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
           periodClock: access.kind === "daily_free" ? { serverTime: status.serverTime, monotonic, resetAt: status.period.resetAt } : null,
           busy: false, error: false });
       } catch {
-        if (alive && ownGeneration === generation) show({ status: null, busy: false, error: true });
+        if (alive && ownGeneration === generation) {
+          // A transient read failure does not revoke an already confirmed plan.
+          // Its original TTL still applies; the room epoch fences old seconds.
+          const delay = retryable && performance.now() - recoveryStartedAt < 5_000 ? RECOVERY_DELAYS_MS[recovery] : undefined;
+          show({ busy: delay !== undefined, error: delay === undefined });
+          if (delay !== undefined) retryTimer = setTimeout(() => {
+            retryTimer = null; void load(recovery + 1, recoveryStartedAt);
+          }, delay);
+        }
       } finally { if (ownGeneration === generation) pending = false; }
     }
-    const suspend = () => { generation++; pending = false; cancelRetry(); show({ status: null, periodClock: null, busy: false }); };
+    const suspend = () => {
+      generation++; pending = false; cancelRetry();
+      // A visibility boundary cancels the read, not just its UI. On return
+      // there is no usable observation to justify the ordinary click cooldown.
+      lastAttempt = Number.NEGATIVE_INFINITY;
+      show({ status: null, periodClock: null, busy: false });
+    };
     const resume = () => {
       if (document.visibilityState === "hidden") { suspend(); return; }
       if (pending || (current.status && performance.now() - lastAttempt < 5_000)) return;
       expiryRecheckUsed = false; resetRecheckUsed = false;
       void load();
     };
-    refreshRef.current = () => { expiryRecheckUsed = false; resetRecheckUsed = false; void load(); };
+    refreshRef.current = () => {
+      // The explicit retry replaces a failed read immediately. Its busy state
+      // suppresses repeated clicks; no stale allowance is made visible.
+      if (current.error) lastAttempt = Number.NEGATIVE_INFINITY;
+      expiryRecheckUsed = false; resetRecheckUsed = false; void load();
+    };
     invalidateRef.current = () => {
       // A newer admission denial supersedes both the display and pending reads.
       generation++; pending = false; cancelRetry(); show({ status: null, busy: false });
@@ -139,7 +168,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
       window.removeEventListener("focus", resume); window.removeEventListener("pageshow", resume); window.removeEventListener("online", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [ownerUserId, sessionKey, enabled, roomScope, exhaustion, request]);
+  }, [ownerUserId, sessionKey, enabled, roomScope, settlementRevision, exhaustion, request]);
   useEffect(() => { if (visible) openRef.current(); }, [visible]);
   const scoped = state.ownerUserId === ownerUserId && state.sessionKey === sessionKey ? state : empty(ownerUserId, sessionKey);
   const elapsed = Math.max(0, performance.now() - scoped.monotonic);
