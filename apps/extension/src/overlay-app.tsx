@@ -208,6 +208,7 @@ import { FreeQuotaNotice } from "./free-quota-notice";
 import { HostingPaywall } from "./hosting-paywall";
 import { useHostingAccess } from "./use-hosting-access";
 import { useAccountHostingStatus } from "./use-account-hosting-status";
+import { useRoomClosingPresentation } from "./use-room-closing-presentation";
 import { RoomHostingTime } from "./room-hosting-time";
 import { useRoomHostingTime } from "./use-room-hosting-time";
 import { useFree20Warning } from "./use-free20-warning";
@@ -832,6 +833,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomId,
 		settlementRevision: roomSettlementRevision,
 		exhaustion: quotaExhaustion,
+	});
+	const roomClosing = useRoomClosingPresentation({
+		loginKey: roomAuthSessionKeyRef.current, roomId, pending: roomEndPending,
+		ready: accountHostingTime.readComplete && (accountHostingTime.status !== null || accountHostingTime.mode === "legacy"),
+		failed: accountHostingTime.readComplete && accountHostingTime.error && !accountHostingTime.busy,
 	});
 	const hostingDisplay = useHostingAccess({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
@@ -3569,6 +3575,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				case "ROOM_ENDED": {
 					if (event.roomId !== roomIdRef.current) return;
+					if (event.reason === "host_ended" && isCurrentHost()) roomClosing.begin();
 					if (event.reason === "quota_exhausted") {
 						if (isCurrentHost()) {
 							const ended = new Date(event.endedAt);
@@ -5019,6 +5026,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		clearRoomActionFeedback();
 		clearRoomEndConfirmation();
 		setRoomEndPending(true);
+		roomClosing.begin();
 		const endingLogin = roomAuthSessionKeyRef.current;
 		try {
 			const activeRoomId = roomIdRef.current;
@@ -5069,6 +5077,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setAuthMessage(message);
 		} finally {
 			setRoomEndPending(false);
+			if (roomIdRef.current !== null && roomAuthSessionKeyRef.current === endingLogin) roomClosing.cancel();
 		}
 	};
 
@@ -6312,8 +6321,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					</> : <PanelRoomActions key={roomAuthSessionKeyRef.current ?? "anonymous"}
 						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
+						closing={roomClosing.closing}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
-						idleTimeUnavailable={accountHostingTime.error && !accountHostingTime.busy}
+						idleTimeUnavailable={roomClosing.unavailable || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
 						onRetryHosting={accountHostingTime.refresh}
 						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
 							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}

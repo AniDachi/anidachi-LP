@@ -35,6 +35,7 @@ export interface PanelRoomActionsProps {
 	roomReady: boolean;
 	/** Owned by OverlayApp so closing the panel cannot retire an in-flight start. */
 	creating?: boolean;
+	closing?: boolean;
 	idleTimePending?: boolean;
 	idleTimeUnavailable?: boolean;
 	onRetryHosting?(): void;
@@ -112,19 +113,20 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	// This is the last idle observation, never a locally started allowance.
 	const waitingForRoom = active && (props.creating ?? startTime !== undefined) && !props.roomReady && !props.roomStartInterrupted;
 	const startInterrupted = Boolean(props.roomStartInterrupted || (props.creating === false && !props.roomReady));
-	const visibleActive = active && !waitingForRoom;
+	const visibleActive = Boolean(props.closing) || (active && !waitingForRoom);
 	// HTTP admission can finish before the first room snapshot. Keep the same
 	// disabled create action throughout that gap; never relabel it as success.
-	const label = waitingForRoom ? "Create room" : props.label;
-	const actionBusy = busy || waitingForRoom;
+	const label = props.closing ? "Closing room" : !visibleActive ? "Create room" : waitingForRoom ? "Create room" : props.label;
+	const actionBusy = busy || waitingForRoom || Boolean(props.closing);
 	const continuingStart = !startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime));
-	const displaySeconds = remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
+	const displaySeconds = props.closing || (!active && props.idleTimeUnavailable) ? null : remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
 		(waitingForRoom && props.retainIdleTimeWhileConnecting !== false ? startTime : null);
 	const timed = typeof displaySeconds === "number" && Number.isFinite(displaySeconds) && (!visibleActive || props.isHost);
-	const awaitingTimer = visibleActive && props.isHost && !timed && Boolean(props.awaitingHostingTime) && !props.roomStartInterrupted;
+	const awaitingTimer = !props.closing && visibleActive && props.isHost && !timed && Boolean(props.awaitingHostingTime) && !props.roomStartInterrupted;
 	// Reserve the original slot while connecting, without retaining stale digits.
-	const timedLayout = visibleActive || timed || Boolean(props.idleTimePending) || (!visibleActive && startTime != null);
+	const timedLayout = visibleActive || timed || Boolean(props.idleTimePending) || (!visibleActive && (props.idleTimeUnavailable || startTime != null));
 	const motion = useRef<ReturnType<typeof animatePanelRoomStart> | null>(null);
+	const exitSnapshot = useRef<PanelRoomStart | null>(null);
 	const descriptionId = useId();
 	const cancelTimers = () => {
 		timers.current.forEach(clearTimeout);
@@ -213,6 +215,18 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			setStartTime(undefined);
 		}
 	}, [busy, roomId]);
+	useLayoutEffect(() => {
+		const strip = stripRef.current, button = buttonRef.current;
+		if (!strip || !button) return;
+		if (visibleActive) {
+			exitSnapshot.current = capturePanelRoomStart(strip, button);
+		} else if (exitSnapshot.current) {
+			const from = exitSnapshot.current;
+			exitSnapshot.current = null;
+			motion.current?.cancel();
+			motion.current = animatePanelRoomStart(from, strip, button, "end");
+		}
+	});
 
 	const begin = (action: "copy" | "sync") => {
 		const operation = ++sequence.current;
@@ -299,7 +313,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 				aria-label={label}
 				aria-busy={actionBusy}
 				aria-describedby={active && timed ? descriptionId : undefined}
-				disabled={props.disabled || waitingForRoom}
+				disabled={props.disabled || waitingForRoom || props.closing}
 				data-show-action={showLabel}
 				onClick={(event) => {
 					if (!active && stripRef.current && buttonRef.current) {
@@ -336,7 +350,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					{displaySeconds} seconds of free time remaining today
 				</span>
 			)}
-			{visibleActive && (
+			{visibleActive && !props.closing && (
 				<div
 					className="panel-action-icons"
 					role="group"

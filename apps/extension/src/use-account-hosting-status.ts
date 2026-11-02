@@ -11,6 +11,8 @@ type State = {
   exhaustionEvent: QuotaExhaustion | null;
   periodClock: { serverTime: number; monotonic: number; resetAt: number } | null;
   busy: boolean; error: boolean;
+  completedRead?: { roomEpoch: number; settlementRevision: number };
+  statusSettlementRevision?: number;
 };
 const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
 const RECOVERY_DELAYS_MS = [500, 1_500] as const;
@@ -61,7 +63,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
       if (!alive || pending || document.visibilityState === "hidden") return;
       const now = performance.now();
       if (recovery > 0 && now - recoveryStartedAt >= 5_000) {
-        show({ busy: false, error: true });
+        show({ busy: false, error: true, completedRead: { roomEpoch: roomScope.epoch, settlementRevision } });
         return;
       }
       if (recovery === 0 && now - lastAttempt < 5_000) {
@@ -82,7 +84,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
         retryable = false;
         const elapsed = Math.max(0, performance.now() - now);
         if (String(document.visibilityState) === "hidden" || Math.abs(Date.now() - wall - elapsed) > 2_000) throw new Error("Stale read");
-        if (result.mode === "legacy") { show({ mode: "legacy", status: null, periodClock: null, exhaustedUntil: null, busy: false }); return; }
+        if (result.mode === "legacy") { show({ mode: "legacy", status: null, periodClock: null, exhaustedUntil: null, busy: false, completedRead: { roomEpoch: roomScope.epoch, settlementRevision } }); return; }
         const status = acceptAccountHostingStatus(ownerUserId!, result.status);
         if (!status) throw new Error("Invalid status");
         // Retain the established UTC clock when a later response carries an
@@ -95,13 +97,15 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
         if (access.kind === "daily_free" && access.remainingSeconds === 0) exhaustedUntil = status.period.resetAt;
         show({ mode: "free20", status, roomEpoch: roomScope.epoch, monotonic, wall: wall - (now - monotonic), exhaustedUntil,
           periodClock: access.kind === "daily_free" ? { serverTime: status.serverTime, monotonic, resetAt: status.period.resetAt } : null,
-          busy: false, error: false });
+          busy: false, error: false, statusSettlementRevision: settlementRevision,
+          completedRead: { roomEpoch: roomScope.epoch, settlementRevision } });
       } catch {
         if (alive && ownGeneration === generation) {
           // A transient read failure does not revoke an already confirmed plan.
           // Its original TTL still applies; the room epoch fences old seconds.
           const delay = retryable && performance.now() - recoveryStartedAt < 5_000 ? RECOVERY_DELAYS_MS[recovery] : undefined;
-          show({ busy: delay !== undefined, error: delay === undefined });
+          show({ busy: delay !== undefined, error: delay === undefined,
+            ...(delay === undefined ? { completedRead: { roomEpoch: roomScope.epoch, settlementRevision } } : {}) });
           if (delay !== undefined) retryTimer = setTimeout(() => {
             retryTimer = null; void load(recovery + 1, recoveryStartedAt);
           }, delay);
@@ -177,10 +181,12 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
     scoped.status.serverTime + elapsed < scoped.status.validUntil &&
     (scoped.status.access.kind !== "daily_free" || scoped.status.serverTime + elapsed < scoped.status.period.resetAt)
     ? scoped.status : null;
-  const status = scoped.roomEpoch === roomScope.epoch && roomScope.roomId === roomId ? observation : null;
+  const status = scoped.roomEpoch === roomScope.epoch && roomScope.roomId === roomId &&
+    scoped.statusSettlementRevision === settlementRevision ? observation : null;
   const exhausted = scoped.mode === "free20" && scoped.exhaustedUntil !== null;
   return {
     mode: scoped.mode, status, planCode: observation?.planCode ?? null, busy: scoped.busy, error: scoped.error, exhausted,
+    readComplete: scoped.completedRead?.roomEpoch === roomScope.epoch && scoped.completedRead?.settlementRevision === settlementRevision,
     remainingSeconds: exhausted ? 0 : status?.access.kind === "daily_free" ? Math.max(0, status.access.remainingSeconds - (status.access.metering ? Math.floor(elapsed / 1000) : 0)) : null,
     // Bounds the last confirmed number during the short visual room handoff.
     displayExpiresAt: status ? scoped.monotonic + Math.min(status.validUntil, status.period.resetAt) - status.serverTime : null,

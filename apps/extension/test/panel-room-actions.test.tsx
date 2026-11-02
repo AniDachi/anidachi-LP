@@ -76,6 +76,21 @@ describe("real room action feedback", () => {
 		expect(button("Leave room").textContent).toContain("Leave room");
 		expect(host.textContent).not.toContain("12:34");
 	});
+	it("keeps a disabled red closing action after terminal state until the idle time is ready", async () => {
+		await render({ closing: true, roomId: null, remainingSeconds: null, idleTimePending: true, isHost: false });
+		expect(button("Closing room").disabled).toBe(true);
+		expect(button("Closing room").classList.contains("room-exit")).toBe(true);
+		expect(host.querySelector(".panel-time-placeholder")).toBeNull();
+		expect(host.querySelector(".panel-action-icons")).toBeNull();
+		await render({ closing: false, remainingSeconds: 690, label: "Room closed" });
+		expect(button("Create room").classList.contains("room-exit")).toBe(false);
+		expect(host.querySelector(".panel-time-counter")?.textContent).toBe("11:30");
+	});
+	it("suppresses an early balance when closing times out before settlement", async () => {
+		await render({ roomId: null, closing: false, remainingSeconds: 780, idleTimeUnavailable: true });
+		expect(host.querySelector(".panel-time-counter")).toBeNull();
+		expect(button("Retry loading remaining time")).toBeTruthy();
+	});
 	it("offers a compact retry after a failed idle read without inventing a time value", async () => {
 		const retry = vi.fn();
 		await render({ roomId: null, roomReady: false, remainingSeconds: null, idleTimePending: true, idleTimeUnavailable: true, onRetryHosting: retry });

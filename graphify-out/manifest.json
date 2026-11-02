@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793608367.5791223,
-    "seen": 1793609013.3379998,
-    "ast_hash": "7fcf056003fe71ee164d5d0f7c4efff2",
+    "mtime": 1793610923.8597407,
+    "seen": 1793611214.927606,
+    "ast_hash": "7bbf4931de30aefe4fc82d4cb1fd9333",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793604975.282316,
-    "seen": 1793605624.129869,
-    "ast_hash": "6d3fb88f9cf7eb8e67d9cc41ad858502",
+    "mtime": 1793610805.7787411,
+    "seen": 1793611214.927615,
+    "ast_hash": "c08b1ffd7c279bea7ff98afa5689fd74",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -11196,34 +11196,34 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions-styles.ts": {
-    "mtime": 1793608334.3969738,
-    "seen": 1793609013.338003,
-    "ast_hash": "a7bd976931a2a982df46b78960736f7f",
+    "mtime": 1793610684.385602,
+    "seen": 1793611214.9276102,
+    "ast_hash": "b855a153131193e9e7c3c810d060335b",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
-    "mtime": 1793608334.3754032,
-    "seen": 1793609013.338005,
-    "ast_hash": "d294a65dfed775082f73421a5c4c32d3",
+    "mtime": 1793610923.8362355,
+    "seen": 1793611214.9276109,
+    "ast_hash": "a246f50460839f97042b0e1043741190",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-start-motion.ts": {
-    "mtime": 1793605956.6536832,
-    "seen": 1793605966.6915042,
-    "ast_hash": "48afa2d6b8ae055ae9cbc78e92a90b27",
+    "mtime": 1793610379.8751786,
+    "seen": 1793611214.9276118,
+    "ast_hash": "4bb824f1bc9575f7c2ac8b297de68e39",
     "semantic_hash": ""
   },
   "apps/extension/test/panel-room-actions.test.tsx": {
-    "mtime": 1793608367.6628397,
-    "seen": 1793609013.338007,
-    "ast_hash": "caf337182653276ca81074bff22ccd24",
+    "mtime": 1793610923.8797648,
+    "seen": 1793611214.927615,
+    "ast_hash": "7a8eeab333c0d8f0cd5c11c8a1ff9b7d",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793608846.081383,
-    "seen": 1793609013.411328,
+    "mtime": 1793610719.913119,
+    "seen": 1793611215.001982,
     "ast_hash": "",
-    "semantic_hash": "79d04fb90f887e2bd998e0608bf8ce14"
+    "semantic_hash": "724abdef2d585217a8d74c7ffc88d1f1"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11244,9 +11244,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/use-account-hosting-status.ts": {
-    "mtime": 1793608846.0413992,
-    "seen": 1793609013.338006,
-    "ast_hash": "7cfe1498e1b8ab25abe2e590a3717dc4",
+    "mtime": 1793610805.6122987,
+    "seen": 1793611214.927613,
+    "ast_hash": "0a6ee04341855a258677674d782b2a36",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-hosting-time.ts": {
@@ -11268,9 +11268,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/use-account-hosting-status.test.tsx": {
-    "mtime": 1793608846.061367,
-    "seen": 1793609013.3380082,
-    "ast_hash": "87020a662d4034de19873ce317ab9c60",
+    "mtime": 1793610806.0742817,
+    "seen": 1793611214.927616,
+    "ast_hash": "8f3afe68af8e49796c72d20ab0d3415d",
     "semantic_hash": ""
   },
   "apps/extension/test/use-room-hosting-time.test.tsx": {
@@ -11613,6 +11613,18 @@
     "mtime": 1793590482.7054012,
     "seen": 1793590718.25827,
     "ast_hash": "2809cb599178ecf8ce6fcf0318e037ff",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/use-room-closing-presentation.ts": {
+    "mtime": 1793610805.6359622,
+    "seen": 1793611214.927614,
+    "ast_hash": "58b2e2c8574edcc478dae338b393c318",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/use-room-closing-presentation.test.tsx": {
+    "mtime": 1793610520.265372,
+    "seen": 1793611214.927617,
+    "ast_hash": "335be1ec8dfce47a841d7480370c4e58",
     "semantic_hash": ""
   }
 }
