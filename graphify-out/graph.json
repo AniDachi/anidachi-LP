@@ -25809,14 +25809,14 @@
       "file_type": "code",
       "norm_label": "button()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4733",
+      "source_location": "L4767",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "querySelectorAll",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L4734",
+            "line": "L4768",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -25832,14 +25832,14 @@
       "file_type": "code",
       "norm_label": "click()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4712",
+      "source_location": "L4746",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "click",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L4714",
+            "line": "L4748",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -25855,7 +25855,7 @@
       "file_type": "code",
       "norm_label": "confirmedroomsession()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4355"
+      "source_location": "L4389"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_createadapter",
@@ -25867,7 +25867,7 @@
       "file_type": "code",
       "norm_label": "createadapter()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4207"
+      "source_location": "L4241"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_deferred",
@@ -25879,7 +25879,7 @@
       "file_type": "code",
       "norm_label": "deferred()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4626"
+      "source_location": "L4660"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_flushmountedwork",
@@ -25891,7 +25891,7 @@
       "file_type": "code",
       "norm_label": "flushmountedwork()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4806"
+      "source_location": "L4840"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_flushroomactionwork",
@@ -25903,7 +25903,7 @@
       "file_type": "code",
       "norm_label": "flushroomactionwork()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4814"
+      "source_location": "L4848"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_guestparticipant",
@@ -25915,7 +25915,7 @@
       "file_type": "code",
       "norm_label": "guestparticipant()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4390"
+      "source_location": "L4424"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_hostparticipant",
@@ -25927,7 +25927,7 @@
       "file_type": "code",
       "norm_label": "hostparticipant()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4378"
+      "source_location": "L4412"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_installactivehostroomruntime",
@@ -25939,7 +25939,7 @@
       "file_type": "code",
       "norm_label": "installactivehostroomruntime()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4453"
+      "source_location": "L4487"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_installoverlayruntime",
@@ -25951,7 +25951,7 @@
       "file_type": "code",
       "norm_label": "installoverlayruntime()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4698"
+      "source_location": "L4732"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_installroomdefaultsruntime",
@@ -25963,7 +25963,7 @@
       "file_type": "code",
       "norm_label": "installroomdefaultsruntime()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4532"
+      "source_location": "L4566"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_invitefriend",
@@ -25975,7 +25975,7 @@
       "file_type": "code",
       "norm_label": "invitefriend()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4402"
+      "source_location": "L4436"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_invitesresponse",
@@ -25987,7 +25987,7 @@
       "file_type": "code",
       "norm_label": "invitesresponse()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4419"
+      "source_location": "L4453"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_preparedroomsession",
@@ -25999,7 +25999,7 @@
       "file_type": "code",
       "norm_label": "preparedroomsession()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4345"
+      "source_location": "L4379"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_primaryroomaction",
@@ -26011,14 +26011,14 @@
       "file_type": "code",
       "norm_label": "primaryroomaction()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4773",
+      "source_location": "L4807",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "querySelector",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L4774",
+            "line": "L4808",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -26034,7 +26034,7 @@
       "file_type": "code",
       "norm_label": "privilegedinvokes()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4793"
+      "source_location": "L4827"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_renderoverlay",
@@ -26046,21 +26046,21 @@
       "file_type": "code",
       "norm_label": "renderoverlay()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4637",
+      "source_location": "L4671",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "append",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L4651",
+            "line": "L4685",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           },
           {
             "callee": "render",
             "receiver_type": "Root",
             "lang": "typescript",
-            "line": "L4657",
+            "line": "L4691",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -26076,14 +26076,14 @@
       "file_type": "code",
       "norm_label": "renderoverlayinclosedshadow()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4666",
+      "source_location": "L4700",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "render",
             "receiver_type": "Root",
             "lang": "typescript",
-            "line": "L4687",
+            "line": "L4721",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -26099,7 +26099,7 @@
       "file_type": "code",
       "norm_label": "roomauthority()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4336"
+      "source_location": "L4370"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_roomsessionstorageresponse",
@@ -26111,7 +26111,7 @@
       "file_type": "code",
       "norm_label": "roomsessionstorageresponse()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4367"
+      "source_location": "L4401"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_sessionfor",
@@ -26123,7 +26123,7 @@
       "file_type": "code",
       "norm_label": "sessionfor()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4322"
+      "source_location": "L4356"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_trustedclick",
@@ -26135,14 +26135,14 @@
       "file_type": "code",
       "norm_label": "trustedclick()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4720",
+      "source_location": "L4754",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "dispatchEvent",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L4727",
+            "line": "L4761",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -26158,14 +26158,14 @@
       "file_type": "code",
       "norm_label": "unmount()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4802",
+      "source_location": "L4836",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "unmount",
             "receiver_type": "Root",
             "lang": "typescript",
-            "line": "L4803",
+            "line": "L4837",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -26181,14 +26181,14 @@
       "file_type": "code",
       "norm_label": "waitforbutton()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4744",
+      "source_location": "L4778",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "querySelectorAll",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L4749",
+            "line": "L4783",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -26204,7 +26204,7 @@
       "file_type": "code",
       "norm_label": "waitforenabledprimaryroomaction()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4780"
+      "source_location": "L4814"
     },
     {
       "id": "apps_extension_test_privileged_overlay_wiring_test_waitfortext",
@@ -26216,7 +26216,7 @@
       "file_type": "code",
       "norm_label": "waitfortext()",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4760"
+      "source_location": "L4794"
     },
     {
       "id": "apps_web_app_api_auth_instagram_config_check_route_get",
@@ -91887,28 +91887,28 @@
             "callee": "append",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L184",
+            "line": "L185",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           },
           {
             "callee": "focus",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L831",
+            "line": "L832",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           },
           {
             "callee": "getRootNode",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L832",
+            "line": "L833",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           },
           {
             "callee": "dispatchEvent",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L833",
+            "line": "L834",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -91923,7 +91923,7 @@
       "file_type": "code",
       "norm_label": "extensionstorage",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L37"
+      "source_location": "L38"
     },
     {
       "id": "apps_web_app_api_auth_instagram_config_check_route",
@@ -199813,7 +199813,7 @@
       "label": "toJSON()",
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L103",
+      "source_location": "L104",
       "_callable": true,
       "_origin": "ast"
     },
@@ -199822,7 +199822,7 @@
       "label": "setup()",
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2970",
+      "source_location": "L3004",
       "_callable": true,
       "metadata": {
         "unresolved_calls": [
@@ -199830,7 +199830,7 @@
             "callee": "dispatchEvent",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L2995",
+            "line": "L3029",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -199842,7 +199842,7 @@
       "label": "quickMicrophone()",
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4825",
+      "source_location": "L4859",
       "_callable": true,
       "metadata": {
         "unresolved_calls": [
@@ -199850,7 +199850,7 @@
             "callee": "querySelector",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L4826",
+            "line": "L4860",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -199862,7 +199862,7 @@
       "label": "selectQuickMicrophoneMode()",
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4830",
+      "source_location": "L4864",
       "_callable": true,
       "metadata": {
         "unresolved_calls": [
@@ -199870,7 +199870,7 @@
             "callee": "querySelector",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L4834",
+            "line": "L4868",
             "file": "apps/extension/test/privileged-overlay-wiring.test.tsx"
           }
         ]
@@ -211359,12 +211359,12 @@
       "label": "Intermediate overlay design on staging",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L1-L58",
+      "source_location": "L1-L61",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Block 6 of the Daily Free20 transition transfers the accepted local prototype into the real staging extension and a stable unpacked folder for iteration. It is intermediate design only, with live events, trial transition, purchase delivery and enabled acceptance unfinished. Tasks preserve real outcomes, use existing quota authority, verify, deliver via staging and record artifact evidence; rollback is a UI revert and rebuild.",
+      "summary": "Block 6 of the Daily Free20 transition plan requires transferring the accepted local prototype into the real staging extension and maintaining a stable unpacked directory. It is an intermediate design plan, not evidence of final Free20 acceptance or current deployment. It preserves action outcomes, defines timer presentation and quota boundaries, and requires staging delivery, evidence and a UI-only rollback.",
       "status": "authorized_intermediate_design_plan",
       "_origin": "semantic"
     },
@@ -211378,7 +211378,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Transfer the accepted local prototype into the real staging extension for continued iteration. Conditional Free20 activation requires the whole system to be ready; unfinished live events, trial transition, purchase delivery and enabled acceptance prohibit activation by this change.",
+      "summary": "The owner authorized transferring the accepted local prototype into the staging extension for continued iteration. At the time of this plan, live time events, trial transition, purchase delivery and enabled acceptance remained unfinished. Conditional permission to activate Free20 requires the whole system to be ready; this UI change does not activate it.",
       "_origin": "semantic"
     },
     {
@@ -211386,12 +211386,12 @@
       "label": "Task 1: Preserve real action outcomes",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L14-L23",
+      "source_location": "L14-L26",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Preserve media and room/invite/people/settings behavior, connect account and billing links, scope clipboard results, report Sync sent only after actual HOST_STATE delivery on an open socket, and verify failure/stale/disconnected/non-host/repeat scenarios.",
+      "summary": "Preserve camera/microphone and room/invite/people/settings behavior. Avatar opens the channel account page; View plans opens the channel /pricing page, including warning and exhausted-limit actions. Show the header plans link only for a server-confirmed current-account Free plan. Scope clipboard feedback to its originating session and report Sync sent only for a real HOST_STATE send on an open socket; test failures, stale operations and repeated clicks.",
       "_origin": "semantic"
     },
     {
@@ -211399,12 +211399,12 @@
       "label": "Task 2: Transfer timer/action presentation",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L25-L37",
+      "source_location": "L28-L40",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Apply the accepted timer/action dimensions and placement while retaining the native media dock. Consume existing enabled legacy quota authority only; unknown/unlimited/guest access has no timer. Animate only real successful room creation with lifecycle/reduced-motion cleanup and verify actual component and staging-artifact rendering.",
+      "summary": "Apply the accepted timer/action dimensions and placement while preserving the native media dock. Only existing legacy quota authority in an enabled mode may drive finite time; unknown, unlimited and guest access has no timer. Move the timer only after successful room creation with reduced-motion and lifecycle cleanup, and inspect actual local component and built staging artifact rendering.",
       "_origin": "semantic"
     },
     {
@@ -211412,12 +211412,12 @@
       "label": "Task 3: Deliver and record",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L39-L46",
+      "source_location": "L42-L49",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Run extension checks/tests, dev:check, narrow staging build/validation; update state and graph through the repository adapter; obtain whole-branch review, PR to staging and required CI, merge, rebuild the accepted commit into the same unpacked directory, and record artifact/visual/browser evidence. No main, Store or server-gate change.",
+      "summary": "Require extension check/test, pnpm dev:check, narrow staging build/validation, current-state and repository-adapter graph updates, fresh whole-branch review, a staging PR, successful required CI and merge. Rebuild from the accepted staging commit into the same unpacked directory and record artifact identity, visual evidence and browser-acceptance limits. Do not promote main, publish a Store version or change server gates.",
       "_origin": "semantic"
     },
     {
@@ -211425,12 +211425,12 @@
       "label": "Review focus",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L48-L53",
+      "source_location": "L51-L56",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Review cross-session async feedback, false sync success, unknown quota as zero, guest account-time confusion, duplicate quota reads, hidden confirmations, media-control movement and stale animation/feedback after panel or room lifecycle changes.",
+      "summary": "Review async feedback crossing sessions, false sync success, unknown quota rendered as zero, guest account-time confusion, duplicated quota fetches, hidden confirmation actions, shifted media controls and animation/feedback cleanup after closing the panel or changing the room.",
       "_origin": "semantic"
     },
     {
@@ -211438,12 +211438,12 @@
       "label": "Rollback",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L55-L58",
+      "source_location": "L58-L61",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Revert the UI commit on staging and rebuild the narrow staging artifact; server schema, accounting, commercial switches and production artifacts are unaffected.",
+      "summary": "The planned rollback is to revert this UI commit on staging and rebuild the narrow staging artifact. The scope excludes changes to server schema, accounting, commercial switches and production artifacts.",
       "_origin": "semantic"
     },
     {
@@ -211456,7 +211456,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Explicit parent-plan citation to Daily Free20 transition block 6. This citation does not stamp or assert that the parent file was re-extracted.",
+      "summary": "Explicit parent-plan citation to Daily Free20 transition, block 6. The citation is owned by this document and does not assert that the parent document was read or re-extracted.",
       "cited_target": "2026-10-30-daily-free20-transition.md",
       "resolved_reference": "docs/superpowers/plans/2026-10-30-daily-free20-transition.md",
       "_origin": "semantic"
@@ -211466,12 +211466,12 @@
       "label": "Channel account and billing navigation",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L16-L17",
+      "source_location": "L16-L20",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Avatar opens the channel account page. View plans under the name/plan opens billing; camera/microphone and existing room/invite/people/settings behavior remain.",
+      "summary": "Avatar must open the channel account page. View plans must open the channel /pricing page from the header, low-time warning and exhausted-limit action. The header link appears only for a server-confirmed Free plan for the current account and is hidden for Plus, Pro or an unknown plan. This records the owner correction dated November 2 and preserves the existing concept ID.",
       "_origin": "semantic"
     },
     {
@@ -211479,13 +211479,13 @@
       "label": "Session-scoped invitation clipboard feedback",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L18-L19",
+      "source_location": "L21-L22",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Copy uses the current room invitation and shows microphone-style feedback only after successful clipboard write. Late results are scoped to the room, login and connection.",
-      "rationale": "An asynchronous clipboard completion must not report success in a replacement room or login.",
+      "summary": "Copy must use the current room invitation and show microphone-style feedback only after clipboard success. Scope late results to the originating room, login and connection.",
+      "rationale": "A late asynchronous clipboard completion must not show success in a replacement room, login or connection context.",
       "_origin": "semantic"
     },
     {
@@ -211493,13 +211493,13 @@
       "label": "Open-socket HOST_STATE sync feedback",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L20-L23",
+      "source_location": "L23-L26",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Only the sync icon rotates. Sync sent is reported only if the existing controller sends HOST_STATE on an open socket; queued, dropped and no-op outcomes are not success. Focused tests include disconnected/non-host sync and repeated clicks.",
-      "rationale": "Requesting synchronization is not evidence that the controller actually sent a state message.",
+      "summary": "Rotate only the sync icon. Report Sync sent only when the existing controller sends HOST_STATE on an open socket; queued, dropped and no-op outcomes are not success. Focused extension tests include disconnected/non-host sync and repeated clicks.",
+      "rationale": "Requesting synchronization does not prove that the controller sent a state message, so success feedback follows an actual send.",
       "_origin": "semantic"
     },
     {
@@ -211507,12 +211507,12 @@
       "label": "Finite timer and action dimensions",
       "file_type": "concept",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L27-L29",
+      "source_location": "L30-L32",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Accepted presentation uses a 28 px tabular timer, 20 px icon, 4 px gap and 14 px action text. Before a room the finite timer stays left of Create; active host time is inside End with hover/focus/confirmation revealing the action, while the media dock stays native.",
+      "summary": "The accepted presentation uses a 28px tabular timer, 20px icon, 4px gap and 14px action text. Finite time before a room stays left of Create; active host time is inside End, with hover/focus/confirmation revealing the action. Preserve the native media dock.",
       "_origin": "semantic"
     },
     {
@@ -211520,13 +211520,13 @@
       "label": "Existing legacy quota authority boundary",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L30-L33",
+      "source_location": "L33-L36",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Only existing legacy quota authority may drive the timer where that mode is enabled. No invented 1200-second value, new account polling or substitution of the account display API for future live Free20 events. Unknown, unlimited and guest access have no timer; existing paywalls remain.",
-      "rationale": "Finite time and hosting permission must come from the active server contract, not the prototype or display-only account read.",
+      "summary": "Use only existing legacy quota authority where that mode is actually enabled. Do not invent a 1200-second value, add account polling or substitute the account display API for future live Free20 events. Show no timer for unknown, unlimited or guest access and preserve existing access paywalls.",
+      "rationale": "Displayed finite time must follow the enabled quota authority; prototype values and account-display reads cannot stand in for future live Free20 events.",
       "_origin": "semantic"
     },
     {
@@ -211534,13 +211534,13 @@
       "label": "Successful creation timer transition",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L34-L37",
+      "source_location": "L37-L40",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Move the timer only after real room creation succeeds. Respect reduced motion and clean the animation on failure, room change and unmount; verify owner/session changes, expiry/reset and unknown states with real component preview and the built staging artifact.",
-      "rationale": "Presentation motion must follow confirmed lifecycle progress and stop when its original context ends.",
+      "summary": "Move the timer when real room creation succeeds, respect reduced motion, and clean animation on failure, room change or unmount. Check owner/session changes, expiry/reset and unknown states; inspect real component rendering in the local preview and built staging artifact.",
+      "rationale": "The transition follows successful room creation and its animation must not outlive the originating lifecycle context.",
       "_origin": "semantic"
     },
     {
@@ -211548,26 +211548,27 @@
       "label": "Focused action and lifecycle verification",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L22-L53",
+      "source_location": "L25-L56",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "Focused tests cover failed copy, stale completion, disconnected/non-host sync, repeated clicks, owner/session changes, expiry/reset, unknown states and cleanup. Rendering inspection covers the actual local component and built staging artifact. Whole-branch review checks missing confirmations, duplicate reads and media-control displacement.",
-      "_origin": "semantic"
+      "summary": "Require focused extension tests for failed copy, stale operations, disconnected/non-host sync and repeated clicks; check owner/session changes, expiry/reset and unknown states. Inspect real local and built-staging rendering. Review cross-session feedback, quota misrepresentation, guest time, duplicate fetches, hidden actions, shifted controls and cleanup.",
+      "_origin": "semantic",
+      "rationale": "Action feedback, quota display and timer animation depend on asynchronous operations and changing room/account state, so verification must include failure and lifecycle boundaries."
     },
     {
       "id": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_stable_unpacked_staging_artifact_delivery",
       "label": "Stable unpacked staging artifact delivery",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L41-L46",
+      "source_location": "L44-L49",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "summary": "After check/test, dev:check, narrow build/validation and graph/docs update, review and merge the staging PR with successful required CI. Rebuild from the accepted staging commit into the same unpacked directory and record exact artifact identity, visual evidence and browser-acceptance limits.",
-      "rationale": "Continued design iteration needs a stable delivery location and evidence tied to the exact accepted staging source.",
+      "summary": "After checks, tests, narrow build/validation, state/graph updates, whole-branch review and a staging PR with successful required CI and merge, rebuild from the accepted staging commit into the same unpacked directory. Record artifact identity, visual evidence and browser-acceptance limits. This plan does not authorize main promotion, Store publication or server-gate changes.",
+      "rationale": "Continued design iteration requires a stable unpacked directory and acceptance evidence tied to the accepted staging commit and exact artifact.",
       "_origin": "semantic"
     },
     {
@@ -215667,7 +215668,7 @@
       "label": "Free20TimerTestSession",
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4268",
+      "source_location": "L4302",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -215677,7 +215678,7 @@
       "label": "renderActiveFree20Timer()",
       "file_type": "code",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4270",
+      "source_location": "L4304",
       "_callable": true,
       "_origin": "ast"
     },
@@ -222874,6 +222875,28 @@
       "contributor": null,
       "summary": "After compatible PR490 delivery, prepare exact staging-branch Web flag before reviewed activation/config merge. Ordinary Git-triggered Web deployment receives new values; Worker and Web may finish in either order. Verify both versions/configurations and effective behavior before the conditional SQL switch.",
       "rationale": "Independent deploy triggers cannot guarantee ordering; keeping SQL admission off until both compatible runtimes are verified avoids treating a merge or env edit as activation.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_extension_test_free_quota_notice_test",
+      "label": "free-quota-notice.test.tsx",
+      "file_type": "code",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_server_confirmed_free_plan_header_link",
+      "label": "Server-confirmed Free plan header link",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
+      "source_location": "L18-L20",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "summary": "The header View plans link is visible only when the server confirms that the current account has the Free plan. Hide it for Plus, Pro and unknown plan states; this is the owner correction dated November 2.",
+      "rationale": "The header offer is conditional on the current account having a server-confirmed Free plan; an unknown plan is insufficient authority to display it.",
       "_origin": "semantic"
     }
   ],
@@ -259990,7 +260013,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4475",
+      "source_location": "L4509",
       "weight": 1.0
     },
     {
@@ -260001,7 +260024,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4488",
+      "source_location": "L4522",
       "weight": 1.0
     },
     {
@@ -260012,7 +260035,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4489",
+      "source_location": "L4523",
       "weight": 1.0
     },
     {
@@ -260023,7 +260046,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4494",
+      "source_location": "L4528",
       "weight": 1.0
     },
     {
@@ -260034,7 +260057,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4514",
+      "source_location": "L4548",
       "weight": 1.0
     },
     {
@@ -260045,7 +260068,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4524",
+      "source_location": "L4558",
       "weight": 1.0
     },
     {
@@ -260056,7 +260079,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4533",
+      "source_location": "L4567",
       "weight": 1.0
     },
     {
@@ -260067,7 +260090,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4537",
+      "source_location": "L4571",
       "weight": 1.0
     },
     {
@@ -260079,7 +260102,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4572",
+      "source_location": "L4606",
       "weight": 1.0
     },
     {
@@ -260090,7 +260113,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4578",
+      "source_location": "L4612",
       "weight": 1.0
     },
     {
@@ -260101,7 +260124,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4406",
+      "source_location": "L4440",
       "weight": 1.0
     },
     {
@@ -260112,7 +260135,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4439",
+      "source_location": "L4473",
       "weight": 1.0
     },
     {
@@ -260123,7 +260146,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4654",
+      "source_location": "L4688",
       "weight": 1.0
     },
     {
@@ -260134,7 +260157,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4689",
+      "source_location": "L4723",
       "weight": 1.0
     },
     {
@@ -260145,7 +260168,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4370",
+      "source_location": "L4404",
       "weight": 1.0
     },
     {
@@ -260156,7 +260179,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4755",
+      "source_location": "L4789",
       "weight": 1.0
     },
     {
@@ -260167,7 +260190,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4784",
+      "source_location": "L4818",
       "weight": 1.0
     },
     {
@@ -293953,7 +293976,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4559",
+      "source_location": "L4593",
       "weight": 1.0
     },
     {
@@ -312533,7 +312556,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -312544,7 +312567,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -312555,7 +312578,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -312566,7 +312589,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -312577,7 +312600,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -312588,7 +312611,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -312599,7 +312622,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -312610,7 +312633,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -312621,7 +312644,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -312632,7 +312655,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -312644,7 +312667,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L96",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -312656,7 +312679,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L94",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -312668,7 +312691,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L95",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -312679,7 +312702,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -312690,7 +312713,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -312734,7 +312757,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -358295,7 +358318,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -358306,7 +358329,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "type_only": true,
       "weight": 1.0
     },
@@ -358318,7 +358341,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -358329,7 +358352,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -358340,7 +358363,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -358351,7 +358374,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -358362,7 +358385,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -358385,7 +358408,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "type_only": true,
       "weight": 1.0
     },
@@ -358405,7 +358428,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "type_only": true,
       "weight": 1.0
     },
@@ -358417,7 +358440,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -358472,7 +358495,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -358483,7 +358506,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -420559,7 +420582,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -420569,7 +420592,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L187",
+      "source_location": "L188",
       "weight": 1.0,
       "context": "call"
     },
@@ -420580,7 +420603,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L247",
+      "source_location": "L248",
       "weight": 1.0,
       "context": "call"
     },
@@ -420591,7 +420614,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L402",
+      "source_location": "L403",
       "weight": 1.0,
       "context": "call"
     },
@@ -420602,7 +420625,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3567",
+      "source_location": "L3601",
       "weight": 1.0,
       "context": "call"
     },
@@ -420613,7 +420636,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L403",
+      "source_location": "L404",
       "weight": 1.0,
       "context": "call"
     },
@@ -420624,7 +420647,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L408",
+      "source_location": "L409",
       "weight": 1.0,
       "context": "call"
     },
@@ -420635,7 +420658,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L431",
+      "source_location": "L432",
       "weight": 1.0,
       "context": "call"
     },
@@ -420646,7 +420669,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1451",
+      "source_location": "L1452",
       "weight": 1.0,
       "context": "call"
     },
@@ -420657,7 +420680,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1711",
+      "source_location": "L1712",
       "weight": 1.0,
       "context": "call"
     },
@@ -420668,7 +420691,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1715",
+      "source_location": "L1716",
       "weight": 1.0,
       "context": "call"
     },
@@ -420679,7 +420702,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1776",
+      "source_location": "L1777",
       "weight": 1.0,
       "context": "call"
     },
@@ -420690,7 +420713,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2401",
+      "source_location": "L2404",
       "weight": 1.0,
       "context": "call"
     },
@@ -420701,7 +420724,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L521",
+      "source_location": "L522",
       "weight": 1.0,
       "context": "call"
     },
@@ -420712,7 +420735,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L121",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "call"
     },
@@ -420723,7 +420746,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L760",
+      "source_location": "L761",
       "weight": 1.0,
       "context": "call"
     },
@@ -420734,7 +420757,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L117",
+      "source_location": "L118",
       "weight": 1.0,
       "context": "call"
     },
@@ -420745,7 +420768,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L268",
+      "source_location": "L269",
       "weight": 1.0,
       "context": "call"
     },
@@ -420756,7 +420779,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L452",
+      "source_location": "L453",
       "weight": 1.0,
       "context": "call"
     },
@@ -420767,7 +420790,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L268",
+      "source_location": "L269",
       "weight": 1.0,
       "context": "call"
     },
@@ -420778,7 +420801,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1738",
+      "source_location": "L1739",
       "weight": 1.0,
       "context": "call"
     },
@@ -420789,7 +420812,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3633",
+      "source_location": "L3667",
       "weight": 1.0,
       "context": "call"
     },
@@ -420800,7 +420823,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L452",
+      "source_location": "L453",
       "weight": 1.0,
       "context": "call"
     },
@@ -420811,7 +420834,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3634",
+      "source_location": "L3668",
       "weight": 1.0,
       "context": "call"
     },
@@ -420822,7 +420845,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0,
       "context": "call"
     },
@@ -420833,7 +420856,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L135",
+      "source_location": "L136",
       "weight": 1.0,
       "context": "call"
     },
@@ -420844,7 +420867,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L272",
+      "source_location": "L273",
       "weight": 1.0,
       "context": "call"
     },
@@ -420855,7 +420878,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L685",
+      "source_location": "L686",
       "weight": 1.0,
       "context": "call"
     },
@@ -523076,7 +523099,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L102",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -548131,7 +548154,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -548660,7 +548683,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2281",
+      "source_location": "L2284",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583351,7 +583374,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1983",
+      "source_location": "L1984",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583362,7 +583385,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583373,7 +583396,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583384,7 +583407,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583395,7 +583418,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583405,7 +583428,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4207",
+      "source_location": "L4241",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583415,7 +583438,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4322",
+      "source_location": "L4356",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583425,7 +583448,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4336",
+      "source_location": "L4370",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583435,7 +583458,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4345",
+      "source_location": "L4379",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583445,7 +583468,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4355",
+      "source_location": "L4389",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583455,7 +583478,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4367",
+      "source_location": "L4401",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583465,7 +583488,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4378",
+      "source_location": "L4412",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583475,7 +583498,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4390",
+      "source_location": "L4424",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583485,7 +583508,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4402",
+      "source_location": "L4436",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583495,7 +583518,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4419",
+      "source_location": "L4453",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583505,7 +583528,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4453",
+      "source_location": "L4487",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583515,7 +583538,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4532",
+      "source_location": "L4566",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583525,7 +583548,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4626",
+      "source_location": "L4660",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583535,7 +583558,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4637",
+      "source_location": "L4671",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583545,7 +583568,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4666",
+      "source_location": "L4700",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583555,7 +583578,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4698",
+      "source_location": "L4732",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583565,7 +583588,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4712",
+      "source_location": "L4746",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583575,7 +583598,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4720",
+      "source_location": "L4754",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583585,7 +583608,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4733",
+      "source_location": "L4767",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583595,7 +583618,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4744",
+      "source_location": "L4778",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583605,7 +583628,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4760",
+      "source_location": "L4794",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583615,7 +583638,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4773",
+      "source_location": "L4807",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583625,7 +583648,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4780",
+      "source_location": "L4814",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583635,7 +583658,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4793",
+      "source_location": "L4827",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583645,7 +583668,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4802",
+      "source_location": "L4836",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583655,7 +583678,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4806",
+      "source_location": "L4840",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -583665,7 +583688,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4814",
+      "source_location": "L4848",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634650,7 +634673,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L103",
+      "source_location": "L104",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634660,7 +634683,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2970",
+      "source_location": "L3004",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634670,7 +634693,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4825",
+      "source_location": "L4859",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634680,7 +634703,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4830",
+      "source_location": "L4864",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634691,7 +634714,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2735",
+      "source_location": "L2769",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634702,7 +634725,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2923",
+      "source_location": "L2957",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634713,7 +634736,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2983",
+      "source_location": "L3017",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634724,7 +634747,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2987",
+      "source_location": "L3021",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634735,7 +634758,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2988",
+      "source_location": "L3022",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634746,7 +634769,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2988",
+      "source_location": "L3022",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634757,7 +634780,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3005",
+      "source_location": "L3039",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634768,7 +634791,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4835",
+      "source_location": "L4869",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634779,7 +634802,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4837",
+      "source_location": "L4871",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -634790,7 +634813,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4838",
+      "source_location": "L4872",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -661249,7 +661272,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2979",
+      "source_location": "L3013",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -680958,7 +680981,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L14-L23",
+      "source_location": "L14-L26",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -680969,7 +680992,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L25-L37",
+      "source_location": "L28-L40",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -680980,7 +681003,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L39-L46",
+      "source_location": "L42-L49",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -680991,7 +681014,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L48-L53",
+      "source_location": "L51-L56",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681002,7 +681025,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L55-L58",
+      "source_location": "L58-L61",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681035,7 +681058,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L16-L17",
+      "source_location": "L16-L20",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681046,7 +681069,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L18-L19",
+      "source_location": "L21-L22",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681057,7 +681080,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L20-L23",
+      "source_location": "L23-L26",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681068,7 +681091,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L27-L29",
+      "source_location": "L30-L32",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681079,7 +681102,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L30-L33",
+      "source_location": "L33-L36",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681090,7 +681113,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L34-L37",
+      "source_location": "L37-L40",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681101,7 +681124,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L22-L23",
+      "source_location": "L25-L26",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681112,7 +681135,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L36-L37",
+      "source_location": "L39-L40",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681123,7 +681146,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L50-L53",
+      "source_location": "L53-L56",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681134,18 +681157,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L41-L45",
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_task_3_deliver_and_record",
-      "target": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_authorized_scope",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L46",
+      "source_location": "L44-L49",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -681156,7 +681168,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
-      "source_location": "L57-L58",
+      "source_location": "L60-L61",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -682569,7 +682581,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687487,7 +687499,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4268",
+      "source_location": "L4302",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687497,7 +687509,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4270",
+      "source_location": "L4304",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687508,7 +687520,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L1880",
+      "source_location": "L1881",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687519,7 +687531,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4272",
+      "source_location": "L4306",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687530,7 +687542,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4274",
+      "source_location": "L4308",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687542,7 +687554,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4276",
+      "source_location": "L4310",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687553,7 +687565,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4289",
+      "source_location": "L4323",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687564,7 +687576,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4295",
+      "source_location": "L4329",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687575,7 +687587,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4296",
+      "source_location": "L4330",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687586,7 +687598,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4296",
+      "source_location": "L4330",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687597,7 +687609,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4301",
+      "source_location": "L4335",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -687608,7 +687620,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L4301",
+      "source_location": "L4335",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -697020,7 +697032,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -702134,127 +702146,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_clientevent",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_p2psignal",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_participant",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_playbackstate",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_reactionevent",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_roomcapabilities",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_room_media_roommediacapabilities",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_room_media_roommediasnapshot",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_roomusagesummary",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_serverevent",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app",
-      "target": "packages_protocol_src_types_watchsourcedescriptor",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_extension_src_room_client",
       "target": "packages_protocol_src_room_session_activeroomconflictresponseschema",
       "relation": "imports",
@@ -702504,39 +702395,6 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/use-free20-warning.ts",
       "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_test_privileged_overlay_wiring_test",
-      "target": "packages_protocol_src_account_friendlistitem",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_test_privileged_overlay_wiring_test",
-      "target": "packages_protocol_src_account_roominvite",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_test_privileged_overlay_wiring_test",
-      "target": "packages_protocol_src_room_media_roommediasnapshotschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
-      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -703230,28 +703088,6 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/use-account-hosting-status.ts",
       "source_location": "L116",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app_livechatmessage",
-      "target": "packages_protocol_src_types_reactionevent",
-      "relation": "references",
-      "context": "field",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L355",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_overlay_app_visiblereaction",
-      "target": "packages_protocol_src_types_reactionevent",
-      "relation": "references",
-      "context": "field",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L360",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -704472,6 +704308,116 @@
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-01-free20-staging-activation-runbook.md",
       "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_test_free_quota_notice_test",
+      "target": "ref_react_dom",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_free_quota_notice_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_free_quota_notice_test",
+      "target": "apps_extension_src_constants",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_free_quota_notice_test",
+      "target": "apps_extension_src_constants_web_http_base",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_free_quota_notice_test",
+      "target": "apps_extension_src_free_quota_notice",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_free_quota_notice_test",
+      "target": "apps_extension_src_free_quota_notice_freequotanotice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/free-quota-notice.test.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test",
+      "target": "apps_extension_src_constants",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_privileged_overlay_wiring_test",
+      "target": "apps_extension_src_constants_web_http_base",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/privileged-overlay-wiring.test.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_channel_account_and_billing_navigation",
+      "target": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_server_confirmed_free_plan_header_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
+      "source_location": "L18-L20",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_task_3_deliver_and_record",
+      "target": "docs_superpowers_plans_2026_11_01_free20_overlay_design_staging_authorized_scope",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "semantic"
     }

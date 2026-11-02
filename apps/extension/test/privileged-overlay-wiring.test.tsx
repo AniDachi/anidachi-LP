@@ -10,6 +10,7 @@ import {
 	type OverlayRenderer,
 } from "../entrypoints/content";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
+import { WEB_HTTP_BASE } from "../src/constants";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
 import * as hostingAccessClient from "../src/hosting-access-client";
@@ -2026,6 +2027,8 @@ describe("privileged overlay wiring", () => {
       expect(view.container.textContent).toContain("Today's free time is used up");
       expect(view.container.textContent).toContain("Renews in 12:00:00");
       expect(view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
+      expect(view.container.querySelector<HTMLAnchorElement>(".panel-limit-plans")?.href).toBe(new URL("/pricing", WEB_HTTP_BASE).href);
+      expect(view.container.querySelector(".panel-plan-link")).toBeNull();
       // The positive account response above is still unsettled; it must not
       // resurrect the create button on the exhausted server UTC day.
       expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(2);
@@ -2468,6 +2471,33 @@ describe("privileged overlay wiring", () => {
 			await unmount(view.root);
 		}
   });
+  it.each(["free", "plus", "pro"] as const)("shows the pricing link only for Free before and during a room: %s", async planCode => {
+    installActiveHostRoomRuntime(); // Cached auth profile is Free even for paid accounts.
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockResolvedValue({
+      entitlementsVersion: 1, ownerUserId: "user-a", planCode, serverTime: "2026-11-01T12:00:00Z",
+    });
+    const view = await renderOverlay();
+    const expectPlansLink = () => {
+      const link = view.container.querySelector<HTMLAnchorElement>(".panel-plan-link");
+      if (planCode === "free") {
+        expect(link?.textContent).toBe("View plans");
+        expect(link?.href).toBe(new URL("/pricing", WEB_HTTP_BASE).href);
+        expect(link?.target).toBe("_blank");
+        expect(link?.rel).toContain("noopener");
+      } else {
+        expect(link).toBeNull();
+      }
+    };
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      expectPlansLink();
+      await click(button(view.container, "Create room"));
+      await flushRoomActionWork();
+      expect(RoomClient.prototype.connect).toHaveBeenCalledOnce();
+      expectPlansLink();
+    } finally { await unmount(view.root); }
+  });
+
   it("keeps the account badge and offer on the server's effective plan across subscription changes", async () => {
     installActiveHostRoomRuntime(); // The auth profile deliberately remains Free.
     const request = vi.mocked(hostingAccessClient.requestHostingAccess);
@@ -2514,6 +2544,7 @@ describe("privileged overlay wiring", () => {
 						.querySelector(".plan-badge")
 						?.textContent?.toLowerCase(),
 				).toBe(state.plan);
+        expect(view.container.querySelector(".panel-plan-link") !== null).toBe(state.plan === "free");
 				expect(
 					view.container.textContent?.includes("You’re ready to host"),
 				).toBe(state.plan !== "free");
@@ -2528,6 +2559,7 @@ describe("privileged overlay wiring", () => {
 				view.container.querySelector(".plan-badge")?.textContent?.toLowerCase(),
 			).toBe("pro");
 			expect(view.container.textContent).toContain("You’re ready to host");
+      expect(view.container.querySelector(".panel-plan-link")).toBeNull();
 			expect(
 				send.mock.calls.filter(
 					([message]: any) => message.command === "create-room",
@@ -2554,6 +2586,7 @@ describe("privileged overlay wiring", () => {
     const view = await renderOverlay();
     try {
       await click(button(view.container, "Open Anidachi controls"));
+      expect(view.container.querySelector(".panel-plan-link")).toBeNull();
       await click(button(view.container, "Create room")); await flushRoomActionWork();
       expect(view.container.querySelector('.hosting-notice')).not.toBeNull();
       currentSession = sessionFor("user-b");
@@ -2565,6 +2598,7 @@ describe("privileged overlay wiring", () => {
       }));
       expect(view.container.querySelector('.hosting-notice')).toBeNull();
       expect(view.container.textContent).not.toContain("Try 3 days free");
+      expect(view.container.querySelector(".panel-plan-link")).toBeNull();
     } finally { await unmount(view.root); }
   });
   it("does not turn an unavailable room service into a subscription offer", async () => {

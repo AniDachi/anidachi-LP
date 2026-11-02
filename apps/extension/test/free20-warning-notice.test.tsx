@@ -12,13 +12,13 @@ describe("capsule Free20 notice", () => {
     host = document.createElement("div"); trigger = document.createElement("button"); document.body.append(trigger, host); root = createRoot(host); dismiss = vi.fn();
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); trigger.remove(); vi.restoreAllMocks(); });
-  it("announces a static polite warning without stealing focus and links to existing billing", async () => {
+  it("announces a static polite warning without stealing focus and links to pricing", async () => {
     trigger.focus(); await render();
     expect(document.activeElement).toBe(trigger);
     const status = host.querySelector('[role="status"]'); expect(status?.textContent).toBe("Free hosting time is running low");
     expect(status?.getAttribute("aria-live")).toBe("polite");
     const link = host.querySelector("a")!; expect(link.textContent).toBe("View plans");
-    expect(link.href).toBe(new URL("/account/billing", WEB_HTTP_BASE).href); expect(link.target).toBe("_blank");
+    expect(link.href).toBe(new URL("/pricing", WEB_HTTP_BASE).href); expect(link.target).toBe("_blank");
     expect(link.rel).toContain("noopener"); expect(host.querySelector("[data-anidachi-hotkey-boundary]")).not.toBeNull();
   });
   it("dismisses with focused Escape and restores capsule focus", async () => {
