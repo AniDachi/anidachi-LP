@@ -6213,13 +6213,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 	const quotaExhausted = !joiningRoom && !roomExitPending && !roomId && displayedQuotaNotice?.kind === "exhausted";
 	const panelPlan = authAuthenticated
-		? accountHostingTime.mode === "legacy" ? hostingDisplay.state.access?.planCode ?? null : accountHostingTime.planCode
+		? accountHostingTime.mode === "legacy" ? hostingDisplay.state.access?.planCode ?? null : accountHostingTime.presentationPlanCode
 		: null;
-	// Fresh account metadata survives room-scoped reads. It only suppresses quota
-	// placeholders; authoritative room time still controls any finite counter.
-	const hasFreshPaidAccount = accountHostingTime.planCode === "plus" || accountHostingTime.planCode === "pro";
-	const idleTimePending = !identityLoaded || (authAuthenticated && accountHostingTime.mode !== "legacy" &&
-		!hasFreshPaidAccount && accountHostingTime.remainingSeconds === null && accountHostingTime.status?.access.kind !== "confirmed_unlimited");
+	// Unknown is not Free. Preserve the last confirmed same-login appearance
+	// through revalidation/expiry, without retaining seconds or granting access.
+	// Fresh account/room observations still own every numeric timer and admission.
+	const hasFreeTimePresentation = accountHostingTime.presentationPlanCode === "free";
+	const idleTimePending = authAuthenticated && accountHostingTime.mode !== "legacy" &&
+		hasFreeTimePresentation && accountHostingTime.remainingSeconds === null;
 	const closedNoticeValid = Boolean(free20ClosedNotice && authAuthenticated &&
 		free20ClosedNotice.ownerUserId === accountUser?.id && free20ClosedNotice.loginKey === roomAuthSessionKeyRef.current &&
 		!roomId && !joiningRoom && !roomCreatePending &&
@@ -6443,7 +6444,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						joining={joiningRoom}
 						connectionStalled={Boolean(roomId && !inviteMembershipReady && !roomCreatePending && !roomStartPending && !joiningRoom)}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
-						idleTimeUnavailable={roomClosing.unavailable || roomLeaving.unavailable || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
+						idleTimeUnavailable={((hasFreeTimePresentation || accountHostingTime.mode === "legacy") && (roomClosing.unavailable || roomLeaving.unavailable)) || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
 						onRetryHosting={accountHostingTime.refresh}
 						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
 							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}
@@ -6451,7 +6452,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
 						remainingSeconds={roomId ? (isConnected && isHost ? (hostingTimeClock.observed ? liveHostingTime?.remainingSeconds ?? null : quotaRemainingSeconds) : null) : (accountHostingTime.mode === "legacy" ? freeQuotaNotice.availableSeconds : accountHostingTime.remainingSeconds)}
-						awaitingHostingTime={isHost && !legacyQuotaEnabled && !hasFreshPaidAccount && (!liveHostingTime || liveHostingTime.snapshot.access.kind === "unknown")}
+						awaitingHostingTime={isHost && !legacyQuotaEnabled && hasFreeTimePresentation && (!liveHostingTime || liveHostingTime.snapshot.access.kind === "unknown")}
 						retainIdleTimeWhileConnecting={accountHostingTime.mode === "legacy" && !hostingTimeClock.observed}
 						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : handleCreateRoom}
 						onCopyInvite={copyInvite} onSync={() => playbackSyncController.broadcastHostState()}

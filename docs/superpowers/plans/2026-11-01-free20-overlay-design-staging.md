@@ -263,6 +263,8 @@ gates, preserve unrelated work, and deliver a rebuild from the merged staging SH
 - Fresh validated Plus/Pro account metadata suppresses quota placeholders during
   room-scoped reads. This does not supply live time or override a later finite
   room observation. Paid capacity and camera/microphone controls are preserved.
+  The November 3 long-return follow-up below extends appearance continuity past
+  observation expiry; numeric time and access observations still expire.
 - Invite/restored-room entry has its own neutral joining presentation. Personal
   hosting time, Create and the exhausted-hosting screen must not appear during
   admission. Use real membership before showing guest/host actions; preserve
@@ -386,3 +388,44 @@ with source/build hashes and a backup of the PR500 artifact. Obtain the owner's
 visual check before the next staging PR/merge. No deployment, server accounting,
 protocol, permissions, flags, main, production or Store change belongs to this
 local iteration. Rollback restores that verified folder or rebuilds PR500.
+
+## November 3: Paid appearance across long tab returns
+
+The owner still observed Free UI when returning to a paid tab. The previous
+correction covered only fresh observations: after the account TTL expired or
+sleep invalidated its clock, `planCode` became null and the overlay interpreted
+that absence as a pending Free timer. Full-source Chromium replay reproduced
+the flash for Plus and Pro, both idle and in a room; idle Create also changed
+width by126CSSpixels during the delayed replacement read.
+
+- Keep the last accepted `presentationPlanCode` in the existing owner/logical-login
+  state. It owns only the plan badge and layout, never rights, seconds, room
+  limits, admission or close-read readiness. Do not populate it from the cached
+  auth profile, and do not persist it outside the mounted account hook.
+- Expiry, UTC rollover, sleep, visibility return, a failed read and same-login
+  credential rotation can retire fresh observations without replacing a known
+  Plus/Pro layout with Free. Original observation expiry, clock and room/settlement
+  fences remain unchanged; no new allowance or local countdown is introduced.
+- A validated replacement read updates appearance, including a real downgrade.
+  Account switch, logout, a new login, admission invalidation and explicit legacy
+  policy retire the previous appearance. Late callbacks cannot restore it.
+- An unclassified account is neutral: neither cached `Free` nor a loading timer
+  establishes its plan. Quota placeholders and unavailable-time controls belong
+  to known Free presentation. An actual fresh finite room observation still
+  renders its counter even if account presentation has not caught up.
+- A paid room's failed post-close read must not add the Free retry/timer slot.
+  The existing bounded closing and departure behavior remains unchanged.
+
+Regression coverage includes expired/sleeping Plus and Pro idle/live screens,
+credential rotation, delayed and failed refreshes, first-read uncertainty,
+manual unlimited access, actual downgrade, login/owner changes, and denial.
+Repeat the earlier create/end/join/restored/hover/reduced-motion scenarios and
+sync/microphone/ad-notice checks against current source. Preserve the camera and
+microphone controls, capsule claim logic and all server authority.
+
+This is another local candidate in the same unpacked staging-channel folder.
+Keep before/after frame records, validated build hashes and the prior-folder
+backup under ignored execution artifacts. The isolated fixtures control network
+and lifecycle inputs; they do not establish acceptance in the owner's loaded
+Chrome or a real two-participant staging room. No staging merge, production
+promotion, server change or permission expansion is part of this iteration.

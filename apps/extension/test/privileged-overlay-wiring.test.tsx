@@ -2029,7 +2029,8 @@ describe("privileged overlay wiring", () => {
     try {
       await vi.waitFor(() => expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(1));
       await click(button(view.container, "Open Anidachi controls"));
-      expect(view.container.querySelector(".panel-time-placeholder")).not.toBeNull();
+      // Until classification arrives, the cached Free profile must not invent a timer.
+      expect(view.container.querySelector(".panel-time-placeholder")).toBeNull();
       const at = Date.parse("2026-11-01T12:00:00Z");
       await act(async () => pending.resolve({ mode: "free20", status: {
         accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000,
@@ -2319,6 +2320,81 @@ describe("privileged overlay wiring", () => {
         snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 2, serverTime: at, period,
           access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false } } }));
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
+    } finally { await unmount(view.root); }
+  });
+
+  it.each((["plus", "pro"] as const).flatMap(planCode =>
+    (["idle", "room"] as const).flatMap(screen =>
+      (["expiry", "sleep", "credential-rotation"] as const).map(boundary => ({ planCode, screen, boundary }))),
+  ))("does not replace a known paid screen with Free UI after a long return: $planCode / $screen / $boundary", async ({ planCode, screen, boundary }) => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "paid-login", authRevision: "revision-a" };
+    installActiveHostRoomRuntime({ getSession: () => session });
+    const at = Date.parse("2026-11-01T12:00:00Z");
+    const paid: import("@anidachi/protocol").AccountHostingStatus = {
+      accountHostingVersion: 1, ownerUserId: owner, planCode, serverTime: at, validUntil: at + 60_000,
+      period: { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") },
+      access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 3_600_000 }, activeRoom: null, canCreateRoom: true,
+    };
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: paid });
+    const capabilities = { mediaProtocolVersion: 3, hostPlanCode: planCode, maxParticipants: 6, maxCameras: 4, maxMediaSeats: 6, capabilityRevision: 1, capabilitiesValidUntil: new Date(at + 3_600_000).toISOString() };
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      const result = await (original as any)(...args);
+      if (args[0]?.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner } };
+      if (args[0]?.command === "create-room") return { ...result, room: { ...result.room, capabilities,
+        roomSession: { ...result.room.roomSession, ownerUserId: owner } } };
+      return result;
+    });
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { connection = next; next.onStatus("connected"); });
+    const view = await renderOverlay();
+    const expectPaid = () => {
+      expect(view.container.querySelector(`.plan-badge.${planCode}`)).not.toBeNull();
+      expect(view.container.querySelector(".panel-idle-time,.panel-action-timer,.panel-action-time-pending,.panel-plan-placeholder,.panel-plan-link,.free-quota-notice,.panel-room-summary")).toBeNull();
+    };
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      if (screen === "room") {
+        await click(button(view.container, "Create room"));
+        await vi.waitFor(() => expect(connection).toBeDefined());
+        await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+          participants: [{ ...hostParticipant(), id: owner, participantSessionId: connection.participantSessionId }] }));
+        await act(async () => connection.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
+          snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, serverTime: at, period: paid.period, access: paid.access } }));
+      }
+      expectPaid();
+      const reply = deferred<Awaited<ReturnType<typeof accountHostingClient.requestAccountHostingStatus>>>();
+      vi.mocked(accountHostingClient.requestAccountHostingStatus).mockReturnValue(reply.promise);
+      const mono = performance.now(), wall = Date.now();
+      vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+      vi.spyOn(performance, "now").mockImplementation(() => mono + (boundary === "sleep" ? 0 : Date.now() - wall));
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+      await act(async () => vi.advanceTimersByTimeAsync(65_000));
+      if (boundary === "credential-rotation") {
+        session = { ...session, accessToken: "paid-b", refreshToken: "paid-refresh-b", authRevision: "revision-b" };
+        await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, session));
+      }
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+      await act(async () => { document.dispatchEvent(new Event("visibilitychange")); window.dispatchEvent(new Event("focus")); });
+      expectPaid();
+      // The replacement read is slow: keeping layout must not depend on its speed.
+      await act(async () => vi.advanceTimersByTimeAsync(3_000)); expectPaid();
+      await act(async () => reply.resolve({ mode: "free20", status: { ...paid, serverTime: at + 68_000, validUntil: at + 128_000 } }));
+      expectPaid();
+    } finally { await unmount(view.root); vi.useRealTimers(); }
+  });
+
+  it("does not assume an unclassified account has a free timer while the first plan read is pending", async () => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) }); // Auth cache says Free, not authoritative.
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockImplementation(() => new Promise(() => {}));
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      expect(view.container.querySelector(".panel-idle-time,.panel-action-time-pending,.panel-plan-link,.plan-badge.free")).toBeNull();
+      expect(button(view.container, "Create room").disabled).toBe(false);
     } finally { await unmount(view.root); }
   });
 

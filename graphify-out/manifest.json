@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793689536.5470622,
-    "seen": 1793689644.676631,
-    "ast_hash": "9bd39dee4ba650d43618207115d23abf",
+    "mtime": 1793692275.3178837,
+    "seen": 1793692414.902747,
+    "ast_hash": "7dc43e903bc9de3fd6b806808a4e7f69",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793688962.5351193,
-    "seen": 1793689644.676637,
-    "ast_hash": "46ea051d5c0985e9a8bf99edaa016944",
+    "mtime": 1793692230.5934203,
+    "seen": 1793692414.902758,
+    "ast_hash": "7382ed8a8527f4ba94dd68722191864d",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -11220,10 +11220,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793690449.469671,
-    "seen": 1793690591.48223,
+    "mtime": 1793692394.6170971,
+    "seen": 1793692613.452706,
     "ast_hash": "",
-    "semantic_hash": "12b185f6f9277d73eaa1c1b08eca24d2"
+    "semantic_hash": "3ba90cb8424865b7c1de92d6c2ae8f09"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11244,9 +11244,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/use-account-hosting-status.ts": {
-    "mtime": 1793685737.1215987,
-    "seen": 1793686800.945261,
-    "ast_hash": "16918ac7e59c68cb1cd29fefbea708ca",
+    "mtime": 1793692230.5177953,
+    "seen": 1793692414.902755,
+    "ast_hash": "cedb768eea1c5b796f52fe0cc3792ccc",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-hosting-time.ts": {
@@ -11268,9 +11268,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/use-account-hosting-status.test.tsx": {
-    "mtime": 1793685716.7858384,
-    "seen": 1793686800.945264,
-    "ast_hash": "3b196074bca6c9d242d06bef70c43b99",
+    "mtime": 1793692230.5724804,
+    "seen": 1793692414.90276,
+    "ast_hash": "423ab0a0d4e278c907b1a75706f6ce17",
     "semantic_hash": ""
   },
   "apps/extension/test/use-room-hosting-time.test.tsx": {
