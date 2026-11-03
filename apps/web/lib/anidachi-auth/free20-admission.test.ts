@@ -108,7 +108,7 @@ async function fixture(
  scopedReads:number;
  roomUsageReads:number;
  transfers:number;
- scopes: unknown[];
+ scopes: Record<string, unknown>[];
 	}) => Promise<void>,
 ) {
 	const originalFetch = globalThis.fetch;
@@ -133,7 +133,7 @@ async function fixture(
 		versions: [] as unknown[],
 		legacyQuotaReads: 0,
 		accessReads: 0,
- scopedReads:0,roomUsageReads:0,transfers:0,scopes:[] as unknown[],
+ scopedReads:0,roomUsageReads:0,transfers:0,scopes:[] as Record<string, unknown>[],
 	};
 	const now = new Date();
 	const until = new Date(now.getTime() + 300_000).toISOString();
@@ -483,7 +483,7 @@ async function contextHeaders(){
 for(const kind of ["create","connect"] as const){
  test(`protected ${kind} passes only proved context to v5 and never exposes markers`,async()=>fixture({abuse:true,protected:true,used:720},async(state)=>{
  const response=await request(kind,"1",owner,await contextHeaders());const payload=await response.json();assert.equal(response.status,200,JSON.stringify(payload));assert.equal(payload.quota.remainingSeconds,480);
- const call=state.scopes.find((x:any)=>"p_free20_browser_hash" in x) as Record<string,unknown>;assert.match(call.p_free20_browser_hash as string,/^[a-f0-9]{64}$/);assert.match(call.p_free20_installation_hash as string,/^[a-f0-9]{64}$/);
+ const call=state.scopes.find((x)=>"p_free20_browser_hash" in x) as Record<string,unknown>;assert.match(call.p_free20_browser_hash as string,/^[a-f0-9]{64}$/);assert.match(call.p_free20_installation_hash as string,/^[a-f0-9]{64}$/);
  assert.equal(JSON.stringify(payload).includes(call.p_free20_browser_hash as string),false);assert.equal(state.legacyQuotaReads,0);
  }));
  test(`${kind} omission and changed expected owner cannot claim finite free hosting`,async()=>fixture({abuse:true,protected:true},async()=>{

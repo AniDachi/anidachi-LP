@@ -229298,6 +229298,15 @@
       "external": true,
       "source_file": "",
       "_origin": "ast"
+    },
+    {
+      "id": "packages_protocol_src_index_free20_context_header",
+      "label": "packages_protocol_src_index_free20_context_header",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
     }
   ],
   "links": [
@@ -723314,28 +723323,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_lib_anidachi_auth_free20_admission_test",
-      "target": "packages_protocol_src_account_hosting_status_account_hosting_owner_header",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_free20_admission_test",
-      "target": "packages_protocol_src_free20_abuse_free20_context_header",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_web_lib_anidachi_auth_free20_context_attach",
       "target": "packages_protocol_src_free20_abuse_free20contexttransferrequest",
       "relation": "imports",
@@ -725013,6 +725000,17 @@
       "confidence_score": 0.85,
       "source_file": "apps/api/src/free20-scope-transfer.ts",
       "source_location": "L155",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_free20_admission_test",
+      "target": "packages_protocol_src_index_free20_context_header",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/free20-admission.test.ts",
+      "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     }
