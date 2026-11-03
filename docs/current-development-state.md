@@ -1,5 +1,43 @@
 # Current Development State
 
+## Free20 anti-abuse staging activation, November 4, 2026
+
+The owner authorized enabling the delivered protection after testers reported
+fresh allowances when switching accounts in one browser. At
+`2026-11-03T17:24:37.315292Z` (November 4 locally), staging SQL policy advanced
+from revision 4 to 5 with `free20_abuse_enabled=true`. Base Free20 remains enabled,
+trials remain disabled, and the original activation and other policy flags were
+preserved. The previously active unprotected room ended through its normal
+lifecycle; the guarded transaction and independent readback found zero
+unprotected nonterminal Free20 rooms. No account, grant or usage was reset.
+
+Web `ANIDACHI_FREE20_ABUSE_ENABLED=true` is scoped only to Preview branch
+`staging`. During preflight the enabled endpoint rejected even the intended
+origin. The existing sensitive `NEXT_PUBLIC_SITE_URL` value could not be read;
+it was explicitly set to the documented `https://staging.anidachi.app` in that
+same branch scope. Fresh READY deployment `dpl_32QuwjzMUj5HJHEaec3sF8owhQge`,
+from reviewed staging source `74ae3484938baa62385466e10496acebfdd08337`, serves
+the staging alias. Site and approved extension origins now reach authentication
+and reject an intentionally invalid bearer with 401 `UNAUTHORIZED`; an unrelated
+origin receives 403 `FREE20_CONTEXT_ORIGIN_INVALID`. No request used user tokens.
+
+[Staging smoke 41684000582](https://github.com/AniDachi/anidachi-LP/actions/runs/41684000582)
+and direct Worker smoke passed. Worker remains `f39a67e5-8a95-4e47-8916-cea88b720361`
+at 100%; no Worker flag, secret or new migration was added. The same ZIP and both
+unpacked folders were rechecked against all 13 files of delivered build
+`03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`; no replacement is needed
+for this configuration activation. The owner reloads/tests Chrome himself.
+
+Main remains `9da93cd9`, production Web `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke`
+and production Worker `3ea773eb-f258-4713-a314-9abeb4012f49` are unchanged.
+PR471 remains open without auto-merge. Ignored activation evidence is under
+`artifacts/free20-abuse-activation-20261104/`; the
+[runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md#authorized-activation-receipt-november-4-2026)
+records the sequence and rollback. Enabled authenticated A/B browser use,
+two-participant spending, browser cookie-policy behavior, paid purchase during
+spending and live UTC rollover still require acceptance. Gate activation and
+unauthenticated probes are not evidence that those scenarios passed.
+
 ## Free20 shared-browser/installation staging delivery, November 3, 2026
 
 The owner-approved [anti-abuse design](superpowers/specs/2026-11-03-free20-abuse-design.md)
@@ -8,9 +46,9 @@ candidate source `c367453c5d15aacf2ee447b10e0aed2907cdf7c7` and completed local
 review/readiness evidence. [PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
 merged to `staging` as `03efd89983ff06cbba1651f63e073f5f21b06fe1` after the
 schema-first workflow from frozen feature head `8a4e479c`. Compatible Web,
-Worker and the matching staging extension are delivered. The new anti-abuse
-protection remains disabled pending the owner's extension reload and controlled
-activation; the existing daily Free20 system remains enabled.
+Worker and the matching staging extension were delivered with the new anti-abuse
+protection disabled. That historical delivery snapshot is superseded by the
+November 4 activation receipt above; existing daily Free20 remained enabled.
 The [implementation plan](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
 records completed local and hosted delivery evidence and outstanding acceptance; the
 [delivery runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
@@ -88,8 +126,8 @@ narrow permissions are unchanged. Delivery evidence and backups are under
 `artifacts/free20-abuse-staging-delivery-20261103/`; the implementation ledger
 is archived under `artifacts/free20-abuse-20261103/sdd-record/`.
 
-The owner reloads Chrome himself. Then re-inventory rooms, enable only the exact
-staging Web gate and guarded SQL policy, and run enabled acceptance. Actual Chrome
+The owner reloads Chrome himself. At delivery, room re-inventory, exact staging
+Web/SQL activation and enabled acceptance remained ahead. Actual Chrome
 cookie-policy behavior, A/B switching, two-participant spending, purchase during
 spending and live UTC rollover remain pending. No account/grant/usage reset,
 production promotion or Store release is part of this delivery. Main remains

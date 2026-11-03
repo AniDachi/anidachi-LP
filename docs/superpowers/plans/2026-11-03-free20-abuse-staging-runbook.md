@@ -1,8 +1,9 @@
 # Free20 anti-abuse staging delivery
 
-Status: compatible staging delivery completed on November 3, 2026; anti-abuse
-activation and loaded-client acceptance remain pending. See the delivery receipt
-below; the ordered procedure still governs activation and later rehearsals.
+Status: compatible staging delivery completed on November 3, 2026; owner-authorized
+anti-abuse activation completed on November 4 locally (November 3 UTC).
+Loaded-client acceptance remains pending. See the separate delivery and activation
+receipts below; the ordered procedure still governs later rehearsals.
 Parent: [implementation plan](2026-11-03-free20-abuse-adaptation.md).
 Contract: [approved design](../specs/2026-11-03-free20-abuse-design.md).
 The existing [Free20 activation runbook](2026-11-01-free20-staging-activation-runbook.md)
@@ -30,7 +31,10 @@ are not a current inventory. Main, production, Store and LIVE Stripe are exclude
 5. After the owner confirms reloading the delivered extension, enable
    `ANIDACHI_FREE20_ABUSE_ENABLED=true` only for the exact staging Web
    Preview deployment on exact branch `staging`, never broad Preview or Production,
-   and verify it is serving the intended alias. This enables compatible
+   and verify it is serving the intended alias. Also verify the deployed canonical
+   site origin is `https://staging.anidachi.app`: site and approved extension
+   origins must reach authentication, while unrelated origins must be rejected.
+   A declared variable or READY deployment alone is insufficient. This enables compatible
    enrollment and v5 callers; SQL still decides final admission enforcement.
 6. Re-inventory unprotected nonterminal Free20 rooms. Let them close through their
    normal lifecycle; do not rewrite browser ownership, erase usage or force-close
@@ -130,6 +134,53 @@ remains `3ea773eb-f258-4713-a314-9abeb4012f49`. Promotion PR471 remains unmerged
 with auto-merge disabled. No account, grant, usage, LIVE Stripe or Store change
 was part of delivery. Continue from step 5 only after the owner's reload; refresh
 room/policy/deployment state again before activation.
+
+## Authorized activation receipt, November 4, 2026
+
+After the delivered ZIP was used for testing, the owner explicitly authorized
+enabling the protection. The fresh preflight observed staging `74ae3484`, Web
+`dpl_DMra8wdsjiz9AgPaYKkMBfF2cqiX`, Worker `f39a67e5`, the reviewed migration,
+policy revision 4 and one unprotected nonterminal Free20 room. No extra account,
+grant, payment, usage or room mutation was used to prepare activation.
+
+The Web gate was created as exact `true` only for Preview branch `staging`.
+The initial READY deployment `dpl_DtDSZ6BjAhP9M8QPz6P8cY6P5FVy` enabled the
+handler but returned `FREE20_CONTEXT_ORIGIN_INVALID` even for the expected origin.
+SQL stayed off. The existing branch-specific sensitive `NEXT_PUBLIC_SITE_URL`
+could not be read; it was explicitly set to the documented canonical staging
+origin. No old value is inferred or recorded. Fresh deployment
+`dpl_32QuwjzMUj5HJHEaec3sF8owhQge` from the same reviewed `74ae3484` source
+became READY and acquired `staging.anidachi.app`. Invalid-bearer probes from the
+site and approved extension origins then returned 401 `UNAUTHORIZED`; the
+unrelated origin still returned 403 `FREE20_CONTEXT_ORIGIN_INVALID`. Responses
+are private/no-store. These probes prove routing/auth boundaries, not enrollment.
+
+The old room ended naturally before SQL activation. At
+`2026-11-03T17:24:37.315292Z`, a bounded transaction took the normal policy lock
+order, checked revision 4 and every expected policy flag/original activation,
+verified no unprotected nonterminal Free20 room, then set only
+`free20_abuse_enabled=true` and `revision=5`. The database trigger also guards the
+drain. Independent readback confirmed revision 5, both Free20 flags true,
+`trials_enabled=false`, unchanged `cardless_trials_enabled=true`,
+`trial_abuse_enforced=true` and original activation
+`2026-09-29T15:48:48.80082Z`; migrations remain 90. No protected room existed at
+that immediate readback, so live protected-room acceptance is not claimed.
+
+[Staging smoke 41684000582](https://github.com/AniDachi/anidachi-LP/actions/runs/41684000582)
+passed against the serving alias, including the password gate, noindex and
+extension/login/checkout routes. Direct Worker smoke passed; staging Worker
+`f39a67e5-8a95-4e47-8916-cea88b720361` remains at 100%. Both unpacked extension
+folders and the ZIP still match the 13-file CI artifact/build listed in the
+delivery receipt. They were not replaced during activation; Chrome loading and
+authenticated acceptance remain with the owner/testers.
+
+Main `9da93cd9`, production Web `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke` and
+production Worker `3ea773eb-f258-4713-a314-9abeb4012f49` were rechecked unchanged;
+PR471 remains open without auto-merge. No Store or LIVE Stripe operation occurred.
+Ignored evidence, guarded SQL and probe results live under
+`artifacts/free20-abuse-activation-20261104/`. Repeat A spending then B switching
+in the same browser after activation; do not treat pre-activation sessions as
+already bound marker history or reset data to manufacture an acceptance result.
 
 ## Acceptance and evidence
 

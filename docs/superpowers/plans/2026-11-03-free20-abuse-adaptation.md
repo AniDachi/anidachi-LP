@@ -4,6 +4,15 @@
 
 **Goal:** Enforce the accepted shared-browser/installation daily Free20 ceiling without resetting account usage or changing paid/guest behavior.
 
+**Current operational status (November 4 locally):** Delivered through PR502 and
+enabled on staging by explicit owner authorization. The
+[activation receipt](2026-11-03-free20-abuse-staging-runbook.md#authorized-activation-receipt-november-4-2026)
+records the branch-scoped Web gate, canonical-origin correction, normal room drain,
+guarded SQL revision 4 to 5, passing staging/Worker smoke and unchanged production.
+Existing extension build `03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`
+was reverified, not replaced. Actual enabled browser/participant/purchase/UTC
+acceptance remains pending; historical default-off preparation below is retained.
+
 **Architecture:** Supabase binds server-verified markers to room generations and applies cumulative usage deltas to account and marker ledgers. Web validates a dedicated signed installation challenge and issues an account-bound context; the background supplies it for admission and display. The existing serialized DO computes live remaining time from the effective committed ceiling and its own pending interval.
 
 **Tech Stack:** Existing Postgres RPCs/pgTAP, TypeScript/Zod, Next.js, WXT/MV3, WebCrypto P-256, Cloudflare Durable Objects. No new dependency or secret.
@@ -19,7 +28,8 @@
 - Unknown proof/authority is retryable unavailable, never a fabricated free budget, zero or paid downgrade.
 - Marker usage survives account/room deletion. Trial claims and existing usage are never reset.
 - Preserve cumulative ACK/terminal/UTC/account identity fences and the pre-existing `.serena/project.yml` edit.
-- Default-off additive enforcement. No main, production, Store or real account mutation.
+- Default-off additive implementation; later activation requires explicit owner
+  authorization and the staged runbook. No main, production, Store or real account mutation.
 
 ## Review Focus
 
