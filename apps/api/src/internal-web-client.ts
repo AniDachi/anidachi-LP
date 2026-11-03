@@ -1,3 +1,4 @@
+import { Free20ContextTransferReceiptSchema, type Free20ContextTransferRequest } from "@anidachi/protocol";
 import {
   FREE20_DISPLAY_VERSION_HEADER,
   Free20RoomBudgetRequestSchema,
@@ -236,6 +237,8 @@ async function fetchAndReadJsonWithBoundedTimeout(
   input: URL,
   init: RequestInit,
   timeoutMs: number,
+  maxBytes = Number.POSITIVE_INFINITY,
+  readErrorBody = false,
 ): Promise<{ body: unknown; response: Response }> {
   const controller = new AbortController();
   let bodyReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
@@ -252,13 +255,13 @@ async function fetchAndReadJsonWithBoundedTimeout(
       ...init,
       signal: controller.signal,
     });
-    if (!response.ok) {
+    if (!response.ok && !readErrorBody) {
       await response.body?.cancel().catch(() => undefined);
       return { body: null, response };
     }
     const body = await readJsonResponseBody(response, (reader) => {
       bodyReader = reader;
-    });
+    }, maxBytes);
     return { body, response };
   })();
   try {
@@ -271,6 +274,7 @@ async function fetchAndReadJsonWithBoundedTimeout(
 async function readJsonResponseBody(
   response: Response,
   captureReader: (reader: ReadableStreamDefaultReader<Uint8Array>) => void,
+  maxBytes: number,
 ): Promise<unknown> {
   if (!response.body) return null;
 
@@ -278,10 +282,13 @@ async function readJsonResponseBody(
   captureReader(reader);
   const decoder = new TextDecoder();
   let text = "";
+  let bytes = 0;
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+      bytes += value.byteLength;
+      if (bytes > maxBytes) { void reader.cancel().catch(() => undefined); throw new Error("Internal response too large"); }
       text += decoder.decode(value, { stream: true });
     }
     text += decoder.decode();
@@ -470,4 +477,17 @@ function internalWebCallbackFailure(message: string, response: Response): Intern
         }
     }
     return new InternalWebCallbackError(message, retryAfterAt);
+}
+
+export async function notifyWebFree20Context(env: InternalWebLifecycleEnv, request: Free20ContextTransferRequest): Promise<void> {
+  const config = internalWebCallbackConfig(env);
+  const { response, body } = await fetchAndReadJsonWithBoundedTimeout(fetch,
+    new URL(`/api/internal/rooms/${encodeURIComponent(request.roomId)}/free20-context`, config.baseUrl),
+    { method: "POST", redirect: "manual", headers: { Authorization: `Bearer ${config.secret}`, "Content-Type": "application/json" }, body: JSON.stringify(request) },
+    INTERNAL_WEB_CALLBACK_TIMEOUT_MS, 4096, true);
+  if (response.status === 409 && body && typeof body === "object" && (body as { code?: unknown }).code === "FREE20_CONTEXT_BUSY") throw new Error("FREE20_CONTEXT_BUSY");
+  const receipt = Free20ContextTransferReceiptSchema.safeParse(body);
+  if (response.status !== 200 || !receipt.success || receipt.data.transferId !== request.transferId ||
+      receipt.data.ownerUserId !== request.ownerUserId || receipt.data.roomId !== request.roomId || receipt.data.roomGeneration !== request.roomGeneration)
+    throw new Error("Free20 attachment unavailable");
 }
