@@ -31,6 +31,19 @@
 
 ## Progress Log
 
+- **2026-11-03, `codex/free20-abuse-adaptation`, through `b219bf49`:**
+  [default-off scoped Free20 candidate](2026-11-03-free20-abuse-adaptation.md)
+  adds stopped-host context transfer: durable intent/frozen meter, cumulative
+  settlement, trusted SQL attachment, durable effective checkpoint, then host
+  admission. Original bindings and terminal/60-second disconnect fences survive
+  retries and hibernation; guest/media controls remain unchanged. Independently
+  reviewed Tasks 1–4 include 24 final focused workerd transfer cases, room
+  harness 39/39 and extension 2759 tests. Local real-WebRTC passed legacy 26/26
+  and all four-participant v3 scenarios (12/12 decoded first frames, p95
+  1931.8 ms), with isolated Chromium/fake media/local Worker and no external
+  TURN. Hosted context transfer, loaded Chrome cookie policy, real two-user/
+  network acceptance and activation are not established by these fixtures.
+
 - **2026-11-01, `codex/free20-staging-readiness`, `14997bf6`:** the
   [readiness candidate](2026-11-01-free20-staging-readiness.md) adds explicit
   current-client negotiation at HTTP/SQL host admission for marked Free20 rooms.

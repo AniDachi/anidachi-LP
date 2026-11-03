@@ -1,5 +1,53 @@
 # Current Development State
 
+## Free20 shared-browser/installation candidate, November 3, 2026
+
+The owner-approved [anti-abuse design](superpowers/specs/2026-11-03-free20-abuse-design.md)
+is implemented locally through Tasks 1–4 on `codex/free20-abuse-adaptation`
+(`7563c360..b219bf49`), with independent task reviews approved after fixes.
+This is an additive, default-off candidate, not enabled staging protection.
+The [implementation plan](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
+records local evidence and outstanding review/delivery work; the
+[delivery runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
+requires schema before compatible runtime, matching extension and SQL activation.
+
+The effective daily allowance is the smallest remainder of the account, signed
+browser and proved installation, each capped at 1200 seconds per UTC day. Changing
+accounts or replacing one marker cannot restore spent time; a replacement inherits
+the greatest known account/paired/bound-scope consumption. A fresh account after
+resetting both markers remains a known design limit. No IP linking, fingerprinting,
+new secret or permission is added. Historical trial eligibility remains separate.
+
+Postgres owns scoped usage, exclusive unsettled reservations and cumulative delta
+settlement. A new context on an existing room requires the DO to stop host spending,
+settle the old interval, attach scopes and durably install the effective checkpoint
+before host admission resumes. Original bindings survive reconnect, paid upgrade,
+gate disable and unknown settlement until durable terminal completion. Paid/trial/
+manual precedence, guest entry, room links, capacities and media controls retain
+their contracts. For new free hosting, missing proof or blocked cookies yields
+retryable unavailable;
+the existing silent auth flow supplies no equivalent first-party enrollment fallback.
+
+Local evidence includes a fresh full-file migration replay (109/109 abuse assertions,
+users 0, cron off, no network), eight actual SQL race groups, protocol/Web/API checks,
+workerd transfer cases and 2759 passing extension tests. Earlier full suite counts
+are overlapping snapshots, not totals to add. Local real-WebRTC passed legacy 26/26
+and all four-participant v3 scenarios, with 12/12 decoded first-frame samples
+(p95 1931.8 ms), using the actual source engine, local Worker, isolated Chromium and
+fake media without external TURN. These are not hosted or physical-network results.
+The narrow candidate validated; build output includes ineffective dynamic imports
+and oversized-chunk warnings, whose baseline ancestry was not independently verified.
+
+The read-only staging preflight at `2026-11-03T11:12:34Z` still observed source
+`3eeea8bc`, Web `dpl_C3D1yExdG6bbscBv2Xjmbx5NxAvw`, 89 database migrations through
+`20261101102723`, no anti-abuse migration and one nonterminal unprotected Free20
+room. This snapshot must be refreshed before delivery or gate changes; it is not
+activation. The user's stable unpacked folder, actual grants/accounts/usage, main,
+production and Store were unchanged. Loaded Chrome cookie-policy behavior, actual
+A/B account switching, two-participant spending, purchase while spending and the
+real UTC boundary remain pending. Whole-branch review and Graphify are tracked
+separately by Task 5; no production-readiness claim follows from local fixtures.
+
 ## Free20 capsule notice and paid refresh correction, November 3, 2026
 
 The owner approved transferring the refined local notice into the real staging

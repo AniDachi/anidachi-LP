@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <MarketingArticle path="/privacy" title="Privacy Policy" updated="October 17, 2026">
+    <MarketingArticle path="/privacy" title="Privacy Policy" updated="November 3, 2026">
       <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mb-4">1. AniDachi and your account</h2>
@@ -94,6 +94,27 @@ export default function PrivacyPage() {
 						a free trial. A short-lived cookie also preserves the choice of
 						ordinary paid plans after a trial is unavailable here.
 					</p>
+              <p>
+                Where daily Free20 abuse protection is enabled, we reuse the
+                signed browser cookie and require a signed proof from the
+                extension installation key for free hosting. Separate daily
+                records use pseudonymous marker hashes to share a 20-minute
+                allowance across accounts using the same browser or installation.
+                Each account also keeps its own allowance across devices; the
+                smallest remaining allowance applies and resets at 00:00 UTC.
+                Blocking the required cookie or proof may make free hosting
+                temporarily unavailable. Paid hosting and joining as a guest do
+                not require this Free20 proof.
+              </p>
+              <p>
+                These daily-quota records are separate from trial eligibility.
+                Eligible daily usage history older than seven UTC days is removed
+                in bounded daily batches. Unsettled room reservations and their
+                marker history are retained until settlement is verified; these
+                records can survive account or room deletion. We do not use IP
+                addresses to link accounts for this allowance or use hardware
+                fingerprinting.
+              </p>
               <p>Essential cookies maintain your login and session. Website analytics may use cookies or browser identifiers. Browser privacy controls can restrict these, although blocking essential storage may prevent sign-in. You can separately control history recording, YouTube history, notifications, camera and microphone access. Turning off history recording does not prevent joining or synchronizing a room.</p>
               <p>Depending on applicable law, you may be entitled to access, correct, export or delete personal data. For account deletion or assistance with these requests, email <a href="mailto:anidachi.app@gmail.com" className="text-brand-orange hover:underline">anidachi.app@gmail.com</a>.</p>
             </section>

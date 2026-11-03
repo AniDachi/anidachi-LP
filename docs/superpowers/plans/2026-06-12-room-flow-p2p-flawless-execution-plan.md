@@ -19,6 +19,26 @@
 
 ---
 
+## Follow-up: Free20 scope transfer candidate, 2026-11-03
+
+The approved [anti-abuse plan](2026-11-03-free20-abuse-adaptation.md) implements
+the existing-room context change as a stopped-host transfer through the real DO
+presence/accounting lifecycle. Durable intent and frozen meter precede external
+I/O; settlement, scope attachment and effective checkpoint precede replacement
+host admission. Recovery keeps the original disconnect deadline and exact-payload
+receipt; it cannot revive an ended room or detach a replacement host on replay.
+Guest presence, room link, frozen capacities and media grants retain their contracts.
+
+Tasks 1–4 through `b219bf49` passed independent task review. Final focused workerd
+transfer cases are 24/24; the full 181-case runtime pass preceded the final
+three-line stopped-meter UTC correction. Room harness 39/39, extension 2759 tests,
+local real-WebRTC legacy 26/26 and all four-participant v3 scenarios passed.
+The latter uses source engine/local Worker/fake media/isolated Chromium without
+external TURN (12/12 first-frame samples, p95 1931.8 ms). No claim of a final full
+182-case run, physical-network transfer or hosted acceptance follows. New enforcement
+is still default off and undelivered; loaded Chrome cookie behavior and two-user
+acceptance remain separate [delivery gates](2026-11-03-free20-abuse-staging-runbook.md).
+
 ## Follow-up: Free20 live display, 2026-11-01
 
 The owner-authorized [staging readiness plan](2026-11-01-free20-staging-readiness.md)
