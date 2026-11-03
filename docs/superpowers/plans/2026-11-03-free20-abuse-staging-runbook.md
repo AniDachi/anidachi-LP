@@ -1,6 +1,8 @@
 # Free20 anti-abuse staging delivery
 
-Status: preparation procedure, not a deployment or activation receipt.
+Status: compatible staging delivery completed on November 3, 2026; anti-abuse
+activation and loaded-client acceptance remain pending. See the delivery receipt
+below; the ordered procedure still governs activation and later rehearsals.
 Parent: [implementation plan](2026-11-03-free20-abuse-adaptation.md).
 Contract: [approved design](../specs/2026-11-03-free20-abuse-design.md).
 The existing [Free20 activation runbook](2026-11-01-free20-staging-activation-runbook.md)
@@ -25,7 +27,8 @@ are not a current inventory. Main, production, Store and LIVE Stripe are exclude
    the known unpacked-folder location, back it up and compare every copied file.
    Replacing files is not evidence that Chrome loaded them. The owner chose to
    reload the extension and inspect the interface himself.
-5. Enable `ANIDACHI_FREE20_ABUSE_ENABLED=true` only for the exact staging Web
+5. After the owner confirms reloading the delivered extension, enable
+   `ANIDACHI_FREE20_ABUSE_ENABLED=true` only for the exact staging Web
    Preview deployment on exact branch `staging`, never broad Preview or Production,
    and verify it is serving the intended alias. This enables compatible
    enrollment and v5 callers; SQL still decides final admission enforcement.
@@ -76,6 +79,57 @@ Build output included ineffective dynamic imports and oversized-chunk warnings;
 their baseline ancestry was not independently verified. The stable working folder
 was left unchanged. Keep backup, exact source/build identity and all-file copy
 comparison receipts when a later authorized compatible delivery replaces it.
+
+## Authorized delivery receipt, November 3, 2026
+
+The owner authorized staging delivery and updating the same extension folder.
+The frozen reviewed head was `8a4e479cfa1509db3be644edb8322291a9208e49`.
+The schema-first workflow
+[41640338430](https://github.com/AniDachi/anidachi-LP/actions/runs/41640338430)
+applied only `20261103120000_free20_abuse.sql` to staging project
+`cyppqpprkygjloyfvvvj`, before [PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
+merged as `03efd89983ff06cbba1651f63e073f5f21b06fe1`.
+Migration SHA-256 is
+`7b467d18d0b9b2e2f57238a694d0c7a9091e4b5ddc3e382a24cdba8d371fcdf8`.
+
+The hosted database has 90 migrations; all 30 checked function identities,
+definition hashes and ACLs, three private-table protections, both default-false
+columns and the 03:17 UTC cleanup job exactly match the local reviewed schema.
+Security advisors added only the expected informational no-policy entries for
+the three private tables; direct anon/authenticated/service-role table access is
+denied, with access through the checked functions. Policy revision 4, original
+activation and existing Free20/trial flags remain unchanged. The new SQL gate
+is false; no protected rooms or bindings existed in the post-migration readback.
+The new Web gate is absent from the project's environment variables. No runtime
+anti-abuse activation is claimed.
+
+Web READY deployment `dpl_GgJ8Gdzf1afeeFBaAS6VVdWBVKzY` serves the staging alias
+from `03efd899`. Worker workflow
+[41640597041](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597041)
+deployed `f39a67e5-8a95-4e47-8916-cea88b720361` at 100%, retaining existing
+accounting and the staging internal Web origin. CI `41640597001`, extension
+build `41640597196`, staging smoke `41641051077` and the direct Worker smoke
+passed. Unauthenticated Web probes are stopped by the staging access gate;
+the new Worker transfer route returns 401. This is delivery/auth-boundary
+evidence, not authenticated enrollment or transfer acceptance.
+
+CI artifact `13231299833` is the narrow staging extension with build ID
+`03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`. Its inner ZIP SHA-256 is
+`16881a1c727c0552085dd6cf73200343136feeecdefaa1fb4bd36728ceff2b28`.
+The existing primary folder
+`/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging` and its
+same-named worktree mirror were backed up separately and replaced. Their previous
+builds differed; both now match all 13 CI file hashes, with the existing public
+manifest key, extension ID and narrow permissions retained. No Chrome reload or
+loaded-artifact acceptance was performed by the agent.
+
+Receipts and backups are in ignored
+`artifacts/free20-abuse-staging-delivery-20261103/`. Main remains `9da93cd9`,
+production Web remains `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke` and production Worker
+remains `3ea773eb-f258-4713-a314-9abeb4012f49`. Promotion PR471 remains unmerged
+with auto-merge disabled. No account, grant, usage, LIVE Stripe or Store change
+was part of delivery. Continue from step 5 only after the owner's reload; refresh
+room/policy/deployment state again before activation.
 
 ## Acceptance and evidence
 

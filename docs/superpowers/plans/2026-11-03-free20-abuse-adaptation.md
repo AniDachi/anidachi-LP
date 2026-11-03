@@ -185,11 +185,13 @@ activation. Actual two-account/loaded-cookie acceptance, two-participant spendin
 purchase during spending and real UTC rollover remain pending unless observed;
 local fixtures do not establish production readiness.
 
-## Final local/readiness receipt, November 3, 2026
+## Historical local/readiness receipt, November 3, 2026
 
 Final candidate source is `c367453c5d15aacf2ee447b10e0aed2907cdf7c7`.
-[Draft PR502](https://github.com/AniDachi/anidachi-LP/pull/502) targets `staging`
-and is not merged, deployed or activated. All hosted delivery remains pending.
+[PR502](https://github.com/AniDachi/anidachi-LP/pull/502) was draft and not
+merged, deployed or activated at this preparation snapshot. The later authorized
+delivery below supersedes those delivery-pending statements, not their original
+test or review scope.
 
 - Whole-branch review at `78ae94a9` found no Critical/Important issue; one P3
   test-maintenance issue about fault-injection boundaries is parked. The test-only
@@ -224,3 +226,29 @@ receipts above; it does not claim its own commit is already reviewed or CI-teste
 Root owns its commit and final semantic refresh. Actual Chrome cookie policy,
 two-account switching, two-participant spending, purchase during spending, live
 UTC rollover and all hosted delivery remain pending.
+
+## Authorized staging delivery, November 3, 2026
+
+The owner authorized compatible delivery and updating the same extension folder.
+PR502 merged as `03efd89983ff06cbba1651f63e073f5f21b06fe1` after schema-first
+workflow `41640338430` from frozen head `8a4e479c`. Hosted schema comparison
+matched all 30 checked functions, three private tables, default-false columns
+and cleanup schedule. Web `dpl_GgJ8Gdzf1afeeFBaAS6VVdWBVKzY` and Worker
+`f39a67e5-8a95-4e47-8916-cea88b720361` are delivered; CI, extension build,
+staging Web smoke and Worker smoke passed.
+
+Artifact `13231299833`, build
+`03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`, replaced the same primary
+unpacked folder and worktree mirror after separate backups. All 13 files match
+the validated CI build; extension identity and narrow permissions are preserved.
+The implementation ledger was archived to `artifacts/free20-abuse-20261103/sdd-record/`.
+Exact deployment, schema, artifact and backup receipts are under
+`artifacts/free20-abuse-staging-delivery-20261103/` and summarized in the
+[delivery runbook](2026-11-03-free20-abuse-staging-runbook.md#authorized-delivery-receipt-november-3-2026).
+
+Base Free20 remains enabled. The new SQL gate is false and Web gate absent;
+policy revision 4 and original trial/activation flags are preserved. Activation
+waits for the owner's Chrome reload, a fresh room inventory and the runbook's
+ordered Web/SQL gates. No actual account/grant/usage reset or production/Store
+promotion occurred. Loaded-cookie behavior, actual A/B switching, two-participant
+spending, purchase during spending and live UTC reset remain acceptance work.
