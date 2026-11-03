@@ -189,5 +189,63 @@ reset role;
 select is((select count(*)::integer from anidachi_room_private.free20_marker_days where marker_hash=repeat('1',64)),1,'unsettled deleted room preserves old marker evidence');
 select is((select count(*)::integer from cron.job where jobname='free20-marker-history-cleanup'),1,'one shared daily cleanup job');
 select is((select count(*)::integer from anidachi_room_private.free20_admission_context),0,'no admission permit survives RPC completion');
+-- Focused authority coherence regression. Delay real dependency returns only
+-- inside this rollback-only fixture so paid grants expire BETWEEN snapshots.
+create temporary table abuse_original_functions(name text primary key,definition text);
+insert into abuse_original_functions values
+ ('status',pg_get_functiondef('public.read_free20_account_status_v1(uuid)'::regprocedure)),
+ ('access',pg_get_functiondef('public.resolve_free20_hosting_access_v1(uuid)'::regprocedure));
+do $$declare f record; anchor text:=' return jsonb_build_object(''enabled'',true,';begin
+ for f in select * from abuse_original_functions loop
+  if position(anchor in f.definition)=0 then raise exception 'fixture status return anchor changed'; end if;
+  execute replace(f.definition,anchor,' perform pg_sleep(2.5);'||chr(10)||anchor);
+ end loop;
+end $$;
+insert into public.users(id,email,display_name) values
+ ('fa200000-0000-4000-8000-000000000006','abuse-expiry@example.test','Expiry snapshot');
+insert into anidachi_room_private.free20_marker_days(kind,marker_hash,day,committed_seconds) values
+ ('browser',repeat('6',64),(clock_timestamp() at time zone 'UTC')::date,720),
+ ('installation',repeat('7',64),(clock_timestamp() at time zone 'UTC')::date,720);
+insert into public.subscriptions(user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,plan_code,status,current_period_end,cancel_at_period_end) values
+ ('fa200000-0000-4000-8000-000000000006','cus_abuse_expiry','sub_abuse_expiry','price_abuse','plus','active',clock_timestamp()+interval '4 seconds',true);
+insert into public.account_manual_plan_grants(user_id,plan_code,valid_until,reason) values
+ ('fa200000-0000-4000-8000-000000000006','pro',clock_timestamp()+interval '2 seconds','sequential snapshot expiry');
+set local role service_role;
+insert into abuse_results values('expiry',public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000006',repeat('6',64),repeat('7',64)));
+select is((select v->>'planCode' from abuse_results where k='expiry'),'free','sequential pro/plus expiry resolves final Free status');
+select is((select v->>'committedSeconds' from abuse_results where k='expiry'),'720','sequential grant expiry never substitutes account0 for marker720');
+select ok((select (v->>'refreshBy')::timestamptz>clock_timestamp() from abuse_results where k='expiry'),'returned expiry snapshot remains valid');
+reset role;
+update public.subscriptions set current_period_end=clock_timestamp()+interval '4 seconds' where user_id='fa200000-0000-4000-8000-000000000006';
+update public.account_manual_plan_grants set valid_until=clock_timestamp()+interval '2 seconds' where user_id='fa200000-0000-4000-8000-000000000006';
+set local role service_role;
+select throws_ok($$select public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000006')$$,'P0001','FREE20_CONTEXT_REQUIRED','sequential expiry without context enforces the newly free requirement');
+reset role;
+do $$declare f record;begin for f in select * from abuse_original_functions loop execute f.definition; end loop;end $$;
+-- Deterministic UTC boundary: the first canonical snapshot belongs to the final
+-- millisecond of yesterday; subsequent reads use the actual current UTC day.
+-- No clocks on the host/database or durable data outside this fixture change.
+create temporary sequence abuse_status_clock;
+create function pg_temp.abuse_status_time(p_actual timestamptz) returns timestamptz language sql volatile as $$
+ select case when nextval('pg_temp.abuse_status_clock')=1 then
+  ((p_actual at time zone 'UTC')::date::timestamp at time zone 'UTC')-interval '1 millisecond' else p_actual end;
+$$;
+grant usage on sequence abuse_status_clock to service_role;
+do $$declare definition text; anchor text:=' at_time:=(authority#>>''{history,serverTime}'')::timestamptz;';begin
+ select f.definition into definition from abuse_original_functions f where f.name='status';
+ if position(anchor in definition)=0 then raise exception 'fixture UTC anchor changed'; end if;
+ execute replace(definition,anchor,anchor||chr(10)||' at_time:=pg_temp.abuse_status_time(at_time);');
+end $$;
+update anidachi_room_private.free20_marker_days set committed_seconds=100 where marker_hash in(repeat('6',64),repeat('7',64));
+insert into anidachi_room_private.free20_marker_days(kind,marker_hash,day,committed_seconds) values
+ ('browser',repeat('6',64),(clock_timestamp() at time zone 'UTC')::date-1,720),
+ ('installation',repeat('7',64),(clock_timestamp() at time zone 'UTC')::date-1,720);
+set local role service_role;
+insert into abuse_results values('utc-coherent',public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000006',repeat('6',64),repeat('7',64)));
+select is((select ((v->>'serverTime')::timestamptz at time zone 'UTC')::date from abuse_results where k='utc-coherent'),(clock_timestamp() at time zone 'UTC')::date,'UTC transition retries stale metadata into the usage day');
+select is((select v->>'committedSeconds' from abuse_results where k='utc-coherent'),'100','UTC transition uses only the returned snapshot day marker usage');
+select ok((select (v->>'refreshBy')::timestamptz>clock_timestamp() and (v->>'resetAt')::timestamptz>clock_timestamp() from abuse_results where k='utc-coherent'),'UTC usage and authority expiry share a live snapshot');
+reset role;
+do $$declare definition text;begin select f.definition into definition from abuse_original_functions f where f.name='status';execute definition;end $$;
 select * from finish();
 rollback;

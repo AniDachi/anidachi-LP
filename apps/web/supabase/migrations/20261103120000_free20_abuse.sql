@@ -111,18 +111,43 @@ end $$;
 
 create function public.read_free20_context_status_v1(p_user_id uuid,p_browser_hash text default null,p_installation_hash text default null)
 returns jsonb language plpgsql security definer set search_path='' set lock_timeout='5s' set statement_timeout='10s' as $$
-declare result jsonb; access jsonb;
+declare policy public.hosting_commercial_policy%rowtype; result jsonb;
+ active_room text; used integer; today date; attempt integer;
 begin
- result:=public.read_free20_account_status_v1(p_user_id);
- access:=public.resolve_free20_context_access_v1(p_user_id,p_browser_hash,p_installation_hash);
- -- Use the later canonical read: an entitlement may expire between these reads.
- if result->>'planCode' is distinct from access->>'planCode' then
+ policy:=public.lock_hosting_commercial_policy_v1();
+ -- Plan, grant/expiry, generation, server time and UTC bucket come from ONE
+ -- canonical snapshot. Account locks do not stop expiry or midnight. Retry the
+ -- complete snapshot if it expired before/while we waited for room/scope locks.
+ for attempt in 1..3 loop
   result:=public.read_free20_account_status_v1(p_user_id);
- end if;
- if access->>'enabled'='true' and access->>'planCode'='free' then
-  result:=result||jsonb_build_object('committedSeconds',(access->>'usedSeconds')::integer);
- end if;
- return result||jsonb_build_object('abuseEnabled',access->'abuseEnabled');
+  result:=result||jsonb_build_object('abuseEnabled',policy.free20_abuse_enabled);
+  if result->>'enabled' is distinct from 'true' then return result; end if;
+  if (result->>'refreshBy')::timestamptz<=clock_timestamp() then continue; end if;
+  if result->>'planCode'='free' then
+   select r.room_id into active_room from public.active_room_sessions a join public.rooms r on r.room_id=a.room_id
+    where a.user_id=p_user_id and r.host_user_id=p_user_id and r.free20_abuse_protected and r.status<>'ended' for update of r;
+   if policy.free20_abuse_enabled then
+    perform anidachi_room_private.validate_free20_context(p_browser_hash,p_installation_hash);
+   else
+    -- Existing protected rooms retain their bound usage while new enforcement
+    -- is off. Ignore supplied context rather than introducing new restrictions.
+    p_browser_hash:=null; p_installation_hash:=null;
+   end if;
+   perform anidachi_room_private.lock_free20_scopes(active_room,p_browser_hash,p_installation_hash);
+   if exists(select 1 from anidachi_room_private.free20_room_bindings b where b.settled_at is null and b.owner_user_id<>p_user_id and
+    ((b.kind='browser' and b.marker_hash=p_browser_hash) or (b.kind='installation' and b.marker_hash=p_installation_hash))) then
+    raise exception 'FREE20_CONTEXT_BUSY';
+   end if;
+   today:=((result->>'serverTime')::timestamptz at time zone 'UTC')::date;
+   select greatest((result->>'committedSeconds')::integer,coalesce(max(d.committed_seconds),0)) into used
+    from anidachi_room_private.free20_marker_days d where d.day=today and (
+     (d.kind='browser' and d.marker_hash=p_browser_hash) or (d.kind='installation' and d.marker_hash=p_installation_hash) or
+     exists(select 1 from anidachi_room_private.free20_room_bindings b where b.room_id=active_room and b.kind=d.kind and b.marker_hash=d.marker_hash));
+   result:=result||jsonb_build_object('committedSeconds',used);
+  end if;
+  if (result->>'refreshBy')::timestamptz>clock_timestamp() then return result; end if;
+ end loop;
+ raise exception 'ROOM_AUTHORITY_UNAVAILABLE';
 end $$;
 
 -- Caller owns policy/account/user/room locks before entry. Binding is append-only.
