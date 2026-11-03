@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793711410.66664,
-    "seen": 1793712009.470436,
+    "mtime": 1793726803.1243496,
+    "seen": 1793727235.657105,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "673e2f4b74bd436239316dc86317b365"
+    "semantic_hash": "561d6dd6e22a760f36f3c78618a8a180"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3510,10 +3510,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1793705770.1941516,
-    "seen": 1793706992.399371,
+    "mtime": 1793726803.1827695,
+    "seen": 1793727235.657108,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "b74d3eb2346bd99d8b1c22f46500afc1"
+    "semantic_hash": "8c7583b4cffb3422527c5aa9b7f934dc"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -11796,16 +11796,16 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-03-free20-abuse-adaptation.md": {
-    "mtime": 1793711410.732766,
-    "seen": 1793712009.470439,
+    "mtime": 1793726803.165705,
+    "seen": 1793727235.65711,
     "ast_hash": "",
-    "semantic_hash": "728580b40527c67e49a920b0fe32a5e4"
+    "semantic_hash": "614e772e84ba614b9080b663cc401265"
   },
   "docs/superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md": {
-    "mtime": 1793711410.7141247,
-    "seen": 1793712009.4704409,
+    "mtime": 1793726803.1449459,
+    "seen": 1793727235.657111,
     "ast_hash": "",
-    "semantic_hash": "59235114e37ea015ef2170ca0c2f5a64"
+    "semantic_hash": "fb9dcdbe6274a09150e76705fda2e245"
   },
   "docs/superpowers/specs/2026-11-03-free20-abuse-design.md": {
     "mtime": 1793699599.933602,
