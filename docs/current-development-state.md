@@ -1,5 +1,70 @@
 # Current Development State
 
+## Free20 shared-browser/installation candidate, November 3, 2026
+
+The owner-approved [anti-abuse design](superpowers/specs/2026-11-03-free20-abuse-design.md)
+is implemented through Tasks 1–5 on `codex/free20-abuse-adaptation`, with final
+candidate source `c367453c5d15aacf2ee447b10e0aed2907cdf7c7` and completed local
+review/readiness evidence. [Draft PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
+targets `staging`; it is not merged, deployed or activated.
+This is an additive, default-off candidate, not enabled staging protection.
+The [implementation plan](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
+records completed local evidence and outstanding hosted delivery/acceptance; the
+[delivery runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
+requires schema before compatible runtime, matching extension and SQL activation.
+
+The effective daily allowance is the smallest remainder of the account, signed
+browser and proved installation, each capped at 1200 seconds per UTC day. Changing
+accounts or replacing one marker cannot restore spent time; a replacement inherits
+the greatest known account/paired/bound-scope consumption. A fresh account after
+resetting both markers remains a known design limit. No IP linking, fingerprinting,
+new secret or permission is added. Historical trial eligibility remains separate.
+
+Postgres owns scoped usage, exclusive unsettled reservations and cumulative delta
+settlement. A new context on an existing room requires the DO to stop host spending,
+settle the old interval, attach scopes and durably install the effective checkpoint
+before host admission resumes. Original bindings survive reconnect, paid upgrade,
+gate disable and unknown settlement until durable terminal completion. Paid/trial/
+manual precedence, guest entry, room links, capacities and media controls retain
+their contracts. For new free hosting, missing proof or blocked cookies yields
+retryable unavailable;
+the existing silent auth flow supplies no equivalent first-party enrollment fallback.
+
+Local evidence includes a fresh full-file migration replay (109/109 abuse assertions,
+users 0, cron off, no network), eight actual SQL race groups, protocol/Web/API checks,
+workerd transfer cases and 2759 passing extension tests. Earlier full suite counts
+are overlapping snapshots, not totals to add. Local real-WebRTC passed legacy 26/26
+and all four-participant v3 scenarios, with 12/12 decoded first-frame samples
+(p95 1931.8 ms), using the actual source engine, local Worker, isolated Chromium and
+fake media without external TURN. These are not hosted or physical-network results.
+The final 13-file narrow candidate `artifacts/free20-abuse-20261103/candidate-c367453c/`
+validated, with exact identity in `final-candidate-receipt.json`; the user's stable
+folder is unchanged. Build output includes ineffective dynamic imports
+and oversized-chunk warnings, whose baseline ancestry was not independently verified.
+
+Whole-branch review at `78ae94a9` found no Critical/Important issue and parked one
+P3 about test fault boundaries. The test-only CI lint correction `df8c047e` was
+independently approved with 45/45 focused tests and full Web lint/check; `c367453c`
+restores Graphify header-import resolution. These corrections change no product
+behavior. CI [41635669181](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669181),
+[E2E Rooms 41635669420](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669420),
+[P2P 41635669076](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669076)
+and Vercel preview succeeded; the full Worker runtime now has a passing 182-case
+run. Graphify completed 62 changed AST sources and nine semantic sources, plus
+one unchanged protocol dependency for header resolution; `graph/validation-final.json`
+records preservation and hash validation. These receipts precede this final docs
+update; they do not claim its commit has already been reviewed or tested by CI.
+
+The read-only staging refresh at `2026-11-03T12:06:26Z` observed policy revision 4,
+Free20 true/trials false, the anti-abuse migration absent and zero nonterminal
+Free20 rooms. This snapshot must be refreshed before delivery or gate changes;
+it is not current activation proof. Reports and ledger will be archived under
+`artifacts/free20-abuse-20261103/sdd-record/` before execution-workspace cleanup.
+Actual grants/accounts/usage, main, production and Store were unchanged. All hosted
+delivery, loaded Chrome cookie-policy behavior, actual A/B account switching,
+two-participant spending, purchase while spending and the real UTC boundary remain
+pending. No production-readiness claim follows from local fixtures or successful CI.
+
 ## Free20 capsule notice and paid refresh correction, November 3, 2026
 
 The owner approved transferring the refined local notice into the real staging

@@ -1,3 +1,4 @@
+import { FREE20_TRANSFER_KEY, parseFree20ScopeTransfer } from "./free20-scope-transfer";
 import {
 	ROOM_POLICY_STORAGE_KEY,
 	type RoomPolicyState,
@@ -257,12 +258,17 @@ export async function reconcileStoredRoomAlarm(
   if (rawParticipantDisconnects !== undefined && !participantDisconnects) {
     throw new Error("Invalid persisted participant disconnect state");
   }
+  const transfer = parseFree20ScopeTransfer(await transaction.get(FREE20_TRANSFER_KEY));
+  if (transfer) {
+    const transferAt = Math.min(transfer.nextAttemptAt, transfer.disconnect.deadlineAt);
+    fallbackAt = fallbackAt === null ? transferAt : Math.min(fallbackAt, transferAt);
+  }
 	const policy = await transaction.get<RoomPolicyState>(
 		ROOM_POLICY_STORAGE_KEY,
 	);
 	if (policy && (!Number.isSafeInteger(policy.alarmAt) || policy.alarmAt < 0))
 		throw new Error("Invalid room policy alarm");
-	if (policy)
+	if (policy && !transfer)
 		fallbackAt =
 			fallbackAt === null
 				? policy.alarmAt

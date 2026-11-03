@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-09-08.
+Last updated: 2026-11-03.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -314,6 +314,19 @@ The Worker must not trust client-provided identity for authenticated rooms. The
 identity should come from a verified room token.
 
 ## Live Room API
+
+The local [Free20 anti-abuse candidate](superpowers/specs/2026-11-03-free20-abuse-design.md)
+adds Postgres-owned browser/installation daily scope ledgers alongside account
+usage. Web verifies the reused signed cookie and purpose-separated installation
+proof; the extension background owns enrollment and the short-lived context.
+Only server-verified scopes reach SQL. A changed context on an existing room uses
+a serialized DO transfer: stop host spending, settle, append scopes, persist the
+effective checkpoint, then resume host admission. Protected room accounting stays
+bound after disabling new admission enforcement. This is not a new media path.
+The [current state](current-development-state.md) and
+[schema-first staging runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
+separate the default-off source candidate from hosted delivery and loaded-client
+acceptance; no production activation is implied.
 
 The live room API is responsible for fast ephemeral state, not durable business
 records.

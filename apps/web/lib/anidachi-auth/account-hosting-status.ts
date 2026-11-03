@@ -1,3 +1,9 @@
+import { Free20ContextError, type Free20AbuseContext } from "./free20-abuse";
+import {
+	free20AbuseEnabled,
+	resolveFree20RequestContext,
+	resolveFree20SsrContext,
+} from "./free20-abuse-context";
 import {
 	ACCOUNT_HOSTING_OWNER_HEADER,
 	AccountHostingStatusSchema,
@@ -47,6 +53,39 @@ export async function readFree20StatusAuthority(
 		.abortSignal(AbortSignal.timeout(2000));
 	if (error) throw new Error("Account hosting authority unavailable");
 	return data;
+}
+/** Public/SSR authority only. Owned live rooms use their already-bound DO budget;
+ * idle free displays require full verified context. Internal warning/provenance
+ * callers intentionally retain readFree20StatusAuthority without proof. */
+export async function readFree20PublicStatusAuthority(
+	userId: string,
+	context: Free20AbuseContext | null = null,
+): Promise<unknown> {
+	if (!free20AbuseEnabled()) return readFree20StatusAuthority(userId);
+	const { data, error } = await db()
+		.rpc("read_free20_context_status_v1", {
+			p_user_id: userId,
+			p_browser_hash: context?.browser ?? null,
+			p_installation_hash: context?.installation ?? null,
+		})
+		.abortSignal(AbortSignal.timeout(2000));
+	if (
+		error?.message.includes("FREE20_CONTEXT_REQUIRED") ||
+		error?.message.includes("FREE20_CONTEXT_INVALID")
+	)
+		throw new Free20ContextError();
+	if (error?.message.includes("FREE20_CONTEXT_BUSY"))
+		throw new Free20ContextError("FREE20_CONTEXT_BUSY");
+	if (
+		error ||
+		!data ||
+		typeof data !== "object" ||
+		Array.isArray(data) ||
+		typeof data.abuseEnabled !== "boolean"
+	)
+		throw new Error("Account hosting authority unavailable");
+	const { abuseEnabled: _, ...authority } = data;
+	return authority;
 }
 export async function readLiveFree20Status(
 	request: Free20LiveStatusRequest,
@@ -184,7 +223,11 @@ export async function readAccountHostingStatus(
 ): Promise<AccountHostingRead> {
 	const deps = {
 		enabled: () => process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true",
-		readAuthority: readFree20StatusAuthority,
+		readAuthority: async (userId: string) =>
+			readFree20PublicStatusAuthority(
+				userId,
+				await resolveFree20SsrContext(userId),
+			),
 		readLive: readLiveFree20Status,
 		clock: () => performance.now(),
 		...overrides,
@@ -232,12 +275,26 @@ export function createAccountHostingStatusHandler(
 				return failure("HOSTING_OWNER_CHANGED", 409);
 			const result = await readAccountHostingStatus(
 				session.userId,
-				deps,
+				{
+					...deps,
+					readAuthority:
+						overrides.readAuthority ??
+						((owner) =>
+							readFree20PublicStatusAuthority(
+								owner,
+								resolveFree20RequestContext(request, owner),
+							)),
+				},
 				started,
 			);
 			if (result.mode === "legacy") return failure("FREE20_DISABLED", 404);
 			return NextResponse.json(result.status, { headers });
-		} catch {
+		} catch (error) {
+			if (error instanceof Free20ContextError)
+				return failure(
+					error.code,
+					error.code === "FREE20_CONTEXT_BUSY" ? 409 : 428,
+				);
 			return failure("HOSTING_STATUS_UNAVAILABLE", 503);
 		}
 	};

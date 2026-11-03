@@ -105,7 +105,13 @@ export function sanitizePrivacySafeData(value: unknown): unknown {
       return undefined;
     }
 
-    if (SECRET_FIELD_RE.test(key)) {
+    if (
+      /^x-anidachi-free20-context$/i.test(key) ||
+      /^(?:browser|installation)(?:Hash|Marker)$/i.test(key) ||
+      (/^(?:browser|installation)$/i.test(key) && typeof item === "string" && /^[a-f0-9]{64}$/i.test(item)) ||
+      (/^context$/i.test(key) && typeof item === "string") ||
+      SECRET_FIELD_RE.test(key)
+    ) {
       if (typeof item === "boolean" || typeof item === "number" || item === null) {
         return item;
       }

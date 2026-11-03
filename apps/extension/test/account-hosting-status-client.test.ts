@@ -56,3 +56,28 @@ describe("account hosting status background bridge", () => {
     await expect(requestAccountHostingStatus(owner)).rejects.toThrow();
   });
 });
+
+it("routes hosting status through background context enrollment and preserves its same-login refresh", async () => {
+  const { createFree20AbuseClient } = await import("../src/free20-abuse-client");
+  let current = { ...session, authSessionId: "logical-login" };
+  const context = "c".repeat(100) + "." + "a".repeat(43), challenge = "b".repeat(100) + "." + "a".repeat(43);
+  let resourceCalls = 0, enrollments = 0;
+  const request = createFree20AbuseClient({ baseUrl: "http://localhost:3003", getSession: async () => current,
+    refresh: async () => current = { ...current, accessToken: "fresh", authRevision: "r2" },
+    sign: async () => ({ version: 1, challenge, publicKey: "a".repeat(124), signature: "a".repeat(86) }),
+    fetch: async (url, init) => {
+      const headers = new Headers(init.headers);
+      if (url.pathname.endsWith("free20-context")) {
+        enrollments++; return Response.json(JSON.parse(String(init.body)).action === "challenge" ? { action: "challenge", challenge, expiresAt: Date.now() + 300000 } : { action: "complete", context, expiresAt: Date.now() + 1800000 });
+      }
+      resourceCalls++;
+      if (headers.get("authorization") === "Bearer token") return Response.json({}, { status: 401 });
+      return headers.get("x-anidachi-free20-context") === context ? Response.json(accountStatus) : Response.json({}, { status: 428 });
+    },
+  }).request;
+  vi.stubGlobal("fetch", vi.fn(() => { throw new Error("Bypassed background transport"); }));
+  const result = await handleAccountHostingStatusMessage(message, { getSession: async () => current, refresh: async () => current, request });
+  expect(result).toEqual({ ok: true, mode: "free20", status: accountStatus });
+  expect(resourceCalls).toBe(3); expect(enrollments).toBe(2);
+  vi.unstubAllGlobals();
+});

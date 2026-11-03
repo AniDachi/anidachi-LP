@@ -2252,18 +2252,19 @@ describe("privileged overlay wiring", () => {
     } finally { await unmount(view.root); if (outcome.startsWith("slow-admission")) vi.useRealTimers(); }
   });
 
-  it.each(["free-invite", "paid-invite", "exhausted-invite", "restored-guest", "rejected-invite", "host-exhausted-invite", "host-exhausted-reconnect", "storage-failure", "slow-snapshot", "guest-leave"])("does not show hosting controls while entering another room: %s", async scenario => {
+  it.each(["free-invite", "paid-invite", "exhausted-invite", "restored-guest", "rejected-invite", "host-exhausted-invite", "host-exhausted-reconnect", "storage-failure", "slow-snapshot", "guest-leave", "delayed-host-role"])("does not show hosting controls while entering another room: %s", async scenario => {
     const owner = "22222222-2222-4222-8222-222222222222";
     installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
     const at = Date.parse("2026-11-01T12:00:00Z");
     const period = { utcDay: "2026-11-01", resetAt: at + 43_200_000 };
     const paid = scenario === "paid-invite", exhausted = scenario === "exhausted-invite";
-    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: {
+    const personalStatus: Awaited<ReturnType<typeof accountHostingClient.requestAccountHostingStatus>> = { mode: "free20", status: {
       accountHostingVersion: 1, ownerUserId: owner, planCode: paid ? "plus" : "free", serverTime: at, validUntil: at + 60_000, period,
       access: paid ? { kind: "confirmed_unlimited", source: "paid", validUntil: at + 60_000 }
         : { kind: "daily_free", budgetSeconds: 1200, usedSeconds: exhausted ? 1200 : 420, remainingSeconds: exhausted ? 0 : 780, metering: false },
       activeRoom: null, canCreateRoom: !exhausted,
-    } });
+    } };
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue(personalStatus);
     const record = { ...confirmedRoomSession(), ownerUserId: owner };
     const caps = { mediaProtocolVersion: 3, hostPlanCode: "pro", maxParticipants: 15, maxCameras: 4, maxMediaSeats: 8, capabilityRevision: 1, capabilitiesValidUntil: new Date(at + 60_000).toISOString() };
     const admission = deferred<unknown>();
@@ -2308,6 +2309,7 @@ describe("privileged overlay wiring", () => {
       await act(async () => { await vi.waitFor(() => expect(send.mock.calls.some(([m]: any) => m.command === "connect-room")).toBe(true)); });
       if (view.container.querySelector('button[aria-label="Open Anidachi controls"]')) await click(button(view.container, "Open Anidachi controls"));
       noHosting(); expect(button(view.container, "Joining room").disabled).toBe(true);
+      expect(accountHostingClient.requestAccountHostingStatus).not.toHaveBeenCalled();
       if (scenario === "host-exhausted-invite") {
         await act(async () => admission.resolve({ ok: false, status: 403, code: "QUOTA_EXHAUSTED",
           error: "Daily free watch-party time is used up", resetAt: new Date(period.resetAt).toISOString() }));
@@ -2340,8 +2342,15 @@ describe("privileged overlay wiring", () => {
         noHosting();
       }
       await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
-        participants: [{ ...hostParticipant(), id: owner, role: "viewer", participantSessionId: connection.participantSessionId }, { ...guestParticipant(), role: "host" }] }));
+        participants: [{ ...hostParticipant(), id: owner, role: scenario === "delayed-host-role" ? "host" : "viewer", participantSessionId: connection.participantSessionId }, { ...guestParticipant(), role: scenario === "delayed-host-role" ? "viewer" : "host" }] }));
+      if (scenario === "delayed-host-role") {
+        await flushMountedWork();
+        expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(1);
+        expect(button(view.container, "End room").disabled).toBe(false);
+        return;
+      }
       noHosting(); expect(button(view.container, "Leave room").disabled).toBe(false);
+      expect(accountHostingClient.requestAccountHostingStatus).not.toHaveBeenCalled();
       if (scenario === "host-exhausted-reconnect") {
         rejectReconnect = true;
         vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -2358,7 +2367,7 @@ describe("privileged overlay wiring", () => {
         expect(send.mock.calls.filter(([message]: any) => message.command === "connect-room")).toHaveLength(2);
       }
       if (scenario === "guest-leave") {
-        const result = await vi.mocked(accountHostingClient.requestAccountHostingStatus).mock.results[0].value;
+        const result = personalStatus;
         const refreshed = deferred<Awaited<ReturnType<typeof accountHostingClient.requestAccountHostingStatus>>>();
         vi.mocked(accountHostingClient.requestAccountHostingStatus).mockReturnValue(refreshed.promise);
         await click(button(view.container, "Leave room")); await flushMountedWork();

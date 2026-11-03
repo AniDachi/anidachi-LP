@@ -1,5 +1,7 @@
+import type { Free20Request } from "./free20-abuse-client";
 import {
   ActiveRoomConflictResponseSchema,
+  ACCOUNT_HOSTING_OWNER_HEADER,
   FREE20_CLIENT_HEADER,
   FREE20_CLIENT_VERSION,
   ClientEventSchema,
@@ -564,10 +566,13 @@ export function isRoomAdmissionHandoffMessage(
     ((message.handoff as Partial<RoomAdmissionHandoff>).tabId ?? -1) >= 0;
 }
 
+type RoomContextRequest = { ownerUserId: string; request: Free20Request };
+
 export async function createWebsiteRoomFromApi(
   accessToken: string,
   participantSessionId: string,
   input?: CreateRoomInput,
+  contextRequest?: RoomContextRequest,
 ): Promise<CreatedRoom> {
   const admission = RoomSessionAdmissionInputSchema.parse({ participantSessionId });
   const normalizedInput = normalizeCreateRoomInput(input);
@@ -576,9 +581,9 @@ export async function createWebsiteRoomFromApi(
     hasSourceUrl: Boolean(normalizedInput?.sourceUrl),
     videoFingerprint: normalizedInput?.videoFingerprint,
   });
-  const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
+  const response = await (contextRequest?.request ?? fetch)(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
-    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION) },
+    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION), ...(contextRequest ? { [ACCOUNT_HOSTING_OWNER_HEADER]: contextRequest.ownerUserId } : {}) },
     body: JSON.stringify({
       ...(normalizedInput ?? {}),
       participantSessionId: admission.participantSessionId,
@@ -650,6 +655,7 @@ export async function connectWebsiteRoomFromApi(
   roomId: string,
   accessToken: string,
   participantSessionId: string,
+  contextRequest?: RoomContextRequest,
 ): Promise<{
   roomToken: string;
   capabilities?: RoomCapabilities | RoomMediaCapabilities;
@@ -664,11 +670,11 @@ export async function connectWebsiteRoomFromApi(
   );
   let response: Response;
   try {
-    response = await fetch(
+    response = await (contextRequest?.request ?? fetch)(
       new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
       {
         method: "POST",
-        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION) },
+        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION), ...(contextRequest ? { [ACCOUNT_HOSTING_OWNER_HEADER]: contextRequest.ownerUserId } : {}) },
         body: JSON.stringify(admission),
         signal: abortController.signal,
       },
@@ -721,6 +727,7 @@ export async function endWebsiteRoomFromApi(
 }
 
 export interface RoomHttpBackgroundDependencies {
+  request?: Free20Request;
   issueAuthority?: (
     input: IssuedRoomAuthorityInput,
     sender: { tab?: { id?: number } },
@@ -867,6 +874,7 @@ export async function handleRoomHttpMessage(
         message.accessToken,
         message.roomSession.participantSessionId,
         message.input,
+        dependencies.request ? { request: dependencies.request, ownerUserId: message.roomSession.ownerUserId } : undefined,
       );
       const roomSession = await confirmPreparedRoomSessionForSender(
         sender,
@@ -896,6 +904,7 @@ export async function handleRoomHttpMessage(
       message.roomId,
       message.accessToken,
       message.roomSession.participantSessionId,
+      dependencies.request ? { request: dependencies.request, ownerUserId: message.roomSession.ownerUserId } : undefined,
     );
     admissionRequestConfirmedSettled = true;
     const roomSession = await confirmPreparedRoomSessionForSender(

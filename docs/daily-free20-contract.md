@@ -5,6 +5,11 @@
 Правила: [spec](superpowers/specs/2026-10-30-daily-free20-design.md).
 Последовательность: [plan](superpowers/plans/2026-10-30-daily-free20-transition.md).
 
+Актуальная согласованная адаптация от 3 ноября: общий дневной лимит браузера и
+установки описан [ниже](#адаптация-3-ноября-2026-общий-лимит-браузера-и-установки).
+Исторические выключенные этапы в этом документе не являются текущим состоянием
+уже включенного базового Free20 на staging; новая anti-abuse часть пока кандидат.
+
 ## Текущий этап
 
 **Дополнение 2026-11-01, в работе:** владелец разрешил довести staging до
@@ -735,3 +740,69 @@ Rollback сохраняет миграцию, очередь, billing и уче�
 admission и сохраняется совместимый accounting/runtime; удалять оплату, расход
 или terminal fences нельзя. Отключенная доставка оставляет pending work и сама
 по себе не выдает права.
+
+## Адаптация 3 ноября 2026: общий лимит браузера и установки
+
+Владелец согласовал [отдельный anti-abuse контракт](superpowers/specs/2026-11-03-free20-abuse-design.md).
+Он заменяет прежнее исключение новых ограничений общего браузера только в этом
+объеме. Tasks 1–4 локально реализованы и независимо проверены на ветке
+`codex/free20-abuse-adaptation` до `b219bf49`; новая защита остается additive,
+default-off кандидатом. [План](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
+и [runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md) содержат
+порядок доставки и незавершенные приемки. Это не подтверждение ее работы на staging.
+
+Каждый аккаунт, подписанный browser marker и подтвержденная установка имеют по
+1200 секунд на UTC-день; доступен минимальный из трех остатков. После расхода
+720 секунд аккаунтом A свежий B в том же браузере получает не более 480 секунд.
+Аккаунт сохраняет свой расход на другом устройстве. Новый marker наследует максимум
+известного расхода аккаунта и парных/привязанных scopes: последовательная замена
+cookie и установки не отмывает расход. Новый аккаунт после сброса обоих markers
+остается известным пределом; IP, fingerprinting, SMS и CAPTCHA не добавляются.
+
+Повторно используются подписанная HttpOnly cookie и постоянный P-256 ключ
+расширения, но не trial eligibility. Enrollment требует cookie на обоих запросах
+и валидное доказательство установки с отдельным Free20 назначением; challenge
+действует 300 секунд, account-bound context — 1800 секунд. Context передается
+только в выделенном header, а first-party status может читать подписанную
+HttpOnly context cookie. Background хранит context в памяти текущего входа;
+signout не удаляет installation key. Cookie-only fallback старого trial не
+разрешает новый бесплатный хостинг. Silent PKCE auth не имеет эквивалентного
+first-party proof/result канала: блокировка cookie дает retryable unavailable.
+
+Idle/member display требует полного контекста, когда защита включена, и не
+подменяет ошибку account-only остатком. Статус текущего protected хоста читает
+уже bound scopes без обязательного нового proof и без привязки предложенных
+markers. Web без installation authority не обещает полный дневной бюджет.
+Реальное создание/подключение всегда проверяет финальную серверную authority.
+
+SQL хранит отдельный дневной ledger, append-only bindings и эксклюзивные
+незавершенные reservations. Один принятый cumulative delta увеличивает account
+и каждый bound marker ровно один раз. Conflict другого аккаунта дает нейтральный
+busy без ссылки на его комнату. Другой подтвержденный контекст текущего хоста
+подключается только через остановку расхода в DO, settlement старого интервала,
+SQL attach и durable effective checkpoint перед новым host admission. Pending
+transfer переживает restart; повтор receipt не отключает нового хоста.
+
+Paid/trial/manual precedence, гостевой вход, media grants, capacities, UTC reset
+и исходные сроки сохраняются. Покупка сохраняет комнату и уже израсходованное
+бесплатное время; завершенная комната не возрождается. Protected room удерживает
+bindings и при paid upgrade, disconnect или отключении нового admission до
+durable terminal settlement. Unknown authority не становится нулем или полными
+20 минутами. Гость не расходует собственный лимит и не проходит host enrollment.
+
+Одна shared cleanup в 03:17 UTC удаляет не более 10000 eligible marker-day строк
+старше 7 UTC-дней и отдельно не более 10000 старых settled bindings после удаления
+соответствующей истории. Незавершенные reservations и их marker history сохраняются,
+включая orphan после удаления комнаты/аккаунта. Операционное удаление сначала
+должно подтвердить settlement; нельзя очищать reservation по отсутствию строки.
+Исторический trial ledger с 365-дневными правилами не меняется и не запрещает
+daily Free20. Privacy описывает эти два назначения отдельно, без нового consent.
+
+Web gate `ANIDACHI_FREE20_ABUSE_ENABLED=true` допускается только для Preview/
+точной ветки staging; SQL `free20_abuse_enabled` независимо default false. Нового
+Worker flag/secret нет. До SQL activation нужны additive schema, совместимые
+Web/Worker/client и нормальное завершение всех unprotected live Free20 rooms.
+Rollback сохраняет схему, расход, bindings и совместимое обслуживание protected
+rooms; отключение нового admission не дает права откатить учет на старый runtime.
+Реальные account-switch/cookie-policy, два участника, покупка во время расхода и
+UTC boundary остаются отдельной hosted/loaded приемкой.

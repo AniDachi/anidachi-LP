@@ -1,3 +1,5 @@
+import { resolveFree20RequestContext } from "@/lib/anidachi-auth/free20-abuse-context";
+import { Free20ContextError, type Free20AbuseContext } from "@/lib/anidachi-auth/free20-abuse";
 import { type NextRequest, NextResponse } from "next/server";
 import { FREE20_CLIENT_HEADER, parseFree20ClientVersion, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import { RoomUpdateRequiredError, roomUpdateRequiredBody } from "@/lib/anidachi-auth/room-update-required";
@@ -14,7 +16,7 @@ import {
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { resolveAccountEntitlements } from "@/lib/anidachi-auth/account-entitlements";
 import { hostingDeniedResponse } from "@/lib/anidachi-auth/hosting-denial";
-import { readFree20HostingAdmission, type Free20HostingAdmission } from "@/lib/anidachi-auth/free20-admission";
+import { readFree20BoundRoomAdmission, type Free20HostingAdmission } from "@/lib/anidachi-auth/free20-admission";
 import {
   clientMediaProtocolVersion,
   negotiateRoomMediaLease,
@@ -100,13 +102,20 @@ export async function POST(
   const user = await getUserById(session.userId);
 	let accountAccess;
 	let free20Access: Free20HostingAdmission | null = null;
+	let free20Context: Free20AbuseContext | null = null;
 	try {
+		if (isHost) free20Context = resolveFree20RequestContext(request, session.userId);
 		accountAccess = await resolveAccountEntitlements(session.userId, now);
 		if (room.hosting_time_mode === "daily_free20") {
-			free20Access = await readFree20HostingAdmission(room.host_user_id);
+			free20Access = await readFree20BoundRoomAdmission(roomId);
 			if (!free20Access) throw new Error("Missing Free20 authority");
 		}
-	} catch {
+	} catch (error) {
+		if (error instanceof Free20ContextError)
+			return NextResponse.json(
+				{ code: error.code },
+				{ status: error.code === "FREE20_CONTEXT_BUSY" ? 409 : 428 },
+			);
 		return NextResponse.json(
 			{ code: "ROOM_AUTHORITY_UNAVAILABLE" },
 			{ status: 503 },
@@ -164,11 +173,17 @@ export async function POST(
       userId: session.userId,
       mediaProtocolVersion,
       free20ClientVersion,
+      free20Context,
       roomId,
       role,
       participantSessionId: admissionInput.data.participantSessionId,
     });
   } catch (error) {
+		if (error instanceof Free20ContextError)
+			return NextResponse.json(
+				{ code: error.code },
+				{ status: error.code === "FREE20_CONTEXT_BUSY" ? 409 : 428 },
+			);
     if (error instanceof Error && error.message === "QUOTA_EXHAUSTED" && free20Access)
       return NextResponse.json(quotaExhaustedResponseBody(free20Access.quota), { status: 403 });
     if (error instanceof Error && error.message === "HOST_SUBSCRIPTION_REQUIRED")
@@ -186,6 +201,20 @@ export async function POST(
 		return NextResponse.json(activeRoomConflictResponse(admission.activeRoom), {
 			status: 409,
 		});
+  }
+  // A serialized context transfer may raise the room's effective usage floor.
+  // Issue host quota/TTL only from the post-claim bound room, never preflight.
+  if (isHost && room.free20_abuse_protected === true) {
+    try {
+      const current = await readFree20BoundRoomAdmission(roomId);
+      if (!current) throw new Error("Missing Free20 authority");
+      if (!canStartHostSession(current.quota))
+        return NextResponse.json(quotaExhaustedResponseBody(current.quota), { status: 403 });
+      tokenTtlSeconds = hostRoomTokenTtlSeconds(current.quota);
+      quotaSummary = quotaSummaryForResponse(current.planCode, current.quota);
+    } catch {
+      return NextResponse.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
+    }
   }
   const touched = isHost
     ? await updateRoom(roomId, {

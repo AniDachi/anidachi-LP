@@ -284,3 +284,20 @@ describe("inactive Free20 reconciliation on the existing durable meter", () => {
 		).toBe(1020);
 	});
 });
+
+it("effective marker720 plus room480 exhausts once across checkpoints and restart",()=>{
+ const initial=apply(checkpoint(720));
+ const middle=start+240_000;
+ const durable=reconcileRoomMeter(reconcileRoomMeter(initial.meter,false,middle),true,middle);
+ const partial=apply({...checkpoint(960,240),checkpointSequence:2,serverTime:middle,refreshBy:middle+300_000},durable,initial.budget,middle);
+ expect(partial.budget.allowedSeconds).toBe(480);
+ const end=start+480_000;
+ expect(readFree20RoomTime(partial.budget,partial.meter,end).remainingSeconds).toBe(0);
+ const stopped=reconcileRoomMeter(partial.meter,false,end);
+ const restored=parseRoomMeterState(JSON.parse(JSON.stringify(stopped)));
+ if(!restored)throw new Error("Missing durable meter");
+ const final=apply({...checkpoint(1200,480),checkpointSequence:3,serverTime:end,refreshBy:end+300_000},restored,partial.budget,end);
+ expect(final.budget.allowedSeconds).toBe(480);
+ expect(readFree20RoomTime(final.budget,final.meter,end).remainingSeconds).toBe(0);
+ expect(roomUsageBuckets(final.meter)).toEqual([]);
+});
