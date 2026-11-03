@@ -54,7 +54,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
         </div>
         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">This watchroom has ended</h1>
         <p className="mt-2 text-sm text-ani-muted">
-          The host closed this room. Ask them for a fresh invite link, or start your own
+          Ask the host for a fresh invite link, or start your own
           watch party from the AniDachi extension on any supported video page.
         </p>
         <Button variant="cream" size="control" className="mt-6 w-full" asChild>

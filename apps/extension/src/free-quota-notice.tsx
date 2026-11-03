@@ -4,8 +4,10 @@ import type { FreeQuotaNoticeState } from "./use-free-quota-notice";
 
 export function FreeQuotaNotice({ state, onRetry, compact = false }: { state: FreeQuotaNoticeState; onRetry: () => void; compact?: boolean }) {
   if (compact) return <section className="panel-limit-copy" aria-label="Free watch-party limit">
-    <strong>Today's free time is used up</strong>
-    <p>{state.remainingSeconds !== null ? `Renews in ${formatResetCountdown(state.remainingSeconds)}. You can still join a friend's room.` : "Checking your limit…"}</p>
+    <strong>{state.kind === "unavailable" ? "Free time unavailable" : state.remainingSeconds === null ? "Checking your limit…" : "Today's free time is used up"}</strong>
+    {state.kind === "unavailable" && <p>Couldn't check your free time.</p>}
+    <p>{state.kind !== "unavailable" && state.remainingSeconds !== null ? `Renews in ${formatResetCountdown(state.remainingSeconds)}. ` : ""}You can still join a friend's room.</p>
+    {state.kind === "unavailable" && <button type="button" className="free-quota-retry" onClick={onRetry}><RefreshCw size={13} aria-hidden="true" />Retry</button>}
   </section>;
   const ready = state.kind === "ready";
   return <section className="free-quota-notice" data-state={state.kind} aria-label="Free watch-party limit">

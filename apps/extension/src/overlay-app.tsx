@@ -4388,8 +4388,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								roomId: reconnectRoomId,
 								resetAt: error.resetAt,
 							});
-							showFreeQuotaNotice(error.resetAt);
-							terminateRoomSession("");
+							// Connect reports the room host's budget, not the caller's.
+							// Only a verified host may latch personal exhaustion here.
+							if (isCurrentHost()) {
+								showFreeQuotaNotice(error.resetAt);
+								terminateRoomSession("");
+							} else {
+								terminateRoomSession(roomJoinUnavailableMessage(error));
+								accountHostingTime.refresh();
+							}
 							return;
 						}
 
@@ -4424,8 +4431,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}, delayMs);
 		},
 		[
+			accountHostingTime.refresh,
 			connectToExistingWebsiteRoom,
+			isCurrentHost,
 			showActiveRoomConflict,
+			showFreeQuotaNotice,
 			terminateRoomSession,
 		],
 	);
@@ -4959,7 +4969,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					});
 					clearStoredRoomSession();
 					clearRoomHash();
-					showFreeQuotaNotice(error.resetAt);
+					releaseRoomTabLock();
+					setAuthMessage(null);
+					setRoomTerminalMessage(roomJoinUnavailableMessage(error));
+					// Admission has not established our role. Re-read our account
+					// instead of assigning the room host's exhausted quota to us.
+					accountHostingTime.refresh();
 					setPanelOpen(true);
 					return;
 				}
@@ -4993,6 +5008,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (shouldOpenPanelForInitialRoom(hashRoomId, persistedRoomId)) setPanelOpen(true);
 		}
 	}, [
+		accountHostingTime.refresh,
 		clearStoredRoomSession,
 		connectToExistingWebsiteRoom,
 		identityLoaded,
@@ -6191,7 +6207,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomLeavePending,
 	});
 	const free20QuotaNotice = accountHostingTime.exhausted && accountUser ? {
-		ownerUserId: accountUser.id, kind: "exhausted" as const, remainingSeconds: accountHostingTime.resetSeconds,
+		ownerUserId: accountUser.id,
+		kind: accountHostingTime.error && !accountHostingTime.busy && !accountHostingTime.status ? "unavailable" as const : "exhausted" as const,
+		remainingSeconds: accountHostingTime.resetSeconds,
 	} : null;
 	const displayedQuotaNotice = accountHostingTime.mode === "legacy" ? freeQuotaNotice.state : free20QuotaNotice;
 	const refreshDisplayedQuota = accountHostingTime.mode === "legacy" ? freeQuotaNotice.retry : accountHostingTime.refresh;
@@ -6211,7 +6229,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		Boolean(roomId && currentJoinAttempt?.roomId === roomId && !currentJoinAttempt.presentationExpired &&
 			!roomSnapshotReady && !participants.length && status !== "closed" && status !== "error")
 	);
-	const quotaExhausted = !joiningRoom && !roomExitPending && !roomId && displayedQuotaNotice?.kind === "exhausted";
+	const quotaExhausted = !joiningRoom && !roomExitPending && !roomId && (
+		accountHostingTime.mode === "legacy" ? displayedQuotaNotice?.kind === "exhausted" : accountHostingTime.exhausted
+	);
 	const panelPlan = authAuthenticated
 		? accountHostingTime.mode === "legacy" ? hostingDisplay.state.access?.planCode ?? null : accountHostingTime.presentationPlanCode
 		: null;
@@ -6389,7 +6409,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							</div>
 						</div>
 						<div className="panel-header-actions">
-							{quotaExhausted ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
+							{quotaExhausted && displayedQuotaNotice?.kind === "exhausted" && displayedQuotaNotice.remainingSeconds !== null ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
 							{identityLoaded && !authAuthenticated ? (
 								<button
 									className="button compact panel-sign-in-button"
@@ -7506,6 +7526,9 @@ function clearRoomHash(): void {
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {
+  if (isQuotaExhaustedError(error)) {
+    return "The host's Free time is used up. You can join another room or create your own.";
+  }
   if (isHostingSubscriptionRequiredError(error)) {
     return "This room needs a host with Plus or Pro. You can join another paid host’s room for free.";
   }

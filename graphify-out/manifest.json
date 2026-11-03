@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793692275.3178837,
-    "seen": 1793692414.902747,
-    "ast_hash": "7dc43e903bc9de3fd6b806808a4e7f69",
+    "mtime": 1793694559.8468876,
+    "seen": 1793694654.901437,
+    "ast_hash": "65098c3e23bad8e9c4521f5d22fd2f88",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -1794,9 +1794,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/room/[roomId]/page.tsx": {
-    "mtime": 1791473682.8181837,
-    "seen": 1791473766.3295748,
-    "ast_hash": "3eedcc4a150009713cc28adcc6796b3a",
+    "mtime": 1793694425.5584216,
+    "seen": 1793694654.901442,
+    "ast_hash": "098e6ca4e126ea148d065c40417e1202",
     "semantic_hash": ""
   },
   "apps/web/app/room/[roomId]/room-mobile-handoff.tsx": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793692230.5934203,
-    "seen": 1793692414.902758,
-    "ast_hash": "7382ed8a8527f4ba94dd68722191864d",
+    "mtime": 1793694583.6291711,
+    "seen": 1793694654.901441,
+    "ast_hash": "51ebd897d48c66433242a66cd9e52740",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -8052,9 +8052,9 @@
     "semantic_hash": "c307336ae0f5e780ca38cb148337f3b4"
   },
   "apps/extension/src/free-quota-notice.tsx": {
-    "mtime": 1793590529.4397042,
-    "seen": 1793590718.258264,
-    "ast_hash": "ccd0d7ca77c8e96c7e58a5375aa38155",
+    "mtime": 1793694448.7825325,
+    "seen": 1793694654.901433,
+    "ast_hash": "810f35739f0789de6e2e3e20ae685c0e",
     "semantic_hash": ""
   },
   "apps/extension/src/room-quota-status-client.ts": {
@@ -8244,9 +8244,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/extension-using-examples.test.ts": {
-    "mtime": 1793355774.5371041,
-    "seen": 1793424347.6724029,
-    "ast_hash": "150ad66a65720068b3fbf80d4e825421",
+    "mtime": 1793694217.38901,
+    "seen": 1793694654.9014442,
+    "ast_hash": "8284be411dfbe402dab944bab11602ff",
     "semantic_hash": ""
   },
   "apps/web/lib/extension-using-guide.ts": {
@@ -11220,10 +11220,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793692394.6170971,
-    "seen": 1793692613.452706,
+    "mtime": 1793694620.1868932,
+    "seen": 1793694786.206302,
     "ast_hash": "",
-    "semantic_hash": "3ba90cb8424865b7c1de92d6c2ae8f09"
+    "semantic_hash": "c7aa531f7872cabae8e198216484f3bd"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11610,9 +11610,9 @@
     "semantic_hash": "6ce363224ce6262379ea3df20328f16c"
   },
   "apps/extension/test/free-quota-notice.test.tsx": {
-    "mtime": 1793590482.7054012,
-    "seen": 1793590718.25827,
-    "ast_hash": "2809cb599178ecf8ce6fcf0318e037ff",
+    "mtime": 1793694429.4612393,
+    "seen": 1793694654.901439,
+    "ast_hash": "14fd71282c682f0722713f9bf460a57b",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-closing-presentation.ts": {

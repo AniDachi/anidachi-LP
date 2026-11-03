@@ -429,3 +429,44 @@ backup under ignored execution artifacts. The isolated fixtures control network
 and lifecycle inputs; they do not establish acceptance in the owner's loaded
 Chrome or a real two-participant staging room. No staging merge, production
 promotion, server change or permission expansion is part of this iteration.
+
+## November 3: Full local Free20 flow review
+
+Before the owner approves the next staging merge, review Free/paid/guest creation,
+admission, reconnect, solo no-spend, live metering, warning and exhaustion, UTC
+renewal, outage recovery, and purchase before/after termination. Preserve the
+earlier start/close/hover, paid-tab, sync/microphone and ad-notice corrections.
+
+The review reproduced and fixes two extension defects:
+
+- A failed account read after UTC renewal left the exhausted screen checking
+  indefinitely without Retry. Keep room creation blocked until a confirmed fresh
+  allowance, but distinguish pending from unavailable and expose an explicit
+  retry. Do not claim today's allowance is spent, or show an authoritative zero,
+  while the new day's status is unknown. Keep the friend-room hint available.
+- Connect admission reports the room host's exhaustion, not the caller's. On
+  initial entry, clear the stale room pointer and show the host-specific terminal
+  explanation, then refresh the caller's own account. During reconnect only a
+  previously verified host may latch personal exhaustion. A guest retains their
+  own time and can create another room. Stop retries of the ended room.
+
+Also make the ended website invite copy neutral: an ended room does not prove
+the host closed it manually. Align the existing microphone text test with the
+previously approved `Microphone always on` wording; no new microphone behavior.
+
+Actual OverlayApp regression tests first reproduce both defects and then cover
+retry success, blocked creation while unknown, guest invite/reconnect, and a
+verified-host reconnect control. Check extension, web, API and protocol suites,
+Worker runtime tests, the local room harness and isolated real-WebRTC harness.
+Inspect source-component Chromium scenarios through warning/dismissal, server
+termination, next-day recovery, and paid upgrade before/after closure. These
+fixtures control external responses and do not establish a real Stripe purchase.
+
+Keep commands, counts, screenshots, source/build hashes and the prior-folder
+backup under ignored `artifacts/free20-full-review-20261103/`. The owner tests the
+same local unpacked staging-channel folder before authorizing the next merge.
+Actual two-account metering, Sandbox checkout during a spending room, installed
+old-client compatibility and real UTC-boundary acceptance remain separate gates.
+No hosted flags, ledger, SQL, Worker, protocol or production change is included.
+Rollback restores the verified prior folder or reverts these UI changes; do not
+reset usage or toggle Free20 to undo presentation corrections.
