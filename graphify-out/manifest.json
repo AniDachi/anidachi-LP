@@ -3924,9 +3924,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-room-media-controls.test.tsx": {
-    "mtime": 1793355774.4236758,
-    "seen": 1793424347.672193,
-    "ast_hash": "348b0022c23281ca66ca52bf913ac535",
+    "mtime": 1793690432.630886,
+    "seen": 1793690482.0670521,
+    "ast_hash": "28b5b3681ec8ef33ac495a16227790c3",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-account-title.tsx": {
@@ -10338,9 +10338,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-media-controls.tsx": {
-    "mtime": 1793355774.4006197,
-    "seen": 1793424347.6721668,
-    "ast_hash": "a37cfca2cca59f5fe88519bc6cd89dd7",
+    "mtime": 1793690449.4124799,
+    "seen": 1793690482.067046,
+    "ast_hash": "363c946d23d84f1ed94113ad2a07972f",
     "semantic_hash": ""
   },
   "apps/extension/src/player-onboarding-chat.tsx": {
@@ -11202,9 +11202,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
-    "mtime": 1793689744.4924664,
-    "seen": 1793689930.350254,
-    "ast_hash": "8506e5451ba2aafb41518e1f918cea27",
+    "mtime": 1793690449.4320843,
+    "seen": 1793690482.06705,
+    "ast_hash": "57021f2bb47668cbd182c0ec03a4b876",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-start-motion.ts": {
@@ -11214,16 +11214,16 @@
     "semantic_hash": ""
   },
   "apps/extension/test/panel-room-actions.test.tsx": {
-    "mtime": 1793688945.5772545,
-    "seen": 1793689644.676636,
-    "ast_hash": "6c2e3d6e8f4150b65e929a089251e606",
+    "mtime": 1793690449.4514418,
+    "seen": 1793690482.067053,
+    "ast_hash": "78946d24cfdc8c7da9a88e045e712421",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793689610.3445165,
-    "seen": 1793689930.424742,
+    "mtime": 1793690449.469671,
+    "seen": 1793690591.48223,
     "ast_hash": "",
-    "semantic_hash": "eda339a7b452ff112433a796c4d95ee5"
+    "semantic_hash": "12b185f6f9277d73eaa1c1b08eca24d2"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,

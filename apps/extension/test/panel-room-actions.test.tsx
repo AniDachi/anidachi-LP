@@ -144,7 +144,7 @@ describe("real room action feedback", () => {
 		await act(async () => complete(true));
 		await advance(650);
 		expect(host.querySelector('[role="status"]')?.textContent).toContain(
-			"Sync sent",
+			"Synced",
 		);
 		expect(host.textContent).not.toContain("Invite link copied");
 	});
@@ -152,7 +152,7 @@ describe("real room action feedback", () => {
 		await render({ onSync: () => false });
 		await click("Sync now");
 		await advance(650);
-		expect(host.textContent).not.toContain("Sync sent");
+		expect(host.textContent).not.toContain("Synced");
 		expect(host.querySelector('[role="status"]')?.textContent).toContain(
 			"Sync unavailable",
 		);
@@ -160,7 +160,7 @@ describe("real room action feedback", () => {
 		await click("Sync now");
 		await render({ scopeKey: "login-a:disconnected", syncDisabled: true });
 		await advance(650);
-		expect(host.textContent).not.toContain("Sync sent");
+		expect(host.textContent).not.toContain("Synced");
 	});
 	function emulateLayoutAndAnimation() {
 		const animations: { finish(): void }[] = [];

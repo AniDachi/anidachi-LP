@@ -25,8 +25,14 @@ below uses those existing live time observations and does not change activation.
   hide it for Plus, Pro and an unknown plan (owner correction, November 2).
 - Copy uses the current room invitation and shows microphone-style feedback only
   after clipboard success. Scope late results to the room/login/connection.
-- Rotate only the sync icon. Report `Sync sent` only when the existing controller
-  sends HOST_STATE on an open socket; queued/dropped/no-op is not success.
+- Rotate only the sync icon. Report `Synced` (owner copy correction, November 3)
+  only when the existing controller sends HOST_STATE on an open socket;
+  queued/dropped/no-op is not success. This confirms the host sync action, not
+  a new acknowledgement from every participant.
+- The microphone click tooltip confirms the selected mode with `Microphone
+  always on` or `Hold V to talk`, without cycling through off/connecting startup
+  hints. Actual device status, capture/grant rules and error feedback remain
+  unchanged; a microphone error still overrides the mode hint.
 - Verify failed copy, stale operation, disconnected/non-host sync and repeated
   clicks with focused extension tests.
 

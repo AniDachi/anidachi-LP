@@ -296,7 +296,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 		timers.current.push(
 			setTimeout(() => {
 				if (current())
-					publish({ action: "sync", error: false, message: "Sync sent" });
+					publish({ action: "sync", error: false, message: "Synced" });
 			}, delay),
 		);
 	};
