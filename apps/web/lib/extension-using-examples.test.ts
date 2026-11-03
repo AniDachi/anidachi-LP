@@ -129,7 +129,7 @@ test("media example toggles the real controls without requests, capture or saved
 		assert.equal(hint.getAttribute("data-visible"), "true");
 		assert.match(
 			exampleRoot().querySelector('[role="tooltip"]')!.textContent!,
-			/Mic is always on/,
+			/Microphone always on/,
 		);
 		await act(async () => context.mock.timers.tick(1000));
 		assert.equal(hint.getAttribute("data-visible"), "false");

@@ -25,8 +25,14 @@ below uses those existing live time observations and does not change activation.
   hide it for Plus, Pro and an unknown plan (owner correction, November 2).
 - Copy uses the current room invitation and shows microphone-style feedback only
   after clipboard success. Scope late results to the room/login/connection.
-- Rotate only the sync icon. Report `Sync sent` only when the existing controller
-  sends HOST_STATE on an open socket; queued/dropped/no-op is not success.
+- Rotate only the sync icon. Report `Synced` (owner copy correction, November 3)
+  only when the existing controller sends HOST_STATE on an open socket;
+  queued/dropped/no-op is not success. This confirms the host sync action, not
+  a new acknowledgement from every participant.
+- The microphone click tooltip confirms the selected mode with `Microphone
+  always on` or `Hold V to talk`, without cycling through off/connecting startup
+  hints. Actual device status, capture/grant rules and error feedback remain
+  unchanged; a microphone error still overrides the mode hint.
 - Verify failed copy, stale operation, disconnected/non-host sync and repeated
   clicks with focused extension tests.
 
@@ -149,7 +155,8 @@ before exercising its parser.
 - Capture the last fresh account number only for this visual handoff. It stays
   still, never starts metering, never becomes a live-clock snapshot or admission
   grant, and expires at the earliest of its original validity, UTC reset, or
-  eight seconds after the click. Bind it to the logical login and admitted room.
+  eight seconds after the click (superseded by the November 3 admission timing
+  correction below). Bind it to the logical login and admitted room.
   Accepted live observations, including unknown/unlimited, supersede it. Hidden
   pages, wall-clock discontinuity, failure, transport restart and room/source
   generation changes retire it. Closing the panel alone preserves the bounded
@@ -256,6 +263,8 @@ gates, preserve unrelated work, and deliver a rebuild from the merged staging SH
 - Fresh validated Plus/Pro account metadata suppresses quota placeholders during
   room-scoped reads. This does not supply live time or override a later finite
   room observation. Paid capacity and camera/microphone controls are preserved.
+  The November 3 long-return follow-up below extends appearance continuity past
+  observation expiry; numeric time and access observations still expire.
 - Invite/restored-room entry has its own neutral joining presentation. Personal
   hosting time, Create and the exhausted-hosting screen must not appear during
   admission. Use real membership before showing guest/host actions; preserve
@@ -337,3 +346,127 @@ Scope is extension display and request lifecycle. No Worker, Web, SQL, protocol,
 policy, permission or production change. Rollback reverts the staging extension
 commit and rebuilds/restores the previous verified unpacked folder; do not toggle
 Free20 or alter usage, claims, subscriptions or active-room records.
+
+## November 3: Local start-transition continuity correction
+
+After PR500 delivery, the owner again observed a transient Leave room label and
+rough transitions. Both unpacked folders matched the exact PR500 CI artifact;
+that excludes a stale file copy, not a stale extension already loaded in Chrome.
+Full-source browser replay and failing component regressions reproduced two
+remaining presentation gaps: a slow HTTP create consumed the eight-second
+membership wait before admission, and subpixel pointer movement revealed End
+while the red button was still arriving.
+
+- Start the eight-second membership presentation window after HTTP admission
+  and initial session setup complete. Keep Creating room through that wait.
+  During HTTP, retain the already displayed number only within its original
+  account observation validity; once admitted, cap it to the same eight-second
+  window. Arm that cap and the escape timeout together so a loading strip does
+  not flash between them. The number stays frozen until real room time arrives;
+  no original expiry, UTC bound, login scope or access right is extended.
+- If membership remains unconfirmed after the window, use the existing departure
+  action with neutral Cancel connection copy. Do not infer guest status from
+  absent membership or show red room controls/personal quota. A later accepted
+  snapshot still animates into the actual room. Existing participants preserve
+  the normal active-room presentation during reconnection.
+- During the create animation, pointer movement updates its suppression anchor.
+  After arrival, require four CSS pixels of movement to reveal End; trackpad
+  jitter must not interrupt the timer. Keyboard focus and explicit confirmation
+  remain available, including reduced-motion mode.
+
+Verify actual OverlayApp and real response parsing in isolated Chromium across
+Free/Plus/Pro creation and closure, guest/invite/restored entry, errors, focus
+return, reduced motion, slow HTTP and late snapshots. Record per-frame label,
+timer/loading visibility, animation and action-row geometry, plus extension
+tests/typecheck, narrow artifact validation, baseline checks and room harness.
+The browser fixtures control the external transport; they are not authenticated
+loaded-extension or two-participant staging acceptance. No WebRTC path changed,
+so physical media acceptance remains a separate gate before production.
+
+This follow-up is a local candidate for the same unpacked staging-channel folder,
+with source/build hashes and a backup of the PR500 artifact. Obtain the owner's
+visual check before the next staging PR/merge. No deployment, server accounting,
+protocol, permissions, flags, main, production or Store change belongs to this
+local iteration. Rollback restores that verified folder or rebuilds PR500.
+
+## November 3: Paid appearance across long tab returns
+
+The owner still observed Free UI when returning to a paid tab. The previous
+correction covered only fresh observations: after the account TTL expired or
+sleep invalidated its clock, `planCode` became null and the overlay interpreted
+that absence as a pending Free timer. Full-source Chromium replay reproduced
+the flash for Plus and Pro, both idle and in a room; idle Create also changed
+width by126CSSpixels during the delayed replacement read.
+
+- Keep the last accepted `presentationPlanCode` in the existing owner/logical-login
+  state. It owns only the plan badge and layout, never rights, seconds, room
+  limits, admission or close-read readiness. Do not populate it from the cached
+  auth profile, and do not persist it outside the mounted account hook.
+- Expiry, UTC rollover, sleep, visibility return, a failed read and same-login
+  credential rotation can retire fresh observations without replacing a known
+  Plus/Pro layout with Free. Original observation expiry, clock and room/settlement
+  fences remain unchanged; no new allowance or local countdown is introduced.
+- A validated replacement read updates appearance, including a real downgrade.
+  Account switch, logout, a new login, admission invalidation and explicit legacy
+  policy retire the previous appearance. Late callbacks cannot restore it.
+- An unclassified account is neutral: neither cached `Free` nor a loading timer
+  establishes its plan. Quota placeholders and unavailable-time controls belong
+  to known Free presentation. An actual fresh finite room observation still
+  renders its counter even if account presentation has not caught up.
+- A paid room's failed post-close read must not add the Free retry/timer slot.
+  The existing bounded closing and departure behavior remains unchanged.
+
+Regression coverage includes expired/sleeping Plus and Pro idle/live screens,
+credential rotation, delayed and failed refreshes, first-read uncertainty,
+manual unlimited access, actual downgrade, login/owner changes, and denial.
+Repeat the earlier create/end/join/restored/hover/reduced-motion scenarios and
+sync/microphone/ad-notice checks against current source. Preserve the camera and
+microphone controls, capsule claim logic and all server authority.
+
+This is another local candidate in the same unpacked staging-channel folder.
+Keep before/after frame records, validated build hashes and the prior-folder
+backup under ignored execution artifacts. The isolated fixtures control network
+and lifecycle inputs; they do not establish acceptance in the owner's loaded
+Chrome or a real two-participant staging room. No staging merge, production
+promotion, server change or permission expansion is part of this iteration.
+
+## November 3: Full local Free20 flow review
+
+Before the owner approves the next staging merge, review Free/paid/guest creation,
+admission, reconnect, solo no-spend, live metering, warning and exhaustion, UTC
+renewal, outage recovery, and purchase before/after termination. Preserve the
+earlier start/close/hover, paid-tab, sync/microphone and ad-notice corrections.
+
+The review reproduced and fixes two extension defects:
+
+- A failed account read after UTC renewal left the exhausted screen checking
+  indefinitely without Retry. Keep room creation blocked until a confirmed fresh
+  allowance, but distinguish pending from unavailable and expose an explicit
+  retry. Do not claim today's allowance is spent, or show an authoritative zero,
+  while the new day's status is unknown. Keep the friend-room hint available.
+- Connect admission reports the room host's exhaustion, not the caller's. On
+  initial entry, clear the stale room pointer and show the host-specific terminal
+  explanation, then refresh the caller's own account. During reconnect only a
+  previously verified host may latch personal exhaustion. A guest retains their
+  own time and can create another room. Stop retries of the ended room.
+
+Also make the ended website invite copy neutral: an ended room does not prove
+the host closed it manually. Align the existing microphone text test with the
+previously approved `Microphone always on` wording; no new microphone behavior.
+
+Actual OverlayApp regression tests first reproduce both defects and then cover
+retry success, blocked creation while unknown, guest invite/reconnect, and a
+verified-host reconnect control. Check extension, web, API and protocol suites,
+Worker runtime tests, the local room harness and isolated real-WebRTC harness.
+Inspect source-component Chromium scenarios through warning/dismissal, server
+termination, next-day recovery, and paid upgrade before/after closure. These
+fixtures control external responses and do not establish a real Stripe purchase.
+
+Keep commands, counts, screenshots, source/build hashes and the prior-folder
+backup under ignored `artifacts/free20-full-review-20261103/`. The owner tests the
+same local unpacked staging-channel folder before authorizing the next merge.
+Actual two-account metering, Sandbox checkout during a spending room, installed
+old-client compatibility and real UTC-boundary acceptance remain separate gates.
+No hosted flags, ledger, SQL, Worker, protocol or production change is included.
+Rollback restores the verified prior folder or reverts these UI changes; do not
+reset usage or toggle Free20 to undo presentation corrections.

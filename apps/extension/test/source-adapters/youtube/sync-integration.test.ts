@@ -2,6 +2,7 @@ import type { ClientEvent, PlaybackState } from "@anidachi/protocol";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlaybackSyncController } from "../../../src/playback-sync-controller";
 import { YouTubeVideoAdapter } from "../../../src/source-adapters/youtube/adapter";
+import type { PlaybackSyncStatus } from "../../../src/playback-sync-status";
 
 describe("YouTube playback sync integration", () => {
 	beforeEach(() => {
@@ -14,6 +15,39 @@ describe("YouTube playback sync integration", () => {
 		document.body.innerHTML = "";
 		vi.useRealTimers();
 		vi.restoreAllMocks();
+	});
+	it("does not leave room-ad feedback on a solo video after the advertisement", async () => {
+		const harness = createHarness(false, false);
+		try {
+			harness.player.classList.add("ad-showing");
+			harness.video.dispatchEvent(new Event("playing"));
+			expect(harness.adapter.getPlaybackSnapshot().phase).toBe("interstitial");
+			harness.player.classList.remove("ad-showing");
+			harness.video.dispatchEvent(new Event("playing"));
+			await vi.advanceTimersByTimeAsync(501);
+			expect(harness.adapter.getPlaybackSnapshot().phase).toBe("content");
+			expect(harness.statuses).not.toContainEqual({ kind: "watching-local-ad" });
+			expect(harness.sent).toEqual([]);
+			expect(harness.video.pause).not.toHaveBeenCalled();
+			expect(harness.video.play).not.toHaveBeenCalled();
+		} finally { harness.controller.dispose(); }
+	});
+	it.each([true, false])("clears room-ad feedback when leaving during an advertisement: host=%s", async isHost => {
+		const harness = createHarness(isHost);
+		try {
+			harness.player.classList.add("ad-showing");
+			harness.video.dispatchEvent(new Event("playing"));
+			expect(harness.statuses.at(-1)?.kind).toBe(isHost ? "waiting-for-host-ad" : "watching-local-ad");
+			harness.controller.setSession({ connectionGeneration: 2, isHost: false, participantId: null,
+				roomGeneration: 0, roomId: null, roomProvider: null, sourceGeneration: 0 });
+			expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+			harness.sent.length = 0;
+			harness.player.classList.remove("ad-showing");
+			harness.video.dispatchEvent(new Event("playing"));
+			await vi.advanceTimersByTimeAsync(501);
+			expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+			expect(harness.sent).toEqual([]);
+		} finally { harness.controller.dispose(); }
 	});
 
 	it("persists one safe host hold without forwarding advertisement events", async () => {
@@ -32,6 +66,15 @@ describe("YouTube playback sync integration", () => {
 			state: { hostTime: 12, playing: false },
 		});
 		expect(harness.sent.some((event) => event.type === "PLAY")).toBe(false);
+
+		harness.player.classList.remove("ad-showing");
+		harness.setCurrentTime(44);
+		harness.video.dispatchEvent(new Event("playing"));
+		await vi.advanceTimersByTimeAsync(501);
+		expect(harness.sent).toHaveLength(2);
+		expect(harness.sent[1]).toMatchObject({ type: "HOST_STATE", state: { hostTime: 44, playing: true } });
+		expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+		harness.controller.dispose();
 	});
 
 	it("does not touch a guest advertisement and applies the latest state after it", async () => {
@@ -49,16 +92,16 @@ describe("YouTube playback sync integration", () => {
 
 		harness.player.classList.remove("ad-showing");
 		harness.video.dispatchEvent(new Event("playing"));
-		vi.advanceTimersByTime(501);
-		await harness.controller.handleHostState(hostState(30, false));
-		await Promise.resolve();
+		await vi.advanceTimersByTimeAsync(501);
 
 		expect(seek).toHaveBeenCalledWith(30, { resumeIfPlaying: false });
 		expect(pause).toHaveBeenCalledTimes(1);
+		expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+		harness.controller.dispose();
 	});
 });
 
-function createHarness(isHost: boolean) {
+function createHarness(isHost: boolean, inRoom = true) {
 	document.body.innerHTML = `
 		<div id="movie_player" class="html5-video-player">
 			<video></video>
@@ -93,16 +136,17 @@ function createHarness(isHost: boolean) {
 
 	const adapter = new YouTubeVideoAdapter(video, player);
 	const sent: ClientEvent[] = [];
+	const statuses: PlaybackSyncStatus[] = [];
 	const controller = new PlaybackSyncController({
 		ensureRemoteSource: async () => ({
 			status: "unsupported",
 			reason: "unsupported-route",
 		}),
-		onStatus: () => undefined,
+		onStatus: status => statuses.push(status),
 		transport: { send: (event) => { sent.push(event); return "sent"; } },
 	});
 	controller.bindAdapter(adapter);
-	controller.setSession({
+	if (inRoom) controller.setSession({
 		connectionGeneration: 1,
 		isHost,
 		participantId: "participant",
@@ -117,6 +161,7 @@ function createHarness(isHost: boolean) {
 		controller,
 		player,
 		sent,
+		statuses,
 		setCurrentTime: (value: number) => {
 			currentTime = value;
 		},

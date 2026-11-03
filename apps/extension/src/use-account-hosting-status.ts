@@ -7,6 +7,9 @@ type State = {
   ownerUserId: string | null; sessionKey: string | null;
   mode: "unknown" | "legacy" | "free20";
   status: AccountHostingStatus | null;
+  /** Last accepted same-login appearance, not access, quota or create authority.
+   * Revalidation can retire all fresh data without inventing a Free layout. */
+  presentationPlanCode: AccountHostingStatus["planCode"] | null;
   roomEpoch: number; monotonic: number; wall: number; exhaustedUntil: number | null;
   exhaustionEvent: QuotaExhaustion | null;
   periodClock: { serverTime: number; monotonic: number; resetAt: number } | null;
@@ -14,7 +17,7 @@ type State = {
   completedRead?: { roomEpoch: number; settlementRevision: number };
   statusSettlementRevision?: number;
 };
-const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
+const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, presentationPlanCode: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
 const RECOVERY_DELAYS_MS = [500, 1_500] as const;
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
@@ -87,7 +90,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
         retryable = false;
         const elapsed = Math.max(0, performance.now() - now);
         if (String(document.visibilityState) === "hidden" || Math.abs(Date.now() - wall - elapsed) > 2_000) throw new Error("Stale read");
-        if (result.mode === "legacy") { show({ mode: "legacy", status: null, periodClock: null, exhaustedUntil: null, busy: false, completedRead: { roomEpoch: roomScope.epoch, settlementRevision } }); return; }
+        if (result.mode === "legacy") { show({ mode: "legacy", status: null, presentationPlanCode: null, periodClock: null, exhaustedUntil: null, busy: false, completedRead: { roomEpoch: roomScope.epoch, settlementRevision } }); return; }
         const status = acceptAccountHostingStatus(ownerUserId!, result.status);
         if (!status) throw new Error("Invalid status");
         // Retain the established UTC clock when a later response carries an
@@ -99,6 +102,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
         if (access.kind === "confirmed_unlimited" || (exhaustedUntil !== null && status.serverTime >= exhaustedUntil)) exhaustedUntil = null;
         if (access.kind === "daily_free" && access.remainingSeconds === 0) exhaustedUntil = status.period.resetAt;
         show({ mode: "free20", status, roomEpoch: roomScope.epoch, monotonic, wall: wall - (now - monotonic), exhaustedUntil,
+          presentationPlanCode: status.planCode,
           periodClock: access.kind === "daily_free" ? { serverTime: status.serverTime, monotonic, resetAt: status.period.resetAt } : null,
           busy: false, error: false, statusSettlementRevision: settlementRevision,
           completedRead: { roomEpoch: roomScope.epoch, settlementRevision } });
@@ -139,7 +143,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
     };
     invalidateRef.current = () => {
       // A newer admission denial supersedes both the display and pending reads.
-      generation++; pending = false; cancelRetry(); show({ status: null, busy: false });
+      generation++; pending = false; cancelRetry(); show({ status: null, presentationPlanCode: null, busy: false });
       refreshRef.current();
     };
     openRef.current = () => {
@@ -197,6 +201,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
   const exhausted = scoped.mode === "free20" && scoped.exhaustedUntil !== null;
   return {
     mode: scoped.mode, status, planCode: observation?.planCode ?? null, busy: scoped.busy, error: scoped.error, exhausted,
+    presentationPlanCode: scoped.presentationPlanCode,
     readComplete: scoped.completedRead?.roomEpoch === roomScope.epoch && scoped.completedRead?.settlementRevision === settlementRevision,
     remainingSeconds: exhausted ? 0 : status?.access.kind === "daily_free" ? Math.max(0, status.access.remainingSeconds - (status.access.metering ? Math.floor(elapsed / 1000) : 0)) : null,
     // Bounds the last confirmed number during the short visual room handoff.

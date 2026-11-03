@@ -104,6 +104,45 @@ describe("account Free20 display", () => {
     await act(async () => vi.advanceTimersByTimeAsync(2_001));
     expect(current.remainingSeconds).toBeNull(); expect(current.planCode).toBeNull();
   });
+  it.each(["plus", "pro"] as const)("retains only %s presentation through expiry and a failed refresh, then accepts a real downgrade", async planCode => {
+    const paid: AccountHostingStatus = { ...status, planCode, access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 60_000 } };
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: paid });
+    await render();
+    vi.mocked(options.request!).mockRejectedValue(new Error("offline"));
+    await act(async () => vi.advanceTimersByTimeAsync(65_000));
+    expect(current.presentationPlanCode).toBe(planCode);
+    expect(current.error).toBe(true);
+    expect(current.status).toBeNull(); expect(current.planCode).toBeNull();
+    expect(current.remainingSeconds).toBeNull(); expect(current.displayExpiresAt).toBeNull();
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: { ...status, serverTime: at + 65_000, validUntil: at + 125_000 } });
+    await act(async () => current.refresh());
+    expect(current.presentationPlanCode).toBe("free");
+    expect(current.remainingSeconds).toBe(780);
+  });
+  it.each(["owner", "login", "denial", "legacy"] as const)("retires previous plan presentation on %s and rejects a late reply", async boundary => {
+    const paid: AccountHostingStatus = { ...status, planCode: "pro", access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 3_600_000 } };
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: paid });
+    await render();
+    const replies: ((value: any) => void)[] = [];
+    vi.mocked(options.request!).mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_000); current.refresh(); });
+    expect(current.presentationPlanCode).toBe("pro");
+    if (boundary === "owner") await render({ ownerUserId: "22222222-2222-4222-8222-222222222222" });
+    if (boundary === "login") await render({ sessionKey: "another-login" });
+    if (boundary === "denial") await act(async () => current.invalidate());
+    if (boundary === "legacy") await act(async () => replies[0]({ mode: "legacy" }));
+    expect(current.presentationPlanCode).toBeNull();
+    await act(async () => replies[0]({ mode: "free20", status: paid }));
+    expect(current.presentationPlanCode).toBeNull();
+  });
+  it("keeps manual unlimited presentation without retaining expired access or quota", async () => {
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: { ...status, planCode: "plus", access: { kind: "confirmed_unlimited", source: "manual", validUntil: at + 60_000 } } });
+    await render();
+    vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
+    await act(async () => vi.advanceTimersByTimeAsync(60_001));
+    expect(current.presentationPlanCode).toBe("plus");
+    expect(current.status).toBeNull(); expect(current.remainingSeconds).toBeNull();
+  });
   it("keeps the room and login fences when credentials rotate during a pending room read", async () => {
     await render({ credentialKey: "token-a" });
     const replies: ((value: any) => void)[] = [];
