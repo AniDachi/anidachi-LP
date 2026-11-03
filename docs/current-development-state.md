@@ -1,15 +1,18 @@
 # Current Development State
 
-## Free20 shared-browser/installation candidate, November 3, 2026
+## Free20 shared-browser/installation staging delivery, November 3, 2026
 
 The owner-approved [anti-abuse design](superpowers/specs/2026-11-03-free20-abuse-design.md)
 is implemented through Tasks 1–5 on `codex/free20-abuse-adaptation`, with final
 candidate source `c367453c5d15aacf2ee447b10e0aed2907cdf7c7` and completed local
-review/readiness evidence. [Draft PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
-targets `staging`; it is not merged, deployed or activated.
-This is an additive, default-off candidate, not enabled staging protection.
+review/readiness evidence. [PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
+merged to `staging` as `03efd89983ff06cbba1651f63e073f5f21b06fe1` after the
+schema-first workflow from frozen feature head `8a4e479c`. Compatible Web,
+Worker and the matching staging extension are delivered. The new anti-abuse
+protection remains disabled pending the owner's extension reload and controlled
+activation; the existing daily Free20 system remains enabled.
 The [implementation plan](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
-records completed local evidence and outstanding hosted delivery/acceptance; the
+records completed local and hosted delivery evidence and outstanding acceptance; the
 [delivery runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
 requires schema before compatible runtime, matching extension and SQL activation.
 
@@ -38,8 +41,9 @@ and all four-participant v3 scenarios, with 12/12 decoded first-frame samples
 (p95 1931.8 ms), using the actual source engine, local Worker, isolated Chromium and
 fake media without external TURN. These are not hosted or physical-network results.
 The final 13-file narrow candidate `artifacts/free20-abuse-20261103/candidate-c367453c/`
-validated, with exact identity in `final-candidate-receipt.json`; the user's stable
-folder is unchanged. Build output includes ineffective dynamic imports
+validated, with exact identity in `final-candidate-receipt.json`; that preparation
+did not replace the stable folder. The later CI artifact delivery is recorded
+below. Build output includes ineffective dynamic imports
 and oversized-chunk warnings, whose baseline ancestry was not independently verified.
 
 Whole-branch review at `78ae94a9` found no Critical/Important issue and parked one
@@ -55,15 +59,42 @@ one unchanged protocol dependency for header resolution; `graph/validation-final
 records preservation and hash validation. These receipts precede this final docs
 update; they do not claim its commit has already been reviewed or tested by CI.
 
-The read-only staging refresh at `2026-11-03T12:06:26Z` observed policy revision 4,
-Free20 true/trials false, the anti-abuse migration absent and zero nonterminal
-Free20 rooms. This snapshot must be refreshed before delivery or gate changes;
-it is not current activation proof. Reports and ledger will be archived under
-`artifacts/free20-abuse-20261103/sdd-record/` before execution-workspace cleanup.
-Actual grants/accounts/usage, main, production and Store were unchanged. All hosted
-delivery, loaded Chrome cookie-policy behavior, actual A/B account switching,
-two-participant spending, purchase while spending and the real UTC boundary remain
-pending. No production-readiness claim follows from local fixtures or successful CI.
+The authorized delivery applied migration `20261103120000` through workflow
+[41640338430](https://github.com/AniDachi/anidachi-LP/actions/runs/41640338430).
+Hosted comparison matched all 30 function definitions/signatures/ACLs, three
+private tables, default-false columns and the cleanup job. Policy revision 4,
+original activation and trial flags were preserved; SQL `free20_abuse_enabled`
+is false and Web `ANIDACHI_FREE20_ABUSE_ENABLED` is absent. No protected rooms
+or bindings existed at the post-migration check.
+
+Web READY `dpl_GgJ8Gdzf1afeeFBaAS6VVdWBVKzY` serves `staging.anidachi.app`
+from `03efd899`; Worker version `f39a67e5-8a95-4e47-8916-cea88b720361` serves
+100% of staging after workflow
+[41640597041](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597041).
+[CI 41640597001](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597001),
+[extension build 41640597196](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597196),
+[staging smoke 41641051077](https://github.com/AniDachi/anidachi-LP/actions/runs/41641051077)
+and the Worker smoke passed. Web probes meet the staging access gate; the new
+Worker transfer route rejects an unauthenticated call. These checks do not
+exercise authenticated enrollment or transfer.
+
+Artifact `13231299833`, build ID
+`03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`, replaced both known
+unpacked folders, including the owner's
+`/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging`.
+The different previous local builds were backed up separately; all 13 delivered
+file hashes now match the validated CI artifact. Stable extension identity and
+narrow permissions are unchanged. Delivery evidence and backups are under
+`artifacts/free20-abuse-staging-delivery-20261103/`; the implementation ledger
+is archived under `artifacts/free20-abuse-20261103/sdd-record/`.
+
+The owner reloads Chrome himself. Then re-inventory rooms, enable only the exact
+staging Web gate and guarded SQL policy, and run enabled acceptance. Actual Chrome
+cookie-policy behavior, A/B switching, two-participant spending, purchase during
+spending and live UTC rollover remain pending. No account/grant/usage reset,
+production promotion or Store release is part of this delivery. Main remains
+`9da93cd9`; production Web and Worker remain on their prior deployments.
+Successful delivery does not establish production readiness.
 
 ## Free20 capsule notice and paid refresh correction, November 3, 2026
 
