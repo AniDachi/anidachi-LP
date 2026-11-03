@@ -75,6 +75,49 @@ describe("account Free20 display", () => {
     await act(async () => reply({ mode: "free20", status: { ...status, serverTime: at + 6_000, validUntil: at + 66_000, access: { ...status.access, usedSeconds: 450, remainingSeconds: 750 } } }));
     expect(current.remainingSeconds).toBe(750);
   });
+  it.each(["plus", "pro"] as const)("keeps fresh %s metadata across credential rotation and fences older replies", async planCode => {
+    const paid: AccountHostingStatus = { ...status, planCode, access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 3_600_000 } };
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: paid });
+    await render({ credentialKey: "token-a" });
+    const replies: ((value: any) => void)[] = [];
+    vi.mocked(options.request!).mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_000); current.refresh(); });
+    await render({ credentialKey: "token-b" });
+    expect(options.request).toHaveBeenCalledTimes(3);
+    expect(current.planCode).toBe(planCode); expect(current.remainingSeconds).toBeNull();
+    await act(async () => replies[0]({ mode: "free20", status }));
+    expect(current.planCode).toBe(planCode);
+    await act(async () => replies[1]({ mode: "free20", status: { ...paid, serverTime: at + 5_000, validUntil: at + 65_000 } }));
+    expect(current.planCode).toBe(planCode); expect(current.busy).toBe(false);
+  });
+  it.each(["expiry", "UTC reset"] as const)("retains idle Free time across rotation only until its original %s", async boundary => {
+    const nearBoundary = boundary === "expiry" ? { ...status, validUntil: at + 5_000 } : {
+      ...status, serverTime: status.period.resetAt - 5_000, validUntil: status.period.resetAt,
+    };
+    vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: nearBoundary });
+    await render({ credentialKey: "token-a" });
+    vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
+    await act(async () => vi.advanceTimersByTimeAsync(3_000));
+    await render({ credentialKey: "token-b" });
+    expect(current.remainingSeconds).toBe(780);
+    expect(options.request).toHaveBeenCalledTimes(2);
+    await act(async () => vi.advanceTimersByTimeAsync(2_001));
+    expect(current.remainingSeconds).toBeNull(); expect(current.planCode).toBeNull();
+  });
+  it("keeps the room and login fences when credentials rotate during a pending room read", async () => {
+    await render({ credentialKey: "token-a" });
+    const replies: ((value: any) => void)[] = [];
+    vi.mocked(options.request!).mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+    await render({ roomId: "room-a" });
+    await render({ roomId: null, credentialKey: "token-b" });
+    expect(current.remainingSeconds).toBeNull(); expect(current.planCode).toBe("free");
+    await act(async () => replies[0]({ mode: "free20", status }));
+    expect(current.remainingSeconds).toBeNull();
+    await render({ sessionKey: "login-b" });
+    expect(current.planCode).toBeNull(); expect(current.mode).toBe("unknown");
+    await act(async () => replies[1]({ mode: "free20", status }));
+    expect(current.planCode).toBeNull(); expect(current.remainingSeconds).toBeNull();
+  });
   it("supersedes an early room-end read as soon as the end HTTP operation settles", async () => {
     await render(); await render({ roomId: "room-a" });
     let early!: (value: any) => void;

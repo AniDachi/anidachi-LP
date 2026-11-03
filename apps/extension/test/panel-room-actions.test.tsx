@@ -64,7 +64,7 @@ describe("real room action feedback", () => {
 	});
 	it("reopens a pending legacy start without a captured allowance or NaN digits", async () => {
 		await render({ roomReady: false, creating: true, remainingSeconds: null, retainIdleTimeWhileConnecting: true });
-		expect(button("Create room").disabled).toBe(true);
+		expect(button("Creating room").disabled).toBe(true);
 		expect(host.querySelector(".panel-time-counter")).toBeNull();
 		expect(host.textContent).not.toContain("NaN");
 	});
@@ -280,9 +280,9 @@ describe("real room action feedback", () => {
 		await render({ roomId: null, roomReady: false, label: "Create room" });
 		await click("Create room");
 		await render({ roomId: "room-a", label: "Leave room", isHost: false, remainingSeconds: null });
-		expect(button("Create room").disabled).toBe(true);
+		expect(button("Creating room").disabled).toBe(true);
 		await advance(ROOM_START_PRESENTATION_TIMEOUT_MS - 1);
-		expect(button("Create room").disabled).toBe(true);
+		expect(button("Creating room").disabled).toBe(true);
 		await advance(1);
 		expect(button("Leave room").disabled).toBe(false);
 		await click("Leave room");

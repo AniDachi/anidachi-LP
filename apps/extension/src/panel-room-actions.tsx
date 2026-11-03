@@ -119,9 +119,12 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const waitingForRoom = active && (props.creating ?? startTime !== undefined) && !props.roomReady && !props.roomStartInterrupted;
 	const startInterrupted = Boolean(props.roomStartInterrupted || (!joining && props.creating === false && !props.roomReady));
 	const visibleActive = Boolean(props.closing) || (active && !waitingForRoom && !joining);
-	// HTTP admission can finish before the first room snapshot. Keep the same
-	// disabled create action throughout that gap; never relabel it as success.
-	const label = props.closing ? props.closingLabel ?? "Closing room" : joining ? "Joining room" : !visibleActive ? "Create room" : waitingForRoom ? "Create room" : props.label;
+	// HTTP admission can finish before the first room snapshot. Keep Creating
+	// throughout that gap, until the room is ready or the existing escape applies.
+	const label = props.closing ? props.closingLabel ?? "Closing room"
+		: joining ? "Joining room"
+		: !visibleActive ? (props.creating || waitingForRoom ? "Creating room" : "Create room")
+		: props.label;
 	const actionBusy = busy || waitingForRoom || joining || Boolean(props.closing);
 	const continuingStart = !startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime));
 	const displaySeconds = joining || props.closing || (!active && props.idleTimeUnavailable) ? null : remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??

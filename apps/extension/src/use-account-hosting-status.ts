@@ -19,8 +19,11 @@ const RECOVERY_DELAYS_MS = [500, 1_500] as const;
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
  * activation or user resume; a successful recovery never starts a polling loop. */
-export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visible = enabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus }: {
+export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey = sessionKey, enabled, visible = enabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus }: {
   ownerUserId: string | null; sessionKey: string | null; enabled: boolean;
+  /** Rotating credentials retires in-flight reads, not the same login's already
+   * confirmed display. Its original clock, expiry and room scope still apply. */
+  credentialKey?: string | null;
   /** Opening the panel recovers expired data without discarding fresh prefetch. */
   visible?: boolean;
   /** Room boundaries require a new account read before idle seconds can return. */
@@ -180,7 +183,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, enabled, visi
       window.removeEventListener("focus", resume); window.removeEventListener("pageshow", resume); window.removeEventListener("online", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [ownerUserId, sessionKey, enabled, roomScope, settlementRevision, exhaustion, request]);
+  }, [ownerUserId, sessionKey, credentialKey, enabled, roomScope, settlementRevision, exhaustion, request]);
   useEffect(() => { if (visible) openRef.current(); }, [visible]);
   const scoped = state.ownerUserId === ownerUserId && state.sessionKey === sessionKey ? state : empty(ownerUserId, sessionKey);
   const elapsed = Math.max(0, performance.now() - scoped.monotonic);
