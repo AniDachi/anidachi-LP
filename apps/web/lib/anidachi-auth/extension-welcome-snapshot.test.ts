@@ -58,3 +58,9 @@ test("welcome checks live owner before direct status or billing work and budgets
 		"error",
 	);
 });
+
+test("SSR missing Free20 installation context is unavailable rather than a fresh allowance",async()=>{
+ const {Free20ContextError}=await import("./free20-abuse");
+ const result=await loadExtensionWelcome(owner,{websiteUser:async()=>({id:owner}),overview:async()=>{throw Error("No billing snapshot");},readStatus:async()=>{throw new Free20ContextError();},clock:()=>0});
+ assert.equal(result.kind,"error");
+});

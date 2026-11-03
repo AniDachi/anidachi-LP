@@ -74,6 +74,21 @@ select lives_ok($$select public.commit_room_usage_day_v1((select v->>'room_id' f
 select is(public.resolve_free20_context_access_v1('fa200000-0000-4000-8000-000000000001',repeat('a',64),repeat('b',64))->>'remainingSeconds','480','A consumes 720 and retains 480');
 select is(public.resolve_free20_context_access_v1('fa200000-0000-4000-8000-000000000001',repeat('c',64),repeat('d',64))->>'remainingSeconds','480','same account on fresh markers still has 480');
 select is(public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000001',repeat('a',64),repeat('b',64))->>'committedSeconds','720','status exposes effective committed seconds');
+-- Public active-host display uses only the room's bound scopes, not a newly
+-- proposed browser context. Admission still requires proof and serialized attach.
+select lives_ok($$select public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000001')$$,'owned active protected host display does not require enrollment');
+reset role;
+insert into anidachi_room_private.free20_marker_days(kind,marker_hash,day,committed_seconds) values
+ ('browser',repeat('8',64),(clock_timestamp() at time zone 'UTC')::date,1100),
+ ('installation',repeat('9',64),(clock_timestamp() at time zone 'UTC')::date,1100);
+set local role service_role;
+select is(public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000001',repeat('8',64),repeat('9',64))->>'committedSeconds','720','unbound proposed context does not change active room display');
+select is(public.read_free20_room_usage_v1((select v->>'room_id' from abuse_results where k='a'),(clock_timestamp() at time zone 'UTC')::date),720,'status did not change the bound room effective checkpoint');
+select throws_ok($$select public.read_free20_context_status_v1('fa200000-0000-4000-8000-000000000002')$$,'P0001','FREE20_CONTEXT_REQUIRED','guest account idle-hosting display still requires its own context');
+reset role;
+select is((select count(*)::integer from anidachi_room_private.free20_room_bindings where room_id=(select v->>'room_id' from abuse_results where k='a')),2,'status does not attach proposed scopes');
+delete from anidachi_room_private.free20_marker_days where marker_hash in(repeat('8',64),repeat('9',64));
+set local role service_role;
 select lives_ok($$select public.attach_free20_room_context_v1('fa200000-0000-4000-8000-000000000001',(select v->>'room_id' from abuse_results where k='a'),repeat('c',64),repeat('d',64))$$,'trusted transfer appends verified replacement context');
 select lives_ok($$select public.attach_free20_room_context_v1('fa200000-0000-4000-8000-000000000001',(select v->>'room_id' from abuse_results where k='a'),repeat('c',64),repeat('d',64))$$,'attach retry is idempotent');
 select lives_ok($$select pg_temp.abuse_claim('fa200000-0000-4000-8000-000000000001',(select v->>'room_id' from abuse_results where k='a'),repeat('c',64),repeat('d',64))$$,'attached context may resume same room');

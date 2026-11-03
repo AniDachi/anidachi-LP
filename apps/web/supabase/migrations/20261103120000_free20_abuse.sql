@@ -125,12 +125,16 @@ begin
   if (result->>'refreshBy')::timestamptz<=clock_timestamp() then continue; end if;
   if result->>'planCode'='free' then
    select r.room_id into active_room from public.active_room_sessions a join public.rooms r on r.room_id=a.room_id
-    where a.user_id=p_user_id and r.host_user_id=p_user_id and r.free20_abuse_protected and r.status<>'ended' for update of r;
-   if policy.free20_abuse_enabled then
+    where a.user_id=p_user_id and a.role='host' and a.room_id=result#>>'{assignment,roomId}'
+     and result#>>'{assignment,role}'='host' and result#>>'{assignment,hostUserId}'=p_user_id::text
+     and r.host_user_id=p_user_id and r.free20_abuse_protected and r.status<>'ended' for update of r;
+   if policy.free20_abuse_enabled and active_room is null then
     perform anidachi_room_private.validate_free20_context(p_browser_hash,p_installation_hash);
    else
-    -- Existing protected rooms retain their bound usage while new enforcement
-    -- is off. Ignore supplied context rather than introducing new restrictions.
+    -- Owned active protected rooms display only their already-bound effective
+    -- usage, even when enforcement is on. Proposed context may not change a
+    -- live budget before serialized transfer. Disabled admission also ignores
+    -- proposed scopes. Idle/member free status still requires complete proof.
     p_browser_hash:=null; p_installation_hash:=null;
    end if;
    perform anidachi_room_private.lock_free20_scopes(active_room,p_browser_hash,p_installation_hash);

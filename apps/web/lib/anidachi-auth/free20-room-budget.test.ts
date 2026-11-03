@@ -399,3 +399,25 @@ test("Free20 authority and ledger failures never become a full balance", async (
 		assert.equal(f.committed.get(day), 600);
 	}
 });
+
+test("protected room uses effective marker total: 720 prior + 480 room seconds exhausts once, even with admission disabled", async () => {
+ const f=fixture();f.committed.set(day,0);
+ const deps={...f.deps,readRoom:async(id:string)=>({...await f.deps.readRoom(id),free20_abuse_protected:true}),readRoomUsage:async(id:string,utcDay:string)=>{assert.equal(id,"free20-room");return 720+(f.roomUsage.get(utcDay)??0);}};
+ const firstRequest=request();const first=await settleFree20RoomBudget(firstRequest,new Date(at),deps);
+ assert.ok("committedSeconds" in first);assert.equal(first.committedSeconds,720);
+ const binding={ownerUserId:owner,roomId:"free20-room",roomGeneration:1,utcDay:day};
+ const initial=reconcileFree20RoomBudget(first,{binding,request:firstRequest,previous:null,meter:reconcileRoomMeter(createRoomMeterState(),true,at),now:at});
+ const later=at+480_000;
+ assert.equal(readFree20RoomTime(initial.budget,initial.meter,at+240_000).remainingSeconds,240);
+ assert.throws(()=>readFree20RoomTime(initial.budget,initial.meter,later),/requires refresh/);
+ const meter=reconcileRoomMeter(initial.meter,false,later);
+ f.setClock(later);
+ const next={...request(480),checkpointSequence:2};
+ const checkpoint=await settleFree20RoomBudget(next,new Date(later),deps);
+ assert.ok("committedSeconds" in checkpoint);assert.equal(checkpoint.committedSeconds,1200);
+ const result=reconcileFree20RoomBudget(checkpoint,{binding,request:next,previous:initial.budget,meter,now:later});
+ assert.equal(readFree20RoomTime(result.budget,result.meter,later).remainingSeconds,0);
+ assert.equal(f.committed.get(day),480);
+ const repeated=await settleFree20RoomBudget(next,new Date(later),deps);
+ assert.ok("committedSeconds" in repeated);assert.equal(repeated.committedSeconds,1200);
+});

@@ -353,3 +353,11 @@ test("shared reader gates authority work and includes elapsed identity work", as
 		/expired/,
 	);
 });
+
+test("context errors remain 428/neutral 409 rather than invented zero or allowance",async()=>{
+ const {Free20ContextError}=await import("./free20-abuse");
+ for(const code of ["FREE20_CONTEXT_REQUIRED","FREE20_CONTEXT_BUSY"] as const){
+ const f=fixture(undefined,{readAuthority:async()=>{throw new Free20ContextError(code);}});
+ const response=await f.request();assert.equal(response.status,code==="FREE20_CONTEXT_BUSY"?409:428);assert.deepEqual(await response.json(),{code});
+ }
+});

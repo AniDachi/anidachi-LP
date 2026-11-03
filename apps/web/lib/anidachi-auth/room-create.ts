@@ -1,5 +1,9 @@
+import { Free20ContextError } from "./free20-abuse";
 import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
-import { RoomUpdateRequiredError, roomUpdateRequiredBody } from "./room-update-required";
+import {
+	RoomUpdateRequiredError,
+	roomUpdateRequiredBody,
+} from "./room-update-required";
 import { RoomSourcePersistenceError } from "./room-source";
 import { hostingDeniedResponse } from "./hosting-denial";
 
@@ -16,10 +20,12 @@ export type RoomCreateRequestInput = {
 
 type RoomCreateFailure = {
 	ok: false;
-	status: 400 | 403 | 426 | 503;
+	status: 400 | 403 | 409 | 426 | 428 | 503;
 	body: {
 		error: string;
 		code:
+			| "FREE20_CONTEXT_REQUIRED"
+			| "FREE20_CONTEXT_BUSY"
 			| "INVALID_REQUEST"
 			| "INVALID_ROOM_SOURCE"
 			| "ROOM_UPDATE_REQUIRED"
@@ -48,8 +54,28 @@ export async function handleRoomCreateRequestBody<T>(params: {
 	try {
 		return { ok: true, value: await params.create(parsed.input) };
 	} catch (error) {
+		if (error instanceof Free20ContextError)
+			return {
+				ok: false,
+				status: error.code === "FREE20_CONTEXT_BUSY" ? 409 : 428,
+				body: {
+					code:
+						error.code === "FREE20_CONTEXT_BUSY"
+							? "FREE20_CONTEXT_BUSY"
+							: "FREE20_CONTEXT_REQUIRED",
+					error:
+						"Free hosting context is temporarily unavailable. Please try again.",
+				},
+			};
 		if (error instanceof Error && error.message === "QUOTA_EXHAUSTED")
-			return { ok: false, status: 403, body: { code: "QUOTA_EXHAUSTED", error: "Daily free watch-party time is used up" } };
+			return {
+				ok: false,
+				status: 403,
+				body: {
+					code: "QUOTA_EXHAUSTED",
+					error: "Daily free watch-party time is used up",
+				},
+			};
 		if (
 			error instanceof Error &&
 			error.message === "HOST_SUBSCRIPTION_REQUIRED"
@@ -75,7 +101,9 @@ export async function handleRoomCreateRequestBody<T>(params: {
 			return {
 				ok: false,
 				status: 426,
-				body: roomUpdateRequiredBody(error instanceof RoomUpdateRequiredError && error.free20),
+				body: roomUpdateRequiredBody(
+					error instanceof RoomUpdateRequiredError && error.free20,
+				),
 			};
 		if (
 			error instanceof RoomSourcePersistenceError &&

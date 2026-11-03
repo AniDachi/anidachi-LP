@@ -9,6 +9,7 @@ import {
 import {
 	commitRoomUsageDay,
 	getRoomById,
+	readFree20RoomUsage,
 	getUsageSecondsForDay,
 	type RoomRow,
 	resolveWatchHistoryAccess,
@@ -17,13 +18,19 @@ import { readFree20AccountBudget } from "./free20-account-budget";
 
 type Room = Pick<
 	RoomRow,
-	"room_id" | "host_user_id" | "host_plan_code" | "hosting_time_mode" | "status"
+	| "room_id"
+	| "host_user_id"
+	| "host_plan_code"
+	| "hosting_time_mode"
+	| "status"
+	| "free20_abuse_protected"
 >;
 type Dependencies = {
 	readRoom: (roomId: string) => Promise<Room | null>;
 	commitUsage: typeof commitRoomUsageDay;
 	resolveAuthority: typeof resolveWatchHistoryAccess;
 	readUsage: typeof getUsageSecondsForDay;
+	readRoomUsage?: typeof readFree20RoomUsage;
 };
 
 /** Used by the gated internal budget route. Requires the existing authenticated,
@@ -69,7 +76,14 @@ export async function settleFree20RoomBudget(
 		acknowledged.push(ack);
 	}
 	// Do not move this read before settlement or return a partial response.
-	const budget = await readFree20AccountBudget(owner, now, deps);
+	const budget = await readFree20AccountBudget(owner, now, {
+		...deps,
+		readUsage:
+			room.free20_abuse_protected === true
+				? (_owner, day) =>
+						(deps.readRoomUsage ?? readFree20RoomUsage)(request.roomId, day)
+				: deps.readUsage,
+	});
 	const current = await deps.readRoom(request.roomId);
 	if (
 		!current ||

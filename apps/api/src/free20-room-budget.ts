@@ -146,7 +146,9 @@ export function reconcileFree20RoomBudget(
 	) {
 		throw new Error("Inconsistent Free20 account usage");
 	}
-	const allowed = Math.max(
+	// committedSeconds is the effective max across the account and bound markers.
+ // Add back only this room's ACK: its durable meter already contains that time.
+ const allowed = Math.max(
 		0,
 		1200 - checkpoint.committedSeconds + next.acknowledgedSeconds,
 	);

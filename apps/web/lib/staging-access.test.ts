@@ -623,3 +623,8 @@ test("staging gate keeps extension auth return targets inside the app", () => {
   assert.equal(sanitizeStagingAccessNextPath("//evil.example"), "/");
   assert.equal(sanitizeStagingAccessNextPath("/__anidachi/staging-access"), "/");
 });
+
+test("Free20 enrollment staging exception is exactly authenticated POST",()=>{
+ assert.equal(canBypassStagingGate({pathname:"/api/me/free20-context",method:"POST",authorization:"Bearer token"}),true);
+ for(const input of [{pathname:"/api/me/free20-context",method:"GET",authorization:"Bearer token"},{pathname:"/api/me/free20-context/extra",method:"POST",authorization:"Bearer token"},{pathname:"/api/me/free20-context",method:"POST"}])assert.equal(canBypassStagingGate(input),false);
+});
