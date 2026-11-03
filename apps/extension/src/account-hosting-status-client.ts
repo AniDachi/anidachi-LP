@@ -1,3 +1,4 @@
+import type { Free20Request } from "./free20-abuse-client";
 import { ACCOUNT_HOSTING_OWNER_HEADER, acceptAccountHostingStatus, type AccountHostingStatus } from "@anidachi/protocol";
 import { getStoredAuthTokens, isSameExtensionAuthSession } from "./auth-tokens";
 import { refreshExtensionSession } from "./auth-client";
@@ -11,7 +12,8 @@ export function isAccountHostingStatusMessage(value: unknown): value is Message 
   const message = value as Partial<Message>;
   return message.type === TYPE && typeof message.ownerUserId === "string" && message.ownerUserId.length > 0;
 }
-const defaults = { getSession: getStoredAuthTokens, refresh: refreshExtensionSession };
+type Dependencies = { getSession: typeof getStoredAuthTokens; refresh: typeof refreshExtensionSession; request?: Free20Request };
+const defaults: Dependencies = { getSession: getStoredAuthTokens, refresh: refreshExtensionSession };
 type Result = ({ ok: true } & AccountHostingRead) | { ok: false };
 const pending = new WeakMap<typeof defaults, Map<string, Promise<Result>>>();
 
@@ -38,13 +40,18 @@ async function load(message: Message, dependencies: typeof defaults, initial: No
   const read = async (): Promise<Result> => {
     try {
       let session = initial;
-      const current = async () => !controller.signal.aborted && isSameExtensionAuthSession(session, await dependencies.getSession());
-      const fetchStatus = () => fetch(new URL("/api/me/hosting-status", WEB_HTTP_BASE), {
+      const current = async () => {
+        const stored = await dependencies.getSession();
+        return !controller.signal.aborted && (dependencies.request && session.authSessionId
+          ? stored?.user.id === session.user.id && stored.authSessionId === session.authSessionId
+          : isSameExtensionAuthSession(session, stored));
+      };
+      const fetchStatus = () => (dependencies.request ?? fetch)(new URL("/api/me/hosting-status", WEB_HTTP_BASE), {
         headers: { Authorization: `Bearer ${session.accessToken}`, [ACCOUNT_HOSTING_OWNER_HEADER]: message.ownerUserId },
         credentials: "omit", cache: "no-store", redirect: "error", signal: controller.signal,
       });
       let response = await fetchStatus();
-      if (response.status === 401) {
+      if (response.status === 401 && !dependencies.request) {
         if (!(await current())) return failure;
         const refreshed = await dependencies.refresh();
         if (!refreshed || refreshed.user.id !== message.ownerUserId) return failure;

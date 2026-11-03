@@ -1,5 +1,7 @@
 import {
 	TrialChallengeSchema,
+	Free20ChallengeSchema,
+	FREE20_INSTALLATION_SIGNING_PREFIX,
 	TRIAL_INSTALLATION_SIGNING_PREFIX,
 	type TrialInstallationProof,
 } from "@anidachi/protocol";
@@ -13,7 +15,7 @@ const encode = (bytes: ArrayBuffer) =>
 		.replaceAll("/", "_")
 		.replace(/=+$/, "");
 /** Sign only the purpose-prefixed challenge; never expose the persisted private key. */
-export function createTrialInstallationSigner(store: {
+export function createInstallationSigners(store: {
 	get(): Promise<unknown>;
 	set(value: StoredKey): Promise<void>;
 }) {
@@ -55,8 +57,7 @@ export function createTrialInstallationSigner(store: {
 		});
 		return { privateKey: keys.privateKey, publicKey };
 	}
-	return async (challenge: string): Promise<TrialInstallationProof> => {
-		TrialChallengeSchema.parse(challenge);
+	const sign = async (challenge: string, prefix: string): Promise<TrialInstallationProof> => {
 		pending ??= load().catch((error) => {
 			pending = undefined;
 			throw error;
@@ -66,11 +67,18 @@ export function createTrialInstallationSigner(store: {
 			await crypto.subtle.sign(
 				{ name: "ECDSA", hash: "SHA-256" },
 				key.privateKey,
-				new TextEncoder().encode(TRIAL_INSTALLATION_SIGNING_PREFIX + challenge),
+				new TextEncoder().encode(prefix + challenge),
 			),
 		);
 		return { version: 1, challenge, publicKey: key.publicKey, signature };
 	};
+	return {
+		trial: async (challenge: string) => sign(TrialChallengeSchema.parse(challenge), TRIAL_INSTALLATION_SIGNING_PREFIX),
+		free20: async (challenge: string) => sign(Free20ChallengeSchema.parse(challenge), FREE20_INSTALLATION_SIGNING_PREFIX),
+	};
+}
+export function createTrialInstallationSigner(store: Parameters<typeof createInstallationSigners>[0]) {
+	return createInstallationSigners(store).trial;
 }
 export function isTrialWebsiteSender(
 	sender: { id?: string; url?: string; origin?: string; frameId?: number },

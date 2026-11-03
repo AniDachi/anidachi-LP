@@ -19,6 +19,26 @@ describe("account Free20 display", () => {
     options = { ownerUserId: owner, sessionKey: "login-a", enabled: true, exhaustion: null, request: vi.fn().mockResolvedValue({ mode: "free20", status }) };
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.useRealTimers(); });
+  it("does not enroll through personal status during guest or unknown-role entry; reads when host role arrives", async () => {
+    await render({ roomId: "room-guest", guestRoom: true });
+    expect(options.request).not.toHaveBeenCalled();
+    await render({ guestRoom: false });
+    expect(options.request).toHaveBeenCalledTimes(1);
+    expect(current.planCode).toBe("free");
+    await render({ guestRoom: true });
+    expect(current.remainingSeconds).toBeNull();
+    await render({ roomId: null, guestRoom: false });
+    expect(options.request).toHaveBeenCalledTimes(2);
+  });
+  it("preserves known paid presentation while guest personal-status reads are suppressed", async () => {
+    options.request = vi.fn().mockResolvedValue({ mode: "free20", status: { ...status, planCode: "plus", access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 3_600_000 } } });
+    await render();
+    expect(current.presentationPlanCode).toBe("plus");
+    const before = current.presentationPlanCode;
+    await render({ roomId: "guest-room", guestRoom: true });
+    expect(current.presentationPlanCode).toBe(before);
+    expect(options.request).toHaveBeenCalledTimes(1);
+  });
   it("keeps idle time fixed and does only one bounded expiry recheck, not a polling loop", async () => {
     await render(); expect(current.remainingSeconds).toBe(780);
     await act(async () => vi.advanceTimersByTimeAsync(30_000)); expect(current.remainingSeconds).toBe(780); expect(options.request).toHaveBeenCalledTimes(1);

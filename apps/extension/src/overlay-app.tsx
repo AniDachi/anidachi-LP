@@ -833,10 +833,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const hostingTimeCredentialKey = authAuthenticated ? JSON.stringify([authRevision, authAccessToken, authSessionKey]) : null;
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
+	const initialRoomTarget = getRoomIdFromHash() ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
 		credentialKey: hostingTimeCredentialKey,
+		guestRoom: !participants.some(p => p.id === accountUser?.id && p.role === "host") && Boolean(
+			roomId || roomJoinAttempt?.pending || (!roomCreatePending && !roomStartPending && !roomActionMessage && (
+				initialRoomTarget || (authAuthenticated && roomSessionLoadedForUserId !== participant?.id)
+			))
+		),
 		// Opening/closing the panel is presentation, not a new data session.
 		// Prefetch for the active player; account seconds never supply live time.
 		enabled: adapterActive || panelOpen || introductionActive || roomId !== null,
@@ -6215,7 +6221,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const refreshDisplayedQuota = accountHostingTime.mode === "legacy" ? freeQuotaNotice.retry : accountHostingTime.refresh;
 	// Resolving an invite/restored session is not the idle hosting screen. Keep
 	// personal quota out of that handoff, including before HTTP admission starts.
-	const initialRoomTarget = getRoomIdFromHash() ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
 	const currentJoinAttempt = roomJoinAttempt?.ownerUserId === (participant?.id ?? null) ? roomJoinAttempt : null;
 	const joiningRoom = !roomCreatePending && !roomStartPending && !roomExitPending && (
 		(!roomId && (

@@ -22,11 +22,13 @@ const RECOVERY_DELAYS_MS = [500, 1_500] as const;
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
  * activation or user resume; a successful recovery never starts a polling loop. */
-export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey = sessionKey, enabled, visible = enabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus }: {
+export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey = sessionKey, enabled: requestedEnabled, guestRoom = false, visible = requestedEnabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus }: {
   ownerUserId: string | null; sessionKey: string | null; enabled: boolean;
   /** Rotating credentials retires in-flight reads, not the same login's already
    * confirmed display. Its original clock, expiry and room scope still apply. */
   credentialKey?: string | null;
+  /** Guest and unknown entry roles do not need personal host enrollment. */
+  guestRoom?: boolean;
   /** Opening the panel recovers expired data without discarding fresh prefetch. */
   visible?: boolean;
   /** Room boundaries require a new account read before idle seconds can return. */
@@ -36,6 +38,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
   settlementRevision?: number;
   exhaustion: QuotaExhaustion | null; request?: typeof requestAccountHostingStatus;
 }) {
+  const enabled = requestedEnabled && !guestRoom;
   const stateRef = useRef<State>(empty(ownerUserId, sessionKey));
   const [state, setState] = useState(stateRef.current);
   const [roomScope, setRoomScope] = useState({ roomId, epoch: 0 });
