@@ -107,6 +107,28 @@ Manual, with two independent browser profiles:
 
 Automated fixtures do not replace real-ad acceptance.
 
+## Room-ad notice lifecycle: local correction, November 3, 2026
+
+The owner reported an ad notice persisting after normal video resumed in his
+hosted room. Controller regressions reproduce this when a player replacement or
+session refresh resets the internal ad barrier without clearing its notice, and
+when an ad gives way to a source transition. Actual YouTube adapter/controller
+fixtures also reproduce stale guest feedback during solo viewing or departure
+from a room during an ad. These cases concern feedback lifetime, not an ad
+detector that still observes a real ad.
+
+Only a provider-bound room session emits host/guest ad notices. Leaving membership
+retires the old ad feedback immediately; player/session replacement clears it
+before evaluating the current phase, and a source transition stops claiming an
+ad is playing while retaining its playback barrier. Solo ads still retain the
+internal barrier without claiming a room is paused or will synchronize. Existing ad
+detection, exit grace, no-touch ad policy, host hold and guest recovery remain.
+Regression fixtures cover host player/session/phase changes, solo viewing,
+host/guest departure during ads, and
+automatic host/guest recovery after ad exit without a second host-state message.
+This correction is a local staging-channel artifact for owner testing, not a
+staging deployment or real-ad/two-profile acceptance.
+
 
 ## Message composer interaction: local candidate, October 1, 2026
 

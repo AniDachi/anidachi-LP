@@ -209,6 +209,32 @@ describe("PlaybackSyncController", () => {
 		});
 	});
 
+	it.each(["adapter", "session", "transition"] as const)("clears the host ad notice when content returns through a %s change", change => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setPhase("interstitial");
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({ kind: "waiting-for-host-ad" });
+		harness.sent.length = 0;
+		if (change === "adapter") {
+			harness.controller.bindAdapter(createFakeAdapter({ provider: "youtube" }));
+		} else if (change === "session") {
+			harness.adapter.setPhase("content");
+			harness.controller.setSession(session({ isHost: true, connectionGeneration: 2 }));
+		} else {
+			harness.adapter.setPhase("transition");
+			harness.adapter.emitPhase();
+			expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+			harness.controller.heartbeat();
+			expect(harness.sent).toEqual([]);
+			harness.adapter.setPhase("content");
+			harness.adapter.emitPhase();
+		}
+		expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+		harness.controller.heartbeat();
+		expect(harness.sent.at(-1)?.type).toBe("HOST_STATE");
+		harness.controller.dispose();
+	});
+
 	it("uses a zero content hold for a host pre-roll", () => {
 		const harness = createHarness({ isHost: true });
 		harness.adapter.setPhase("interstitial");

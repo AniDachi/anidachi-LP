@@ -735,20 +735,6 @@
         "_origin": "semantic"
       },
       {
-        "id": "docs_youtube_adapter_notes_composer_scope_and_acceptance",
-        "label": "Provider CSS guard, protected surfaces and independent owner acceptance",
-        "nodes": [
-          "docs_youtube_adapter_notes_composer_provider_css_guard",
-          "docs_youtube_adapter_notes_composer_protected_surfaces_and_geometry",
-          "docs_youtube_adapter_notes_composer_local_evidence_and_owner_gate"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "docs/youtube-adapter-notes.md",
-        "_origin": "semantic"
-      },
-      {
         "id": "docs_releases_paid_hosting_trial_cutover_operations_durable_cutover_completion_requirements",
         "label": "One immutable activation operation completes only after durable fence, finalization and reconciliation",
         "nodes": [
@@ -1375,6 +1361,21 @@
         "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
         "source_location": "L343",
         "_origin": "semantic"
+      },
+      {
+        "id": "docs_youtube_adapter_notes_composer_scope_and_acceptance",
+        "label": "Provider CSS guard, protected surfaces and independent owner acceptance",
+        "nodes": [
+          "docs_youtube_adapter_notes_composer_provider_css_guard",
+          "docs_youtube_adapter_notes_composer_protected_surfaces_and_geometry",
+          "docs_youtube_adapter_notes_composer_local_evidence_and_owner_gate"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/youtube-adapter-notes.md",
+        "_origin": "semantic",
+        "source_location": "L133"
       }
     ]
   },
@@ -6992,7 +6993,7 @@
       "file_type": "code",
       "norm_label": "fakeadapter",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1046"
+      "source_location": "L1072"
     },
     {
       "id": "apps_extension_src_ghost_cam_size_ghostcamsizestep",
@@ -9825,7 +9826,7 @@
       "file_type": "code",
       "norm_label": "harnessoptions",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L977"
+      "source_location": "L1003"
     },
     {
       "id": "packages_protocol_src_sync_synccorrection",
@@ -39159,14 +39160,14 @@
       "file_type": "code",
       "norm_label": ".applyauthoritativeplaybackrate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1337",
+      "source_location": "L1349",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "setPlaybackRate",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1349",
+            "line": "L1361",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -39434,7 +39435,7 @@
       "file_type": "code",
       "norm_label": ".emit()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1047"
+      "source_location": "L1073"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_fakeadapter_emitphase",
@@ -39446,7 +39447,7 @@
       "file_type": "code",
       "norm_label": ".emitphase()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1048"
+      "source_location": "L1074"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_fakeadapter_setcurrenttime",
@@ -39458,7 +39459,7 @@
       "file_type": "code",
       "norm_label": ".setcurrenttime()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1052"
+      "source_location": "L1078"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_fakeadapter_setmediaready",
@@ -39470,7 +39471,7 @@
       "file_type": "code",
       "norm_label": ".setmediaready()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1053"
+      "source_location": "L1079"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_fakeadapter_setpaused",
@@ -39482,7 +39483,7 @@
       "file_type": "code",
       "norm_label": ".setpaused()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1054"
+      "source_location": "L1080"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_fakeadapter_setphase",
@@ -39494,7 +39495,7 @@
       "file_type": "code",
       "norm_label": ".setphase()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1055"
+      "source_location": "L1081"
     },
     {
       "id": "scripts_generate_extension_icons_chunk",
@@ -52607,28 +52608,28 @@
       "file_type": "code",
       "norm_label": ".applyhoststate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L352",
+      "source_location": "L358",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L358",
+            "line": "L364",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L367",
+            "line": "L373",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "pause",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L431",
+            "line": "L437",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52644,14 +52645,14 @@
       "file_type": "code",
       "norm_label": ".applyplaybacksnapshot()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L830",
+      "source_location": "L836",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L899",
+            "line": "L911",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52674,7 +52675,7 @@
             "callee": "subscribe",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L182",
+            "line": "L185",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52690,7 +52691,7 @@
       "file_type": "code",
       "norm_label": ".broadcasthoststate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L497"
+      "source_location": "L503"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_cancelpendingremoteplayback",
@@ -52702,7 +52703,7 @@
       "file_type": "code",
       "norm_label": ".cancelpendingremoteplayback()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L714"
+      "source_location": "L720"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_cancelpendingsourcenavigation",
@@ -52714,7 +52715,7 @@
       "file_type": "code",
       "norm_label": ".cancelpendingsourcenavigation()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L611"
+      "source_location": "L617"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_catchupfromusergesture",
@@ -52726,21 +52727,21 @@
       "file_type": "code",
       "norm_label": ".catchupfromusergesture()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L512",
+      "source_location": "L518",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L520",
+            "line": "L526",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "seek",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L530",
+            "line": "L536",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52756,7 +52757,7 @@
       "file_type": "code",
       "norm_label": ".clearheartbeattimer()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L719"
+      "source_location": "L725"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearhostbufferingtimer",
@@ -52768,7 +52769,7 @@
       "file_type": "code",
       "norm_label": ".clearhostbufferingtimer()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L980"
+      "source_location": "L992"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearpendinglocalseek",
@@ -52780,7 +52781,7 @@
       "file_type": "code",
       "norm_label": ".clearpendinglocalseek()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L727"
+      "source_location": "L733"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearpendingremoteseekifsettled",
@@ -52792,14 +52793,14 @@
       "file_type": "code",
       "norm_label": ".clearpendingremoteseekifsettled()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L735",
+      "source_location": "L741",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L744",
+            "line": "L750",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52815,7 +52816,7 @@
       "file_type": "code",
       "norm_label": ".clearpendingsourcenavigation()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L622"
+      "source_location": "L628"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearresumerequired",
@@ -52827,7 +52828,7 @@
       "file_type": "code",
       "norm_label": ".clearresumerequired()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1352"
+      "source_location": "L1364"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_completesourcenavigationforadapter",
@@ -52839,14 +52840,14 @@
       "file_type": "code",
       "norm_label": ".completesourcenavigationforadapter()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L627",
+      "source_location": "L633",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L635",
+            "line": "L641",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52874,7 +52875,7 @@
       "file_type": "code",
       "norm_label": ".dispose()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L585"
+      "source_location": "L591"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_finishpendingplay",
@@ -52886,7 +52887,7 @@
       "file_type": "code",
       "norm_label": ".finishpendingplay()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1164"
+      "source_location": "L1176"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_flushpendinglocalseek",
@@ -52898,14 +52899,14 @@
       "file_type": "code",
       "norm_label": ".flushpendinglocalseek()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L755",
+      "source_location": "L761",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L780",
+            "line": "L786",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52921,7 +52922,7 @@
       "file_type": "code",
       "norm_label": ".getactiveadapter()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L797"
+      "source_location": "L803"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_getrememberedauthoritativeroomsource",
@@ -52933,7 +52934,7 @@
       "file_type": "code",
       "norm_label": ".getrememberedauthoritativeroomsource()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L646"
+      "source_location": "L652"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlebufferingphase",
@@ -52945,14 +52946,14 @@
       "file_type": "code",
       "norm_label": ".handlebufferingphase()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L908",
+      "source_location": "L920",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L972",
+            "line": "L984",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52968,14 +52969,14 @@
       "file_type": "code",
       "norm_label": ".handlehoststate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L279",
+      "source_location": "L285",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L304",
+            "line": "L310",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -52991,7 +52992,7 @@
       "file_type": "code",
       "norm_label": ".handlelocalevent()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L220"
+      "source_location": "L226"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handleplayfailure",
@@ -53003,14 +53004,14 @@
       "file_type": "code",
       "norm_label": ".handleplayfailure()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1357",
+      "source_location": "L1369",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getPlaybackSnapshot",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1373",
+            "line": "L1385",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53026,21 +53027,21 @@
       "file_type": "code",
       "norm_label": ".handleremotecommand()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L438",
+      "source_location": "L444",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L464",
+            "line": "L470",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "pause",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L475",
+            "line": "L481",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53056,7 +53057,7 @@
       "file_type": "code",
       "norm_label": ".handlesourcenavigationresult()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1265"
+      "source_location": "L1277"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_hasactiveroomsession",
@@ -53068,7 +53069,7 @@
       "file_type": "code",
       "norm_label": ".hasactiveroomsession()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L801"
+      "source_location": "L807"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_hasproviderboundroomsession",
@@ -53080,7 +53081,7 @@
       "file_type": "code",
       "norm_label": ".hasproviderboundroomsession()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L808"
+      "source_location": "L814"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_heartbeat",
@@ -53092,7 +53093,7 @@
       "file_type": "code",
       "norm_label": ".heartbeat()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L489"
+      "source_location": "L495"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_invalidateasyncwork",
@@ -53104,7 +53105,7 @@
       "file_type": "code",
       "norm_label": ".invalidateasyncwork()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1064"
+      "source_location": "L1076"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_isasyncepochcurrent",
@@ -53116,7 +53117,7 @@
       "file_type": "code",
       "norm_label": ".isasyncepochcurrent()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1069"
+      "source_location": "L1081"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_isduplicateremotecommand",
@@ -53128,7 +53129,7 @@
       "file_type": "code",
       "norm_label": ".isduplicateremotecommand()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1080"
+      "source_location": "L1092"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_pinroomprovider",
@@ -53140,7 +53141,7 @@
       "file_type": "code",
       "norm_label": ".pinroomprovider()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L338"
+      "source_location": "L344"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_playwhenready",
@@ -53152,14 +53153,14 @@
       "file_type": "code",
       "norm_label": ".playwhenready()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1095",
+      "source_location": "L1107",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "play",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1125",
+            "line": "L1137",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53175,7 +53176,7 @@
       "file_type": "code",
       "norm_label": ".queuelocalseek()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1170"
+      "source_location": "L1182"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
@@ -53187,7 +53188,7 @@
       "file_type": "code",
       "norm_label": ".queuesourcenavigation()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1189"
+      "source_location": "L1201"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_reconcilerejectedguestcontrol",
@@ -53199,35 +53200,35 @@
       "file_type": "code",
       "norm_label": ".reconcilerejectedguestcontrol()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1303",
+      "source_location": "L1315",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1309",
+            "line": "L1321",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1316",
+            "line": "L1328",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "seek",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1322",
+            "line": "L1334",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "pause",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1327",
+            "line": "L1339",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53243,14 +53244,14 @@
       "file_type": "code",
       "norm_label": ".refreshplaybackphase()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L988",
+      "source_location": "L1000",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getPlaybackSnapshot",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L989",
+            "line": "L1001",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53266,7 +53267,7 @@
       "file_type": "code",
       "norm_label": ".rememberauthoritativeroomsource()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L665"
+      "source_location": "L671"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_rememberconfirmedcontentstate",
@@ -53278,21 +53279,21 @@
       "file_type": "code",
       "norm_label": ".rememberconfirmedcontentstate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L992",
+      "source_location": "L1004",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getState",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L996",
+            "line": "L1008",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1003",
+            "line": "L1015",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53308,7 +53309,7 @@
       "file_type": "code",
       "norm_label": ".rememberpendingremoteseek()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1331"
+      "source_location": "L1343"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restartheartbeattimer",
@@ -53320,7 +53321,7 @@
       "file_type": "code",
       "norm_label": ".restartheartbeattimer()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1385"
+      "source_location": "L1397"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restoreauthoritativesourceforadapter",
@@ -53332,14 +53333,14 @@
       "file_type": "code",
       "norm_label": ".restoreauthoritativesourceforadapter()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L685",
+      "source_location": "L691",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L694",
+            "line": "L700",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53355,14 +53356,14 @@
       "file_type": "code",
       "norm_label": ".resumefromusergesture()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L534",
+      "source_location": "L540",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "play",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L551",
+            "line": "L557",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53378,14 +53379,14 @@
       "file_type": "code",
       "norm_label": ".seekfromremote()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1396",
+      "source_location": "L1408",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "seek",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1416",
+            "line": "L1428",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53401,14 +53402,14 @@
       "file_type": "code",
       "norm_label": ".sendauthoritativehoststate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1043",
+      "source_location": "L1055",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getSourceDescriptor",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1060",
+            "line": "L1072",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53424,21 +53425,21 @@
       "file_type": "code",
       "norm_label": ".sendconfirmedhoststate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1029",
+      "source_location": "L1041",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getState",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1034",
+            "line": "L1046",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1039",
+            "line": "L1051",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53454,21 +53455,21 @@
       "file_type": "code",
       "norm_label": ".sendhostinterstitialhold()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1007",
+      "source_location": "L1019",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getState",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1014",
+            "line": "L1026",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "getFingerprint",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1019",
+            "line": "L1031",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53484,21 +53485,21 @@
       "file_type": "code",
       "norm_label": ".sendhoststate()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1420",
+      "source_location": "L1432",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getState",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1446",
+            "line": "L1458",
             "file": "apps/extension/src/playback-sync-controller.ts"
           },
           {
             "callee": "getSourceDescriptor",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1452",
+            "line": "L1464",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53514,7 +53515,7 @@
       "file_type": "code",
       "norm_label": ".sendlocalcontrolevent()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1456"
+      "source_location": "L1468"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_setsession",
@@ -53526,7 +53527,7 @@
       "file_type": "code",
       "norm_label": ".setsession()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L192"
+      "source_location": "L195"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_shouldholdhoststateforpendingseek",
@@ -53538,14 +53539,14 @@
       "file_type": "code",
       "norm_label": ".shouldholdhoststateforpendingseek()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1496",
+      "source_location": "L1508",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getCurrentTime",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1519",
+            "line": "L1531",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53561,7 +53562,7 @@
       "file_type": "code",
       "norm_label": ".suppresslocaleventsforremotetransition()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L505"
+      "source_location": "L511"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_suspend",
@@ -53573,7 +53574,7 @@
       "file_type": "code",
       "norm_label": ".suspend()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L571"
+      "source_location": "L577"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_unsubscribefromadapter",
@@ -53585,7 +53586,7 @@
       "file_type": "code",
       "norm_label": ".unsubscribefromadapter()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1527"
+      "source_location": "L1539"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_updatelatesthoststatefromcommand",
@@ -53597,14 +53598,14 @@
       "file_type": "code",
       "norm_label": ".updatelatesthoststatefromcommand()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1536",
+      "source_location": "L1548",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "getState",
             "receiver_type": "VideoAdapter",
             "lang": "typescript",
-            "line": "L1545",
+            "line": "L1557",
             "file": "apps/extension/src/playback-sync-controller.ts"
           }
         ]
@@ -53716,7 +53717,7 @@
       "file_type": "code",
       "norm_label": "createharness()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L990"
+      "source_location": "L1016"
     },
     {
       "id": "apps_extension_test_source_adapters_youtube_sync_integration_test_createharness",
@@ -53728,7 +53729,7 @@
       "file_type": "code",
       "norm_label": "createharness()",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L61"
+      "source_location": "L104"
     },
     {
       "id": "packages_protocol_src_sync_getsynccorrection",
@@ -55087,7 +55088,7 @@
       "file_type": "code",
       "norm_label": "isplaybackbarrier()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1561"
+      "source_location": "L1573"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontroller_isauthoritativesourcevalid",
@@ -55099,7 +55100,7 @@
       "file_type": "code",
       "norm_label": ".isauthoritativesourcevalid()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L819"
+      "source_location": "L825"
     },
     {
       "id": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_ensureremotesource",
@@ -55135,7 +55136,7 @@
       "file_type": "code",
       "norm_label": "sessionsequal()",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1569"
+      "source_location": "L1581"
     },
     {
       "id": "apps_extension_test_active_adapter_playback_test_createadapter",
@@ -55183,7 +55184,7 @@
       "file_type": "code",
       "norm_label": "createfakeadapter()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1060"
+      "source_location": "L1086"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_deferred",
@@ -55195,7 +55196,7 @@
       "file_type": "code",
       "norm_label": "deferred()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1212"
+      "source_location": "L1238"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_playbackstate",
@@ -55207,7 +55208,7 @@
       "file_type": "code",
       "norm_label": "playbackstate()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1035"
+      "source_location": "L1061"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_session",
@@ -55219,7 +55220,7 @@
       "file_type": "code",
       "norm_label": "session()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1020"
+      "source_location": "L1046"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_settleasyncwork",
@@ -55231,7 +55232,7 @@
       "file_type": "code",
       "norm_label": "settleasyncwork()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1222"
+      "source_location": "L1248"
     },
     {
       "id": "apps_extension_test_playback_sync_controller_test_watchsource",
@@ -55243,7 +55244,7 @@
       "file_type": "code",
       "norm_label": "watchsource()",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1199"
+      "source_location": "L1225"
     },
     {
       "id": "apps_extension_test_source_adapters_core_adapter_manager_test_createadapter",
@@ -77799,7 +77800,7 @@
       "file_type": "code",
       "norm_label": "hoststate()",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L127"
+      "source_location": "L172"
     },
     {
       "id": "apps_extension_test_source_adapters_youtube_sync_integration_test_mocklocation",
@@ -77811,7 +77812,7 @@
       "file_type": "code",
       "norm_label": "mocklocation()",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L137"
+      "source_location": "L182"
     },
     {
       "id": "docs_superpowers_plans_2026_09_05_watch_history_crunchyroll_catalog_progress_plan_canonical_logical_identity",
@@ -181770,12 +181771,12 @@
       "label": "YouTube provider maintenance contract",
       "file_type": "document",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L3",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "The YouTube adapter owns provider DOM and state interpretation. Shared room/overlay code consumes normalized capabilities and must not inspect YouTube selectors or infer its state. The document also records the local October1 composer change and its uncompleted owner acceptance.",
+      "description": "The YouTube adapter owns provider DOM and state interpretation. Shared room and overlay code consume normalized capabilities and must not inspect YouTube selectors or infer its state. The document records the November 3 local room-ad notice lifecycle correction and the historical October 1 composer candidate with separate pending owner acceptance; neither establishes real-ad or two-profile acceptance.",
       "status": "documented_provider_contract",
       "_origin": "semantic"
     },
@@ -181784,7 +181785,7 @@
       "label": "Finite YouTube watch-only overlay and provider-pinned navigation",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L9",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181798,7 +181799,7 @@
       "label": "Provider DOM ownership and shared synchronization authority",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L19",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181812,7 +181813,7 @@
       "label": "Fail-closed YouTube playback phase contract",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L34",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181826,21 +181827,22 @@
       "label": "Local advertisement isolation from synchronized content",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L57",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
       "description": "Advertisement media is never paused/played/sought/skipped or published as room content. Host ad persists one paused HOST_STATE at last confirmed content time or zero for pre-roll. Guest ad remains local and retains only newest host state for application after content resumes.",
       "status": "documented_provider_contract",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "checkpoint_context": "The November 3 notice-lifetime correction preserves existing ad detection, exit grace, no-touch advertisement policy, host hold and guest recovery. Clearing stale notice feedback does not clear the internal playback barrier."
     },
     {
       "id": "docs_youtube_adapter_notes_transition_buffering_autoplay_policy",
       "label": "Bounded transition, host buffering and gesture recovery",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L63",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181854,7 +181856,7 @@
       "label": "Scoped selector updates and privacy-safe diagnostics",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L74",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181868,7 +181870,7 @@
       "label": "Independent real-ad and two-profile acceptance",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L86",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181882,7 +181884,7 @@
       "label": "Local YouTube composer provider-owned CSS guard",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L135",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181896,7 +181898,7 @@
       "label": "Local composer preserves protected surfaces and updates safe insets",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L148",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -181910,14 +181912,15 @@
       "label": "Local YouTube composer evidence with owner acceptance pending",
       "file_type": "concept",
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L153",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
       "description": "Current YouTube DOM was inspected read-only. Failing-before/passing-after computed-style tests cover open/quiet/guard, descendant hits, protected surfaces, first native event, unmounted player and ad escape; geometry tests check hide/release. Typecheck and2150 tests pass. Narrow local staging build/validate must precede owner Reload; website/Worker are not deployed. Owner must refresh YouTube and check Enter/Send/emoji/reopen/close/native controls in normal/theater/fullscreen including Space/K, seek, Escape and captions. Existing real-ad/two-client acceptance remains independent.",
       "status": "local_validation_owner_acceptance_pending",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "checkpoint_context": "The 2,150 passing tests and pending composer owner acceptance are the recorded October 1 local checkpoint, not evidence or test counts for the November 3 room-ad notice correction."
     },
     {
       "id": "apps_extension_src_message_composer_events_anidachi_message_composer_dismiss_event",
@@ -225208,6 +225211,102 @@
       "evidence_scope": "Recorded source evidence only. This extraction does not independently verify deployed or loaded behavior or acceptance.",
       "checkpoint_status": "recorded_notification_copy_rule",
       "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "label": "Room-ad notice lifecycle: local correction, November 3, 2026",
+      "file_type": "concept",
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L110",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The owner reported an ad notice persisting after normal video resumed in his hosted room. Controller regressions reproduce stale notice lifetime after player replacement, session refresh or an ad-to-source-transition change. Actual YouTube adapter/controller fixtures also reproduce stale guest feedback during solo viewing or departure during an ad.",
+      "rationale": "These cases concern room-specific feedback lifetime rather than a detector that still observes a real advertisement.",
+      "status": "local_candidate_not_deployed",
+      "evidence_scope": "Recorded source evidence only. The local candidate and fixture evidence do not independently establish deployed, loaded-extension, real-ad or two-profile acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_host_player_session_and_phase_notice_retirement",
+      "label": "Host player, session and phase notice retirement",
+      "file_type": "rationale",
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L112",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Player replacement or session refresh can reset the internal ad barrier while leaving its old notice. Clear the previous room-ad feedback before evaluating the current replacement player/session phase. When an ad gives way to a source transition, stop claiming an ad is playing while retaining the transition playback barrier.",
+      "rationale": "An internal barrier reset or source transition must retire the old presentation so normal content or an unsettled source is not described as a continuing ad.",
+      "status": "local_candidate_not_deployed",
+      "evidence_scope": "Recorded source evidence only. The local candidate and fixture evidence do not independently establish deployed, loaded-extension, real-ad or two-profile acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_provider_bound_room_ad_notice_ownership",
+      "label": "Provider-bound room ad notice ownership",
+      "file_type": "rationale",
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L120",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Only a provider-bound room session emits host or guest ad notices. Leaving room membership immediately retires the old ad feedback; solo viewing must not claim that a room is paused or will synchronize.",
+      "rationale": "A room-specific notice cannot survive departure or be emitted merely because a local advertisement creates a playback barrier.",
+      "status": "local_candidate_not_deployed",
+      "evidence_scope": "Recorded source evidence only. The local candidate and fixture evidence do not independently establish deployed, loaded-extension, real-ad or two-profile acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_solo_ad_and_transition_barrier_continuity",
+      "label": "Solo-ad and transition barrier continuity",
+      "file_type": "rationale",
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L123",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Solo advertisements keep the internal playback barrier without room-ad feedback. An ad-to-source-transition change also retains its playback barrier after the old ad notice clears. Existing ad detection, exit grace, no-touch ad policy, host hold and guest recovery remain unchanged.",
+      "rationale": "Retiring stale notice feedback must not authorize playback operations during an advertisement or an unstable source.",
+      "status": "local_candidate_not_deployed",
+      "evidence_scope": "Recorded source evidence only. The local candidate and fixture evidence do not independently establish deployed, loaded-extension, real-ad or two-profile acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_room_ad_notice_regression_fixtures",
+      "label": "Room-ad notice regression fixtures",
+      "file_type": "rationale",
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L126",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Regression fixtures cover host player, session and phase changes; solo viewing; host and guest departure during ads; and automatic host or guest recovery after ad exit without a second host-state message.",
+      "rationale": "Feedback cleanup must preserve both active-host and guest recovery behavior while preventing stale room notices outside membership.",
+      "status": "recorded_fixture_coverage_not_real_ad_acceptance",
+      "evidence_scope": "Recorded source evidence only. The local candidate and fixture evidence do not independently establish deployed, loaded-extension, real-ad or two-profile acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_local_room_ad_notice_artifact_acceptance_boundary",
+      "label": "Local room-ad notice artifact acceptance boundary",
+      "file_type": "rationale",
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L129",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The correction is a local staging-channel artifact for owner testing. It is not a staging deployment, real-ad acceptance or two-profile acceptance.",
+      "rationale": "An automated adapter/controller replay and a local artifact do not establish live advertisement or multi-profile synchronization behavior.",
+      "status": "local_artifact_owner_testing",
+      "evidence_scope": "Recorded source evidence only. The local candidate and fixture evidence do not independently establish deployed, loaded-extension, real-ad or two-profile acceptance.",
+      "_origin": "semantic"
     }
   ],
   "links": [
@@ -240225,7 +240324,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L353",
+      "source_location": "L359",
       "weight": 1.0
     },
     {
@@ -240236,7 +240335,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L356",
+      "source_location": "L362",
       "weight": 1.0
     },
     {
@@ -240247,7 +240346,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L359",
+      "source_location": "L365",
       "weight": 1.0
     },
     {
@@ -240258,7 +240357,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L365",
+      "source_location": "L371",
       "weight": 1.0
     },
     {
@@ -240270,7 +240369,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L371",
+      "source_location": "L377",
       "weight": 1.0
     },
     {
@@ -240281,7 +240380,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L372",
+      "source_location": "L378",
       "weight": 1.0
     },
     {
@@ -240292,7 +240391,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L374",
+      "source_location": "L380",
       "weight": 1.0
     },
     {
@@ -240303,7 +240402,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L377",
+      "source_location": "L383",
       "weight": 1.0
     },
     {
@@ -240315,7 +240414,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L382",
+      "source_location": "L388",
       "weight": 1.0
     },
     {
@@ -240327,7 +240426,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L383",
+      "source_location": "L389",
       "weight": 1.0
     },
     {
@@ -240338,7 +240437,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L407",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -240349,7 +240448,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L411",
+      "source_location": "L417",
       "weight": 1.0
     },
     {
@@ -240360,7 +240459,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L429",
+      "source_location": "L435",
       "weight": 1.0
     },
     {
@@ -240371,7 +240470,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L834",
+      "source_location": "L840",
       "weight": 1.0
     },
     {
@@ -240382,7 +240481,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L838",
+      "source_location": "L844",
       "weight": 1.0
     },
     {
@@ -240394,7 +240493,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L844",
+      "source_location": "L850",
       "weight": 1.0
     },
     {
@@ -240405,7 +240504,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L854",
+      "source_location": "L860",
       "weight": 1.0
     },
     {
@@ -240416,7 +240515,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L856",
+      "source_location": "L862",
       "weight": 1.0
     },
     {
@@ -240427,7 +240526,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L868",
+      "source_location": "L877",
       "weight": 1.0
     },
     {
@@ -240438,7 +240537,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L870",
+      "source_location": "L879",
       "weight": 1.0
     },
     {
@@ -240449,7 +240548,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L871",
+      "source_location": "L880",
       "weight": 1.0
     },
     {
@@ -240460,7 +240559,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L875",
+      "source_location": "L887",
       "weight": 1.0
     },
     {
@@ -240471,7 +240570,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L876",
+      "source_location": "L875",
       "weight": 1.0
     },
     {
@@ -240482,7 +240581,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L886",
+      "source_location": "L898",
       "weight": 1.0
     },
     {
@@ -240493,7 +240592,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L895",
+      "source_location": "L907",
       "weight": 1.0
     },
     {
@@ -240504,7 +240603,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L901",
+      "source_location": "L913",
       "weight": 1.0
     },
     {
@@ -240548,7 +240647,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L179",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -240559,34 +240658,12 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L183",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
       "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_refreshplaybackphase",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "call",
-      "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L185",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_completesourcenavigationforadapter",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "call",
-      "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L187",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restoreauthoritativesourceforadapter",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -240597,13 +240674,35 @@
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_completesourcenavigationforadapter",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "context": "call",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restoreauthoritativesourceforadapter",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "context": "call",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L191",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
       "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restartheartbeattimer",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L189",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -240614,7 +240713,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L498",
+      "source_location": "L504",
       "weight": 1.0
     },
     {
@@ -240625,7 +240724,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L499",
+      "source_location": "L505",
       "weight": 1.0
     },
     {
@@ -240636,7 +240735,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L502",
+      "source_location": "L508",
       "weight": 1.0
     },
     {
@@ -240647,7 +240746,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L513",
+      "source_location": "L519",
       "weight": 1.0
     },
     {
@@ -240658,7 +240757,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L529",
+      "source_location": "L535",
       "weight": 1.0
     },
     {
@@ -240669,7 +240768,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L531",
+      "source_location": "L537",
       "weight": 1.0
     },
     {
@@ -240681,7 +240780,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L748",
+      "source_location": "L754",
       "weight": 1.0
     },
     {
@@ -240692,7 +240791,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L623",
+      "source_location": "L629",
       "weight": 1.0
     },
     {
@@ -240703,7 +240802,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L624",
+      "source_location": "L630",
       "weight": 1.0
     },
     {
@@ -240714,7 +240813,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L642",
+      "source_location": "L648",
       "weight": 1.0
     },
     {
@@ -240725,7 +240824,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L643",
+      "source_location": "L649",
       "weight": 1.0
     },
     {
@@ -240736,7 +240835,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L592",
+      "source_location": "L598",
       "weight": 1.0
     },
     {
@@ -240747,7 +240846,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L593",
+      "source_location": "L599",
       "weight": 1.0
     },
     {
@@ -240758,7 +240857,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L594",
+      "source_location": "L600",
       "weight": 1.0
     },
     {
@@ -240769,7 +240868,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L595",
+      "source_location": "L601",
       "weight": 1.0
     },
     {
@@ -240780,7 +240879,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L607",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -240791,7 +240890,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L608",
+      "source_location": "L614",
       "weight": 1.0
     },
     {
@@ -240802,7 +240901,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L756",
+      "source_location": "L762",
       "weight": 1.0
     },
     {
@@ -240813,7 +240912,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L787",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -240824,7 +240923,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L917",
+      "source_location": "L929",
       "weight": 1.0
     },
     {
@@ -240835,7 +240934,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L923",
+      "source_location": "L935",
       "weight": 1.0
     },
     {
@@ -240846,7 +240945,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L937",
+      "source_location": "L949",
       "weight": 1.0
     },
     {
@@ -240858,7 +240957,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L943",
+      "source_location": "L955",
       "weight": 1.0
     },
     {
@@ -240869,7 +240968,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L951",
+      "source_location": "L963",
       "weight": 1.0
     },
     {
@@ -240880,7 +240979,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L960",
+      "source_location": "L972",
       "weight": 1.0
     },
     {
@@ -240891,7 +240990,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L966",
+      "source_location": "L978",
       "weight": 1.0
     },
     {
@@ -240902,7 +241001,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L974",
+      "source_location": "L986",
       "weight": 1.0
     },
     {
@@ -240913,7 +241012,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L283",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -240924,7 +241023,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L286",
+      "source_location": "L292",
       "weight": 1.0
     },
     {
@@ -240935,23 +241034,12 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L292",
+      "source_location": "L298",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
       "target": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_onstatus",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "call",
-      "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L293",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_rememberauthoritativeroomsource",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -240962,18 +241050,7 @@
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_getrememberedauthoritativeroomsource",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "call",
-      "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L302",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_rememberauthoritativeroomsource",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -240984,7 +241061,7 @@
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearpendingsourcenavigation",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_getrememberedauthoritativeroomsource",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -240995,13 +241072,35 @@
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "context": "call",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L311",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearpendingsourcenavigation",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "context": "call",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L314",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlehoststate",
       "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_clearresumerequired",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L322",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -241012,7 +241111,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L324",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -241023,7 +241122,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L329",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -241034,7 +241133,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L335",
+      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -241045,7 +241144,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L221",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -241056,7 +241155,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L226",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -241067,7 +241166,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L230",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -241078,7 +241177,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L238",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -241089,7 +241188,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L244",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -241100,7 +241199,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L245",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -241111,7 +241210,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L251",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -241122,7 +241221,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L262",
+      "source_location": "L268",
       "weight": 1.0
     },
     {
@@ -241134,7 +241233,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L271",
+      "source_location": "L277",
       "weight": 1.0
     },
     {
@@ -241145,7 +241244,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L276",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -241157,7 +241256,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1370",
+      "source_location": "L1382",
       "weight": 1.0
     },
     {
@@ -241168,7 +241267,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1376",
+      "source_location": "L1388",
       "weight": 1.0
     },
     {
@@ -241179,7 +241278,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L439",
+      "source_location": "L445",
       "weight": 1.0
     },
     {
@@ -241190,7 +241289,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L442",
+      "source_location": "L448",
       "weight": 1.0
     },
     {
@@ -241201,7 +241300,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L449",
+      "source_location": "L455",
       "weight": 1.0
     },
     {
@@ -241212,7 +241311,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L450",
+      "source_location": "L456",
       "weight": 1.0
     },
     {
@@ -241223,7 +241322,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L455",
+      "source_location": "L461",
       "weight": 1.0
     },
     {
@@ -241234,7 +241333,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L461",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -241246,7 +241345,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L465",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -241258,7 +241357,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L465",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -241269,7 +241368,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L466",
+      "source_location": "L472",
       "weight": 1.0
     },
     {
@@ -241280,7 +241379,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L468",
+      "source_location": "L474",
       "weight": 1.0
     },
     {
@@ -241291,7 +241390,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L472",
+      "source_location": "L478",
       "weight": 1.0
     },
     {
@@ -241302,7 +241401,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L473",
+      "source_location": "L479",
       "weight": 1.0
     },
     {
@@ -241313,7 +241412,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1279",
+      "source_location": "L1291",
       "weight": 1.0
     },
     {
@@ -241324,7 +241423,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1279",
+      "source_location": "L1291",
       "weight": 1.0
     },
     {
@@ -241335,7 +241434,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1281",
+      "source_location": "L1293",
       "weight": 1.0
     },
     {
@@ -241346,7 +241445,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L805",
+      "source_location": "L811",
       "weight": 1.0
     },
     {
@@ -241357,7 +241456,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L809",
+      "source_location": "L815",
       "weight": 1.0
     },
     {
@@ -241368,7 +241467,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L490",
+      "source_location": "L496",
       "weight": 1.0
     },
     {
@@ -241379,7 +241478,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L491",
+      "source_location": "L497",
       "weight": 1.0
     },
     {
@@ -241390,7 +241489,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L494",
+      "source_location": "L500",
       "weight": 1.0
     },
     {
@@ -241401,7 +241500,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1066",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -241412,7 +241511,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1076",
+      "source_location": "L1088",
       "weight": 1.0
     },
     {
@@ -241423,7 +241522,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L348",
+      "source_location": "L354",
       "weight": 1.0
     },
     {
@@ -241434,7 +241533,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1096",
+      "source_location": "L1108",
       "weight": 1.0
     },
     {
@@ -241445,7 +241544,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1100",
+      "source_location": "L1112",
       "weight": 1.0
     },
     {
@@ -241457,7 +241556,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1105",
+      "source_location": "L1117",
       "weight": 1.0
     },
     {
@@ -241468,7 +241567,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1120",
+      "source_location": "L1132",
       "weight": 1.0
     },
     {
@@ -241479,7 +241578,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1127",
+      "source_location": "L1139",
       "weight": 1.0
     },
     {
@@ -241490,7 +241589,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1132",
+      "source_location": "L1144",
       "weight": 1.0
     },
     {
@@ -241502,7 +241601,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1136",
+      "source_location": "L1148",
       "weight": 1.0
     },
     {
@@ -241513,7 +241612,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1179",
+      "source_location": "L1191",
       "weight": 1.0
     },
     {
@@ -241525,7 +241624,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1180",
+      "source_location": "L1192",
       "weight": 1.0
     },
     {
@@ -241536,7 +241635,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1184",
+      "source_location": "L1196",
       "weight": 1.0
     },
     {
@@ -241547,7 +241646,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1204",
+      "source_location": "L1216",
       "weight": 1.0
     },
     {
@@ -241558,7 +241657,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1205",
+      "source_location": "L1217",
       "weight": 1.0
     },
     {
@@ -241569,7 +241668,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1206",
+      "source_location": "L1218",
       "weight": 1.0
     },
     {
@@ -241580,7 +241679,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1207",
+      "source_location": "L1219",
       "weight": 1.0
     },
     {
@@ -241591,35 +241690,12 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1210",
+      "source_location": "L1222",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
       "target": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_onstatus",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "call",
-      "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1226",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
-      "target": "apps_extension_src_debug_log_logdebug",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1230",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restartheartbeattimer",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -241630,7 +241706,19 @@
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
-      "target": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_ensureremotesource",
+      "target": "apps_extension_src_debug_log_logdebug",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L1242",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_restartheartbeattimer",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -241641,13 +241729,24 @@
     },
     {
       "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_ensureremotesource",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "context": "call",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L1262",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_queuesourcenavigation",
       "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_handlesourcenavigationresult",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1255",
+      "source_location": "L1267",
       "weight": 1.0
     },
     {
@@ -241658,7 +241757,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1304",
+      "source_location": "L1316",
       "weight": 1.0
     },
     {
@@ -241669,7 +241768,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1310",
+      "source_location": "L1322",
       "weight": 1.0
     },
     {
@@ -241680,7 +241779,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1321",
+      "source_location": "L1333",
       "weight": 1.0
     },
     {
@@ -241691,7 +241790,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1324",
+      "source_location": "L1336",
       "weight": 1.0
     },
     {
@@ -241702,7 +241801,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1326",
+      "source_location": "L1338",
       "weight": 1.0
     },
     {
@@ -241713,7 +241812,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L989",
+      "source_location": "L1001",
       "weight": 1.0
     },
     {
@@ -241724,7 +241823,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1386",
+      "source_location": "L1398",
       "weight": 1.0
     },
     {
@@ -241735,7 +241834,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1387",
+      "source_location": "L1399",
       "weight": 1.0
     },
     {
@@ -241746,7 +241845,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1391",
+      "source_location": "L1403",
       "weight": 1.0
     },
     {
@@ -241757,7 +241856,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L693",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -241768,7 +241867,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L698",
+      "source_location": "L704",
       "weight": 1.0
     },
     {
@@ -241780,7 +241879,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L703",
+      "source_location": "L709",
       "weight": 1.0
     },
     {
@@ -241791,7 +241890,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L710",
+      "source_location": "L716",
       "weight": 1.0
     },
     {
@@ -241802,7 +241901,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L711",
+      "source_location": "L717",
       "weight": 1.0
     },
     {
@@ -241813,7 +241912,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L535",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -241824,7 +241923,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L543",
+      "source_location": "L549",
       "weight": 1.0
     },
     {
@@ -241835,7 +241934,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L554",
+      "source_location": "L560",
       "weight": 1.0
     },
     {
@@ -241846,7 +241945,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L561",
+      "source_location": "L567",
       "weight": 1.0
     },
     {
@@ -241857,7 +241956,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L562",
+      "source_location": "L568",
       "weight": 1.0
     },
     {
@@ -241868,7 +241967,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1397",
+      "source_location": "L1409",
       "weight": 1.0
     },
     {
@@ -241879,7 +241978,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1398",
+      "source_location": "L1410",
       "weight": 1.0
     },
     {
@@ -241891,7 +241990,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1404",
+      "source_location": "L1416",
       "weight": 1.0
     },
     {
@@ -241902,7 +242001,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1415",
+      "source_location": "L1427",
       "weight": 1.0
     },
     {
@@ -241913,7 +242012,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1052",
+      "source_location": "L1064",
       "weight": 1.0
     },
     {
@@ -241924,7 +242023,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1033",
+      "source_location": "L1045",
       "weight": 1.0
     },
     {
@@ -241935,7 +242034,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1008",
+      "source_location": "L1020",
       "weight": 1.0
     },
     {
@@ -241946,7 +242045,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1021",
+      "source_location": "L1033",
       "weight": 1.0
     },
     {
@@ -241957,7 +242056,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1424",
+      "source_location": "L1436",
       "weight": 1.0
     },
     {
@@ -241968,7 +242067,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1431",
+      "source_location": "L1443",
       "weight": 1.0
     },
     {
@@ -241979,7 +242078,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1435",
+      "source_location": "L1447",
       "weight": 1.0
     },
     {
@@ -241991,7 +242090,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1441",
+      "source_location": "L1453",
       "weight": 1.0
     },
     {
@@ -242002,7 +242101,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1492",
+      "source_location": "L1504",
       "weight": 1.0
     },
     {
@@ -242013,7 +242112,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L193",
+      "source_location": "L196",
       "weight": 1.0
     },
     {
@@ -242024,7 +242123,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L197",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -242035,7 +242134,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L198",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -242046,7 +242145,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L209",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
@@ -242057,7 +242156,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L210",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -242068,7 +242167,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L213",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -242079,7 +242178,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L215",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -242090,7 +242189,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L217",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -242102,7 +242201,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1522",
+      "source_location": "L1534",
       "weight": 1.0
     },
     {
@@ -242113,7 +242212,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L577",
+      "source_location": "L583",
       "weight": 1.0
     },
     {
@@ -242124,7 +242223,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L578",
+      "source_location": "L584",
       "weight": 1.0
     },
     {
@@ -242135,7 +242234,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L579",
+      "source_location": "L585",
       "weight": 1.0
     },
     {
@@ -242146,7 +242245,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L580",
+      "source_location": "L586",
       "weight": 1.0
     },
     {
@@ -242157,7 +242256,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L581",
+      "source_location": "L587",
       "weight": 1.0
     },
     {
@@ -261481,7 +261580,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1153",
+      "source_location": "L1179",
       "weight": 1.0
     },
     {
@@ -261492,7 +261591,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L993",
+      "source_location": "L1019",
       "weight": 1.0
     },
     {
@@ -261504,7 +261603,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L994",
+      "source_location": "L1020",
       "weight": 1.0
     },
     {
@@ -261515,7 +261614,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1008",
+      "source_location": "L1034",
       "weight": 1.0
     },
     {
@@ -262786,7 +262885,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L94",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -262798,7 +262897,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L96",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -295777,7 +295876,7 @@
       "confidence": "EXTRACTED",
       "context": "field",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L979",
+      "source_location": "L1005",
       "weight": 1.0
     },
     {
@@ -296175,7 +296274,7 @@
       "confidence": "EXTRACTED",
       "context": "generic_arg",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L979",
+      "source_location": "L1005",
       "weight": 1.0
     },
     {
@@ -389776,7 +389875,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1337",
+      "source_location": "L1349",
       "weight": 1.0
     },
     {
@@ -389787,7 +389886,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L830",
+      "source_location": "L836",
       "weight": 1.0
     },
     {
@@ -389798,7 +389897,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L830",
+      "source_location": "L836",
       "weight": 1.0
     },
     {
@@ -389820,7 +389919,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L627",
+      "source_location": "L633",
       "weight": 1.0
     },
     {
@@ -389831,7 +389930,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L908",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -389842,7 +389941,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L908",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -389853,7 +389952,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L908",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -389864,7 +389963,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L220",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -389875,7 +389974,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1265",
+      "source_location": "L1277",
       "weight": 1.0
     },
     {
@@ -389886,7 +389985,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L338",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -389897,7 +389996,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L988",
+      "source_location": "L1000",
       "weight": 1.0
     },
     {
@@ -389908,7 +390007,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L665",
+      "source_location": "L671",
       "weight": 1.0
     },
     {
@@ -389919,7 +390018,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L992",
+      "source_location": "L1004",
       "weight": 1.0
     },
     {
@@ -389930,7 +390029,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L992",
+      "source_location": "L1004",
       "weight": 1.0
     },
     {
@@ -389941,7 +390040,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L685",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -389952,7 +390051,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1043",
+      "source_location": "L1055",
       "weight": 1.0
     },
     {
@@ -389963,7 +390062,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1029",
+      "source_location": "L1041",
       "weight": 1.0
     },
     {
@@ -389974,7 +390073,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1029",
+      "source_location": "L1041",
       "weight": 1.0
     },
     {
@@ -389985,7 +390084,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1007",
+      "source_location": "L1019",
       "weight": 1.0
     },
     {
@@ -389996,7 +390095,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1456",
+      "source_location": "L1468",
       "weight": 1.0
     },
     {
@@ -390437,7 +390536,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1047",
+      "source_location": "L1073",
       "weight": 1.0
     },
     {
@@ -390448,7 +390547,7 @@
       "confidence": "EXTRACTED",
       "context": "parameter_type",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1055",
+      "source_location": "L1081",
       "weight": 1.0
     },
     {
@@ -391026,7 +391125,7 @@
       "confidence": "EXTRACTED",
       "context": "return_type",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L797",
+      "source_location": "L803",
       "weight": 1.0
     },
     {
@@ -391468,7 +391567,7 @@
       "confidence": "EXTRACTED",
       "context": "type",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1046",
+      "source_location": "L1072",
       "weight": 1.0
     },
     {
@@ -405439,7 +405538,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1561",
+      "source_location": "L1573",
       "weight": 1.0
     },
     {
@@ -405449,7 +405548,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1569",
+      "source_location": "L1581",
       "weight": 1.0
     },
     {
@@ -421546,7 +421645,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1020",
+      "source_location": "L1046",
       "weight": 1.0
     },
     {
@@ -421556,7 +421655,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1035",
+      "source_location": "L1061",
       "weight": 1.0
     },
     {
@@ -421566,7 +421665,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1046",
+      "source_location": "L1072",
       "weight": 1.0
     },
     {
@@ -421576,7 +421675,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1060",
+      "source_location": "L1086",
       "weight": 1.0
     },
     {
@@ -421586,7 +421685,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1199",
+      "source_location": "L1225",
       "weight": 1.0
     },
     {
@@ -421596,7 +421695,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1212",
+      "source_location": "L1238",
       "weight": 1.0
     },
     {
@@ -421606,7 +421705,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1222",
+      "source_location": "L1248",
       "weight": 1.0
     },
     {
@@ -421616,7 +421715,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L977",
+      "source_location": "L1003",
       "weight": 1.0
     },
     {
@@ -421626,7 +421725,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L990",
+      "source_location": "L1016",
       "weight": 1.0
     },
     {
@@ -424701,7 +424800,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L127",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -424711,7 +424810,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L137",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -424721,7 +424820,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L61",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -489356,7 +489455,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1007",
+      "source_location": "L1019",
       "weight": 1.0
     },
     {
@@ -489366,7 +489465,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1029",
+      "source_location": "L1041",
       "weight": 1.0
     },
     {
@@ -489376,7 +489475,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1043",
+      "source_location": "L1055",
       "weight": 1.0
     },
     {
@@ -489386,7 +489485,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1064",
+      "source_location": "L1076",
       "weight": 1.0
     },
     {
@@ -489396,7 +489495,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1069",
+      "source_location": "L1081",
       "weight": 1.0
     },
     {
@@ -489406,7 +489505,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1080",
+      "source_location": "L1092",
       "weight": 1.0
     },
     {
@@ -489416,7 +489515,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1095",
+      "source_location": "L1107",
       "weight": 1.0
     },
     {
@@ -489426,7 +489525,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1164",
+      "source_location": "L1176",
       "weight": 1.0
     },
     {
@@ -489436,7 +489535,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1170",
+      "source_location": "L1182",
       "weight": 1.0
     },
     {
@@ -489446,7 +489545,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1189",
+      "source_location": "L1201",
       "weight": 1.0
     },
     {
@@ -489456,7 +489555,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1265",
+      "source_location": "L1277",
       "weight": 1.0
     },
     {
@@ -489466,7 +489565,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1303",
+      "source_location": "L1315",
       "weight": 1.0
     },
     {
@@ -489476,7 +489575,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1331",
+      "source_location": "L1343",
       "weight": 1.0
     },
     {
@@ -489486,7 +489585,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1337",
+      "source_location": "L1349",
       "weight": 1.0
     },
     {
@@ -489496,7 +489595,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1352",
+      "source_location": "L1364",
       "weight": 1.0
     },
     {
@@ -489506,7 +489605,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1357",
+      "source_location": "L1369",
       "weight": 1.0
     },
     {
@@ -489516,7 +489615,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1385",
+      "source_location": "L1397",
       "weight": 1.0
     },
     {
@@ -489526,7 +489625,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1396",
+      "source_location": "L1408",
       "weight": 1.0
     },
     {
@@ -489536,7 +489635,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1420",
+      "source_location": "L1432",
       "weight": 1.0
     },
     {
@@ -489546,7 +489645,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1456",
+      "source_location": "L1468",
       "weight": 1.0
     },
     {
@@ -489566,7 +489665,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1496",
+      "source_location": "L1508",
       "weight": 1.0
     },
     {
@@ -489576,7 +489675,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1527",
+      "source_location": "L1539",
       "weight": 1.0
     },
     {
@@ -489596,7 +489695,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1536",
+      "source_location": "L1548",
       "weight": 1.0
     },
     {
@@ -489606,7 +489705,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L192",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -489616,7 +489715,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L220",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -489626,7 +489725,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L279",
+      "source_location": "L285",
       "weight": 1.0
     },
     {
@@ -489636,7 +489735,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L338",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -489646,7 +489745,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L352",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -489656,7 +489755,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L438",
+      "source_location": "L444",
       "weight": 1.0
     },
     {
@@ -489666,7 +489765,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L489",
+      "source_location": "L495",
       "weight": 1.0
     },
     {
@@ -489676,7 +489775,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L497",
+      "source_location": "L503",
       "weight": 1.0
     },
     {
@@ -489686,7 +489785,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L505",
+      "source_location": "L511",
       "weight": 1.0
     },
     {
@@ -489696,7 +489795,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L512",
+      "source_location": "L518",
       "weight": 1.0
     },
     {
@@ -489706,7 +489805,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L534",
+      "source_location": "L540",
       "weight": 1.0
     },
     {
@@ -489716,7 +489815,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L571",
+      "source_location": "L577",
       "weight": 1.0
     },
     {
@@ -489726,7 +489825,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L585",
+      "source_location": "L591",
       "weight": 1.0
     },
     {
@@ -489736,7 +489835,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L611",
+      "source_location": "L617",
       "weight": 1.0
     },
     {
@@ -489746,7 +489845,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L622",
+      "source_location": "L628",
       "weight": 1.0
     },
     {
@@ -489756,7 +489855,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L627",
+      "source_location": "L633",
       "weight": 1.0
     },
     {
@@ -489766,7 +489865,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L646",
+      "source_location": "L652",
       "weight": 1.0
     },
     {
@@ -489776,7 +489875,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L665",
+      "source_location": "L671",
       "weight": 1.0
     },
     {
@@ -489786,7 +489885,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L685",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -489796,7 +489895,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L714",
+      "source_location": "L720",
       "weight": 1.0
     },
     {
@@ -489806,7 +489905,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L719",
+      "source_location": "L725",
       "weight": 1.0
     },
     {
@@ -489816,7 +489915,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L727",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -489826,7 +489925,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L735",
+      "source_location": "L741",
       "weight": 1.0
     },
     {
@@ -489836,7 +489935,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L755",
+      "source_location": "L761",
       "weight": 1.0
     },
     {
@@ -489846,7 +489945,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L797",
+      "source_location": "L803",
       "weight": 1.0
     },
     {
@@ -489856,7 +489955,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L801",
+      "source_location": "L807",
       "weight": 1.0
     },
     {
@@ -489866,7 +489965,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L808",
+      "source_location": "L814",
       "weight": 1.0
     },
     {
@@ -489876,7 +489975,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L819",
+      "source_location": "L825",
       "weight": 1.0
     },
     {
@@ -489886,7 +489985,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L830",
+      "source_location": "L836",
       "weight": 1.0
     },
     {
@@ -489896,7 +489995,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L908",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -489906,7 +490005,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L980",
+      "source_location": "L992",
       "weight": 1.0
     },
     {
@@ -489916,7 +490015,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L988",
+      "source_location": "L1000",
       "weight": 1.0
     },
     {
@@ -489926,7 +490025,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L992",
+      "source_location": "L1004",
       "weight": 1.0
     },
     {
@@ -492117,7 +492216,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1047",
+      "source_location": "L1073",
       "weight": 1.0
     },
     {
@@ -492127,7 +492226,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1048",
+      "source_location": "L1074",
       "weight": 1.0
     },
     {
@@ -492137,7 +492236,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1052",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -492147,7 +492246,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1053",
+      "source_location": "L1079",
       "weight": 1.0
     },
     {
@@ -492157,7 +492256,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1054",
+      "source_location": "L1080",
       "weight": 1.0
     },
     {
@@ -492167,7 +492266,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1055",
+      "source_location": "L1081",
       "weight": 1.0
     },
     {
@@ -498974,7 +499073,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1006",
+      "source_location": "L1032",
       "weight": 1.0
     },
     {
@@ -498986,7 +499085,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1007",
+      "source_location": "L1033",
       "weight": 1.0
     },
     {
@@ -498998,7 +499097,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L104",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -499010,7 +499109,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L105",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -586729,7 +586828,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586740,7 +586839,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586751,7 +586850,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586762,7 +586861,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586773,7 +586872,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586784,7 +586883,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L74",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586795,7 +586894,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586806,7 +586905,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586817,7 +586916,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586828,7 +586927,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586839,7 +586938,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586850,7 +586949,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586861,7 +586960,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L136",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586872,7 +586971,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L136",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586883,7 +586982,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L137",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586894,7 +586993,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586905,7 +587004,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L163",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586916,7 +587015,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586927,7 +587026,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586938,7 +587037,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -586949,7 +587048,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/youtube-adapter-notes.md",
-      "source_location": null,
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -682925,7 +683024,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L506",
+      "source_location": "L532",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -682936,7 +683035,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L582",
+      "source_location": "L222",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -682947,7 +683046,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L628",
+      "source_location": "L654",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -682958,7 +683057,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L637",
+      "source_location": "L219",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -682969,7 +683068,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L714",
+      "source_location": "L740",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -682980,7 +683079,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -683002,7 +683101,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
-      "source_location": "L46",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -683087,7 +683186,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/playback-sync-controller.test.ts",
-      "source_location": "L1049",
+      "source_location": "L1075",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -683171,7 +683270,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1056",
+      "source_location": "L1068",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -683183,7 +683282,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1448",
+      "source_location": "L1460",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -683195,7 +683294,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/extension/src/playback-sync-controller.ts",
-      "source_location": "L1491",
+      "source_location": "L1503",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -708354,6 +708453,242 @@
       "weight": 1.0,
       "description": "Task 1 explicitly defines microphone mode click feedback and error precedence without changing device status or capture/grant behavior.",
       "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_setsession",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_onstatus",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L209",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_applyplaybacksnapshot",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontroller_hasproviderboundroomsession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L885",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_source_adapters_youtube_sync_integration_test",
+      "target": "apps_extension_src_playback_sync_status",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_source_adapters_youtube_sync_integration_test",
+      "target": "apps_extension_src_playback_sync_status_playbacksyncstatus",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/source-adapters/youtube/sync-integration.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_maintenance_contract",
+      "target": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L110",
+      "weight": 1.0,
+      "description": "The maintenance document records this dated local notice-lifetime correction.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "target": "docs_youtube_adapter_notes_host_player_session_and_phase_notice_retirement",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L112",
+      "weight": 1.0,
+      "description": "The local correction explicitly records this behavior or evidence boundary.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "target": "docs_youtube_adapter_notes_provider_bound_room_ad_notice_ownership",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L120",
+      "weight": 1.0,
+      "description": "The local correction explicitly records this behavior or evidence boundary.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "target": "docs_youtube_adapter_notes_solo_ad_and_transition_barrier_continuity",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L123",
+      "weight": 1.0,
+      "description": "The local correction explicitly records this behavior or evidence boundary.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "target": "docs_youtube_adapter_notes_room_ad_notice_regression_fixtures",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L126",
+      "weight": 1.0,
+      "description": "The local correction explicitly records this behavior or evidence boundary.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_lifecycle_local_correction_november_3_2026",
+      "target": "docs_youtube_adapter_notes_local_room_ad_notice_artifact_acceptance_boundary",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L129",
+      "weight": 1.0,
+      "description": "The local correction explicitly records this behavior or evidence boundary.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_host_player_session_and_phase_notice_retirement",
+      "target": "docs_youtube_adapter_notes_solo_ad_and_transition_barrier_continuity",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L122",
+      "weight": 1.0,
+      "description": "Clearing an ad notice on source transition preserves the internal playback barrier.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_provider_bound_room_ad_notice_ownership",
+      "target": "docs_youtube_adapter_notes_solo_ad_and_transition_barrier_continuity",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L120",
+      "weight": 1.0,
+      "description": "No provider-bound room means no host or guest ad notice, while the solo local-ad barrier remains.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_solo_ad_and_transition_barrier_continuity",
+      "target": "docs_youtube_adapter_notes_advertisement_sync_isolation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L124",
+      "weight": 1.0,
+      "description": "The local notice cleanup preserves the no-touch policy, host hold and guest recovery.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_solo_ad_and_transition_barrier_continuity",
+      "target": "docs_youtube_adapter_notes_transition_buffering_autoplay_policy",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L122",
+      "weight": 1.0,
+      "description": "A source transition stops the stale ad claim while retaining playback blocking.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_host_player_session_and_phase_notice_retirement",
+      "target": "docs_youtube_adapter_notes_playback_phase_contract",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L125",
+      "weight": 1.0,
+      "description": "The change retires stale feedback while leaving the existing detector and ad-exit grace unchanged.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_regression_fixtures",
+      "target": "docs_youtube_adapter_notes_host_player_session_and_phase_notice_retirement",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L126",
+      "weight": 1.0,
+      "description": "Fixtures cover active-host player replacement, session refresh and phase changes.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_regression_fixtures",
+      "target": "docs_youtube_adapter_notes_provider_bound_room_ad_notice_ownership",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L126",
+      "weight": 1.0,
+      "description": "Fixtures cover solo viewing and both host and guest departure during advertisements.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_room_ad_notice_regression_fixtures",
+      "target": "docs_youtube_adapter_notes_advertisement_sync_isolation",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L128",
+      "weight": 1.0,
+      "description": "Automatic host and guest recovery remains covered without requiring a second host-state message.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_youtube_adapter_notes_local_room_ad_notice_artifact_acceptance_boundary",
+      "target": "docs_youtube_adapter_notes_real_ad_and_two_profile_acceptance",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "source_location": "L129",
+      "weight": 1.0,
+      "description": "This local artifact and fixture coverage do not replace the existing real-ad and two-profile acceptance requirement.",
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_src_playback_sync_controller_playbacksynccontroller_bindadapter",
+      "target": "apps_extension_src_playback_sync_controller_playbacksynccontrolleroptions_onstatus",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/playback-sync-controller.ts",
+      "source_location": "L176",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [
@@ -709089,20 +709424,6 @@
       "_origin": "semantic"
     },
     {
-      "id": "docs_youtube_adapter_notes_composer_scope_and_acceptance",
-      "label": "Provider CSS guard, protected surfaces and independent owner acceptance",
-      "nodes": [
-        "docs_youtube_adapter_notes_composer_provider_css_guard",
-        "docs_youtube_adapter_notes_composer_protected_surfaces_and_geometry",
-        "docs_youtube_adapter_notes_composer_local_evidence_and_owner_gate"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/youtube-adapter-notes.md",
-      "_origin": "semantic"
-    },
-    {
       "id": "docs_releases_paid_hosting_trial_cutover_operations_durable_cutover_completion_requirements",
       "label": "One immutable activation operation completes only after durable fence, finalization and reconciliation",
       "nodes": [
@@ -709729,6 +710050,21 @@
       "source_file": "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md",
       "source_location": "L343",
       "_origin": "semantic"
+    },
+    {
+      "id": "docs_youtube_adapter_notes_composer_scope_and_acceptance",
+      "label": "Provider CSS guard, protected surfaces and independent owner acceptance",
+      "nodes": [
+        "docs_youtube_adapter_notes_composer_provider_css_guard",
+        "docs_youtube_adapter_notes_composer_protected_surfaces_and_geometry",
+        "docs_youtube_adapter_notes_composer_local_evidence_and_owner_gate"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/youtube-adapter-notes.md",
+      "_origin": "semantic",
+      "source_location": "L133"
     }
   ],
   "built_at_commit": "80fefde3795d299224df3f8d78cbef2c177a5800",

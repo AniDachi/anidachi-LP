@@ -171,6 +171,9 @@ export class PlaybackSyncController {
 		this.suppressLocalEventsUntil = 0;
 		this.lastConfirmedContentState = null;
 		this.lastPlaybackPhase = null;
+		// Replacing the player retires the old ad notice even if the new player
+		// already reports content (and therefore has no barrier-exit event).
+		if (this.playbackBarrier === "interstitial") this.onStatus({ kind: "synced" });
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
 		this.hostBufferingHoldSent = false;
@@ -201,6 +204,9 @@ export class PlaybackSyncController {
 		this.latestHostState = null;
 		this.authoritativeRoomSource = null;
 		this.pendingRemoteSeek = null;
+		// Membership/connection refresh resets the barrier too. Re-read the
+		// current phase below instead of retaining feedback from the old session.
+		if (this.playbackBarrier === "interstitial") this.onStatus({ kind: "synced" });
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
 		this.hostBufferingHoldSent = false;
@@ -864,6 +870,9 @@ export class PlaybackSyncController {
 
 		const previousBarrier = this.playbackBarrier;
 		this.playbackBarrier = nextBarrier;
+		// Transition/unsupported is still a playback barrier, but it is no longer
+		// an advertisement. Do not leave the old ad copy attached to that state.
+		if (previousBarrier === "interstitial" && nextBarrier) this.onStatus({ kind: "synced" });
 		if (nextBarrier) {
 			this.clearHostBufferingTimer();
 			this.hostBufferingHoldSent = false;
@@ -871,6 +880,9 @@ export class PlaybackSyncController {
 			this.clearPendingLocalSeek();
 			this.pendingRemoteSeek = null;
 			if (nextBarrier === "interstitial") {
+				// Keep the playback barrier, but solo viewing has no room to pause
+				// or synchronize. Do not classify the absence of a host as a guest.
+				if (!this.hasProviderBoundRoomSession()) return true;
 				if (this.session.isHost) {
 					this.sendHostInterstitialHold(adapter);
 					this.onStatus({ kind: "waiting-for-host-ad" });
