@@ -58,6 +58,12 @@ restrictions solely for the tradeoff explicitly accepted here.
   under the same account/room fences; it cannot remove original scope restrictions.
   Any newly attached scope must reflect current known account consumption and
   subsequent room deltas, including a pending ACK, without double-counting.
+- Binding a fresh replacement marker must carry forward the greatest known
+  current-day consumption of the account and all paired/bound scopes, not just
+  the account's own consumption. Browser 720 + fresh installation + fresh account
+  must seed the new installation to 720 before spending; later replacing the
+  browser then cannot recover those 720 seconds. Status/enrollment reads do not
+  mutate a live room's scope ceiling outside its serialized transfer.
 - The effective committed total is max(account committed, each bound marker's
   committed total). With exclusive active-scope ownership, the existing DO's
   own unsettled interval can be added once using its existing ACK machinery.
@@ -81,6 +87,13 @@ reconnect needs no such transfer. Lost response/restart must resume or fail clos
 from the durable transfer record; a client abort must not strand a smaller SQL
 allowance behind a larger active DO budget. A terminal room never resumes. This
 does not alter ordinary guest, camera or microphone controls.
+
+Transfer intent and the stopped meter are one durable write. Recovery loads this
+fence before restoring old host sockets, and pending transfer blocks host JOIN and
+metering. The existing 60-second host-disconnect deadline bounds recovery and is
+never extended by retries. An applied exact-payload receipt survives restart so
+duplicate delivery cannot detach the replacement host. Settlement uses the
+existing nonterminal `settleOnly` path; terminal departure is not a transfer.
 
 The browser cookie must be observed on both enrollment requests. A browser that
 blocks it must not receive a usable context from the challenge alone. A dedicated
