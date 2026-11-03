@@ -64,7 +64,8 @@ export function createFree20ContextHandler(
 			});
 		const failure = (code: string, status: number) => json({ code }, status);
 		try {
-			return await boundedFree20(10_000, async () => {
+			return await boundedFree20(10_000, async (signal) => {
+				signal.throwIfAborted();
 				if (!deps.enabled()) return failure("FREE20_DISABLED", 404);
 				const origin = deps.siteOrigin();
 				if (
@@ -80,6 +81,7 @@ export function createFree20ContextHandler(
 				)
 					return failure("FREE20_CONTEXT_ORIGIN_INVALID", 403);
 				const session = await deps.getSession(request);
+				signal.throwIfAborted();
 				if (!session) return failure("UNAUTHORIZED", 401);
 				if (!request.headers.has("origin") && session.source !== "extension")
 					return failure("FREE20_CONTEXT_ORIGIN_INVALID", 403);
@@ -92,10 +94,13 @@ export function createFree20ContextHandler(
 					raw = await readBoundedFree20Json(
 						request.body,
 						FREE20_CONTEXT_REQUEST_MAX_BYTES,
+						signal,
 					);
 				} catch {
+					signal.throwIfAborted();
 					return failure("INVALID_REQUEST", 400);
 				}
+				signal.throwIfAborted();
 				const parsed = Free20ContextRequestSchema.safeParse(raw);
 				if (!parsed.success)
 					return failure(
@@ -104,8 +109,9 @@ export function createFree20ContextHandler(
 							: "INVALID_REQUEST",
 						(raw as { action?: unknown })?.action === "complete" ? 428 : 400,
 					);
-				if (!(await deps.allowRequest(session.userId)))
-					return failure("FREE20_CONTEXT_RATE_LIMITED", 429);
+				const allowed = await deps.allowRequest(session.userId);
+				signal.throwIfAborted();
+				if (!allowed) return failure("FREE20_CONTEXT_RATE_LIMITED", 429);
 				const input = parsed.data,
 					tokens = deps.tokens(origin),
 					browser = deps.browserTokens(origin),
@@ -148,6 +154,7 @@ export function createFree20ContextHandler(
 					input.requestId,
 					input.proof,
 				);
+				signal.throwIfAborted();
 				const response = json(
 					Free20ContextResponseSchema.parse({ action: "complete", ...result }),
 					200,

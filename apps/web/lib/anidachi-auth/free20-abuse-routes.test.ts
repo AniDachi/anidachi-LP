@@ -131,3 +131,155 @@ test("absent Origin is accepted only for actually verified extension bearer, nev
 		assert.equal(response.status, source === "extension" ? 200 : 403);
 	}
 });
+
+function deferred<T>() {
+	let resolve!: (value: T) => void;
+	const promise = new Promise<T>((done) => {
+		resolve = done;
+	});
+	return { promise, resolve };
+}
+const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
+test("enrollment timeout cancels an incomplete request body and prevents late body/rate work", async (t) => {
+	const reading = deferred<void>();
+	let source!: ReadableStreamDefaultController<Uint8Array>;
+	let cancelled = false,
+		limited = 0;
+	const stream = new ReadableStream<Uint8Array>(
+		{
+			start(controller) {
+				source = controller;
+			},
+			pull() {
+				reading.resolve();
+			},
+			cancel() {
+				cancelled = true;
+			},
+		},
+		{ highWaterMark: 0 },
+	);
+	const req = new NextRequest(`${origin}/api/me/free20-context`, {
+		method: "POST",
+		headers: {
+			origin,
+			"content-type": "application/json",
+			[ACCOUNT_HOSTING_OWNER_HEADER]: owner,
+		},
+		body: stream,
+		duplex: "half",
+	} as NonNullable<ConstructorParameters<typeof NextRequest>[1]> & {
+		duplex: "half";
+	});
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	const responsePromise = createFree20ContextHandler({
+		...options,
+		allowRequest: async () => {
+			limited++;
+			return true;
+		},
+	})(req);
+	await reading.promise;
+	t.mock.timers.tick(10_000);
+	const response = await responsePromise;
+	assert.equal(response.status, 503);
+	assert.equal(response.headers.get("set-cookie"), null);
+	await flush();
+	assert.equal(cancelled, true);
+	assert.equal(stream.locked, false);
+	assert.throws(() =>
+		source.enqueue(
+			new TextEncoder().encode(
+				JSON.stringify({ action: "challenge", requestId }),
+			),
+		),
+	);
+	assert.equal(limited, 0);
+});
+test("a session or rate decision that resolves after deadline cannot issue a challenge", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	for (const stage of ["session", "rate"] as const) {
+		const entered = deferred<void>(),
+			release = deferred<void>();
+		let limited = 0,
+			issued = 0;
+		const handler = createFree20ContextHandler({
+			...options,
+			getSession: async () => {
+				if (stage === "session") {
+					entered.resolve();
+					await release.promise;
+				}
+				return options.getSession();
+			},
+			allowRequest: async () => {
+				limited++;
+				if (stage === "rate") {
+					entered.resolve();
+					await release.promise;
+				}
+				return true;
+			},
+			tokens: () => ({
+				...tokens,
+				issueChallenge: (...args) => {
+					issued++;
+					return tokens.issueChallenge(...args);
+				},
+			}),
+		});
+		const responsePromise = handler(
+			request({ action: "challenge", requestId }),
+		);
+		await entered.promise;
+		t.mock.timers.tick(10_000);
+		const response = await responsePromise;
+		assert.equal(response.status, 503);
+		release.resolve();
+		await flush();
+		assert.equal(issued, 0);
+		assert.equal(limited, stage === "session" ? 0 : 1);
+	}
+});
+test("late proof completion cannot assemble a context response or cookie after deadline", async (t) => {
+	const cookie = browser.issueCookie();
+	const proof = await signProof(
+		tokens.issueChallenge(cookie, owner, requestId),
+	);
+	const result = await tokens.complete(cookie, owner, requestId, proof);
+	const entered = deferred<void>(),
+		release = deferred<void>();
+	let resultReads = 0;
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	const handler = createFree20ContextHandler({
+		...options,
+		tokens: () => ({
+			...tokens,
+			complete: async () => {
+				entered.resolve();
+				await release.promise;
+				return {
+					get context() {
+						resultReads++;
+						return result.context;
+					},
+					expiresAt: result.expiresAt,
+				};
+			},
+		}),
+	});
+	const responsePromise = handler(
+		request(
+			{ action: "complete", requestId, proof },
+			{ cookie: `${trialBrowserCookieName(origin)}=${cookie}` },
+		),
+	);
+	await entered.promise;
+	t.mock.timers.tick(10_000);
+	const response = await responsePromise;
+	assert.equal(response.status, 503);
+	assert.equal(response.headers.get("set-cookie"), null);
+	release.resolve();
+	await flush();
+	assert.equal(resultReads, 0);
+});
