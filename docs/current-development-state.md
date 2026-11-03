@@ -3,11 +3,13 @@
 ## Free20 shared-browser/installation candidate, November 3, 2026
 
 The owner-approved [anti-abuse design](superpowers/specs/2026-11-03-free20-abuse-design.md)
-is implemented locally through Tasks 1–4 on `codex/free20-abuse-adaptation`
-(`7563c360..b219bf49`), with independent task reviews approved after fixes.
+is implemented through Tasks 1–5 on `codex/free20-abuse-adaptation`, with final
+candidate source `c367453c5d15aacf2ee447b10e0aed2907cdf7c7` and completed local
+review/readiness evidence. [Draft PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
+targets `staging`; it is not merged, deployed or activated.
 This is an additive, default-off candidate, not enabled staging protection.
 The [implementation plan](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
-records local evidence and outstanding review/delivery work; the
+records completed local evidence and outstanding hosted delivery/acceptance; the
 [delivery runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
 requires schema before compatible runtime, matching extension and SQL activation.
 
@@ -35,18 +37,33 @@ are overlapping snapshots, not totals to add. Local real-WebRTC passed legacy 26
 and all four-participant v3 scenarios, with 12/12 decoded first-frame samples
 (p95 1931.8 ms), using the actual source engine, local Worker, isolated Chromium and
 fake media without external TURN. These are not hosted or physical-network results.
-The narrow candidate validated; build output includes ineffective dynamic imports
+The final 13-file narrow candidate `artifacts/free20-abuse-20261103/candidate-c367453c/`
+validated, with exact identity in `final-candidate-receipt.json`; the user's stable
+folder is unchanged. Build output includes ineffective dynamic imports
 and oversized-chunk warnings, whose baseline ancestry was not independently verified.
 
-The read-only staging preflight at `2026-11-03T11:12:34Z` still observed source
-`3eeea8bc`, Web `dpl_C3D1yExdG6bbscBv2Xjmbx5NxAvw`, 89 database migrations through
-`20261101102723`, no anti-abuse migration and one nonterminal unprotected Free20
-room. This snapshot must be refreshed before delivery or gate changes; it is not
-activation. The user's stable unpacked folder, actual grants/accounts/usage, main,
-production and Store were unchanged. Loaded Chrome cookie-policy behavior, actual
-A/B account switching, two-participant spending, purchase while spending and the
-real UTC boundary remain pending. Whole-branch review and Graphify are tracked
-separately by Task 5; no production-readiness claim follows from local fixtures.
+Whole-branch review at `78ae94a9` found no Critical/Important issue and parked one
+P3 about test fault boundaries. The test-only CI lint correction `df8c047e` was
+independently approved with 45/45 focused tests and full Web lint/check; `c367453c`
+restores Graphify header-import resolution. These corrections change no product
+behavior. CI [41635669181](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669181),
+[E2E Rooms 41635669420](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669420),
+[P2P 41635669076](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669076)
+and Vercel preview succeeded; the full Worker runtime now has a passing 182-case
+run. Graphify completed 62 changed AST sources and nine semantic sources, plus
+one unchanged protocol dependency for header resolution; `graph/validation-final.json`
+records preservation and hash validation. These receipts precede this final docs
+update; they do not claim its commit has already been reviewed or tested by CI.
+
+The read-only staging refresh at `2026-11-03T12:06:26Z` observed policy revision 4,
+Free20 true/trials false, the anti-abuse migration absent and zero nonterminal
+Free20 rooms. This snapshot must be refreshed before delivery or gate changes;
+it is not current activation proof. Reports and ledger will be archived under
+`artifacts/free20-abuse-20261103/sdd-record/` before execution-workspace cleanup.
+Actual grants/accounts/usage, main, production and Store were unchanged. All hosted
+delivery, loaded Chrome cookie-policy behavior, actual A/B account switching,
+two-participant spending, purchase while spending and the real UTC boundary remain
+pending. No production-readiness claim follows from local fixtures or successful CI.
 
 ## Free20 capsule notice and paid refresh correction, November 3, 2026
 

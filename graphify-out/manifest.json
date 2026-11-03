@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793705976.1728044,
-    "seen": 1793706992.399368,
+    "mtime": 1793709191.6379075,
+    "seen": 1793709551.4530728,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "14d94593b05de1390a2467d688524791"
+    "semantic_hash": "7dacff6e51d7c215ac9f6fce3c8bc610"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -11796,10 +11796,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-03-free20-abuse-adaptation.md": {
-    "mtime": 1793705976.2184722,
-    "seen": 1793706992.399373,
+    "mtime": 1793709191.6581502,
+    "seen": 1793709551.453076,
     "ast_hash": "",
-    "semantic_hash": "c96767ecc53fa4dd7b6592171f9e8ada"
+    "semantic_hash": "b4ba4032e486111c12df87d522869cde"
   },
   "docs/superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md": {
     "mtime": 1793705888.6736457,

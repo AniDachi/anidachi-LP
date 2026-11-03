@@ -117,12 +117,12 @@
 
 **Files:** Current-state/Free20/P2P plan notes, architecture and environment documentation, factual daily-quota disclosure in `apps/web/app/privacy/page.tsx`, this plan/spec, Graphify team artifacts, execution evidence under ignored `artifacts/free20-abuse-20261103/`.
 
-- [ ] Run `pnpm dev:check` and required affected-plane checks; rerun only changed/failing areas after fixes. Record gaps separately from passes.
-- [ ] Independent whole-branch review of auth, accounting, concurrency, paid/guest compatibility and UI continuity. Fix material findings with targeted regression tests.
-- [ ] Update canonical docs and semantic Graphify through the safe fragment adapter; preserve unrelated graph/user changes.
+- [x] Run `pnpm dev:check` and required affected-plane checks; rerun only changed/failing areas after fixes. Record gaps separately from passes.
+- [x] Independent whole-branch review of auth, accounting, concurrency, paid/guest compatibility and UI continuity. Fix material findings with targeted regression tests.
+- [x] Update canonical docs and semantic Graphify through the safe fragment adapter; preserve unrelated graph/user changes.
 - [x] Describe the reused daily-quota markers, shared allowance and bounded retention in privacy copy, separately from unchanged historical trial rules; no new consent or legal interpretation.
-- [ ] Prepare a reviewable staging PR/delivery packet with schema-before-runtime order, default-off flags, activation preconditions, artifact replacement and rollback retaining all usage/bindings. Do not activate/deploy an incompletely verified candidate.
-- [ ] Report concrete completed behavior, tests, exact local/staging state and remaining loaded/two-user acceptance. No production-readiness claim from local fixtures.
+- [x] Prepare a reviewable staging PR/delivery packet with schema-before-runtime order, default-off flags, activation preconditions, artifact replacement and rollback retaining all usage/bindings. Do not activate/deploy an incompletely verified candidate.
+- [x] Report concrete completed behavior, tests, exact local/staging state and remaining loaded/two-user acceptance. No production-readiness claim from local fixtures.
 
 
 ## Execution evidence and remaining delivery gates, November 3, 2026
@@ -130,15 +130,16 @@
 Tasks 1–4 are implemented through `b219bf49` and independently reviewed after
 scoped fixes: SQL `0632721a`/`69223f29`, Web `31e8bdcf`/`fdccf2d7`, Worker
 `31b7b51a`, extension `b219bf49`. Checkboxes above record local implementation,
-not hosted activation or loaded-client acceptance. Full reports and review receipts
-are in the ignored `.superpowers/sdd/2026-11-03-free20-abuse-adaptation/` workspace
-and `artifacts/free20-abuse-20261103/`; counts below overlap and must not be summed.
+not hosted activation or loaded-client acceptance. Full reports and the execution
+ledger will be archived under ignored `artifacts/free20-abuse-20261103/sdd-record/`
+before execution-workspace cleanup; review receipts and other evidence remain in
+`artifacts/free20-abuse-20261103/`. Counts below overlap and must not be summed.
 
 | Slice | Completed local evidence | Remaining boundary |
 | --- | --- | --- |
 | SQL | Initial 724 assertions/21 suites, eight actual two-connection race groups and existing admission/purchase/trial/warning/client contracts; review fix 104/104 abuse + 36 status; Task 2 status integration and fresh full-file replay 109/109 abuse | No hosted migration or policy change; orphan unsettled reservations intentionally hold |
 | Proof/Web/protocol | Protocol 285, Web 1552 pass/6 existing skips, API 326, workerd 158 and room harness 39 at Task 2; cancellation fix 15/15 plus Web check | Real crypto/handlers use synthetic auth/SQL boundaries; actual browser cookie delivery unverified |
-| DO transfer | Final focused 24/24 workerd transfer and API check; preceding full runtime 181, API 329, Web 1561 pass/6 existing skips, protocol 285 and harness 39 | Full runtime pass precedes final three-line UTC fix; external Web/SQL HTTP authority simulated; no final full 182-run claim |
+| DO transfer | Task 3 final focused 24/24 workerd transfer and API check; its preceding full runtime 181, API 329, Web 1561 pass/6 existing skips, protocol 285 and harness 39; later CI full Worker runtime 182 passed | The earlier 181-case pass predates the final three-line UTC fix; the later 182-case pass closes that local full-suite gap. External Web/SQL HTTP authority is simulated; hosted acceptance remains pending |
 | Extension | Final check; 2759 tests/166 files; icon check; narrow candidate build/validator; actual handler/P-256 client fixture; unchanged stable folder receipt | Loaded Chrome cookie-policy, A/B account switching and hosted compatible runtime still pending |
 | Media regression | Root legacy real-WebRTC 26/26; all four-participant v3 scenarios, 12/12 decoded first frames, p95 1931.8 ms | Actual source engine/local Worker/isolated Chromium/fake media, no external TURN; not physical-network or hosted transfer acceptance |
 
@@ -149,7 +150,7 @@ verified. Do not describe the bundle output as pristine. The current silent PKCE
 auth flow has no equivalent first-party proof POST/context result path. Cookie
 blocking remains retryable unavailable; no cookie-only bypass or auth redesign.
 
-The matching ignored extension candidate is
+The historical Task 4 ignored extension candidate is
 `artifacts/free20-abuse-20261103/task4/candidate-31b7b51-staging-task4-20261103T182700Z/`,
 build ID `31b7b51-staging-task4-20261103T182700Z` (base plus dirty-source fingerprint,
 not a committed-source build claim); `task4/candidate-receipt.json` records exact
@@ -159,9 +160,9 @@ working folder. Owner reload/inspection remains his separate step.
 Task 5 canonical docs/privacy slice records the shared allowance, replacement
 floors, strict proof, separate unchanged trial rules, seven-UTC-day eligible
 cleanup, retained unsettled evidence and compatible rollback. Semantic Graphify,
-whole-branch review, final check aggregation and any hosted/PR operations are
-root-owned and remain open until their receipts exist. The approved spec requires
-no behavioral amendment for this documentation slice.
+whole-branch review, final check aggregation and draft PR preparation are complete
+as recorded below. Hosted delivery and acceptance remain pending. The approved
+spec requires no behavioral amendment for this documentation slice.
 
 Documentation-slice verification: `pnpm dev:check` passes and recommends
 `api`, `rooms`, `extension`, `web`, `docs`. `pnpm --filter @anidachi/web check`
@@ -179,7 +180,47 @@ usage, user's stable artifact, main, production and Store remain unchanged here.
 
 The [delivery packet](2026-11-03-free20-abuse-staging-runbook.md) preserves schema
 before runtime, exact Preview/staging Web gate, normal room drain and SQL policy
-last. Do not mark the combined review/Graphify/PR checkboxes above complete until
-root's separate work is evidenced. Actual two-account/loaded-cookie acceptance,
-two-participant spending, purchase during spending and real UTC rollover remain
-pending unless observed; local fixtures do not establish production readiness.
+last. Completed readiness checkboxes do not represent merge, deployment or
+activation. Actual two-account/loaded-cookie acceptance, two-participant spending,
+purchase during spending and real UTC rollover remain pending unless observed;
+local fixtures do not establish production readiness.
+
+## Final local/readiness receipt, November 3, 2026
+
+Final candidate source is `c367453c5d15aacf2ee447b10e0aed2907cdf7c7`.
+[Draft PR502](https://github.com/AniDachi/anidachi-LP/pull/502) targets `staging`
+and is not merged, deployed or activated. All hosted delivery remains pending.
+
+- Whole-branch review at `78ae94a9` found no Critical/Important issue; one P3
+  test-maintenance issue about fault-injection boundaries is parked. The test-only
+  CI lint correction `df8c047e` was independently approved with 45/45 focused tests,
+  full Web lint and Web check. Graphify import resolution was restored at
+  `c367453c`. These corrections make no product behavior change.
+- [CI 41635669181](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669181),
+  [E2E Rooms 41635669420](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669420),
+  [P2P 41635669076](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669076)
+  and Vercel preview succeeded. A full 182-case Worker runtime pass now closes
+  the earlier local full-suite source gap; the historical 181/24-case evidence
+  above retains its original scope.
+- The exact final narrow candidate is
+  `artifacts/free20-abuse-20261103/candidate-c367453c/`, build ID
+  `c367453c5d15aacf2ee447b10e0aed2907cdf7c7-staging-abuse-candidate`.
+  `final-candidate-receipt.json` records all 13 file hashes, preserved identity/
+  permissions and `delivered:false`. Validation passed; the stable working folder
+  remains unchanged. The old Task 4 candidate is historical evidence only.
+- Graphify completed 62 changed AST sources and nine semantic sources plus one
+  unchanged protocol dependency needed to resolve both context/owner header
+  imports. `artifacts/free20-abuse-20261103/graph/validation-final.json` records
+  source hashes, preserved unrelated content and no duplicate/dangling endpoints.
+- Read-only refresh `2026-11-03T12:06:26Z` observed policy revision 4/Free20 true/
+  trials false, new migration absent and zero nonterminal Free20 rooms. This is
+  preparation evidence, not current activation proof or permission to skip fresh
+  room/deployment inventory before any later gate change.
+
+Reports and ledger will be archived to
+`artifacts/free20-abuse-20261103/sdd-record/` before their execution workspace is
+removed. This final two-document receipt update postdates the source/CI/review
+receipts above; it does not claim its own commit is already reviewed or CI-tested.
+Root owns its commit and final semantic refresh. Actual Chrome cookie policy,
+two-account switching, two-participant spending, purchase during spending, live
+UTC rollover and all hosted delivery remain pending.
