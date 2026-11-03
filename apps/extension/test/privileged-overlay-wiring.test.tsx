@@ -1889,14 +1889,22 @@ describe("privileged overlay wiring", () => {
       await act(async () => pending.resolve(authorization));
       const notice = room.view.container.querySelector(".free20-warning-notice")!;
       expect(notice).not.toBeNull();
-      expect(notice.parentElement?.classList.contains("anidachi-overlay")).toBe(true);
-      expect(notice.closest(".mini-panel, .top-bubble-reveal")).toBeNull();
+      expect(notice.parentElement?.classList.contains("top-bubble-reveal")).toBe(true);
+      expect(notice.closest(".mini-panel")).toBeNull();
+      expect(notice.parentElement?.classList.contains("free20-notice-present")).toBe(true);
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 40)); });
+      expect(notice.getAttribute("data-open")).toBe("true");
+      expect(notice.querySelector('[role="timer"]')?.textContent).toBe("00:10");
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+      expect(notice.querySelector('[role="timer"]')?.textContent).toBe("00:09");
       expect(room.view.container.querySelector(".panel-media-dock")).toBe(dock);
       await click(button(room.view.container, "Close Anidachi controls"));
       expect(room.view.container.querySelector(".mini-panel")).toBeNull();
       expect(room.view.container.querySelector(".free20-warning-notice")).toBe(notice);
       expect(claim).toHaveBeenCalledTimes(1);
       await click(button(room.view.container, "Dismiss hosting time warning"));
+      expect(notice.getAttribute("data-open")).toBe("false");
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 350)); });
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       await act(async () => room.options.onEvent(room.time(2, 8)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
@@ -1915,6 +1923,38 @@ describe("privileged overlay wiring", () => {
       await act(async () => room.options.onEvent(room.time(4, 6)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
+    } finally { vi.useRealTimers(); await unmount(room.view.root); }
+  });
+
+  it.each(["new login", "overnight sleep"])("shows the closed strip only on a host Free20 terminal event and retires it after %s", async retirement => {
+    vi.spyOn(free20WarningClient, "requestFree20Warning").mockResolvedValue({ kind: "suppressed" });
+    const room = await renderActiveFree20Timer();
+    try {
+      await click(button(room.view.container, "Close Anidachi controls"));
+      await act(async () => room.options.onEvent(room.time(2, 0)));
+      expect(room.view.container.querySelector('.free20-warning-notice[data-kind="closed"]')).toBeNull();
+      await act(async () => room.options.onEvent({ type: "ROOM_ENDED", roomId: "unrelated", endedAt: room.at, reason: "quota_exhausted" }));
+      expect(room.view.container.querySelector('.free20-warning-notice[data-kind="closed"]')).toBeNull();
+      await act(async () => room.options.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: room.at, reason: "quota_exhausted" }));
+      expect(room.view.container.querySelector(".mini-panel")).toBeNull();
+      const notice = room.view.container.querySelector('.free20-warning-notice[data-kind="closed"]')!;
+      expect(notice).not.toBeNull();
+      expect(notice.textContent).toContain("Room closed");
+      expect(notice.textContent).toContain("Daily limit reached");
+      expect(notice.querySelector("a")?.href).toBe(new URL("/pricing", WEB_HTTP_BASE).href);
+      expect(room.send.mock.calls.some(([message]: any) => message.action === "quota-end-room")).toBe(false);
+      if (retirement === "new login") {
+        room.setSession({ ...room.session!, authSessionId: "login-b" });
+        await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
+      } else {
+        const frozen = performance.now();
+        vi.mocked(accountHostingClient.requestAccountHostingStatus).mockReturnValue(new Promise(() => {}));
+        vi.spyOn(performance, "now").mockReturnValue(frozen);
+        vi.setSystemTime(Date.now() + 24 * 60 * 60 * 1_000);
+        await act(async () => window.dispatchEvent(new Event("focus")));
+      }
+      await flushMountedWork();
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
     } finally { vi.useRealTimers(); await unmount(room.view.root); }
   });
 
@@ -2043,8 +2083,8 @@ describe("privileged overlay wiring", () => {
       await vi.waitFor(() => expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1));
       const expectPending = () => {
         const action = primaryRoomAction(view.container);
-        expect(action.textContent).toBe("Create room");
-        expect(action.getAttribute("aria-label")).toBe("Create room");
+        expect(action.textContent).toBe("Creating room");
+        expect(action.getAttribute("aria-label")).toBe("Creating room");
         expect(action.disabled).toBe(true);
         expect(action.classList.contains("room-exit")).toBe(false);
       };
@@ -2207,9 +2247,12 @@ describe("privileged overlay wiring", () => {
     } finally { admission.resolve({ ok: false, status: 404, code: "ROOM_ENDED", error: "Room ended" }); await unmount(view.root); vi.useRealTimers(); history.replaceState(null, "", priorUrl); }
   });
 
-  it.each(["plus", "pro"] as const)("keeps the paid creation flow free of quota UI while account and room reads are pending: %s", async planCode => {
+  it.each((["plus", "pro"] as const).flatMap(planCode =>
+    (["unchanged", "admission", "live-room"] as const).map(rotation => ({ planCode, rotation })),
+  ))("keeps the paid creation flow free of quota UI with pending reads: $planCode / $rotation", async ({ planCode, rotation }) => {
     const owner = "22222222-2222-4222-8222-222222222222";
-    installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) }); // Cached auth profile is Free.
+    let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "paid-login-a", authRevision: "paid-revision-a" };
+    installActiveHostRoomRuntime({ getSession: () => session }); // Cached auth profile is Free.
     const at = Date.parse("2026-11-01T12:00:00Z");
     const period = { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") };
     const access = { kind: "confirmed_unlimited" as const, source: "paid" as const, validUntil: at + 3_600_000 };
@@ -2237,6 +2280,7 @@ describe("privileged overlay wiring", () => {
     try {
       await click(button(view.container, "Open Anidachi controls")); expectPaid();
       vi.mocked(accountHostingClient.requestAccountHostingStatus).mockImplementation(() => new Promise(() => {}));
+      if (rotation === "admission") session = { ...session, accessToken: "paid-access-b", refreshToken: "paid-refresh-b", authRevision: "paid-revision-b" };
       await click(button(view.container, "Create room"));
       await vi.waitFor(() => expect(connection).toBeDefined()); await flushMountedWork();
       expectPaid();
@@ -2244,6 +2288,12 @@ describe("privileged overlay wiring", () => {
       await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
         participants: [{ ...hostParticipant(), id: owner, participantSessionId: connection.participantSessionId }] }));
       expectPaid(); expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("End room");
+      if (rotation === "live-room") {
+        session = { ...session, accessToken: "paid-access-b", refreshToken: "paid-refresh-b", authRevision: "paid-revision-b" };
+        await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, session));
+        await flushMountedWork(); expectPaid();
+        expect(RoomClient.prototype.connect).toHaveBeenCalledTimes(1);
+      }
       await act(async () => connection.onEvent({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000,
         snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, serverTime: at, period, access } }));
       expectPaid();

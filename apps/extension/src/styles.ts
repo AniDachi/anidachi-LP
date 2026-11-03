@@ -106,6 +106,21 @@ ${extensionThemeTokens}
     pointer-events: auto;
   }
 
+  .anidachi-overlay .top-bubble-reveal.free20-notice-present .top-bubble {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    background: #0c0c0e;
+    border-color: #535357;
+    transition-duration: 180ms, 180ms, 260ms, 260ms;
+  }
+  .top-bubble-reveal.free20-notice-present .top-bubble-edge-glow { opacity: 0; }
+  .top-bubble-reveal.free20-notice-reveal .top-bubble { animation: free20-capsule-entry 260ms cubic-bezier(.22, 1, .36, 1) both; }
+  @keyframes free20-capsule-entry { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .anidachi-overlay .top-bubble-reveal.free20-notice-present .top-bubble { animation: none; transition: none; }
+  }
+
   .top-bubble:focus-visible {
     outline: 2px solid rgba(147, 197, 253, 0.9);
     outline-offset: 2px;

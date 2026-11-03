@@ -1,5 +1,30 @@
 # Current Development State
 
+## Free20 capsule notice and paid refresh correction, November 3, 2026
+
+The owner approved transferring the refined local notice into the real staging
+extension, together with investigation of renewed paid-plan UI flicker. The
+[overlay plan](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-3-capsule-notice-and-paid-refresh)
+records the bounded implementation and delivery gates. The 300-second warning
+uses the existing server claim and authoritative room clock. Its strip emerges
+from beneath the actual capsule, displaying remaining time and View plans.
+Only a host's confirmed Free20 quota-ended event produces Room closed / Daily
+limit reached; it does not force the controls panel open or end a room locally.
+
+Source and both local artifact folders contained the previous lifecycle fixes;
+their absence from staging was not reproduced. A distinct same-login credential
+rotation did reproduce loss of fresh paid metadata and temporary quota loading
+elements. Account display continuity now uses the logical login while a separate
+credential epoch retires pending reads. Original expiry, UTC, room/settlement and
+account replacement fences remain. The approved Creating room label is included.
+
+Local extension tests/typecheck and isolated source-component browser inspection
+are recorded in the delivery PR, along with independent review, required CI,
+staging build validation and exact unpacked-folder receipt. They do not prove
+that Chrome loaded the folder or replace authenticated two-participant, purchase,
+mixed-client and UTC-reset acceptance. No server accounting, protocol, flags,
+permissions, main, production or Store changes are included.
+
 ## Accepted Free20 overlay lifecycle corrections, November 2, 2026
 
 The owner tested the successive local staging-channel builds and authorized

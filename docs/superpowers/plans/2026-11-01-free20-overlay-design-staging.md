@@ -284,3 +284,56 @@ No Web/Worker/schema, accounting, grant, permission or policy change is included
 Rollback is a staging revert and rebuild into the same unpacked folder; keep the
 previous verified folder backup. Main, production and Store publication remain
 separate actions.
+
+## November 3: Capsule notice and paid refresh
+
+The owner approved delivery of the refined local capsule notice to staging and
+reported recurrence of paid/entry presentation problems after the previous
+delivery. Review found PR495–499 in staging and both local artifacts; the exact
+loaded Chrome version remains a separate observation. A full OverlayApp test
+reproduced a different gap: same-login token rotation with a delayed account read
+cleared fresh Plus/Pro metadata during creation and exposed quota placeholders.
+
+- Preserve confirmed account display through token rotation using the existing
+  logical login. A separate credential epoch cancels old request/retry callbacks
+  and starts a fresh read. Keep original monotonic/wall anchors, TTL, UTC reset,
+  room and settlement epochs. A new login, logout or account switch still retires
+  the old display. This cache supplies presentation, never admission rights.
+- Include the owner's approved Creating room label through HTTP admission and
+  first-snapshot readiness. Preserve bounded failure/escape and all previous
+  join, paid, end, visibility and intentional-hover corrections.
+- Keep the existing host-only, once-per-UTC-day server warning claim at300seconds.
+  Use the existing live room clock: paused metering remains paused, stale/unknown,
+  guest, ended and upgraded observations cannot show a live Free20 countdown.
+  No warning requests, quota writes or room termination are added to UI ticks.
+- Show a32px connected strip emerging left from underneath the real capsule.
+  Copy is `05:00 left today` with `View plans`. If the capsule was hidden, reveal
+  it first, wait briefly, then reveal the strip. Preserve its real count, outline,
+  position and user control visibility preference after dismissal. Camera and
+  microphone controls remain in their existing dock.
+- On a host's server `ROOM_ENDED` with quota exhaustion in negotiated Free20,
+  display `Room closed` / `Daily limit reached` in the same strip without forcing
+  the panel open. A local zero or create denial cannot claim a room closed.
+  The existing exhausted panel remains available on explicit open. Dismiss the
+  terminal notice on account/login replacement, another room, confirmed unlimited
+  access or the next daily budget. Retire it after a discontinuous clock/sleep,
+  including unavailable account recovery. Preserve legacy and guest notices.
+- Keep the approved orange gradient CTA and a four-second highlight, gentle
+  nudge, rest cycle; terminal copy has highlight only. Pause CTA motion during
+  interaction. The connected left dismiss tab expands on hover/focus, is exposed
+  for touch, and restores capsule focus only when dismissal began inside it.
+  Pricing opens the correct environment in a new tab. Reduced motion is immediate;
+  the static polite announcement never reads every countdown tick.
+
+Verification includes actual OverlayApp token-rotation and terminal-event tests,
+clock/claim lifecycle tests, motion timing and component keyboard tests, plus
+Chromium inspection of actual source styles in Shadow DOM at420px and320px.
+Extension check/test, baseline check/test, room harness, dev:check, independent
+review, staging artifact validation and normal PR/CI precede folder delivery.
+The PR owns final counts, CI/merge and matching-file artifact evidence. These
+checks are not authenticated loaded-extension or two-participant acceptance.
+
+Scope is extension display and request lifecycle. No Worker, Web, SQL, protocol,
+policy, permission or production change. Rollback reverts the staging extension
+commit and rebuilds/restores the previous verified unpacked folder; do not toggle
+Free20 or alter usage, claims, subscriptions or active-room records.

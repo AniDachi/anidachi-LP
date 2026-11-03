@@ -213,6 +213,7 @@ import { RoomHostingTime } from "./room-hosting-time";
 import { useRoomHostingTime } from "./use-room-hosting-time";
 import { useFree20Warning } from "./use-free20-warning";
 import { Free20WarningNotice } from "./free20-warning-notice";
+import { useCapsuleNoticePresentation } from "./use-capsule-notice-presentation";
 import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
@@ -825,12 +826,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
-	const hostingTimeSessionKey = authAuthenticated ? JSON.stringify([accountUser?.id, authRevision, authAccessToken, authSessionKey]) : null;
+	const [free20ClosedNotice, setFree20ClosedNotice] = useState<{
+		ownerUserId: string; loginKey: string; roomId: string; resetAt: number; expiresAt: number; monotonic: number; wall: number;
+	} | null>(null);
+	const hostingTimeSessionKey = authAuthenticated ? roomAuthSessionKeyRef.current : null;
+	const hostingTimeCredentialKey = authAuthenticated ? JSON.stringify([authRevision, authAccessToken, authSessionKey]) : null;
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
+		credentialKey: hostingTimeCredentialKey,
 		// Opening/closing the panel is presentation, not a new data session.
 		// Prefetch for the active player; account seconds never supply live time.
 		enabled: adapterActive || panelOpen || introductionActive || roomId !== null,
@@ -867,11 +873,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		onQuotaRetired: hostingDisplay.invalidate,
 		exhaustion: quotaExhaustion,
 	});
-	const showFreeQuotaNotice = useCallback((resetAt?: string, free20 = false) => {
+	const showFreeQuotaNotice = useCallback((resetAt?: string, free20 = false, revealPanel = true) => {
 		const ownerUserId = authUserIdRef.current;
 		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt, free20, sessionKey: hostingTimeSessionKeyRef.current ?? undefined });
 		setAuthMessage(null);
-		setPanelOpen(true);
+		if (revealPanel) setPanelOpen(true);
 	}, []);
 	useEffect(() => {
 		if (roomId || (quotaExhaustion && quotaExhaustion.ownerUserId !== accountUser?.id)) setQuotaExhaustion(null);
@@ -3510,7 +3516,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// free-quota expiry, so the overlay settles on a clear message instead of
 	// jittering between connect attempts.
 	const terminateRoomSession = useCallback(
-		(message: string, feedback?: RoomActionFeedback) => {
+		(message: string, feedback?: RoomActionFeedback, revealPanel = true) => {
 			ghostCamSession.stop();
 			roomReconnectSuppressedRef.current = true;
 			if (roomReconnectTimerRef.current !== null) {
@@ -3538,7 +3544,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setRoomTerminalMessage(message || null);
 			if (feedback) showRoomActionFeedback(feedback);
 			announcedRoomClosingRef.current = null;
-			setPanelOpen(true);
+			if (revealPanel) setPanelOpen(true);
 		},
 		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop, showRoomActionFeedback],
 	);
@@ -3600,8 +3606,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						if (isCurrentHost()) {
 							const ended = new Date(event.endedAt);
 							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
-								showFreeQuotaNotice(resetAt, hostingTimeClock.observed);
-							terminateRoomSession("");
+							const free20 = hostingTimeClock.observed;
+							const ownerUserId = authUserIdRef.current, loginKey = roomAuthSessionKeyRef.current;
+							if (free20 && ownerUserId && loginKey) setFree20ClosedNotice({
+								ownerUserId, loginKey, roomId: event.roomId, resetAt: Date.parse(resetAt),
+								monotonic: performance.now(), wall: Date.now(),
+								expiresAt: performance.now() + Math.max(0, Date.parse(resetAt) - event.endedAt),
+							});
+							showFreeQuotaNotice(resetAt, free20, !free20);
+							terminateRoomSession("", undefined, !free20);
 						} else {
 							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
 						}
@@ -6200,6 +6213,53 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const hasFreshPaidAccount = accountHostingTime.planCode === "plus" || accountHostingTime.planCode === "pro";
 	const idleTimePending = !identityLoaded || (authAuthenticated && accountHostingTime.mode !== "legacy" &&
 		!hasFreshPaidAccount && accountHostingTime.remainingSeconds === null && accountHostingTime.status?.access.kind !== "confirmed_unlimited");
+	const closedNoticeValid = Boolean(free20ClosedNotice && authAuthenticated &&
+		free20ClosedNotice.ownerUserId === accountUser?.id && free20ClosedNotice.loginKey === roomAuthSessionKeyRef.current &&
+		!roomId && !joiningRoom && !roomCreatePending &&
+		accountHostingTime.status?.access.kind !== "confirmed_unlimited" &&
+		(accountHostingTime.status?.period.resetAt ?? 0) <= free20ClosedNotice.resetAt &&
+		performance.now() < free20ClosedNotice.expiresAt &&
+		Math.abs(Date.now() - free20ClosedNotice.wall - (performance.now() - free20ClosedNotice.monotonic)) <= 2_000);
+	useEffect(() => {
+		if (!free20ClosedNotice) return;
+		if (!closedNoticeValid) { setFree20ClosedNotice(null); return; }
+		const timer = setTimeout(() => setFree20ClosedNotice(null), Math.max(0, free20ClosedNotice.expiresAt - performance.now()));
+		const resume = () => {
+			const mono = performance.now();
+			if (mono < free20ClosedNotice.monotonic || mono >= free20ClosedNotice.expiresAt ||
+				Math.abs(Date.now() - free20ClosedNotice.wall - (mono - free20ClosedNotice.monotonic)) > 2_000) setFree20ClosedNotice(null);
+		};
+		window.addEventListener("focus", resume);
+		window.addEventListener("pageshow", resume);
+		document.addEventListener("visibilitychange", resume);
+		return () => {
+			clearTimeout(timer);
+			window.removeEventListener("focus", resume);
+			window.removeEventListener("pageshow", resume);
+			document.removeEventListener("visibilitychange", resume);
+		};
+	}, [free20ClosedNotice, closedNoticeValid]);
+	const capsuleNoticeKind = closedNoticeValid ? "closed" : free20Warning.visible ? "warning" : null;
+	const capsuleNoticeKey = capsuleNoticeKind === "closed"
+		? JSON.stringify(["closed", free20ClosedNotice!.loginKey, free20ClosedNotice!.roomId, free20ClosedNotice!.resetAt])
+		: capsuleNoticeKind === "warning" ? JSON.stringify(["warning", roomAuthSessionKeyRef.current, roomId, roomGeneration, liveHostingTime?.snapshot.period.utcDay]) : null;
+	const capsuleNotice = useCapsuleNoticePresentation({
+		noticeKey: capsuleNoticeKey, bubbleVisible: topBubbleReveal.bubbleVisible || panelOpen,
+		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
+	});
+	useEffect(() => {
+		if (!capsuleNotice.present) return;
+		const bubble = topBubbleRef.current, root = overlayRootRef.current;
+		if (!bubble || !root) return;
+		const measure = () => {
+			const width = bubble.getBoundingClientRect().width;
+			if (width > 0) root.style.setProperty("--free20-capsule-width", `${width}px`);
+		};
+		measure();
+		const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+		observer?.observe(bubble);
+		return () => { observer?.disconnect(); root.style.removeProperty("--free20-capsule-width"); };
+	}, [capsuleNotice.present]);
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6246,6 +6306,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				className={[
 					"top-bubble-reveal",
 					panelOpen ? "panel-open" : "",
+					capsuleNotice.present ? "free20-notice-present" : "",
+					capsuleNotice.revealCapsule ? "free20-notice-reveal" : "",
 					topBubbleReveal.bubbleVisible ? "bubble-visible" : "",
 					topBubbleReveal.edgeGlowVisible ? "edge-glow" : "",
 				]
@@ -6253,6 +6315,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					.join(" ")}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
+				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
+					kind={capsuleNoticeKind} remainingSeconds={capsuleNoticeKind === "warning" ? liveHostingTime?.remainingSeconds ?? null : null}
+					open={capsuleNotice.open} onDismiss={capsuleNotice.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}
 				<button
 					aria-controls="anidachi-mini-panel"
 					aria-expanded={panelOpen}
@@ -6280,8 +6345,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					<span className="bubble-count">{participantCount}</span>
 				</button>
 			</div>
-
-			{free20Warning.visible ? <Free20WarningNotice onDismiss={free20Warning.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}
 
 			{panelOpen ? (
 				<section
