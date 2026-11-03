@@ -149,7 +149,8 @@ before exercising its parser.
 - Capture the last fresh account number only for this visual handoff. It stays
   still, never starts metering, never becomes a live-clock snapshot or admission
   grant, and expires at the earliest of its original validity, UTC reset, or
-  eight seconds after the click. Bind it to the logical login and admitted room.
+  eight seconds after the click (superseded by the November 3 admission timing
+  correction below). Bind it to the logical login and admitted room.
   Accepted live observations, including unknown/unlimited, supersede it. Hidden
   pages, wall-clock discontinuity, failure, transport restart and room/source
   generation changes retire it. Closing the panel alone preserves the bounded
@@ -337,3 +338,45 @@ Scope is extension display and request lifecycle. No Worker, Web, SQL, protocol,
 policy, permission or production change. Rollback reverts the staging extension
 commit and rebuilds/restores the previous verified unpacked folder; do not toggle
 Free20 or alter usage, claims, subscriptions or active-room records.
+
+## November 3: Local start-transition continuity correction
+
+After PR500 delivery, the owner again observed a transient Leave room label and
+rough transitions. Both unpacked folders matched the exact PR500 CI artifact;
+that excludes a stale file copy, not a stale extension already loaded in Chrome.
+Full-source browser replay and failing component regressions reproduced two
+remaining presentation gaps: a slow HTTP create consumed the eight-second
+membership wait before admission, and subpixel pointer movement revealed End
+while the red button was still arriving.
+
+- Start the eight-second membership presentation window after HTTP admission
+  and initial session setup complete. Keep Creating room through that wait.
+  During HTTP, retain the already displayed number only within its original
+  account observation validity; once admitted, cap it to the same eight-second
+  window. Arm that cap and the escape timeout together so a loading strip does
+  not flash between them. The number stays frozen until real room time arrives;
+  no original expiry, UTC bound, login scope or access right is extended.
+- If membership remains unconfirmed after the window, use the existing departure
+  action with neutral Cancel connection copy. Do not infer guest status from
+  absent membership or show red room controls/personal quota. A later accepted
+  snapshot still animates into the actual room. Existing participants preserve
+  the normal active-room presentation during reconnection.
+- During the create animation, pointer movement updates its suppression anchor.
+  After arrival, require four CSS pixels of movement to reveal End; trackpad
+  jitter must not interrupt the timer. Keyboard focus and explicit confirmation
+  remain available, including reduced-motion mode.
+
+Verify actual OverlayApp and real response parsing in isolated Chromium across
+Free/Plus/Pro creation and closure, guest/invite/restored entry, errors, focus
+return, reduced motion, slow HTTP and late snapshots. Record per-frame label,
+timer/loading visibility, animation and action-row geometry, plus extension
+tests/typecheck, narrow artifact validation, baseline checks and room harness.
+The browser fixtures control the external transport; they are not authenticated
+loaded-extension or two-participant staging acceptance. No WebRTC path changed,
+so physical media acceptance remains a separate gate before production.
+
+This follow-up is a local candidate for the same unpacked staging-channel folder,
+with source/build hashes and a backup of the PR500 artifact. Obtain the owner's
+visual check before the next staging PR/merge. No deployment, server accounting,
+protocol, permissions, flags, main, production or Store change belongs to this
+local iteration. Rollback restores that verified folder or rebuilds PR500.

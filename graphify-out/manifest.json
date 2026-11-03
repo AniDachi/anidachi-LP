@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793686328.8622434,
-    "seen": 1793686800.945259,
-    "ast_hash": "9a78facfd499f7b0095e2b7b5042d884",
+    "mtime": 1793689536.5470622,
+    "seen": 1793689644.676631,
+    "ast_hash": "9bd39dee4ba650d43618207115d23abf",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793686530.9474075,
-    "seen": 1793686800.9452631,
-    "ast_hash": "5cb3c1a9abad93df8584640001e024d0",
+    "mtime": 1793688962.5351193,
+    "seen": 1793689644.676637,
+    "ast_hash": "46ea051d5c0985e9a8bf99edaa016944",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -11196,15 +11196,15 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions-styles.ts": {
-    "mtime": 1793616965.4555,
-    "seen": 1793618217.0009458,
-    "ast_hash": "e7bf6c7af61ba829b617ba6771b7a12e",
+    "mtime": 1793689208.0772893,
+    "seen": 1793689644.676634,
+    "ast_hash": "0f23982af813ebeb8ed7b32eba8aa96b",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
-    "mtime": 1793621493.7151833,
-    "seen": 1793621588.04587,
-    "ast_hash": "3dc67ebf1d5a9c8819f327e649b09c45",
+    "mtime": 1793689744.4924664,
+    "seen": 1793689930.350254,
+    "ast_hash": "8506e5451ba2aafb41518e1f918cea27",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-start-motion.ts": {
@@ -11214,16 +11214,16 @@
     "semantic_hash": ""
   },
   "apps/extension/test/panel-room-actions.test.tsx": {
-    "mtime": 1793621493.736702,
-    "seen": 1793621588.0458722,
-    "ast_hash": "baf3c92dc2371ac424852c469d593ae2",
+    "mtime": 1793688945.5772545,
+    "seen": 1793689644.676636,
+    "ast_hash": "6c2e3d6e8f4150b65e929a089251e606",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793686328.8842916,
-    "seen": 1793686801.0208158,
+    "mtime": 1793689610.3445165,
+    "seen": 1793689930.424742,
     "ast_hash": "",
-    "semantic_hash": "a41e45686439093ceb5c7db3b937e1c0"
+    "semantic_hash": "eda339a7b452ff112433a796c4d95ee5"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,

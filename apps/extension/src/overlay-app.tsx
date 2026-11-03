@@ -2303,10 +2303,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const sendHostingTimeRecovery = useCallback((event: ClientEvent) => clientRef.current.send(event), []);
 	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
 	useEffect(() => {
-		if (!roomStartPending) return;
+		// The snapshot timeout belongs to the admitted room. Identity refresh and
+		// HTTP creation can take longer; they must not consume its recovery window.
+		if (!roomStartPending || roomCreatePending || !roomId) return;
+		// Start the display cap and recovery timeout together. Otherwise the old
+		// digits can expire a frame before the neutral cancellation action arrives.
+		const expiresAt = performance.now() + ROOM_START_PRESENTATION_TIMEOUT_MS;
+		setRoomStartTime(current => current?.roomId === roomId
+			? { ...current, expiresAt: Math.min(current.expiresAt, expiresAt) } : current);
 		const timeout = setTimeout(() => setRoomStartPending(false), ROOM_START_PRESENTATION_TIMEOUT_MS);
 		return () => clearTimeout(timeout);
-	}, [roomStartPending]);
+	}, [roomStartPending, roomCreatePending, roomId]);
 	useEffect(() => {
 		if (!roomJoinAttempt) return;
 		const sequence = roomJoinAttempt.sequence;
@@ -5021,7 +5028,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		const capturedAt = performance.now();
 		setRoomStartTime(accountHostingTime.remainingSeconds !== null && accountHostingTime.displayExpiresAt !== null ? {
 			seconds: accountHostingTime.remainingSeconds, capturedAt, wall: Date.now(),
-			expiresAt: Math.min(accountHostingTime.displayExpiresAt, capturedAt + ROOM_START_PRESENTATION_TIMEOUT_MS),
+			expiresAt: accountHostingTime.displayExpiresAt,
 			sessionKey: roomAuthSessionKeyRef.current, roomId: null,
 		} : null);
 		setRoomCreatePending(true);
@@ -6434,6 +6441,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
 						closing={roomExitPending} closingLabel={roomLeaving.closing ? "Leaving room" : "Closing room"}
 						joining={joiningRoom}
+						connectionStalled={Boolean(roomId && !inviteMembershipReady && !roomCreatePending && !roomStartPending && !joiningRoom)}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
 						idleTimeUnavailable={roomClosing.unavailable || roomLeaving.unavailable || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
 						onRetryHosting={accountHostingTime.refresh}

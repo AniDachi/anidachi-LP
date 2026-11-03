@@ -2049,7 +2049,7 @@ describe("privileged overlay wiring", () => {
     } finally { await unmount(view.root); }
   });
 
-  it.each(["ready", "reopen", "credential-rotation", "connection-error", "admission-error", "unknown-live", "generation-change", "transport-restart", "hidden-reopen"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
+  it.each(["ready", "slow-admission", "slow-admission-timeout", "reopen", "credential-rotation", "connection-error", "admission-error", "unknown-live", "generation-change", "transport-restart", "hidden-reopen"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
     const owner = "22222222-2222-4222-8222-222222222222";
     let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "stable-login" };
     installActiveHostRoomRuntime({ getSession: () => session });
@@ -2074,6 +2074,11 @@ describe("privileged overlay wiring", () => {
     });
     let options!: Parameters<RoomClient["connect"]>[0];
     vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { options = next; next.onStatus("connecting"); });
+    if (outcome.startsWith("slow-admission")) {
+      const mono = performance.now(), wall = Date.now();
+      vi.useFakeTimers();
+      vi.spyOn(performance, "now").mockImplementation(() => mono + Date.now() - wall);
+    }
     const view = await renderOverlay();
     try {
       await click(button(view.container, "Open Anidachi controls"));
@@ -2101,6 +2106,10 @@ describe("privileged overlay wiring", () => {
         expect(options).toBeUndefined();
         return;
       }
+      if (outcome.startsWith("slow-admission")) {
+        await act(async () => vi.advanceTimersByTimeAsync(8_500));
+        expectPending();
+      }
       await act(async () => admission.resolve(true));
       await vi.waitFor(() => expect(options).toBeDefined());
       await flushMountedWork();
@@ -2116,14 +2125,21 @@ describe("privileged overlay wiring", () => {
       if (outcome === "connection-error") {
         await act(async () => options.onStatus("error"));
         expect(primaryRoomAction(view.container).disabled).toBe(false);
-        expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("Leave room");
+        expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("Cancel connection");
         await trustedClick(primaryRoomAction(view.container));
         await flushRoomActionWork();
         expect(view.container.querySelector(".panel-primary-action.room-exit")).toBeNull();
-        return; // Before membership arrives, the existing escape action is leave.
+        return; // Before membership arrives, cancel uses the existing departure path.
       }
       await act(async () => options.onStatus("connected"));
       expectPending(); // Socket open is not yet authoritative membership.
+      if (outcome === "slow-admission-timeout") {
+        await act(async () => vi.advanceTimersByTimeAsync(8_100));
+        expect(primaryRoomAction(view.container).disabled).toBe(false);
+        expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("Cancel connection");
+        expect(view.container.querySelector(".panel-time-counter")).toBeNull();
+        return; // A genuinely stalled admitted connection still has a bounded escape.
+      }
       await act(async () => options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
         participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }],
       }));
@@ -2156,7 +2172,7 @@ describe("privileged overlay wiring", () => {
       expect(primaryRoomAction(view.container).classList.contains("room-exit")).toBe(true);
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
       expect(view.container.textContent).not.toMatch(/Creating room|Room created/);
-    } finally { await unmount(view.root); }
+    } finally { await unmount(view.root); if (outcome.startsWith("slow-admission")) vi.useRealTimers(); }
   });
 
   it.each(["free-invite", "paid-invite", "exhausted-invite", "restored-guest", "rejected-invite", "storage-failure", "slow-snapshot", "guest-leave"])("does not show hosting controls while entering another room: %s", async scenario => {
@@ -2227,7 +2243,8 @@ describe("privileged overlay wiring", () => {
       if (scenario === "slow-snapshot") {
         await act(async () => { await vi.advanceTimersByTimeAsync(8_001); });
         expect(view.container.querySelector('button[aria-label="Joining room"]')).toBeNull();
-        expect(button(view.container, "Leave room").disabled).toBe(false);
+        expect(button(view.container, "Cancel connection").disabled).toBe(false);
+        expect(button(view.container, "Cancel connection").classList.contains("room-exit")).toBe(false);
         noHosting();
       }
       await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,

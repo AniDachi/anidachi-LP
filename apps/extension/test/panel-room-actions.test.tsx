@@ -183,6 +183,22 @@ describe("real room action feedback", () => {
 		});
 		return animations;
 	}
+	it("keeps the timer visible through pointer jitter and movement during the create transition", async () => {
+		const animations = emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await act(async () => button("Create room").dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: 150, clientY: 18 })));
+		await render({ roomId: "room-a", roomReady: true, label: "End room" });
+		const move = async (x: number, y: number) => {
+			await act(async () => button("End room").dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: x, clientY: y })));
+		};
+		await move(158, 18); // Moving the button and the hand together must not interrupt its arrival.
+		expect(button("End room").dataset.suppressStartHover).toBe("true");
+		await act(async () => animations.forEach(animation => animation.finish()));
+		await move(158.2, 18.2); // Trackpad/subpixel drift is not a new hover request.
+		expect(button("End room").dataset.suppressStartHover).toBe("true");
+		await move(165, 18);
+		expect(button("End room").dataset.suppressStartHover).toBe("false");
+	});
 	it("waits for the asynchronous room snapshot before moving the idle timer", async () => {
 		emulateLayoutAndAnimation();
 		await render({ roomId: null, roomReady: false, label: "Create room" });
@@ -210,6 +226,19 @@ describe("real room action feedback", () => {
 		await render({ roomId: null, roomReady: false });
 		expect(host.querySelector(".panel-flying-counter")).toBeNull();
 	});
+	it("keeps a stalled admission neutral and animates its eventual confirmed room", async () => {
+		emulateLayoutAndAnimation();
+		await render({ roomId: null, roomReady: false, label: "Create room" });
+		await click("Create room");
+		await render({ roomId: "room-a", creating: true, remainingSeconds: null, isHost: false, label: "Leave room" });
+		await render({ creating: false, connectionStalled: true });
+		expect(button("Cancel connection").disabled).toBe(false);
+		expect(button("Cancel connection").classList.contains("room-exit")).toBe(false);
+		expect(host.querySelector(".panel-time-counter,.panel-time-placeholder,.panel-action-icons")).toBeNull();
+		await render({ connectionStalled: false, roomReady: true, isHost: true, label: "End room", remainingSeconds: 742 });
+		expect(host.querySelector("[data-room-motion=true]")).not.toBeNull();
+		expect(host.querySelector(".panel-action-timer strong")?.textContent).toBe("12:22");
+	});
 	it("keeps one counter through admission, movement and the first live observation", async () => {
 		emulateLayoutAndAnimation();
 		const startingTime = { seconds: 754, capturedAt: performance.now(), wall: Date.now(), expiresAt: performance.now() + 8_000 };
@@ -226,7 +255,7 @@ describe("real room action feedback", () => {
 		expect(host.querySelector(".panel-time-counter")).toBe(counter);
 		expect(counter?.textContent).toContain("12:22");
 	});
-	it.each([2_000, 60_000])("keeps the starting number still and retires it at its original deadline or eight seconds: %s", async validFor => {
+	it.each([2_000, 8_000])("keeps the starting number still and retires it at the bounded display deadline: %s", async validFor => {
 		const capturedAt = performance.now(), wall = Date.now();
 		vi.spyOn(performance, "now").mockImplementation(() => capturedAt + Date.now() - wall);
 		await render({ remainingSeconds: null, creating: false, awaitingHostingTime: true,
@@ -234,7 +263,7 @@ describe("real room action feedback", () => {
 		const counter = host.querySelector(".panel-time-counter");
 		await advance(1_000);
 		expect(counter?.textContent).toBe("12:34"); // No allowance or countdown is started locally.
-		await advance(Math.min(validFor, ROOM_START_PRESENTATION_TIMEOUT_MS) - 1_001);
+		await advance(validFor - 1_001);
 		expect(host.querySelector(".panel-time-counter")).toBe(counter);
 		await advance(1);
 		expect(host.querySelector(".panel-time-counter")).toBeNull();

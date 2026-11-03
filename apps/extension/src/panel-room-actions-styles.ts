@@ -36,6 +36,7 @@ export const panelRoomActionsStyles = `
   .panel-room-actions.room-active[data-timed-layout=true] .panel-primary-action { left:0; }
   .panel-room-actions.room-empty .panel-primary-action { transition:left 220ms ease,width 220ms ease,background 160ms ease,box-shadow 160ms ease; }
   .panel-room-actions[data-joining=true] .panel-primary-action { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); color:#c9c7c5; box-shadow:none; opacity:1; cursor:default; }
+  .panel-room-actions[data-joining=true] .panel-primary-action:not(:disabled) { cursor:pointer; }
   .panel-room-actions[data-room-motion=true] .panel-primary-action { transition:none; }
   .panel-room-actions[data-timed-layout=true] .panel-action-icons { position:absolute; top:0; right:0; }
   .panel-room-actions .panel-action-timer { position:absolute; top:0; left:0; width:calc(100% - 126px); height:36px; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:1; transition:opacity 120ms ease; }
