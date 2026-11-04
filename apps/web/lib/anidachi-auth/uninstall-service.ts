@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import type { PricingOffer } from "../pricing-offer";
 import { verifiedBillingPrice } from "./billing-price";
 import type { RetentionClaim } from "./retention-invoice";
 import type { CheckoutInput, CheckoutResult } from "./subscription-trial";
@@ -56,6 +57,9 @@ export type UninstallServiceDeps = {
 	secret: Uint8Array;
 	config: () => { firstCoupon: string | null; renewalCoupon: string | null };
 	catalog: () => Promise<UninstallCatalog>;
+	purchaseOffer: (
+		userId: string,
+	) => Promise<Pick<PricingOffer, "ownerUserId" | "action" | "validForMs">>;
 	account: typeof readUninstallAccount;
 	readClaim: (userId: string) => Promise<RetentionClaim | null>;
 	reserve: typeof reserveRetention;
@@ -334,6 +338,24 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 					reason: "No first-month offer is currently available.",
 				} as UninstallOffer,
 			};
+		// Stripe history alone cannot see an active legacy entitlement or a
+		// pending cardless activation. Use the same purchase authority as Checkout
+		// before presenting a financial action or reaching its reservation adapter.
+		const purchase = await deps.purchaseOffer(userId);
+		if (
+			purchase.ownerUserId !== userId ||
+			!Number.isFinite(purchase.validForMs) ||
+			purchase.validForMs <= 0
+		)
+			throw new Error("Purchase authority unavailable.");
+		if (purchase.action === "manage")
+			return manage(
+				"Your account already has access or a pending subscription change. Manage it below.",
+			);
+		if (purchase.action !== "subscribe" && purchase.action !== "trial")
+			throw new Error("Purchase authority unavailable.");
+		// Eligible-for-trial Free is still eligible for this direct paid offer;
+		// it never creates a trial or exposes trial terms in the uninstall DTO.
 		const coupon = await deps.stripe.coupons.retrieve(
 			config.firstCoupon,
 			{ expand: ["applies_to"] },
@@ -362,6 +384,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 			offer: {
 				...base,
 				kind: "first_month",
+				validForMs: Math.min(base.validForMs, purchase.validForMs),
 				prices,
 				revision: revisions.sign(review),
 			} as UninstallOffer,

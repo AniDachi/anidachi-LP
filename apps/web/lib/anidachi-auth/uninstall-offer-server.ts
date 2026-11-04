@@ -1,4 +1,5 @@
 import { getJwtSecret } from "./jwt";
+import { getPricingOffer } from "./pricing-offer";
 import { createStripeClient } from "./stripe-env";
 import { subscriptionCheckoutService } from "./subscription-checkout-server";
 import {
@@ -19,6 +20,7 @@ export function uninstallService() {
 		secret: getJwtSecret(),
 		config: uninstallCampaignConfig,
 		catalog: () => readUninstallCatalog(stripe),
+		purchaseOffer: getPricingOffer,
 		account: readUninstallAccount,
 		readClaim: readRetentionClaim,
 		reserve: reserveRetention,

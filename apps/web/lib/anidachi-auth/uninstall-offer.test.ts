@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type Stripe from "stripe";
+import type { AccountEntitlements } from "./account-entitlements";
+import { getPricingOffer } from "./pricing-offer";
 import {
 	fulfillRetentionInvoice,
 	type RetentionClaim,
@@ -138,6 +140,11 @@ function fixture() {
 		now: () => clock,
 		config: () => config,
 		catalog: async () => catalog,
+		purchaseOffer: async (owner) => ({
+			ownerUserId: owner,
+			action: "subscribe",
+			validForMs: 60_000,
+		}),
 		account: async () => account,
 		readClaim: async () => claim,
 		reserve: async (terms) => {
@@ -201,6 +208,145 @@ test("anonymous offer is ownerless and never reads Stripe/account data", async (
 		throw Error("must not read");
 	};
 	assert.equal((await f.service.offer(null)).kind, "sign_in");
+});
+
+/** Exercise existing authoritative pricing policy, not a second trial policy. */
+function purchaseAuthority(
+	mode: "active_trial" | "pending_activation" | "free20" | "eligible_trial",
+) {
+	const time = new Date(at).toISOString();
+	return (owner: string) =>
+		getPricingOffer(owner, {
+			priceId: (plan) => `price_${plan}`,
+			readPrice: async (id, _active, billingPeriod = "monthly") => ({
+				unitAmount: id === "price_plus" ? 799 : 1499,
+				currency: "usd",
+				billingPeriod,
+			}),
+			access: async () =>
+				({
+					policy: { planCode: mode === "active_trial" ? "plus" : "free" },
+					history: { serverTime: time },
+					hosting: {
+						hostingActivationAt: time,
+						hostingPolicyVersion: 1,
+						trialEligibility: mode === "eligible_trial" ? "eligible" : "used",
+					},
+					selectedPlanExpiresAt:
+						mode === "active_trial"
+							? new Date(at + 3600_000).toISOString()
+							: null,
+				}) as AccountEntitlements,
+			subscriptions: async () => [],
+			pendingActivation: async () =>
+				mode === "pending_activation"
+					? { id: userId, planCode: "plus", billingPeriod: "monthly" }
+					: null,
+			policy: async () => ({
+				activation_at: time,
+				trials_enabled: mode === "eligible_trial",
+				cardless_trials_enabled: true,
+				free20_enabled: mode === "free20",
+				revision: 1,
+			}),
+			now: () => at,
+		});
+}
+for (const mode of ["active_trial", "pending_activation"] as const)
+	test(`${mode} without Stripe subscription gets management and no Checkout/grant`, async () => {
+		const f = fixture();
+		const first = await f.service.offer(userId);
+		assert.equal(first.kind, "first_month");
+		if (first.kind !== "first_month")
+			throw new Error("First-purchase fixture required.");
+		f.deps.purchaseOffer = purchaseAuthority(mode);
+		const result = await f.service.offer(userId);
+		assert.equal(result.kind, "manage");
+		if (result.kind === "manage")
+			assert.equal(result.manageUrl, "/account/billing?manage=1");
+		await assert.rejects(
+			() =>
+				f.service.checkout(
+					userId,
+					{
+						expectedOwnerUserId: userId,
+						revision: first.revision,
+						planCode: "plus",
+						expectedPrice: first.prices[0],
+						requestId: userId,
+					},
+					"https://anidachi.test",
+				),
+			/no longer available/,
+		);
+		assert.equal(f.checkoutCalls, 0);
+		assert.equal(f.account.grant, undefined);
+		assert.equal(f.claim, null);
+	});
+for (const mode of ["free20", "eligible_trial"] as const)
+	test(`${mode} ordinary free account remains eligible for direct first-month purchase`, async () => {
+		const f = fixture();
+		f.deps.purchaseOffer = purchaseAuthority(mode);
+		const result = await f.service.offer(userId);
+		assert.equal(result.kind, "first_month");
+		if (result.kind !== "first_month")
+			throw new Error("Expected first-month offer.");
+		await f.service.checkout(
+			userId,
+			{
+				expectedOwnerUserId: userId,
+				revision: result.revision,
+				planCode: "plus",
+				expectedPrice: result.prices[0],
+				requestId: userId,
+			},
+			"https://anidachi.test",
+		);
+		assert.equal(f.checkoutCalls, 1); // Existing fixture also asserts displayed trial=false.
+	});
+test("unknown, stale or foreign purchase authority fails unavailable before Checkout", async () => {
+	const f = fixture();
+	const first = await f.service.offer(userId);
+	assert.equal(first.kind, "first_month");
+	if (first.kind !== "first_month") throw new Error("Expected fixture.");
+	for (const read of [
+		async () => {
+			throw new Error("Authority unavailable");
+		},
+		async () => ({
+			ownerUserId: userId,
+			action: "sign_in" as const,
+			validForMs: 60_000,
+		}),
+		async () => ({
+			ownerUserId: userId,
+			action: "subscribe" as const,
+			validForMs: 0,
+		}),
+		async () => ({
+			ownerUserId: "foreign",
+			action: "subscribe" as const,
+			validForMs: 60_000,
+		}),
+	]) {
+		f.deps.purchaseOffer = read;
+		assert.equal((await f.service.offer(userId)).kind, "unavailable");
+		await assert.rejects(() =>
+			f.service.checkout(
+				userId,
+				{
+					expectedOwnerUserId: userId,
+					revision: first.revision,
+					planCode: "plus",
+					expectedPrice: first.prices[0],
+					requestId: userId,
+				},
+				"https://anidachi.test",
+			),
+		);
+	}
+	assert.equal(f.checkoutCalls, 0);
+	assert.equal(f.account.grant, undefined);
 });
 test("never paid account sees verified two monthly prices, integer 40% discount and no trial", async () => {
 	const f = fixture();
