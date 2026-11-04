@@ -219,6 +219,13 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
   const status = scoped.roomEpoch === roomScope.epoch && roomScope.roomId === roomId &&
     scoped.statusSettlementRevision === settlementRevision ? observation : null;
   const exhausted = scoped.mode === "free20" && scoped.exhaustedUntil !== null;
+  // Keep a known renewal instant through ordinary revalidation, but never roll
+  // it forward locally or let a different login/clock/guest inherit it.
+  const periodClock = exhausted && enabled && document.visibilityState !== "hidden" &&
+    Math.abs(Date.now() - scoped.wall - elapsed) < 2_000 ? scoped.periodClock : null;
+  const serverTime = periodClock ? periodClock.serverTime + Math.max(0, performance.now() - periodClock.monotonic) : null;
+  const renewal = periodClock && serverTime !== null && serverTime < periodClock.resetAt &&
+    periodClock.resetAt === scoped.exhaustedUntil ? {serverTime,resetAt:periodClock.resetAt} : null;
   return {
     mode: scoped.mode, status, planCode: observation?.planCode ?? null, busy: scoped.busy, error: scoped.error, exhausted,
     presentationPlanCode: scoped.presentationPlanCode,
@@ -227,6 +234,6 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
     // Bounds the last confirmed number during the short visual room handoff.
     displayExpiresAt: status ? scoped.monotonic + Math.min(status.validUntil, status.period.resetAt) - status.serverTime : null,
     resetSeconds: exhausted && enabled && scoped.periodClock && document.visibilityState !== "hidden" ? Math.max(0, Math.ceil((scoped.periodClock.resetAt - scoped.periodClock.serverTime - Math.max(0, performance.now() - scoped.periodClock.monotonic)) / 1000)) : null,
-    refresh, invalidate, reconcile,
+    renewal, refresh, invalidate, reconcile,
   };
 }

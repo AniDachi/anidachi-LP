@@ -1971,7 +1971,7 @@ describe("privileged overlay wiring", () => {
       await act(async () => vi.advanceTimersByTimeAsync(2_000));
       await flushMountedWork();
       expect(room.send.mock.calls.filter(([message]: any) => message.command === "connect-room")).toHaveLength(1);
-      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Today's free time is used up");
+      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Daily limit reached");
       expect(room.view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
       expect(room.view.container.textContent).not.toContain("The host's Free time is used up");
       expect([...room.view.container.querySelectorAll("button")].some(item => item.textContent?.trim() === "Create room")).toBe(false);
@@ -1995,19 +1995,19 @@ describe("privileged overlay wiring", () => {
       request.mockResolvedValue({ mode: "free20", status: exhaustedStatus });
       await act(async () => room.options.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: resetAt - 5_000, reason: "quota_exhausted" }));
       await flushMountedWork();
-      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Renews in 00:00:05");
-      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Today's free time is used up");
-      expect(room.view.container.querySelector('[role="timer"][aria-label="Free time used up"]')?.textContent).toBe("00:00");
+      expect(room.view.container.querySelector<HTMLTimeElement>(".panel-limit-copy time")?.dateTime).toBe("2026-11-02T00:00:00.000Z");
+      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Daily limit reached");
+      expect(room.view.container.querySelector('[role="timer"][aria-label="Free time used up"]')).toBeNull();
 
       request.mockRejectedValue(new Error("Account hosting temporarily unavailable"));
       const requestsBeforeReset = request.mock.calls.length;
       await act(async () => { await vi.advanceTimersByTimeAsync(8_000); });
       expect(request.mock.calls.length).toBeGreaterThan(requestsBeforeReset);
       const exhaustedCopy = room.view.container.querySelector(".panel-limit-copy");
-      expect(exhaustedCopy?.textContent).toContain("Free time unavailable");
-      expect(exhaustedCopy?.textContent).not.toContain("Today's free time is used up");
-      expect(exhaustedCopy?.textContent).toContain("Couldn't check your free time.");
-      expect(exhaustedCopy?.textContent).toContain("You can still join a friend's room.");
+      expect(exhaustedCopy?.textContent).toContain("Couldn't check renewal time.");
+      expect(exhaustedCopy?.textContent).toContain("Daily limit reached");
+      expect(exhaustedCopy?.querySelector("time")).toBeNull();
+      expect(exhaustedCopy?.textContent).not.toContain("Renews in");
       expect(room.view.container.querySelector('[role="timer"][aria-label="Free time used up"]')).toBeNull();
       expect([...room.view.container.querySelectorAll("button")].some(item => item.textContent?.trim() === "Create room")).toBe(false);
       expect(room.view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
@@ -2017,7 +2017,7 @@ describe("privileged overlay wiring", () => {
       const requestsBeforeRetry = request.mock.calls.length;
       await click(button(room.view.container, "Retry"));
       expect(request).toHaveBeenCalledTimes(requestsBeforeRetry + 1);
-      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Checking your limit");
+      expect(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Checking renewal time");
       expect(room.view.container.querySelector(".free-quota-retry")).toBeNull();
       expect(room.view.container.querySelector('[role="timer"][aria-label="Free time used up"]')).toBeNull();
       expect([...room.view.container.querySelectorAll("button")].some(item => item.textContent?.trim() === "Create room")).toBe(false);
@@ -2053,7 +2053,7 @@ describe("privileged overlay wiring", () => {
       expect.soft(room.timer()).toBe("00:06");
       expect(room.wire.mock.calls.some(([event]) => event.type === "HOSTING_TIME_REQUEST")).toBe(false);
       await act(async () => room.options.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: room.at + 3_000, reason: "quota_exhausted" }));
-      expect.soft(room.view.container.textContent).toContain("Today's free time is used up");
+      expect.soft(room.view.container.querySelector(".panel-limit-copy")?.textContent).toContain("Daily limit reached");
       expect.soft(room.view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
       expect(room.send.mock.calls.some(([message]: any) => message.action === "quota-end-room")).toBe(false);
     } finally { vi.useRealTimers(); await unmount(room.view.root); }
@@ -2647,9 +2647,10 @@ describe("privileged overlay wiring", () => {
       expect(wire.mock.calls.some(([event]) => event.type === "HOSTING_TIME_REQUEST")).toBe(false);
       expect(view.container.querySelector(".panel-primary-action")?.textContent).not.toBe("Create room");
       await act(async () => options.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: at, reason: "quota_exhausted" }));
-      expect(view.container.textContent).toContain("Today's free time is used up");
-      // Reusing the original server clock must not restart the reset countdown.
-      expect(view.container.textContent).toContain("Renews in 11:59:54");
+      expect(view.container.querySelector(".panel-limit-copy h2")?.textContent).toBe("Daily limit reached");
+      // The terminal screen keeps the original server UTC renewal instant.
+      expect(view.container.querySelector<HTMLTimeElement>(".panel-limit-copy time")?.dateTime).toBe("2026-11-02T00:00:00.000Z");
+      expect(view.container.querySelector('[role="timer"][aria-label="Free time used up"]')).toBeNull();
       expect(view.container.querySelector(".panel-primary-action")?.textContent).toContain("View plans");
       expect(view.container.querySelector<HTMLAnchorElement>(".panel-limit-plans")?.href).toBe(new URL("/pricing", WEB_HTTP_BASE).href);
       expect(view.container.querySelector(".panel-plan-link")).toBeNull();

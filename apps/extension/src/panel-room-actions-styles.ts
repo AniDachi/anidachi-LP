@@ -17,7 +17,12 @@ export const panelRoomActionsStyles = `
   .panel-limit-copy { margin:0 1px 13px; }
   .panel-limit-copy strong { color:#f2ede5; font-size:13px; font-weight:650; line-height:1.4; }
   .panel-limit-copy p { margin:5px 0 0; color:#a9a8ac; font-size:11px; line-height:1.55; text-wrap:pretty; }
-  .panel-limit-plans { display:flex; align-items:center; gap:7px; text-decoration:none; font-size:14px; }
+  .panel-limit-copy[data-daily-free=true] { margin:0 1px 16px; }
+  .panel-limit-copy[data-daily-free=true] h2 { margin:0; color:#f2ede5; font-size:16px; font-weight:650; line-height:1.35; letter-spacing:-.2px; }
+  .panel-limit-copy[data-daily-free=true] p { margin:6px 0 0; font-size:12px; line-height:1.5; }
+  .panel-limit-copy .panel-limit-renewal { color:#f2ede5; font-size:inherit; font-weight:600; white-space:nowrap; }
+  .panel-limit-plans { display:flex; align-items:center; gap:9px; text-decoration:none; font-size:14px; }
+  .panel-limit-plans svg { flex:none; }
   .panel-time-counter { display:inline-flex; align-items:center; gap:4px; height:32px; width:max-content; }
   .panel-time-counter svg { width:20px; height:20px; flex:none; color:#c4b9ad; }
   .panel-time-counter strong { display:block; color:#f5f3ef; font-size:28px; line-height:1; font-weight:760; letter-spacing:-.7px; font-variant-numeric:tabular-nums; }

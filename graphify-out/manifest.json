@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793770915.8315213,
-    "seen": 1793771177.881515,
-    "ast_hash": "d0976c86290007f8e3c053601149e093",
+    "mtime": 1793784673.3927457,
+    "seen": 1793785100.462049,
+    "ast_hash": "e268854127d764cb3b77f9473d8dd051",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793726803.1243496,
-    "seen": 1793727235.657105,
+    "mtime": 1793785682.2526164,
+    "seen": 1793785896.96119,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "561d6dd6e22a760f36f3c78618a8a180"
+    "semantic_hash": "e8c30ff20e0dd218a6ece6a1f94301be"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793770960.9303336,
-    "seen": 1793771177.88152,
-    "ast_hash": "8ce276fe847d251640ba4dd453ce0d7e",
+    "mtime": 1793784673.3689501,
+    "seen": 1793785100.462053,
+    "ast_hash": "11a5ed4eeb7eab55e1757cae08bd5d00",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -8052,9 +8052,9 @@
     "semantic_hash": "c307336ae0f5e780ca38cb148337f3b4"
   },
   "apps/extension/src/free-quota-notice.tsx": {
-    "mtime": 1793694448.7825325,
-    "seen": 1793694654.901433,
-    "ast_hash": "810f35739f0789de6e2e3e20ae685c0e",
+    "mtime": 1793784523.1262815,
+    "seen": 1793785100.462046,
+    "ast_hash": "445c6d3ddb8348ba7ef5ba4c426386ea",
     "semantic_hash": ""
   },
   "apps/extension/src/room-quota-status-client.ts": {
@@ -11196,9 +11196,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions-styles.ts": {
-    "mtime": 1793689208.0772893,
-    "seen": 1793689644.676634,
-    "ast_hash": "0f23982af813ebeb8ed7b32eba8aa96b",
+    "mtime": 1793784523.1867166,
+    "seen": 1793785100.4620512,
+    "ast_hash": "af005d02dd8661864eafdc5afbdba918",
     "semantic_hash": ""
   },
   "apps/extension/src/panel-room-actions.tsx": {
@@ -11220,10 +11220,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793694620.1868932,
-    "seen": 1793694786.206302,
+    "mtime": 1793784953.7843368,
+    "seen": 1793785253.991756,
     "ast_hash": "",
-    "semantic_hash": "c7aa531f7872cabae8e198216484f3bd"
+    "semantic_hash": "769ce68d4928c1473e72ee53f3ca4c8d"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11244,9 +11244,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/use-account-hosting-status.ts": {
-    "mtime": 1793770767.795644,
-    "seen": 1793771177.8815181,
-    "ast_hash": "36341b1dc3b9a1223c425b96a404dae9",
+    "mtime": 1793784523.1461945,
+    "seen": 1793785100.462052,
+    "ast_hash": "f7ea03a06c65a2f07827c1ce22dd0370",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-hosting-time.ts": {
@@ -11268,9 +11268,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/use-account-hosting-status.test.tsx": {
-    "mtime": 1793769381.926031,
-    "seen": 1793769718.287971,
-    "ast_hash": "0a769ca25dea0b02019d4d3fd5a3b343",
+    "mtime": 1793785808.0558894,
+    "seen": 1793785896.8851252,
+    "ast_hash": "06f7353da20a7c3f6fa94a0f08abb4cd",
     "semantic_hash": ""
   },
   "apps/extension/test/use-room-hosting-time.test.tsx": {
@@ -11610,9 +11610,9 @@
     "semantic_hash": "6ce363224ce6262379ea3df20328f16c"
   },
   "apps/extension/test/free-quota-notice.test.tsx": {
-    "mtime": 1793694429.4612393,
-    "seen": 1793694654.901439,
-    "ast_hash": "14fd71282c682f0722713f9bf460a57b",
+    "mtime": 1793784473.4660835,
+    "seen": 1793785100.462053,
+    "ast_hash": "524f4ca018bba259e1238de821f8aaed",
     "semantic_hash": ""
   },
   "apps/extension/src/use-room-closing-presentation.ts": {

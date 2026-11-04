@@ -1,5 +1,25 @@
 # Current Development State
 
+## Free20 exhausted-host screen, November 4, 2026
+
+The owner approved the [exhausted-host screen](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-4-agreed-exhausted-host-screen-local-candidate)
+and its delivery through a PR into `staging`, followed by refreshing the existing
+unpacked extension folder. The screen shows `Daily limit reached`, a highlighted
+local renewal date/time and the channel pricing action, without a zero timer or
+reset countdown. The renewal instant remains server-owned; presentation uses
+the device timezone and existing monotonic clock. Unknown renewal retains retry
+and requires fresh server allowance before creation. Paid, guest and legacy
+flows retain their existing rules.
+
+The local candidate passed 2788 extension tests, typecheck, narrow staging build
+validation and source-component visual inspection. The delivery PR records
+independent review, CI, the accepted staging SHA and final artifact identity;
+local evidence is under ignored `artifacts/free20-limit-screen-20261104/`.
+Loaded Chrome and two-participant acceptance remain distinct from these checks.
+This is extension presentation only: no SQL, Worker, protocol, policy flag,
+production or Store change. Rollback restores the prior verified extension or
+reverts the UI commit and rebuilds.
+
 ## Free20 anti-abuse staging activation, November 4, 2026
 
 The owner authorized enabling the delivered protection after testers reported

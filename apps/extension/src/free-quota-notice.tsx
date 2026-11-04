@@ -2,7 +2,39 @@ import { Clock3, Check, RefreshCw, ArrowUpRight } from "lucide-react";
 import { WEB_HTTP_BASE } from "./constants";
 import type { FreeQuotaNoticeState } from "./use-free-quota-notice";
 
-export function FreeQuotaNotice({ state, onRetry, compact = false }: { state: FreeQuotaNoticeState; onRetry: () => void; compact?: boolean }) {
+export type FreeQuotaRenewal = { serverTime: number; resetAt: number };
+
+/** The server owns the instant and current date. The device supplies only its
+ * local timezone; changing its wall clock cannot move the renewal boundary. */
+function localRenewalLabel(renewal: FreeQuotaRenewal | null): string | null {
+  if (!renewal || !Number.isFinite(renewal.serverTime) || !Number.isFinite(renewal.resetAt) ||
+    renewal.serverTime >= renewal.resetAt || !Number.isFinite(new Date(renewal.resetAt).getTime()) ||
+    !Number.isFinite(new Date(renewal.serverTime).getTime())) return null;
+  const calendar = new Intl.DateTimeFormat('en', {year:'numeric',month:'numeric',day:'numeric'});
+  const localDay = (at: number) => {
+    const parts = Object.fromEntries(calendar.formatToParts(at).map(part => [part.type,part.value]));
+    return Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day)) / 86_400_000;
+  };
+  const difference = localDay(renewal.resetAt) - localDay(renewal.serverTime);
+  const day = difference === 0 ? 'today' : difference === 1 ? 'tomorrow'
+    : new Intl.DateTimeFormat('en', {month:'short',day:'numeric'}).format(renewal.resetAt);
+  const time = new Intl.DateTimeFormat('en', {hour:'numeric',minute:'2-digit',hour12:true}).format(renewal.resetAt);
+  return `${day} at ${time}`;
+}
+
+export function FreeQuotaNotice({ state, onRetry, compact = false, dailyFree = false, renewal = null }: {
+  state: FreeQuotaNoticeState; onRetry: () => void; compact?: boolean;
+  dailyFree?: boolean; renewal?: FreeQuotaRenewal | null;
+}) {
+  if (compact && dailyFree) {
+    const label = localRenewalLabel(renewal);
+    return <section className="panel-limit-copy" data-daily-free="true" aria-label="Free watch-party limit">
+      <h2>Daily limit reached</h2>
+      {label ? <p>20 free minutes <strong className="panel-limit-renewal"><time dateTime={new Date(renewal!.resetAt).toISOString()}>{label}</time></strong></p>
+        : <p>{state.kind === 'unavailable' ? "Couldn't check renewal time." : 'Checking renewal time…'}</p>}
+      {!label && state.kind === 'unavailable' && <button type="button" className="free-quota-retry" onClick={onRetry}><RefreshCw size={13} aria-hidden="true" />Retry</button>}
+    </section>;
+  }
   if (compact) return <section className="panel-limit-copy" aria-label="Free watch-party limit">
     <strong>{state.kind === "unavailable" ? "Free time unavailable" : state.remainingSeconds === null ? "Checking your limit…" : "Today's free time is used up"}</strong>
     {state.kind === "unavailable" && <p>Couldn't check your free time.</p>}

@@ -6431,7 +6431,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							</div>
 						</div>
 						<div className="panel-header-actions">
-							{quotaExhausted && displayedQuotaNotice?.kind === "exhausted" && displayedQuotaNotice.remainingSeconds !== null ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
+							{accountHostingTime.mode === "legacy" && quotaExhausted && displayedQuotaNotice?.kind === "exhausted" && displayedQuotaNotice.remainingSeconds !== null ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
 							{identityLoaded && !authAuthenticated ? (
 								<button
 									className="button compact panel-sign-in-button"
@@ -6477,8 +6477,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					) : null}
 
 					{quotaExhausted ? <>
-						<FreeQuotaNotice state={displayedQuotaNotice!} onRetry={refreshDisplayedQuota} compact />
-						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={14} aria-hidden="true" /></a></div>
+						<FreeQuotaNotice state={displayedQuotaNotice!} onRetry={refreshDisplayedQuota} compact
+							dailyFree={accountHostingTime.mode === "free20"} renewal={accountHostingTime.renewal} />
+						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={15} aria-hidden="true" /></a></div>
 					</> : <PanelRoomActions key={roomAuthSessionKeyRef.current ?? "anonymous"}
 						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
