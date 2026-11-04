@@ -2252,14 +2252,19 @@ describe("privileged overlay wiring", () => {
     } finally { await unmount(view.root); if (outcome.startsWith("slow-admission")) vi.useRealTimers(); }
   });
 
-  it.each(["free-invite", "paid-invite", "exhausted-invite", "restored-guest", "rejected-invite", "host-exhausted-invite", "host-exhausted-reconnect", "storage-failure", "slow-snapshot", "guest-leave", "delayed-host-role"])("does not show hosting controls while entering another room: %s", async scenario => {
+  it.each(["free-invite", "paid-invite", "pro-invite", "exhausted-invite", "restored-guest", "rejected-invite", "host-exhausted-invite", "host-exhausted-reconnect", "storage-failure", "slow-snapshot", "guest-leave", "delayed-host-role"])("does not show hosting controls while entering another room: %s", async scenario => {
     const owner = "22222222-2222-4222-8222-222222222222";
     installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
     const at = Date.parse("2026-11-01T12:00:00Z");
     const period = { utcDay: "2026-11-01", resetAt: at + 43_200_000 };
-    const paid = scenario === "paid-invite", exhausted = scenario === "exhausted-invite";
+    const planCode = scenario === "paid-invite" ? "plus" : scenario === "pro-invite" ? "pro" : "free";
+    const paid = planCode !== "free", exhausted = scenario === "exhausted-invite";
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockResolvedValue({
+      entitlementsVersion: 1, ownerUserId: owner, planCode, serverTime: new Date(at).toISOString(),
+      hosting: { hostingPolicyVersion: 1, hostingActivationAt: null, canHost: true, trialEligibility: "unavailable", trialEndsAt: null },
+    });
     const personalStatus: Awaited<ReturnType<typeof accountHostingClient.requestAccountHostingStatus>> = { mode: "free20", status: {
-      accountHostingVersion: 1, ownerUserId: owner, planCode: paid ? "plus" : "free", serverTime: at, validUntil: at + 60_000, period,
+      accountHostingVersion: 1, ownerUserId: owner, planCode, serverTime: at, validUntil: at + 60_000, period,
       access: paid ? { kind: "confirmed_unlimited", source: "paid", validUntil: at + 60_000 }
         : { kind: "daily_free", budgetSeconds: 1200, usedSeconds: exhausted ? 1200 : 420, remainingSeconds: exhausted ? 0 : 780, metering: false },
       activeRoom: null, canCreateRoom: !exhausted,
@@ -2310,6 +2315,10 @@ describe("privileged overlay wiring", () => {
       if (view.container.querySelector('button[aria-label="Open Anidachi controls"]')) await click(button(view.container, "Open Anidachi controls"));
       noHosting(); expect(button(view.container, "Joining room").disabled).toBe(true);
       expect(accountHostingClient.requestAccountHostingStatus).not.toHaveBeenCalled();
+      // A direct invite has no cached personal-hosting observation. The guest's
+      // own verified plan must still load, independently of the Pro room host.
+      expect(view.container.querySelector(`.plan-badge.${planCode}`)).not.toBeNull();
+      expect(view.container.querySelector('.panel-plan-placeholder')).toBeNull();
       if (scenario === "host-exhausted-invite") {
         await act(async () => admission.resolve({ ok: false, status: 403, code: "QUOTA_EXHAUSTED",
           error: "Daily free watch-party time is used up", resetAt: new Date(period.resetAt).toISOString() }));
@@ -2351,6 +2360,8 @@ describe("privileged overlay wiring", () => {
       }
       noHosting(); expect(button(view.container, "Leave room").disabled).toBe(false);
       expect(accountHostingClient.requestAccountHostingStatus).not.toHaveBeenCalled();
+      expect(view.container.querySelector(`.plan-badge.${planCode}`)).not.toBeNull();
+      expect(view.container.querySelector('.panel-plan-placeholder')).toBeNull();
       if (scenario === "host-exhausted-reconnect") {
         rejectReconnect = true;
         vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });

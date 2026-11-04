@@ -13,6 +13,19 @@ Existing extension build `03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`
 was reverified, not replaced. Actual enabled browser/participant/purchase/UTC
 acceptance remains pending; historical default-off preparation below is retained.
 
+**Guest plan display repair candidate (November 4):** A pre-activation screenshot
+exposed a cold guest/restored-session path that suppressed personal hosting-status
+reads and consequently never populated the account badge. Guests now read their
+own server-verified entitlements for presentation only, without Free20 enrollment,
+personal minutes or create authority. Idle session discovery and pending own-room
+creation do not use that guest reader. Logical-login, credential and room-role
+fences reject obsolete replies; an already confirmed badge survives revalidation,
+and bounded read failure ends the loading placeholder. Web/SQL/Worker contracts,
+quota policy and production remain unchanged. Local evidence: extension check,
+2769 tests, and isolated Chromium Free/Plus/Pro restored-guest/failure scenarios,
+including focus and token rotation; real tester acceptance remains pending.
+This note records a local candidate, not a staging merge or loaded-user result.
+
 **Architecture:** Supabase binds server-verified markers to room generations and applies cumulative usage deltas to account and marker ledgers. Web validates a dedicated signed installation challenge and issues an account-bound context; the background supplies it for admission and display. The existing serialized DO computes live remaining time from the effective committed ceiling and its own pending interval.
 
 **Tech Stack:** Existing Postgres RPCs/pgTAP, TypeScript/Zod, Next.js, WXT/MV3, WebCrypto P-256, Cloudflare Durable Objects. No new dependency or secret.

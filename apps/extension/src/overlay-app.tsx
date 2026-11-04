@@ -843,6 +843,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				initialRoomTarget || (authAuthenticated && roomSessionLoadedForUserId !== participant?.id)
 			))
 		),
+		// Suppressed hosting reads also cover idle session discovery and our own
+		// pending creation. Only an actual room entry needs the guest plan reader.
+		guestPlanEnabled: !roomCreatePending && !roomStartPending && Boolean(
+			roomId || roomJoinAttempt?.pending || (!roomActionMessage && initialRoomTarget)
+		),
 		// Opening/closing the panel is presentation, not a new data session.
 		// Prefetch for the active player; account seconds never supply live time.
 		enabled: adapterActive || panelOpen || introductionActive || roomId !== null,

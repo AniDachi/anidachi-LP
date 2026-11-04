@@ -1,6 +1,7 @@
 import { acceptAccountHostingStatus, type AccountHostingStatus } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { requestAccountHostingStatus } from "./account-hosting-status-client";
+import { requestHostingAccess } from "./hosting-access-client";
 import type { QuotaExhaustion } from "./use-free-quota-notice";
 
 type State = {
@@ -22,13 +23,15 @@ const RECOVERY_DELAYS_MS = [500, 1_500] as const;
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
  * activation or user resume; a successful recovery never starts a polling loop. */
-export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey = sessionKey, enabled: requestedEnabled, guestRoom = false, visible = requestedEnabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus }: {
+export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey = sessionKey, enabled: requestedEnabled, guestRoom = false, guestPlanEnabled = true, visible = requestedEnabled, roomId = null, settlementRevision = 0, exhaustion, request = requestAccountHostingStatus, requestPlan = requestHostingAccess }: {
   ownerUserId: string | null; sessionKey: string | null; enabled: boolean;
   /** Rotating credentials retires in-flight reads, not the same login's already
    * confirmed display. Its original clock, expiry and room scope still apply. */
   credentialKey?: string | null;
-  /** Guest and unknown entry roles do not need personal host enrollment. */
+  /** Guests and unknown entry roles read only their plan, without personal host enrollment. */
   guestRoom?: boolean;
+  /** Wait during session discovery or own-room creation; neither is guest entry. */
+  guestPlanEnabled?: boolean;
   /** Opening the panel recovers expired data without discarding fresh prefetch. */
   visible?: boolean;
   /** Room boundaries require a new account read before idle seconds can return. */
@@ -37,8 +40,10 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
    * event. Retire its possibly-unsettled read and read the completed ledger. */
   settlementRevision?: number;
   exhaustion: QuotaExhaustion | null; request?: typeof requestAccountHostingStatus;
+  requestPlan?: typeof requestHostingAccess;
 }) {
   const enabled = requestedEnabled && !guestRoom;
+  const readEnabled = requestedEnabled && (!guestRoom || guestPlanEnabled);
   const stateRef = useRef<State>(empty(ownerUserId, sessionKey));
   const [state, setState] = useState(stateRef.current);
   const [roomScope, setRoomScope] = useState({ roomId, epoch: 0 });
@@ -53,16 +58,17 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
   useEffect(() => {
     if (stateRef.current.ownerUserId !== ownerUserId || stateRef.current.sessionKey !== sessionKey) stateRef.current = empty(ownerUserId, sessionKey);
     let current: State = { ...stateRef.current, busy: false,
-      ...(!enabled ? { status: null, periodClock: null } : {}) };
+      ...(!enabled ? { status: null, periodClock: null } : {}),
+      ...(guestRoom ? { mode: "unknown" as const } : {}) };
     const exhaustedUntil = exhaustion?.ownerUserId === ownerUserId && (exhaustion.sessionKey === undefined || exhaustion.sessionKey === sessionKey) ? Date.parse(exhaustion.resetAt ?? "") : NaN;
     if (Number.isFinite(exhaustedUntil) && current.exhaustionEvent !== exhaustion) {
       current.exhaustionEvent = exhaustion;
       current.exhaustedUntil = exhaustedUntil;
-      if (exhaustion?.free20) current.mode = "free20";
+      if (exhaustion?.free20 && !guestRoom) current.mode = "free20";
     }
     const show = (patch: Partial<State>) => { current = { ...current, ...patch }; stateRef.current = current; setState(current); };
     show({});
-    if (!enabled || !ownerUserId || !sessionKey) return;
+    if (!readEnabled || !ownerUserId || !sessionKey) return;
     let alive = true, pending = false, generation = 0, expiryRecheckUsed = false, resetRecheckUsed = false;
     let lastAttempt = Number.NEGATIVE_INFINITY;
     let lastMonotonic = performance.now(), lastWall = Date.now();
@@ -88,11 +94,20 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
       try {
         // This consumer anchors age at this load's start. A shared older pending
         // request has an earlier start and must never acquire this newer clock.
-        const result = await request(ownerUserId!, true);
+        // Guest identity still needs a server-confirmed badge. Entitlements do
+        // not enroll Free20 markers or grant personal time/create authority.
+        const result = guestRoom
+          ? { mode: "guest" as const, access: await requestPlan(ownerUserId!, true) }
+          : await request(ownerUserId!, true);
         if (!alive || ownGeneration !== generation) return;
         retryable = false;
         const elapsed = Math.max(0, performance.now() - now);
         if (String(document.visibilityState) === "hidden" || Math.abs(Date.now() - wall - elapsed) > 2_000) throw new Error("Stale read");
+        if (result.mode === "guest") {
+          if (result.access.ownerUserId !== ownerUserId) throw new Error("Invalid plan owner");
+          show({ presentationPlanCode: result.access.planCode, busy: false, error: false });
+          return;
+        }
         if (result.mode === "legacy") { show({ mode: "legacy", status: null, presentationPlanCode: null, periodClock: null, exhaustedUntil: null, busy: false, completedRead: { roomEpoch: roomScope.epoch, settlementRevision } }); return; }
         const status = acceptAccountHostingStatus(ownerUserId!, result.status);
         if (!status) throw new Error("Invalid status");
@@ -190,7 +205,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
       window.removeEventListener("focus", resume); window.removeEventListener("pageshow", resume); window.removeEventListener("online", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [ownerUserId, sessionKey, credentialKey, enabled, roomScope, settlementRevision, exhaustion, request]);
+  }, [ownerUserId, sessionKey, credentialKey, readEnabled, guestRoom, roomScope, settlementRevision, exhaustion, request, requestPlan]);
   useEffect(() => { if (visible) openRef.current(); }, [visible]);
   const scoped = state.ownerUserId === ownerUserId && state.sessionKey === sessionKey ? state : empty(ownerUserId, sessionKey);
   const elapsed = Math.max(0, performance.now() - scoped.monotonic);
