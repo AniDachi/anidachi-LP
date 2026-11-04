@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnidachiLogo } from "../../components/anidachi-logo";
 import { CHROME_WEB_STORE_URL } from "../../lib/install-cta";
@@ -108,7 +109,7 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
     window.addEventListener("pageshow", refresh);
     document.addEventListener("visibilitychange", visibility);
     return () => {
-      alive.current = false; ++generation.current;
+      alive.current = false;
       window.removeEventListener("blur", invalidate); window.removeEventListener("focus", refresh);
       window.removeEventListener("pagehide", invalidate); window.removeEventListener("pageshow", refresh);
       document.removeEventListener("visibilitychange", visibility);
@@ -222,7 +223,7 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
     } finally { actionLock.current = false; if (alive.current) setBusy(false); }
   }
   return <div className="uninstall-page">
-    <header className="uninstall-header"><a href="/" className="uninstall-brand"><AnidachiLogo size={32} aria-hidden priority /><span>AniDachi</span></a><a href="/" className="uninstall-home">Home <span aria-hidden="true">↗</span></a></header>
+    <header className="uninstall-header"><Link href="/" className="uninstall-brand"><AnidachiLogo size={32} aria-hidden priority /><span>AniDachi</span></Link><Link href="/" className="uninstall-home">Home <span aria-hidden="true">↗</span></Link></header>
     <main id="main-content" className="uninstall-main">
       <h1 className="sr-only">AniDachi uninstall feedback</h1>
       <article className="uninstall-card" data-survey-only={surveyOnly}>
