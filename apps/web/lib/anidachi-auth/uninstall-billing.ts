@@ -28,10 +28,13 @@ export function retentionBillingSnapshot(
 		sub.pending_update ||
 		sub.schedule ||
 		sub.pause_collection ||
+		sub.pending_invoice_item_interval ||
+		sub.billing_thresholds ||
 		sub.items.has_more ||
 		sub.items.data.length !== 1 ||
 		item.price.id !== claim.price_id ||
 		item.quantity !== 1 ||
+		item.billing_thresholds ||
 		item.current_period_end !== claim.target_period_start ||
 		item.price.unit_amount !== claim.unit_amount ||
 		sub.discounts.length ||

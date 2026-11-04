@@ -783,6 +783,47 @@ test("pending billing snapshot discounts only the reserved next month", () => {
 	f.s.cancel_at_period_end = true;
 	assert.equal(retentionBillingSnapshot(f.s, f.c, at), undefined);
 });
+for (const [label, mutate] of [
+	[
+		"pending invoice items",
+		(s: Stripe.Subscription) => {
+			s.pending_invoice_item_interval = {
+				interval: "month",
+				interval_count: 1,
+			};
+		},
+	],
+	[
+		"subscription billing threshold",
+		(s: Stripe.Subscription) => {
+			s.billing_thresholds = {
+				amount_gte: 1000,
+				reset_billing_cycle_anchor: false,
+			};
+		},
+	],
+	[
+		"item billing threshold",
+		(s: Stripe.Subscription) => {
+			s.items.data[0].billing_thresholds = { usage_gte: 100 };
+		},
+	],
+] as const)
+	test(`pending billing discount disappears after ${label} change`, () => {
+		const f = invoiceFixture();
+		f.s.items.data[0].current_period_end = f.c.target_period_start;
+		assert.equal(
+			retentionBillingSnapshot(f.s, f.c, at)?.nextPrice?.unitAmount,
+			479,
+		);
+		mutate(f.s);
+		assert.equal(retentionBillingSnapshot(f.s, f.c, at), undefined);
+		assert.equal(
+			f.c.state,
+			"accepted",
+			"display exclusion does not release the durable promise",
+		);
+	});
 test("first promotion is account-bound and one-redemption; late retry does not mint a fresh allowance", async () => {
 	const catalog = { plus: price("plus", 799), pro: price("pro", 1499) };
 	let codes: Stripe.PromotionCode[] = [];
