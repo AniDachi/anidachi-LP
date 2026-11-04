@@ -46,7 +46,7 @@ import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { PlayerOnboarding } from "./player-onboarding";
-import { AUTH_TOKENS_KEY, normalizeExtensionAuthTokens, type AuthenticatedUser, type ExtensionAuthTokens } from "./auth-tokens";
+import { AUTH_TOKENS_KEY, extensionAuthSessionKey as roomAuthSessionKey, normalizeExtensionAuthTokens, type AuthenticatedUser, type ExtensionAuthTokens } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, WEB_HTTP_BASE } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { ANIDACHI_EMOJI_CATALOG } from "./emoji-catalog";
@@ -519,15 +519,6 @@ export async function runOverlayPrivilegedAction(
 	await afterApproval();
 }
 
-function roomAuthSessionKey(tokens: ExtensionAuthTokens | null): string | null {
-	if (!tokens) return null;
-	// Credential rotation does not replace a login. Older backgrounds without a
-	// logical ID retain the conservative credential fence until they migrate.
-	return JSON.stringify(tokens.authSessionId
-		? [tokens.user.id, "login", tokens.authSessionId]
-		: [tokens.user.id, "credentials", tokens.authRevision, tokens.accessToken, tokens.refreshToken]);
-}
-
 export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
@@ -830,7 +821,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		ownerUserId: string; loginKey: string; roomId: string; resetAt: number; expiresAt: number; monotonic: number; wall: number;
 	} | null>(null);
 	const hostingTimeSessionKey = authAuthenticated ? roomAuthSessionKeyRef.current : null;
-	const hostingTimeCredentialKey = authAuthenticated ? JSON.stringify([authRevision, authAccessToken, authSessionKey]) : null;
+	// A changed cached tier is only a revalidation signal, never display authority.
+	const hostingTimeCredentialKey = authAuthenticated ? JSON.stringify([authRevision, authAccessToken, authSessionKey, accountUser?.plan]) : null;
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const initialRoomTarget = getRoomIdFromHash() ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
@@ -869,7 +861,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const roomExitPending = roomClosing.closing || roomLeaving.closing;
 	const hostingDisplay = useHostingAccess({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
-		sessionKey: authSessionKey,
+		sessionKey: hostingTimeSessionKey,
+		credentialKey: hostingTimeCredentialKey,
 		enabled: (accountHostingTime.mode === "legacy" && (panelOpen || roomId !== null || introductionActive)) || hostingPaywallOpen,
 	});
 	const legacyQuotaEnabled = !hostingTimeClock.observed && (hostingTimeClock.legacy ||
@@ -2313,6 +2306,24 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// the display moving between snapshots while host and guest are both live.
 	const sendHostingTimeRecovery = useCallback((event: ClientEvent) => clientRef.current.send(event), []);
 	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
+	const lastRoomAccountAccess = useRef<{ scope: string; kind: "daily_free" | "confirmed_unlimited" } | null>(null);
+	useEffect(() => {
+		if (!roomId || !isHost) { lastRoomAccountAccess.current = null; return; }
+		const snapshot = liveHostingTime?.snapshot;
+		if (!snapshot || snapshot.access.kind === "unknown") return;
+		const scope = JSON.stringify([hostingTimeSessionKey, snapshot.ownerUserId, snapshot.roomId, snapshot.roomGeneration]);
+		const previous = lastRoomAccountAccess.current;
+		lastRoomAccountAccess.current = { scope, kind: snapshot.access.kind };
+		const previousKind = previous?.scope === scope ? previous.kind : accountHostingTime.status?.access.kind ?? (
+			accountHostingTime.presentationPlanCode === null ? null : accountHostingTime.presentationPlanCode === "free" ? "daily_free" : "confirmed_unlimited"
+		);
+		// The live owner grant can change after purchase/expiry without a token
+		// change. Read the account's actual tier; never infer Plus/Pro from room caps.
+		// One read per accepted access transition, never one per timer snapshot.
+		if (previousKind && previousKind !== snapshot.access.kind) accountHostingTime.reconcile();
+	}, [roomId, isHost, hostingTimeSessionKey, liveHostingTime?.snapshot.ownerUserId, liveHostingTime?.snapshot.roomId,
+		liveHostingTime?.snapshot.roomGeneration, liveHostingTime?.snapshot.access.kind,
+		accountHostingTime.status?.access.kind, accountHostingTime.presentationPlanCode, accountHostingTime.reconcile]);
 	useEffect(() => {
 		// The snapshot timeout belongs to the admitted room. Identity refresh and
 		// HTTP creation can take longer; they must not consume its recovery window.
@@ -6243,8 +6254,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		accountHostingTime.mode === "legacy" ? displayedQuotaNotice?.kind === "exhausted" : accountHostingTime.exhausted
 	);
 	const panelPlan = authAuthenticated
-		? accountHostingTime.mode === "legacy" ? hostingDisplay.state.access?.planCode ?? null : accountHostingTime.presentationPlanCode
+		? accountHostingTime.mode === "legacy" ? hostingDisplay.presentationPlanCode : accountHostingTime.presentationPlanCode
 		: null;
+	const planReadFailed = accountHostingTime.mode === "legacy" ? hostingDisplay.state.error : accountHostingTime.error;
 	// Unknown is not Free. Preserve the last confirmed same-login appearance
 	// through revalidation/expiry, without retaining seconds or granting access.
 	// Fresh account/room observations still own every numeric timer and admission.
@@ -6401,7 +6413,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								<PanelAccountTitle
 									displayName={accountDisplayName}
 									plan={panelPlan}
-									loading={!identityLoaded || (authAuthenticated && panelPlan === null && !accountHostingTime.error)}
+									loading={!identityLoaded || (authAuthenticated && panelPlan === null && !planReadFailed)}
 									loadingIdentity={!identityLoaded}
 								/>
 								<div className="panel-account-secondary">

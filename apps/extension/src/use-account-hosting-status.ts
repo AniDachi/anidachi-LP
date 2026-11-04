@@ -52,9 +52,10 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
   const [, tick] = useState(0);
   const refreshRef = useRef<() => void>(() => {});
   const openRef = useRef<() => void>(() => {});
-  const invalidateRef = useRef<() => void>(() => {});
+  const invalidateRef = useRef<(immediate?: boolean) => void>(() => {});
   const refresh = useCallback(() => refreshRef.current(), []);
   const invalidate = useCallback(() => invalidateRef.current(), []);
+  const reconcile = useCallback(() => invalidateRef.current(true), []);
   useEffect(() => {
     if (stateRef.current.ownerUserId !== ownerUserId || stateRef.current.sessionKey !== sessionKey) stateRef.current = empty(ownerUserId, sessionKey);
     let current: State = { ...stateRef.current, busy: false,
@@ -159,9 +160,10 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
       if (current.error) lastAttempt = Number.NEGATIVE_INFINITY;
       expiryRecheckUsed = false; resetRecheckUsed = false; void load();
     };
-    invalidateRef.current = () => {
-      // A newer admission denial supersedes both the display and pending reads.
+    invalidateRef.current = (immediate = false) => {
+      // New server authority supersedes both the display and pending reads.
       generation++; pending = false; cancelRetry(); show({ status: null, presentationPlanCode: null, busy: false });
+      if (immediate) lastAttempt = Number.NEGATIVE_INFINITY;
       refreshRef.current();
     };
     openRef.current = () => {
@@ -225,6 +227,6 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
     // Bounds the last confirmed number during the short visual room handoff.
     displayExpiresAt: status ? scoped.monotonic + Math.min(status.validUntil, status.period.resetAt) - status.serverTime : null,
     resetSeconds: exhausted && enabled && scoped.periodClock && document.visibilityState !== "hidden" ? Math.max(0, Math.ceil((scoped.periodClock.resetAt - scoped.periodClock.serverTime - Math.max(0, performance.now() - scoped.periodClock.monotonic)) / 1000)) : null,
-    refresh, invalidate,
+    refresh, invalidate, reconcile,
   };
 }

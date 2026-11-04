@@ -26,6 +26,20 @@ quota policy and production remain unchanged. Local evidence: extension check,
 including focus and token rotation; real tester acceptance remains pending.
 This note records a local candidate, not a staging merge or loaded-user result.
 
+**Display refresh audit follow-up (November 4):** The same local candidate now
+also repairs popup badge loss/stale replies during credential rotation, ignores
+the old login's badge on a new login, and revalidates changed profile metadata
+instead of trusting its cached tier. Overlay and popup share the existing logical
+login identity rule; credential-scoped access remains separate from retained
+presentation. A confirmed host-room Free/unlimited transition triggers one fresh
+account-tier read, including purchase and expiry; guest time and frozen room
+capacity do not become account authority. Failed legacy entitlement reads now end
+the plan placeholder. Source check and all 2776 extension tests pass; isolated
+Chromium verifies four guest scenarios, host upgrade/expiry, and popup rotation,
+new-login and profile-change flows. These use synthetic transport, not real
+checkout or tester accounts. No Web, SQL, Worker, policy or permission change is
+required; the candidate remains local pending staging merge and tester acceptance.
+
 **Architecture:** Supabase binds server-verified markers to room generations and applies cumulative usage deltas to account and marker ledgers. Web validates a dedicated signed installation challenge and issues an account-bound context; the background supplies it for admission and display. The existing serialized DO computes live remaining time from the effective committed ceiling and its own pending interval.
 
 **Tech Stack:** Existing Postgres RPCs/pgTAP, TypeScript/Zod, Next.js, WXT/MV3, WebCrypto P-256, Cloudflare Durable Objects. No new dependency or secret.

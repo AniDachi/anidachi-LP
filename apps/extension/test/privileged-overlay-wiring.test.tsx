@@ -2524,6 +2524,82 @@ describe("privileged overlay wiring", () => {
     } finally { await unmount(view.root); }
   });
 
+  it("ends the legacy plan placeholder when its entitlement read fails", async () => {
+    installActiveHostRoomRuntime();
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "legacy" });
+    vi.mocked(hostingAccessClient.requestHostingAccess).mockRejectedValue(new Error("offline"));
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls")); await flushMountedWork();
+      expect(view.container.querySelector('.panel-plan-placeholder')).toBeNull();
+      expect(view.container.querySelector('.plan-badge')).toBeNull();
+    } finally { await unmount(view.root); }
+  });
+
+  it("rechecks the overlay's own tier after a profile plan change without token rotation", async () => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    let session = { ...sessionFor(owner), authSessionId: "login-a", profileRevision: 1 };
+    installActiveHostRoomRuntime({ getSession: () => session });
+    const at = Date.parse("2026-11-01T12:00:00Z");
+    const status: import("@anidachi/protocol").AccountHostingStatus = { accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000,
+      period: { utcDay: "2026-11-01", resetAt: at + 43_200_000 }, access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false }, activeRoom: null, canCreateRoom: true };
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      expect(view.container.querySelector('.plan-badge.free')).not.toBeNull();
+      vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: { ...status, planCode: "pro", access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 3_600_000 } } });
+      session = { ...session, profileRevision: 2, user: { ...session.user, plan: "plus" as any } };
+      await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, session)); await flushMountedWork();
+      expect(view.container.querySelector('.plan-badge.pro')).not.toBeNull();
+      expect(view.container.querySelector('.panel-plan-link,.panel-idle-time')).toBeNull();
+    } finally { await unmount(view.root); }
+  });
+
+  it("refreshes the account badge and pricing link when its live room becomes paid", async () => {
+    const owner = "22222222-2222-4222-8222-222222222222";
+    installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
+    const at = Date.parse("2026-11-01T12:00:00Z"), period = { utcDay: "2026-11-01", resetAt: at + 43_200_000 };
+    const finite = { kind: "daily_free" as const, budgetSeconds: 1200 as const, usedSeconds: 420, remainingSeconds: 780, metering: false };
+    const status: import("@anidachi/protocol").AccountHostingStatus = { accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000, period, access: finite, activeRoom: null, canCreateRoom: true };
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status });
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      const result = await (original as any)(...args);
+      if (args[0]?.command === "prepare") return { ...result, prepared: { ...result.prepared, ownerUserId: owner } };
+      if (args[0]?.command === "create-room") return { ...result, room: { ...result.room, roomSession: { ...result.room.roomSession, ownerUserId: owner }, privilegedRoomAuthority: { ...roomAuthority(), accountUserId: owner } } };
+      return result;
+    });
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(next => { connection = next; next.onStatus("connected"); });
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room")); await vi.waitFor(() => expect(connection).toBeDefined());
+      await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+        participants: [{ ...hostParticipant(), id: owner, participantSessionId: connection.participantSessionId }, guestParticipant()] }));
+      const time = (sequence: number, access: import("@anidachi/protocol").HostingTimeSnapshot["access"]): import("@anidachi/protocol").HostingTimeEvent => ({ type: "HOSTING_TIME", roomId: "room-a", roomGeneration: 1, serverTime: at, validUntil: at + 60_000, snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room-a", roomGeneration: 1, snapshotSequence: sequence, serverTime: at, period, access } });
+      await act(async () => connection.onEvent(time(1, finite)));
+      expect(view.container.querySelector('.plan-badge.free')).not.toBeNull();
+      const paid = { kind: "confirmed_unlimited" as const, source: "paid" as const, validUntil: at + 3_600_000 };
+      vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: { ...status, planCode: "plus", access: paid } });
+      await act(async () => connection.onEvent(time(2, paid))); await flushMountedWork();
+      expect(view.container.querySelector('.plan-badge.plus')).not.toBeNull();
+      expect(view.container.querySelector('.panel-plan-link,.panel-action-timer,.panel-idle-time')).toBeNull();
+      expect(button(view.container, "End room").disabled).toBe(false);
+      const reads = vi.mocked(accountHostingClient.requestAccountHostingStatus).mock.calls.length;
+      await act(async () => { connection.onEvent(time(3, paid)); connection.onEvent(time(2, finite)); });
+      expect(accountHostingClient.requestAccountHostingStatus).toHaveBeenCalledTimes(reads);
+      expect(view.container.querySelector('.plan-badge.plus')).not.toBeNull();
+      // A later accepted expiry is a new transition, not a stale paid badge.
+      vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status });
+      await act(async () => connection.onEvent(time(4, finite))); await flushMountedWork();
+      expect(view.container.querySelector('.plan-badge.free')).not.toBeNull();
+      expect(view.container.querySelector('.panel-plan-link')).not.toBeNull();
+      expect(view.container.querySelector('.panel-action-timer')).not.toBeNull();
+    } finally { await unmount(view.root); }
+  });
+
   it("shows authoritative Free20 idle/live time despite legacy canHost false, retires unknown, and only exhausts on server termination", async () => {
     const owner = "22222222-2222-4222-8222-222222222222";
     installActiveHostRoomRuntime({ getSession: () => sessionFor(owner) });
