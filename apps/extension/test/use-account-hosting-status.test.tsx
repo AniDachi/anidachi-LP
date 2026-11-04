@@ -3,9 +3,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAccountHostingStatus } from "../src/use-account-hosting-status";
 import type { AccountHostingStatus } from "@anidachi/protocol";
+import type { HostingAccountAccess } from "../src/hosting-access-client";
 
 const owner = "11111111-1111-4111-8111-111111111111";
 const at = Date.parse("2026-11-01T12:00:00Z");
+const guestAccess: HostingAccountAccess = { entitlementsVersion: 1, ownerUserId: owner, planCode: "free", serverTime: new Date(at).toISOString() };
 const status = { accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000, period: { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") }, access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 420, remainingSeconds: 780, metering: false }, activeRoom: null, canCreateRoom: true } satisfies AccountHostingStatus;
 type Options = Parameters<typeof useAccountHostingStatus>[0];
 let options: Options, current: ReturnType<typeof useAccountHostingStatus>, root: Root, host: HTMLElement;
@@ -16,9 +18,70 @@ describe("account Free20 display", () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.useFakeTimers(); vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
     host = document.createElement("div"); document.body.append(host); root = createRoot(host);
-    options = { ownerUserId: owner, sessionKey: "login-a", enabled: true, exhaustion: null, request: vi.fn().mockResolvedValue({ mode: "free20", status }) };
+    options = { ownerUserId: owner, sessionKey: "login-a", enabled: true, exhaustion: null, request: vi.fn().mockResolvedValue({ mode: "free20", status }), requestPlan: vi.fn().mockResolvedValue(guestAccess) };
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.useRealTimers(); });
+  it.each(["free", "plus", "pro"] as const)("loads a cold guest's own %s badge without acquiring hosting authority", async planCode => {
+    vi.mocked(options.requestPlan!).mockResolvedValue({ ...guestAccess, planCode });
+    await render({ roomId: "guest-room", guestRoom: true });
+    expect(current.presentationPlanCode).toBe(planCode);
+    expect(current.busy).toBe(false); expect(current.error).toBe(false);
+    expect(current.status).toBeNull(); expect(current.planCode).toBeNull();
+    expect(current.remainingSeconds).toBeNull(); expect(current.displayExpiresAt).toBeNull();
+    expect(options.request).not.toHaveBeenCalled();
+  });
+  it("keeps the guest badge across tab return and credential rotation, rejecting the older reply", async () => {
+    vi.mocked(options.requestPlan!).mockResolvedValue({ ...guestAccess, planCode: "pro" });
+    await render({ roomId: "guest-room", guestRoom: true, credentialKey: "token-a" });
+    expect(current.presentationPlanCode).toBe("pro");
+    const replies: ((value: HostingAccountAccess) => void)[] = [];
+    vi.mocked(options.requestPlan!).mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    await render({ credentialKey: "token-b" });
+    expect(current.presentationPlanCode).toBe("pro");
+    await act(async () => replies[0](guestAccess));
+    expect(current.presentationPlanCode).toBe("pro");
+    await act(async () => replies[1]({ ...guestAccess, planCode: "plus" }));
+    expect(current.presentationPlanCode).toBe("plus");
+    expect(current.remainingSeconds).toBeNull();
+    expect(options.request).not.toHaveBeenCalled();
+  });
+  it.each(["owner", "login", "host"] as const)("fences pending guest plan reads across a %s boundary", async boundary => {
+    vi.mocked(options.requestPlan!).mockResolvedValue({ ...guestAccess, planCode: "pro" });
+    await render({ roomId: "guest-room", guestRoom: true });
+    expect(current.presentationPlanCode).toBe("pro");
+    let reply!: (value: HostingAccountAccess) => void;
+    vi.mocked(options.requestPlan!).mockImplementation(() => new Promise(resolve => { reply = resolve; }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_000); current.refresh(); });
+    const staleReply = reply;
+    if (boundary === "owner") await render({ ownerUserId: "22222222-2222-4222-8222-222222222222" });
+    if (boundary === "login") await render({ sessionKey: "login-b" });
+    if (boundary === "host") await render({ guestRoom: false });
+    await act(async () => staleReply({ ...guestAccess, planCode: "pro" }));
+    expect(current.presentationPlanCode).toBe(boundary === "host" ? "free" : null);
+    expect(current.remainingSeconds).toBe(boundary === "host" ? 780 : null);
+  });
+  it("ends guest loading after bounded failures and recovers on resume without requesting host minutes", async () => {
+    vi.mocked(options.requestPlan!).mockRejectedValue(new Error("offline"));
+    await render({ roomId: "guest-room", guestRoom: true });
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(current.error).toBe(true); expect(current.busy).toBe(false);
+    expect(current.presentationPlanCode).toBeNull();
+    vi.mocked(options.requestPlan!).mockResolvedValue({ ...guestAccess, planCode: "plus" });
+    await act(async () => window.dispatchEvent(new Event("online")));
+    expect(current.presentationPlanCode).toBe("plus");
+    expect(current.error).toBe(false); expect(current.remainingSeconds).toBeNull();
+    expect(options.request).not.toHaveBeenCalled();
+  });
+  it("rejects a guest entitlement reply belonging to a different account", async () => {
+    vi.mocked(options.requestPlan!).mockResolvedValue({ ...guestAccess, ownerUserId: "22222222-2222-4222-8222-222222222222", planCode: "pro" });
+    await render({ roomId: "guest-room", guestRoom: true });
+    expect(current.presentationPlanCode).toBeNull();
+    expect(current.error).toBe(true); expect(current.busy).toBe(false);
+  });
   it("does not enroll through personal status during guest or unknown-role entry; reads when host role arrives", async () => {
     await render({ roomId: "room-guest", guestRoom: true });
     expect(options.request).not.toHaveBeenCalled();
@@ -32,6 +95,7 @@ describe("account Free20 display", () => {
   });
   it("preserves known paid presentation while guest personal-status reads are suppressed", async () => {
     options.request = vi.fn().mockResolvedValue({ mode: "free20", status: { ...status, planCode: "plus", access: { kind: "confirmed_unlimited", source: "paid", validUntil: at + 3_600_000 } } });
+    vi.mocked(options.requestPlan!).mockResolvedValue({ ...guestAccess, planCode: "plus" });
     await render();
     expect(current.presentationPlanCode).toBe("plus");
     const before = current.presentationPlanCode;

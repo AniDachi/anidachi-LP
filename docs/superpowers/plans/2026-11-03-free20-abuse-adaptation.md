@@ -13,6 +13,33 @@ Existing extension build `03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`
 was reverified, not replaced. Actual enabled browser/participant/purchase/UTC
 acceptance remains pending; historical default-off preparation below is retained.
 
+**Guest plan display repair candidate (November 4):** A pre-activation screenshot
+exposed a cold guest/restored-session path that suppressed personal hosting-status
+reads and consequently never populated the account badge. Guests now read their
+own server-verified entitlements for presentation only, without Free20 enrollment,
+personal minutes or create authority. Idle session discovery and pending own-room
+creation do not use that guest reader. Logical-login, credential and room-role
+fences reject obsolete replies; an already confirmed badge survives revalidation,
+and bounded read failure ends the loading placeholder. Web/SQL/Worker contracts,
+quota policy and production remain unchanged. Local evidence: extension check,
+2769 tests, and isolated Chromium Free/Plus/Pro restored-guest/failure scenarios,
+including focus and token rotation; real tester acceptance remains pending.
+This note records a local candidate, not a staging merge or loaded-user result.
+
+**Display refresh audit follow-up (November 4):** The same local candidate now
+also repairs popup badge loss/stale replies during credential rotation, ignores
+the old login's badge on a new login, and revalidates changed profile metadata
+instead of trusting its cached tier. Overlay and popup share the existing logical
+login identity rule; credential-scoped access remains separate from retained
+presentation. A confirmed host-room Free/unlimited transition triggers one fresh
+account-tier read, including purchase and expiry; guest time and frozen room
+capacity do not become account authority. Failed legacy entitlement reads now end
+the plan placeholder. Source check and all 2776 extension tests pass; isolated
+Chromium verifies four guest scenarios, host upgrade/expiry, and popup rotation,
+new-login and profile-change flows. These use synthetic transport, not real
+checkout or tester accounts. No Web, SQL, Worker, policy or permission change is
+required; the candidate remains local pending staging merge and tester acceptance.
+
 **Architecture:** Supabase binds server-verified markers to room generations and applies cumulative usage deltas to account and marker ledgers. Web validates a dedicated signed installation challenge and issues an account-bound context; the background supplies it for admission and display. The existing serialized DO computes live remaining time from the effective committed ceiling and its own pending interval.
 
 **Tech Stack:** Existing Postgres RPCs/pgTAP, TypeScript/Zod, Next.js, WXT/MV3, WebCrypto P-256, Cloudflare Durable Objects. No new dependency or secret.

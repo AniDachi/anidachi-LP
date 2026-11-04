@@ -40,6 +40,7 @@ import {
 } from "./auth-client";
 import {
   AUTH_TOKENS_STORAGE_KEY,
+  extensionAuthSessionKey,
   type ExtensionAuthTokens,
   normalizeExtensionAuthTokens,
 } from "./auth-tokens";
@@ -228,10 +229,11 @@ export function PopupApp() {
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
   const hostingDisplay = useHostingAccess({
     ownerUserId: accountUser?.id ?? null,
-    sessionKey: tokens?.refreshToken ?? null,
+    sessionKey: extensionAuthSessionKey(tokens),
+    credentialKey: tokens ? JSON.stringify([tokens.authRevision, tokens.accessToken, tokens.refreshToken, tokens.profileRevision]) : null,
     enabled: Boolean(accountUser),
   });
-  const currentPlan = hostingDisplay.state.access?.planCode ?? null;
+  const currentPlan = hostingDisplay.presentationPlanCode;
   const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef, settingsOpen);
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);

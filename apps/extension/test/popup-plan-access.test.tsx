@@ -78,6 +78,39 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("Popup current account plan", () => {
+  it.each(["access-only", "refresh-token"])("keeps the verified badge through same-login credential rotation and rejects the old reply: %s", async rotation => {
+    const original = { ...tokens(), authSessionId: "login-a", authRevision: "revision-a" };
+    store.set(AUTH_TOKENS_KEY, original);
+    read.mockResolvedValue(access("plus"));
+    await mount();
+    const old = deferred<HostingAccountAccess>(), fresh = deferred<HostingAccountAccess>();
+    read.mockReturnValueOnce(old.promise).mockReturnValueOnce(fresh.promise);
+    await act(async () => { window.dispatchEvent(new Event("blur")); window.dispatchEvent(new Event("focus")); });
+    await changeSession({ ...original, authRevision: "revision-b", accessToken: "access-b", refreshToken: rotation === "refresh-token" ? "refresh-b" : original.refreshToken });
+    expect(container.querySelector(".plan-badge")?.textContent).toBe("Plus");
+    await act(async () => old.resolve(access("free")));
+    expect(container.querySelector(".plan-badge")?.textContent).toBe("Plus");
+    await act(async () => fresh.resolve(access("pro")));
+    expect(container.querySelector(".plan-badge")?.textContent).toBe("Pro");
+  });
+  it("revalidates a changed profile without trusting its plan or rotating credentials", async () => {
+    const original = { ...tokens(), authSessionId: "login-a", profileRevision: 1 };
+    store.set(AUTH_TOKENS_KEY, original);
+    await mount();
+    read.mockResolvedValue(access("pro"));
+    await changeSession({ ...original, profileRevision: 2, user: { ...original.user, plan: "plus" } });
+    expect(container.querySelector(".plan-badge")?.textContent).toBe("Pro");
+  });
+  it("retires the badge on a new login even when owner and credentials are reused", async () => {
+    const original = { ...tokens(), authSessionId: "login-a" };
+    store.set(AUTH_TOKENS_KEY, original); read.mockResolvedValue(access("pro"));
+    await mount();
+    const fresh = deferred<HostingAccountAccess>(); read.mockReturnValue(fresh.promise);
+    await changeSession({ ...original, authSessionId: "login-b" });
+    expect(container.querySelector(".plan-badge")).toBeNull();
+    await act(async () => fresh.resolve(access("free")));
+    expect(container.querySelector(".plan-badge")?.textContent).toBe("Free");
+  });
   it("loads notification settings when opened from the welcome", async () => {
     vi.spyOn(chrome.storage.local, "get").mockImplementation(async () => ({}));
     vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });

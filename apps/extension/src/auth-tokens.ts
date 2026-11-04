@@ -25,6 +25,15 @@ export interface ExtensionAuthTokens {
   user: AuthenticatedUser;
 }
 
+/** Presentation belongs to a login, not a rotating access/refresh token pair. */
+export function extensionAuthSessionKey(tokens: ExtensionAuthTokens | null): string | null {
+  if (!tokens) return null;
+  // Older backgrounds retain the conservative credential fence until migration.
+  return JSON.stringify(tokens.authSessionId
+    ? [tokens.user.id, "login", tokens.authSessionId]
+    : [tokens.user.id, "credentials", tokens.authRevision, tokens.accessToken, tokens.refreshToken]);
+}
+
 export interface AuthSessionStorageAdapter {
   get: () => Promise<ExtensionAuthTokens | null>;
   set: (tokens: ExtensionAuthTokens) => Promise<void>;
