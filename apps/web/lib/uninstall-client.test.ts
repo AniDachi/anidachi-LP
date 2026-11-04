@@ -6,6 +6,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { dom } from "./test-helpers/account-client-dom";
 import { UninstallClient } from "../app/uninstall/uninstall-client";
 import { uninstallPrice, type UninstallOffer } from "./anidachi-auth/uninstall-offer";
+import { uninstallRevisions } from "./anidachi-auth/uninstall-revision";
 
 const first: UninstallOffer = { kind: "first_month", ownerUserId: "a", validForMs: 60000, revision: "r1", prices: [uninstallPrice("plus", 799), uninstallPrice("pro", 1499)] };
 const renewal: UninstallOffer = { kind: "renewal", ownerUserId: "a", validForMs: 60000, revision: "r2", price: uninstallPrice("pro", 1499), renewsAt: "2030-12-04T00:00:00Z", manageUrl: "/account/billing?manage=1" };
@@ -19,9 +20,9 @@ let posts: Array<{ path: string; body: Record<string, unknown> }> = [];
 let handlePost: (path: string, body: Record<string, unknown>) => Promise<Response>;
 let get: () => Promise<Response>;
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>((r) => { resolve = r; }); return { promise, resolve }; }
-async function mount(initialPlan: "plus" | "pro" = "plus") {
+async function mount(initialPlan: "plus" | "pro" = "plus", initialOffer: UninstallOffer = first) {
   dom.happyDOM.setURL("https://staging.anidachi.app/uninstall");
-  current = first;
+  current = initialOffer;
   posts = [];
   get = async () => Response.json(current);
   handlePost = async () => Response.json({ saved: true });
@@ -80,9 +81,9 @@ test("owner change before action updates page and never posts old offer", async 
   assert.match(container.textContent!, /Your next month of Pro/); assert.equal(container.querySelector("dialog")?.hasAttribute("open"), false);
 });
 
-test("revision change requires a new explicit review and cannot charge", async () => {
+test("changed first-month prices require a new explicit review and cannot charge", async () => {
   await mount(); await click("Get 40% off"); await click("Continue");
-  current = { ...first, revision: "r3" };
+  current = { ...first, revision: "r3", prices: [uninstallPrice("plus", 899), uninstallPrice("pro", 1499)] };
   await click("Continue to checkout"); assert.equal(posts.length, 0); assert.match(container.textContent!, /Review the current offer/);
 });
 
@@ -227,4 +228,98 @@ test("an aged review must be reviewed again before a financial action", async (t
   await mount(); await click("Get 40% off"); await click("Continue");
   now += 60001;
   await click("Continue to checkout"); assert.equal(posts.length, 0); assert.match(container.textContent!, /Review the current offer/);
+});
+
+
+test("freshly issued time-advanced token permits checkout with the originally reviewed token", async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  const revisions = uninstallRevisions(new Uint8Array(32).fill(7), () => now);
+  const snapshot = JSON.stringify({ kind: "first_month", owner: "a", prices: first.kind === "first_month" ? first.prices : [] });
+  const original = revisions.sign(snapshot);
+  await mount("pro", { ...first, revision: original });
+  await click("Get 40% off"); await click("Continue");
+  now += 1000;
+  const reissued = revisions.sign(snapshot);
+  assert.notEqual(original, reissued);
+  current = { ...first, revision: reissued };
+  handlePost = async (path, body) => {
+    assert.equal(path, "/api/uninstall/checkout");
+    revisions.verify(String(body.revision), snapshot);
+    return Response.json({ ownerUserId: "a", kind: "checkout", url: "https://checkout.stripe.com/c/pay/test" });
+  };
+  await click("Continue to checkout");
+  assert.equal(posts.length, 1, "unchanged terms with a reissued token must reach checkout");
+  assert.equal(posts[0].body.revision, original, "server must verify the token the user actually reviewed");
+  assert.equal(window.location.hostname, "checkout.stripe.com");
+});
+
+test("freshly issued time-advanced token permits renewal claim with the originally reviewed token", async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  const revisions = uninstallRevisions(new Uint8Array(32).fill(7), () => now);
+  const snapshot = JSON.stringify({ kind: "renewal", owner: "a", price: renewal.kind === "renewal" ? renewal.price : null, renewsAt: "2030-12-04T00:00:00Z" });
+  const original = revisions.sign(snapshot);
+  await mount("pro", { ...renewal, revision: original });
+  await click("Get 40% off");
+  now += 1000;
+  const reissued = revisions.sign(snapshot);
+  assert.notEqual(original, reissued);
+  current = { ...renewal, revision: reissued };
+  handlePost = async (path, body) => {
+    assert.equal(path, "/api/uninstall/claim");
+    revisions.verify(String(body.revision), snapshot);
+    current = claimed;
+    return Response.json(claimed);
+  };
+  await click("Apply to next renewal");
+  assert.equal(posts.length, 1, "unchanged terms with a reissued token must reach claim");
+  assert.equal(posts[0].body.revision, original);
+  assert.match(container.textContent!, /Discount saved for your next renewal/);
+});
+
+
+for (const kind of ["checkout", "claim"] as const) test(`expired real ${kind} token cannot be replaced implicitly by the fresh GET`, async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  const revisions = uninstallRevisions(new Uint8Array(32).fill(7), () => now);
+  const snapshot = JSON.stringify({ kind, owner: "a", terms: "unchanged" });
+  const original = revisions.sign(snapshot);
+  const displayed = kind === "checkout" ? first : renewal;
+  await mount("pro", { ...displayed, revision: original });
+  await click("Get 40% off");
+  if (kind === "checkout") await click("Continue");
+  now += 60000;
+  assert.throws(() => revisions.verify(original, snapshot), /changed or expired/);
+  current = { ...displayed, revision: revisions.sign(snapshot) };
+  await click(kind === "checkout" ? "Continue to checkout" : "Apply to next renewal");
+  assert.equal(posts.length, 0);
+  assert.match(container.textContent!, /Review the current offer/);
+  assert.doesNotMatch(container.textContent!, /Discount saved/);
+});
+
+for (const term of ["price", "date"] as const) test(`changed renewal ${term} requires a new explicit review`, async () => {
+  await mount("pro", renewal); await click("Get 40% off");
+  current = term === "price" ? { ...renewal, price: uninstallPrice("pro", 1599) } : { ...renewal, renewsAt: "2030-12-05T00:00:00Z" };
+  await click("Apply to next renewal");
+  assert.equal(posts.length, 0); assert.match(container.textContent!, /Review the current offer/);
+});
+
+test("server still rejects an original token when non-displayed snapshot terms change", async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  const revisions = uninstallRevisions(new Uint8Array(32).fill(7), () => now);
+  const original = revisions.sign("original server snapshot");
+  await mount("pro", { ...renewal, revision: original }); await click("Get 40% off");
+  now += 1000;
+  current = { ...renewal, revision: revisions.sign("changed server snapshot") };
+  handlePost = async (_path, body) => {
+    assert.equal(body.revision, original);
+    try { revisions.verify(String(body.revision), "changed server snapshot"); }
+    catch (error) { return Response.json({ ownerUserId: "a", error: (error as Error).message }, { status: 409 }); }
+    throw new Error("original proof must not authorize a changed snapshot");
+  };
+  await click("Apply to next renewal");
+  assert.equal(posts.length, 1); assert.match(container.textContent!, /changed or expired/);
+  assert.doesNotMatch(container.textContent!, /Discount saved/); assert.equal(window.location.pathname, "/uninstall");
 });

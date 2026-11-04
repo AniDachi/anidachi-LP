@@ -10,12 +10,20 @@ const name = (plan: UninstallPlan) => plan === "pro" ? "Pro" : "Plus";
 const date = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 type Dialog = "plans" | "review" | "renewal" | "reinstall" | null;
 const changed = "Your account or offer changed. Review the current offer before continuing.";
+function samePrice(a: UninstallPrice, b: UninstallPrice) {
+  return a.planCode === b.planCode && a.currency === b.currency && a.billingPeriod === b.billingPeriod &&
+    a.ordinaryAmount === b.ordinaryAmount && a.discountedAmount === b.discountedAmount;
+}
 function reviewedEqual(a: UninstallOffer, b: UninstallOffer) {
   if (a.ownerUserId !== b.ownerUserId || a.kind !== b.kind) return false;
+  // The opaque review token is reissued with a new expiry on every GET. Compare
+  // displayed terms here; POST retains the original token for server validation
+  // of its expiry and complete snapshot, including terms the browser cannot see.
   if (a.kind === "first_month" && b.kind === "first_month")
-    return a.revision === b.revision && JSON.stringify(a.prices) === JSON.stringify(b.prices);
+    return a.prices.length === b.prices.length && a.prices.every((price) =>
+      b.prices.some((fresh) => samePrice(price, fresh)));
   if (a.kind === "renewal" && b.kind === "renewal")
-    return a.revision === b.revision && a.renewsAt === b.renewsAt && JSON.stringify(a.price) === JSON.stringify(b.price);
+    return a.renewsAt === b.renewsAt && samePrice(a.price, b.price);
   return false;
 }
 function validPrice(value: unknown): value is UninstallPrice {
@@ -142,7 +150,7 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
     try {
       const fresh = await getOffer();
       if (!active(token)) return;
-      if (!reviewedEqual(review, fresh) || Date.now() - fetchedAt.current > UNINSTALL_OFFER_VALID_FOR_MS) {
+      if (!reviewedEqual(review, fresh) || Date.now() - fetchedAt.current >= Math.min(review.validForMs, UNINSTALL_OFFER_VALID_FOR_MS)) {
         applyOffer(fresh); setDialog(null); throw new Error(changed);
       }
       const expectedOwnerUserId = review.ownerUserId;
