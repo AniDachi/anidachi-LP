@@ -1,5 +1,40 @@
 # Current Development State
 
+## Uninstall offers and feedback, November 4, 2026
+
+The owner authorized the real `/uninstall` flow for staging after reviewing the
+local design. The [implementation plan](superpowers/plans/2026-11-04-uninstall-retention-staging.md)
+records the latest rule: **one lifetime 40% discount per account**, shared between
+the first paid monthly Plus/Pro purchase and one next monthly renewal of an
+existing paid subscription. Separate Stripe coupons do not grant separate rights.
+No new trial, yearly offer, stacked discount, immediate renewal charge or second
+subscription is introduced. ANIHUNT40 and Free20 accounting are unchanged.
+
+The server owns eligibility, actual prices, account identity and immutable
+reservations. First purchase reuses the existing Checkout recovery authority;
+retention binds the exact renewal invoice before applying an invoice-only coupon.
+Duplicate/lost responses reconcile the same operation. Saved offers are checked
+against current subscription conditions on return; changed or unconfirmed terms
+cannot appear as a successful future discount. Optional feedback is private,
+bounded, idempotent and rate-limited. Extension removal opens the channel URL
+without identifying query parameters; visiting the page is not proof of removal.
+
+Delivery requires the additive migration `20261104133355`, the compatible signed
+`invoice.created` receiver, then explicit TEST campaign gates scoped only to
+Preview branch `staging`. Disabling new offers retains fulfillment of accepted
+renewals. Rollback must preserve those obligations and their durable records.
+The delivery PR records the deployed SHA, webhook/configuration readback and the
+matching extension artifact. Main, LIVE Stripe and Store release need a separate
+accepted promotion.
+
+Local backend evidence includes web typecheck, 1602 passing tests with six skips,
+focused restored-claim regressions, 33 SQL assertions and actual SQL concurrency.
+Real Sandbox proof verified both discounted first invoices, both exact discounted
+renewals, following full-price invoices, same-operation replay and isolation of
+manual/annual-proration invoices. These checks do not replace owner login,
+hosted Checkout and loaded-extension acceptance. Evidence is under ignored
+`artifacts/uninstall-retention-20261104/`; the PR records later UI/delivery checks.
+
 ## Free20 exhausted-host screen, November 4, 2026
 
 The owner approved the [exhausted-host screen](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-4-agreed-exhausted-host-screen-local-candidate)

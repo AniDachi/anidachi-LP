@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-11-03.
+Last updated: 2026-11-04.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -291,6 +291,16 @@ Before loading or distributing an artifact, inspect the generated
 ## Website, Auth, And Rooms
 
 The website is the owner of durable account and commercial data.
+
+The [uninstall flow](superpowers/plans/2026-11-04-uninstall-retention-staging.md)
+uses `/api/uninstall/offer`, `/checkout`, `/claim` and `/feedback` under that
+API prefix. Private SQL authority shares one lifetime discount between first
+purchase and next-renewal offers. First purchase uses the shared Checkout
+reservation/recovery path; signed `invoice.created` fulfills a reserved renewal
+on that invoice only. New issuance gates do not cancel accepted obligations.
+The extension registers the channel's `/uninstall` URL without identity data;
+feedback and billing policy stay on the website. No room protocol changes are
+needed. See the plan and delivery PR for staging validation boundaries.
 
 Current responsibilities:
 
