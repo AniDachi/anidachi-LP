@@ -470,3 +470,42 @@ old-client compatibility and real UTC-boundary acceptance remain separate gates.
 No hosted flags, ledger, SQL, Worker, protocol or production change is included.
 Rollback restores the verified prior folder or reverts these UI changes; do not
 reset usage or toggle Free20 to undo presentation corrections.
+
+## November 4: Agreed exhausted-host screen, local candidate
+
+Transfer the approved local design into the actual Free20 host panel: `Daily
+limit reached`, one line `20 free minutes` followed by the highlighted local
+renewal date/time, and the full-width orange `View plans` link to the current
+channel's `/pricing`. Remove the zero timer and reset countdown from this screen.
+Keep video, settings, reactions, guest closure copy, paid presentation and legacy
+quota behavior. No new guest paywall or host entitlement is introduced.
+
+The existing account hook exposes a presentation-only renewal pair from its
+accepted server/monotonic period clock. Convert that instant into the device's
+timezone; compare server-local calendar dates for `today`/`tomorrow`, falling
+back to a calendar date for unusual timezone/DST boundaries. Do not derive the
+renewal instant or calendar day from the device's wall clock. Ordinary
+revalidation can retain a known future reset, but a different login, guest
+scope, clock discontinuity or passed reset cannot reuse that label. Unknown
+renewal shows `Checking renewal time…`; a failed read shows `Couldn't check
+renewal time.` and Retry. Creation still waits for fresh server-confirmed
+allowance after UTC reset. The heading identifies the preceding exhaustion;
+it does not assert an authoritative new-day zero while status is unknown.
+
+Validation: all 166 extension test files / 2788 tests and extension typecheck
+pass. Regressions cover timezone/DST/year/leap-day formatting, monotonic clock
+and scope invalidation, host termination, failed UTC renewal and retry, and
+paid/guest lifecycle behavior. Visual inspection uses the actual notice and
+styles in the local rehearsal, with simulated responses; it is not acceptance
+in the owner's loaded Chrome or a two-participant staging room.
+
+Deliver a separately identified local staging-channel build into the owner's
+existing unpacked folder and the worktree mirror. Keep logs, screenshot, source
+and artifact hashes, and both prior-folder backups under ignored
+`artifacts/free20-limit-screen-20261104/`. Validate narrow staging permissions
+and unchanged extension identity. This slice changes extension presentation
+only; SQL, Worker, protocol, flags, hosted staging, main, production and Store
+are untouched. No backend/media checks are required for this local UI slice;
+the extension integration suite covers existing consumers. Graphify receives
+the source changes and this complete plan through the safe repository adapter.
+Rollback restores the prior verified folder; no ledger or policy changes.

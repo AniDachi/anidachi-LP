@@ -395,11 +395,38 @@ describe("account Free20 display", () => {
     const nearReset = { ...status, serverTime: status.period.resetAt - 180_000, validUntil: status.period.resetAt - 120_000, access: { ...status.access, kind: "daily_free" as const, budgetSeconds: 1200 as const, usedSeconds: 1200, remainingSeconds: 0, metering: false }, canCreateRoom: false };
     vi.mocked(options.request!).mockResolvedValue({ mode: "free20", status: nearReset });
     await render(); expect(current.exhausted).toBe(true);
+    expect(current.renewal).toEqual({serverTime:nearReset.serverTime,resetAt:nearReset.period.resetAt});
     await act(async () => vi.advanceTimersByTimeAsync(121_000)); expect(options.request).toHaveBeenCalledTimes(2);
     vi.mocked(options.request!).mockRejectedValue(new Error("unavailable after reset"));
     await act(async () => vi.advanceTimersByTimeAsync(120_000)); expect(options.request).toHaveBeenCalledTimes(5);
     expect(current.exhausted).toBe(true); expect(current.remainingSeconds).toBe(0); expect(current.resetSeconds).toBeNull();
+    expect(current.renewal).toBeNull();
     await act(async () => vi.advanceTimersByTimeAsync(600_000)); expect(options.request).toHaveBeenCalledTimes(5);
+  });
+  it('uses anchored server time for renewal and retires it across clock jumps, guests and login changes', async () => {
+    const exhausted = {...status,access:{...status.access,remainingSeconds:0,usedSeconds:1200},canCreateRoom:false};
+    vi.mocked(options.request!).mockResolvedValue({mode:'free20',status:exhausted});
+    await render();
+    expect(current.renewal).toEqual({serverTime:at,resetAt:status.period.resetAt});
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(current.renewal?.serverTime).toBe(at+2000);
+    vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
+    vi.setSystemTime(Date.now()+86400000);
+    await act(async () => window.dispatchEvent(new Event('focus')));
+    expect(current.renewal).toBeNull();
+    expect(current.remainingSeconds).toBe(0);
+    // Each boundary starts with a real renewal; a previous invalidation must
+    // not make the login/guest assertions pass without exercising their fence.
+    for (const boundary of ['login', 'guest'] as const) {
+      await act(async () => root.unmount());
+      root = createRoot(host);
+      vi.mocked(options.request!).mockResolvedValue({mode:'free20',status:exhausted});
+      await render({sessionKey:'login-a',guestRoom:false,roomId:null});
+      expect(current.renewal).toEqual({serverTime:at,resetAt:status.period.resetAt});
+      vi.mocked(options.request!).mockImplementation(() => new Promise(() => {}));
+      await render(boundary === 'login' ? {sessionKey:'login-b'} : {guestRoom:true,roomId:'guest-room'});
+      expect(current.renewal).toBeNull();
+    }
   });
   it.each(["resume", "remount"])("does not re-anchor another pending read after %s", async lifecycle => {
     type Read = Awaited<ReturnType<NonNullable<Options["request"]>>>;
