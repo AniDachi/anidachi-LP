@@ -48,6 +48,7 @@ export function formatBillingTime(value: string, timeZone?: string): string {
 }
 
 export type BillingPromotion = {
+	campaign?: "uninstall_first" | "uninstall_renewal";
 	state: "active" | "unavailable";
 	percentOff?: number;
 	endsAt?: string;

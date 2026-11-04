@@ -27,6 +27,11 @@ describe("sitemap", () => {
     assert.ok(paths.includes("/extension"));
   });
 
+  it("excludes the noindex uninstall page from static sitemap discovery", () => {
+    assert.equal(isExcludedFromSitemap("/uninstall"), true);
+    assert.equal(paths.includes("/uninstall"), false);
+  });
+
   it("lists only pages that set their own canonical", () => {
     for (const urlPath of paths) {
       if (urlPath === "/") continue;

@@ -6,6 +6,7 @@ import {
 	markStripeEventFailed,
 	markStripeEventProcessed,
 } from "@/lib/anidachi-auth/db";
+import { fulfillRetentionInvoice } from "@/lib/anidachi-auth/retention-invoice";
 import {
 	createStripeClient,
 	getStripeWebhookSecret,
@@ -13,6 +14,7 @@ import {
 import { syncStripeSubscriptionById } from "@/lib/anidachi-auth/stripe-subscription-sync";
 import { processSubscriptionWebhookEvent } from "@/lib/anidachi-auth/stripe-webhook-events";
 import { finalizeTrialSetupSession } from "@/lib/anidachi-auth/trial-renewal-server";
+import { retentionInvoiceStore } from "@/lib/anidachi-auth/uninstall-store";
 import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 
 export async function POST(request: NextRequest) {
@@ -68,6 +70,8 @@ export async function POST(request: NextRequest) {
 
 	try {
 		await processSubscriptionWebhookEvent(event, {
+			retentionInvoice: (invoice) =>
+				fulfillRetentionInvoice(invoice, { stripe, ...retentionInvoiceStore }),
 			sync: async (subscriptionId) => {
 				await syncStripeSubscriptionById(stripe, subscriptionId);
 			},

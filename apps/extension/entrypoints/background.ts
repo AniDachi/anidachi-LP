@@ -2,6 +2,7 @@ import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
 import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
 import { WEB_HTTP_BASE } from "../src/constants";
+import { registerUninstallUrl } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
 import { registerOnboardingCheckoutBridge } from "../src/onboarding-checkout-bridge";
@@ -276,6 +277,7 @@ async function waitForAdmissionCompletion(
 }
 
 export default defineBackground(() => {
+  void registerUninstallUrl();
   const installation = createInstallationSigners({
     get: () => storage.getItem(TRIAL_INSTALLATION_STORAGE_KEY),
     set: value => storage.setItem(TRIAL_INSTALLATION_STORAGE_KEY, value),
@@ -437,7 +439,10 @@ export default defineBackground(() => {
       .catch(() => undefined);
   };
   chrome.runtime.onStartup?.addListener(() => reconcileStoredWebsiteSession(true));
-  chrome.runtime.onInstalled?.addListener(() => reconcileStoredWebsiteSession(false));
+  chrome.runtime.onInstalled?.addListener(() => {
+    void registerUninstallUrl();
+    reconcileStoredWebsiteSession(false);
+  });
 
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
   void drainRoomDepartureRetries().catch(() => undefined);

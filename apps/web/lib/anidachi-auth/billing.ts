@@ -1,17 +1,17 @@
-import { readPendingTrialActivation } from "./cardless-trial-status";
 import type {
 	BillingOverview,
 	BillingSubscription,
 	BillingTrial,
 } from "../billing-view";
 import { resolveAccountEntitlements } from "./account-entitlements";
-import { readBillingPrice } from "./billing-price";
-import { readBillingDisplayPrice } from "./pricing-catalog";
+import type { readBillingPrice } from "./billing-price";
+import { readPendingTrialActivation } from "./cardless-trial-status";
 import {
 	getBillingCustomerByUserId,
 	getSubscriptionTrial,
 	listSubscriptionsForUser,
 } from "./db";
+import { readBillingDisplayPrice } from "./pricing-catalog";
 import {
 	createStripeClient,
 	resolveStripeMode,
@@ -20,7 +20,7 @@ import {
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 import { readTrialRenewal } from "./trial-renewal-server";
-import { readProductHuntBilling } from "./product-hunt-billing-server";
+import { readBillingPromotions } from "./uninstall-billing-server";
 
 export class BillingError extends Error {
 	constructor(
@@ -62,7 +62,7 @@ function canRestoreRenewal(
 }
 
 type BillingDeps = {
-	readPromotions?: typeof readProductHuntBilling;
+	readPromotions?: typeof readBillingPromotions;
 	readActivation: typeof readPendingTrialActivation;
 	now?: () => number;
 	listSubscriptions: typeof listSubscriptionsForUser;
@@ -77,7 +77,7 @@ type BillingDeps = {
 };
 
 const defaultDeps: BillingDeps = {
-	readPromotions: readProductHuntBilling,
+	readPromotions: readBillingPromotions,
 	readActivation: readPendingTrialActivation,
 	listSubscriptions: listSubscriptionsForUser,
 	getCustomer: getBillingCustomerByUserId,

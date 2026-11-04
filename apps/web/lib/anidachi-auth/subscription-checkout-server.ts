@@ -10,14 +10,43 @@ import {
 	parseCheckoutReservation,
 	SubscriptionCheckoutError,
 } from "./subscription-trial";
+import { readUninstallCatalog } from "./uninstall-config";
+import { ensureUninstallPromotion } from "./uninstall-promotion";
+import { claimUninstallFirst, readUninstallAccount } from "./uninstall-store";
+import { UNINSTALL_CHECKOUT_POLICY } from "./uninstall-stripe";
 
 /** Server adapter; neither Stripe IDs nor trial eligibility come from a browser. */
 export function subscriptionCheckoutService(
 	stripe: Stripe,
-	{ withoutTrial = false }: { withoutTrial?: boolean } = {},
+	{
+		withoutTrial = false,
+		uninstallOffer = false,
+	}: { withoutTrial?: boolean; uninstallOffer?: boolean } = {},
 ) {
 	return createSubscriptionCheckoutService({
 		stripe,
+		...(uninstallOffer ? { checkoutPolicy: UNINSTALL_CHECKOUT_POLICY } : {}),
+		async frozenPromotion(reservation, customerId) {
+			if (
+				reservation.attribution.checkoutPromotionPolicy !==
+					UNINSTALL_CHECKOUT_POLICY ||
+				!reservation.attribution.uninstallCouponId
+			)
+				throw new SubscriptionCheckoutError("Frozen promotion unavailable.");
+			return ensureUninstallPromotion(
+				{
+					userId: reservation.user_id,
+					customerId,
+					couponId: reservation.attribution.uninstallCouponId,
+				},
+				{
+					stripe,
+					catalog: await readUninstallCatalog(stripe),
+					accountHistory: readUninstallAccount,
+					claim: claimUninstallFirst,
+				},
+			);
+		},
 		ensurePromotion: (userId, customerId) =>
 			provisionProductHuntPromotion(stripe, userId, customerId),
 		async readReservation(userId) {

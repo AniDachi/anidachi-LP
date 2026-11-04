@@ -10,9 +10,15 @@ export async function processSubscriptionWebhookEvent(
 		sync: (subscriptionId: string) => Promise<void>;
 		alert: (payload: SubscriptionAlertPayload) => Promise<void>;
 		completeSetup?: (sessionId: string) => Promise<void>;
+		retentionInvoice?: (invoice: Stripe.Invoice) => Promise<void>;
 	},
 ): Promise<void> {
-	if (event.type === "checkout.session.completed") {
+	if (event.type === "invoice.created") {
+		if (event.livemode) return;
+		if (!deps.retentionInvoice)
+			throw new Error("Retention invoice handler unavailable; retry delivery.");
+		await deps.retentionInvoice(event.data.object);
+	} else if (event.type === "checkout.session.completed") {
 		const session = event.data.object;
 		if (session.mode === "setup" && session.metadata?.trialRenewalId) {
 			if (!deps.completeSetup)
