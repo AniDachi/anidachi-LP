@@ -2136,9 +2136,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1793530717.0049226,
-    "seen": 1793533463.1609511,
-    "ast_hash": "a1c19550ed1a10eb484867d4c1a5776f",
+    "mtime": 1793788318.8013442,
+    "seen": 1793788584.1924322,
+    "ast_hash": "b2a154e3fb51fe81ce926c7e07c6d409",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
@@ -3576,10 +3576,10 @@
     "semantic_hash": "297535b2a1e217a5aec894d4937eeb74"
   },
   "docs/social-pricing-model.md": {
-    "mtime": 1793528554.514666,
-    "seen": 1793533463.2373672,
+    "mtime": 1793788361.509468,
+    "seen": 1793788584.269515,
     "ast_hash": "24a8c5405395a7a64e8aec2f8b7dfe11",
-    "semantic_hash": "6a2989d2874e89cdb1ad4fed0f2a5662"
+    "semantic_hash": "0e5fbbcf014b93aedeba09029c67a6ab"
   },
   "docs/staging-acceptance-checklist.md": {
     "mtime": 1789490459.0094938,
@@ -8904,9 +8904,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-client.test.ts": {
-    "mtime": 1793530411.858464,
-    "seen": 1793533463.1609669,
-    "ast_hash": "93a9e2b981cdf3636bd0a6aeb441a7d2",
+    "mtime": 1793788385.5713453,
+    "seen": 1793788584.1924338,
+    "ast_hash": "3b59631452f7a122a40727bebd8cd545",
     "semantic_hash": ""
   },
   "apps/web/lib/pricing-offer.ts": {
@@ -10608,9 +10608,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing-selection.tsx": {
-    "mtime": 1793530493.0200276,
-    "seen": 1793533463.1609511,
-    "ast_hash": "f95668eb12f93d4b50eec3bd8a47ba1c",
+    "mtime": 1793788318.822629,
+    "seen": 1793788584.192429,
+    "ast_hash": "f60c8a27ca66b94d6c35bae8c6a19270",
     "semantic_hash": ""
   },
   "apps/web/components/section-index-page.tsx": {

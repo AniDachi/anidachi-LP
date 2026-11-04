@@ -138,7 +138,7 @@ test("cardless pricing explains no automatic payment and opens explicit trial co
 	await act(async () => plusButton(el).click());
 	assert.equal(posts, 0);
 	assert.equal(window.location.pathname, "/checkout");
-	assert.equal(window.location.search, "?plan=plus&billing=yearly");
+	assert.equal(window.location.search, "?plan=plus&billing=monthly");
 });
 
 test("a signed-out cardless offer remains conditional on eligibility after login", async () => {
@@ -159,7 +159,7 @@ test("a signed-out cardless offer remains conditional on eligibility after login
 	assert.equal(window.location.pathname, "/login");
 	assert.equal(
 		new URLSearchParams(window.location.search).get("next"),
-		"/checkout?plan=plus&billing=yearly",
+		"/checkout?plan=plus&billing=monthly",
 	);
 });
 test("used trial and current subscribers get paid or management actions", async () => {
@@ -210,8 +210,8 @@ function plusButton(el: HTMLElement) {
 
 test("public monthly and annual plans render without any server catalog", async () => {
 	const html = renderToStaticMarkup(React.createElement(Pricing));
-	assert.match(html, /\$76\.70/);
-	assert.match(html, /\$143\.90/);
+	assert.match(html, /\$7\.99/);
+	assert.match(html, /\$14\.99/);
 	assert.match(html, /Yearly/);
 	assert.match(html, /Loading options for Plus/);
 	assert.doesNotMatch(
@@ -223,9 +223,9 @@ test("public monthly and annual plans render without any server catalog", async 
 	const el = await mount();
 	assert.equal(el.querySelector('[role="alert"]'), null);
 	assert.equal(plusButton(el).disabled, false);
-	await act(async () => periodButton(el, "Monthly").click());
-	assert.match(el.textContent!, /\$7\.99/);
-	assert.match(el.textContent!, /\$14\.99/);
+	await act(async () => periodButton(el, "Yearly").click());
+	assert.match(el.textContent!, /\$76\.70/);
+	assert.match(el.textContent!, /\$143\.90/);
 	assert.match(el.textContent!, /Choose Plus/);
 	assert.doesNotMatch(el.textContent!, /Renews at/);
 });
@@ -257,7 +257,7 @@ test("guest pricing advertises a trial only while the server offers it", async (
 			.split(" ")) {
 			assert.ok(el.querySelector(`#${id}`), `Missing terms element: ${id}`);
 		}
-		assert.match(el.textContent!, /\$76\.70/);
+		assert.match(el.textContent!, /\$7\.99/);
 		assert.equal(plusButton(el).disabled, false);
 		await act(async () => root?.unmount());
 		root = null;
@@ -313,7 +313,7 @@ test("availability errors appear only after purchase intent and can be retried",
 		el.querySelector('[role="alert"]')?.textContent ?? "",
 		/Checkout is temporarily unavailable/,
 	);
-	assert.match(el.textContent!, /\$76\.70/);
+	assert.match(el.textContent!, /\$7\.99/);
 	available = true;
 	const retry = el.querySelector<HTMLButtonElement>('[role="alert"] button');
 	assert.ok(retry);
@@ -332,7 +332,7 @@ test("slow initial availability keeps prices and one neutral pending button unti
 			: Response.json({ url: "https://checkout.stripe.com/slow-lookup" });
 	};
 	const el = await mount();
-	assert.match(el.textContent!, /\$76\.70/);
+	assert.match(el.textContent!, /\$7\.99/);
 	assert.equal(plusButton(el).disabled, true);
 	await act(async () => {
 		plusButton(el).click();
@@ -365,7 +365,7 @@ test("a remote price cannot replace or charge a different published amount", asy
 			},
 		});
 	};
-	const el = await mount();
+	const el = await mount({ initialPeriod: "yearly" });
 	assert.match(el.textContent!, /\$76\.70/);
 	assert.doesNotMatch(el.textContent!, /\$99\.99/);
 	assert.equal(el.querySelector('[role="alert"]'), null);
@@ -406,8 +406,8 @@ test("server-rendered pricing shows published prices before the account request"
 			{},
 		),
 	);
-	assert.match(html, /\$76\.70/);
-	assert.match(html, /\$143\.90/);
+	assert.match(html, /\$7\.99/);
+	assert.match(html, /\$14\.99/);
 	assert.match(html, /Loading options for Plus/);
 	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
 	assert.match(html, /Yearly|Save 20%/);
@@ -417,7 +417,7 @@ test("published yearly pricing is present in server HTML before account availabi
 	const html = renderToStaticMarkup(
 		React.createElement<NonNullable<Parameters<typeof Pricing>[0]>>(
 			Pricing,
-			{},
+			{ initialPeriod: "yearly" },
 		),
 	);
 	assert.match(html, /\$76\.70/);
@@ -434,8 +434,8 @@ test("returning to the tab keeps prices visible while account availability is re
 	const el = await mount();
 	await act(async () => window.dispatchEvent(new Event("blur")));
 	await act(async () => window.dispatchEvent(new Event("focus")));
-	assert.match(el.textContent!, /\$76\.70/);
-	assert.match(el.textContent!, /\$143\.90/);
+	assert.match(el.textContent!, /\$7\.99/);
+	assert.match(el.textContent!, /\$14\.99/);
 	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
 	assert.equal(plusButton(el).disabled, false);
 	refresh.resolve(
@@ -582,7 +582,7 @@ test("expired availability disables stale trial and hosting promises without era
 	const el = await mount();
 	assert.match(el.textContent!, /30 min/);
 	await act(async () => t.mock.timers.tick(1000));
-	assert.match(el.textContent!, /\$76\.70/);
+	assert.match(el.textContent!, /\$7\.99/);
 	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
 	assert.doesNotMatch(el.textContent!, /30 min/);
 	assert.equal(plusButton(el).disabled, false);
@@ -611,7 +611,7 @@ test("purchase immediately posts the displayed offer once without a second prici
 	assert.equal(request.body?.expectedOwnerUserId, "owner");
 	assert.equal(request.body?.expectedTrialOffered, true);
 	assert.deepEqual(request.body?.expectedPrice, {
-		unitAmount: 7670,
+		unitAmount: 799,
 		currency: "usd",
 	});
 	checkout.resolve(
@@ -683,7 +683,7 @@ function periodButton(el: HTMLElement, period: "Monthly" | "Yearly") {
 	return button;
 }
 
-test("annual checkout defaults to yearly and submits the verified full yearly amount", async () => {
+test("explicit annual selection stays yearly and submits the verified full yearly amount", async () => {
 	const requests: Record<string, unknown>[] = [];
 	globalThis.fetch = async (url, init) => {
 		if (String(url) === "/api/billing/offer")
@@ -693,6 +693,7 @@ test("annual checkout defaults to yearly and submits the verified full yearly am
 	};
 	const el = await mount({
 		showPlanMatrix: true,
+		initialPeriod: "yearly",
 	});
 	assert.equal(periodButton(el, "Yearly").getAttribute("aria-pressed"), "true");
 	assert.match(el.textContent!, /−20%/);
@@ -716,14 +717,14 @@ test("published amounts remain visible without granting trial during an outage",
 	globalThis.fetch = async () =>
 		Response.json({ error: "unavailable" }, { status: 503 });
 	const el = await mount({});
-	assert.match(el.textContent!, /\$76\.70/);
-	await act(async () => periodButton(el, "Monthly").click());
 	assert.match(el.textContent!, /\$7\.99/);
+	await act(async () => periodButton(el, "Yearly").click());
+	assert.match(el.textContent!, /\$76\.70/);
 	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
 	assert.equal(plusButton(el).disabled, false);
 });
 
-test("switching to monthly uses verified prices and locks the period during checkout", async () => {
+test("default monthly pricing uses verified prices and locks the period during checkout", async () => {
 	const checkout = deferred<Response>();
 	const requests: Record<string, unknown>[] = [];
 	globalThis.fetch = async (url, init) => {
@@ -733,7 +734,7 @@ test("switching to monthly uses verified prices and locks the period during chec
 		return checkout.promise;
 	};
 	const el = await mount({});
-	await act(async () => periodButton(el, "Monthly").click());
+	assert.equal(periodButton(el, "Monthly").getAttribute("aria-pressed"), "true");
 	assert.match(el.textContent!, /Card required/);
 	await act(async () => plusButton(el).click());
 	assert.ok(periodButton(el, "Yearly").disabled);
@@ -743,6 +744,7 @@ test("switching to monthly uses verified prices and locks the period during chec
 		"true",
 	);
 	assert.equal(requests.length, 1);
+	assert.equal(requests[0].billingPeriod, "monthly");
 	assert.deepEqual(requests[0].expectedPrice, offer.prices.plus);
 	checkout.resolve(
 		Response.json({ url: "https://checkout.stripe.com/monthly" }),
@@ -760,7 +762,6 @@ test("monthly sign-in carries the selected plan and period into checkout", async
 			action: "sign_in",
 		});
 	const el = await mount({});
-	await act(async () => periodButton(el, "Monthly").click());
 	const signIn = plusButton(el);
 	assert.match(signIn.textContent!, /Try 3 days free/);
 	await act(async () => signIn.click());
@@ -772,7 +773,7 @@ test("monthly sign-in carries the selected plan and period into checkout", async
 test("an existing subscriber can still open account management from yearly pricing", async () => {
 	globalThis.fetch = async () =>
 		Response.json({ ...offer, yearlyPrices, action: "manage" });
-	const el = await mount({});
+	const el = await mount({ initialPeriod: "yearly" });
 	const manage = [...el.querySelectorAll("button")].find((button) =>
 		button.textContent?.includes("Manage subscription"),
 	);
@@ -795,7 +796,7 @@ test("losing annual availability does not silently submit a monthly checkout", a
 			yearlyPrices: ++reads === 1 ? yearlyPrices : null,
 		});
 	};
-	const el = await mount({});
+	const el = await mount({ initialPeriod: "yearly" });
 	await act(async () => window.dispatchEvent(new Event("focus")));
 	assert.equal(periodButton(el, "Yearly").getAttribute("aria-pressed"), "true");
 	assert.equal(el.querySelector('[role="alert"]'), null);
