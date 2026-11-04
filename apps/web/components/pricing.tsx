@@ -59,7 +59,7 @@ function FeatureList({ features }: { features: string[] }) {
 export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
-	initialPeriod = "yearly",
+	initialPeriod = "monthly",
 	onboarding,
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */

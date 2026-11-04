@@ -10,7 +10,7 @@ type Props = { headingLevel?: 1 | 2; showPlanMatrix?: boolean };
 
 function SelectedPricing(props: Props) {
 	const search = useSearchParams();
-	const period = search.get("billing") === "monthly" ? "monthly" : "yearly";
+	const period = search.get("billing") === "yearly" ? "yearly" : "monthly";
 	const parsed = search.getAll("onboarding").length === 1 ? OnboardingTokenSchema.safeParse(search.get("onboarding")) : null;
 	const onboarding = parsed?.success ? parsed.data : undefined;
 	return (
