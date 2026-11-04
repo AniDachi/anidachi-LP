@@ -5,11 +5,11 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { dom } from "./test-helpers/account-client-dom";
 import { UninstallClient } from "../app/uninstall/uninstall-client";
-import { uninstallPrice, type UninstallOffer } from "./anidachi-auth/uninstall-offer";
+import { calculateUninstallPrice, type UninstallOffer } from "./anidachi-auth/uninstall-offer";
 import { uninstallRevisions } from "./anidachi-auth/uninstall-revision";
 
-const first: UninstallOffer = { kind: "first_month", ownerUserId: "a", validForMs: 60000, revision: "r1", prices: [uninstallPrice("plus", 799), uninstallPrice("pro", 1499)] };
-const renewal: UninstallOffer = { kind: "renewal", ownerUserId: "a", validForMs: 60000, revision: "r2", price: uninstallPrice("pro", 1499), renewsAt: "2030-12-04T00:00:00Z", manageUrl: "/account/billing?manage=1" };
+const first: UninstallOffer = { kind: "first_month", ownerUserId: "a", validForMs: 60000, revision: "r1", prices: [calculateUninstallPrice("plus", 799), calculateUninstallPrice("pro", 1499)] };
+const renewal: UninstallOffer = { kind: "renewal", ownerUserId: "a", validForMs: 60000, revision: "r2", price: calculateUninstallPrice("pro", 1499), renewsAt: "2030-12-04T00:00:00Z", manageUrl: "/account/billing?manage=1" };
 const claimed: UninstallOffer = { ...renewal, kind: "claimed", state: "accepted", reason: "", };
 const signedOut: UninstallOffer = { kind: "sign_in", ownerUserId: null, validForMs: 60000, loginUrl: "/login?next=%2Funinstall" };
 const originalFetch = globalThis.fetch;
@@ -56,7 +56,7 @@ test("real first offer reviews both server prices and submits exactly one owner-
   assert.equal(button("Checking").disabled, true);
   await act(async () => button("Checking").click());
   assert.equal(posts.length, 1);
-  assert.deepEqual(posts[0].body.expectedPrice, uninstallPrice("pro", 1499));
+  assert.deepEqual(posts[0].body.expectedPrice, calculateUninstallPrice("pro", 1499));
   assert.equal(posts[0].body.expectedOwnerUserId, "a"); assert.equal(posts[0].body.revision, "r1");
   assert.match(String(posts[0].body.requestId), /^[\da-f-]{36}$/);
   pending.resolve(Response.json({ ownerUserId: "a", kind: "checkout", url: "https://checkout.stripe.com/c/pay/test" }));
@@ -83,7 +83,7 @@ test("owner change before action updates page and never posts old offer", async 
 
 test("changed first-month prices require a new explicit review and cannot charge", async () => {
   await mount(); await click("Get 40% off"); await click("Continue");
-  current = { ...first, revision: "r3", prices: [uninstallPrice("plus", 899), uninstallPrice("pro", 1499)] };
+  current = { ...first, revision: "r3", prices: [calculateUninstallPrice("plus", 899), calculateUninstallPrice("pro", 1499)] };
   await click("Continue to checkout"); assert.equal(posts.length, 0); assert.match(container.textContent!, /Review the current offer/);
 });
 
@@ -300,7 +300,7 @@ for (const kind of ["checkout", "claim"] as const) test(`expired real ${kind} to
 
 for (const term of ["price", "date"] as const) test(`changed renewal ${term} requires a new explicit review`, async () => {
   await mount("pro", renewal); await click("Get 40% off");
-  current = term === "price" ? { ...renewal, price: uninstallPrice("pro", 1599) } : { ...renewal, renewsAt: "2030-12-05T00:00:00Z" };
+  current = term === "price" ? { ...renewal, price: calculateUninstallPrice("pro", 1599) } : { ...renewal, renewsAt: "2030-12-05T00:00:00Z" };
   await click("Apply to next renewal");
   assert.equal(posts.length, 0); assert.match(container.textContent!, /Review the current offer/);
 });

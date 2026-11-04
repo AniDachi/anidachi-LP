@@ -70,7 +70,7 @@ export class UninstallError extends Error {
 }
 export const uninstallDiscount = (amount: number) =>
 	amount - Math.round(amount * 0.4);
-export function uninstallPrice(
+export function calculateUninstallPrice(
 	planCode: UninstallPlan,
 	amount: number,
 ): UninstallPrice {

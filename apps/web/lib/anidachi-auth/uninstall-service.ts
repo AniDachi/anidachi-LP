@@ -4,12 +4,12 @@ import { verifiedBillingPrice } from "./billing-price";
 import type { RetentionClaim } from "./retention-invoice";
 import type { CheckoutInput, CheckoutResult } from "./subscription-trial";
 import {
+	calculateUninstallPrice,
 	UNINSTALL_OFFER_VALID_FOR_MS,
 	type UninstallCheckoutInput,
 	type UninstallClaimInput,
 	UninstallError,
 	type UninstallOffer,
-	uninstallPrice,
 } from "./uninstall-offer";
 import { uninstallRevisions } from "./uninstall-revision";
 import type { readUninstallAccount, reserveRetention } from "./uninstall-store";
@@ -42,7 +42,7 @@ export function claimedUninstallOffer(
 					)
 				: UNINSTALL_OFFER_VALID_FOR_MS,
 		kind: "claimed",
-		price: uninstallPrice(c.plan_code, c.unit_amount),
+		price: calculateUninstallPrice(c.plan_code, c.unit_amount),
 		renewsAt: new Date(c.target_period_start * 1000).toISOString(),
 		state: missed ? "reconciliation" : c.state,
 		reason: missed
@@ -275,7 +275,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 			)
 				return manage("Your next invoice has already been issued.");
 			const planCode = catalog.plus.id === item.price.id ? "plus" : "pro";
-			const price = uninstallPrice(
+			const price = calculateUninstallPrice(
 				planCode,
 				catalog[planCode].unit_amount ?? 0,
 			);
@@ -368,7 +368,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 			catalog,
 		);
 		const prices = (["plus", "pro"] as const).map((plan) =>
-			uninstallPrice(plan, catalog[plan].unit_amount ?? 0),
+			calculateUninstallPrice(plan, catalog[plan].unit_amount ?? 0),
 		);
 		const review = JSON.stringify({
 			kind: "first_month",
