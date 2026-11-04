@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { verifiedBillingPrice } from "./billing-price";
 import type { RetentionClaim } from "./retention-invoice";
 import type { CheckoutInput, CheckoutResult } from "./subscription-trial";
 import {
@@ -29,11 +30,16 @@ export function claimedUninstallOffer(
 	c: RetentionClaim,
 	now = Date.now(),
 ): UninstallOffer {
-	const missed =
-		c.state === "accepted" && c.target_period_start * 1000 + 3600_000 < now;
+	const missed = c.state === "accepted" && c.target_period_start * 1000 <= now;
 	return {
 		ownerUserId: c.user_id,
-		validForMs: UNINSTALL_OFFER_VALID_FOR_MS,
+		validForMs:
+			c.state === "accepted" && !missed
+				? Math.min(
+						UNINSTALL_OFFER_VALID_FOR_MS,
+						c.target_period_start * 1000 - now,
+					)
+				: UNINSTALL_OFFER_VALID_FOR_MS,
 		kind: "claimed",
 		price: uninstallPrice(c.plan_code, c.unit_amount),
 		renewsAt: new Date(c.target_period_start * 1000).toISOString(),
@@ -58,6 +64,82 @@ export type UninstallServiceDeps = {
 export function createUninstallService(deps: UninstallServiceDeps) {
 	const now = deps.now ?? Date.now;
 	const revisions = uninstallRevisions(deps.secret, now);
+	/** Presentation only: never revoke an accepted obligation or release its
+	 * lifetime allowance. Issuance gates/catalog changes cannot hide a promise. */
+	async function restoredClaim(claim: RetentionClaim): Promise<UninstallOffer> {
+		if (claim.state !== "accepted" || claim.target_period_start * 1000 <= now())
+			return claimedUninstallOffer(claim, now());
+		try {
+			const [sub, rawCustomer] = await Promise.all([
+				deps.stripe.subscriptions.retrieve(
+					claim.stripe_subscription_id,
+					{},
+					REQUEST,
+				),
+				deps.stripe.customers.retrieve(claim.stripe_customer_id, {}, REQUEST),
+			]);
+			const customer = verifyUninstallCustomer(
+				rawCustomer,
+				claim.stripe_customer_id,
+				claim.user_id,
+			);
+			if (
+				sub.id !== claim.stripe_subscription_id ||
+				sub.livemode ||
+				stripeObjectId(sub.customer) !== customer.id ||
+				sub.metadata.userId !== claim.user_id
+			)
+				throw new Error("Reserved subscription ownership unavailable.");
+			const item = sub.items.data[0];
+			const changed =
+				sub.status !== "active" ||
+				sub.cancel_at_period_end ||
+				sub.cancel_at ||
+				sub.schedule ||
+				sub.pending_update ||
+				sub.pause_collection ||
+				sub.pending_invoice_item_interval ||
+				sub.billing_thresholds ||
+				sub.items.has_more ||
+				sub.items.data.length !== 1 ||
+				item.price.id !== claim.price_id ||
+				item.quantity !== 1 ||
+				item.billing_thresholds ||
+				item.current_period_end !== claim.target_period_start ||
+				!Number.isSafeInteger(item.current_period_start) ||
+				item.current_period_start <= 0 ||
+				item.current_period_start >= claim.target_period_start ||
+				item.price.unit_amount !== claim.unit_amount ||
+				!claim.product_ids.includes(stripeObjectId(item.price.product) ?? "") ||
+				item.price.recurring?.interval !== "month" ||
+				item.price.recurring.interval_count !== 1 ||
+				sub.discounts.length ||
+				item.discounts.length ||
+				customer.discount;
+			if (changed)
+				return claimedUninstallOffer(
+					{
+						...claim,
+						state: "ineligible",
+						reason:
+							"Your subscription changed. The reserved discount is not currently eligible; manage your subscription or contact support.",
+					},
+					now(),
+				);
+			verifiedBillingPrice(item.price, claim.price_id, false, false, "monthly");
+			return claimedUninstallOffer(claim, now());
+		} catch {
+			return claimedUninstallOffer(
+				{
+					...claim,
+					state: "reconciliation",
+					reason:
+						"We could not verify your reserved renewal. Your offer remains saved; please retry.",
+				},
+				now(),
+			);
+		}
+	}
 	async function snapshot(userId: string) {
 		const base = {
 			ownerUserId: userId,
@@ -74,7 +156,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				account.grant !== "renewal"
 			)
 				throw new Error("Offer ownership changed.");
-			return { offer: claimedUninstallOffer(claim, now()), claim };
+			return { offer: await restoredClaim(claim), claim };
 		}
 		const config = deps.config();
 		if (!config.firstCoupon && !config.renewalCoupon)

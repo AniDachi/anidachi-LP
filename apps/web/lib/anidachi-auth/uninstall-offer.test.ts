@@ -120,7 +120,7 @@ function fixture() {
 	};
 	const stripe = {
 		customers: { retrieve: async () => c },
-		subscriptions: { list: async () => list(subs) },
+		subscriptions: { list: async () => list(subs), retrieve: async () => s },
 		invoices: {
 			list: async (p: Stripe.InvoiceListParams) =>
 				list(
@@ -305,6 +305,132 @@ test("monthly active paid account reserves exact next renewal; repeats and reloa
 		() => f.service.claim(userId, { ...input, revision: "other" }),
 		/already has/,
 	);
+});
+
+async function acceptedFixture() {
+	const f = fixture();
+	f.paid();
+	const offer = await f.service.offer(userId);
+	assert.equal(offer.kind, "renewal");
+	if (offer.kind !== "renewal") throw new Error("Expected renewal fixture.");
+	const input = { expectedOwnerUserId: userId, revision: offer.revision };
+	await f.service.claim(userId, input);
+	return { ...f, claimInput: input };
+}
+for (const [label, mutate] of [
+	[
+		"cancellation",
+		(s: Stripe.Subscription) => {
+			s.cancel_at_period_end = true;
+		},
+	],
+	[
+		"annual change",
+		(s: Stripe.Subscription) => {
+			assert.ok(s.items.data[0].price.recurring);
+			s.items.data[0].price.recurring.interval = "year";
+		},
+	],
+	[
+		"price change",
+		(s: Stripe.Subscription) => {
+			s.items.data[0].price.id = "price_new";
+		},
+	],
+	[
+		"amount change",
+		(s: Stripe.Subscription) => {
+			s.items.data[0].price.unit_amount = 999;
+		},
+	],
+	[
+		"period change",
+		(s: Stripe.Subscription) => {
+			s.items.data[0].current_period_end += 1000;
+		},
+	],
+] as const)
+	test(`restored accepted claim after ${label} does not promise a discounted renewal`, async () => {
+		const f = await acceptedFixture();
+		mutate(f.s);
+		for (const result of [
+			await f.service.offer(userId),
+			await f.service.claim(userId, f.claimInput),
+		]) {
+			assert.equal(result.kind, "claimed");
+			if (result.kind === "claimed") assert.equal(result.state, "ineligible");
+		}
+		assert.equal(
+			f.claim?.state,
+			"accepted",
+			"presentation must not revoke the durable obligation",
+		);
+		assert.equal(f.account.grant, "renewal");
+	});
+test("restored claim at target time shows reconciliation immediately, not a future discount", async () => {
+	const f = await acceptedFixture();
+	f.advance(99_990_000);
+	const before = await f.service.offer(userId);
+	assert.equal(
+		before.validForMs,
+		10_000,
+		"display lease cannot outlive the reserved renewal boundary",
+	);
+	f.advance(10_000);
+	for (const result of [
+		await f.service.offer(userId),
+		await f.service.claim(userId, f.claimInput),
+	]) {
+		assert.equal(result.kind, "claimed");
+		if (result.kind === "claimed") assert.equal(result.state, "reconciliation");
+	}
+	assert.equal(f.claim?.state, "accepted");
+});
+test("transient Stripe read failure does not restore accepted presentation or alter the promise", async () => {
+	const f = await acceptedFixture();
+	f.deps.stripe.subscriptions.retrieve = async () => {
+		throw new Error("transient Stripe failure");
+	};
+	for (const result of [
+		await f.service.offer(userId),
+		await f.service.claim(userId, f.claimInput),
+	]) {
+		assert.equal(result.kind, "claimed");
+		if (result.kind === "claimed") assert.equal(result.state, "reconciliation");
+	}
+	assert.equal(f.claim?.state, "accepted");
+});
+test("valid reserved renewal restores with gates off and no current catalog dependency", async () => {
+	const f = await acceptedFixture();
+	f.config.firstCoupon = null;
+	f.config.renewalCoupon = null;
+	f.deps.config = () => {
+		throw new Error("must not inspect issuance gates");
+	};
+	f.deps.catalog = async () => {
+		throw new Error("must use frozen terms");
+	};
+	for (const result of [
+		await f.service.offer(userId),
+		await f.service.claim(userId, f.claimInput),
+	]) {
+		assert.equal(result.kind, "claimed");
+		if (result.kind === "claimed") assert.equal(result.state, "accepted");
+	}
+});
+test("applied renewal remains historical applied after subscription cancellation and Stripe outage", async () => {
+	const f = await acceptedFixture();
+	assert.ok(f.claim);
+	f.claim.state = "applied";
+	f.claim.stripe_invoice_id = "in_paid";
+	f.s.cancel_at_period_end = true;
+	f.deps.stripe.subscriptions.retrieve = async () => {
+		throw new Error("must not reinterpret historical applied invoice");
+	};
+	f.advance(100_000_001);
+	const result = await f.service.offer(userId);
+	assert.equal(result.kind, "claimed");
+	if (result.kind === "claimed") assert.equal(result.state, "applied");
 });
 for (const [label, change] of [
 	[
