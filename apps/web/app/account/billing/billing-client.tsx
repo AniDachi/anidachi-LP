@@ -1369,9 +1369,23 @@ function SubscriptionFacts({
 			<div className="billing-terms">
 				{subscription.promotion?.state === "active" && (
 					<p>
-						ANIHUNT40: 40% off until{" "}
-						{formatBillingTime(subscription.promotion.endsAt!, timeZone)}.
-						Monthly renewal continues at the regular price after that.
+						{subscription.promotion.campaign === "uninstall_renewal" ? (
+							<>
+								40% off your next eligible monthly renewal only. Later renewals
+								remain at the regular price.
+							</>
+						) : subscription.promotion.campaign === "uninstall_first" ? (
+							<>
+								Your one-time first-month discount is applied. Later renewals
+								remain at the regular price.
+							</>
+						) : (
+							<>
+								ANIHUNT40: 40% off until{" "}
+								{formatBillingTime(subscription.promotion.endsAt!, timeZone)}.
+								Monthly renewal continues at the regular price after that.
+							</>
+						)}
 					</p>
 				)}
 				{inTrial && (
