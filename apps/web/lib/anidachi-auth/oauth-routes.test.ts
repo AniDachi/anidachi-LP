@@ -181,6 +181,37 @@ describe("browser OAuth routes", () => {
     }
   });
 
+  it("preserves uninstall Plus/Pro through success, cancellation and start failure for both providers", async () => {
+    for (const provider of ["google", "discord"] as const) {
+      for (const plan of ["plus", "pro"]) {
+        const returnTo = `/uninstall?plan=${plan}`;
+        const state = secret(17);
+        for (const canceled of [false, true]) {
+          const request = callbackRequest(provider, state, secret(18), "code");
+          if (canceled) request.nextUrl.searchParams.set("error", "access_denied");
+          const response = await handleOAuthCallback({
+            provider, request, exchangeFn: async () => profile(`${provider}-user`),
+            dependencies: {
+              consumeTransaction: async () => ({ returnTo, codeVerifier: "V".repeat(43) }),
+              upsertUser: async () => ({ id: "user-1" }) as never,
+              issueTokenPair: async () => ({ accessToken: "access", refreshToken: "refresh" }),
+              setAuthCookies: () => {},
+            },
+          });
+          const redirect = new URL(response.headers.get("location")!);
+          assert.equal(redirect.origin, "https://staging.anidachi.app");
+          assert.equal(canceled ? redirect.searchParams.get("next") : redirect.pathname + redirect.search, returnTo);
+        }
+        console.error = () => {};
+        const start = provider === "google" ? handleGoogleOAuthStart : handleDiscordOAuthStart;
+        const failed = await start(new NextRequest(`https://staging.anidachi.app/api/auth/${provider}?returnTo=${encodeURIComponent(returnTo)}`), {
+          createTransaction: async () => { throw new Error("unavailable"); },
+        });
+        assert.equal(new URL(failed.headers.get("location")!).searchParams.get("next"), returnTo);
+      }
+    }
+  });
+
   it("rejects cross-provider swaps and callback replays before exchange", async () => {
     const state = secret(9);
     const correlationSecret = secret(10);

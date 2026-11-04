@@ -78,5 +78,19 @@ export function checkoutLoginErrorPath(
 	returnTo?: string | null,
 ): string {
 	const selection = checkoutSelectionFromPath(returnTo);
+	// Uninstall selection carries intent only, never an automatic billing action.
+	const uninstall = uninstallReturnPath(returnTo);
+	if (uninstall) return `/login?error=${encodeURIComponent(error)}&next=${encodeURIComponent(uninstall)}`;
 	return `/login?error=${encodeURIComponent(error)}${selection ? `&next=${encodeURIComponent(checkoutReturnPath(selection))}` : ""}`;
+}
+
+/** Strict local continuation: preserve only the approved monthly plan choice. */
+export function uninstallReturnPath(path: string | null | undefined): string | null {
+	if (!path || !/^\/uninstall(?:\?|$)/.test(path)) return null;
+	const url = new URL(path, "https://uninstall-intent.invalid");
+	if (url.origin !== "https://uninstall-intent.invalid" || url.pathname !== "/uninstall" || url.hash) return null;
+	if (!url.search) return "/uninstall";
+	const plan = url.searchParams.get("plan");
+	if (url.searchParams.size !== 1 || (plan !== "plus" && plan !== "pro")) return null;
+	return `/uninstall?plan=${plan}`;
 }
