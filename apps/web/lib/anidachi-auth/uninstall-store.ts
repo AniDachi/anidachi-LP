@@ -1,3 +1,6 @@
+import { reconcileCancellationRetention } from "./cancellation-retention";
+import { cancellationRetentionStore } from "./cancellation-retention-store";
+import { createStripeClient, resolveStripeMode } from "./stripe-env";
 import { db } from "./db";
 import type { RetentionClaim, RetentionInvoiceDeps } from "./retention-invoice";
 import { UninstallError, type UninstallFeedbackInput } from "./uninstall-offer";
@@ -10,6 +13,17 @@ async function rpc(name: string, input: Record<string, unknown>) {
 	return data;
 }
 export async function readUninstallAccount(userId: string) {
+	// Reconcile provider redemption before trusting the shared allowance. A live
+	// pending hold is temporary unavailability, never a permanent used claim.
+	if (
+		resolveStripeMode() === "test" &&
+		(await cancellationRetentionStore.pending(userId))
+	) {
+		await reconcileCancellationRetention(userId, createStripeClient());
+		if (await cancellationRetentionStore.pending(userId))
+			throw new Error("Cancellation offer verification pending. Please retry.");
+	}
+
 	const [mapping, subs, trials, grant] = await Promise.all([
 		db()
 			.from("billing_customers")
@@ -70,7 +84,7 @@ export async function readUninstallAccount(userId: string) {
 		customerId,
 		customerIds,
 		hasPaid: trials.data.some((t) => t.first_paid_at || t.first_cash_paid_at),
-		grant: grant.data?.kind as "first" | "renewal" | undefined,
+		grant: grant.data?.kind as "first" | "renewal" | "cancellation" | undefined,
 		firstBinding,
 		subscriptionIds: subs.data.map((s) => s.stripe_subscription_id as string),
 	};
