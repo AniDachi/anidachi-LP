@@ -11,6 +11,7 @@ const name = (plan: UninstallPlan) => plan === "pro" ? "Pro" : "Plus";
 const date = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 type Dialog = "plans" | "review" | "renewal" | "reinstall" | null;
 const changed = "Your account or offer changed. Review the current offer before continuing.";
+const verificationError = "We couldn’t verify your offer. Please retry.";
 function samePrice(a: UninstallPrice, b: UninstallPrice) {
   return a.planCode === b.planCode && a.currency === b.currency && a.billingPeriod === b.billingPeriod &&
     a.ordinaryAmount === b.ordinaryAmount && a.discountedAmount === b.discountedAmount;
@@ -69,10 +70,12 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
 }) {
   const [offer, setOffer] = useState<UninstallOffer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState<UninstallPlan>(initialPlan);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [dialogHeight, setDialogHeight] = useState<number>();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -82,45 +85,68 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
   const checkoutRequest = useRef<{ key: string; id: string } | null>(null);
   const fetchedAt = useRef(0);
   const currentOffer = useRef<UninstallOffer | null>(null);
+  const lastOffer = useRef<UninstallOffer | null>(null);
   const applyOffer = useCallback((next: UninstallOffer | null) => {
     currentOffer.current = next; setOffer(next); fetchedAt.current = Date.now();
+    if (next) lastOffer.current = next;
   }, []);
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (background = false) => {
+    // A timer must not invalidate an in-flight checkout/claim. The timer is
+    // scheduled again when the action finishes; focus changes still invalidate it.
+    if (background && actionLock.current) return;
     const token = ++generation.current;
-    applyOffer(null); setLoading(true); setDialog(null); setError("");
+    const previous = lastOffer.current;
+    currentOffer.current = null; setChecking(true);
+    if (!background) {
+      if (dialogRef.current?.open) setDialogHeight(dialogRef.current.getBoundingClientRect().height);
+      setLoading(true);
+    }
     try {
       const next = await getOffer();
       if (!alive.current || generation.current !== token || document.visibilityState === "hidden") return;
+      if (previous && !reviewedEqual(previous, next)) {
+        setDialog((step) => step === "reinstall" ? step : null);
+        setError("");
+      }
       applyOffer(next);
+      setError((message) => message === verificationError ? "" : message);
     } catch {
-      if (alive.current && generation.current === token) setError("We couldn’t verify your offer. Please retry.");
-    } finally { if (alive.current && generation.current === token) setLoading(false); }
+      if (alive.current && generation.current === token) {
+        if (dialogRef.current?.open) setDialogHeight(dialogRef.current.getBoundingClientRect().height);
+        applyOffer(null); setError(verificationError);
+      }
+    } finally {
+      if (alive.current && generation.current === token) { setLoading(false); setChecking(false); }
+    }
   }, [applyOffer]);
   useEffect(() => {
     alive.current = true;
     void refresh();
     const invalidate = () => {
-      ++generation.current; applyOffer(null); setLoading(true); setDialog(null); setError("");
+      if (dialogRef.current?.open) setDialogHeight(dialogRef.current.getBoundingClientRect().height);
+      ++generation.current; currentOffer.current = null; setLoading(true); setChecking(true);
     };
+    const recheck = () => { void refresh(); };
     const visibility = () => { if (document.visibilityState === "hidden") invalidate(); else void refresh(); };
     window.addEventListener("blur", invalidate);
-    window.addEventListener("focus", refresh);
+    window.addEventListener("focus", recheck);
     window.addEventListener("pagehide", invalidate);
-    window.addEventListener("pageshow", refresh);
+    window.addEventListener("pageshow", recheck);
     document.addEventListener("visibilitychange", visibility);
     return () => {
       alive.current = false;
-      window.removeEventListener("blur", invalidate); window.removeEventListener("focus", refresh);
-      window.removeEventListener("pagehide", invalidate); window.removeEventListener("pageshow", refresh);
+      ++generation.current;
+      window.removeEventListener("blur", invalidate); window.removeEventListener("focus", recheck);
+      window.removeEventListener("pagehide", invalidate); window.removeEventListener("pageshow", recheck);
       document.removeEventListener("visibilitychange", visibility);
     };
   }, [applyOffer, refresh]);
   useEffect(() => {
-    if (!offer) return;
+    if (!offer || busy || loading) return;
     const ttl = Math.max(1, Math.min(offer.validForMs || UNINSTALL_OFFER_VALID_FOR_MS, UNINSTALL_OFFER_VALID_FOR_MS));
-    const timer = window.setTimeout(() => { void refresh(); }, ttl);
+    const timer = window.setTimeout(() => { void refresh(true); }, Math.max(1, ttl - (Date.now() - fetchedAt.current)));
     return () => window.clearTimeout(timer);
-  }, [offer, refresh]);
+  }, [offer, busy, loading, refresh]);
   useEffect(() => {
     const element = dialogRef.current;
     if (!element) return;
@@ -196,15 +222,15 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
     }
   }
   const signedOut = offer?.kind === "sign_in";
-  const first = offer?.kind === "first_month" ? offer : null;
-  const renewal = offer?.kind === "renewal" ? offer : null;
-  const claimed = offer?.kind === "claimed" ? offer : null;
+  const first = !loading && offer?.kind === "first_month" ? offer : null;
+  const renewal = !loading && offer?.kind === "renewal" ? offer : null;
+  const claimed = !loading && offer?.kind === "claimed" ? offer : null;
   const selectedPrice = first?.prices.find((p) => p.planCode === plan);
   const surveyOnly = offer?.kind === "former";
   const unavailable = !loading && (!offer || offer.kind === "unavailable");
   const loginHref = `/login?next=${encodeURIComponent(`/uninstall?plan=${plan}`)}`;
   async function manage() {
-    if (actionLock.current) return;
+    if (actionLock.current || !currentOffer.current) return;
     const review = currentOffer.current;
     const token = generation.current;
     actionLock.current = true; setBusy(true); setError("");
@@ -230,26 +256,26 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
         {!surveyOnly ? <><section className="uninstall-offer" aria-label="Your offer" aria-busy={loading}>
           {loading ? <p role="status" className="uninstall-description">Checking your account…</p> : first || renewal ? <>
             <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-value">40% off</h2>
-            <p className="uninstall-subtitle">{first ? "Your first month of Plus or Pro" : `Your next month of ${name(renewal!.price.planCode)}`}</p>
-            <button className="uninstall-primary" disabled={busy} onClick={() => open(first ? "plans" : "renewal")}>Get 40% off <span aria-hidden="true">→</span></button>
-            <p className="uninstall-terms">{first ? "First purchase only · then the regular monthly price" : <>One month only · then <span className="uninstall-nowrap">{money(renewal!.price.ordinaryAmount)}/month</span></>}</p>
+            <p className="uninstall-subtitle">{first ? "One month of Plus or Pro" : `Your next month of ${name(renewal!.price.planCode)}`}</p>
+            <button className="uninstall-primary" disabled={busy || checking} onClick={() => open(first ? "plans" : "renewal")}>Get 40% off <span aria-hidden="true">→</span></button>
+            <p className="uninstall-terms">{first ? "One month only · then the regular monthly price" : <>One month only · then <span className="uninstall-nowrap">{money(renewal!.price.ordinaryAmount)}/month</span></>}</p>
           </> : signedOut ? <>
             <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-title">Check your offer</h2>
             <p className="uninstall-description">Sign in to see whether a one-time discount is available for your account.</p>
-            <button className="uninstall-primary" onClick={() => open("plans")}>Sign in to check your offer <span aria-hidden="true">→</span></button>
+            <a className="uninstall-primary" href={loginHref}>Sign in to check your offer <span aria-hidden="true">→</span></a>
           </> : claimed ? <>
             <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-title">{claimed.state === "accepted" ? "40% off your next month" : claimed.state === "applied" ? "Your discount was applied" : "Check your subscription"}</h2>
             {claimed.state === "accepted" ? <><p className="uninstall-description">{name(claimed.price.planCode)} · {money(claimed.price.discountedAmount)} on {date(claimed.renewsAt)} (UTC).<br />Then {money(claimed.price.ordinaryAmount)} / month, before taxes.</p><p className="uninstall-saved" role="status"><span aria-hidden="true">✓</span> Discount saved for your next renewal</p></> : claimed.state === "applied" ? <p className="uninstall-description">Your one-time discount has been applied to your invoice. View your subscription for current billing details.</p> : <p className="uninstall-description">{claimed.state === "reconciliation" ? "We’re checking your discount. Please reload the offer or open subscription management." : "This discount is no longer available for the renewal. View your current subscription for details."}</p>}
             {(claimed.state === "reconciliation" || claimed.state === "ineligible") && <button className="uninstall-secondary" onClick={() => void refresh()}>Reload offer</button>}
           </> : offer?.kind === "manage" ? <>
             <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-title">Your subscription</h2><p className="uninstall-description">{offer.reason}</p>
-            <button className="uninstall-primary uninstall-cream" disabled={busy} onClick={() => void manage()}>Manage subscription <span aria-hidden="true">↗</span></button>
+            <button className="uninstall-primary uninstall-cream" disabled={busy || checking} onClick={() => void manage()}>Manage subscription <span aria-hidden="true">↗</span></button>
           </> : unavailable ? <>
             <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-title">We couldn’t verify your offer</h2><p className="uninstall-description">Please retry before continuing with an offer.</p><button className="uninstall-secondary" onClick={() => void refresh()}>Retry</button>
           </> : <>
-            <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-title">Thanks for trying AniDachi</h2><p className="uninstall-description">No uninstall discount is available for this account.</p><a className="uninstall-text-link" href="/pricing?billing=monthly">View regular plans ↗</a>
+            <h2 id="uninstall-offer-title" tabIndex={-1} className="uninstall-title">Thanks for trying AniDachi</h2><p className="uninstall-description">{offer?.kind === "disabled" ? offer.reason : "No uninstall discount is available for this account."}</p><a className="uninstall-text-link" href="/pricing?billing=monthly">View regular plans ↗</a>
           </>}
-          {(renewal || claimed || offer?.kind === "manage") && <div className="uninstall-subscription-help"><p>Uninstalling won’t cancel your subscription.</p><button className="uninstall-text-link" disabled={busy} onClick={() => void manage()} aria-label="Manage subscription">Manage <span aria-hidden="true">↗</span></button></div>}
+          {!loading && (renewal || claimed || offer?.kind === "manage") && <div className="uninstall-subscription-help"><p>Uninstalling won’t cancel your subscription.</p>{offer?.kind !== "manage" && <button className="uninstall-text-link" disabled={busy || checking} onClick={() => void manage()} aria-label="Manage subscription">Manage <span aria-hidden="true">↗</span></button>}</div>}
         </section><div className="uninstall-divider" /></> : null}
         {error && !dialog ? <p role="alert" className="uninstall-error">{error} <a href="/account/billing">Open your account</a></p> : null}
         <UninstallSurvey />
@@ -257,29 +283,29 @@ export function UninstallClient({ initialPlan = "plus", stagingInstallation }: {
           {stagingInstallation ? <button className="uninstall-text-link" onClick={() => open("reinstall")}>Reinstall staging extension <span aria-hidden="true">↗</span></button> : <a className="uninstall-text-link" href={CHROME_WEB_STORE_URL}>Reinstall extension <span aria-hidden="true">↗</span></a>}
           {surveyOnly ? <a className="uninstall-text-link" href="/pricing?billing=monthly">View plans ↗</a> : null}
         </div>
-        {!(renewal || claimed || offer?.kind === "manage") ? <div className="uninstall-management"><a href="/account/billing" className="uninstall-text-link">Manage subscription ↗</a></div> : null}
+        {!loading && !first && !(renewal || claimed || offer?.kind === "manage") ? <div className="uninstall-management"><a href="/account/billing" className="uninstall-text-link">{signedOut ? "Manage subscription" : "Open your account"} ↗</a></div> : null}
       </article>
     </main>
-    <dialog ref={dialogRef} className="uninstall-dialog" aria-labelledby="uninstall-dialog-title" onCancel={() => setDialog(null)} onClose={() => setDialog(null)}>
+    <dialog ref={dialogRef} className="uninstall-dialog" style={{ minHeight: dialog !== "reinstall" && (loading || !offer) ? dialogHeight : undefined }} aria-labelledby="uninstall-dialog-title" aria-busy={dialog !== "reinstall" && checking} onCancel={() => setDialog(null)} onClose={() => setDialog(null)}>
       <button className="uninstall-dialog-close" aria-label="Close dialog" onClick={() => setDialog(null)}>×</button>
       <h2 ref={titleRef} tabIndex={-1} id="uninstall-dialog-title" className="uninstall-dialog-title">{dialog === "reinstall" ? "Reinstall staging extension" : dialog === "renewal" ? "40% off your next month" : dialog === "review" ? `${name(plan)}, billed monthly` : "Choose a plan"}</h2>
-      {dialog === "reinstall" ? <><p className="uninstall-dialog-lead">In Chrome, open Extensions → Manage Extensions. Turn on Developer mode, choose Load unpacked, and select your existing reviewed staging extension folder.</p><p className="uninstall-dialog-note">If you don’t have the staging folder, ask the AniDachi team for the current reviewed build.</p></> : dialog === "plans" && (first || signedOut) ? <>
-        <p className="uninstall-dialog-lead">{first ? "Monthly billing. 40% off your first month." : "Choose a monthly plan, then sign in to check eligibility."}</p>
-        <fieldset className="uninstall-plan-grid" aria-label="Monthly plan">{(["plus", "pro"] as const).map((value) => {
+      {dialog === "reinstall" ? <><p className="uninstall-dialog-lead">In Chrome, open Extensions → Manage Extensions. Turn on Developer mode, choose Load unpacked, and select your existing reviewed staging extension folder.</p><p className="uninstall-dialog-note">If you don’t have the staging folder, ask the AniDachi team for the current reviewed build.</p></> : loading ? <p role="status" className="uninstall-dialog-lead">Checking your account…</p> : !offer ? <button className="uninstall-secondary" onClick={() => void refresh()}>Retry</button> : dialog === "plans" && first ? <>
+        <p className="uninstall-dialog-lead">40% off the first month of your new subscription.</p>
+        <fieldset className="uninstall-plan-grid" aria-label="Monthly plan" disabled={checking}>{(["plus", "pro"] as const).map((value) => {
           const price = first?.prices.find((p) => p.planCode === value);
           return <label className="uninstall-plan" key={value}><input type="radio" name="plan" value={value} checked={plan === value} onChange={() => selectPlan(value)} /><h3>{name(value)}</h3>{price ? <><div className="uninstall-plan-price">{money(price.discountedAmount)}<small>first month</small></div><p className="uninstall-plan-after">Then {money(price.ordinaryAmount)} / month</p></> : <p className="uninstall-plan-after">Price confirmed after sign-in</p>}</label>;
         })}</fieldset>
-        {signedOut ? <a className="uninstall-primary" href={loginHref}>Sign in to check your offer <span aria-hidden="true">→</span></a> : <button className="uninstall-primary" disabled={!selectedPrice} onClick={() => open("review")}>Continue <span aria-hidden="true">→</span></button>}
-        <p className="uninstall-dialog-note">{first ? "USD · First purchase only. No combined discounts." : "Signing in won’t start a purchase."}</p>
+        <button className="uninstall-primary" disabled={checking || !selectedPrice} onClick={() => open("review")}>Continue <span aria-hidden="true">→</span></button>
+        <p className="uninstall-dialog-note">USD · Once per account. No combined discounts.</p>
       </> : dialog === "review" && selectedPrice ? <>
-        <p className="uninstall-dialog-lead">40% off your first paid month.</p><PriceReview price={selectedPrice} />
-        <button className="uninstall-primary" disabled={busy} onClick={() => void transact("checkout")}>{busy ? "Checking…" : "Continue to checkout"} <span aria-hidden="true">→</span></button>
+        <p className="uninstall-dialog-lead">40% off the first month of your new subscription.</p><PriceReview price={selectedPrice} />
+        <button className="uninstall-primary" disabled={busy || checking} onClick={() => void transact("checkout")}>{busy ? "Checking…" : "Continue to checkout"} <span aria-hidden="true">→</span></button>
         <button className="uninstall-text-link" disabled={busy} onClick={() => open("plans")}>Change plan</button>
         <p className="uninstall-dialog-note">USD. Renews monthly until canceled. Any applicable taxes are shown at checkout.</p>
       </> : dialog === "renewal" && renewal ? <>
         <p className="uninstall-dialog-lead">Your existing {name(renewal.price.planCode)} plan. Renews {date(renewal.renewsAt)} (UTC). Your plan and renewal date stay the same.</p>
         <PriceReview price={renewal.price} renewal />
-        <button className="uninstall-primary" disabled={busy} onClick={() => void transact("claim")}>{busy ? "Checking…" : "Apply to next renewal"} <span aria-hidden="true">→</span></button>
+        <button className="uninstall-primary" disabled={busy || checking} onClick={() => void transact("claim")}>{busy ? "Checking…" : "Apply to next renewal"} <span aria-hidden="true">→</span></button>
         <p className="uninstall-dialog-note">One renewal only. No charge now. No combined discounts. USD, before any applicable taxes.</p>
       </> : null}
       {error ? <p className="uninstall-error" role="alert">{error}</p> : null}

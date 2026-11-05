@@ -103,7 +103,7 @@ test("background action results cannot show success or navigate; focusing reload
   pending.resolve(Response.json(claimed)); await flush();
   assert.doesNotMatch(container.textContent!, /Discount saved/);
   current = { ...first, ownerUserId: "b" }; await focus();
-  assert.match(container.textContent!, /Your first month/); assert.doesNotMatch(container.textContent!, /Discount saved/);
+  assert.match(container.textContent!, /One month of Plus or Pro/); assert.doesNotMatch(container.textContent!, /Discount saved/);
 });
 
 test("out of order offer responses cannot replace current owner", async () => {
@@ -111,7 +111,7 @@ test("out of order offer responses cannot replace current owner", async () => {
   await focus();
   current = renewal; get = async () => Response.json(current); await focus();
   pending.resolve(Response.json(first)); await flush();
-  assert.match(container.textContent!, /Your next month of Pro/); assert.doesNotMatch(container.textContent!, /Your first month/);
+  assert.match(container.textContent!, /Your next month of Pro/); assert.doesNotMatch(container.textContent!, /One month of Plus or Pro/);
 });
 
 test("renewal is explicit, shows actual UTC date, then restores verified accepted claim", async () => {
@@ -148,12 +148,108 @@ test("unavailable retry shows neither purchase nor wrong-account pricing", async
 });
 
 test("signed-out selection survives native login with no invented price and subscriber return is re-evaluated", async () => {
-  await mount("pro"); current = signedOut; await focus(); await click("Sign in to check");
+  await mount("pro"); current = signedOut; await focus();
   const dialog = container.querySelector("dialog")!;
-  assert.doesNotMatch(dialog.textContent!, /\$|40%/);
-  assert.equal(dialog.querySelector('a')?.getAttribute("href"), "/login?next=%2Funinstall%3Fplan%3Dpro");
+  assert.equal(dialog.open, false);
+  assert.doesNotMatch(container.textContent!, /Price confirmed after sign-in|Choose a monthly plan/);
+  assert.equal(container.querySelector('a.uninstall-primary')?.getAttribute("href"), "/login?next=%2Funinstall%3Fplan%3Dpro");
   assert.equal(posts.length, 0);
   current = renewal; await focus(); assert.match(container.textContent!, /Your next month of Pro/); assert.equal(posts.length, 0);
+});
+
+test("focus rechecks identity without losing the reviewed step or selected plan", async () => {
+  await mount("pro"); await click("Get 40% off"); await click("Continue");
+  await act(async () => window.dispatchEvent(new Event("blur")));
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.doesNotMatch(container.textContent!, /\$8\.99|Continue to checkout/);
+  await focus();
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.match(container.querySelector("dialog")!.textContent!, /Pro, billed monthly[\s\S]*\$8\.99/);
+  assert.equal(button("Continue to checkout").disabled, false);
+  assert.equal(posts.length, 0);
+});
+
+test("periodic refresh preserves the review and pauses actions until unchanged terms are verified", async (t) => {
+  let tick!: () => void;
+  const original = window.setTimeout.bind(window);
+  t.mock.method(window, "setTimeout", (callback: () => void, delay: number) => {
+    if (delay > 59000 && delay <= 60000) tick = callback;
+    return original(callback, delay);
+  });
+  await mount("pro"); await click("Get 40% off"); await click("Continue");
+  const pending = deferred<Response>(); get = async () => pending.promise;
+  await act(async () => tick());
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.match(container.querySelector("dialog")!.textContent!, /\$8\.99/);
+  assert.equal(button("Continue to checkout").disabled, true);
+  await click("Continue to checkout"); assert.equal(posts.length, 0);
+  pending.resolve(Response.json({ ...first, revision: "refreshed" })); await flush();
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.equal(button("Continue to checkout").disabled, false);
+});
+
+test("a periodic callback cannot discard an in-flight renewal result", async (t) => {
+  let tick!: () => void;
+  const original = window.setTimeout.bind(window);
+  t.mock.method(window, "setTimeout", (callback: () => void, delay: number) => {
+    if (delay > 59000 && delay <= 60000) tick = callback;
+    return original(callback, delay);
+  });
+  await mount("pro", renewal); await click("Get 40% off");
+  const pending = deferred<Response>(); handlePost = async () => pending.promise;
+  await click("Apply to next renewal");
+  await act(async () => tick());
+  current = claimed; pending.resolve(Response.json(claimed)); await flush();
+  assert.equal(posts.length, 1);
+  assert.match(container.textContent!, /Discount saved for your next renewal/);
+});
+
+test("renewal review survives unchanged refresh but closes for a different renewal date", async () => {
+  await mount("pro", renewal); await click("Get 40% off");
+  await focus();
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.ok(button("Apply to next renewal"));
+  current = { ...renewal, renewsAt: "2030-12-05T00:00:00Z" }; await focus();
+  assert.equal(container.querySelector("dialog")!.open, false);
+  assert.equal(posts.length, 0);
+});
+
+test("refresh failure keeps the step retryable without stale prices or executable actions", async () => {
+  await mount("pro"); await click("Get 40% off"); await click("Continue");
+  get = async () => { throw new Error("offline"); }; await focus();
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.doesNotMatch(container.textContent!, /\$8\.99|Continue to checkout/);
+  get = async () => Response.json(first);
+  await act(async () => container.querySelector<HTMLButtonElement>("dialog .uninstall-secondary")!.click());
+  assert.match(container.querySelector("dialog")!.textContent!, /Pro, billed monthly[\s\S]*\$8\.99/);
+  assert.doesNotMatch(container.querySelector("dialog")!.textContent!, /couldn’t verify/);
+  assert.equal(posts.length, 0);
+});
+
+for (const change of ["owner", "price", "signed_out"] as const) test(`refresh closes financial review when ${change} changes`, async () => {
+  await mount(); await click("Get 40% off"); await click("Continue");
+  current = change === "owner" ? { ...first, ownerUserId: "b" } : change === "signed_out" ? signedOut :
+    { ...first, prices: [calculateUninstallPrice("plus", 899), calculateUninstallPrice("pro", 1499)] };
+  await focus();
+  assert.equal(container.querySelector("dialog")!.open, false);
+  assert.equal(posts.length, 0);
+});
+
+test("reinstall instructions survive account refresh even when the owner changes", async () => {
+  await mount(); await click("Reinstall staging");
+  current = { ...first, ownerUserId: "b" }; await focus();
+  assert.equal(container.querySelector("dialog")!.open, true);
+  assert.match(container.querySelector("dialog")!.textContent!, /Load unpacked/);
+});
+
+test("subscription restriction has one management action; free users have none", async () => {
+  await mount();
+  assert.doesNotMatch(container.textContent!, /Manage subscription/);
+  current = { kind: "manage", ownerUserId: "a", validForMs: 60000, manageUrl: "/account/billing", reason: "Your subscription payment is overdue. Update your payment details to continue." };
+  await focus();
+  assert.equal([...container.querySelectorAll("button, a")].filter((el) => /^Manage/.test(el.textContent!.trim())).length, 1);
+  assert.match(container.textContent!, /Uninstalling won’t cancel your subscription/);
+  assert.match(container.textContent!, /payment is overdue/);
 });
 
 test("optional feedback sends only on submit, retries idempotently, and clears local draft on verified success", async () => {
@@ -191,10 +287,28 @@ test("staging reinstall explains actual unpacked installation and dialog closes 
   assert.equal(dialog.hasAttribute("open"), false);
 });
 
-test("former account starts with survey and regular plans", async () => {
+test("legacy former response remains readable during rolling deployment", async () => {
   await mount(); current = { kind: "former", ownerUserId: "a", validForMs: 60000, reason: "Previously paid" }; await focus();
   assert.equal(container.querySelector(".uninstall-offer"), null); assert.match(container.textContent!, /Why did you uninstall/);
   assert.equal(container.querySelector('a[href="/pricing?billing=monthly"]')?.textContent, "View plans ↗");
+});
+
+test("new-subscription screens also describe returning subscribers and disclose one lifetime discount", async () => {
+  await mount();
+  assert.match(container.textContent!, /One month of Plus or Pro/);
+  assert.doesNotMatch(container.textContent!, /First purchase only|Welcome back|first paid month/);
+  await click("Get 40% off");
+  assert.match(container.querySelector("dialog")!.textContent!, /first month of your new subscription/);
+  assert.match(container.querySelector("dialog")!.textContent!, /Once per account/);
+  await click("Continue");
+  assert.match(container.querySelector("dialog")!.textContent!, /first month of your new subscription/);
+});
+
+test("used discount explains why no new offer is available", async () => {
+  await mount(); current = { kind: "disabled", ownerUserId: "a", validForMs: 60000, reason: "Your one-time 40% discount has already been used." }; await focus();
+  assert.match(container.textContent!, /already been used/);
+  assert.doesNotMatch(container.textContent!, /Get 40% off/);
+  assert.ok(container.querySelector('a[href="/pricing?billing=monthly"]'));
 });
 
 test("management checks the current owner and uses the server management path", async () => {

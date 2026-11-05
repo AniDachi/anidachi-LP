@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793801091.5901692,
-    "seen": 1793804855.513403,
+    "mtime": 1793865671.4301844,
+    "seen": 1793865855.708569,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "920c1fb3fdc21685f0432307b7305f32"
+    "semantic_hash": "1546f67e1a015bb79859bf0cd1ab930c"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3576,10 +3576,10 @@
     "semantic_hash": "297535b2a1e217a5aec894d4937eeb74"
   },
   "docs/social-pricing-model.md": {
-    "mtime": 1793800330.3149548,
-    "seen": 1793804855.513407,
+    "mtime": 1793862562.4910357,
+    "seen": 1793862955.931726,
     "ast_hash": "24a8c5405395a7a64e8aec2f8b7dfe11",
-    "semantic_hash": "f3c7e95eacc0dff8c3a444f8d1db1579"
+    "semantic_hash": "f650e4833dfa92d4700ff43012a73dcd"
   },
   "docs/staging-acceptance-checklist.md": {
     "mtime": 1789490459.0094938,
@@ -11856,9 +11856,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/uninstall/uninstall-client.tsx": {
-    "mtime": 1793803948.8618248,
-    "seen": 1793804855.432758,
-    "ast_hash": "572eee2bc98aacf5fdf15157c39d6d97",
+    "mtime": 1793865245.8799207,
+    "seen": 1793865453.2697432,
+    "ast_hash": "34dfbe9b2f0f4abb1585fac6613d2ec7",
     "semantic_hash": ""
   },
   "apps/web/app/uninstall/uninstall-survey.tsx": {
@@ -11904,9 +11904,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-offer.test.ts": {
-    "mtime": 1793802507.7776992,
-    "seen": 1793804855.432766,
-    "ast_hash": "904847b024d59989b37b7744fd49908a",
+    "mtime": 1793865116.7652364,
+    "seen": 1793865453.269751,
+    "ast_hash": "3a1c1a59aa4c5495b61478bf43447630",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-offer.ts": {
@@ -11916,9 +11916,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-promotion.ts": {
-    "mtime": 1793800404.3123455,
-    "seen": 1793804855.432767,
-    "ast_hash": "3718df80d7a5e3e88573955ed23db4f8",
+    "mtime": 1793862458.01467,
+    "seen": 1793862740.641372,
+    "ast_hash": "1ef5f662a1dcfa77e780933c49774dd0",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-revision.ts": {
@@ -11940,21 +11940,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-service.ts": {
-    "mtime": 1793804346.6069713,
-    "seen": 1793804855.432769,
-    "ast_hash": "9905f9bb7cb685414cd6f42786a4621c",
+    "mtime": 1793865041.7684052,
+    "seen": 1793865453.2697542,
+    "ast_hash": "dfbbe423a930196fa8d9a2a33ce38c9b",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-store.ts": {
-    "mtime": 1793800404.3084776,
-    "seen": 1793804855.43277,
-    "ast_hash": "e359fec8be15aebecf79d48b2dbf00a5",
+    "mtime": 1793862458.0433524,
+    "seen": 1793862740.641379,
+    "ast_hash": "bc44ec448e8a935521487d1d555489d7",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-stripe.ts": {
-    "mtime": 1793800571.7661333,
-    "seen": 1793804855.43277,
-    "ast_hash": "33771c52dee7a694f8d12a9898cd5548",
+    "mtime": 1793865041.7430716,
+    "seen": 1793865453.269757,
+    "ast_hash": "2abfa309b4f5c84b4b7e43a47cb268f0",
     "semantic_hash": ""
   },
   "apps/web/lib/uninstall-auth-continuation.test.ts": {
@@ -11964,9 +11964,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/uninstall-client.test.ts": {
-    "mtime": 1793804330.2049959,
-    "seen": 1793804855.4327738,
-    "ast_hash": "a20904086142d85b36dcb80847a57f03",
+    "mtime": 1793865116.744736,
+    "seen": 1793865453.2697651,
+    "ast_hash": "e867306bfe4a4a0165950b8f4d42fdbc",
     "semantic_hash": ""
   },
   "apps/web/scripts/stripe/uninstall-hosted-proof.ts": {
@@ -11994,9 +11994,9 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md": {
-    "mtime": 1793799524.1128983,
-    "seen": 1793804855.513408,
+    "mtime": 1793865671.4499278,
+    "seen": 1793865855.708571,
     "ast_hash": "",
-    "semantic_hash": "24a17d60def8e5a533441f2fd8ad14ef"
+    "semantic_hash": "9e55bce1fe2e79233472e325d1a08a5a"
   }
 }

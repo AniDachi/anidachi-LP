@@ -56,11 +56,22 @@ export async function readUninstallAccount(userId: string) {
 		(grant.data && grant.data.stripe_customer_id !== customerId)
 	)
 		throw new Error("Offer account mapping changed.");
+	let firstBinding: UninstallBinding | null = null;
+	if (grant.data?.kind === "first") {
+		const binding = await db().from("uninstall_first_bindings")
+			.select("id,user_id,stripe_customer_id,coupon_id,created_at")
+			.eq("user_id", userId).abortSignal(signal()).maybeSingle();
+		if (binding.error || !binding.data || binding.data.user_id !== userId ||
+			binding.data.stripe_customer_id !== customerId)
+			throw new Error("First-month reservation unavailable.");
+		firstBinding = binding.data as UninstallBinding;
+	}
 	return {
 		customerId,
 		customerIds,
 		hasPaid: trials.data.some((t) => t.first_paid_at || t.first_cash_paid_at),
 		grant: grant.data?.kind as "first" | "renewal" | undefined,
+		firstBinding,
 		subscriptionIds: subs.data.map((s) => s.stripe_subscription_id as string),
 	};
 }

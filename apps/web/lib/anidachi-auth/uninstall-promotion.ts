@@ -1,6 +1,5 @@
 import type Stripe from "stripe";
 import {
-	hasPositiveSubscriptionInvoice,
 	UNINSTALL_REQUEST as REQUEST,
 	stripeObjectId,
 	UNINSTALL_FIRST_CAMPAIGN,
@@ -16,6 +15,26 @@ export type UninstallBinding = {
 	coupon_id: string;
 	created_at: string;
 };
+/** The durable binding, not ordinary payment history, owns the lifetime offer. */
+export function uninstallPromotionStatus(
+	code: Stripe.PromotionCode,
+	binding: UninstallBinding,
+): "available" | "used" | "inactive" {
+	if (
+		!binding.id || !binding.user_id || !binding.stripe_customer_id ||
+		stripeObjectId(code.customer) !== binding.stripe_customer_id ||
+		code.livemode || code.coupon.id !== binding.coupon_id ||
+		code.max_redemptions !== 1 || code.expires_at !== null ||
+		code.restrictions.first_time_transaction || code.restrictions.minimum_amount ||
+		code.metadata?.userId !== binding.user_id ||
+		code.metadata?.campaignBindingId !== binding.id ||
+		code.metadata?.anidachiCampaign !== UNINSTALL_FIRST_CAMPAIGN ||
+		!Number.isInteger(code.times_redeemed) ||
+		code.times_redeemed < 0 || code.times_redeemed > 1
+	) throw new Error("First-month promotion ownership or terms changed.");
+	if (code.times_redeemed === 1) return "used";
+	return code.active ? "available" : "inactive";
+}
 export type UninstallPromotionDeps = {
 	stripe: Stripe;
 	catalog: UninstallCatalog;
@@ -36,7 +55,7 @@ export async function ensureUninstallPromotion(
 	deps: UninstallPromotionDeps,
 ): Promise<string> {
 	const { stripe } = deps;
-	const [coupon, rawCustomer, history, invoices, codes] = await Promise.all([
+	const [coupon, rawCustomer, history, codes] = await Promise.all([
 		stripe.coupons.retrieve(
 			input.couponId,
 			{ expand: ["applies_to"] },
@@ -44,10 +63,6 @@ export async function ensureUninstallPromotion(
 		),
 		stripe.customers.retrieve(input.customerId, {}, REQUEST),
 		deps.accountHistory(input.userId),
-		stripe.invoices.list(
-			{ customer: input.customerId, status: "paid", limit: 100 },
-			REQUEST,
-		),
 		stripe.promotionCodes.list(
 			{ customer: input.customerId, limit: 100 },
 			REQUEST,
@@ -67,11 +82,9 @@ export async function ensureUninstallPromotion(
 	if (
 		codes.has_more ||
 		customer.discount ||
-		history.customerIds.some((c) => c !== input.customerId) ||
-		history.hasPaid ||
-		hasPositiveSubscriptionInvoice(invoices, input.customerId)
+		history.customerIds.some((c) => c !== input.customerId)
 	)
-		throw new Error("First purchase offer is no longer available.");
+		throw new Error("First-month offer is no longer available.");
 	const binding = await deps.claim(
 		input.userId,
 		input.customerId,
@@ -90,21 +103,8 @@ export async function ensureUninstallPromotion(
 	if (owned.length > 1)
 		throw new Error("First purchase promotion is ambiguous.");
 	function verify(code: Stripe.PromotionCode) {
-		if (
-			stripeObjectId(code.customer) !== input.customerId ||
-			code.livemode ||
-			code.coupon.id !== input.couponId ||
-			code.max_redemptions !== 1 ||
-			code.expires_at !== null ||
-			code.restrictions.first_time_transaction ||
-			code.restrictions.minimum_amount ||
-			code.metadata?.userId !== input.userId ||
-			code.metadata?.campaignBindingId !== binding.id ||
-			code.metadata?.anidachiCampaign !== UNINSTALL_FIRST_CAMPAIGN ||
-			code.times_redeemed !== 0 ||
-			!code.active
-		)
-			throw new Error("First purchase promotion unavailable.");
+		if (uninstallPromotionStatus(code, binding) !== "available")
+			throw new Error("First-month promotion unavailable.");
 		return code.id;
 	}
 	if (owned.length) return verify(owned[0]);
