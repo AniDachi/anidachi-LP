@@ -94,12 +94,12 @@ test("provider trials, paid size examples and existing-trial rights remain valid
 });
 
 test("shared Free20 copy distinguishes metering, media permission and personal history", () => {
-  assert.match(copy.PRICING_FREE20_SUMMARY, /20 host minutes per UTC day.*4 people, including the host/);
-  for (const requirement of [/host and at least one guest/, /paused/, /alone uses no time/, /account allowance/, /00:00 UTC/, /no carryover/, /Joining a friend's room does not spend your own/]) assert.match(copy.PRICING_FREE20_METERING_NOTE, requirement);
-  assert.match(copy.PRICING_FREE20_MEDIA_NOTE, /four media seats.*four simultaneous cameras/);
-  assert.match(copy.PRICING_FREE20_MEDIA_NOTE, /explicit local device action/);
-  assert.match(copy.PRICING_HISTORY_NOTE, /Free can read, Resume and delete/);
-  assert.match(copy.PRICING_HISTORY_NOTE, /Recording and editing.*each viewer's own Plus or Pro/);
+  assert.match(copy.PRICING_FREE20_SUMMARY, /20 minutes a day.*4 people, including you/);
+  for (const requirement of [/you and at least one guest/, /paused/, /alone uses no time/, /one allowance across your rooms and devices/, /00:00 UTC/, /don’t carry over/, /Joining someone else’s room doesn’t use your minutes/]) assert.match(copy.PRICING_FREE20_METERING_NOTE, requirement);
+  assert.match(copy.PRICING_FREE20_MEDIA_NOTE, /four people.*camera and microphone/);
+  assert.match(copy.PRICING_FREE20_MEDIA_NOTE, /host manages access.*each person chooses/);
+  assert.match(copy.PRICING_HISTORY_NOTE, /view, resume and delete.*Free/);
+  assert.match(copy.PRICING_HISTORY_NOTE, /Saving or editing.*your own Plus or Pro/);
   assert.match(copy.PRICING_ROOM_SIZE_RANGE, /4 people on Free, 6 people with a Plus host or 15 with a Pro host/);
   assert.match(copy.PRICING_EXISTING_TRIAL_NOTE, /New trials are no longer offered/);
 });

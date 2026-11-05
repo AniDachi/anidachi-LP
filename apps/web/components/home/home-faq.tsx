@@ -3,10 +3,9 @@ import { homeFAQ } from "@/lib/home-faq";
 import { FaqQuestionList } from "@/components/faq-section";
 import styles from "./home-faq.module.css";
 
-// Keep the shared answers and JSON-LD intact; only prioritize their presentation.
-const primaryIndexes = [0, 2, 6, 7, 8, 10];
-const primaryQuestions = primaryIndexes.map((index) => homeFAQ[index]);
-const otherQuestions = homeFAQ.filter((_, index) => !primaryIndexes.includes(index));
+// The shared copy puts the core product questions first, for UI and JSON-LD.
+const primaryQuestions = homeFAQ.slice(0, 6);
+const otherQuestions = homeFAQ.slice(6);
 
 export function HomeFAQ() {
   return (

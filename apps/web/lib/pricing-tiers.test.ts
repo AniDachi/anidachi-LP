@@ -68,11 +68,11 @@ test("explicit Free20 matrix is separate from legacy and unknown offers stay neu
 	);
 	assert.match(
 		pricingFreeTier("daily_free20").features.join(" "),
-		/20 host minutes per UTC day/,
+		/20 free minutes every day/,
 	);
 	assert.match(
 		pricingFreeTier("daily_free20").features.join(" "),
-		/4 media seats/,
+		/4 cameras & 4 mics/,
 	);
 	assert.match(
 		pricingFreeTier("daily_free20").features.join(" "),
@@ -82,7 +82,7 @@ test("explicit Free20 matrix is separate from legacy and unknown offers stay neu
 		pricingMatrixRows("daily_free20").find(
 			(row) => row.feature === "Host your own room",
 		)!.values.free,
-		"20 min/UTC day",
+		"20 min/day",
 	);
 	assert.equal(
 		pricingMatrixRows("legacy").find(

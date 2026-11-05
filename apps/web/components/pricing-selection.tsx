@@ -36,7 +36,7 @@ export function PricingSelection(props: Props) {
 					<div className="container relative mx-auto px-4">
 						<HomeSectionHeader
 							title="Watch together. Choose your plan."
-							description="Join friends for free. Compare hosting and personal watch history options."
+							description="Watch together. Find the plan that fits your group."
 							titleAs={props.headingLevel === 1 ? "h1" : "h2"}
 							align="center"
 						/>

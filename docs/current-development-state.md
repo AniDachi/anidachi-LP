@@ -1,5 +1,58 @@
 # Current Development State
 
+## Free20 release preparation: November 5, 2026
+
+The owner requested an updated plan and careful preparation for a production
+extension ZIP, with the next work discussed before release actions. After the
+site audit, the owner approved a first local homepage/pricing clarity fix, then
+approved delivering that completed block to staging through a PR.
+This does not authorize a production/LIVE change, production ZIP build or
+Store upload/publication.
+
+The [master plan](superpowers/plans/2026-10-30-daily-free20-transition.md),
+[product rules](superpowers/specs/2026-10-30-daily-free20-design.md) and
+[handoff](superpowers/plans/2026-10-30-daily-free20-handoff.md) now distinguish
+implemented staging features from remaining release verification. Free20,
+anti-abuse, live paid transition, warning/exhaustion screens, monthly pricing,
+uninstall/cancellation offers and the feedback inbox are implemented; they are
+not new development tasks. The latest rule is one lifetime 40% allowance shared
+by the new offers, including eligible former subscribers, without blocking
+billing-period changes. Earlier independent-campaign and default-off entries
+below are dated history, not the current product contract.
+
+Readback: staging `dc0eeb0458cde8232df22577a8964a093990fe65` (#514), READY Vercel
+`dpl_J3zD6iuENS1LGq3ncBJCgQWYFkrc` on the staging alias, and successful CI
+`42042530777`. Staging SQL revision 5 has Free20 and anti-abuse enabled and trials
+disabled, with the original activation timestamp preserved. Production alias
+still serves `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke` from main
+`9da93cd9891b6155051fc550957635c089fc8f3a`.
+
+The website audit found that expiring personal billing offers also erased public
+Free20 plan details. The local fix retains the last confirmed public catalog
+through offer expiry, focus refresh and account replacement, while checkout still
+requires fresh owner/price authority. A newly confirmed hosting mode replaces the
+catalog; legacy 30-minute promises still expire at their server deadline.
+
+Homepage and pricing copy now use shorter English explanations: 20 minutes/day,
+four people including the host, four cameras/mics, free guests and personal-history
+access. Metering, UTC reset and renewal instructions stay in separate FAQ answers;
+the first six homepage questions cover the core product choices. Monthly remains
+the default, with explicit yearly selection and full annual charges unchanged.
+
+Local evidence: 50 focused pricing/copy checks, web typecheck, and the full web
+suite (1758 passed, six existing skips). Actual Next pages were inspected through
+a read-only synthetic-offer preview at desktop 1280×720 and mobile 390×844,
+including monthly/yearly, Free/subscriber actions and FAQ interactions. This is
+not an authenticated checkout. The delivery PR records the exact merged SHA,
+CI result and hosted staging verification separately. No server, database,
+extension, environment or pricing-policy change is included.
+
+Welcome, Help and Privacy copy remain separate follow-up findings. The full
+candidate audit and production-gap inventory are still pending. Runtime checks,
+owner acceptance, current Store version and an exact production artifact remain
+distinct evidence. The release diff includes more than Free20; do not infer its
+scope from the most recent PR alone.
+
 ## Uninstall feedback inbox: November 5, 2026
 
 The owner selected `/kreatli-email-crm` as the inbox for existing uninstall
@@ -16,7 +69,7 @@ and anti-abuse hashes are excluded. No new credentials, public feed, exports or
 response mutations are introduced. The survey remains voluntary; `(optional)`
 appears only beside **Add a note**, not beside its question heading.
 
-Delivery is staging-only, schema first. The delivery PR records exact checks,
+Delivered schema-first to staging through [PR #514](https://github.com/AniDachi/anidachi-LP/pull/514). The PR records exact checks,
 deployed SHA and hosted evidence; local fixture views do not establish
 owner-authenticated staging acceptance. Reverting the web change hides the
 inbox without deleting responses or changing feedback submission and billing.
