@@ -302,6 +302,15 @@ The extension registers the channel's `/uninstall` URL without identity data;
 feedback and billing policy stay on the website. No room protocol changes are
 needed. See the plan and delivery PR for staging validation boundaries.
 
+The existing `/kreatli-email-crm` admin displays saved uninstall feedback through
+`/api/kreatli-crm/uninstall-feedback`. Every read requires its existing CRM
+session, independently of ordinary website login. The private
+`list_uninstall_feedback_v1` RPC returns only date, reason, comment and an opaque
+submission ID for stable cursor pagination (50 rows plus one lookahead).
+The table remains inaccessible to client roles; only the server can execute the
+reader. Feedback is not exported or modified by this inbox. API responses are
+private/no-store and retain the internal route's noindex policy.
+
 Current responsibilities:
 
 - user sign-in through Google/Discord;
