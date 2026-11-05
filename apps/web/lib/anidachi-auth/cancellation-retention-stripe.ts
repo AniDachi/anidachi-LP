@@ -16,6 +16,7 @@ export function cancellationCouponParams(
 		max_redemptions: 1,
 		redeem_by: offer.redeem_by,
 		applies_to: { products: offer.product_ids },
+		expand: ["applies_to"],
 		metadata: {
 			anidachiCampaign: CANCELLATION_RETENTION_CAMPAIGN,
 			offerId: offer.id,
