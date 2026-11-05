@@ -1,3 +1,4 @@
+import { isCancellationBillingProviderUnavailable } from "./cancellation-retention-billing";
 import { reconcileCancellationRetention } from "./cancellation-retention";
 import {
 	cancellationRetentionStore,
@@ -36,11 +37,10 @@ export async function readUninstallAccount(
 		try {
 			await deps.reconcile(userId, deps.createStripe());
 		} catch (error) {
-			const type = error && typeof error === "object" && "type" in error
-				? error.type : null;
-			if (!options.presentationOnly || ![
-				"StripeConnectionError", "StripeAPIError", "StripeRateLimitError",
-			].includes(String(type))) throw error;
+			if (
+				!options.presentationOnly ||
+				!isCancellationBillingProviderUnavailable(error)
+			) throw error;
 			pendingCancellation = pending;
 		}
 		if (!options.presentationOnly && (await deps.pending(userId)))

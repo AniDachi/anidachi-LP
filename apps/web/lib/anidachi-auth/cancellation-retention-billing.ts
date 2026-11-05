@@ -5,6 +5,19 @@ import { verifyCancellationCoupon } from "./cancellation-retention-stripe";
 import { uninstallDiscount } from "./uninstall-offer";
 import { stripeObjectId } from "./uninstall-stripe";
 
+/** Availability alone never establishes ownership or authorizes a price. */
+export function isCancellationBillingProviderUnavailable(
+	error: unknown,
+): boolean {
+	const type =
+		error && typeof error === "object" && "type" in error ? error.type : null;
+	return [
+		"StripeConnectionError",
+		"StripeAPIError",
+		"StripeRateLimitError",
+	].includes(String(type));
+}
+
 /** Display only. Permanent allowance authority is the reconciled shared grant. */
 export function cancellationBillingSnapshot(
 	sub: Stripe.Subscription,

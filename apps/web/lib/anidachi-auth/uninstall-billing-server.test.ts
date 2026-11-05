@@ -4,6 +4,8 @@ import type Stripe from "stripe";
 import { db, type SubscriptionRow } from "./db";
 import { readUninstallAccount } from "./uninstall-store";
 import type { CancellationOffer } from "./cancellation-retention-store";
+import { PRODUCT_HUNT_CAMPAIGN } from "./product-hunt-promo";
+import { UNINSTALL_RENEWAL_CAMPAIGN } from "./uninstall-stripe";
 import { cancellationCouponParams } from "./cancellation-retention-stripe";
 import { readBillingPromotions } from "./uninstall-billing-server";
 
@@ -238,7 +240,10 @@ test("actual default issuance remains strict on pending native provider failure"
 		/provider read unavailable/,
 	);
 	await assert.rejects(
-		readUninstallAccount("owner", undefined, { ...f.accountDeps, reconcile: async () => {} }),
+		readUninstallAccount("owner", undefined, {
+			...f.accountDeps,
+			reconcile: async () => {},
+		}),
 		/verification pending/,
 	);
 });
@@ -285,4 +290,132 @@ test("pending fallback requires exact durable owner/subscription/price and reada
 		kind: "renewal",
 	};
 	assert.deepEqual((await grant.read()).local, { state: "unavailable" });
+});
+
+function laterProviderFixture(state: "pending" | "accepted") {
+	const f = pendingOutageFixture();
+	f.offer.state = state;
+	if (state === "accepted")
+		f.results.uninstall_offer_grants = {
+			user_id: "owner",
+			stripe_customer_id: "cus_owner",
+			kind: "cancellation",
+		};
+	let reconciliations = 0;
+	f.deps.readAccount = (id, options) =>
+		readUninstallAccount(id, options, {
+			...f.accountDeps,
+			pending: async () => (state === "pending" ? f.offer : null),
+			reconcile: async () => {
+				reconciliations++;
+			},
+		});
+	const stripe = f.deps.createStripe();
+	f.deps.createStripe = () => stripe;
+	return { ...f, stripe, reconciliations: () => reconciliations };
+}
+async function attachPartialNativeCoupon(
+	f: ReturnType<typeof laterProviderFixture>,
+) {
+	const coupon = await f.stripe.coupons.retrieve(f.offer.coupon_id, {
+		expand: ["applies_to"],
+	});
+	delete coupon.applies_to;
+	f.sub.discounts = [{ id: "di_native", coupon }] as unknown as Stripe.Discount[];
+	return coupon;
+}
+const unavailableProvider = async () => {
+	throw Object.assign(Error("provider read unavailable"), {
+		type: "StripeConnectionError",
+	});
+};
+for (const state of ["pending", "accepted"] as const)
+	for (const phase of ["customer", "subscription", "coupon"] as const) {
+		test(`actual ${state} native classification survives later ${phase} provider read outage`, async () => {
+			const f = laterProviderFixture(state);
+			if (phase === "customer")
+				f.stripe.customers.retrieve = unavailableProvider;
+			if (phase === "subscription")
+				f.stripe.subscriptions.retrieve = unavailableProvider;
+			if (phase === "coupon") {
+				await attachPartialNativeCoupon(f);
+				f.stripe.coupons.retrieve = unavailableProvider;
+			}
+			assert.deepEqual((await f.read()).local, {
+				state: "unavailable",
+				campaign: "cancellation_retention",
+			});
+			assert.equal(f.reconciliations(), state === "pending" ? 1 : 0);
+		});
+	}
+test("observed provider ownership or coupon validation failure cannot be masked by a subsequent outage", async () => {
+	const customer = laterProviderFixture("pending");
+	customer.stripe.customers.retrieve = async () =>
+		({
+			id: "cus_foreign",
+			livemode: false,
+			metadata: { userId: "owner" },
+		}) as unknown as Stripe.Response<Stripe.Customer>;
+	customer.stripe.subscriptions.retrieve = unavailableProvider;
+	assert.deepEqual((await customer.read()).local, { state: "unavailable" });
+	const sub = laterProviderFixture("pending");
+	await attachPartialNativeCoupon(sub);
+	sub.sub.metadata.userId = "foreign";
+	sub.stripe.coupons.retrieve = unavailableProvider;
+	assert.deepEqual((await sub.read()).local, { state: "unavailable" });
+	const terms = laterProviderFixture("pending");
+	const coupon = await attachPartialNativeCoupon(terms);
+	coupon.percent_off = 99;
+	terms.stripe.coupons.retrieve = unavailableProvider;
+	assert.deepEqual((await terms.read()).local, { state: "unavailable" });
+});
+test("later provider outage preserves local ownership, storage and legacy campaign blocks", async () => {
+	for (const state of ["pending", "accepted"] as const) {
+		const owner = laterProviderFixture(state);
+		owner.offer.user_id = "foreign";
+		owner.stripe.customers.retrieve = unavailableProvider;
+		assert.deepEqual((await owner.read()).local, { state: "unavailable" });
+		const storage = laterProviderFixture(state);
+		storage.deps.readCancellationOffer = unavailableProvider;
+		assert.deepEqual((await storage.read()).local, { state: "unavailable" });
+		const hunt = laterProviderFixture(state);
+		hunt.deps.readProductHuntBilling = async () => ({
+			local: { state: "active" },
+		});
+		hunt.stripe.customers.retrieve = unavailableProvider;
+		assert.deepEqual((await hunt.read()).local, { state: "unavailable" });
+		const legacy = laterProviderFixture(state);
+		legacy.results.uninstall_offer_grants = {
+			user_id: "owner",
+			stripe_customer_id: "cus_owner",
+			kind: "renewal",
+		};
+		legacy.stripe.subscriptions.retrieve = unavailableProvider;
+		assert.deepEqual((await legacy.read()).local, { state: "unavailable" });
+	}
+});
+
+test("observed legacy discounts and invalid native shape remain blocked before later provider outages", async () => {
+	for (const campaign of [PRODUCT_HUNT_CAMPAIGN, UNINSTALL_RENEWAL_CAMPAIGN]) {
+		const customer = laterProviderFixture("accepted");
+		customer.stripe.customers.retrieve = async () =>
+			({
+				id: "cus_owner",
+				livemode: false,
+				metadata: { userId: "owner" },
+				discount: { coupon: { metadata: { anidachiCampaign: campaign } } },
+			}) as unknown as Stripe.Response<Stripe.Customer>;
+		customer.stripe.subscriptions.retrieve = unavailableProvider;
+		assert.deepEqual((await customer.read()).local, { state: "unavailable" });
+		const sub = laterProviderFixture("accepted");
+		const coupon = await attachPartialNativeCoupon(sub);
+		coupon.metadata!.anidachiCampaign = campaign;
+		sub.stripe.coupons.retrieve = unavailableProvider;
+		assert.deepEqual((await sub.read()).local, { state: "unavailable" });
+	}
+	const shape = laterProviderFixture("pending");
+	await attachPartialNativeCoupon(shape);
+	shape.sub.items.has_more = true;
+	shape.stripe.coupons.retrieve = unavailableProvider;
+	assert.deepEqual((await shape.read()).local, { state: "unavailable" });
 });
