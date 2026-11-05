@@ -1475,6 +1475,22 @@
         "confidence_score": 1.0,
         "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
         "_origin": "semantic"
+      },
+      {
+        "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_review_refresh_authority",
+        "label": "Stable review retains server authority across reads and departure",
+        "nodes": [
+          "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+          "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_unchanged_offer_refresh_preserves_review",
+          "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_departure_revalidation_fences_private_review",
+          "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_inflight_action_survives_periodic_read"
+        ],
+        "relation": "implement",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+        "source_location": "L130-L138",
+        "_origin": "semantic"
       }
     ]
   },
@@ -224393,7 +224409,7 @@
     },
     {
       "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
-      "label": "Task 2: Real uninstall page",
+      "label": "Actual uninstall page and local UX correction",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
       "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:121",
@@ -224401,8 +224417,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Port the accepted prototype into `apps/web/app/uninstall` using actual site components/tokens; GET server offer, no mock scenario selector. Preserve compact layout, 14px readable one-line terms, paid cancellation notice with short Manage action; eligible former users share the new-subscription offer. Render no wrong-account/free flash during refresh. Show honest retry state on unavailable; no purchase when unverified.",
-      "status": "authorized implementation and staging requirements; not production acceptance",
+      "description": "The real website uses server-owned offer data and existing tokens, compact terms and an optional independent survey. Eligible former users share the new-subscription offer. November 5 local UX correction is awaiting owner review and is not deployed: unchanged refresh retains the current step/plan, departure hides private details until verified, changed owner/terms closes financial review, signed-out CTA goes directly to login, management is not duplicated, and restriction copy is specific without changing eligibility.",
+      "status": "November 5 local UX candidate; owner review and staging delivery not claimed",
       "_origin": "semantic"
     },
     {
@@ -224410,7 +224426,7 @@
       "label": "Task 3: Extension uninstall URL",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:156",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:172",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -224424,7 +224440,7 @@
       "label": "Task 4: Evidence, delivery and owner test",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:166",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:182",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226740,7 +226756,7 @@
     },
     {
       "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
-      "label": "Actual Geist tokens compact accessible uninstall flow",
+      "label": "Actual Geist tokens and verified uninstall UX",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
       "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:121",
@@ -226748,30 +226764,32 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Actual Geist tokens compact accessible uninstall flow. Source context: ## Task 2: Real uninstall page Port the accepted prototype into `apps/web/app/uninstall` using actual site components/tokens; GET server offer, no mock scenario selector. Preserve compact layout, 14px readable one-line terms, paid cancellation notice with short Manage action; eligible former users share the new-subscription offer. Render no wrong-account/free flash during refresh. Show honest retry state on unavailable; no purchase when unverified. First purchase: two monthly plan choices with server price, then explicit continue to real Stripe checkout. Signed-out selection survives OAuth at `/uninstall?plan=plus|pro`; authenticate through existing login, re-evaluate status after login, route existing subscriber to current subscription offer. Never create a second subscription. Selection and survey draft survive auth; draft stays local until explicit send. Use same-tab sessionStorage with bounded schema for draft only, clear after send. Return from billing/checkout to valid same-origin destinations. Do not automatically perform a financial action when returning from OAuth. Real owner/revision guards before action and navigation; stale/background responses cannot overwrite another account or imply success. Monthly renewal opens a confirmation with actual next amount/date and ordinary price. Explicit Apply to next renewal invokes claim; button disappears only after verified accepted response; refreshing restores claim. Management always remains available. Annual/existing discount/cancellation/past_due/used allowance get truthful management/regular pricing with no invented discount. No legacy trial UI. Optional survey reason list matches prototype, 500-char optional note, disabled submit until selected, accessible status/error, preserve form height on thanks. Real reinstall destination comes from approved channel installation config; staging build must not pretend Store installation restores staging. Keep management accessible. Native dialog keyboard/escape/focus, responsive 390px, reduced motion. Test actual component owner transitions, failed actions/retries, double submits, auth continuation and successful feedback. Run check/focused tests, visual desktop/mobile inspection; controller handles hosted…",
-      "status": "requirement",
-      "_origin": "semantic"
+      "description": "The real uninstall page keeps the compact website/extension styling and server-owned monthly offers, no production mock selector. Eligible former subscribers use their unused allowance. Periodic same-owner same-terms reads preserve the open step/plan; focus/visibility hides private details and disables actions until verification. Changed owner, price, eligibility or renewal date retires the financial review; reinstall instructions remain open. Failed reads keep a retryable step without stale prices. This November 5 UX correction is local and awaiting owner review.",
+      "status": "November 5 local UX candidate; owner review and staging delivery not claimed",
+      "_origin": "semantic",
+      "rationale": "The real uninstall page keeps the compact website/extension styling and server-owned monthly offers, no production mock selector. Eligible former subscribers use their unused allowance. Periodic same-owner same-terms reads preserve the open step/plan; focus/visibility hides private details and disables actions until verification. Changed owner, price, eligibility or renewal date retires the financial review; reinstall instructions remain open. Failed reads keep a retryable step without stale prices. This November 5 UX correction is local and awaiting owner review."
     },
     {
       "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_oauth",
-      "label": "Bounded same-tab draft OAuth continuation explicit action",
+      "label": "Direct login with selected plan and explicit financial confirmation",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:130",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:146",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "Bounded same-tab draft OAuth continuation explicit action. Source context: First purchase: two monthly plan choices with server price, then explicit continue to real Stripe checkout. Signed-out selection survives OAuth at `/uninstall?plan=plus|pro`; authenticate through existing login, re-evaluate status after login, route existing subscriber to current subscription offer. Never create a second subscription. Selection and survey draft survive auth; draft stays local until explicit send. Use same-tab sessionStorage with bounded schema for draft only, clear after send. Return from billing/checkout to valid same-origin destinations. Do not automatically perform a financial action when returning from OAuth. Real owner/revision guards before action and navigation; stale/background responses cannot overwrite another account or imply success. Monthly renewal opens a confirmation with actual next amount/date and ordinary price. Explicit Apply to next renewal invokes claim; button disappears only after verified accepted response; refreshing restores claim. Management always remains available. Annual/existing discount/cancellation/past_due/used allowance get truthful management/regular pricing with no invented discount. No legacy trial UI. Optional survey reason list matches prototype, 500-char optional note, disabled submit until selected, accessible status/error, preserve form height on thanks. Real reinstall destination comes from approved channel installation config; staging build must not pretend Store installation restores staging. Keep management accessible. Native dialog keyboard/escape/focus, responsive 390px, reduced motion. Test actual component owner transitions, failed actions/retries, double submits, auth continuation and successful feedback. Run check/focused tests, visual desktop/mobile inspection; controller handles hosted acceptance.",
+      "description": "The signed-out CTA goes directly to existing login, preserving selected Plus/Pro in the uninstall return URL. After authentication the server reevaluates eligibility; existing subscribers go to their current subscription offer rather than a second subscription. Selected plan and bounded same-tab survey draft survive OAuth, but a draft is not submitted automatically. Returning from OAuth never performs a financial action. Owner/revision guards fence stale or background responses and verified same-origin destinations.",
       "status": "requirement",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "rationale": "The signed-out CTA goes directly to existing login, preserving selected Plus/Pro in the uninstall return URL. After authentication the server reevaluates eligibility; existing subscribers go to their current subscription offer rather than a second subscription. Selected plan and bounded same-tab survey draft survive OAuth, but a draft is not submitted automatically. Returning from OAuth never performs a financial action. Owner/revision guards fence stale or background responses and verified same-origin destinations."
     },
     {
       "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_accessibility",
       "label": "Real component owner tests native dialog focus mobile",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:147",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:163",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226785,7 +226803,7 @@
       "label": "runtime.setUninstallURL channel validated at background lifecycle",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:158",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:174",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226813,7 +226831,7 @@
       "label": "Actual disposable AniDachi Sandbox lifecycle proof",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:168",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:184",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226827,7 +226845,7 @@
       "label": "Frozen reviewed migration webhook runtime exact TEST gates",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:173",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:189",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226841,7 +226859,7 @@
       "label": "Owner login hosted Checkout loaded Chrome acceptance",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:177",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:193",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226855,7 +226873,7 @@
       "label": "Disable new issuance preserve durable accepted obligations",
       "file_type": "rationale",
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
-      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:182",
+      "source_location": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md:198",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -227046,7 +227064,7 @@
       "label": "samePrice()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227055,7 +227073,7 @@
       "label": "reviewedEqual()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227064,7 +227082,7 @@
       "label": "validPrice()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227073,7 +227091,7 @@
       "label": "validOffer()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227082,7 +227100,7 @@
       "label": "getOffer()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L48",
+      "source_location": "L49",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227091,7 +227109,7 @@
       "label": "checkoutDestination()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L56",
+      "source_location": "L57",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227100,7 +227118,7 @@
       "label": "UninstallClient()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L67",
+      "source_location": "L68",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227109,7 +227127,7 @@
       "label": "selectPlan()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L137",
+      "source_location": "L163",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227118,7 +227136,7 @@
       "label": "open()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L143",
+      "source_location": "L169",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227127,7 +227145,7 @@
       "label": "transact()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L145",
+      "source_location": "L171",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227136,7 +227154,7 @@
       "label": "manage()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L206",
+      "source_location": "L232",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227145,7 +227163,7 @@
       "label": "PriceReview()",
       "file_type": "code",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L289",
+      "source_location": "L315",
       "_callable": true,
       "_origin": "ast"
     },
@@ -227470,7 +227488,7 @@
       "label": "invoiceFixture()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L746",
+      "source_location": "L760",
       "_callable": true,
       "_origin": "ast"
     },
@@ -228435,6 +228453,111 @@
       "description": "An unused new-subscription reservation may resume only the same verified customer-bound code. Redeemed codes cannot be reissued; missing or inconsistent promotion evidence needs reconciliation. Ordinary payment history alone cannot exclude a former subscriber.",
       "_origin": "semantic",
       "rationale": "An unused new-subscription reservation may resume only the same verified customer-bound code. Redeemed codes cannot be reissued; missing or inconsistent promotion evidence needs reconciliation. Ordinary payment history alone cannot exclude a former subscriber."
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_unchanged_offer_refresh_preserves_review",
+      "label": "Unchanged refresh preserves open review and selected plan",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L132",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "A periodic offer refresh retains the current dialog step and selected plan only when the owner and displayed terms match. Refresh does not force the user to restart an unchanged review.",
+      "rationale": "A periodic offer refresh retains the current dialog step and selected plan only when the owner and displayed terms match. Refresh does not force the user to restart an unchanged review.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_departure_revalidation_fences_private_review",
+      "label": "Departure verification fences private review",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L132-L136",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Focus and visibility changes temporarily hide account-specific details and invalidate actions. After verifying unchanged owner and terms the same step returns. Changed owner, price, eligibility or renewal date closes financial review; reinstall instructions remain open. Failed reads offer retry without displaying old prices.",
+      "rationale": "Focus and visibility changes temporarily hide account-specific details and invalidate actions. After verifying unchanged owner and terms the same step returns. Changed owner, price, eligibility or renewal date closes financial review; reinstall instructions remain open. Failed reads offer retry without displaying old prices.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_inflight_action_survives_periodic_read",
+      "label": "Periodic read cannot discard a pending financial action",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L136-L138",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Periodic reads must not discard an in-flight action result. The action retains its own fresh validation of displayed terms and reviewed token/expiry; server owner, snapshot and idempotency checks remain authoritative.",
+      "rationale": "Periodic reads must not discard an in-flight action result. The action retains its own fresh validation of displayed terms and reviewed token/expiry; server owner, snapshot and idempotency checks remain authoritative.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_direct_login_selected_plan",
+      "label": "Signed-out CTA enters login directly",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L139-L139",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The signed-out call to action goes directly to login with the selected plan preserved in the uninstall return URL, without performing a purchase on return.",
+      "rationale": "The signed-out call to action goes directly to login with the selected plan preserved in the uninstall return URL, without performing a purchase on return.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_single_contextual_management_action",
+      "label": "One contextual management action",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L140-L142",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Subscribers get one management action; restricted offers have no duplicate action and verified new-subscription offers omit an irrelevant management link. Anonymous and unverified users retain a route to account management.",
+      "rationale": "Subscribers get one management action; restricted offers have no duplicate action and verified new-subscription offers omit an irrelevant management link. Anonymous and unverified users retain a route to account management.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_specific_subscription_restriction_copy",
+      "label": "Concrete restriction explanations preserve eligibility",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L142-L144",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Restriction copy distinguishes overdue or incomplete payment, paused billing, canceled renewal, yearly plans, existing discounts and pending changes. The clarification changes presentation, not eligibility.",
+      "rationale": "Restriction copy distinguishes overdue or incomplete payment, paused billing, canceled renewal, yearly plans, existing discounts and pending changes. The clarification changes presentation, not eligibility.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_local_ux_review_not_deployed",
+      "label": "November 5 UX is local pending owner review",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L144",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The November 5 UX correction is explicitly local, awaiting owner review and not deployed. Local component/scenario evidence cannot be presented as hosted staging or production acceptance.",
+      "rationale": "The November 5 UX correction is explicitly local, awaiting owner review and not deployed. Local component/scenario evidence cannot be presented as hosted staging or production acceptance.",
+      "status": "local UX candidate, awaiting owner review, not deployed",
+      "_origin": "semantic"
     }
   ],
   "links": [
@@ -722207,7 +722330,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722217,7 +722340,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722227,7 +722350,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722237,7 +722360,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722247,7 +722370,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722257,7 +722380,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722267,7 +722390,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L67",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722277,7 +722400,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L137",
+      "source_location": "L163",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722287,7 +722410,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L143",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722297,7 +722420,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L145",
+      "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722307,7 +722430,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L206",
+      "source_location": "L232",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722317,7 +722440,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L289",
+      "source_location": "L315",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722328,7 +722451,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722340,7 +722463,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722351,7 +722474,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722362,7 +722485,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722373,7 +722496,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L92",
+      "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722384,7 +722507,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L233",
+      "source_location": "L259",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722395,7 +722518,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L235",
+      "source_location": "L261",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722406,7 +722529,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L242",
+      "source_location": "L268",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722417,7 +722540,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L246",
+      "source_location": "L272",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722428,7 +722551,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L270",
+      "source_location": "L296",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722439,7 +722562,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L275",
+      "source_location": "L301",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722450,7 +722573,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L276",
+      "source_location": "L302",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722461,7 +722584,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L152",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722472,7 +722595,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L154",
+      "source_location": "L180",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722483,7 +722606,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L186",
+      "source_location": "L212",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722494,7 +722617,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L212",
+      "source_location": "L238",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722505,7 +722628,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L218",
+      "source_location": "L244",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722516,7 +722639,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L290",
+      "source_location": "L316",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724191,7 +724314,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L746",
+      "source_location": "L760",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724312,7 +724435,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L747",
+      "source_location": "L761",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724323,7 +724446,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L756",
+      "source_location": "L770",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724334,7 +724457,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L840",
+      "source_location": "L854",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724345,7 +724468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L885",
+      "source_location": "L899",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724356,7 +724479,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L1043",
+      "source_location": "L1057",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724367,7 +724490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L1050",
+      "source_location": "L1064",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724378,7 +724501,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-offer.test.ts",
-      "source_location": "L1055",
+      "source_location": "L1069",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727950,7 +728073,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L226",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727962,7 +728085,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
-      "source_location": "L255",
+      "source_location": "L281",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -728238,7 +728361,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/uninstall-client.test.ts",
-      "source_location": "L176",
+      "source_location": "L272",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -728453,6 +728576,171 @@
       "source_location": null,
       "weight": 1.0,
       "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_unchanged_offer_refresh_preserves_review",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L132",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_departure_revalidation_fences_private_review",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L132-L136",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_inflight_action_survives_periodic_read",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L136-L138",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_direct_login_selected_plan",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L139-L139",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_single_contextual_management_action",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L140-L142",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_specific_subscription_restriction_copy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L142-L144",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_section_task_2__real_uninstall_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_local_ux_review_not_deployed",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L144",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_unchanged_offer_refresh_preserves_review",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L132",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_departure_revalidation_fences_private_review",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L132-L136",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_inflight_action_survives_periodic_read",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L136-L138",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_oauth",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_direct_login_selected_plan",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L139-L154",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_single_contextual_management_action",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L140-L142",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_specific_subscription_restriction_copy",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L142-L144",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_local_ux_review_not_deployed",
+      "target": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_owner",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L144",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_app_uninstall_uninstall_client_uninstallclient",
+      "target": "apps_web_app_uninstall_uninstall_client_reviewedequal",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/uninstall/uninstall-client.tsx",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [
@@ -729927,6 +730215,22 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_review_refresh_authority",
+      "label": "Stable review retains server authority across reads and departure",
+      "nodes": [
+        "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_page",
+        "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_unchanged_offer_refresh_preserves_review",
+        "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_departure_revalidation_fences_private_review",
+        "docs_superpowers_plans_2026_11_04_uninstall_retention_staging_inflight_action_survives_periodic_read"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md",
+      "source_location": "L130-L138",
       "_origin": "semantic"
     }
   ],

@@ -710,6 +710,20 @@ test("lifetime shared first grant prevents a renewal even when first checkout ou
 	f.account.grant = "first";
 	assert.equal((await f.service.offer(userId)).kind, "manage");
 });
+
+for (const [status, expected] of [
+	["past_due", /payment is overdue.*Update your payment details/],
+	["unpaid", /payment is overdue.*Update your payment details/],
+	["incomplete", /payment is incomplete.*finish it/],
+	["paused", /billing is paused.*Review it/],
+	["trialing", /no paid renewal.*Check your subscription details/],
+] as const) test(`${status} explains the billing restriction without offering checkout`, async () => {
+	const f = fixture(); f.paid(); f.s.status = status;
+	const offer = await f.service.offer(userId);
+	assert.equal(offer.kind, "manage");
+	assert.match("reason" in offer ? offer.reason : "", expected);
+	assert.equal(f.checkoutCalls, 0);
+});
 test("multiple/foreign subscriptions and missing catalog fail closed", async () => {
 	const f = fixture();
 	f.setSubs([f.s, { ...f.s, id: "sub_two" }]);

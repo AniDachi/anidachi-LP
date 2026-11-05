@@ -216,7 +216,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 		if (sub && customer) {
 			if (account.grant)
 				return manage(
-					"An uninstall offer was already used or reserved for this account. Contact support if a previous checkout needs reconciliation.",
+					"This account has already used or reserved its one-time discount. Contact support for help with the earlier offer.",
 				);
 			const reason = renewalIneligibility(sub, catalog, customer, userId);
 			if (reason) return manage(reason);
@@ -231,14 +231,14 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				)
 			)
 				return manage(
-					"This offer requires a previously paid invoice for the current subscription.",
+					"A paid month is required before this renewal offer is available. Check your subscription payments.",
 				);
 			if (!account.subscriptionIds.includes(sub.id))
 				throw new Error("Subscription reconciliation required.");
 			const item = sub.items.data[0];
 			if (item.current_period_end * 1000 <= now() + 3600_000)
 				return manage(
-					"Your next invoice is too close to confirm this offer safely.",
+					"Your renewal is less than an hour away. It’s too late to apply this offer to that bill.",
 				);
 			const coupon = await deps.stripe.coupons.retrieve(
 				config.renewalCoupon,
@@ -274,7 +274,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 					i.lines.data.some((l) => l.period.start === item.current_period_end),
 				)
 			)
-				return manage("Your next invoice has already been issued.");
+				return manage("Your next bill is already being processed, so this offer can’t change it.");
 			const planCode = catalog.plus.id === item.price.id ? "plus" : "pro";
 			const price = calculateUninstallPrice(
 				planCode,
@@ -322,7 +322,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				} as UninstallOffer,
 			};
 		if (customer?.discount)
-			return manage("Your account already has a discount.");
+			return manage("Your account already has a discount. Discounts can’t be combined.");
 		if (!config.firstCoupon)
 			return {
 				offer: {

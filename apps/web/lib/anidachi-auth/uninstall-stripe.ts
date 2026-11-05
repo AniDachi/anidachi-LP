@@ -106,25 +106,34 @@ export function renewalIneligibility(
 		sub.livemode
 	)
 		throw new Error("Subscription owner mismatch.");
+	if (sub.status === "past_due" || sub.status === "unpaid")
+		return "Your subscription payment is overdue. Update your payment details in subscription management.";
+	if (sub.status === "incomplete")
+		return "Your subscription payment is incomplete. Open subscription management to finish it.";
+	if (sub.status === "paused")
+		return "Subscription billing is paused. Review it in subscription management.";
 	if (sub.status !== "active")
-		return "This offer requires an active paid monthly subscription.";
+		return "This subscription has no paid renewal available for this offer. Check your subscription details.";
 	if (sub.cancel_at_period_end || sub.cancel_at)
-		return "Renewal is canceled. You can manage your subscription below.";
+		return "Renewal is canceled, so there is no next monthly renewal to discount.";
+	if (sub.pause_collection)
+		return "Subscription billing is paused. Review it in subscription management.";
+	if (sub.schedule || sub.pending_update)
+		return "A subscription change is pending. Check it in subscription management before trying again.";
 	if (
-		sub.schedule ||
-		sub.pending_update ||
-		sub.pause_collection ||
 		sub.pending_invoice_item_interval ||
 		sub.billing_thresholds
 	)
-		return "A pending subscription change prevents this offer.";
+		return "Your subscription has special billing settings. Review them in subscription management.";
 	if (
 		sub.discounts.length ||
 		customer.discount ||
 		sub.items.data.some((i) => i.discounts.length)
 	)
-		return "This subscription already has a discount.";
+		return "Your subscription already has a discount. Discounts can’t be combined.";
 	const item = sub.items.data[0];
+	if (item?.price.recurring?.interval === "year")
+		return "This offer covers one month and doesn’t apply to yearly plans.";
 	if (
 		sub.items.has_more ||
 		sub.items.data.length !== 1 ||
@@ -134,7 +143,7 @@ export function renewalIneligibility(
 		item.price.recurring?.interval !== "month" ||
 		item.price.recurring.interval_count !== 1
 	)
-		return "This offer is available only for monthly Plus or Pro.";
+		return "Only standard monthly Plus and Pro plans qualify. Check your subscription details.";
 	if (
 		!Number.isSafeInteger(item.current_period_end) ||
 		!Number.isSafeInteger(item.current_period_start)

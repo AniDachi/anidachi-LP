@@ -127,6 +127,22 @@ action; eligible former users share the new-subscription offer. Render no
 wrong-account/free flash during refresh.
 Show honest retry state on unavailable; no purchase when unverified.
 
+November 5 local UX correction (awaiting owner review, not deployed): periodic
+offer refresh preserves the open step and selected plan when owner and displayed
+terms match. Focus/visibility changes temporarily hide account-specific details
+and invalidate actions, then restore the same step after verification. A changed
+owner, price, eligibility or renewal date closes financial review; reinstall
+instructions remain open. Failed reads preserve a retryable step without old
+prices. Periodic reads must not discard an in-flight action result. The action's
+own fresh read still validates the reviewed token/expiry and displayed terms;
+server ownership, snapshot and idempotency checks remain authoritative.
+Signed-out CTA goes directly to login with the selected plan in the return URL.
+Management appears once for subscribers, with no duplicate action on restricted
+offers or irrelevant management link on verified new-subscription offers.
+Anonymous/unverified users retain account management access. Restriction copy
+distinguishes overdue/incomplete payment, paused billing, canceled renewal,
+yearly plans, existing discounts and pending changes without changing eligibility.
+
 First purchase: two monthly plan choices with server price, then explicit
 continue to real Stripe checkout. Signed-out selection survives OAuth at
 `/uninstall?plan=plus|pro`; authenticate through existing login, re-evaluate
