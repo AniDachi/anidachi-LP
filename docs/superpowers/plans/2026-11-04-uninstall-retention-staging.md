@@ -13,9 +13,10 @@ subscriber offer; production and Store release remain separate.
 - The extension opens the channel's `/uninstall` URL after removal, without any
   identity, token or installation identifier in the URL. A visit is not proof of
   uninstall. Page/API are noindex, not in sitemap, and respect the staging gate.
-- First purchase: 40% off the first paid monthly Plus or Pro invoice; no previous
-  positive paid subscription invoice, including paid invoices later refunded.
-  Credits settling a positive subscription invoice count as paid history.
+- New subscription: 40% off its first monthly Plus or Pro invoice, for both new
+  and former subscribers without current access or a pending subscription.
+  Owner correction November 5: ordinary paid history does not consume this
+  offer. Only the shared lifetime uninstall grant controls prior use/reservation.
 - Retention: 40% off exactly the next eligible monthly renewal of the same active
   paid subscription. Current period, renewal date and plan stay unchanged; no
   immediate charge, new subscription, cancellation reversal or trial creation.
@@ -25,7 +26,10 @@ subscriber offer; production and Store release remain separate.
   Distinct coupon IDs may implement these paths but cannot reset the shared right.
   No stacking; yearly, past-due, incomplete, scheduled cancellation, active trial,
   ambiguous ownership, existing discounts and pending subscription changes are
-  ineligible. Previously paid free accounts have survey and normal pricing only.
+  ineligible. Former subscribers without an active subscription can use their
+  unused allowance for a new monthly subscription. A redeemed personal promotion
+  cannot be reissued; an unused reservation can resume only the same verified
+  customer-bound code. Missing or inconsistent evidence requires reconciliation.
 - Campaigns are explicitly enabled for the staging rehearsal, with no invented
   deadline/urgency. LIVE configuration remains absent. Disabling new claims must
   preserve already accepted promises and retry reconciliation.
@@ -74,7 +78,8 @@ frozen campaign identity in reservation attribution, correct policy matching,
 retire incompatible sessions before exposing a new URL, reconcile ambiguous
 creation. Use an account-bound one-redemption Stripe promotion (no public code
 required), apply it automatically to Checkout, disable manual stacking, validate
-Stripe ownership/metadata/catalog and prior positive invoices. Do not reuse the
+Stripe ownership/metadata/catalog and the durable grant plus promotion redemption
+state. Prior ordinary invoices do not exclude returning subscribers. Do not reuse the
 Product Hunt campaign or leak coupon/promo IDs to client. Both old and new
 reservation recovery paths must preserve frozen terms, including normal checkout
 after an abandoned offer and vice versa. No browser-supplied Stripe IDs.
@@ -118,7 +123,8 @@ Report all API shapes and SQL/deployment dependencies for Task 2 and operator.
 Port the accepted prototype into `apps/web/app/uninstall` using actual site
 components/tokens; GET server offer, no mock scenario selector. Preserve compact
 layout, 14px readable one-line terms, paid cancellation notice with short Manage
-action; former survey-first. Render no wrong-account/free flash during refresh.
+action; eligible former users share the new-subscription offer. Render no
+wrong-account/free flash during refresh.
 Show honest retry state on unavailable; no purchase when unverified.
 
 First purchase: two monthly plan choices with server price, then explicit
@@ -135,7 +141,7 @@ stale/background responses cannot overwrite another account or imply success.
 Monthly renewal opens a confirmation with actual next amount/date and ordinary
 price. Explicit Apply to next renewal invokes claim; button disappears only after
 verified accepted response; refreshing restores claim. Management always remains
-available. Annual/existing discount/cancellation/past_due/former get truthful
+available. Annual/existing discount/cancellation/past_due/used allowance get truthful
 management/regular pricing with no invented discount. No legacy trial UI.
 
 Optional survey reason list matches prototype, 500-char optional note, disabled

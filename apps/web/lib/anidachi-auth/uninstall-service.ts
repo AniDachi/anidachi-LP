@@ -12,6 +12,7 @@ import {
 	type UninstallOffer,
 } from "./uninstall-offer";
 import { uninstallRevisions } from "./uninstall-revision";
+import { uninstallPromotionStatus } from "./uninstall-promotion";
 import type { readUninstallAccount, reserveRetention } from "./uninstall-store";
 import {
 	hasPositiveSubscriptionInvoice,
@@ -174,7 +175,6 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 		const catalog = await deps.catalog();
 		let customer: Stripe.Customer | null = null;
 		let active: Stripe.Subscription[] = [];
-		let paid = account.hasPaid;
 		let paidInvoices: Stripe.Invoice[] = [];
 		if (account.customerId) {
 			const [raw, subs, invoices] = await Promise.all([
@@ -199,8 +199,9 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				)
 			)
 				throw new Error("Offer subscription history unavailable.");
-			paid =
-				hasPositiveSubscriptionInvoice(invoices, account.customerId) || paid;
+			// Validate history ownership/completeness; prior ordinary payments do
+			// not consume the lifetime uninstall discount.
+			hasPositiveSubscriptionInvoice(invoices, account.customerId);
 			paidInvoices = invoices.data;
 			active = subs.data.filter(
 				(s) => !["canceled", "incomplete_expired"].includes(s.status),
@@ -312,14 +313,6 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				terms,
 			};
 		}
-		if (paid)
-			return {
-				offer: {
-					...base,
-					kind: "former",
-					reason: "Previous subscribers can return using regular pricing.",
-				} as UninstallOffer,
-			};
 		if (account.grant === "renewal")
 			return {
 				offer: {
@@ -338,6 +331,27 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 					reason: "No first-month offer is currently available.",
 				} as UninstallOffer,
 			};
+		if (account.grant === "first") {
+			const binding = account.firstBinding;
+			if (!binding || binding.user_id !== userId ||
+				binding.stripe_customer_id !== account.customerId ||
+				binding.coupon_id !== config.firstCoupon)
+				throw new Error("First-month reservation needs reconciliation.");
+			const codes = await deps.stripe.promotionCodes.list(
+				{ customer: binding.stripe_customer_id, limit: 100 }, REQUEST,
+			);
+			const owned = codes.data.filter((c) =>
+				c.metadata?.anidachiCampaign === UNINSTALL_FIRST_CAMPAIGN);
+			if (codes.has_more || owned.length !== 1)
+				throw new Error("First-month promotion needs reconciliation.");
+			const status = uninstallPromotionStatus(owned[0], binding);
+			if (status !== "available") return {
+				offer: { ...base, kind: "disabled", reason: status === "used"
+					? "Your one-time 40% discount has already been used."
+					: "Your reserved discount is no longer available. Contact support for help."
+				} as UninstallOffer,
+			};
+		}
 		// Stripe history alone cannot see an active legacy entitlement or a
 		// pending cardless activation. Use the same purchase authority as Checkout
 		// before presenting a financial action or reaching its reservation adapter.

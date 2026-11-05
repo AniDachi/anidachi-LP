@@ -1,5 +1,21 @@
 # Current Development State
 
+## Returning subscribers: uninstall offer correction, November 5, 2026
+
+Local candidate, awaiting visual acceptance and a separate staging delivery.
+The owner clarified that former subscribers without a current subscription may
+use an unused lifetime 40% allowance for the first month of a new monthly Plus/Pro
+subscription. Ordinary paid history no longer excludes them. Both offer reads
+and promotion provisioning use this rule; shared purchase authority still blocks
+active access and pending changes. Existing first-month grants require a verified
+binding and customer-bound promotion: unused resumes, redeemed/inactive does not
+offer another discount, missing or inconsistent evidence fails closed.
+The real page describes a new subscription rather than a first-ever purchase.
+The existing shared SQL lifetime constraint and one-redemption Stripe restriction
+remain unchanged. No migration, coupon replacement or extension change is needed.
+The local scenario gallery uses real web components with isolated fixture APIs;
+it is visual evidence, not Stripe, authenticated staging or production acceptance.
+
 ## Uninstall offers and feedback, November 4, 2026
 
 The owner authorized the real `/uninstall` flow for staging after reviewing the

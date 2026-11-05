@@ -103,7 +103,7 @@ test("background action results cannot show success or navigate; focusing reload
   pending.resolve(Response.json(claimed)); await flush();
   assert.doesNotMatch(container.textContent!, /Discount saved/);
   current = { ...first, ownerUserId: "b" }; await focus();
-  assert.match(container.textContent!, /Your first month/); assert.doesNotMatch(container.textContent!, /Discount saved/);
+  assert.match(container.textContent!, /One month of Plus or Pro/); assert.doesNotMatch(container.textContent!, /Discount saved/);
 });
 
 test("out of order offer responses cannot replace current owner", async () => {
@@ -111,7 +111,7 @@ test("out of order offer responses cannot replace current owner", async () => {
   await focus();
   current = renewal; get = async () => Response.json(current); await focus();
   pending.resolve(Response.json(first)); await flush();
-  assert.match(container.textContent!, /Your next month of Pro/); assert.doesNotMatch(container.textContent!, /Your first month/);
+  assert.match(container.textContent!, /Your next month of Pro/); assert.doesNotMatch(container.textContent!, /One month of Plus or Pro/);
 });
 
 test("renewal is explicit, shows actual UTC date, then restores verified accepted claim", async () => {
@@ -191,10 +191,28 @@ test("staging reinstall explains actual unpacked installation and dialog closes 
   assert.equal(dialog.hasAttribute("open"), false);
 });
 
-test("former account starts with survey and regular plans", async () => {
+test("legacy former response remains readable during rolling deployment", async () => {
   await mount(); current = { kind: "former", ownerUserId: "a", validForMs: 60000, reason: "Previously paid" }; await focus();
   assert.equal(container.querySelector(".uninstall-offer"), null); assert.match(container.textContent!, /Why did you uninstall/);
   assert.equal(container.querySelector('a[href="/pricing?billing=monthly"]')?.textContent, "View plans ↗");
+});
+
+test("new-subscription screens also describe returning subscribers and disclose one lifetime discount", async () => {
+  await mount();
+  assert.match(container.textContent!, /One month of Plus or Pro/);
+  assert.doesNotMatch(container.textContent!, /First purchase only|Welcome back|first paid month/);
+  await click("Get 40% off");
+  assert.match(container.querySelector("dialog")!.textContent!, /first month of your new subscription/);
+  assert.match(container.querySelector("dialog")!.textContent!, /Once per account/);
+  await click("Continue");
+  assert.match(container.querySelector("dialog")!.textContent!, /first month of your new subscription/);
+});
+
+test("used discount explains why no new offer is available", async () => {
+  await mount(); current = { kind: "disabled", ownerUserId: "a", validForMs: 60000, reason: "Your one-time 40% discount has already been used." }; await focus();
+  assert.match(container.textContent!, /already been used/);
+  assert.doesNotMatch(container.textContent!, /Get 40% off/);
+  assert.ok(container.querySelector('a[href="/pricing?billing=monthly"]'));
 });
 
 test("management checks the current owner and uses the server management path", async () => {

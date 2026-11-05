@@ -9,7 +9,7 @@ import {
 } from "./retention-invoice";
 import { retentionBillingSnapshot } from "./uninstall-billing";
 import { uninstallCampaignConfig } from "./uninstall-config";
-import { ensureUninstallPromotion } from "./uninstall-promotion";
+import { ensureUninstallPromotion, type UninstallBinding } from "./uninstall-promotion";
 import {
 	createUninstallService,
 	type UninstallServiceDeps,
@@ -105,6 +105,7 @@ function fixture() {
 	const s = subscription();
 	const c = customer();
 	let invoices: Stripe.Invoice[] = [];
+	let codes: Stripe.PromotionCode[] = [];
 	let subs: Stripe.Subscription[] = [];
 	let clock = at;
 	let claim: RetentionClaim | null = null;
@@ -115,12 +116,14 @@ function fixture() {
 		subscriptionIds: ["sub_owner"],
 		hasPaid: false,
 		grant: undefined as "first" | "renewal" | undefined,
+		firstBinding: null as UninstallBinding | null,
 	};
 	const config = {
 		firstCoupon: coupon().id as string | null,
 		renewalCoupon: coupon(UNINSTALL_RENEWAL_CAMPAIGN).id as string | null,
 	};
 	const stripe = {
+		promotionCodes: { list: async () => list(codes) },
 		customers: { retrieve: async () => c },
 		subscriptions: { list: async () => list(subs), retrieve: async () => s },
 		invoices: {
@@ -187,6 +190,22 @@ function fixture() {
 		},
 		setInvoices(value: Stripe.Invoice[]) {
 			invoices = value;
+		},
+		reserveFirst() {
+			account.grant = "first";
+			account.firstBinding = {
+				id: "binding", user_id: userId, stripe_customer_id: "cus_owner",
+				coupon_id: coupon().id, created_at: new Date(at).toISOString(),
+			};
+			const code = {
+				id: "promo_owner", customer: "cus_owner", coupon: coupon(),
+				max_redemptions: 1, expires_at: null, times_redeemed: 0,
+				active: true, livemode: false,
+				restrictions: { first_time_transaction: false },
+				metadata: { userId, campaignBindingId: "binding", anidachiCampaign: UNINSTALL_FIRST_CAMPAIGN },
+			} as unknown as Stripe.PromotionCode;
+			codes = [code];
+			return code;
 		},
 		setSubs(value: Stripe.Subscription[]) {
 			subs = value;
@@ -409,7 +428,7 @@ test("checkout rejects wrong owner, changed amount and expired revision before s
 	);
 	assert.equal(f.checkoutCalls, 0);
 });
-test("zero-dollar invoices permit first purchase, positive paid/refunded/credit invoices do not", async () => {
+test("ordinary paid/refunded/credit history does not consume the uninstall discount", async () => {
 	for (const invoice of [
 		paidInvoice(),
 		{ ...paidInvoice(), amount_paid: 0 },
@@ -423,7 +442,57 @@ test("zero-dollar invoices permit first purchase, positive paid/refunded/credit 
 	f.setInvoices([paidInvoice(0)]);
 	assert.equal((await f.service.offer(userId)).kind, "first_month");
 	f.setInvoices([paidInvoice()]);
-	assert.equal((await f.service.offer(userId)).kind, "former");
+	assert.equal((await f.service.offer(userId)).kind, "first_month");
+});
+for (const history of ["database", "stripe", "both"] as const)
+	test(`former subscriber with ${history} paid history can buy a discounted new month`, async () => {
+		const f = fixture();
+		f.account.hasPaid = history !== "stripe";
+		if (history !== "database") f.setInvoices([paidInvoice()]);
+		f.s.status = "canceled";
+		f.setSubs([f.s]);
+		const offer = await f.service.offer(userId);
+		assert.equal(offer.kind, "first_month");
+		if (offer.kind !== "first_month") throw Error("Missing returning offer");
+		for (const price of offer.prices) await f.service.checkout(userId, {
+			expectedOwnerUserId: userId, revision: offer.revision,
+			planCode: price.planCode, expectedPrice: price, requestId: userId,
+		}, "https://anidachi.test");
+		assert.equal(f.checkoutCalls, 2);
+	});
+test("unused first-month reservation survives ordinary paid history; redemption prevents another offer and checkout", async () => {
+	const f = fixture();
+	f.account.hasPaid = true; f.setInvoices([paidInvoice()]);
+	const code = f.reserveFirst();
+	const offer = await f.service.offer(userId);
+	assert.equal(offer.kind, "first_month");
+	if (offer.kind !== "first_month") throw Error("Missing reserved offer");
+	code.times_redeemed = 1; code.active = false;
+	const used = await f.service.offer(userId);
+	assert.equal(used.kind, "disabled");
+	assert.match("reason" in used ? used.reason : "", /already been used/);
+	await assert.rejects(() => f.service.checkout(userId, {
+		expectedOwnerUserId: userId, revision: offer.revision,
+		planCode: "plus", expectedPrice: offer.prices[0], requestId: userId,
+	}, "https://anidachi.test"));
+	assert.equal(f.checkoutCalls, 0);
+});
+test("reserved renewal cannot become a new purchase after the subscription ends", async () => {
+	const f = fixture(); f.account.hasPaid = true; f.account.grant = "renewal";
+	assert.equal((await f.service.offer(userId)).kind, "disabled");
+});
+test("inactive, foreign, changed and missing first promotions never expose a fresh allowance", async () => {
+	const f = fixture(); const code = f.reserveFirst();
+	code.active = false;
+	assert.equal((await f.service.offer(userId)).kind, "disabled");
+	code.active = true; code.metadata!.userId = "foreign";
+	assert.equal((await f.service.offer(userId)).kind, "unavailable");
+	code.metadata!.userId = userId; code.max_redemptions = 2;
+	assert.equal((await f.service.offer(userId)).kind, "unavailable");
+	code.max_redemptions = 1; f.account.firstBinding!.coupon_id = "changed";
+	assert.equal((await f.service.offer(userId)).kind, "unavailable");
+	f.account.firstBinding = null;
+	assert.equal((await f.service.offer(userId)).kind, "unavailable");
 });
 test("monthly active paid account reserves exact next renewal; repeats and reload restore accepted state after expiry/disable", async () => {
 	const f = fixture();
@@ -970,7 +1039,7 @@ for (const [label, mutate] of [
 			"display exclusion does not release the durable promise",
 		);
 	});
-test("first promotion is account-bound and one-redemption; late retry does not mint a fresh allowance", async () => {
+for (const hasPaid of [false, true]) test(`new-subscription promotion stays account-bound and single-use (previously paid: ${hasPaid})`, async () => {
 	const catalog = { plus: price("plus", 799), pro: price("pro", 1499) };
 	let codes: Stripe.PromotionCode[] = [];
 	let writes = 0;
@@ -984,7 +1053,7 @@ test("first promotion is account-bound and one-redemption; late retry does not m
 	const stripe = {
 		coupons: { retrieve: async () => coupon() },
 		customers: { retrieve: async () => customer() },
-		invoices: { list: async () => list([]) },
+		invoices: { list: async () => list(hasPaid ? [paidInvoice()] : []) },
 		promotionCodes: {
 			list: async () => list(codes),
 			create: async (
@@ -1015,7 +1084,7 @@ test("first promotion is account-bound and one-redemption; late retry does not m
 		now: () => at,
 		accountHistory: async () => ({
 			customerIds: ["cus_owner"],
-			hasPaid: false,
+			hasPaid,
 		}),
 		claim: async () => binding,
 	};

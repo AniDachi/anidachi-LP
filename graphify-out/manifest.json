@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793801091.5901692,
-    "seen": 1793804855.513403,
+    "mtime": 1793862562.5112047,
+    "seen": 1793862955.931723,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "920c1fb3fdc21685f0432307b7305f32"
+    "semantic_hash": "b6722561855394ffa8477a4b99b0a924"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3576,10 +3576,10 @@
     "semantic_hash": "297535b2a1e217a5aec894d4937eeb74"
   },
   "docs/social-pricing-model.md": {
-    "mtime": 1793800330.3149548,
-    "seen": 1793804855.513407,
+    "mtime": 1793862562.4910357,
+    "seen": 1793862955.931726,
     "ast_hash": "24a8c5405395a7a64e8aec2f8b7dfe11",
-    "semantic_hash": "f3c7e95eacc0dff8c3a444f8d1db1579"
+    "semantic_hash": "f650e4833dfa92d4700ff43012a73dcd"
   },
   "docs/staging-acceptance-checklist.md": {
     "mtime": 1789490459.0094938,
@@ -11856,9 +11856,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/uninstall/uninstall-client.tsx": {
-    "mtime": 1793803948.8618248,
-    "seen": 1793804855.432758,
-    "ast_hash": "572eee2bc98aacf5fdf15157c39d6d97",
+    "mtime": 1793862458.0831501,
+    "seen": 1793862740.6413581,
+    "ast_hash": "dc2ea58097571762a5e5f7be53171627",
     "semantic_hash": ""
   },
   "apps/web/app/uninstall/uninstall-survey.tsx": {
@@ -11904,9 +11904,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-offer.test.ts": {
-    "mtime": 1793802507.7776992,
-    "seen": 1793804855.432766,
-    "ast_hash": "904847b024d59989b37b7744fd49908a",
+    "mtime": 1793862530.628388,
+    "seen": 1793862740.6413682,
+    "ast_hash": "90a173a44221d4ab4dcbf883c79d5093",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-offer.ts": {
@@ -11916,9 +11916,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-promotion.ts": {
-    "mtime": 1793800404.3123455,
-    "seen": 1793804855.432767,
-    "ast_hash": "3718df80d7a5e3e88573955ed23db4f8",
+    "mtime": 1793862458.01467,
+    "seen": 1793862740.641372,
+    "ast_hash": "1ef5f662a1dcfa77e780933c49774dd0",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-revision.ts": {
@@ -11940,15 +11940,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-service.ts": {
-    "mtime": 1793804346.6069713,
-    "seen": 1793804855.432769,
-    "ast_hash": "9905f9bb7cb685414cd6f42786a4621c",
+    "mtime": 1793862458.0618472,
+    "seen": 1793862740.641375,
+    "ast_hash": "6af269eff16e88f397d1d8c33f173c4f",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-store.ts": {
-    "mtime": 1793800404.3084776,
-    "seen": 1793804855.43277,
-    "ast_hash": "e359fec8be15aebecf79d48b2dbf00a5",
+    "mtime": 1793862458.0433524,
+    "seen": 1793862740.641379,
+    "ast_hash": "bc44ec448e8a935521487d1d555489d7",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-stripe.ts": {
@@ -11964,9 +11964,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/uninstall-client.test.ts": {
-    "mtime": 1793804330.2049959,
-    "seen": 1793804855.4327738,
-    "ast_hash": "a20904086142d85b36dcb80847a57f03",
+    "mtime": 1793862722.8270204,
+    "seen": 1793862740.641383,
+    "ast_hash": "996c6bec98160222d0f81fc22ce6f6a4",
     "semantic_hash": ""
   },
   "apps/web/scripts/stripe/uninstall-hosted-proof.ts": {
@@ -11994,9 +11994,9 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md": {
-    "mtime": 1793799524.1128983,
-    "seen": 1793804855.513408,
+    "mtime": 1793862722.8496306,
+    "seen": 1793862955.931728,
     "ast_hash": "",
-    "semantic_hash": "24a17d60def8e5a533441f2fd8ad14ef"
+    "semantic_hash": "73ff3f3c80adcaa3c76fae1cabad53bc"
   }
 }
