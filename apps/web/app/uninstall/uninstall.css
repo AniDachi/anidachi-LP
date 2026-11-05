@@ -4,7 +4,7 @@
 .uninstall-page button,.uninstall-page a{touch-action:manipulation}
 .uninstall-page button{cursor:pointer}.uninstall-page button:disabled{cursor:default;opacity:.46}
 .uninstall-page :is(button,a,input,textarea):focus-visible{outline:2px solid var(--ani-focus);outline-offset:4px}
-.uninstall-page :is(h1,h2,h3,p){margin:0}.uninstall-muted{color:var(--ani-muted)}
+.uninstall-page :is(h1,h2,h3,p){margin:0}
 .uninstall-header{height:68px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ani-line);max-width:1600px;margin:auto}
 .uninstall-brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-size:20px;font-weight:600;letter-spacing:-.5px}
 .uninstall-home{color:var(--ani-muted);text-decoration:none;font-size:14px;display:flex;gap:10px;align-items:center}
@@ -17,7 +17,6 @@
 .uninstall-page .uninstall-terms{margin:14px 0 0;font-size:14px;line-height:1.5;color:#b7b2aa;text-wrap:pretty}.uninstall-nowrap{white-space:nowrap}
 .uninstall-divider{height:1px;background:var(--ani-line);margin:27px 0 24px}
 .uninstall-survey fieldset{border:0;padding:0;margin:0;min-inline-size:0}.uninstall-survey legend{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;padding:0;margin:0 0 20px;font-size:18px;font-weight:600;letter-spacing:-.35px}
-.uninstall-optional{font-size:14px;color:var(--ani-muted);font-weight:400;letter-spacing:0}
 .uninstall-reasons{display:grid;grid-template-columns:1fr 1fr;gap:10px}.uninstall-reason{display:flex;align-items:center;gap:11px;padding:10px 14px;min-height:44px;border:1px solid var(--ani-control-border);border-radius:var(--ani-radius-pill);font-size:13px;cursor:pointer;transition:background 180ms,border-color 180ms}
 .uninstall-reason:hover{background:var(--ani-hover);border-color:var(--ani-control-border-hover)}.uninstall-reason:has(input:checked){background:var(--ani-selected-quiet);border-color:#eee5d966}
 .uninstall-reason input{appearance:none;width:16px;height:16px;flex:none;border:1.5px solid var(--ani-muted);border-radius:50%;margin:0;display:grid;place-items:center}
@@ -30,6 +29,7 @@
 .uninstall-note textarea::placeholder{color:var(--ani-muted)}.uninstall-note-footer{display:flex;justify-content:space-between;gap:16px;color:var(--ani-muted);font-size:11px;margin-top:4px}
 .uninstall-thanks{min-height:210px;display:flex;align-items:center;justify-content:center;gap:14px}.uninstall-thanks h2{font-size:18px;letter-spacing:-.4px}.uninstall-success-icon{display:grid;place-items:center;width:38px;height:38px;flex:none;background:#ffac6610;color:#ffb578;border:1px solid #966b414f;border-radius:50%;font-size:20px}
 .uninstall-title{font-size:25px;letter-spacing:-.7px;font-weight:600;line-height:1.3;text-wrap:balance}.uninstall-page .uninstall-description{color:var(--ani-muted);font-size:14px;line-height:1.65;margin:12px auto 24px;max-width:380px}
+.uninstall-title+:is(.uninstall-primary,.uninstall-text-link){margin-top:24px}
 .uninstall-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px;margin-top:24px}.uninstall-text-link{border:0;background:none;padding:8px 0;display:inline-flex;align-items:center;gap:6px;color:var(--ani-muted);font-size:13px!important;line-height:1.3;text-decoration:none;transition:color 160ms;min-height:44px}
 .uninstall-text-link:hover{color:var(--ani-text)}.uninstall-text-link span{font-size:16px}.uninstall-management{text-align:center}
 .uninstall-card[data-survey-only=true] legend{flex-direction:column;gap:5px;font-size:25px;margin-bottom:24px}.uninstall-card[data-survey-only=true] .uninstall-secondary{background:var(--ani-primary);color:var(--ani-on-primary);min-width:180px;font-weight:600}
