@@ -173,7 +173,11 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 					valid: true,
 				} as Stripe.Coupon;
 				if (creationTimeout) throw new Error("lost response");
-				return coupon;
+				// Stripe keeps product applicability hidden unless explicitly expanded,
+				// even when applies_to was supplied in the creation request.
+				const response = { ...coupon };
+				if (!input.expand?.includes("applies_to")) delete response.applies_to;
+				return response;
 			},
 		},
 	} as unknown as Stripe;
@@ -238,7 +242,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 const prepare = (f: ReturnType<typeof fixture>) =>
 	f.service.prepare("user_1", "cus_1", "sub_1");
 
-test("native offer reserves before creation and reuses exactly one finite monthly coupon without consuming allowance", async () => {
+test("native offer returns a newly created coupon on the first request and reuses it without consuming allowance", async () => {
 	const f = fixture();
 	const id = await prepare(f);
 	assert.equal(id, "cancel_retention_11111111111141118111111111111111");
@@ -252,6 +256,7 @@ test("native offer reserves before creation and reuses exactly one finite monthl
 		max_redemptions: 1,
 		redeem_by: 2_000_000_600,
 		applies_to: { products: ["prod_plus", "prod_pro"] },
+		expand: ["applies_to"],
 		metadata: {
 			anidachiCampaign: "cancellation_retention_v1",
 			offerId: f.pending!.id,
