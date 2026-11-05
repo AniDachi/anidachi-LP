@@ -2,7 +2,9 @@
 
 ## Returning subscribers: uninstall offer correction, November 5, 2026
 
-Local candidate, awaiting visual acceptance and a separate staging delivery.
+Approved by the owner for staging delivery on November 5 after local review.
+The delivery PR records the deployed commit and hosted checks; full hosted flow
+acceptance remains with the owner before any production promotion.
 The owner clarified that former subscribers without a current subscription may
 use an unused lifetime 40% allowance for the first month of a new monthly Plus/Pro
 subscription. Ordinary paid history no longer excludes them. Both offer reads

@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793862562.5112047,
-    "seen": 1793862955.931723,
+    "mtime": 1793865671.4301844,
+    "seen": 1793865855.708569,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "b6722561855394ffa8477a4b99b0a924"
+    "semantic_hash": "1546f67e1a015bb79859bf0cd1ab930c"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -11994,9 +11994,9 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-04-uninstall-retention-staging.md": {
-    "mtime": 1793865245.9105127,
-    "seen": 1793865453.354912,
+    "mtime": 1793865671.4499278,
+    "seen": 1793865855.708571,
     "ast_hash": "",
-    "semantic_hash": "1b0c9c8d4a49392b3b24a39c490af0c4"
+    "semantic_hash": "9e55bce1fe2e79233472e325d1a08a5a"
   }
 }

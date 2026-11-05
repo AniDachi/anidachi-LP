@@ -127,7 +127,7 @@ action; eligible former users share the new-subscription offer. Render no
 wrong-account/free flash during refresh.
 Show honest retry state on unavailable; no purchase when unverified.
 
-November 5 local UX correction (awaiting owner review, not deployed): periodic
+November 5 UX correction, approved for staging delivery after local review: periodic
 offer refresh preserves the open step and selected plan when owner and displayed
 terms match. Focus/visibility changes temporarily hide account-specific details
 and invalidate actions, then restore the same step after verification. A changed
