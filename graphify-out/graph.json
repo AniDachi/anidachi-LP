@@ -227679,7 +227679,7 @@
       "label": "readBillingPromotions()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L25",
+      "source_location": "L46",
       "_callable": true,
       "_origin": "ast"
     },
@@ -228223,7 +228223,7 @@
       "label": "signal()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "_callable": true,
       "_origin": "ast"
     },
@@ -228232,7 +228232,7 @@
       "label": "rpc()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "_callable": true,
       "_origin": "ast"
     },
@@ -228241,7 +228241,7 @@
       "label": "readUninstallAccount()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "_callable": true,
       "_origin": "ast"
     },
@@ -229667,7 +229667,7 @@
       "label": "cancellationBillingSnapshot()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
-      "source_location": "L9",
+      "source_location": "L22",
       "_callable": true,
       "_origin": "ast"
     },
@@ -229995,7 +229995,7 @@
       "label": "fixture()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "_callable": true,
       "_origin": "ast"
     },
@@ -230004,7 +230004,7 @@
       "label": "pendingOutageFixture()",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L170",
+      "source_location": "L172",
       "_callable": true,
       "_origin": "ast"
     },
@@ -230013,7 +230013,7 @@
       "label": "defaultDeps",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L16",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -230021,7 +230021,7 @@
       "label": "accountReadDeps",
       "file_type": "code",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -230145,6 +230145,51 @@
       "file_type": "code",
       "source_file": "apps/web/supabase/tests/cancellation_retention.test.sql",
       "source_location": "L25",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_cancellation_retention_billing_iscancellationbillingproviderunavailable",
+      "label": "isCancellationBillingProviderUnavailable()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
+      "source_location": "L9",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_laterproviderfixture",
+      "label": "laterProviderFixture()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L295",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_attachpartialnativecoupon",
+      "label": "attachPartialNativeCoupon()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L317",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_unavailableprovider",
+      "label": "unavailableProvider()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L327",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_uninstall_billing_server_islegacydiscount",
+      "label": "isLegacyDiscount()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L23",
+      "_callable": true,
       "_origin": "ast"
     }
   ],
@@ -724633,7 +724678,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -724645,7 +724690,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724656,7 +724701,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L4",
+      "source_location": "L9",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -724668,7 +724713,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L4",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724679,7 +724724,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L5",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724690,7 +724735,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L5",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724701,7 +724746,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L6",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724712,7 +724757,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L6",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724723,7 +724768,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L6",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724734,7 +724779,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L7",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724745,7 +724790,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L7",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724756,7 +724801,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L8",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724767,7 +724812,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L8",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724778,7 +724823,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L8",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724789,7 +724834,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724800,7 +724845,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724811,7 +724856,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724822,7 +724867,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724833,7 +724878,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L9",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -724843,7 +724888,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L25",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727184,7 +727229,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727195,7 +727240,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727206,7 +727251,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -727218,7 +727263,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727229,7 +727274,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727240,7 +727285,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727251,7 +727296,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727262,7 +727307,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727273,7 +727318,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -727285,7 +727330,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727295,7 +727340,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727305,7 +727350,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727315,7 +727360,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -727376,7 +727421,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -729052,7 +729097,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L81",
+      "source_location": "L135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -729063,7 +729108,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L135",
+      "source_location": "L221",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -729074,7 +729119,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L154",
+      "source_location": "L158",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -729382,7 +729427,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -731603,7 +731648,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
-      "source_location": "L9",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732740,7 +732785,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L7",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732751,7 +732796,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L7",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732762,7 +732807,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L8",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732773,7 +732818,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L8",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732783,7 +732828,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732793,7 +732838,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L170",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732804,7 +732849,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L129",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732815,7 +732860,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L171",
+      "source_location": "L173",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732826,7 +732871,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732837,7 +732882,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732848,7 +732893,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732859,7 +732904,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L3",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732870,7 +732915,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L3",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732880,7 +732925,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L16",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732891,7 +732936,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732902,7 +732947,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732913,7 +732958,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732924,7 +732969,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732935,7 +732980,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732946,7 +732991,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732957,7 +733002,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732968,7 +733013,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -732978,7 +733023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733538,7 +733583,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
-      "source_location": "L18",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733549,7 +733594,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
-      "source_location": "L45",
+      "source_location": "L58",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733560,7 +733605,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
-      "source_location": "L84",
+      "source_location": "L97",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733736,7 +733781,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733747,7 +733792,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L123",
+      "source_location": "L125",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733758,7 +733803,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733769,7 +733814,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L119",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733925,7 +733970,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L17",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733937,7 +733982,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L18",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733949,7 +733994,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L19",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733961,7 +734006,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L20",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733973,7 +734018,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L21",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733985,7 +734030,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
-      "source_location": "L22",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -733997,7 +734042,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -734009,7 +734054,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -734021,7 +734066,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -734033,7 +734078,289 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_cancellation_retention_billing",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_billing_iscancellationbillingproviderunavailable",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_product_hunt_promo",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_product_hunt_promo_product_hunt_campaign",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_stripe_uninstall_renewal_campaign",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_laterproviderfixture",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_attachpartialnativecoupon",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L317",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_unavailableprovider",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L327",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_laterproviderfixture",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_pendingoutagefixture",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L296",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_laterproviderfixture",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L335",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_attachpartialnativecoupon",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L341",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "ref_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "type_only": true,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_billing_iscancellationbillingproviderunavailable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_stripe",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_stripe_verifycancellationcoupon",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_product_hunt_promo",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_product_hunt_promo_product_hunt_campaign",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_uninstall_stripe_uninstall_renewal_campaign",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_islegacydiscount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
       "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_readbillingpromotions",
+      "target": "apps_web_lib_anidachi_auth_uninstall_billing_server_islegacydiscount",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_store",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_billing",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_store",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_billing_iscancellationbillingproviderunavailable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_test_laterproviderfixture",
+      "target": "apps_web_lib_anidachi_auth_uninstall_store_readuninstallaccount",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts",
+      "source_location": "L306",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_readbillingpromotions",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_stripe_verifycancellationcoupon",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L184",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_billing_server_readbillingpromotions",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_billing_iscancellationbillingproviderunavailable",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-billing-server.ts",
+      "source_location": "L265",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_uninstall_store_readuninstallaccount",
+      "target": "apps_web_lib_anidachi_auth_cancellation_retention_billing_iscancellationbillingproviderunavailable",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/uninstall-store.ts",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     }
