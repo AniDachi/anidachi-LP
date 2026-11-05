@@ -3565,16 +3565,20 @@ describe("RoomDurableObject media v2", () => {
   const replacement = await f.join(0, "replacement"); await replacement.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "replacement after flush retry");
  });
  it("Free20 transfer across UTC settles old day once and checkpoints the new day without frozen interval charge", async () => {
-  const start = Date.parse("2026-11-03T23:59:45Z");
+  // Workerd alarms use real time even while Date.now is mocked.
+  const midnight = (Math.floor(Date.now() / 86_400_000) + 2) * 86_400_000;
+  const start = midnight - 15_000;
+  const previousDay = new Date(start).toISOString().slice(0, 10);
+  const day = new Date(midnight).toISOString().slice(0, 10);
   const outerClock = vi.spyOn(Date, "now").mockReturnValue(start);
   const f = await spendingTransferFixture(); f.loseAttachReply();
   expect((await transferRoom(f.stub, f.command)).status).toBe(503);
   outerClock.mockReturnValue(start + 20000); f.setAttachFloor(0); f.setPriorUsage(0);
   await evictDurableObject(f.stub, { webSockets: "hibernate" });
   expect((await transferRoom(f.stub, f.command)).status).toBe(200);
-  expect(f.ledger.get("2026-11-03")).toBe(10);
-  expect(f.ledger.get("2026-11-04") ?? 0).toBe(0);
-  await runInDurableObject(f.stub, instance => { expect(free20Room(instance).free20Accounting.budget?.checkpoint.utcDay).toBe("2026-11-04"); });
+  expect(f.ledger.get(previousDay)).toBe(10);
+  expect(f.ledger.get(day) ?? 0).toBe(0);
+  await runInDurableObject(f.stub, instance => { expect(free20Room(instance).free20Accounting.budget?.checkpoint.utcDay).toBe(day); });
  });
 
  it("Free20 transfer bootstraps a SQL-created room before first JOIN and recovers after eviction", async () => {
@@ -3688,14 +3692,19 @@ describe("RoomDurableObject media v2", () => {
  });
 
  it("Free20 transfer checkpoint flush retry after UTC rollover never rewinds a stopped meter", async () => {
-  const start = Date.parse("2026-11-03T23:59:45Z"); vi.spyOn(Date, "now").mockReturnValue(start);
+  // Keep the pre-rollover alarms ahead of Workerd's real clock.
+  const midnight = (Math.floor(Date.now() / 86_400_000) + 2) * 86_400_000;
+  const start = midnight - 15_000;
+  const previousDay = new Date(start).toISOString().slice(0, 10);
+  const day = new Date(midnight).toISOString().slice(0, 10);
+  vi.spyOn(Date, "now").mockReturnValue(start);
   const f = await spendingTransferFixture(); f.setAttachFloor(0);
   f.beforeBudgetReply(() => f.clock.mockReturnValue(start + 20000));
   let faulted = false;
   await runInDurableObject(f.stub, (instance, state) => {
    const sync = state.storage.sync.bind(state.storage);
    vi.spyOn(state.storage, "sync").mockImplementation(async () => {
-    if (!faulted && state.storage.kv.get<any>("free20_scope_transfer_v1")?.phase === "attached" && free20Room(instance).free20Accounting.budget?.checkpoint.utcDay === "2026-11-04") {
+    if (!faulted && state.storage.kv.get<any>("free20_scope_transfer_v1")?.phase === "attached" && free20Room(instance).free20Accounting.budget?.checkpoint.utcDay === day) {
      faulted = true; throw new Error("new-day checkpoint flush unknown");
     }
     await sync();
@@ -3705,10 +3714,10 @@ describe("RoomDurableObject media v2", () => {
   await evictDurableObject(f.stub, { webSockets: "hibernate" });
   expect((await transferRoom(f.stub, f.command)).status).toBe(200);
   await runInDurableObject(f.stub, instance => {
-   expect(free20Room(instance).roomMeter.day).toBe("2026-11-04");
+   expect(free20Room(instance).roomMeter.day).toBe(day);
    expect(free20Room(instance).roomMeter.accumulatedMs).toBe(0);
   });
-  expect(f.ledger.get("2026-11-03")).toBe(10); expect(f.ledger.get("2026-11-04") ?? 0).toBe(0);
+  expect(f.ledger.get(previousDay)).toBe(10); expect(f.ledger.get(day) ?? 0).toBe(0);
  });
 
  function refreshRequest(roomId: string, revision = 7) {
