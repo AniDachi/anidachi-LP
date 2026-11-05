@@ -1,5 +1,45 @@
 # Current Development State
 
+## Monthly cancellation offer: November 5, 2026
+
+The owner approved a native Stripe cancellation offer: **40% off one monthly
+renewal**, using the same **one lifetime discount per account** as `/uninstall`.
+Annual conversion remains available and receives no reduction from this coupon.
+The [design](superpowers/specs/2026-11-05-cancellation-retention-design.md) and
+[delivery plan](superpowers/plans/2026-11-05-cancellation-retention.md) record scope,
+provider evidence and the schema/catalog/runtime activation order. The delivery
+PR records the deployed commit, completed gates and exact staging activation;
+owner acceptance remains separate before production promotion.
+
+A short-lived private reservation serializes native and uninstall offers before
+a coupon is created. Opening or declining the offer does not consume the lifetime
+allowance; verified Stripe redemption does. Expired unused reservations release
+only after authoritative provider evidence. TEST customers with a test clock also
+require that clock to be ready and past the redemption deadline. Provider errors
+retain uncertainty without blocking ordinary subscription cancellation.
+
+The offer is attached to the owner-checked **Cancel** action from AniDachi billing
+into Stripe. Generic Stripe management sessions retain normal cancellation but
+have no global retention coupon. New annual sales use separate products at the
+same prices; legacy annual IDs remain recognized and existing subscriptions are
+not repriced. A stale monthly cancellation tab can still redeem after annual
+conversion; this consumes the allowance while the annual price stays unchanged.
+The account page must show that actual price and monthly-only applicability.
+
+Local integration evidence: 1732 web tests passed with six existing skips, web
+typecheck, 49 new plus 33 existing SQL checks, and five concurrent SQL scenarios.
+A subsequent review fix preserved annual availability during a provider outage
+for a verified pending native offer, without promising a discounted amount; all
+162 affected checks and typecheck passed. Other campaigns and unknown ownership
+still fail closed. These are scoped runs, not counts to add together. Disposable Stripe TEST proof confirmed paid
+Plus invoices 799 -> 479 -> 799 cents, Pro 1499 -> 899 -> 1499, ordinary declining
+without redemption, expired cached-offer rejection, and separate-product annual
+conversion with zero coupon reduction. Native provider proof is distinct from
+owner-authenticated hosted account acceptance. No extension, Worker, protocol,
+production or Store release is part of this change. The eventual PR/receipt
+records final CI, deployed SHA and activation; main requires separate
+accepted promotion.
+
 ## Returning subscribers: uninstall offer correction, November 5, 2026
 
 Approved by the owner for staging delivery on November 5 after local review.
