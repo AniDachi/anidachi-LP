@@ -12,7 +12,10 @@ async function rpc(name: string, input: Record<string, unknown>) {
 	if (error) throw new Error("Uninstall offer storage unavailable.");
 	return data;
 }
-export async function readUninstallAccount(userId: string) {
+export async function readUninstallAccount(
+	userId: string,
+	options: { presentationOnly?: boolean } = {},
+) {
 	// Reconcile provider redemption before trusting the shared allowance. A live
 	// pending hold is temporary unavailability, never a permanent used claim.
 	if (
@@ -20,7 +23,7 @@ export async function readUninstallAccount(userId: string) {
 		(await cancellationRetentionStore.pending(userId))
 	) {
 		await reconcileCancellationRetention(userId, createStripeClient());
-		if (await cancellationRetentionStore.pending(userId))
+		if (!options.presentationOnly && await cancellationRetentionStore.pending(userId))
 			throw new Error("Cancellation offer verification pending. Please retry.");
 	}
 

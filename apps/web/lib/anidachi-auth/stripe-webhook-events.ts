@@ -11,12 +11,22 @@ export async function processSubscriptionWebhookEvent(
 		alert: (payload: SubscriptionAlertPayload) => Promise<void>;
 		completeSetup?: (sessionId: string) => Promise<void>;
 		retentionInvoice?: (invoice: Stripe.Invoice) => Promise<void>;
+		reconcileCancellation?: (subscriptionId: string) => Promise<void>;
 	},
 ): Promise<void> {
+	const reconcile = async (subscriptionId: string) => {
+		if (!event.livemode) await deps.reconcileCancellation?.(subscriptionId);
+	};
+	const sync = async (subscriptionId: string) => {
+		await deps.sync(subscriptionId);
+		await reconcile(subscriptionId);
+	};
 	if (event.type === "invoice.created") {
 		if (event.livemode) return;
 		if (!deps.retentionInvoice)
 			throw new Error("Retention invoice handler unavailable; retry delivery.");
+		const subscriptionId = invoiceSubscriptionId(event.data.object);
+		if (subscriptionId) await reconcile(subscriptionId);
 		await deps.retentionInvoice(event.data.object);
 	} else if (event.type === "checkout.session.completed") {
 		const session = event.data.object;
@@ -38,7 +48,7 @@ export async function processSubscriptionWebhookEvent(
 			throw new Error(
 				"Completed subscription checkout is missing subscription.",
 			);
-		await deps.sync(subscriptionId);
+		await sync(subscriptionId);
 		// Test fixtures and a zero-dollar trial start must never announce a purchase.
 		if (
 			!event.livemode ||
@@ -70,7 +80,7 @@ export async function processSubscriptionWebhookEvent(
 			"customer.subscription.deleted",
 		].includes(event.type)
 	) {
-		await deps.sync((event.data.object as Stripe.Subscription).id);
+		await sync((event.data.object as Stripe.Subscription).id);
 	} else if (
 		[
 			"invoice.paid",
@@ -81,6 +91,6 @@ export async function processSubscriptionWebhookEvent(
 		const subscriptionId = invoiceSubscriptionId(
 			event.data.object as Stripe.Invoice,
 		);
-		if (subscriptionId) await deps.sync(subscriptionId);
+		if (subscriptionId) await sync(subscriptionId);
 	}
 }

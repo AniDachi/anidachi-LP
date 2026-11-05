@@ -336,3 +336,63 @@ test("billing details retain plan, problem and actual account access", async () 
 	);
 	assert.deepEqual(actions, [], "returning from details does not open Stripe");
 });
+
+test("native monthly offer shows one renewal, permits annual and never uses Product Hunt copy", async () => {
+	await mount(
+		{
+			...subscription,
+			canSwitchToYearly: true,
+			promotion: {
+				state: "active",
+				campaign: "cancellation_retention",
+				percentOff: 40,
+				endsAt: "2030-02-04T16:00:00Z",
+				nextPrice: {
+					unitAmount: 479,
+					currency: "usd",
+					billingPeriod: "monthly",
+				},
+			},
+		},
+		"plus",
+	);
+	assert.match(container.textContent!, /\$4\.79/);
+	assert.match(container.textContent!, /next monthly renewal only/);
+	assert.doesNotMatch(container.textContent!, /first 3 months|ANIHUNT/);
+	await act(async () =>
+		container
+			.querySelector<HTMLButtonElement>(".billing-summary-card button")!
+			.click(),
+	);
+	assert.match(container.textContent!, /Switch to yearly billing/);
+	assert.equal(
+		container.textContent!.split(
+			"This discount applies to monthly billing only.",
+		).length - 1,
+		1,
+	);
+	assert.match(
+		container.textContent!,
+		/This discount applies to monthly billing only/,
+	);
+	assert.doesNotMatch(
+		container.textContent!,
+		/Yearly billing is available after/,
+	);
+});
+test("stale native acceptance after annual conversion shows full annual price without a future monthly promise", async () => {
+	await mount(
+		{
+			...subscription,
+			price: { unitAmount: 7670, currency: "usd", billingPeriod: "yearly" },
+			promotion: { state: "active", campaign: "cancellation_retention" },
+		},
+		"plus",
+	);
+	assert.match(container.textContent!, /\$76\.70/);
+	assert.match(container.textContent!, /monthly billing only/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/next monthly renewal|first 3 months|ANIHUNT|Amount unavailable/,
+	);
+});

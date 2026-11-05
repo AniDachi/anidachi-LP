@@ -3,9 +3,11 @@ import type Stripe from "stripe";
 
 import {
 	beginStripeEventProcessing,
+	getSubscriptionOwner,
 	markStripeEventFailed,
 	markStripeEventProcessed,
 } from "@/lib/anidachi-auth/db";
+import { reconcileCancellationRetention } from "@/lib/anidachi-auth/cancellation-retention";
 import { fulfillRetentionInvoice } from "@/lib/anidachi-auth/retention-invoice";
 import {
 	createStripeClient,
@@ -70,6 +72,10 @@ export async function POST(request: NextRequest) {
 
 	try {
 		await processSubscriptionWebhookEvent(event, {
+			reconcileCancellation: async (subscriptionId) => {
+				const owner = await getSubscriptionOwner(subscriptionId);
+				if (owner) await reconcileCancellationRetention(owner, stripe);
+			},
 			retentionInvoice: (invoice) =>
 				fulfillRetentionInvoice(invoice, { stripe, ...retentionInvoiceStore }),
 			sync: async (subscriptionId) => {

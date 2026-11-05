@@ -1102,7 +1102,8 @@ export function BillingView({
 									</button>
 								)}
 								<div className="billing-actions">
-									{subscription.promotion?.state === "active" && (
+									{subscription.promotion?.state === "active" &&
+									 subscription.promotion.campaign !== "cancellation_retention" && (
 										<p className="ac-muted">
 											Yearly billing is available after your discount ends.
 										</p>
@@ -1369,7 +1370,14 @@ function SubscriptionFacts({
 			<div className="billing-terms">
 				{subscription.promotion?.state === "active" && (
 					<p>
-						{subscription.promotion.campaign === "uninstall_renewal" ? (
+						{subscription.promotion.campaign === "cancellation_retention" ? (
+							<>
+								{subscription.promotion.nextPrice
+									? "40% off your next monthly renewal only. Later renewals remain at the regular price. "
+									: ""}
+								This discount applies to monthly billing only.
+							</>
+						) : subscription.promotion.campaign === "uninstall_renewal" ? (
 							<>
 								40% off your next eligible monthly renewal only. Later renewals
 								remain at the regular price.

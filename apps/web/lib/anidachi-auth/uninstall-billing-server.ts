@@ -1,4 +1,6 @@
 import type { BillingPromotion } from "../billing-view";
+import { cancellationBillingSnapshot } from "./cancellation-retention-billing";
+import { readCancellationRetentionOffer } from "./cancellation-retention-store";
 import type { SubscriptionRow } from "./db";
 import { readProductHuntBilling } from "./product-hunt-billing-server";
 import { createStripeClient, resolveStripeMode } from "./stripe-env";
@@ -11,19 +13,49 @@ import {
 	verifyUninstallCustomer,
 } from "./uninstall-stripe";
 
+const defaultDeps = {
+	readProductHuntBilling,
+	mode: resolveStripeMode,
+	readAccount: readUninstallAccount,
+	readClaim: readRetentionClaim,
+	createStripe: createStripeClient,
+	readCancellationOffer: readCancellationRetentionOffer,
+};
+
 export async function readBillingPromotions(
 	userId: string,
 	rows: SubscriptionRow[],
+	deps = defaultDeps,
 ): Promise<Record<string, BillingPromotion | undefined>> {
-	const original = await readProductHuntBilling(userId, rows);
-	if (resolveStripeMode() !== "test" || !rows.length) return original;
+	const original = await deps.readProductHuntBilling(userId, rows);
+	if (deps.mode() !== "test" || !rows.length) return original;
 	try {
 		const [account, claim] = await Promise.all([
-			readUninstallAccount(userId),
-			readRetentionClaim(userId),
+			deps.readAccount(userId, { presentationOnly: true }),
+			deps.readClaim(userId),
 		]);
-		if (!account.grant || !account.customerId) return original;
-		const stripe = createStripeClient();
+		if (!account.customerId) return original;
+		const nativeOffers = new Map(
+			await Promise.all(
+				rows
+					.filter((row) =>
+						["active", "past_due", "unpaid", "incomplete"].includes(row.status),
+					)
+					.map(
+						async (row) =>
+							[
+								row.id,
+								await deps.readCancellationOffer(
+									userId,
+									row.stripe_subscription_id,
+								),
+							] as const,
+					),
+			),
+		);
+		if (!account.grant && ![...nativeOffers.values()].some(Boolean))
+			return original;
+		const stripe = deps.createStripe();
 		const customer = verifyUninstallCustomer(
 			await stripe.customers.retrieve(
 				account.customerId,
@@ -43,6 +75,37 @@ export async function readBillingPromotions(
 				{ expand: ["discounts", "items.data.discounts"] },
 				UNINSTALL_REQUEST,
 			);
+			const native = nativeOffers.get(row.id);
+			if (native) {
+				const attached = [
+					...sub.discounts,
+					...sub.items.data.flatMap((item) => item.discounts ?? []),
+				].find(
+					(d) => typeof d !== "string" && d.coupon?.id === native.coupon_id,
+				);
+				// Stripe may omit optional coupon scope in embedded discount objects.
+				const coupon =
+					attached &&
+					typeof attached !== "string" &&
+					!attached.coupon.applies_to
+						? await stripe.coupons.retrieve(
+								native.coupon_id,
+								{ expand: ["applies_to"] },
+								UNINSTALL_REQUEST,
+							)
+						: undefined;
+				const snapshot = cancellationBillingSnapshot(
+					sub,
+					native,
+					Date.now(),
+					coupon,
+				);
+				if (snapshot?.nextPrice && customer.discount)
+					throw new Error(
+						"Cancellation billing discount stacking unavailable.",
+					);
+				if (snapshot) original[row.id] = snapshot;
+			}
 			if (claim?.stripe_subscription_id === sub.id) {
 				if (customer.discount && claim.state === "accepted")
 					original[row.id] = { state: "unavailable" };

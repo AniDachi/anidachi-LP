@@ -102,8 +102,10 @@ export function SubscriptionSummary({
 				timeZone,
 			}).format(date)
 		: "";
+	const native = s.promotion?.campaign === "cancellation_retention";
 	const price = s.promotion
-		? s.promotion.nextPrice
+		? (s.promotion.nextPrice ??
+			(native && s.promotion.state === "active" ? s.price : undefined))
 		: (s.price ?? s.monthlyPrice);
 	const enabled =
 		trial?.mode === "cardless"
@@ -209,13 +211,20 @@ export function SubscriptionSummary({
 					{note}
 					{s.promotion?.state === "active" && (
 						<span className="billing-summary-access">
-							40% off your first 3 months.
-							{(s.price ?? s.monthlyPrice) ? (
+							{native
+								? s.promotion.nextPrice
+									? "40% off your next monthly renewal only."
+									: "This discount applies to monthly billing only."
+								: "40% off your first 3 months."}
+							{(!native || s.promotion.nextPrice) &&
+							(s.price ?? s.monthlyPrice) ? (
 								<>
 									{" "}
 									Then {formatMonthlyPrice((s.price ?? s.monthlyPrice)!)} /
 									month.
 								</>
+							) : native ? (
+								""
 							) : (
 								" Then the regular monthly price."
 							)}

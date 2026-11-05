@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type Stripe from "stripe";
+import { fulfillRetentionInvoice } from "./retention-invoice";
 import { processSubscriptionWebhookEvent } from "./stripe-webhook-events";
 
 function fixture(type: string, object: unknown, livemode = true) {
@@ -144,4 +145,135 @@ test("failed synchronization does not announce a purchase", async () => {
 		/authority/,
 	);
 	assert.equal(alerted, false);
+});
+
+test("signed subscription/invoice sync reconciles native allowance using current state on duplicate and delayed events", async () => {
+	const order: string[] = [];
+	const deps = {
+		sync: async (id: string) => {
+			order.push(`sync:${id}`);
+		},
+		reconcileCancellation: async (id: string) => {
+			order.push(`native:${id}`);
+		},
+		alert: async () => {},
+	};
+	for (const type of [
+		"customer.subscription.updated",
+		"invoice.paid",
+		"invoice.payment_failed",
+		"customer.subscription.updated",
+	]) {
+		const event = fixture(
+			type,
+			type.startsWith("invoice")
+				? { parent: { subscription_details: { subscription: "sub_native" } } }
+				: { id: "sub_native" },
+			false,
+		);
+		await processSubscriptionWebhookEvent(event, deps);
+	}
+	assert.deepEqual(
+		order,
+		Array.from({ length: 4 }, () => [
+			"sync:sub_native",
+			"native:sub_native",
+		]).flat(),
+	);
+});
+test("draft-created reconciles native redemption independently of legacy invoice-only fulfillment", async () => {
+	const order: string[] = [];
+	await processSubscriptionWebhookEvent(
+		fixture(
+			"invoice.created",
+			{ parent: { subscription_details: { subscription: "sub_native" } } },
+			false,
+		),
+		{
+			sync: async () => {
+				order.push("sync");
+			},
+			alert: async () => {},
+			reconcileCancellation: async (id) => {
+				order.push(`native:${id}`);
+			},
+			retentionInvoice: async () => {
+				order.push("legacy");
+			},
+		},
+	);
+	assert.deepEqual(order, ["native:sub_native", "legacy"]);
+});
+test("native reconciliation errors retry signed delivery and never create another invoice discount", async () => {
+	let legacy = 0;
+	await assert.rejects(
+		processSubscriptionWebhookEvent(
+			fixture(
+				"invoice.created",
+				{ parent: { subscription_details: { subscription: "sub_native" } } },
+				false,
+			),
+			{
+				sync: async () => {},
+				alert: async () => {},
+				reconcileCancellation: async () => {
+					throw Error("reconcile pending");
+				},
+				retentionInvoice: async () => {
+					legacy++;
+				},
+			},
+		),
+		/reconcile pending/,
+	);
+	assert.equal(legacy, 0);
+});
+test("live event sync never invokes TEST native reconciliation", async () => {
+	let reconciled = 0;
+	await processSubscriptionWebhookEvent(
+		fixture("customer.subscription.updated", { id: "sub_live" }, true),
+		{
+			sync: async () => {},
+			alert: async () => {},
+			reconcileCancellation: async () => {
+				reconciled++;
+			},
+		},
+	);
+	assert.equal(reconciled, 0);
+});
+
+test("native draft event never invokes legacy Stripe discount fulfillment when no uninstall claim exists", async () => {
+	let writes = 0;
+	let native = 0;
+	const invoice = {
+		id: "in_native",
+		livemode: false,
+		billing_reason: "subscription_cycle",
+		parent: { subscription_details: { subscription: "sub_native" } },
+	} as Stripe.Invoice;
+	await processSubscriptionWebhookEvent(
+		fixture("invoice.created", invoice, false),
+		{
+			sync: async () => {},
+			alert: async () => {},
+			reconcileCancellation: async () => {
+				native++;
+			},
+			retentionInvoice: async (inv) =>
+				fulfillRetentionInvoice(inv, {
+					stripe: {} as Stripe,
+					find: async () => null,
+					bind: async () => {
+						writes++;
+						throw Error("native must not bind legacy claim");
+					},
+					finish: async () => {
+						writes++;
+					},
+				}),
+		},
+	);
+	assert.equal(native, 1);
+	assert.equal(writes, 0);
 });
