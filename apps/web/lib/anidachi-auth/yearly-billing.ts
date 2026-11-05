@@ -151,7 +151,8 @@ export async function yearlyBillingPortal(
 		!target.active ||
 		!validPrice(target, "year") ||
 		!validPrice(item.price, "month") ||
-		id(target.product) !== id(item.price.product)
+		deps.planCode(target.id) !== plan ||
+		!id(target.product)
 	)
 		throw new BillingError(503, "The yearly price could not be verified.");
 	if (

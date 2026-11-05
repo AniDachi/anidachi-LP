@@ -3,6 +3,7 @@ import test from "node:test";
 import {
 	effectivePlanForSubscription,
 	effectivePlanFromSubscriptions,
+	paidPlanCodeFromStripeSubscription,
 	planCodeFromStripeMetadata,
 	stripePlanCodeForPriceId,
 	stripePriceIdForPlanCode,
@@ -201,6 +202,63 @@ test("annual price configuration is mode-aware and never falls back to monthly",
 		assert.equal(stripePriceIdForPlanCode("plus", "yearly"), "price_live_year");
 	} finally {
 		for (const [key, value] of original) {
+			if (value === undefined) delete process.env[key];
+			else process.env[key] = value;
+		}
+	}
+});
+
+test("archived annual aliases from both modes preserve entitlements but never become purchase targets", () => {
+	const settings = {
+		VERCEL_ENV: "preview",
+		STRIPE_PRICE_ID_PLUS_YEARLY_TEST: "price_plus_new_year",
+		STRIPE_PRICE_ID_PRO_YEARLY_TEST: "price_pro_new_year",
+		STRIPE_PRICE_IDS_PLUS_YEARLY_LEGACY_TEST:
+			" ,price_plus_old1, price_plus_old2, ,",
+		STRIPE_PRICE_IDS_PLUS_YEARLY_LEGACY_LIVE: "price_plus_old_live",
+		STRIPE_PRICE_IDS_PRO_YEARLY_LEGACY_TEST: "price_pro_old1, price_pro_old2",
+		STRIPE_PRICE_IDS_PRO_YEARLY_LEGACY_LIVE: " ,price_pro_old_live, ",
+	};
+	const old = new Map(
+		[...Object.keys(settings), "STRIPE_PRICE_ID_PLUS_YEARLY"].map((key) => [
+			key,
+			process.env[key],
+		]),
+	);
+	Object.assign(process.env, settings);
+	try {
+		for (const [priceId, plan] of [
+			["price_plus_old1", "plus"],
+			["price_plus_old2", "plus"],
+			["price_plus_old_live", "plus"],
+			["price_pro_old1", "pro"],
+			["price_pro_old2", "pro"],
+			["price_pro_old_live", "pro"],
+		] as const) {
+			assert.equal(stripePlanCodeForPriceId(priceId), plan);
+			assert.equal(
+				paidPlanCodeFromStripeSubscription({
+					items: { data: [{ price: { id: priceId } }] },
+					metadata: {},
+				} as never),
+				plan,
+			);
+		}
+		assert.equal(stripePlanCodeForPriceId(" "), null);
+		assert.equal(stripePlanCodeForPriceId(""), null);
+		assert.equal(
+			stripePriceIdForPlanCode("plus", "yearly"),
+			"price_plus_new_year",
+		);
+		assert.equal(
+			stripePriceIdForPlanCode("pro", "yearly"),
+			"price_pro_new_year",
+		);
+		delete process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST;
+		delete process.env.STRIPE_PRICE_ID_PLUS_YEARLY;
+		assert.equal(stripePriceIdForPlanCode("plus", "yearly"), null);
+	} finally {
+		for (const [key, value] of old) {
 			if (value === undefined) delete process.env[key];
 			else process.env[key] = value;
 		}
