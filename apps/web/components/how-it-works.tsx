@@ -1,4 +1,3 @@
-import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import { Chrome, LogIn, Play, Users, MessageSquare, Clock3 } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import Link from "next/link";
@@ -25,7 +24,7 @@ const steps = [
     icon: Users,
     title: "Create or join a room",
     description:
-      `${PRICING_FREE20_SUMMARY} Share the link; friends join free.`,
+      "Create a room and share the link. You get 20 free minutes a day for up to 4 people; friends join free.",
   },
   {
     icon: MessageSquare,
@@ -135,7 +134,7 @@ export function HowItWorks() {
               </span>
             </div>
             <p className="col-start-2 mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
-              Coming soon in a later batch: mark episodes at your pace, leave
+              Mark episodes at your pace, leave
               reactions, and chat so friends can catch up on their schedule.
               Live sync is available now.
             </p>

@@ -78,6 +78,9 @@ export function Pricing({
 	const sectionRef = useRef<HTMLElement | null>(null);
 	const pricingViewFired = useRef(false);
 	const [offer, setOffer] = useState<PricingOffer | null>(null);
+	// The public hosting model is not an account entitlement or a checkout lease.
+	// Keep its last confirmed value while personal offers refresh or expire.
+	const [catalogModel, setCatalogModel] = useState<PricingOffer["hostingModel"]>();
 	const [offerFresh, setOfferFresh] = useState(false);
 	const [offerLoading, setOfferLoading] = useState(true);
 	const checkingOfferRef = useRef(true);
@@ -93,6 +96,10 @@ export function Pricing({
 	const lastAttemptedTier = useRef<CheckoutTier | null>(null);
 	const displayPrices = PUBLISHED_PRICING[period];
 	const showTrialTerms = hasConfirmedTrialOffer(offer);
+	// The legacy allowance can end at the activation boundary carried by the
+	// offer deadline. Never keep that old promise past its confirmed lifetime.
+	const hostingModel =
+		catalogModel === "legacy" && !offerFresh ? undefined : catalogModel;
 
 	useEffect(() => {
 		const life = new AbortController();
@@ -167,6 +174,7 @@ export function Pricing({
 					Math.min(60_000, next.validForMs) - (Date.now() - started);
 				if (!(remaining > 0)) throw new Error("Offer expired");
 				setOffer(next);
+				setCatalogModel(next.hostingModel);
 				setOfferFresh(true);
 				offerDeadline.current = Date.now() + remaining;
 				clearTimeout(expiryTimer);
@@ -520,9 +528,9 @@ export function Pricing({
 					titleAs={headingLevel === 1 ? "h1" : "h2"}
 					title="Watch together. Choose your plan."
 					description={
-						offerFresh && offer?.hostingModel === "daily_free20"
-							? "Free includes 20 host minutes per UTC day. Plus and Pro include hosting without a daily time limit."
-							: "Join friends for free. Compare hosting and personal watch history options."
+						hostingModel === "daily_free20"
+							? "20 free minutes every day. No daily time limit with Plus or Pro."
+							: "Watch together. Find the plan that fits your group."
 					}
 				/>
 				<div
@@ -573,7 +581,7 @@ export function Pricing({
 					{PRICING_TIERS.map((baseTier) => {
 						const tier =
 							baseTier.id === "free"
-								? pricingFreeTier(offerFresh ? offer?.hostingModel : undefined)
+								? pricingFreeTier(hostingModel)
 								: baseTier;
 						const highlighted = isHighlighted(tier.id);
 						const paidTier = tier.id !== "free" ? tier.id : null;
@@ -592,7 +600,7 @@ export function Pricing({
 									paidTier={paidTier}
 									onSubscribe={handleSubscribe}
 									offer={offer}
-									offerFresh={offerFresh}
+									hostingModel={hostingModel}
 									offerLoading={!offer && offerLoading}
 									prices={displayPrices}
 									period={period}
@@ -626,9 +634,7 @@ export function Pricing({
 						</h3>
 						<ResponsiveCompareTable
 							columns={[...PRICING_PLAN_MATRIX_COLUMNS]}
-							rows={pricingMatrixRows(
-								offerFresh ? offer?.hostingModel : undefined,
-							).map((row) =>
+							rows={pricingMatrixRows(hostingModel).map((row) =>
 								row.feature === "Price"
 									? {
 											...row,
@@ -664,7 +670,7 @@ function TierCardBody({
 	paidTier,
 	onSubscribe,
 	offer,
-	offerFresh,
+	hostingModel,
 	offerLoading,
 	prices,
 	period,
@@ -680,7 +686,7 @@ function TierCardBody({
 	prices: PricingPrices | null;
 	period: BillingPeriod;
 	headingLevel: 2 | 3;
-	offerFresh: boolean;
+	hostingModel: PricingOffer["hostingModel"];
 	offerLoading: boolean;
 }) {
 	const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -747,7 +753,7 @@ function TierCardBody({
 				? null
 				: offer.action === "manage"
 					? "Manage your current plan and renewal in Account → Subscription."
-					: "Cancel renewal in Account → Subscription. No new free trial is included.";
+					: "Cancel renewal anytime in Account → Subscription.";
 
 	return (
 		<>
@@ -768,7 +774,7 @@ function TierCardBody({
 						<span className="pricing-plans__amount">{price}</span>
 						<span className="pricing-plans__suffix">
 							{!paidTier
-								? "Free to join"
+								? "No subscription"
 								: yearly
 									? "per month, approx."
 									: "per month"}
@@ -851,8 +857,8 @@ function TierCardBody({
 			<div className="pricing-plans__details">
 				<p className="pricing-plans__feature-heading">
 					{tier.id === "free" ? (
-						offerFresh && offer?.hostingModel === "daily_free20" ? (
-							"Host or join with Free"
+						hostingModel === "daily_free20" ? (
+							"Included with Free"
 						) : (
 							"Everything you need to join"
 						)
@@ -866,8 +872,7 @@ function TierCardBody({
 				<div>
 					<FeatureList features={features} />
 					{tier.id === "free" &&
-					offerFresh &&
-					offer?.hostingModel === "paid_hosting" ? (
+					hostingModel === "paid_hosting" ? (
 						<p className="pricing-plans__free-note">
 							{offer
 								? "Creating rooms and saving new watch progress require Plus or Pro."

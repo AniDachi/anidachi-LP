@@ -18,20 +18,20 @@ export const PRICING_ROOM_SIZE_RANGE = `up to 4 people on Free, ${plusPolicy.max
 
 /** Async is planned — never sell it as a current paid differentiator. */
 export const ASYNC_COMING_SOON =
-  "Async catch-up is coming soon in a later batch";
+  "Async catch-up is coming soon";
 
 /** Public Free20 offer; the deployed legacy runtime policy remains separate. */
 export const PRICING_FREE20_SUMMARY =
-  "Free includes 20 host minutes per UTC day for up to 4 people, including the host. Plus and Pro include hosting without a daily time limit.";
+  "Free includes 20 minutes a day for rooms of up to 4 people, including you. Plus and Pro have no daily time limit.";
 
 export const PRICING_FREE20_METERING_NOTE =
-  "Time counts while the host and at least one guest are present, including while video is paused. Waiting alone uses no time. The shared account allowance resets at 00:00 UTC with no carryover. Joining a friend's room does not spend your own hosting allowance.";
+  "Your minutes count while you and at least one guest are in your room, even when the video is paused. Waiting alone uses no time. You share one allowance across your rooms and devices. It resets at 00:00 UTC every day; unused minutes don’t carry over. Joining someone else’s room doesn’t use your minutes.";
 
 export const PRICING_HISTORY_NOTE =
-  "Free can read, Resume and delete saved history. Recording and editing progress require each viewer's own Plus or Pro access.";
+  "You can view, resume and delete saved history on Free. Saving or editing progress requires your own Plus or Pro plan.";
 
 export const PRICING_FREE20_MEDIA_NOTE =
-  "Free rooms have four media seats and support four simultaneous cameras. A granted media seat permits camera and microphone use after an explicit local device action.";
+  "All four people in a Free room can use a camera and microphone. The host manages access, and each person chooses when to turn their devices on.";
 
 export const PRICING_HOST_MODEL =
   `${PRICING_FREE20_SUMMARY} Friends join on Free accounts, and the host's plan sets the room limits. ${PRICING_HISTORY_NOTE} Crunchyroll, YouTube, and Netflix are supported.`;
@@ -43,10 +43,10 @@ export const PRICING_CANCELLATION_NOTE =
   "Cancel renewal from Account → Subscription. Access continues until your current trial or paid period ends.";
 
 export const PRICING_IS_ANIDACHI_FREE_ANSWER =
-  `Yes. ${PRICING_FREE20_SUMMARY} ${PRICING_FREE20_METERING_NOTE} ${PRICING_HISTORY_NOTE} See the pricing page for monthly and yearly prices. ${PRICING_CANCELLATION_NOTE}`;
+  `Yes. ${PRICING_FREE20_SUMMARY} Friends can join your room for free. No card is needed for Free.`;
 
 export const PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER =
-  `No. ${PRICING_HOST_MODEL} Each person still needs their own access to the video on Crunchyroll.`;
+  "No. Friends can join your room for free. Your plan sets the room size. Everyone needs the extension and their own access to the video. Saving personal watch progress requires each viewer’s own Plus or Pro plan.";
 
 export const PRICING_PLUS_VS_PRO_ANSWER =
   `Plus supports one host and up to ${plusPolicy.maxParticipants - 1} friends, with ${plusPolicy.maxCameras} cameras and ${plusPolicy.maxMicrophones} microphones. Pro supports one host and up to ${proPolicy.maxParticipants - 1} friends, with ${proPolicy.maxCameras} cameras, ${proPolicy.maxMicrophones} microphones and priority support. Friends join for free. Both plans include hosting without a daily time limit and personal watch history on Crunchyroll, YouTube, and Netflix. Monthly and yearly billing are available.`;
@@ -96,9 +96,9 @@ export const PRICING_YT_PRICING_SNIPPET =
 export const PRICING_CR_PRICING_SNIPPET =
   PRICING_YT_PRICING_SNIPPET;
 
-export const PRICING_FREE_TIER_TABLE = "Free: 20 host minutes per UTC day, up to 4 people; Plus / Pro: no daily hosting time limit";
+export const PRICING_FREE_TIER_TABLE = "Free: 20 minutes a day, up to 4 people; Plus / Pro: no daily time limit";
 export const PRICING_HOST_PRICING_TABLE = PRICING_FREE_TIER_TABLE;
-export const PRICING_PRICE_TABLE = `Free: 20 host minutes per UTC day for up to 4 people; Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT}. Yearly options available`;
+export const PRICING_PRICE_TABLE = `Free: 20 minutes a day for up to 4 people; Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT}. Yearly options available`;
 /** Compare-table Pricing cell — Free + Plus + Pro. */
 export const PRICING_PLUS_PRICE_LINE = PRICING_PRICE_TABLE;
 export const PRICING_AMAZON_SUBSCRIPTION_ROW = PRICING_PRICE_TABLE;

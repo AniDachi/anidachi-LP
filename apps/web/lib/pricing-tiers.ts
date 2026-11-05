@@ -228,21 +228,19 @@ export function pricingFreeTier(
 	if (mode === "legacy") return base;
 	const common = [
 		"Crunchyroll, YouTube, Netflix",
-		"Join friends’ rooms",
-		"Sync, chat & reactions",
-		"Read, Resume and delete saved history",
-		"Recording & editing require Plus or Pro",
+		"Join friends’ rooms for free",
+		"Synced video, chat & reactions",
+		"View, resume & delete saved history",
 	];
 	if (mode === "daily_free20")
 		return {
 			...base,
-			audience: "Host a small room or join friends free",
-			summary: "20 host minutes per UTC day, shared across your account",
+			audience: "A little time together, every day.",
+			summary: "20 free minutes every day",
 			features: [
-				"20 host minutes per UTC day",
-				"Up to 4 people (incl. host)",
-				"4 media seats and up to 4 cameras",
-				"Resets at 00:00 UTC; no carryover",
+				"20 free minutes every day",
+				"Up to 4 people, including you",
+				"Up to 4 cameras & 4 mics",
 				...common,
 			],
 		};
@@ -267,7 +265,7 @@ export function pricingMatrixRows(
 			free:
 				row.feature === "Host your own room"
 					? mode === "daily_free20"
-						? "20 min/UTC day"
+						? "20 min/day"
 						: mode === "paid_hosting"
 							? "Join only"
 							: "Check availability"

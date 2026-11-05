@@ -1016,12 +1016,116 @@ test("explicit Free20 offer paints daily hosting while retired trials stay absen
 		});
 	const el = await mount({ showPlanMatrix: true });
 	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
-	assert.match(free.textContent!, /20 host minutes per UTC day/);
-	assert.match(free.textContent!, /4 media seats/);
+	assert.match(free.textContent!, /20 free minutes every day/);
+	assert.match(free.textContent!, /4 cameras & 4 mics/);
 	assert.doesNotMatch(
 		free.textContent!,
 		/Creating rooms.*require Plus|30 min|trial host/,
 	);
 	assert.doesNotMatch(el.textContent!, /3.day free trial|Try 3 days free/);
-	assert.match(el.textContent!, /20 min\/UTC day/);
+	assert.match(el.textContent!, /20 min\/day/);
+});
+
+test("Free20 catalog survives offer expiry but an expired checkout still needs verification", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+	let reads = 0;
+	let posts = 0;
+	globalThis.fetch = async (_url, init) => {
+		if (init?.method === "POST") posts++;
+		if (++reads > 1) throw new Error("offline");
+		return Response.json({
+			...offer,
+			hostingModel: "daily_free20",
+			trialAvailable: false,
+			action: "subscribe",
+			validForMs: 1000,
+		});
+	};
+	const el = await mount({ showPlanMatrix: true });
+	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
+	const before = free.innerHTML;
+	const table = el.querySelector("table")!.innerHTML;
+	await act(async () => t.mock.timers.tick(1000));
+	assert.equal(reads, 1, "catalog stability must not introduce polling");
+	assert.equal(
+		free.innerHTML,
+		before,
+		"public plan details survive personal offer expiry",
+	);
+	assert.equal(el.querySelector("table")!.innerHTML, table);
+	await act(async () => plusButton(el).click());
+	assert.equal(reads, 2, "checkout rechecks its expired authority");
+	assert.equal(
+		posts,
+		0,
+		"visible catalog does not authorize checkout during an outage",
+	);
+	assert.equal(free.innerHTML, before);
+});
+
+test("Free20 catalog stays in place during focus refresh and account replacement", async () => {
+	const pending = deferred<Response>();
+	let reads = 0;
+	globalThis.fetch = async () =>
+		++reads === 1
+			? Response.json({
+					...offer,
+					hostingModel: "daily_free20",
+					trialAvailable: false,
+					action: "manage",
+				})
+			: pending.promise;
+	const el = await mount({ showPlanMatrix: true });
+	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
+	const before = free.innerHTML;
+	try {
+		Object.defineProperty(document, "visibilityState", {
+			value: "hidden",
+			configurable: true,
+		});
+		await act(async () =>
+			document.dispatchEvent(new Event("visibilitychange")),
+		);
+		assert.equal(free.innerHTML, before);
+		Reflect.deleteProperty(document, "visibilityState");
+		await act(async () => window.dispatchEvent(new Event("focus")));
+		assert.equal(
+			free.innerHTML,
+			before,
+			"keep the public catalog while the account check is pending",
+		);
+		await act(async () =>
+			pending.resolve(
+				Response.json({
+					...offer,
+					ownerUserId: "new-owner",
+					hostingModel: "daily_free20",
+					trialAvailable: false,
+					action: "subscribe",
+				}),
+			),
+		);
+		assert.equal(free.innerHTML, before);
+		assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
+	} finally {
+		Reflect.deleteProperty(document, "visibilityState");
+	}
+});
+
+test("a confirmed hosting-policy change replaces the Free20 catalog", async () => {
+	let free20 = true;
+	globalThis.fetch = async () =>
+		Response.json({
+			...offer,
+			hostingModel: free20 ? "daily_free20" : "paid_hosting",
+			trialAvailable: false,
+			action: "subscribe",
+		});
+	const el = await mount();
+	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
+	assert.match(free.textContent!, /20/);
+	free20 = false;
+	await act(async () => window.dispatchEvent(new Event("focus")));
+	assert.doesNotMatch(free.textContent!, /20/);
+	assert.match(free.textContent!, /Join friends/);
 });

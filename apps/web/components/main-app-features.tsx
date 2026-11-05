@@ -1,6 +1,5 @@
 "use client";
 
-import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import { useState } from "react";
 import { getPlanPolicy } from "@anidachi/protocol";
 import styles from "./main-app-features.module.css";
@@ -27,12 +26,13 @@ export function MainAppFeatures() {
 				<div className={styles.main}>
 					<div className={styles.copy}>
 						<h2 id="hosting-title">
-							Free daily hosting.
+							20 free minutes a day.
 							<br />
 							<span>Friends join free.</span>
 						</h2>
 						<p className={styles.description}>
-							{PRICING_FREE20_SUMMARY} The larger rooms below use Plus or Pro. Friends join on free accounts.
+							Start a room for up to 4 people, including you. Choose Plus or Pro
+							for a larger group and no daily time limit.
 						</p>
 						<a className={styles.planLink} href="#pricing">
 							Find your plan <ArrowDown size={17} aria-hidden="true" />
