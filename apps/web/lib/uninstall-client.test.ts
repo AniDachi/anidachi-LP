@@ -249,7 +249,7 @@ test("subscription restriction has one management action; free users have none",
   await focus();
   assert.equal([...container.querySelectorAll("button, a")].filter((el) => /^Manage/.test(el.textContent!.trim())).length, 1);
   assert.match(container.textContent!, /Uninstalling won’t cancel your subscription/);
-  assert.match(container.textContent!, /payment is overdue/);
+  assert.doesNotMatch(container.textContent!, /payment is overdue/);
 });
 
 test("optional feedback sends only on submit, retries idempotently, and clears local draft on verified success", async () => {
@@ -304,9 +304,9 @@ test("new-subscription screens also describe returning subscribers and disclose 
   assert.match(container.querySelector("dialog")!.textContent!, /first month of your new subscription/);
 });
 
-test("used discount explains why no new offer is available", async () => {
+test("used discount keeps regular plans available without restriction copy", async () => {
   await mount(); current = { kind: "disabled", ownerUserId: "a", validForMs: 60000, reason: "Your one-time 40% discount has already been used." }; await focus();
-  assert.match(container.textContent!, /already been used/);
+  assert.doesNotMatch(container.textContent!, /already been used/);
   assert.doesNotMatch(container.textContent!, /Get 40% off/);
   assert.ok(container.querySelector('a[href="/pricing?billing=monthly"]'));
 });

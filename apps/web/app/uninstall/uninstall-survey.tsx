@@ -70,16 +70,16 @@ export function UninstallSurvey() {
       <span className="uninstall-success-icon" aria-hidden="true">✓</span><h2>Thanks for your feedback.</h2>
     </div> : <form ref={form} onSubmit={send}>
       <fieldset disabled={state === "sending"}>
-        <legend><span id="uninstall-survey-title">Why did you uninstall?</span><span className="uninstall-optional">Optional</span></legend>
+        <legend id="uninstall-survey-title">Why did you uninstall?</legend>
         <div className="uninstall-reasons">{UNINSTALL_REASONS.map((reason, index) => <label className="uninstall-reason" key={reason}>
           <input type="radio" name="reason" value={reason} checked={draft.reason === reason} onChange={() => update({ reason, ...(reason === "other" ? { expanded: true } : {}) })} />
           <span>{labels[index]}</span>
         </label>)}</div>
         {draft.expanded ? <div className="uninstall-note">
-          <label htmlFor="uninstall-note">Add a note <span className="uninstall-muted">(optional)</span></label>
+          <label htmlFor="uninstall-note">Add a note</label>
           <textarea id="uninstall-note" maxLength={500} rows={3} value={draft.note} onChange={(e) => update({ note: e.target.value.slice(0, 500) })} placeholder="Tell us a little more…" />
           <div className="uninstall-note-footer"><span>Please don’t include personal information.</span><span>{draft.note.length} / 500</span></div>
-        </div> : draft.reason ? <button type="button" className="uninstall-note-toggle" onClick={() => update({ expanded: true })}>Add a note <span className="uninstall-muted">(optional)</span></button> : null}
+        </div> : draft.reason ? <button type="button" className="uninstall-note-toggle" onClick={() => update({ expanded: true })}>Add a note</button> : null}
         <div className="uninstall-submit"><button className="uninstall-secondary" disabled={!draft.reason || state === "sending"} type="submit">{state === "sending" ? "Sending…" : "Send feedback"}</button></div>
       </fieldset>
       {error ? <p className="uninstall-error" role="alert">{error}</p> : null}
