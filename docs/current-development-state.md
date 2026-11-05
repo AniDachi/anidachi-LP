@@ -1,5 +1,26 @@
 # Current Development State
 
+## Uninstall feedback inbox: November 5, 2026
+
+The owner selected `/kreatli-email-crm` as the inbox for existing uninstall
+responses. Its **Uninstall feedback** tab reads the saved date, reason and
+optional comment, newest first, in pages of 50. Refresh reloads the first page;
+load failures preserve already loaded responses and offer retry. An expired CRM
+session clears the displayed responses and asks for CRM login again.
+
+`/api/kreatli-crm/uninstall-feedback` checks the existing CRM session before
+reading or parsing pagination. The additive migration `20261105142000` exposes
+only a bounded, service-role-only SQL projection; ordinary website login and
+anonymous clients cannot read it or the underlying table. Account identifiers
+and anti-abuse hashes are excluded. No new credentials, public feed, exports or
+response mutations are introduced. The survey remains voluntary; `(optional)`
+appears only beside **Add a note**, not beside its question heading.
+
+Delivery is staging-only, schema first. The delivery PR records exact checks,
+deployed SHA and hosted evidence; local fixture views do not establish
+owner-authenticated staging acceptance. Reverting the web change hides the
+inbox without deleting responses or changing feedback submission and billing.
+
 ## Monthly cancellation offer: November 5, 2026
 
 The owner approved a native Stripe cancellation offer: **40% off one monthly
