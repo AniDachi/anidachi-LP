@@ -61,7 +61,11 @@ export function BillingPreview() {
 		"Renewal off",
 		"Product Hunt",
 		"Discount ending",
+		"Native monthly",
+		"Native annual",
+		"Native pending",
 	].includes(variant);
+	const annual = variant === "Paid yearly" || variant === "Native annual";
 	const pending = variant === "Setup pending";
 	const processing = variant === "Payment processing";
 	const paymentRequired = variant === "Payment failed";
@@ -79,6 +83,7 @@ export function BillingPreview() {
 						canRestoreRenewal: variant === "Renewal off",
 						canSwitchToYearly: ![
 							"Paid yearly",
+							"Native annual",
 							"Product Hunt",
 							"Discount ending",
 						].includes(variant),
@@ -99,12 +104,29 @@ export function BillingPreview() {
 									},
 								}
 							: {}),
+						...(["Native monthly", "Native annual"].includes(variant)
+							? {
+									promotion: {
+										state: "active" as const,
+										campaign: "cancellation_retention" as const,
+										...(variant === "Native monthly"
+											? {
+													percentOff: 40,
+													endsAt: "2030-02-04T16:00:00Z",
+													nextPrice: {
+														unitAmount: 479,
+														currency: "usd",
+														billingPeriod: "monthly" as const,
+													},
+												}
+											: {}),
+									},
+								}
+							: {}),
 						cancelAtPeriodEnd: variant === "Renewal off",
 						price: {
-							...PUBLISHED_PRICING[
-								variant === "Paid yearly" ? "yearly" : "monthly"
-							].plus,
-							billingPeriod: variant === "Paid yearly" ? "yearly" : "monthly",
+							...PUBLISHED_PRICING[annual ? "yearly" : "monthly"].plus,
+							billingPeriod: annual ? "yearly" : "monthly",
 						},
 					},
 				],
@@ -285,6 +307,9 @@ export function BillingPreview() {
 						"Paid",
 						"Product Hunt",
 						"Discount ending",
+						"Native monthly",
+						"Native annual",
+						"Native pending",
 						"Renewal off",
 						"Paid yearly",
 						"Setup pending",

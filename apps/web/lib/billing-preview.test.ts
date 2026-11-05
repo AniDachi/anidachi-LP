@@ -79,10 +79,7 @@ test("cardless preview can review sample renewal without contacting billing", as
 			),
 		),
 	);
-	for (const label of [
-		"Set up renewal",
-		"Add card & enable renewal",
-	]) {
+	for (const label of ["Set up renewal", "Add card & enable renewal"]) {
 		const button = [...container.querySelectorAll("button")].find(
 			(b) => b.textContent?.trim() === label,
 		);
@@ -90,4 +87,62 @@ test("cardless preview can review sample renewal without contacting billing", as
 		await act(async () => button.click());
 	}
 	assert.match(container.textContent!, /No subscription changes were made/);
+});
+
+test("native preview shows monthly, annual and unaccepted states without billing requests", async () => {
+	env.NODE_ENV = "development";
+	let requests = 0;
+	globalThis.fetch = async () => {
+		requests++;
+		throw Error("Preview attempted network");
+	};
+	const container = document.createElement("div");
+	document.body.append(container);
+	root = createRoot(container);
+	await act(async () =>
+		root!.render(
+			createElement(
+				PathnameContext.Provider,
+				{ value: "/dev/billing" },
+				BillingPreviewPage(),
+			),
+		),
+	);
+	for (const [label, amount, yearly] of [
+		["Native monthly", "4.79", true],
+		["Native annual", "76.70", false],
+		["Native pending", "7.99", true],
+	] as const) {
+		const button = [...container.querySelectorAll("button")].find(
+			(b) => b.textContent === label,
+		);
+		assert.ok(button, label);
+		await act(async () => button.click());
+		assert.match(
+			container.querySelector(".billing-summary-card")!.textContent!,
+			new RegExp(amount.replace(".", "\\.")),
+		);
+		assert.doesNotMatch(
+			container.textContent!,
+			/ANIHUNT|first 3 months|Yearly billing is available after/,
+		);
+		await act(async () =>
+			container
+				.querySelector<HTMLButtonElement>(".billing-summary-card button")!
+				.click(),
+		);
+		assert.equal(
+			[...container.querySelectorAll("button")].some((b) =>
+				b.textContent?.includes("Switch to yearly billing"),
+			),
+			yearly,
+		);
+		if (label === "Native annual") {
+			assert.match(container.textContent!, /monthly billing only/);
+			assert.doesNotMatch(container.textContent!, /next monthly renewal/);
+		}
+		if (label === "Native pending")
+			assert.doesNotMatch(container.textContent!, /40% off/);
+	}
+	assert.equal(requests, 0);
 });

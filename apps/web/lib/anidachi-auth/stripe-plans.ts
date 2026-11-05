@@ -51,6 +51,17 @@ export function stripePriceIdForPlanCode(
 	);
 }
 
+// Archived annual prices remain valid for existing subscriptions and webhooks.
+// Never use these recognition-only aliases in stripePriceIdForPlanCode.
+function legacyYearlyPriceIds(plan: "PLUS" | "PRO"): string[] {
+	return ["TEST", "LIVE"].flatMap((mode) =>
+		(process.env[`STRIPE_PRICE_IDS_${plan}_YEARLY_LEGACY_${mode}`] ?? "")
+			.split(",")
+			.map((id) => id.trim())
+			.filter(Boolean),
+	);
+}
+
 export function stripePlanCodeForPriceId(
 	priceId: string | null | undefined,
 ): PaidPlanCode | null {
@@ -58,6 +69,7 @@ export function stripePlanCodeForPriceId(
 	// Match against every known plus/pro price id (both modes + legacy) so the
 	// webhook resolves the plan regardless of which env mode produced the event.
 	const plusIds = [
+		...legacyYearlyPriceIds("PLUS"),
 		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST,
 		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_LIVE,
 		process.env.STRIPE_PRICE_ID_PLUS_YEARLY,
@@ -71,6 +83,7 @@ export function stripePlanCodeForPriceId(
 	if (plusIds.includes(priceId)) return "plus";
 
 	const proIds = [
+		...legacyYearlyPriceIds("PRO"),
 		process.env.STRIPE_PRICE_ID_PRO_YEARLY_TEST,
 		process.env.STRIPE_PRICE_ID_PRO_YEARLY_LIVE,
 		process.env.STRIPE_PRICE_ID_PRO_YEARLY,

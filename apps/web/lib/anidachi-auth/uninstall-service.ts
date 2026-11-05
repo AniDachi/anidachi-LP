@@ -313,7 +313,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				terms,
 			};
 		}
-		if (account.grant === "renewal")
+		if (account.grant === "renewal" || account.grant === "cancellation")
 			return {
 				offer: {
 					...base,

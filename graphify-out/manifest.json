@@ -1104,9 +1104,9 @@
     "semantic_hash": "61a460a64f6d1bb0859dc2fe7c4ac372"
   },
   "apps/web/app/api/stripe/webhook/route.ts": {
-    "mtime": 1793800404.2916992,
-    "seen": 1793804855.4327538,
-    "ast_hash": "6607b0db253a14ac9d74bf6f37dbf429",
+    "mtime": 1793877860.1300178,
+    "seen": 1793879025.749276,
+    "ast_hash": "492f29a2d63b39dfccfd7f666c9f399e",
     "semantic_hash": ""
   },
   "apps/web/app/api/users/[userId]/block/route.ts": {
@@ -2382,15 +2382,15 @@
     "semantic_hash": "60e3e0fae4428702864744e2c758e7ef"
   },
   "apps/web/lib/anidachi-auth/stripe-plans.test.ts": {
-    "mtime": 1790758381.8574598,
-    "seen": 1790844799.913156,
-    "ast_hash": "1e6e2082e29f8fe724eb1127a8915590",
+    "mtime": 1793875404.829808,
+    "seen": 1793879025.749284,
+    "ast_hash": "c16a023aae23cd3956e369cec3d794b5",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-plans.ts": {
-    "mtime": 1790758381.8569136,
-    "seen": 1790844799.913156,
-    "ast_hash": "721be2881a48405d1aa3cc2afb732626",
+    "mtime": 1793875364.9222088,
+    "seen": 1793879025.7492852,
+    "ast_hash": "c5dc1be62fff9e2e6bb46476f100ff9d",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-subscription-sync.test.ts": {
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793865671.4301844,
-    "seen": 1793865855.708569,
+    "mtime": 1793878928.6967428,
+    "seen": 1793879025.8268318,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "1546f67e1a015bb79859bf0cd1ab930c"
+    "semantic_hash": "a886e1b23d4a1337a6cfe45711b825af"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3510,10 +3510,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1793800330.3528585,
-    "seen": 1793804855.5134048,
+    "mtime": 1793877715.083093,
+    "seen": 1793879025.826833,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "3100e567be99d82d9779fd325cdd9ad2"
+    "semantic_hash": "6e7671e802041e0c18c6ffbc8d62d9e7"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -7224,9 +7224,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/billing-client.tsx": {
-    "mtime": 1793800486.4976704,
-    "seen": 1793804855.4327528,
-    "ast_hash": "9cc7cca3fa3bd50d1be5232148ce32a8",
+    "mtime": 1793878244.3817787,
+    "seen": 1793879025.7492712,
+    "ast_hash": "02d012dac399707bcea91e6057bbb7de",
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/page.tsx": {
@@ -7278,15 +7278,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.test.ts": {
-    "mtime": 1793355774.516352,
-    "seen": 1793424347.672364,
-    "ast_hash": "c467e38e4f7474c9ff0a963f4f39186e",
+    "mtime": 1793878795.0707016,
+    "seen": 1793879025.749278,
+    "ast_hash": "6502aa720636d7a09c9d198a95f9e81a",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/billing.ts": {
-    "mtime": 1793800404.29477,
-    "seen": 1793804855.432759,
-    "ast_hash": "064fb91b13a9e2e189b7f6b447f0fdc4",
+    "mtime": 1793878110.0906646,
+    "seen": 1793879025.749278,
+    "ast_hash": "a5f5807dc673b533aca28579b63088b3",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-capacity.test.ts": {
@@ -7308,9 +7308,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-view.ts": {
-    "mtime": 1793799866.7458725,
-    "seen": 1793804855.432771,
-    "ast_hash": "eca8fa60746eeea51b8bbf519cb0b333",
+    "mtime": 1793877743.2190237,
+    "seen": 1793879025.7492921,
+    "ast_hash": "54282f983c80f055edddd21ca8d7143a",
     "semantic_hash": ""
   },
   "apps/web/supabase/contracts/watch_history_capacity_concurrency_contract.mjs": {
@@ -8646,15 +8646,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-webhook-events.test.ts": {
-    "mtime": 1791727357.1734998,
-    "seen": 1791729394.750765,
-    "ast_hash": "feab3bcbe9613ed4c1efb16ffcdce56d",
+    "mtime": 1793878110.0902047,
+    "seen": 1793879025.7492852,
+    "ast_hash": "3d025bce85e4a06dad62547fe1314585",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-webhook-events.ts": {
-    "mtime": 1793800338.1862676,
-    "seen": 1793804855.4327612,
-    "ast_hash": "e41f88a777d0d8f933723823aebc68d0",
+    "mtime": 1793877860.129784,
+    "seen": 1793879025.749286,
+    "ast_hash": "23503cb53aa03b4d068db113c08aea15",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/subscription-checkout-server.ts": {
@@ -9036,9 +9036,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/dev/billing/billing-preview.tsx": {
-    "mtime": 1793355774.4650195,
-    "seen": 1793424347.672236,
-    "ast_hash": "486a6fdc92adfd28c205ab85bcfcdb09",
+    "mtime": 1793878110.090091,
+    "seen": 1793879025.7492769,
+    "ast_hash": "0575d9b1668b9658743c08f4c9117300",
     "semantic_hash": ""
   },
   "apps/web/app/dev/billing/page.tsx": {
@@ -9138,21 +9138,21 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/yearly-billing.test.ts": {
-    "mtime": 1793355774.5323648,
-    "seen": 1793424347.67239,
-    "ast_hash": "32713250338bae6939dbc45e7f7b87be",
+    "mtime": 1793875404.829924,
+    "seen": 1793879025.74929,
+    "ast_hash": "671bf854690a47aea4c974973771ac56",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/yearly-billing.ts": {
-    "mtime": 1793355774.5331361,
-    "seen": 1793424347.672391,
-    "ast_hash": "4ae651fb4e6b5cb6f993bc2f0178de48",
+    "mtime": 1793875364.9224517,
+    "seen": 1793879025.74929,
+    "ast_hash": "c4d48f994aca2300dc00f2043b32733b",
     "semantic_hash": ""
   },
   "apps/web/lib/billing-preview.test.ts": {
-    "mtime": 1793355774.5355318,
-    "seen": 1793424347.672396,
-    "ast_hash": "561b2befe958b4698af7252ff206590a",
+    "mtime": 1793878110.0897768,
+    "seen": 1793879025.749291,
+    "ast_hash": "86c0650e65ed512d6a6d46f8402ff4bc",
     "semantic_hash": ""
   },
   "apps/web/lib/checkout-success-preview.test.ts": {
@@ -9210,10 +9210,10 @@
     "semantic_hash": ""
   },
   "docs/releases/paid-hosting-trial/annual-billing-2026-09-30.md": {
-    "mtime": 1790772924.606465,
-    "seen": 1790845878.699736,
+    "mtime": 1793875404.214677,
+    "seen": 1793879025.826834,
     "ast_hash": "",
-    "semantic_hash": "63f3bd827f34e20b11d78af005b82d11"
+    "semantic_hash": "13e1f630796dbc8695670bb41d988be6"
   },
   "docs/releases/paid-hosting-trial/pricing-design-integration-2026-09-30.md": {
     "mtime": 1790756334.7160656,
@@ -10008,9 +10008,9 @@
     "semantic_hash": ""
   },
   "apps/web/app/account/billing/subscription-summary.tsx": {
-    "mtime": 1793530411.8469071,
-    "seen": 1793533463.160882,
-    "ast_hash": "30dd76a444b50dffd30b6a10eb8a79bb",
+    "mtime": 1793878110.0906353,
+    "seen": 1793879025.749275,
+    "ast_hash": "723bf3beaa95cadfda10260ee030ded7",
     "semantic_hash": ""
   },
   "apps/web/app/not-found.tsx": {
@@ -10782,9 +10782,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/billing-presentation.test.ts": {
-    "mtime": 1793355774.535475,
-    "seen": 1793424347.672395,
-    "ast_hash": "4b4ed2635579b4fecb054ee35ef72b2e",
+    "mtime": 1793878795.0705404,
+    "seen": 1793879025.749291,
+    "ast_hash": "302bea9d9d1d71763965e0a0937faef3",
     "semantic_hash": ""
   },
   "apps/web/lib/extension-presence-client.test.ts": {
@@ -11874,9 +11874,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-billing-server.ts": {
-    "mtime": 1793800571.7661357,
-    "seen": 1793804855.4327629,
-    "ast_hash": "3a696d9f0980d524364f0cb8808e062c",
+    "mtime": 1793879828.246248,
+    "seen": 1793879941.366442,
+    "ast_hash": "518f9cc4fc7169a346739646f381edc3",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-billing.ts": {
@@ -11904,9 +11904,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-offer.test.ts": {
-    "mtime": 1793865116.7652364,
-    "seen": 1793865453.269751,
-    "ast_hash": "3a1c1a59aa4c5495b61478bf43447630",
+    "mtime": 1793876558.526714,
+    "seen": 1793879025.7492878,
+    "ast_hash": "4b699bf315be26085f851b8145a95871",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-offer.ts": {
@@ -11940,15 +11940,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-service.ts": {
-    "mtime": 1793865041.7684052,
-    "seen": 1793865453.2697542,
-    "ast_hash": "dfbbe423a930196fa8d9a2a33ce38c9b",
+    "mtime": 1793876352.900684,
+    "seen": 1793879025.749289,
+    "ast_hash": "3a083e0bb73f85b48030178212e44be9",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-store.ts": {
-    "mtime": 1793862458.0433524,
-    "seen": 1793862740.641379,
-    "ast_hash": "bc44ec448e8a935521487d1d555489d7",
+    "mtime": 1793879883.4435143,
+    "seen": 1793879941.366443,
+    "ast_hash": "1178554d8b235ad5a5b909c5ca296c50",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/uninstall-stripe.ts": {
@@ -11998,5 +11998,89 @@
     "seen": 1793865855.708571,
     "ast_hash": "",
     "semantic_hash": "9e55bce1fe2e79233472e325d1a08a5a"
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention-billing.test.ts": {
+    "mtime": 1793878081.442146,
+    "seen": 1793879025.749279,
+    "ast_hash": "1a0c9d68ca0dc160953fd0ba9c44dc25",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention-billing.ts": {
+    "mtime": 1793879784.7731078,
+    "seen": 1793879941.3664372,
+    "ast_hash": "5d1eed42b3336803fe8a27b9ba56ffe1",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention-catalog.test.ts": {
+    "mtime": 1793875462.2804055,
+    "seen": 1793879025.749281,
+    "ast_hash": "997e711b8e403c7b3c9dbfb98c9a0389",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention-catalog.ts": {
+    "mtime": 1793875404.8295252,
+    "seen": 1793879025.749281,
+    "ast_hash": "498bb601036c4710e84df161bb1deb2a",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention-store.ts": {
+    "mtime": 1793876951.5277452,
+    "seen": 1793879025.7492821,
+    "ast_hash": "2aa4d2c397bbec075c8a177ee0fbbddc",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention-stripe.ts": {
+    "mtime": 1793876528.8733103,
+    "seen": 1793879025.7492821,
+    "ast_hash": "fd016eb5283f4e1242a4f7d0405be36a",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention.test.ts": {
+    "mtime": 1793877024.753743,
+    "seen": 1793879025.749283,
+    "ast_hash": "db287b0f21818a20f8953d93a39e2710",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cancellation-retention.ts": {
+    "mtime": 1793876951.5281262,
+    "seen": 1793879025.749283,
+    "ast_hash": "c2785279d74ea7613e9da72ff680f4b5",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/uninstall-billing-server.test.ts": {
+    "mtime": 1793879797.913142,
+    "seen": 1793879941.3664398,
+    "ast_hash": "da966984dca4c35a471cc56c25f12223",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/cancellation_retention_concurrency.mjs": {
+    "mtime": 1793876752.5864444,
+    "seen": 1793879025.749293,
+    "ast_hash": "41c14c28f95786cbdc1cf06f76ad3f26",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20261105120000_cancellation_retention.sql": {
+    "mtime": 1793876927.6448457,
+    "seen": 1793879025.749293,
+    "ast_hash": "b97c0bb3a42a60e0eb572aae93ee1e20",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/cancellation_retention.test.sql": {
+    "mtime": 1793876927.645296,
+    "seen": 1793879025.749294,
+    "ast_hash": "3006d441d358c18eb109009eed79f110",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-05-cancellation-retention.md": {
+    "mtime": 1793878043.1950743,
+    "seen": 1793879025.826835,
+    "ast_hash": "",
+    "semantic_hash": "461f53da60f7717e9b735fd3d05eb3f4"
+  },
+  "docs/superpowers/specs/2026-11-05-cancellation-retention-design.md": {
+    "mtime": 1793878043.1954486,
+    "seen": 1793879025.8268359,
+    "ast_hash": "",
+    "semantic_hash": "776273f4d88487aae186485ec4ac8978"
   }
 }

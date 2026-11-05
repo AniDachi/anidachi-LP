@@ -1,0 +1,66 @@
+-- Disposable fixture only; rollback all synthetic accounts and offers.
+begin;
+create extension if not exists pgtap with schema extensions;
+set search_path=public,extensions;
+select no_plan();
+select has_table('public','cancellation_retention_offers','private pending native offers exist');
+select ok((select relrowsecurity from pg_class where oid='public.cancellation_retention_offers'::regclass),'native offers have RLS');
+select ok(not has_table_privilege('anon','public.cancellation_retention_offers','SELECT'),'anon cannot read offers');
+select ok(not has_table_privilege('authenticated','public.cancellation_retention_offers','SELECT'),'authenticated cannot read offers');
+select ok(has_table_privilege('service_role','public.cancellation_retention_offers','SELECT'),'server can read offers');
+select ok(not has_table_privilege('service_role','public.cancellation_retention_offers','UPDATE'),'server cannot rewrite frozen offers');
+select ok(not has_table_privilege('service_role','public.cancellation_retention_offers','INSERT'),'server must use locked reserve');
+select ok(not has_table_privilege('service_role','public.cancellation_retention_offers','DELETE'),'server cannot erase offer evidence');
+select ok(not has_function_privilege('anon','public.reserve_cancellation_retention_v1(uuid,text,text,text,text[],bigint)','EXECUTE'),'anon cannot reserve');
+select ok(not has_function_privilege('authenticated','public.reconcile_cancellation_retention_v1(uuid,text,uuid,text,bigint,integer,boolean,boolean,boolean)','EXECUTE'),'authenticated cannot forge reconciliation');
+select ok(has_function_privilege('service_role','public.reconcile_cancellation_retention_v1(uuid,text,uuid,text,bigint,integer,boolean,boolean,boolean)','EXECUTE'),'server can reconcile');
+insert into users(id,email,display_name) select ('10000000-0000-4000-8000-00000000000'||n)::uuid,'native'||n||'@example.test','Native' from generate_series(1,5)n;
+insert into billing_customers select id,'cus_native_'||right(id::text,1) from users where email like 'native%@example.test';
+insert into subscriptions(user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,plan_code,status,current_period_end)
+ select id,'cus_native_'||right(id::text,1),'sub_native_'||right(id::text,1),'price_plus','plus','active',to_timestamp(4102444800) from users where email like 'native%@example.test';
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_2','sub_native_1','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'P0001','OFFER_CUSTOMER_MISMATCH','foreign mapping rejected');
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_2','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'P0001','OFFER_RENEWAL_CHANGED','foreign subscription rejected');
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_1','price_plus',array['prod_plus','prod_pro'],extract(epoch from clock_timestamp())::bigint+3599)$$,'P0001','OFFER_RENEWAL_CHANGED','imminent renewal rejected');
+select lives_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_1','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'native hold reserved');
+create temp table original_offer as select * from cancellation_retention_offers;
+select is((select count(*)::integer from uninstall_offer_grants),0,'display does not consume allowance');
+select ok((select redeem_by between extract(epoch from clock_timestamp())::bigint+598 and extract(epoch from clock_timestamp())::bigint+600 from cancellation_retention_offers),'hold lasts ten minutes');
+select is((select coupon_id from cancellation_retention_offers),'cancel_retention_'||(select replace(id::text,'-','') from cancellation_retention_offers),'coupon identity derived from durable UUID');
+select lives_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_1','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'native retry reuses hold');
+select is((select id from cancellation_retention_offers),(select id from original_offer),'retry preserves identity');
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_1','price_changed',array['prod_plus','prod_pro'],4102444800)$$,'P0001','OFFER_ALREADY_RESERVED','pending terms cannot change');
+select throws_ok($$select claim_uninstall_first_v1('10000000-0000-4000-8000-000000000001','cus_native_1','first')$$,'P0001','OFFER_CANCELLATION_PENDING','pending hold blocks first under shared lock');
+select throws_ok($$select reserve_uninstall_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_1','renewal',array['prod_plus','prod_pro'],'price_plus','plus',799,4102444800,'review')$$,'P0001','OFFER_CANCELLATION_PENDING','pending hold blocks renewal under shared lock');
+select throws_ok($$select reconcile_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1',(select id from original_offer),'wrong',extract(epoch from clock_timestamp())::bigint,1,false,false,false)$$,'P0001','OFFER_BINDING_MISMATCH','reconcile needs exact coupon binding');
+select throws_ok($$select reconcile_cancellation_retention_v1('10000000-0000-4000-8000-000000000002','cus_native_2',(select id from original_offer),(select coupon_id from original_offer),extract(epoch from clock_timestamp())::bigint,1,false,false,false)$$,'P0001','OFFER_BINDING_MISMATCH','another user cannot reconcile offer');
+select throws_ok($$select reconcile_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1',(select id from original_offer),(select coupon_id from original_offer),extract(epoch from clock_timestamp())::bigint,0,false,false,true)$$,'P0001','OFFER_REDEMPTION_UNRESOLVED','unredeemed before expiry retains hold');
+select throws_ok($$select reconcile_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1',(select id from original_offer),(select coupon_id from original_offer),extract(epoch from clock_timestamp())::bigint,1,true,null,false)$$,'P0001','OFFER_INVALID_EVIDENCE','missing coupon cannot be redeemed');
+select lives_ok($$select reconcile_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1',(select id from original_offer),(select coupon_id from original_offer),extract(epoch from clock_timestamp())::bigint,1,false,false,false)$$,'redemption atomically consumes shared allowance');
+select is((select state from cancellation_retention_offers),'accepted','accepted outcome saved');
+select is((select kind from uninstall_offer_grants),'cancellation','accepted native grant kind');
+select lives_ok($$select reconcile_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1',(select id from original_offer),(select coupon_id from original_offer),extract(epoch from clock_timestamp())::bigint,1,false,false,false)$$,'duplicate redemption is idempotent');
+select is((select count(*)::integer from uninstall_offer_grants),1,'duplicate never creates second grant');
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000001','cus_native_1','sub_native_1','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'P0001','OFFER_LIFETIME_LIMIT','accepted native cannot reserve again');
+select throws_ok($$select claim_uninstall_first_v1('10000000-0000-4000-8000-000000000001','cus_native_1','first')$$,'P0001','OFFER_LIFETIME_LIMIT','accepted native blocks first');
+select throws_ok($$update cancellation_retention_offers set price_id='price_changed'$$,'P0001','OFFER_IDENTITY_IMMUTABLE','immutable price survives privileged accidental update');
+-- Aged fixtures model a hold abandoned more than ten minutes ago.
+insert into cancellation_retention_offers(user_id,stripe_customer_id,stripe_subscription_id,price_id,product_ids,target_period_start,redeem_by,created_at)
+ values('10000000-0000-4000-8000-000000000002','cus_native_2','sub_native_2','price_plus',array['prod_plus','prod_pro'],4102444800,extract(epoch from clock_timestamp())::bigint-10,clock_timestamp()-interval '610 seconds');
+select throws_ok($$select reconcile_cancellation_retention_v1(user_id,stripe_customer_id,id,coupon_id,redeem_by-1,0,false,false,true) from cancellation_retention_offers where stripe_customer_id='cus_native_2'$$,'P0001','OFFER_REDEMPTION_UNRESOLVED','pre-deadline provider read cannot expire a hold later');
+select throws_ok($$select reconcile_cancellation_retention_v1(user_id,stripe_customer_id,id,coupon_id,extract(epoch from clock_timestamp())::bigint,0,false,true,true) from cancellation_retention_offers where stripe_customer_id='cus_native_2'$$,'P0001','OFFER_REDEMPTION_UNRESOLVED','provider still-valid coupon cannot release on local expiry');
+select throws_ok($$select reconcile_cancellation_retention_v1(user_id,stripe_customer_id,id,coupon_id,extract(epoch from clock_timestamp())::bigint,0,false,false,false) from cancellation_retention_offers where stripe_customer_id='cus_native_2'$$,'P0001','OFFER_REDEMPTION_UNRESOLVED','unproven provider clock expiry cannot release');
+select lives_ok($$select reconcile_cancellation_retention_v1(user_id,stripe_customer_id,id,coupon_id,extract(epoch from clock_timestamp())::bigint,0,false,false,true) from cancellation_retention_offers where stripe_customer_id='cus_native_2'$$,'provider expired zero-use releases');
+select is((select state from cancellation_retention_offers where stripe_customer_id='cus_native_2'),'expired','expired row retained');
+select is((select count(*)::integer from uninstall_offer_grants where stripe_customer_id='cus_native_2'),0,'expired hold creates no grant');
+select lives_ok($$select claim_uninstall_first_v1('10000000-0000-4000-8000-000000000002','cus_native_2','first')$$,'released hold permits ordinary first allowance');
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000002','cus_native_2','sub_native_2','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'P0001','OFFER_LIFETIME_LIMIT','earlier first allowance blocks native');
+insert into cancellation_retention_offers(user_id,stripe_customer_id,stripe_subscription_id,price_id,product_ids,target_period_start,redeem_by,created_at)
+ values('10000000-0000-4000-8000-000000000003','cus_native_3','sub_native_3','price_plus',array['prod_plus','prod_pro'],4102444800,extract(epoch from clock_timestamp())::bigint-10,clock_timestamp()-interval '610 seconds');
+select lives_ok($$select reconcile_cancellation_retention_v1(user_id,stripe_customer_id,id,coupon_id,extract(epoch from clock_timestamp())::bigint,0,true,null,true) from cancellation_retention_offers where stripe_customer_id='cus_native_3'$$,'expired missing coupon releases after provider read');
+select lives_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000003','cus_native_3','sub_native_3','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'expired hold allows new native reservation');
+select is((select count(*)::integer from cancellation_retention_offers where stripe_customer_id='cus_native_3'),2,'new hold preserves old evidence');
+select is((select count(*)::integer from cancellation_retention_offers where stripe_customer_id='cus_native_3' and state='pending'),1,'one pending row per customer');
+select lives_ok($$select reserve_uninstall_retention_v1('10000000-0000-4000-8000-000000000004','cus_native_4','sub_native_4','renewal',array['prod_plus','prod_pro'],'price_plus','plus',799,4102444800,'review')$$,'old uninstall renewal remains valid');
+select throws_ok($$select reserve_cancellation_retention_v1('10000000-0000-4000-8000-000000000004','cus_native_4','sub_native_4','price_plus',array['prod_plus','prod_pro'],4102444800)$$,'P0001','OFFER_LIFETIME_LIMIT','earlier renewal blocks native');
+select * from finish();
+rollback;

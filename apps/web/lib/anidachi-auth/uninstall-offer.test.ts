@@ -115,7 +115,7 @@ function fixture() {
 		customerIds: ["cus_owner"],
 		subscriptionIds: ["sub_owner"],
 		hasPaid: false,
-		grant: undefined as "first" | "renewal" | undefined,
+		grant: undefined as "first" | "renewal" | "cancellation" | undefined,
 		firstBinding: null as UninstallBinding | null,
 	};
 	const config = {
@@ -1142,4 +1142,11 @@ test("campaign config ignores unsuffixed and LIVE values and never enables produ
 			if (old[k] === undefined) delete process.env[k];
 			else process.env[k] = old[k];
 	}
+});
+
+test("accepted native cancellation allowance prevents first offer after subscription ends", async () => {
+	const f = fixture();
+	f.account.grant = "cancellation";
+	const offer = await createUninstallService(f.deps).offer(userId);
+	assert.equal(offer.kind, "disabled");
 });

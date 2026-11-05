@@ -1,3 +1,10 @@
+import { isCancellationBillingProviderUnavailable } from "./cancellation-retention-billing";
+import { reconcileCancellationRetention } from "./cancellation-retention";
+import {
+	cancellationRetentionStore,
+	type CancellationOffer,
+} from "./cancellation-retention-store";
+import { createStripeClient, resolveStripeMode } from "./stripe-env";
 import { db } from "./db";
 import type { RetentionClaim, RetentionInvoiceDeps } from "./retention-invoice";
 import { UninstallError, type UninstallFeedbackInput } from "./uninstall-offer";
@@ -9,27 +16,57 @@ async function rpc(name: string, input: Record<string, unknown>) {
 	if (error) throw new Error("Uninstall offer storage unavailable.");
 	return data;
 }
-export async function readUninstallAccount(userId: string) {
+const accountReadDeps = {
+	db,
+	mode: resolveStripeMode,
+	pending: cancellationRetentionStore.pending,
+	reconcile: reconcileCancellationRetention,
+	createStripe: createStripeClient,
+};
+
+export async function readUninstallAccount(
+	userId: string,
+	options: { presentationOnly?: boolean } = {},
+	deps = accountReadDeps,
+) {
+	// Issuance remains strict. A presentation-only outage marker is returned only
+	// after the durable pending offer is matched against local owned history below.
+	const pending = deps.mode() === "test" ? await deps.pending(userId) : null;
+	let pendingCancellation: CancellationOffer | null = null;
+	if (pending) {
+		try {
+			await deps.reconcile(userId, deps.createStripe());
+		} catch (error) {
+			if (
+				!options.presentationOnly ||
+				!isCancellationBillingProviderUnavailable(error)
+			) throw error;
+			pendingCancellation = pending;
+		}
+		if (!options.presentationOnly && (await deps.pending(userId)))
+			throw new Error("Cancellation offer verification pending. Please retry.");
+	}
+
 	const [mapping, subs, trials, grant] = await Promise.all([
-		db()
+		deps.db()
 			.from("billing_customers")
 			.select("user_id,stripe_customer_id")
 			.eq("user_id", userId)
 			.abortSignal(signal())
 			.maybeSingle(),
-		db()
+		deps.db()
 			.from("subscriptions")
-			.select("user_id,stripe_customer_id,stripe_subscription_id,status")
+			.select("user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,status")
 			.eq("user_id", userId)
 			.limit(101)
 			.abortSignal(signal()),
-		db()
+		deps.db()
 			.from("account_subscription_trials")
 			.select("first_paid_at,first_cash_paid_at")
 			.eq("user_id", userId)
 			.limit(101)
 			.abortSignal(signal()),
-		db()
+		deps.db()
 			.from("uninstall_offer_grants")
 			.select("user_id,stripe_customer_id,kind")
 			.eq("user_id", userId)
@@ -52,13 +89,22 @@ export async function readUninstallAccount(userId: string) {
 	const customerId: string | null = mapping.data?.stripe_customer_id ?? null;
 	const customerIds = subs.data.map((s) => s.stripe_customer_id as string);
 	if (
+		subs.data.some((sub) => sub.user_id !== userId) ||
 		customerIds.some((id) => id !== customerId) ||
 		(grant.data && grant.data.stripe_customer_id !== customerId)
 	)
 		throw new Error("Offer account mapping changed.");
+	if (pendingCancellation && (
+		pendingCancellation.state !== "pending" ||
+		pendingCancellation.user_id !== userId ||
+		pendingCancellation.stripe_customer_id !== customerId ||
+		!subs.data.some(sub =>
+			sub.stripe_subscription_id === pendingCancellation.stripe_subscription_id &&
+			sub.stripe_price_id === pendingCancellation.price_id)
+	)) throw new Error("Pending cancellation ownership unavailable.");
 	let firstBinding: UninstallBinding | null = null;
 	if (grant.data?.kind === "first") {
-		const binding = await db().from("uninstall_first_bindings")
+		const binding = await deps.db().from("uninstall_first_bindings")
 			.select("id,user_id,stripe_customer_id,coupon_id,created_at")
 			.eq("user_id", userId).abortSignal(signal()).maybeSingle();
 		if (binding.error || !binding.data || binding.data.user_id !== userId ||
@@ -67,10 +113,11 @@ export async function readUninstallAccount(userId: string) {
 		firstBinding = binding.data as UninstallBinding;
 	}
 	return {
+		...(pendingCancellation ? { pendingCancellation } : {}),
 		customerId,
 		customerIds,
 		hasPaid: trials.data.some((t) => t.first_paid_at || t.first_cash_paid_at),
-		grant: grant.data?.kind as "first" | "renewal" | undefined,
+		grant: grant.data?.kind as "first" | "renewal" | "cancellation" | undefined,
 		firstBinding,
 		subscriptionIds: subs.data.map((s) => s.stripe_subscription_id as string),
 	};
