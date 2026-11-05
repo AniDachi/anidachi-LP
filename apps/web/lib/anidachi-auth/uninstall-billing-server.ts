@@ -34,6 +34,28 @@ export async function readBillingPromotions(
 			deps.readAccount(userId, { presentationOnly: true }),
 			deps.readClaim(userId),
 		]);
+		if (account.pendingCancellation) {
+			const pending = account.pendingCancellation;
+			const row = rows.find(
+				(row) =>
+					row.user_id === userId &&
+					row.stripe_customer_id === account.customerId &&
+					row.stripe_subscription_id === pending.stripe_subscription_id &&
+					row.stripe_price_id === pending.price_id,
+			);
+			if (
+				!row ||
+				account.grant ||
+				claim ||
+				Object.values(original).some(Boolean)
+			)
+				throw new Error("Pending cancellation campaign uncertain.");
+			// Known native outage: withhold any price, preserve the annual action.
+			return {
+				...original,
+				[row.id]: { state: "unavailable", campaign: "cancellation_retention" },
+			};
+		}
 		if (!account.customerId) return original;
 		const nativeOffers = new Map(
 			await Promise.all(

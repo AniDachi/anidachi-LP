@@ -396,3 +396,29 @@ test("stale native acceptance after annual conversion shows full annual price wi
 		/next monthly renewal|first 3 months|ANIHUNT|Amount unavailable/,
 	);
 });
+
+test("known pending native verification outage withholds next amount while retaining annual action", async () => {
+	await mount(
+		{
+			...subscription,
+			canSwitchToYearly: true,
+			promotion: { state: "unavailable", campaign: "cancellation_retention" },
+		},
+		"plus",
+	);
+	assert.match(
+		container.querySelector(".billing-summary-card")!.textContent!,
+		/Amount unavailable/,
+	);
+	assert.doesNotMatch(container.textContent!, /40% off|ANIHUNT|first 3 months/);
+	await act(async () =>
+		container
+			.querySelector<HTMLButtonElement>(".billing-summary-card button")!
+			.click(),
+	);
+	assert.match(container.textContent!, /Switch to yearly billing/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/Yearly billing is available after/,
+	);
+});

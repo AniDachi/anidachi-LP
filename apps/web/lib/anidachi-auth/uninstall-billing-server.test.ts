@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type Stripe from "stripe";
-import type { SubscriptionRow } from "./db";
+import { db, type SubscriptionRow } from "./db";
+import { readUninstallAccount } from "./uninstall-store";
 import type { CancellationOffer } from "./cancellation-retention-store";
 import { cancellationCouponParams } from "./cancellation-retention-stripe";
 import { readBillingPromotions } from "./uninstall-billing-server";
@@ -164,4 +165,124 @@ test("omitted embedded coupon scope is read from the exact durable coupon before
 	delete (f.sub.discounts[0] as Stripe.Discount).coupon.applies_to;
 	assert.equal((await f.read()).local?.nextPrice?.unitAmount, 479);
 	assert.equal(f.couponReads(), 1);
+});
+
+function pendingOutageFixture(type = "StripeConnectionError") {
+	const f = fixture();
+	f.row.stripe_price_id = f.offer.price_id;
+	const results: Record<string, unknown> = {
+		billing_customers: { user_id: "owner", stripe_customer_id: "cus_owner" },
+		subscriptions: [{ ...f.row }],
+		account_subscription_trials: [],
+		uninstall_offer_grants: null,
+	};
+	const fakeDb = () =>
+		({
+			from: (table: string) => {
+				const result = () => ({ data: results[table], error: null });
+				const query = {
+					select() {
+						return query;
+					},
+					eq() {
+						return query;
+					},
+					abortSignal() {
+						return query;
+					},
+					limit() {
+						return query;
+					},
+					maybeSingle: async () => result(),
+					then(
+						resolve: (value: unknown) => unknown,
+						reject: (reason: unknown) => unknown,
+					) {
+						return Promise.resolve(result()).then(resolve, reject);
+					},
+				};
+				return query;
+			},
+		}) as unknown as ReturnType<typeof db>;
+	const accountDeps = {
+		db: fakeDb,
+		mode: () => "test" as const,
+		pending: async () => f.offer,
+		reconcile: async () => {
+			throw Object.assign(Error("provider read unavailable"), { type });
+		},
+		createStripe: () => ({}) as Stripe,
+	};
+	f.deps.readAccount = (id, options) =>
+		readUninstallAccount(id, options, accountDeps);
+	return { ...f, results, accountDeps };
+}
+test("actual account presentation preserves known pending native classification during provider reconciliation outage", async () => {
+	for (const type of [
+		"StripeConnectionError",
+		"StripeAPIError",
+		"StripeRateLimitError",
+	]) {
+		const f = pendingOutageFixture(type);
+		assert.deepEqual((await f.read()).local, {
+			state: "unavailable",
+			campaign: "cancellation_retention",
+		});
+		assert.equal(f.reads(), 0);
+	}
+});
+test("actual default issuance remains strict on pending native provider failure", async () => {
+	const f = pendingOutageFixture();
+	await assert.rejects(
+		readUninstallAccount("owner", undefined, f.accountDeps),
+		/provider read unavailable/,
+	);
+	await assert.rejects(
+		readUninstallAccount("owner", undefined, { ...f.accountDeps, reconcile: async () => {} }),
+		/verification pending/,
+	);
+});
+test("unknown ownership and explicit validation failures do not gain native annual exemption", async () => {
+	const f = pendingOutageFixture();
+	f.results.billing_customers = {
+		user_id: "owner",
+		stripe_customer_id: "cus_changed",
+	};
+	assert.deepEqual((await f.read()).local, { state: "unavailable" });
+	const invalid = pendingOutageFixture("ValidationError");
+	assert.deepEqual((await invalid.read()).local, { state: "unavailable" });
+});
+test("Product Hunt and uninstall uncertainty still blocks annual under known native provider outage", async () => {
+	const productHunt = pendingOutageFixture();
+	productHunt.deps.readProductHuntBilling = async () => ({
+		local: { state: "unavailable" },
+	});
+	assert.deepEqual((await productHunt.read()).local, { state: "unavailable" });
+	const legacy = pendingOutageFixture();
+	legacy.deps.readClaim = async () => {
+		throw Error("uninstall state unavailable");
+	};
+	assert.deepEqual((await legacy.read()).local, { state: "unavailable" });
+});
+
+test("pending fallback requires exact durable owner/subscription/price and readable local storage", async () => {
+	for (const field of [
+		"user_id",
+		"stripe_subscription_id",
+		"price_id",
+	] as const) {
+		const f = pendingOutageFixture();
+		f.offer[field] = "foreign";
+		assert.deepEqual((await f.read()).local, { state: "unavailable" });
+	}
+	const storage = pendingOutageFixture();
+	storage.results.subscriptions = null;
+	assert.deepEqual((await storage.read()).local, { state: "unavailable" });
+	const grant = pendingOutageFixture();
+	grant.results.uninstall_offer_grants = {
+		user_id: "owner",
+		stripe_customer_id: "cus_owner",
+		kind: "renewal",
+	};
+	assert.deepEqual((await grant.read()).local, { state: "unavailable" });
 });

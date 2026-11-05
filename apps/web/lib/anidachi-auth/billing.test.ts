@@ -821,20 +821,22 @@ test("native campaign keeps annual conversion available while other promotion gu
 		process.env.STRIPE_MODE = "test";
 		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST = "price_yearly";
 		process.env.STRIPE_YEARLY_PORTAL_CONFIGURATION_ID_TEST = "bpc_yearly";
-		for (const campaign of [
-			"cancellation_retention",
-			"uninstall_renewal",
-			undefined,
-		] as const) {
-			const f = fixture({
-				access: trialAccess("2029-12-31T00:00:00Z"),
-				promotion: { state: "active", campaign },
-			});
-			assert.equal(
-				(await f.service.overview("owner")).subscriptions[0].canSwitchToYearly,
-				campaign === "cancellation_retention",
-			);
-		}
+		for (const state of ["active", "unavailable"] as const)
+			for (const campaign of [
+				"cancellation_retention",
+				"uninstall_renewal",
+				undefined,
+			] as const) {
+				const f = fixture({
+					access: trialAccess("2029-12-31T00:00:00Z"),
+					promotion: { state, campaign },
+				});
+				assert.equal(
+					(await f.service.overview("owner")).subscriptions[0]
+						.canSwitchToYearly,
+					campaign === "cancellation_retention",
+				);
+			}
 	} finally {
 		process.env = saved;
 	}
