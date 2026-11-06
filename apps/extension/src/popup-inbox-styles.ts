@@ -32,6 +32,7 @@ export const popupInboxStyles = `
   .inbox-group svg { flex-shrink: 0; margin-top: 2px; }
   .inbox-group span { min-width: 0; overflow-wrap: anywhere; }
   .inbox-message { margin: 8px 0 0; color: #aaa29b; font-size: 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .inbox-item-notice { margin: 12px 0 0; color: #c7b29e; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
   .inbox-room[data-state='missed'] { border: 0; border-radius: 0; background: transparent; padding: 0 0 14px; border-bottom: 1px solid #ffffff0c; }
   .inbox-room[data-state='missed']:last-child { border-bottom: 0; padding-bottom: 0; }
   .inbox-room[data-state='missed'] .inbox-room-copy { margin: 7px 0 0 46px; }

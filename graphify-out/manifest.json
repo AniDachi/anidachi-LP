@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793784673.3927457,
-    "seen": 1793785100.462049,
-    "ast_hash": "e268854127d764cb3b77f9473d8dd051",
+    "mtime": 1793958758.7591152,
+    "seen": 1793958767.1089559,
+    "ast_hash": "9f00cb5cb0426e3bd111b69e285265ad",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -390,15 +390,15 @@
     "semantic_hash": "36308950ab5526f30362d99a6ae2826f"
   },
   "apps/extension/src/popup-app.tsx": {
-    "mtime": 1793770611.7204645,
-    "seen": 1793771177.8815172,
-    "ast_hash": "1e7a38c7957ad3d79a1b467b01ab6781",
+    "mtime": 1793962390.9462163,
+    "seen": 1793962525.06333,
+    "ast_hash": "9fa4094aae1cb2beb92d4a06c98a6cac",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-styles.ts": {
-    "mtime": 1790862084.2855303,
-    "seen": 1790862436.821826,
-    "ast_hash": "f06a4b639f5b306c923d22422c1031f4",
+    "mtime": 1793962390.9986393,
+    "seen": 1793962525.063335,
+    "ast_hash": "654469dbf0955c96be3d1b1c1d5f55a3",
     "semantic_hash": ""
   },
   "apps/extension/src/privacy-sanitizer.ts": {
@@ -450,15 +450,15 @@
     "semantic_hash": "c0512c914b34023f94a02fcb98cb161f"
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1789490458.8872004,
-    "seen": 1789807056.436509,
-    "ast_hash": "e2ca5a2b0c455ec0aeb9a1acff897bcd",
-    "semantic_hash": "e2ca5a2b0c455ec0aeb9a1acff897bcd"
+    "mtime": 1793961173.6128337,
+    "seen": 1793961761.804092,
+    "ast_hash": "f04f72682d87644d2d11e23981b25271",
+    "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1793686209.4454658,
-    "seen": 1793686800.94526,
-    "ast_hash": "5420a29607f8e7081db5f62dccc95e36",
+    "mtime": 1793958567.498366,
+    "seen": 1793958572.1580842,
+    "ast_hash": "0a23ae4cd3bc4e7edd96191d87294f97",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -606,10 +606,10 @@
     "semantic_hash": "4990f2060084364a9ec5f6f98a328f29"
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1789490458.9037075,
-    "seen": 1789807056.436589,
-    "ast_hash": "fb5dc6032a92dbc3220ba83c4c390d32",
-    "semantic_hash": "fb5dc6032a92dbc3220ba83c4c390d32"
+    "mtime": 1793961107.8567023,
+    "seen": 1793961761.8041039,
+    "ast_hash": "cb9645c8006d6c57266585dc5f7358d0",
+    "semantic_hash": ""
   },
   "apps/extension/test/video-adapter.test.ts": {
     "mtime": 1789490458.9059823,
@@ -1296,15 +1296,15 @@
     "semantic_hash": "7d9b7c83bd8ae4d25839c9cabf9ff7bf"
   },
   "apps/web/app/friend/invite/[token]/friend-invite-client.tsx": {
-    "mtime": 1791473521.9541545,
-    "seen": 1791473766.329555,
-    "ast_hash": "7be08ef7eaf5b3cee8848fe5e8d54446",
+    "mtime": 1793960444.0851643,
+    "seen": 1793960448.7681239,
+    "ast_hash": "8dc25bf93f432254a01f4d3bf4ab13f0",
     "semantic_hash": ""
   },
   "apps/web/app/friend/invite/[token]/page.tsx": {
-    "mtime": 1791473521.954233,
-    "seen": 1791473766.329556,
-    "ast_hash": "6f30592f9f007fc1b0fcc75b1d839b31",
+    "mtime": 1793960444.1069329,
+    "seen": 1793960448.768127,
+    "ast_hash": "fdb99bc57013089c9ba3108a5571959c",
     "semantic_hash": ""
   },
   "apps/web/app/friends/friends-client.tsx": {
@@ -4884,10 +4884,10 @@
     "semantic_hash": "30a312b7ab87619a4b79c1a15d5dd68f"
   },
   "apps/extension/src/popup-people-panel.tsx": {
-    "mtime": 1789490458.8830156,
-    "seen": 1789807056.4364889,
-    "ast_hash": "fa4cfa6e67bc179d75417a5322a0874d",
-    "semantic_hash": "fa4cfa6e67bc179d75417a5322a0874d"
+    "mtime": 1793964171.3506324,
+    "seen": 1793964178.533469,
+    "ast_hash": "70c4743c4588ba590d4714de82487116",
+    "semantic_hash": ""
   },
   "apps/extension/test/popup-people-model.test.ts": {
     "mtime": 1789490458.9001174,
@@ -4896,9 +4896,9 @@
     "semantic_hash": "a550facece2e1b0b49624408e437434a"
   },
   "apps/extension/test/popup-people-panel.test.tsx": {
-    "mtime": 1793355774.4267678,
-    "seen": 1793424347.672194,
-    "ast_hash": "49580ec06cb1397f594d829e11d2e1df",
+    "mtime": 1793963129.2112088,
+    "seen": 1793963615.3287199,
+    "ast_hash": "323279f51392b9a55d5618d133762bb1",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-07-popup-people-social-directory.md": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793784673.3689501,
-    "seen": 1793785100.462053,
-    "ast_hash": "11a5ed4eeb7eab55e1757cae08bd5d00",
+    "mtime": 1793958066.1448684,
+    "seen": 1793958498.542391,
+    "ast_hash": "ab4d3b08738fbcc39fd63d026674ebe6",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -6192,9 +6192,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/popup-inbox-convergence.test.tsx": {
-    "mtime": 1790862339.6011994,
-    "seen": 1790862436.8218298,
-    "ast_hash": "0e32312221c0fbd20ad1df194438fe2b",
+    "mtime": 1793962348.4230196,
+    "seen": 1793962525.063336,
+    "ast_hash": "db77c68dc674a35a2431398757a6b749",
     "semantic_hash": ""
   },
   "apps/extension/test/room-invite-notification-runtime.test.ts": {
@@ -7542,22 +7542,22 @@
     "semantic_hash": "1cbca477bf6c29a8fe664a2fb0b55f87"
   },
   "apps/extension/src/popup-inbox-panel.tsx": {
-    "mtime": 1789490458.8827958,
-    "seen": 1789807056.436487,
-    "ast_hash": "a1e94cdeff83dbc6333080be33d46ffa",
-    "semantic_hash": "a1e94cdeff83dbc6333080be33d46ffa"
+    "mtime": 1793961385.337571,
+    "seen": 1793961761.804084,
+    "ast_hash": "4e548d2e4ca5939c2630ae7f5d915366",
+    "semantic_hash": ""
   },
   "apps/extension/src/popup-inbox-styles.ts": {
-    "mtime": 1789490458.8828683,
-    "seen": 1789807056.436488,
-    "ast_hash": "966de3811c5826fd18fcde1b365d2084",
-    "semantic_hash": "966de3811c5826fd18fcde1b365d2084"
+    "mtime": 1793961173.6596892,
+    "seen": 1793961761.804088,
+    "ast_hash": "52d4ad1828f95c9ee984d7188895a001",
+    "semantic_hash": ""
   },
   "apps/extension/src/popup-people-styles.ts": {
-    "mtime": 1789490458.883096,
-    "seen": 1789807056.4364889,
-    "ast_hash": "44d9660cc9bd041a60424dc60b84aa3c",
-    "semantic_hash": "44d9660cc9bd041a60424dc60b84aa3c"
+    "mtime": 1793964171.370813,
+    "seen": 1793964178.533473,
+    "ast_hash": "9de60317f463643c8619bfd9777805c6",
+    "semantic_hash": ""
   },
   "apps/extension/test/people-editor-client.test.ts": {
     "mtime": 1789490458.8994045,
@@ -7566,10 +7566,10 @@
     "semantic_hash": "aab2e5487d292507fbae0f0a4144f06b"
   },
   "apps/extension/test/popup-inbox-panel.test.tsx": {
-    "mtime": 1789490458.8999455,
-    "seen": 1789807056.436574,
-    "ast_hash": "9bd683c1619e279d5233dac2ec601fdb",
-    "semantic_hash": "9bd683c1619e279d5233dac2ec601fdb"
+    "mtime": 1793961296.8766236,
+    "seen": 1793961761.8040981,
+    "ast_hash": "239782a8c62f63932991f99d015dc728",
+    "semantic_hash": ""
   },
   "apps/web/app/api/groups/editor/route.ts": {
     "mtime": 1789490458.9198897,
@@ -12154,5 +12154,65 @@
     "seen": 1793944580.789576,
     "ast_hash": "d228e755ef9c6c6834738cab358f4ebd",
     "semantic_hash": ""
+  },
+  "apps/extension/src/capsule-friends-model.ts": {
+    "mtime": 1793958489.0941203,
+    "seen": 1793958498.54238,
+    "ast_hash": "5ddd24f0ce04bef3a52235e1781314a0",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/capsule-friends-panel.tsx": {
+    "mtime": 1793958489.0944498,
+    "seen": 1793958498.5423832,
+    "ast_hash": "5c4000589afc496e3905b5f04aeb1d54",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/capsule-friends-styles.ts": {
+    "mtime": 1793957764.428729,
+    "seen": 1793958498.5423841,
+    "ast_hash": "c712861d63eed72ead03a96a0c05ae09",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/capsule-friends-model.test.ts": {
+    "mtime": 1793957764.972958,
+    "seen": 1793958498.542388,
+    "ast_hash": "d47c356cf6d636b4a804cc32f41680e5",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/capsule-friends-panel.test.tsx": {
+    "mtime": 1793958113.0931,
+    "seen": 1793958498.542389,
+    "ast_hash": "41cf72418cef675427f77dfb7e0d5366",
+    "semantic_hash": ""
+  },
+  "docs/extension-capsule-friends.md": {
+    "mtime": 1793964802.0450208,
+    "seen": 1793964929.088895,
+    "ast_hash": "",
+    "semantic_hash": "4290d1ed18e54e028a1627f3dfd7db7a"
+  },
+  "apps/web/app/friend/invite/[token]/friend-invite-client.test.tsx": {
+    "mtime": 1793959999.104775,
+    "seen": 1793960379.9061499,
+    "ast_hash": "d8ba8b071d8939ca4b0ea066b31a8e74",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/friend-invite-client.test.ts": {
+    "mtime": 1793959999.12778,
+    "seen": 1793960379.906157,
+    "ast_hash": "d25b8f283ac302081d085e9aba0225d7",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/popup-navigation.tsx": {
+    "mtime": 1793962390.946079,
+    "seen": 1793962525.063333,
+    "ast_hash": "4faedab74954c02f79b1a69d4b41a0d1",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md": {
+    "mtime": 1793964802.0208316,
+    "seen": 1793964929.0888991,
+    "ast_hash": "",
+    "semantic_hash": "08108c8f660fc2572b9b9079814c779f"
   }
 }

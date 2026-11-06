@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SOCIAL_OWNER_HEADER } from "@/lib/social-editor-contracts";
 
 type PublicProfile = {
   userId: string;
@@ -12,21 +12,12 @@ type PublicProfile = {
   avatarUrl: string | null;
 };
 
-import { SOCIAL_OWNER_HEADER } from "@/lib/social-editor-contracts";
-
 type Props = {
   alreadyFriends?: boolean;
   ownerUserId: string;
   sender: PublicProfile;
   token: string;
 };
-
-async function readJson(response: Response): Promise<void> {
-  const body = (await response.json().catch(() => null)) as { error?: unknown } | null;
-  if (!response.ok) {
-    throw new Error(typeof body?.error === "string" ? body.error : "Could not accept invite");
-  }
-}
 
 function initials(name: string) {
   return (
@@ -44,83 +35,136 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
   const [busy, setBusy] = useState(false);
   const [accepted, setAccepted] = useState(alreadyFriends);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
+  const confirmationRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (accepted && !alreadyFriends) confirmationRef.current?.focus();
+  }, [accepted, alreadyFriends]);
 
   const acceptInvite = useCallback(async () => {
-    if (busyRef.current) return;
+    if (busyRef.current || accepted) return;
     busyRef.current = true;
     setBusy(true);
     setError(null);
     try {
-      await readJson(
-        await fetch(`/api/friends/invite-links/${encodeURIComponent(token)}/accept`, {
+      const response = await fetch(
+        `/api/friends/invite-links/${encodeURIComponent(token)}/accept`,
+        {
           method: "POST",
           headers: { [SOCIAL_OWNER_HEADER]: ownerUserId },
-        }),
+        },
       );
+      if (response.status === 401) {
+        setNeedsLogin(true);
+        return;
+      }
+      const body = (await response.json().catch(() => null)) as {
+        error?: unknown;
+        friendship?: { status?: unknown };
+      } | null;
+      if (!response.ok || body?.friendship?.status !== "accepted") {
+        if (
+          [403, 404, 410].includes(response.status) ||
+          (response.status === 409 && body?.error === "This invite has already been used. Ask for a new link.")
+        ) {
+          setUnavailable(true);
+        }
+        throw new Error(
+          response.status < 500 && !response.ok && typeof body?.error === "string"
+            ? body.error
+            : "Could not add friend. Please try again.",
+        );
+      }
       setAccepted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not accept invite");
+      setError(
+        err instanceof Error && err.name !== "TypeError"
+          ? err.message
+          : "Could not add friend. Please try again.",
+      );
     } finally {
       busyRef.current = false;
       setBusy(false);
     }
-  }, [token, ownerUserId]);
+  }, [token, ownerUserId, accepted]);
 
   return (
-    <div className="rounded-[20px] border border-ani-line bg-ani-panel p-6">
+    <div className="rounded-[20px] border border-ani-line bg-ani-panel p-6 sm:p-8">
       <div className="flex items-center gap-4">
         {sender.avatarUrl ? (
           <img
             alt=""
-            className="h-14 w-14 rounded-full object-cover"
+            className="h-16 w-16 shrink-0 rounded-full object-cover"
             src={sender.avatarUrl}
           />
         ) : (
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-ani-line bg-ani-canvas text-lg font-semibold text-ani-text">
+          <span aria-hidden className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-ani-line bg-ani-canvas text-xl font-semibold text-ani-text">
             {initials(sender.displayName)}
           </span>
         )}
         <div className="min-w-0">
-          <p className="truncate text-lg font-semibold tracking-[-0.02em] text-ani-text">{sender.displayName}</p>
-          <p className="truncate text-sm text-ani-muted">
-            {sender.handle ? `@${sender.handle}` : "AniDachi user"}
-          </p>
+          <h1 className="break-words text-xl font-semibold leading-snug tracking-[-0.02em] text-ani-text">
+            {sender.displayName}
+          </h1>
+          {sender.handle ? (
+            <p className="mt-1 break-words text-sm text-ani-muted">@{sender.handle}</p>
+          ) : null}
         </div>
       </div>
 
-      {accepted ? (
-        <div className="mt-6 rounded-[12px] border border-ani-line bg-ani-selected-quiet px-4 py-3 text-sm text-ani-text">
-          <Check className="mr-2 inline h-4 w-4 text-ani-progress" aria-hidden />
-          You are friends.
-        </div>
-      ) : null}
+      <div className="mt-6" aria-live="polite">
+        {accepted ? (
+          <p
+            ref={confirmationRef}
+            tabIndex={-1}
+            role="status"
+            className="flex min-h-11 items-center gap-2.5 text-base font-medium text-ani-text outline-none"
+          >
+            <Check className="h-5 w-5 shrink-0 text-ani-progress" aria-hidden />
+            You’re now friends
+          </p>
+        ) : (
+          <>
+            {!unavailable && (
+              <p className="text-base leading-relaxed text-ani-muted">
+                {needsLogin ? "Sign in to accept this invitation." : "Invites you to be friends"}
+              </p>
+            )}
+            {unavailable ? null : needsLogin ? (
+              <Button asChild className="mt-6 w-full" size="control" variant="cream">
+                <a href={`/login?next=${encodeURIComponent(`/friend/invite/${encodeURIComponent(token)}`)}`}>
+                  Sign in
+                </a>
+              </Button>
+            ) : (
+              <Button
+                className="mt-6 w-full"
+                disabled={busy}
+                aria-busy={busy}
+                onClick={acceptInvite}
+                size="control"
+                type="button"
+                variant="cream"
+              >
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden />
+                ) : (
+                  <UserPlus className="h-4 w-4" aria-hidden />
+                )}
+                Add friend
+              </Button>
+            )}
+          </>
+        )}
+      </div>
 
       {error ? (
-        <div className="mt-6 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <p role="alert" className="mt-4 text-sm leading-relaxed text-ani-error-text">
           {error}
-        </div>
+        </p>
       ) : null}
-
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Button
-          className="w-full sm:w-auto"
-          disabled={busy || accepted}
-          onClick={acceptInvite}
-          size="control"
-          type="button"
-          variant="cream"
-        >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-          ) : (
-            <UserPlus className="h-4 w-4" aria-hidden />
-          )}
-          {accepted ? "Already friends" : "Add friend"}
-        </Button>
-        <Button asChild className="w-full sm:w-auto" size="control" variant="creamOutline">
-          <Link href="/account/friends">Open friends</Link>
-        </Button>
-      </div>
     </div>
   );
 }

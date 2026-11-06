@@ -185,7 +185,8 @@ describe("Inbox presentation", () => {
 		});
 		expect(container.textContent).toContain("No saved invitations");
 		expect(container.textContent).not.toContain("all caught up");
-		expect(container.textContent).toContain("out of date");
+		if (status === "error") expect(container.textContent).toContain("Couldn’t refresh invitations");
+		else expect(container.querySelector(".inbox-status")).toBeNull();
 	});
 
 	it("retains invitations on refresh failure, disables stale actions, and retries", async () => {

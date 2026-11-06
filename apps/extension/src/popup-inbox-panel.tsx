@@ -8,7 +8,7 @@ import {
 	Users,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import type { AccountInboxResponse } from "@anidachi/protocol";
+import type { AccountInboxItem, AccountInboxResponse } from "@anidachi/protocol";
 import type { AccountOwnedState } from "./account-sync";
 import type {
 	PopupInboxFriendRequest,
@@ -17,9 +17,16 @@ import type {
 } from "./popup-people-model";
 
 export type InboxInviteAction = "join" | "decline";
+export type InboxItemNotice = { text: string; terminal: boolean };
+// A response to an older invitation must never disable a resend or Return card.
+export function inboxActionNoticeKey(item: AccountInboxItem): string {
+	const id = item.kind === "room-invite" ? item.inviteId : item.friendshipId;
+	return `${item.kind}:${id}:${item.createdAt}:${item.state}:${item.activityAt}`;
+}
 
 export function PopupInboxPanel({
 	actionNotice = null,
+	itemNotices = {},
 	busyFriendRequestActionKey,
 	busyInviteId,
 	busyInviteAction = null,
@@ -38,6 +45,7 @@ export function PopupInboxPanel({
 		tone: "success" | "warning" | "error";
 		text: string;
 	} | null;
+	itemNotices?: Readonly<Record<string, InboxItemNotice>>;
 	busyFriendRequestActionKey: string | null;
 	busyInviteId: string | null;
 	busyInviteAction?: InboxInviteAction | null;
@@ -63,7 +71,7 @@ export function PopupInboxPanel({
 				model!.returnableRoomInvites.length +
 				model!.missedRoomInvites.length,
 		);
-	const stale = hasCache && (refreshing || state.status === "error");
+	const stale = hasCache && state.status === "error";
 	const notice =
 		actionNotice && /^(accept|decline)-friend:/.test(actionNotice.actionKey)
 			? actionNotice
@@ -102,7 +110,7 @@ export function PopupInboxPanel({
 			{state.status === "error" && !hasCache ? (
 				<InboxState
 					title="Could not load invitations"
-					description={state.error}
+					description="Please try again."
 				>
 					<button className="inbox-primary" type="button" onClick={onRefresh}>
 						Retry
@@ -129,9 +137,7 @@ export function PopupInboxPanel({
 					role="status"
 				>
 					<span>
-						{state.status === "error"
-							? `${state.error} Saved inbox data may be out of date.`
-							: "Refreshing inbox. Saved data may be out of date."}
+						Couldn’t refresh invitations.
 					</span>
 					{state.status === "error" ? (
 						<button type="button" disabled={busy} onClick={onRefresh}>
@@ -171,6 +177,7 @@ export function PopupInboxPanel({
 								<FriendRequestRow
 									key={request.friendshipId}
 									request={request}
+									notice={itemNotices[inboxActionNoticeKey(request)]}
 									disabled={disabled}
 									busyActionKey={busyFriendRequestActionKey}
 									onAccept={() => onAcceptFriendRequest(request.friendshipId)}
@@ -188,6 +195,7 @@ export function PopupInboxPanel({
 								<RoomInviteRow
 									key={invite.inviteId}
 									invite={invite}
+									notice={itemNotices[inboxActionNoticeKey(invite)]}
 									disabled={disabled}
 									busyAction={
 										busyInviteId === invite.inviteId ? busyInviteAction : null
@@ -204,6 +212,7 @@ export function PopupInboxPanel({
 								<RoomInviteRow
 									key={invite.inviteId}
 									invite={invite}
+									notice={itemNotices[inboxActionNoticeKey(invite)]}
 									disabled={disabled}
 									busyAction={busyInviteId === invite.inviteId ? busyInviteAction : null}
 									onJoin={() => onAcceptInvite(invite.inviteId)}
@@ -280,12 +289,14 @@ function InboxSection({
 
 function FriendRequestRow({
 	request,
+	notice,
 	disabled,
 	busyActionKey,
 	onAccept,
 	onDecline,
 }: {
 	request: PopupInboxFriendRequest;
+	notice?: InboxItemNotice;
 	disabled: boolean;
 	busyActionKey: string | null;
 	onAccept: () => void;
@@ -307,7 +318,8 @@ function FriendRequestRow({
 				</div>
 				<ActivityTime value={request.activityAt} />
 			</div>
-			<div className="inbox-actions">
+			{notice ? <p className="inbox-item-notice" role="status">{notice.text}</p> : null}
+			{!notice?.terminal ? <div className="inbox-actions">
 				<button
 					className="inbox-primary"
 					type="button"
@@ -328,19 +340,21 @@ function FriendRequestRow({
 					{declining ? <Spinner /> : null}
 					{declining ? "Declining…" : "Decline"}
 				</button>
-			</div>
+			</div> : null}
 		</article>
 	);
 }
 
 function RoomInviteRow({
 	invite,
+	notice,
 	disabled,
 	busyAction,
 	onJoin,
 	onDecline,
 }: {
 	invite: PopupInboxInvite;
+	notice?: InboxItemNotice;
 	disabled: boolean;
 	busyAction: InboxInviteAction | null;
 	onJoin?: () => void;
@@ -358,7 +372,7 @@ function RoomInviteRow({
 				<InboxAvatar profile={invite.sender} />
 				<div className="inbox-person">
 					<strong>{invite.sender.displayName}</strong>
-					<span>{missed ? "Missed invite" : returning ? "Return to this room" : "Invited you to watch"}</span>
+					<span>{missed ? "Room ended" : returning ? "Return to this room" : "Invited you to watch"}</span>
 				</div>
 				<ActivityTime value={invite.activityAt} />
 			</div>
@@ -374,7 +388,8 @@ function RoomInviteRow({
 					<p className="inbox-message">{invite.message}</p>
 				) : null}
 			</div>
-			{!missed ? (
+			{!missed && notice ? <p className="inbox-item-notice" role="status">{notice.text}</p> : null}
+			{!missed && !notice?.terminal ? (
 				<div className="inbox-actions">
 					<button
 						className="inbox-primary"
