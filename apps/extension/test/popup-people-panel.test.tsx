@@ -139,7 +139,7 @@ describe("PopupPeoplePanel", () => {
     expect(tabs.map((tab) => tab.textContent?.trim())).toEqual(["Friends", "Groups"]);
     expect(tabs[0]?.getAttribute("aria-selected")).toBe("true");
     expect(view.container.textContent).toContain("Friend");
-    expect(view.container.textContent).not.toContain("New group");
+    expect(view.container.textContent).not.toContain("Create group");
 
     await unmount(view.root);
   });
@@ -148,25 +148,56 @@ describe("PopupPeoplePanel", () => {
     const view = await renderPanel();
 
     expect(view.container.textContent).not.toContain("Watched with recently");
-    expect(view.container.textContent).toContain("Invite a friend with a link to get started.");
+    expect(view.container.textContent).toContain("Add a friend to start watching together.");
 
     await unmount(view.root);
   });
 
-  it("uses deliberate one-time links instead of recent-person requests", async () => {
+  it("creates and copies a one-person link in one click, reusing it on later copies", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     const onCreateInviteLink = vi.fn(async () => ({ url: "https://staging.anidachi.app/friend/invite/example", expiresAt: "2099-01-01T00:00:00Z" }));
     const view = await renderPanel({ state: readyState(directory({ recentPeople: [recent("recent-a", "Recent A")] })), onCreateInviteLink });
     expect(view.container.textContent).not.toContain("Recent A");
-    await click(getButton(view.container, "Invite"));
+    await click(getButton(view.container, "Add friend"));
     expect(onCreateInviteLink).not.toHaveBeenCalled();
-    await click(getButton(view.container, "Create link"));
+    await click(getButton(view.container, "Copy invite link"));
     expect(onCreateInviteLink).toHaveBeenCalledTimes(1);
     const input = view.container.querySelector<HTMLInputElement>('input[readonly]')!;
     expect(input.value).toContain("/friend/invite/example");
-    await click(getButton(view.container, "Close"));
-    await click(getButton(view.container, "Invite"));
+    expect(writeText).toHaveBeenCalledWith(input.value);
+    await click(getButton(view.container, "Close dialog"));
+    await click(getButton(view.container, "Add friend"));
     expect(view.container.querySelector<HTMLInputElement>('input[readonly]')?.value).toBe(input.value);
+    await click(getButton(view.container, "Copy invite link"));
+    expect(writeText).toHaveBeenCalledTimes(2);
     expect(onCreateInviteLink).toHaveBeenCalledTimes(1);
+    await unmount(view.root);
+  });
+
+  it("serializes link preparation and replaces an expired link before copying", async () => {
+    const clock = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-06T00:00:00Z"));
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    let finish!: (value: { url: string; expiresAt: string }) => void;
+    const onCreateInviteLink = vi.fn<PopupPeoplePanelProps["onCreateInviteLink"]>()
+      .mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }))
+      .mockResolvedValue({ url: "https://staging.anidachi.app/friend/invite/new", expiresAt: "2099-01-01T00:00:00Z" });
+    const view = await renderPanel({ onCreateInviteLink });
+    await click(getButton(view.container, "Add friend"));
+    const copy = getButton(view.container, "Copy invite link");
+    await act(async () => { copy.click(); copy.click(); });
+    expect(onCreateInviteLink).toHaveBeenCalledTimes(1);
+    await act(async () => finish({ url: "https://staging.anidachi.app/friend/invite/old", expiresAt: "2026-11-07T00:00:00Z" }));
+    expect(writeText).toHaveBeenCalledTimes(1);
+    // Expiry can pass without a render while the dialog stays open.
+    clock.mockReturnValue(Date.parse("2026-11-08T00:00:00Z"));
+    await click(copy);
+    expect(onCreateInviteLink).toHaveBeenCalledTimes(2);
+    expect(writeText).toHaveBeenLastCalledWith("https://staging.anidachi.app/friend/invite/new");
+    await click(getButton(view.container, "New link"));
+    expect(onCreateInviteLink).toHaveBeenCalledTimes(3);
+    expect(writeText).toHaveBeenCalledTimes(2);
     await unmount(view.root);
   });
 
@@ -176,7 +207,7 @@ describe("PopupPeoplePanel", () => {
     await click(getButton(view.container, "Groups"));
     expect(view.container.textContent).toContain("Friday crew");
     expect(view.container.querySelector('input[name="group-name"]')).toBeNull();
-    await click(getButton(view.container, "New group"));
+    await click(getButton(view.container, "Create group"));
     const input = getGroupInput(view.container);
     await setInputValue(input, "Weekend");
     await act(async () => view.container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
@@ -237,17 +268,17 @@ describe("PopupPeoplePanel", () => {
       "Showing saved people while we reconnect.",
     );
     expect(stale.container.querySelector('[data-state="empty"]')?.textContent).toContain(
-      "Invite a friend with a link to get started.",
+      "Add a friend to start watching together.",
     );
     await unmount(stale.root);
   });
 
   it("disables new actions while another social mutation is pending", async () => {
     const view = await renderPanel({ pendingActionKey: "save-group:example" });
-    expect(getButton(view.container, "Invite").disabled).toBe(true);
+    expect(getButton(view.container, "Add friend").disabled).toBe(true);
     expect(getButton(view.container, "Refresh people").disabled).toBe(true);
     await click(getButton(view.container, "Groups"));
-    expect(getButton(view.container, "New group").disabled).toBe(true);
+    expect(getButton(view.container, "Create group").disabled).toBe(true);
     await unmount(view.root);
   });
 
@@ -255,7 +286,7 @@ describe("PopupPeoplePanel", () => {
     const onSaveGroup = vi.fn<PopupPeoplePanelProps["onSaveGroup"]>().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     const view = await renderPanel({ onSaveGroup });
     await click(getButton(view.container, "Groups"));
-    await click(getButton(view.container, "New group"));
+    await click(getButton(view.container, "Create group"));
     const input = getGroupInput(view.container);
     await setInputValue(input, "Weekend");
     await submit(input.form!);
@@ -270,16 +301,16 @@ describe("PopupPeoplePanel", () => {
   it("retains selected friends while searching and confirms discarding a draft", async () => {
     const onSaveGroup = vi.fn(async () => true);
     const view = await renderPanel({ state: readyState(directory({ friends: [friend("ren", "f1", "Ren", "accepted"), friend("mei", "f2", "Mei", "accepted")] })), onSaveGroup });
-    await click(getButton(view.container, "Groups")); await click(getButton(view.container, "New group"));
+    await click(getButton(view.container, "Groups")); await click(getButton(view.container, "Create group"));
     const box = view.container.querySelector<HTMLInputElement>('input[aria-label="Ren"]')!;
     await act(async () => box.click());
     await setInputValue(view.container.querySelector<HTMLInputElement>('input[aria-label="Search group friends"]')!, "Mei");
     expect(view.container.querySelector('input[aria-label="Ren"]')).toBeNull();
-    expect(view.container.textContent).toContain("1 / 100");
+    expect(view.container.textContent).toContain("1 selected");
     await click(getButton(view.container, "Cancel"));
     expect(view.container.textContent).toContain("Discard unsaved changes?");
     await click(getButton(view.container, "Keep editing"));
-    expect(view.container.textContent).toContain("1 / 100");
+    expect(view.container.textContent).toContain("1 selected");
     await click(getButton(view.container, "Cancel")); await click(getButton(view.container, "Discard"));
     expect(onSaveGroup).not.toHaveBeenCalled(); expect(view.container.querySelector("dialog")).toBeNull();
     await unmount(view.root);
@@ -312,8 +343,7 @@ describe("PopupPeoplePanel", () => {
     const writeText = vi.fn().mockRejectedValue(new Error("Clipboard denied"));
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     const view = await renderPanel({ onCreateInviteLink: vi.fn(async () => ({ url: "https://staging.anidachi.app/friend/invite/example", expiresAt: "2099-01-01T00:00:00Z" })) });
-    await click(getButton(view.container, "Invite")); await click(getButton(view.container, "Create link"));
-    await click(getButton(view.container, "Copy link"));
+    await click(getButton(view.container, "Add friend")); await click(getButton(view.container, "Copy invite link"));
     expect(view.container.textContent).toContain("copy it manually");
     expect(view.container.querySelector<HTMLInputElement>('input[readonly]')?.value).toContain("/friend/invite/example");
     await unmount(view.root);
@@ -741,9 +771,9 @@ describe("PopupApp social mutations", () => {
   it("creates a friend link for the captured owner without refreshing history or social data", async () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
     const view = await renderPopupApp(); root = view.root;
-    await click(await findButton(view.container, "People")); await click(await findButton(view.container, "Invite"));
+    await click(await findButton(view.container, "People")); await click(await findButton(view.container, "Add friend"));
     expect(createFriendInviteLink).not.toHaveBeenCalled();
-    await click(getButton(view.container, "Create link"));
+    await click(getButton(view.container, "Copy invite link"));
     expect(createFriendInviteLink).toHaveBeenCalledWith("access-1", VIEWER_ID);
     expect(listSocialDirectory).toHaveBeenCalledTimes(1);
   });
@@ -755,7 +785,7 @@ describe("PopupApp social mutations", () => {
 
     await click(await findButton(view.container, "People"));
     await click(await findButton(view.container, "Groups"));
-    await click(getButton(view.container, "New group"));
+    await click(getButton(view.container, "Create group"));
     const input = getGroupInput(view.container);
     await setInputValue(input, "Weekend");
     await submit(input.form!);
@@ -778,7 +808,7 @@ describe("PopupApp social mutations", () => {
 
     await click(await findButton(view.container, "People"));
     await click(await findButton(view.container, "Groups"));
-    await click(getButton(view.container, "New group"));
+    await click(getButton(view.container, "Create group"));
     const input = getGroupInput(view.container);
     await setInputValue(input, "Weekend");
     await submit(input.form!);
@@ -805,7 +835,7 @@ describe("PopupApp social mutations", () => {
 
     await click(await findButton(view.container, "People"));
     await click(await findButton(view.container, "Groups"));
-    await click(getButton(view.container, "New group"));
+    await click(getButton(view.container, "Create group"));
     const input = getGroupInput(view.container);
     await setInputValue(input, "Weekend");
     await act(async () => {
@@ -837,19 +867,22 @@ describe("PopupApp social mutations", () => {
   });
 
   it("discards a late invitation link after switching accounts", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
     let finishLink!: (value: { url: string; expiresAt: string }) => void;
     vi.mocked(createFriendInviteLink).mockImplementation(() => new Promise(resolve => { finishLink = resolve; }));
     const view = await renderPopupApp(); root = view.root;
-    await click(await findButton(view.container, "People")); await click(getButton(view.container, "Invite")); await click(getButton(view.container, "Create link"));
+    await click(await findButton(view.container, "People")); await click(getButton(view.container, "Add friend")); await click(getButton(view.container, "Copy invite link"));
     const other = { ...TOKENS, accessToken: "other-access", user: { ...TOKENS.user, id: RECENT_USER_ID, displayName: "Other account" } };
     const listeners = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.map(([listener]) => listener);
     vi.mocked(requestCurrentExtensionSession).mockResolvedValue(other);
     await act(async () => { for (const listener of listeners) listener({ authTokens: { oldValue: TOKENS, newValue: other } }, "local"); });
     await act(async () => finishLink({ url: "https://staging.anidachi.app/friend/invite/old-owner-secret", expiresAt: "2099-01-01T00:00:00Z" }));
+    expect(writeText).not.toHaveBeenCalled();
     expect(view.container.innerHTML).not.toContain("old-owner-secret"); expect(view.container.querySelector("dialog")).toBeNull();
-    await click(await findButton(view.container, "People")); await click(await findButton(view.container, "Invite"));
-    expect(view.container.querySelector('input[readonly]')).toBeNull(); expect(getButton(view.container, "Create link")).not.toBeNull();
+    await click(await findButton(view.container, "People")); await click(await findButton(view.container, "Add friend"));
+    expect(view.container.querySelector('input[readonly]')).toBeNull(); expect(getButton(view.container, "Copy invite link")).not.toBeNull();
   });
 
   it("opens the authenticated friends dashboard from People", async () => {

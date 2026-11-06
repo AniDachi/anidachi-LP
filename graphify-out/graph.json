@@ -1572,7 +1572,7 @@
         "confidence": "EXTRACTED",
         "confidence_score": 1.0,
         "source_file": "docs/extension-capsule-friends.md",
-        "source_location": "lines 117-132",
+        "source_location": "lines 136-151",
         "_origin": "semantic"
       }
     ]
@@ -13382,7 +13382,7 @@
       "file_type": "code",
       "norm_label": "editor",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L60"
+      "source_location": "L61"
     },
     {
       "id": "apps_extension_src_popup_people_panel_mode",
@@ -13395,7 +13395,7 @@
       "file_type": "code",
       "norm_label": "mode",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L59"
+      "source_location": "L60"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeopleactionkey",
@@ -13408,7 +13408,7 @@
       "file_type": "code",
       "norm_label": "popuppeopleactionkey",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L36"
+      "source_location": "L37"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeopleactionnotice",
@@ -13421,7 +13421,7 @@
       "file_type": "code",
       "norm_label": "popuppeopleactionnotice",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L41"
+      "source_location": "L42"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeoplepanelprops",
@@ -13434,7 +13434,7 @@
       "file_type": "code",
       "norm_label": "popuppeoplepanelprops",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L46"
+      "source_location": "L47"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeoplepresentationstate",
@@ -13447,7 +13447,7 @@
       "file_type": "code",
       "norm_label": "popuppeoplepresentationstate",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L24"
+      "source_location": "L25"
     },
     {
       "id": "apps_extension_src_popup_people_panel_removal",
@@ -13460,7 +13460,7 @@
       "file_type": "code",
       "norm_label": "removal",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L61"
+      "source_location": "L62"
     },
     {
       "id": "apps_extension_src_social_client_friendinvitelink",
@@ -13486,7 +13486,7 @@
       "file_type": "code",
       "norm_label": "panelprops",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1019"
+      "source_location": "L1052"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_renderedview",
@@ -13499,7 +13499,7 @@
       "file_type": "code",
       "norm_label": "renderedview",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1023"
+      "source_location": "L1056"
     },
     {
       "id": "packages_protocol_src_account_roominvitesresponse",
@@ -67699,7 +67699,7 @@
       "file_type": "code",
       "norm_label": "emptystate()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L914"
+      "source_location": "L880"
     },
     {
       "id": "apps_extension_src_popup_people_panel_friendmenu",
@@ -67711,7 +67711,25 @@
       "file_type": "code",
       "norm_label": "friendmenu()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L847"
+      "source_location": "L813",
+      "metadata": {
+        "unresolved_calls": [
+          {
+            "callee": "preventDefault",
+            "receiver_type": "Event",
+            "lang": "typescript",
+            "line": "L837",
+            "file": "apps/extension/src/popup-people-panel.tsx"
+          },
+          {
+            "callee": "stopPropagation",
+            "receiver_type": "Event",
+            "lang": "typescript",
+            "line": "L838",
+            "file": "apps/extension/src/popup-people-panel.tsx"
+          }
+        ]
+      }
     },
     {
       "id": "apps_extension_src_popup_people_panel_groupeditor",
@@ -67723,7 +67741,18 @@
       "file_type": "code",
       "norm_label": "groupeditor()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L384"
+      "source_location": "L385",
+      "metadata": {
+        "unresolved_calls": [
+          {
+            "callee": "preventDefault",
+            "receiver_type": "Event",
+            "lang": "typescript",
+            "line": "L462",
+            "file": "apps/extension/src/popup-people-panel.tsx"
+          }
+        ]
+      }
     },
     {
       "id": "apps_extension_src_popup_people_panel_linkdialog",
@@ -67735,7 +67764,7 @@
       "file_type": "code",
       "norm_label": "linkdialog()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L602"
+      "source_location": "L604"
     },
     {
       "id": "apps_extension_src_popup_people_panel_matches",
@@ -67747,7 +67776,7 @@
       "file_type": "code",
       "norm_label": "matches()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L940"
+      "source_location": "L906"
     },
     {
       "id": "apps_extension_src_popup_people_panel_notice",
@@ -67759,7 +67788,7 @@
       "file_type": "code",
       "norm_label": "notice()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L902"
+      "source_location": "L868"
     },
     {
       "id": "apps_extension_src_popup_people_panel_peopledialog",
@@ -67771,7 +67800,18 @@
       "file_type": "code",
       "norm_label": "peopledialog()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L794"
+      "source_location": "L759",
+      "metadata": {
+        "unresolved_calls": [
+          {
+            "callee": "preventDefault",
+            "receiver_type": "Event",
+            "lang": "typescript",
+            "line": "L793",
+            "file": "apps/extension/src/popup-people-panel.tsx"
+          }
+        ]
+      }
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeoplepanel",
@@ -67783,7 +67823,18 @@
       "file_type": "code",
       "norm_label": "popuppeoplepanel()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L63"
+      "source_location": "L64",
+      "metadata": {
+        "unresolved_calls": [
+          {
+            "callee": "preventDefault",
+            "receiver_type": "Event",
+            "lang": "typescript",
+            "line": "L142",
+            "file": "apps/extension/src/popup-people-panel.tsx"
+          }
+        ]
+      }
     },
     {
       "id": "apps_extension_src_popup_people_panel_profileavatar",
@@ -67795,7 +67846,7 @@
       "file_type": "code",
       "norm_label": "profileavatar()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L921"
+      "source_location": "L887"
     },
     {
       "id": "apps_extension_src_popup_people_panel_removaldialog",
@@ -67807,7 +67858,7 @@
       "file_type": "code",
       "norm_label": "removaldialog()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L723"
+      "source_location": "L688"
     },
     {
       "id": "apps_extension_src_popup_people_panel_usemounted",
@@ -67819,7 +67870,7 @@
       "file_type": "code",
       "norm_label": "usemounted()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L943"
+      "source_location": "L909"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_accountinbox",
@@ -67831,7 +67882,7 @@
       "file_type": "code",
       "norm_label": "accountinbox()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1117"
+      "source_location": "L1150"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_click",
@@ -67843,14 +67894,14 @@
       "file_type": "code",
       "norm_label": "click()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1249",
+      "source_location": "L1282",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "click",
             "receiver_type": "HTMLButtonElement",
             "lang": "typescript",
-            "line": "L1251",
+            "line": "L1284",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -67866,7 +67917,7 @@
       "file_type": "code",
       "norm_label": "directory()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1090"
+      "source_location": "L1123"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_findbutton",
@@ -67878,14 +67929,14 @@
       "file_type": "code",
       "norm_label": "findbutton()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1286",
+      "source_location": "L1319",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "querySelectorAll",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L1290",
+            "line": "L1323",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -67901,7 +67952,7 @@
       "file_type": "code",
       "norm_label": "flushpromises()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1275"
+      "source_location": "L1308"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_friend",
@@ -67913,7 +67964,7 @@
       "file_type": "code",
       "norm_label": "friend()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1201"
+      "source_location": "L1234"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_getbutton",
@@ -67925,14 +67976,14 @@
       "file_type": "code",
       "norm_label": "getbutton()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1307",
+      "source_location": "L1340",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "querySelectorAll",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L1308",
+            "line": "L1341",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -67948,14 +67999,14 @@
       "file_type": "code",
       "norm_label": "getgroupinput()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1269",
+      "source_location": "L1302",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "querySelector",
             "receiver_type": "HTMLElement",
             "lang": "typescript",
-            "line": "L1270",
+            "line": "L1303",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -67971,7 +68022,7 @@
       "file_type": "code",
       "norm_label": "group()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1218"
+      "source_location": "L1251"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_inboxfriendrequest",
@@ -67983,7 +68034,7 @@
       "file_type": "code",
       "norm_label": "inboxfriendrequest()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1184"
+      "source_location": "L1217"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_inboxroominvite",
@@ -67995,7 +68046,7 @@
       "file_type": "code",
       "norm_label": "inboxroominvite()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1136"
+      "source_location": "L1169"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_installpopupchrome",
@@ -68007,7 +68058,7 @@
       "file_type": "code",
       "norm_label": "installpopupchrome()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1320"
+      "source_location": "L1353"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_legalpresentationstates",
@@ -68019,7 +68070,7 @@
       "file_type": "code",
       "norm_label": "legalpresentationstates()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1075"
+      "source_location": "L1108"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_readystate",
@@ -68031,7 +68082,7 @@
       "file_type": "code",
       "norm_label": "readystate()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1071"
+      "source_location": "L1104"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_recent",
@@ -68043,7 +68094,7 @@
       "file_type": "code",
       "norm_label": "recent()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1242"
+      "source_location": "L1275"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_renderelement",
@@ -68055,14 +68106,14 @@
       "file_type": "code",
       "norm_label": "renderelement()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1053",
+      "source_location": "L1086",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "render",
             "receiver_type": "Root",
             "lang": "typescript",
-            "line": "L1058",
+            "line": "L1091",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -68078,14 +68129,14 @@
       "file_type": "code",
       "norm_label": "renderpanel()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1028",
+      "source_location": "L1061",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "render",
             "receiver_type": "Root",
             "lang": "typescript",
-            "line": "L1033",
+            "line": "L1066",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -68101,7 +68152,7 @@
       "file_type": "code",
       "norm_label": "renderpopupapp()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1063"
+      "source_location": "L1096"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_roominvitecontract",
@@ -68113,7 +68164,7 @@
       "file_type": "code",
       "norm_label": "roominvitecontract()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1167"
+      "source_location": "L1200"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_roominvites",
@@ -68125,7 +68176,7 @@
       "file_type": "code",
       "norm_label": "roominvites()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1109"
+      "source_location": "L1142"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_setinputvalue",
@@ -68137,14 +68188,14 @@
       "file_type": "code",
       "norm_label": "setinputvalue()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1255",
+      "source_location": "L1288",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "dispatchEvent",
             "receiver_type": "HTMLInputElement",
             "lang": "typescript",
-            "line": "L1258",
+            "line": "L1291",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -68160,7 +68211,7 @@
       "file_type": "code",
       "norm_label": "socialsnapshot()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1101"
+      "source_location": "L1134"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_submit",
@@ -68172,14 +68223,14 @@
       "file_type": "code",
       "norm_label": "submit()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1262",
+      "source_location": "L1295",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "dispatchEvent",
             "receiver_type": "HTMLFormElement",
             "lang": "typescript",
-            "line": "L1264",
+            "line": "L1297",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -68195,14 +68246,14 @@
       "file_type": "code",
       "norm_label": "unmount()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1316",
+      "source_location": "L1349",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "unmount",
             "receiver_type": "Root",
             "lang": "typescript",
-            "line": "L1317",
+            "line": "L1350",
             "file": "apps/extension/test/popup-people-panel.test.tsx"
           }
         ]
@@ -68218,7 +68269,7 @@
       "file_type": "code",
       "norm_label": "waitfor()",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1280"
+      "source_location": "L1313"
     },
     {
       "id": "apps_web_app_api_billing_sync_checkout_session_route_checkoutsessionuserid",
@@ -231618,7 +231669,7 @@
       "label": "Local browser rehearsal",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 142-144",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232258,7 +232309,7 @@
       "label": "Extension and friendship regression coverage",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-122",
+      "source_location": "lines 138-141",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232271,7 +232322,7 @@
       "label": "Room signaling harness",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 122-130",
+      "source_location": "lines 141-149",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232284,7 +232335,7 @@
       "label": "Narrow staging build and artifact validator",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 122-123",
+      "source_location": "lines 141-142",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232297,7 +232348,7 @@
       "label": "Two-account staging acceptance",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 130-132",
+      "source_location": "lines 149-151",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232310,7 +232361,7 @@
       "label": "Unchanged runtime behavior boundary",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 13-14, 51-52, 127-130",
+      "source_location": "lines 13-14, 51-52, 146-149",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232323,7 +232374,7 @@
       "label": "Prior reviewed extension artifact rollback",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 134-135",
+      "source_location": "lines 153-154",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232616,7 +232667,7 @@
       "label": "capsule-friends-model.test.ts",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232629,7 +232680,7 @@
       "label": "capsule-friends-panel.test.tsx",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232642,7 +232693,7 @@
       "label": "privileged-overlay-wiring.test.tsx",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232838,6 +232889,418 @@
       "source_file": "apps/extension/src/popup-navigation.tsx",
       "source_location": "L34",
       "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "label": "Toolbar People clarity",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 117-134",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Local November 6 UI follow-up makes Add friend and Create group explicit while preserving existing contracts; separate from the capsule Add friend flow described earlier in this document.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_people_empty_list_action",
+      "label": "People empty-list action",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 119-121",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Friends uses Add friend and Groups uses Create group. Empty lists expose one central action without empty search or a redundant zero count; populated lists retain search, row actions and the Friends / Groups switch.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_add_friend_dialog",
+      "label": "Toolbar Add friend dialog",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 123-128",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Shows a short explanation that the link is for one person and an explicit Copy invite link action; opening the dialog alone does not create a link.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_copy_invite_link",
+      "label": "Copy invite link",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 123-128",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "One explicit click creates and copies the invitation link; valid links are reused, expiry is checked at click, and a selectable URL remains available after clipboard failure.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_new_link",
+      "label": "Toolbar New link",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 125-127",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Explicitly creates a replacement for another friend without silently copying it.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_link_operation_lock",
+      "label": "Toolbar link operation lock",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Duplicate creation and copy operations are locked.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_link_owner_fencing",
+      "label": "Toolbar link owner fencing",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Late results from an old account cannot reach the clipboard or the dialog.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_group_dialog",
+      "label": "Toolbar group dialog",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-134",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Retains name and friend selection with a selected count, and distinct Create group and Save changes actions; initial focus goes to the name.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_create_group",
+      "label": "Create group",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 119-121, 130-131",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Explicit creation action in Groups and the group dialog; distinguished from Save changes for editing.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_save_changes",
+      "label": "Save changes",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-131",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Explicit group editing action distinct from Create group.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_existing_group_contract",
+      "label": "Existing group contract",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-134",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Private invitation-list semantics, empty groups, 100-member limit, draft retention, conflict/retry handling and deletion confirmation remain unchanged.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_people_ui_release_boundary",
+      "label": "People UI release boundary",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 133-134",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "This follow-up is local UI work with no server migration or new permissions; the linked plan defines the work and delivery boundary.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "label": "People drawer clarity",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 1-49",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Local follow-up to the accepted September People editor responding to the request to make adding friends and creating groups simple and clear; uses the existing extension style and API without new friendship or group semantics.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_september_people_editor",
+      "label": "September People editor",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 3-5",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Accepted prior People editor that this local clarity work follows.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_focused_people_dialogs",
+      "label": "Focused People dialogs",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 9-11, 25-27",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Keep Friends / Groups and the existing focused dialogs. Text-only cleanup would leave the redundant link step; a full-screen wizard would be disproportionate. The chosen approach is the existing dialog with one explicit copy action.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_explicit_people_actions",
+      "label": "Explicit People actions",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 9-11",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Friends and Groups expose Add friend and Create group actions. Empty lists use one central action without empty search or a redundant zero count, while nonempty lists keep search and compact rows.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_add_friend",
+      "label": "Add friend",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 13-18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Explains single-person link use and offers Copy invite link; opening the dialog creates nothing.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_copy_invite_link",
+      "label": "Copy invite link",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 13-18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "An explicit click creates and copies the link. Subsequent copies reuse a valid link; the URL remains available for manual copy.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_new_link",
+      "label": "New link",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 16-18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Explicitly replaces the displayed link for another friend. Old unused links retain server expiry and single-use behavior.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_link_owner_fencing",
+      "label": "Link owner fencing",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Late results after an account change must not display or copy a previous owner link.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_create_group_dialog",
+      "label": "Create group dialog",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 20-23",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Retains the name, accepted-friend selection, search and compact selected count; Create group and Save changes distinguish creation from editing.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_private_invitation_lists",
+      "label": "Private invitation lists",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 22-23",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Groups remain private invitation lists, including allowed empty groups; draft retention, conflict handling, limits and destructive confirmations stay unchanged.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_popup_people_panel_tsx",
+      "label": "popup-people-panel.tsx",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 31-32",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The presentation and link-copy changes are restricted to this existing People panel and its stylesheet, preserving API/auth ownership.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_popup_people_styles_ts",
+      "label": "popup-people-styles.ts",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 31-32",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Existing People stylesheet changed only for presentation and the stated link-copy interaction.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_regressions",
+      "label": "People regressions",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 33-35",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Completed checklist item extends existing regressions for single-click creation/copy, reuse, expiry, clipboard failure, duplicate clicks and late account-switch results, while preserving group selection, stable retry ID and conflict tests.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_actual_component_fixture",
+      "label": "Actual-component fixture",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 36-37, 44-48",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Completed inspection covers populated/empty lists, copy/re-copy, creation/editing and narrow width. Reported fixture inspection at 392 and 320 pixels includes successful local group save and reopening with selected friends intact; this is not real two-account friend acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_validation_checklist",
+      "label": "Validation checklist",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 38-39, 44-48",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Extension typecheck/tests, dev check, review and Graphify refresh remain an unchecked checklist item in this source. The local-verification paragraph separately reports extension typecheck and 169 files / 2838 tests passing, with independent review finding no actionable issues.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_local_artifact_delivery",
+      "label": "Local artifact delivery",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 39-40",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Unchecked delivery item requires building and validating the narrow staging artifact, then backing up and refreshing the same tester folders and ZIPs. Do not push or deploy this local block automatically.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_tester_artifact_rollback",
+      "label": "Tester artifact rollback",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 42",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Restore the prior tester artifact or revert this local change.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_local_delivery_evidence",
+      "label": "Local delivery evidence",
+      "file_type": "concept",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 48-49",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Delivery evidence is to be recorded in artifacts/people-clarity-20261106/, an ignored local-only directory.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_api_auth_ownership",
+      "label": "API/auth ownership",
+      "file_type": "rationale",
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 5, 31-32",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Preserve existing API and auth ownership and introduce no new friendship or group semantics.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_extension_src_popup_app_popupnavigation",
+      "label": "apps_extension_src_popup_app_popupnavigation",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
       "_origin": "ast"
     }
   ],
@@ -250461,10 +250924,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L408",
+      "source_location": "L409",
       "weight": 1.0
     },
     {
@@ -250473,10 +250935,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L421",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -250485,10 +250946,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L618",
+      "source_location": "L621",
       "weight": 1.0
     },
     {
@@ -250497,10 +250957,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L72",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -250509,10 +250968,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L78",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -250521,10 +250979,9 @@
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L737",
+      "source_location": "L702",
       "weight": 1.0
     },
     {
@@ -268989,7 +269446,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1288",
+      "source_location": "L1321",
       "weight": 1.0
     },
     {
@@ -269000,7 +269457,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1080",
+      "source_location": "L1113",
       "weight": 1.0
     },
     {
@@ -269011,7 +269468,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1045",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -269022,7 +269479,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1045",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -269033,7 +269490,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1064",
+      "source_location": "L1097",
       "weight": 1.0
     },
     {
@@ -269044,7 +269501,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1065",
+      "source_location": "L1098",
       "weight": 1.0
     },
     {
@@ -269055,7 +269512,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1067",
+      "source_location": "L1100",
       "weight": 1.0
     },
     {
@@ -269066,7 +269523,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1103",
+      "source_location": "L1136",
       "weight": 1.0
     },
     {
@@ -269077,7 +269534,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1104",
+      "source_location": "L1137",
       "weight": 1.0
     },
     {
@@ -269088,7 +269545,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1265",
+      "source_location": "L1298",
       "weight": 1.0
     },
     {
@@ -311506,26 +311963,13 @@
     },
     {
       "source": "apps_extension_src_popup_people_panel",
-      "target": "packages_protocol_src_account_socialdirectory",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_people_panel",
       "target": "apps_extension_src_popup_people_model_buildpopuppeoplemodel",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -311534,10 +311978,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -311546,10 +311989,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -311558,10 +312000,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -311570,10 +312011,9 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -321007,7 +321447,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L598",
+      "source_location": "L628",
       "weight": 1.0
     },
     {
@@ -321019,7 +321459,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L599",
+      "source_location": "L629",
       "weight": 1.0
     },
     {
@@ -321031,7 +321471,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L600",
+      "source_location": "L630",
       "weight": 1.0
     },
     {
@@ -321043,7 +321483,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L601",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -321066,7 +321506,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L594",
+      "source_location": "L624",
       "weight": 1.0
     },
     {
@@ -321078,7 +321518,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L595",
+      "source_location": "L625",
       "weight": 1.0
     },
     {
@@ -321090,7 +321530,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L596",
+      "source_location": "L626",
       "weight": 1.0
     },
     {
@@ -321102,7 +321542,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L597",
+      "source_location": "L627",
       "weight": 1.0
     },
     {
@@ -321141,17 +321581,6 @@
     {
       "source": "apps_extension_test_popup_people_panel_test",
       "target": "apps_extension_src_popup_app_popupinboxbadgecount",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "import",
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_src_popup_inbox_panel_popupinboxpanel",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -321213,7 +321642,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L616",
+      "source_location": "L646",
       "weight": 1.0
     },
     {
@@ -321225,7 +321654,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L619",
+      "source_location": "L649",
       "weight": 1.0
     },
     {
@@ -321237,7 +321666,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L615",
+      "source_location": "L645",
       "weight": 1.0
     },
     {
@@ -321249,7 +321678,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L612",
+      "source_location": "L642",
       "weight": 1.0
     },
     {
@@ -321261,7 +321690,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L624",
+      "source_location": "L654",
       "weight": 1.0
     },
     {
@@ -321273,7 +321702,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L611",
+      "source_location": "L641",
       "weight": 1.0
     },
     {
@@ -321285,7 +321714,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L637",
+      "source_location": "L667",
       "weight": 1.0
     },
     {
@@ -321297,7 +321726,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L614",
+      "source_location": "L644",
       "weight": 1.0
     },
     {
@@ -321309,7 +321738,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L613",
+      "source_location": "L643",
       "weight": 1.0
     },
     {
@@ -321321,7 +321750,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L609",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -321333,7 +321762,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L610",
+      "source_location": "L640",
       "weight": 1.0
     },
     {
@@ -361866,7 +362295,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
       "source_location": "L1",
@@ -361879,10 +362307,9 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -361891,10 +362318,9 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -361903,10 +362329,9 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "type_only": true,
       "weight": 1.0
     },
@@ -412967,9 +413392,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -412978,9 +413402,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -412989,9 +413412,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L384",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -413000,9 +413422,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -413011,9 +413432,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -413022,9 +413442,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -413033,9 +413452,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -413044,9 +413462,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L602",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -413055,9 +413472,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -413066,9 +413482,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -413077,9 +413492,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L723",
+      "source_location": "L688",
       "weight": 1.0
     },
     {
@@ -413088,9 +413502,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L794",
+      "source_location": "L759",
       "weight": 1.0
     },
     {
@@ -413099,9 +413512,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L847",
+      "source_location": "L813",
       "weight": 1.0
     },
     {
@@ -413110,9 +413522,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L902",
+      "source_location": "L868",
       "weight": 1.0
     },
     {
@@ -413121,9 +413532,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L914",
+      "source_location": "L880",
       "weight": 1.0
     },
     {
@@ -413132,9 +413542,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L921",
+      "source_location": "L887",
       "weight": 1.0
     },
     {
@@ -413143,9 +413552,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L940",
+      "source_location": "L906",
       "weight": 1.0
     },
     {
@@ -413154,9 +413562,8 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L943",
+      "source_location": "L909",
       "weight": 1.0
     },
     {
@@ -413165,7 +413572,6 @@
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-people-styles.ts",
       "source_location": "L2",
       "weight": 1.0
@@ -428682,7 +429088,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L441",
+      "source_location": "L471",
       "weight": 1.0,
       "context": "call"
     },
@@ -428693,7 +429099,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L670",
+      "source_location": "L700",
       "weight": 1.0,
       "context": "call"
     },
@@ -428715,7 +429121,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L191",
+      "source_location": "L222",
       "weight": 1.0,
       "context": "call"
     },
@@ -428737,7 +429143,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L369",
+      "source_location": "L399",
       "weight": 1.0,
       "context": "call"
     },
@@ -428748,7 +429154,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L611",
+      "source_location": "L641",
       "weight": 1.0,
       "context": "call"
     },
@@ -428759,7 +429165,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L462",
+      "source_location": "L492",
       "weight": 1.0,
       "context": "call"
     },
@@ -428780,7 +429186,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L469",
+      "source_location": "L499",
       "weight": 1.0,
       "context": "call"
     },
@@ -428791,7 +429197,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L620",
+      "source_location": "L650",
       "weight": 1.0,
       "context": "call"
     },
@@ -428802,7 +429208,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L463",
+      "source_location": "L493",
       "weight": 1.0,
       "context": "call"
     },
@@ -428824,7 +429230,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L175",
+      "source_location": "L206",
       "weight": 1.0,
       "context": "call"
     },
@@ -428835,7 +429241,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L158",
+      "source_location": "L160",
       "weight": 1.0,
       "context": "call"
     },
@@ -428846,7 +429252,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L160",
+      "source_location": "L162",
       "weight": 1.0,
       "context": "call"
     },
@@ -428857,7 +429263,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L181",
+      "source_location": "L212",
       "weight": 1.0,
       "context": "call"
     },
@@ -428868,7 +429274,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L184",
+      "source_location": "L215",
       "weight": 1.0,
       "context": "call"
     },
@@ -428879,7 +429285,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L180",
+      "source_location": "L211",
       "weight": 1.0,
       "context": "call"
     },
@@ -428890,7 +429296,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1012",
+      "source_location": "L1045",
       "weight": 1.0,
       "context": "call"
     },
@@ -428901,7 +429307,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L639",
+      "source_location": "L669",
       "weight": 1.0,
       "context": "call"
     },
@@ -428912,7 +429318,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L642",
+      "source_location": "L672",
       "weight": 1.0,
       "context": "call"
     },
@@ -428923,7 +429329,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L160",
+      "source_location": "L162",
       "weight": 1.0,
       "context": "call"
     },
@@ -428945,7 +429351,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L593",
+      "source_location": "L623",
       "weight": 1.0,
       "context": "call"
     },
@@ -428956,7 +429362,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1019",
+      "source_location": "L1052",
       "weight": 1.0
     },
     {
@@ -428966,7 +429372,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1023",
+      "source_location": "L1056",
       "weight": 1.0
     },
     {
@@ -506142,7 +506548,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1067",
+      "source_location": "L1100",
       "weight": 1.0
     },
     {
@@ -527565,7 +527971,6 @@
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
       "source_location": "L1",
@@ -527577,7 +527982,6 @@
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
       "source_location": "L2",
@@ -641125,7 +641529,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1028",
+      "source_location": "L1061",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641135,7 +641539,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1053",
+      "source_location": "L1086",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641145,7 +641549,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1063",
+      "source_location": "L1096",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641155,7 +641559,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1071",
+      "source_location": "L1104",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641165,7 +641569,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1075",
+      "source_location": "L1108",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641175,7 +641579,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1090",
+      "source_location": "L1123",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641185,7 +641589,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1101",
+      "source_location": "L1134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641195,7 +641599,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1109",
+      "source_location": "L1142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641205,7 +641609,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1117",
+      "source_location": "L1150",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641215,7 +641619,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1136",
+      "source_location": "L1169",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641225,7 +641629,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1167",
+      "source_location": "L1200",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641235,7 +641639,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1184",
+      "source_location": "L1217",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641245,7 +641649,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1201",
+      "source_location": "L1234",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641255,7 +641659,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1218",
+      "source_location": "L1251",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641265,7 +641669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1242",
+      "source_location": "L1275",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641275,7 +641679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1249",
+      "source_location": "L1282",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641285,7 +641689,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1255",
+      "source_location": "L1288",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641295,7 +641699,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1262",
+      "source_location": "L1295",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641305,7 +641709,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1269",
+      "source_location": "L1302",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641315,7 +641719,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1275",
+      "source_location": "L1308",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641325,7 +641729,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1280",
+      "source_location": "L1313",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641335,7 +641739,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1286",
+      "source_location": "L1319",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641345,7 +641749,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1307",
+      "source_location": "L1340",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641355,7 +641759,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1316",
+      "source_location": "L1349",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641365,7 +641769,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1320",
+      "source_location": "L1353",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641376,7 +641780,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1066",
+      "source_location": "L1099",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667516,7 +667920,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1034",
+      "source_location": "L1067",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667528,7 +667932,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L1064",
+      "source_location": "L1097",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -737975,7 +738379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 142-144",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738974,7 +739378,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-122",
+      "source_location": "lines 138-141",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738985,7 +739389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 122-130",
+      "source_location": "lines 141-149",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738996,7 +739400,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 122-123",
+      "source_location": "lines 141-142",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739007,7 +739411,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 142-144",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739018,7 +739422,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 130-132",
+      "source_location": "lines 149-151",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739029,7 +739433,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 127-130",
+      "source_location": "lines 146-149",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739040,7 +739444,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 134-135",
+      "source_location": "lines 153-154",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739469,7 +739873,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739480,7 +739884,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-120",
+      "source_location": "lines 138-139",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739491,7 +739895,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 130-132",
+      "source_location": "lines 149-151",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739502,7 +739906,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 130-132",
+      "source_location": "lines 149-151",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739513,7 +739917,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 130-132",
+      "source_location": "lines 149-151",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739524,7 +739928,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 127-130",
+      "source_location": "lines 146-149",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739535,7 +739939,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 127-135",
+      "source_location": "lines 146-154",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740164,7 +740568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740175,7 +740579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740186,7 +740590,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 119-121",
+      "source_location": "lines 138-140",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -741033,17 +741437,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_src_popup_navigation_popupnavigation",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L27",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_extension_src_popup_app_popupapp",
       "target": "apps_extension_src_popup_navigation_popupnavigation",
       "relation": "calls",
@@ -741052,6 +741445,787 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
       "source_location": "L938",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_extension_capsule_friends_capsule_friends_and_invitations",
+      "target": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 117-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_popup_people_screen",
+      "target": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 117-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_people_empty_list_action",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 119-121",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_toolbar_add_friend_dialog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 123-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_copy_invite_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 123-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_toolbar_new_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 125-127",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_toolbar_link_operation_lock",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_toolbar_link_owner_fencing",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_toolbar_group_dialog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_create_group",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 119-121, 130-131",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_save_changes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-131",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_existing_group_contract",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_extension_capsule_friends_people_ui_release_boundary",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 133-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_add_friend_dialog",
+      "target": "docs_extension_capsule_friends_copy_invite_link",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 123-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_add_friend_dialog",
+      "target": "docs_extension_capsule_friends_toolbar_new_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 125-127",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_copy_invite_link",
+      "target": "docs_extension_capsule_friends_toolbar_link_operation_lock",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_copy_invite_link",
+      "target": "docs_extension_capsule_friends_toolbar_link_owner_fencing",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_new_link",
+      "target": "docs_extension_capsule_friends_toolbar_link_operation_lock",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_new_link",
+      "target": "docs_extension_capsule_friends_toolbar_link_owner_fencing",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 127-128",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_group_dialog",
+      "target": "docs_extension_capsule_friends_create_group",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-131",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_group_dialog",
+      "target": "docs_extension_capsule_friends_save_changes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-131",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_group_dialog",
+      "target": "docs_extension_capsule_friends_existing_group_contract",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 130-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_september_people_editor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 3-5",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_focused_people_dialogs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 9-11, 25-27",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_explicit_people_actions",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 9-11",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_add_friend",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 13-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_copy_invite_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 13-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_new_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 16-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_link_owner_fencing",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_create_group_dialog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 20-23",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_private_invitation_lists",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 22-23",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_popup_people_panel_tsx",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 31-32",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_popup_people_styles_ts",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 31-32",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_regressions",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 33-35",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_actual_component_fixture",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 36-37, 44-48",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_validation_checklist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 38-39, 44-48",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_local_artifact_delivery",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 39-40",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_tester_artifact_rollback",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 42",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_local_delivery_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 48-49",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_api_auth_ownership",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 5, 31-32",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_focused_people_dialogs",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_add_friend",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 9-18, 25-27",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_focused_people_dialogs",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_create_group_dialog",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 9-11, 20-27",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_add_friend",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_copy_invite_link",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 13-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_add_friend",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_new_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 16-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_copy_invite_link",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_link_owner_fencing",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 13-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_new_link",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_link_owner_fencing",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 16-18",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_create_group_dialog",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_private_invitation_lists",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 20-23",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_popup_people_panel_tsx",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_api_auth_ownership",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 31-32",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_regressions",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_copy_invite_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 33-35",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_regressions",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_link_owner_fencing",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 33-35",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_regressions",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_create_group_dialog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 33-35",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_actual_component_fixture",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_create_group_dialog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 36-37, 44-47",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_actual_component_fixture",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_copy_invite_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 36-37",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_local_artifact_delivery",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_local_delivery_evidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md",
+      "source_location": "lines 39-40, 48-49",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_people_clarity",
+      "target": "docs_superpowers_plans_2026_11_06_people_drawer_clarity_people_drawer_clarity",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 133-134",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_profileavatar",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L255",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_friendmenu",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L260",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_emptystate",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L274",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_notice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L329",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_groupeditor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L339",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_linkdialog",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L356",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_popuppeoplepanel",
+      "target": "apps_extension_src_popup_people_panel_removaldialog",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L365",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_groupeditor",
+      "target": "apps_extension_src_popup_people_panel_peopledialog",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L454",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_groupeditor",
+      "target": "apps_extension_src_popup_people_panel_profileavatar",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L498",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_groupeditor",
+      "target": "apps_extension_src_popup_people_panel_emptystate",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L530",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_groupeditor",
+      "target": "apps_extension_src_popup_people_panel_notice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L539",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_linkdialog",
+      "target": "apps_extension_src_popup_people_panel_peopledialog",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L658",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_linkdialog",
+      "target": "apps_extension_src_popup_people_panel_notice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L681",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_removaldialog",
+      "target": "apps_extension_src_popup_people_panel_peopledialog",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L719",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_people_panel_removaldialog",
+      "target": "apps_extension_src_popup_people_panel_notice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-people-panel.tsx",
+      "source_location": "L734",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test",
+      "target": "apps_extension_src_popup_app_popupnavigation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     }
@@ -742626,7 +743800,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 117-132",
+      "source_location": "lines 136-151",
       "_origin": "semantic"
     }
   ],

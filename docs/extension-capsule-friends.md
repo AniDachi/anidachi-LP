@@ -114,6 +114,25 @@ opening failure remains retryable. Duplicate actions share the existing lock,
 and late old-account results cannot open a room or change another account's UI.
 This follow-up is local until a separate staging PR is accepted.
 
+## Toolbar People clarity (local, November 6)
+
+Friends uses Add friend, and Groups uses Create group. Empty lists present one
+central action without empty search or a redundant zero count. Nonempty lists
+retain search, existing row actions and the Friends / Groups switch.
+
+Add friend keeps a short one-person explanation and Copy invite link. That
+explicit click creates and copies the link in one operation; opening the dialog
+alone does not create one. A valid link is reused, expiry is checked at click,
+and New link creates a replacement for another friend without silently copying
+it. The URL remains selectable if clipboard access fails. Duplicate operations
+are locked, and late old-account results cannot reach the clipboard or dialog.
+
+The group dialog keeps name and friend selection, a selected count, and distinct
+Create group / Save changes actions. Initial focus goes to the name. Private-list
+semantics, empty groups, 100-member limit, draft retention, conflict/retry handling
+and deletion confirmation are unchanged. This is a local UI change with no
+server migration or new permissions; see the [follow-up plan](superpowers/plans/2026-11-06-people-drawer-clarity.md).
+
 ## Validation and release boundary
 
 Regression coverage lives in `capsule-friends-model.test.ts`,

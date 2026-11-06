@@ -4884,10 +4884,10 @@
     "semantic_hash": "30a312b7ab87619a4b79c1a15d5dd68f"
   },
   "apps/extension/src/popup-people-panel.tsx": {
-    "mtime": 1789490458.8830156,
-    "seen": 1789807056.4364889,
-    "ast_hash": "fa4cfa6e67bc179d75417a5322a0874d",
-    "semantic_hash": "fa4cfa6e67bc179d75417a5322a0874d"
+    "mtime": 1793963247.1342428,
+    "seen": 1793963615.328714,
+    "ast_hash": "fef73b7a4f5fc7bbe8469f87667f7281",
+    "semantic_hash": ""
   },
   "apps/extension/test/popup-people-model.test.ts": {
     "mtime": 1789490458.9001174,
@@ -4896,9 +4896,9 @@
     "semantic_hash": "a550facece2e1b0b49624408e437434a"
   },
   "apps/extension/test/popup-people-panel.test.tsx": {
-    "mtime": 1793962391.0192726,
-    "seen": 1793962525.063336,
-    "ast_hash": "50c4294c4a3e6c05eeadf64b3938a3f8",
+    "mtime": 1793963129.2112088,
+    "seen": 1793963615.3287199,
+    "ast_hash": "323279f51392b9a55d5618d133762bb1",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-07-popup-people-social-directory.md": {
@@ -7554,10 +7554,10 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-people-styles.ts": {
-    "mtime": 1789490458.883096,
-    "seen": 1789807056.4364889,
-    "ast_hash": "44d9660cc9bd041a60424dc60b84aa3c",
-    "semantic_hash": "44d9660cc9bd041a60424dc60b84aa3c"
+    "mtime": 1793963247.1583567,
+    "seen": 1793963615.3287182,
+    "ast_hash": "65a80cfca09db9eb38d6d5861915390d",
+    "semantic_hash": ""
   },
   "apps/extension/test/people-editor-client.test.ts": {
     "mtime": 1789490458.8994045,
@@ -12186,10 +12186,10 @@
     "semantic_hash": ""
   },
   "docs/extension-capsule-friends.md": {
-    "mtime": 1793962391.037423,
-    "seen": 1793962525.141932,
+    "mtime": 1793963489.4769158,
+    "seen": 1793963615.40747,
     "ast_hash": "",
-    "semantic_hash": "7c048c2d1d76f78de628448784462a51"
+    "semantic_hash": "7d87b6a8ad8a68211fba95eecce8aefe"
   },
   "apps/web/app/friend/invite/[token]/friend-invite-client.test.tsx": {
     "mtime": 1793959999.104775,
@@ -12208,5 +12208,11 @@
     "seen": 1793962525.063333,
     "ast_hash": "4faedab74954c02f79b1a69d4b41a0d1",
     "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-06-people-drawer-clarity.md": {
+    "mtime": 1793963489.495818,
+    "seen": 1793963615.4074728,
+    "ast_hash": "",
+    "semantic_hash": "7e46d45f6f077ad605f5587b1db1aabc"
   }
 }

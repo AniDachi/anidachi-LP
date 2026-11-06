@@ -11,6 +11,7 @@ import {
   Search,
   Trash2,
   Users,
+  UserPlus,
   X,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
@@ -96,6 +97,20 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
     props.onDismissNotice();
     setRemoval(value);
   };
+  const hasItems = !!model && (mode === "friends" ? model.friends.length > 0 : model.groups.length > 0);
+  const beginAdd = () => {
+    if (mode === "groups") beginEditor(null);
+    else {
+      props.onDismissNotice();
+      setLinkOpen(true);
+    }
+  };
+  const addButton = (
+    <button className="people-primary people-add" disabled={!!pendingActionKey} onClick={beginAdd}>
+      {mode === "friends" ? <UserPlus size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+      {mode === "friends" ? "Add friend" : "Create group"}
+    </button>
+  );
   const showNotice = actionNotice && !editor && !linkOpen && !removal;
 
   return (
@@ -204,7 +219,7 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
         )}
         {model && (
           <>
-            <div className="people-list-tools">
+            {hasItems && <div className="people-list-tools">
               <label className="people-search">
                 <Search size={16} aria-hidden="true" />
                 <input
@@ -216,27 +231,14 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
                   }
                 />
               </label>
-              <button
-                className="people-primary people-add"
-                disabled={!!pendingActionKey}
-                onClick={() => {
-                  if (mode === "groups") beginEditor(null);
-                  else {
-                    props.onDismissNotice();
-                    setLinkOpen(true);
-                  }
-                }}
-              >
-                <Plus size={16} />
-                {mode === "friends" ? "Invite" : "New group"}
-              </button>
-            </div>
+              {addButton}
+            </div>}
             <div
               role="tabpanel"
               id={`${id}-list`}
               aria-labelledby={`${id}-${mode}`}
             >
-              <div className="people-list-caption">
+              {hasItems && <div className="people-list-caption">
                 <span>
                   {mode === "friends" ? "Your friends" : "Your groups"}
                 </span>
@@ -245,7 +247,7 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
                     ? model.friends.length
                     : model.groups.length}
                 </span>
-              </div>
+              </div>}
               {mode === "friends" ? (
                 <div className="people-rows">
                   {friends.map(({ user }) => (
@@ -253,9 +255,7 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
                       <ProfileAvatar profile={user} />
                       <span className="people-row-copy">
                         <strong>{user.displayName}</strong>
-                        <small>
-                          {user.handle ? `@${user.handle}` : "Friend"}
-                        </small>
+                        {user.handle && <small>@{user.handle}</small>}
                       </span>
                       <FriendMenu
                         name={user.displayName}
@@ -272,9 +272,12 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
                   ))}
                   {!friends.length && (
                     <EmptyState>
-                      {query
-                        ? "No friends found."
-                        : "Invite a friend with a link to get started."}
+                      {hasItems ? "No friends found." : <>
+                        <span className="people-empty-icon"><UserPlus size={24} aria-hidden="true" /></span>
+                        <strong>No friends yet</strong>
+                        <p>Add a friend to start watching together.</p>
+                        {addButton}
+                      </>}
                     </EmptyState>
                   )}
                 </div>
@@ -308,15 +311,13 @@ export function PopupPeoplePanel(props: PopupPeoplePanelProps) {
                   ))}
                   {!groups.length && (
                     <EmptyState>
-                      {query
-                        ? "No groups found."
-                        : "Keep friends in a group to invite them together."}
+                      {hasItems ? "No groups found." : <>
+                        <span className="people-empty-icon"><Users size={24} aria-hidden="true" /></span>
+                        <strong>Watch with your group</strong>
+                        <p>Keep friends together for easy room invites.</p>
+                        {addButton}
+                      </>}
                     </EmptyState>
-                  )}
-                  {model.groups.length > 0 && (
-                    <p className="people-hint">
-                      Only you see your groups. Invite them from the player.
-                    </p>
                   )}
                 </div>
               )}
@@ -451,7 +452,7 @@ function GroupEditor({
   };
   return (
     <PeopleDialog
-      title={editor.initial.create ? "New group" : "Edit group"}
+      title={editor.initial.create ? "Create group" : "Edit group"}
       onClose={requestClose}
       busy={busy}
     >
@@ -469,6 +470,7 @@ function GroupEditor({
               id={nameId}
               name="group-name"
               autoFocus
+              data-people-initial-focus
               value={name}
               maxLength={80}
               required
@@ -479,17 +481,17 @@ function GroupEditor({
           </label>
           <div className="people-list-caption">
             <span>Choose friends</span>
-            <span>{selected.size} / 100</span>
+            <span>{selected.size} selected</span>
           </div>
-          <label className="people-search">
-            <Search size={16} />
+          {candidates.length > 0 && <label className="people-search">
+            <Search size={16} aria-hidden="true" />
             <input
               aria-label="Search group friends"
               placeholder="Search friends"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
-          </label>
+          </label>}
           <div className="people-member-list">
             {visible.map((user) => (
               <label className="people-row people-member" key={user.userId}>
@@ -531,7 +533,7 @@ function GroupEditor({
             )}
           </div>
           <p className="people-hint">
-            A private list for inviting friends together.
+            {selected.size >= 100 ? "100-friend limit reached." : "Only you can see this group."}
           </p>
           {notice?.actionKey === `save-group:${editor.initial.groupId}` &&
             notice.tone === "error" && <Notice notice={notice} />}
@@ -590,7 +592,7 @@ function GroupEditor({
                 selected.size > 100
               }
             >
-              {busy ? "Saving..." : "Save"}
+              {busy ? "Saving..." : editor.initial.create ? "Create group" : "Save changes"}
             </button>
           </div>
         )}
@@ -614,18 +616,37 @@ function LinkDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [copied, setCopied] = useState(false);
   const lock = useRef(false);
   const mounted = useMounted();
-  const activeLink =
-    link && Date.parse(link.expiresAt) > Date.now() ? link : null;
-  const create = async () => {
+  const activeLink = link && Date.parse(link.expiresAt) > Date.now() ? link : null;
+
+  const prepareLink = async (replace: boolean, copy: boolean) => {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setFeedback("");
+    setCopied(false);
     try {
-      const result = await onCreate();
-      if (mounted.current && result) onLink(result);
+      // Recheck expiry at the click, not only at the last render.
+      let next = !replace && link && Date.parse(link.expiresAt) > Date.now() ? link : null;
+      if (!next) {
+        next = await onCreate();
+        if (!mounted.current || !next) return;
+        onLink(next);
+      }
+      if (!mounted.current) return;
+      if (copy) {
+        try {
+          await navigator.clipboard.writeText(next.url);
+          if (mounted.current) {
+            setCopied(true);
+            setFeedback("Link copied. Send it to one friend.");
+          }
+        } catch {
+          if (mounted.current) setFeedback("Select the link and copy it manually.");
+        }
+      }
     } catch {
       if (mounted.current) setFeedback("Could not create a link. Try again.");
     } finally {
@@ -633,88 +654,32 @@ function LinkDialog({
       if (mounted.current) setBusy(false);
     }
   };
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(activeLink!.url);
-      if (mounted.current) setFeedback("Copied. Send this link to one friend.");
-    } catch {
-      if (mounted.current)
-        setFeedback(
-          "Could not copy. Select the link above and copy it manually.",
-        );
-    }
-  };
   return (
-    <PeopleDialog
-      title="Invite a friend"
-      busy={busy}
-      onClose={() => {
-        if (!lock.current) onClose();
-      }}
-    >
+    <PeopleDialog title="Add friend" busy={busy} onClose={() => { if (!lock.current) onClose(); }}>
       <div className="people-dialog-body people-link-body">
-        <span className="people-link-icon">
-          <Link size={24} />
-        </span>
-        <p>Send a one-time link. You become friends when they accept it.</p>
+        <p className="people-link-intro">Share an invite link with one friend.</p>
         {activeLink && (
-          <>
-            <label className="people-field">
-              Invitation link
-              <input
-                readOnly
-                value={activeLink.url}
-                onFocus={(event) => event.currentTarget.select()}
-              />
-            </label>
-            <p className="people-hint">
-              One person can use this link. Expires{" "}
-              {new Date(activeLink.expiresAt).toLocaleDateString()}.
-            </p>
-            <button
-              className="people-secondary"
-              disabled={busy}
-              onClick={() => void create()}
-            >
-              {busy ? "Creating..." : "Create another link"}
-            </button>
-          </>
+          <label className="people-link-url">
+            <Link size={17} aria-hidden="true" />
+            <input aria-label="Invitation link" readOnly value={activeLink.url}
+              onFocus={(event) => event.currentTarget.select()} />
+          </label>
         )}
-        {notice?.actionKey === "create-friend-link" &&
-          notice.tone === "error" && <Notice notice={notice} />}
-        {feedback && (
-          <p className="people-hint" role="status">
-            {feedback}
-          </p>
-        )}
-      </div>
-      <div className="people-dialog-footer">
-        <button className="people-secondary" disabled={busy} onClick={onClose}>
-          Close
+        <button className="people-primary people-copy-link" disabled={busy} data-people-initial-focus
+          aria-label="Copy invite link" onClick={() => void prepareLink(false, true)}>
+          {copied ? <Check size={17} aria-hidden="true" /> : <Copy size={17} aria-hidden="true" />}
+          {busy ? "Preparing link..." : copied ? "Copied" : "Copy invite link"}
         </button>
-        <span className="people-footer-spacer" />
-        {activeLink ? (
-          <button
-            className="people-primary"
-            disabled={busy}
-            onClick={() => void copy()}
-          >
-            {feedback.startsWith("Copied") ? (
-              <Check size={16} />
-            ) : (
-              <Copy size={16} />
-            )}
-            Copy link
-          </button>
-        ) : (
-          <button
-            className="people-primary"
-            disabled={busy}
-            onClick={() => void create()}
-          >
-            {busy ? "Creating..." : "Create link"}
-          </button>
+        {activeLink && (
+          <div className="people-link-more">
+            <span>For another friend</span>
+            <button className="people-text-button" disabled={busy} onClick={() => void prepareLink(true, false)}>
+              <Plus size={14} aria-hidden="true" /> New link
+            </button>
+          </div>
         )}
+        {notice?.actionKey === "create-friend-link" && notice.tone === "error" && <Notice notice={notice} />}
+        <div className="people-link-feedback" role="status">{feedback}</div>
       </div>
     </PeopleDialog>
   );
@@ -808,6 +773,7 @@ function PeopleDialog({
     const dialog = ref.current!;
     const opener = document.activeElement as HTMLElement | null;
     dialog.showModal();
+    dialog.querySelector<HTMLElement>("[data-people-initial-focus]")?.focus();
     return () => {
       dialog.close();
       if (opener?.isConnected) opener.focus();
