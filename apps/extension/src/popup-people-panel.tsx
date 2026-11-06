@@ -4,7 +4,6 @@ import {
   Check,
   ChevronRight,
   Copy,
-  Link,
   MoreHorizontal,
   Plus,
   RefreshCw,
@@ -641,7 +640,6 @@ function LinkDialog({
           await navigator.clipboard.writeText(next.url);
           if (mounted.current) {
             setCopied(true);
-            setFeedback("Link copied. Send it to one friend.");
           }
         } catch {
           if (mounted.current) setFeedback("Select the link and copy it manually.");
@@ -657,10 +655,9 @@ function LinkDialog({
   return (
     <PeopleDialog title="Add friend" busy={busy} onClose={() => { if (!lock.current) onClose(); }}>
       <div className="people-dialog-body people-link-body">
-        <p className="people-link-intro">Share an invite link with one friend.</p>
+        <p className="people-link-intro">Only one person can use this link.</p>
         {activeLink && (
           <label className="people-link-url">
-            <Link size={17} aria-hidden="true" />
             <input aria-label="Invitation link" readOnly value={activeLink.url}
               onFocus={(event) => event.currentTarget.select()} />
           </label>
@@ -668,18 +665,17 @@ function LinkDialog({
         <button className="people-primary people-copy-link" disabled={busy} data-people-initial-focus
           aria-label="Copy invite link" onClick={() => void prepareLink(false, true)}>
           {copied ? <Check size={17} aria-hidden="true" /> : <Copy size={17} aria-hidden="true" />}
-          {busy ? "Preparing link..." : copied ? "Copied" : "Copy invite link"}
+          <span role="status" aria-live="polite">{busy ? "Preparing link..." : copied ? "Copied" : "Copy link"}</span>
         </button>
         {activeLink && (
           <div className="people-link-more">
-            <span>For another friend</span>
-            <button className="people-text-button" disabled={busy} onClick={() => void prepareLink(true, false)}>
-              <Plus size={14} aria-hidden="true" /> New link
+            <button className="people-text-button" disabled={busy} title="Create a link for another friend" onClick={() => void prepareLink(true, false)}>
+              New link
             </button>
           </div>
         )}
         {notice?.actionKey === "create-friend-link" && notice.tone === "error" && <Notice notice={notice} />}
-        <div className="people-link-feedback" role="status">{feedback}</div>
+        {feedback && <p className="people-link-feedback" role="alert">{feedback}</p>}
       </div>
     </PeopleDialog>
   );

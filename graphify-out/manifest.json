@@ -4884,9 +4884,9 @@
     "semantic_hash": "30a312b7ab87619a4b79c1a15d5dd68f"
   },
   "apps/extension/src/popup-people-panel.tsx": {
-    "mtime": 1793963247.1342428,
-    "seen": 1793963615.328714,
-    "ast_hash": "fef73b7a4f5fc7bbe8469f87667f7281",
+    "mtime": 1793964171.3506324,
+    "seen": 1793964178.533469,
+    "ast_hash": "70c4743c4588ba590d4714de82487116",
     "semantic_hash": ""
   },
   "apps/extension/test/popup-people-model.test.ts": {
@@ -7554,9 +7554,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-people-styles.ts": {
-    "mtime": 1793963247.1583567,
-    "seen": 1793963615.3287182,
-    "ast_hash": "65a80cfca09db9eb38d6d5861915390d",
+    "mtime": 1793964171.370813,
+    "seen": 1793964178.533473,
+    "ast_hash": "9de60317f463643c8619bfd9777805c6",
     "semantic_hash": ""
   },
   "apps/extension/test/people-editor-client.test.ts": {

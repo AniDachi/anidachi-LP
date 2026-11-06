@@ -72,7 +72,6 @@ export const popupPeopleStyles = `
   .people-discard > div { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
   .people-link-intro { margin: 0 0 18px; color: #aaa39b; font-size: 13px; line-height: 1.5; }
   .people-link-url { display: flex; align-items: center; gap: 9px; border: 1px solid #ffffff25; background: #ffffff03; border-radius: 12px; padding: 11px 12px; color: #a9a19a; margin-bottom: 12px; }
-  .people-link-url svg { flex-shrink: 0; }
   .people-link-url input { min-width: 0; width: 100%; padding: 0; border: 0; outline: 0; background: transparent; color: #e9e2d9; font: inherit; font-size: 12px; text-overflow: ellipsis; }
   .people-link-url:focus-within { border-color: #ff984e; }
   .people-copy-link { width: 100%; min-height: 42px; background: linear-gradient(110deg, #ffb563, #ff791b); color: #21170e; }
@@ -80,7 +79,7 @@ export const popupPeopleStyles = `
   .people-link-more { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 12px; margin-top: 14px; color: #9e968d; font-size: 12px; }
   .people-text-button { display: inline-flex; align-items: center; gap: 5px; padding: 6px 0; border: 0; background: transparent; color: #eee5d9; font: inherit; font-weight: 600; cursor: pointer; }
   .people-text-button:hover { color: #ffb563; }
-  .people-link-feedback { min-height: 18px; margin-top: 10px; color: #b8b1a8; font-size: 12px; line-height: 1.5; text-align: center; }
+  .people-link-feedback { margin: 12px 0 0; color: #efaaa1; font-size: 12px; line-height: 1.5; text-align: center; }
   .people-removal-name { margin: 0; font-weight: 650; overflow-wrap: anywhere; }
   .people-error { color: #efaaa1; font-size: 12px; line-height: 1.5; }
   .people-dialog .popup-people-action-notice { margin-top: 12px; }

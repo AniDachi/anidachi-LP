@@ -13382,7 +13382,7 @@
       "file_type": "code",
       "norm_label": "editor",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L61"
+      "source_location": "L60"
     },
     {
       "id": "apps_extension_src_popup_people_panel_mode",
@@ -13395,7 +13395,7 @@
       "file_type": "code",
       "norm_label": "mode",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L60"
+      "source_location": "L59"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeopleactionkey",
@@ -13408,7 +13408,7 @@
       "file_type": "code",
       "norm_label": "popuppeopleactionkey",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L37"
+      "source_location": "L36"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeopleactionnotice",
@@ -13421,7 +13421,7 @@
       "file_type": "code",
       "norm_label": "popuppeopleactionnotice",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L42"
+      "source_location": "L41"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeoplepanelprops",
@@ -13434,7 +13434,7 @@
       "file_type": "code",
       "norm_label": "popuppeoplepanelprops",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L47"
+      "source_location": "L46"
     },
     {
       "id": "apps_extension_src_popup_people_panel_popuppeoplepresentationstate",
@@ -13447,7 +13447,7 @@
       "file_type": "code",
       "norm_label": "popuppeoplepresentationstate",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L25"
+      "source_location": "L24"
     },
     {
       "id": "apps_extension_src_popup_people_panel_removal",
@@ -13460,7 +13460,7 @@
       "file_type": "code",
       "norm_label": "removal",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L62"
+      "source_location": "L61"
     },
     {
       "id": "apps_extension_src_social_client_friendinvitelink",
@@ -67699,7 +67699,7 @@
       "file_type": "code",
       "norm_label": "emptystate()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L880"
+      "source_location": "L876"
     },
     {
       "id": "apps_extension_src_popup_people_panel_friendmenu",
@@ -67711,21 +67711,21 @@
       "file_type": "code",
       "norm_label": "friendmenu()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L813",
+      "source_location": "L809",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "preventDefault",
             "receiver_type": "Event",
             "lang": "typescript",
-            "line": "L837",
+            "line": "L833",
             "file": "apps/extension/src/popup-people-panel.tsx"
           },
           {
             "callee": "stopPropagation",
             "receiver_type": "Event",
             "lang": "typescript",
-            "line": "L838",
+            "line": "L834",
             "file": "apps/extension/src/popup-people-panel.tsx"
           }
         ]
@@ -67741,14 +67741,14 @@
       "file_type": "code",
       "norm_label": "groupeditor()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L385",
+      "source_location": "L384",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "preventDefault",
             "receiver_type": "Event",
             "lang": "typescript",
-            "line": "L462",
+            "line": "L461",
             "file": "apps/extension/src/popup-people-panel.tsx"
           }
         ]
@@ -67764,7 +67764,7 @@
       "file_type": "code",
       "norm_label": "linkdialog()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L604"
+      "source_location": "L603"
     },
     {
       "id": "apps_extension_src_popup_people_panel_matches",
@@ -67776,7 +67776,7 @@
       "file_type": "code",
       "norm_label": "matches()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L906"
+      "source_location": "L902"
     },
     {
       "id": "apps_extension_src_popup_people_panel_notice",
@@ -67788,7 +67788,7 @@
       "file_type": "code",
       "norm_label": "notice()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L868"
+      "source_location": "L864"
     },
     {
       "id": "apps_extension_src_popup_people_panel_peopledialog",
@@ -67800,14 +67800,14 @@
       "file_type": "code",
       "norm_label": "peopledialog()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L759",
+      "source_location": "L755",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "preventDefault",
             "receiver_type": "Event",
             "lang": "typescript",
-            "line": "L793",
+            "line": "L789",
             "file": "apps/extension/src/popup-people-panel.tsx"
           }
         ]
@@ -67823,14 +67823,14 @@
       "file_type": "code",
       "norm_label": "popuppeoplepanel()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L64",
+      "source_location": "L63",
       "metadata": {
         "unresolved_calls": [
           {
             "callee": "preventDefault",
             "receiver_type": "Event",
             "lang": "typescript",
-            "line": "L142",
+            "line": "L141",
             "file": "apps/extension/src/popup-people-panel.tsx"
           }
         ]
@@ -67846,7 +67846,7 @@
       "file_type": "code",
       "norm_label": "profileavatar()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L887"
+      "source_location": "L883"
     },
     {
       "id": "apps_extension_src_popup_people_panel_removaldialog",
@@ -67858,7 +67858,7 @@
       "file_type": "code",
       "norm_label": "removaldialog()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L688"
+      "source_location": "L684"
     },
     {
       "id": "apps_extension_src_popup_people_panel_usemounted",
@@ -67870,7 +67870,7 @@
       "file_type": "code",
       "norm_label": "usemounted()",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L909"
+      "source_location": "L905"
     },
     {
       "id": "apps_extension_test_popup_people_panel_test_accountinbox",
@@ -250926,7 +250926,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L409",
+      "source_location": "L408",
       "weight": 1.0
     },
     {
@@ -250937,7 +250937,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L422",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -250948,7 +250948,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L621",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -250959,7 +250959,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L73",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -250970,7 +250970,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L79",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -250981,7 +250981,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L702",
+      "source_location": "L698",
       "weight": 1.0
     },
     {
@@ -311969,7 +311969,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -311980,7 +311980,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -311991,7 +311991,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -312002,7 +312002,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L23",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -312013,7 +312013,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L23",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -362309,7 +362309,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L17",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -362320,7 +362320,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -362331,7 +362331,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L23",
+      "source_location": "L22",
       "type_only": true,
       "weight": 1.0
     },
@@ -413393,7 +413393,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L25",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -413403,7 +413403,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L37",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -413413,7 +413413,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L385",
+      "source_location": "L384",
       "weight": 1.0
     },
     {
@@ -413423,7 +413423,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L42",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -413433,7 +413433,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L47",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -413443,7 +413443,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L60",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -413453,7 +413453,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L61",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -413463,7 +413463,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L604",
+      "source_location": "L603",
       "weight": 1.0
     },
     {
@@ -413473,7 +413473,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L62",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -413483,7 +413483,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L64",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -413493,7 +413493,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L688",
+      "source_location": "L684",
       "weight": 1.0
     },
     {
@@ -413503,7 +413503,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L759",
+      "source_location": "L755",
       "weight": 1.0
     },
     {
@@ -413513,7 +413513,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L813",
+      "source_location": "L809",
       "weight": 1.0
     },
     {
@@ -413523,7 +413523,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L868",
+      "source_location": "L864",
       "weight": 1.0
     },
     {
@@ -413533,7 +413533,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L880",
+      "source_location": "L876",
       "weight": 1.0
     },
     {
@@ -413543,7 +413543,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L887",
+      "source_location": "L883",
       "weight": 1.0
     },
     {
@@ -413553,7 +413553,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L906",
+      "source_location": "L902",
       "weight": 1.0
     },
     {
@@ -413563,7 +413563,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L909",
+      "source_location": "L905",
       "weight": 1.0
     },
     {
@@ -742060,7 +742060,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L255",
+      "source_location": "L254",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742071,7 +742071,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L260",
+      "source_location": "L259",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742082,7 +742082,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L274",
+      "source_location": "L273",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742093,7 +742093,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L329",
+      "source_location": "L328",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742104,7 +742104,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L339",
+      "source_location": "L338",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742115,7 +742115,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L356",
+      "source_location": "L355",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742126,7 +742126,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L365",
+      "source_location": "L364",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742137,7 +742137,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L454",
+      "source_location": "L453",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742148,7 +742148,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L498",
+      "source_location": "L497",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742159,7 +742159,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L530",
+      "source_location": "L529",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742170,7 +742170,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L539",
+      "source_location": "L538",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742181,7 +742181,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L658",
+      "source_location": "L656",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742192,7 +742192,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L681",
+      "source_location": "L677",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742203,7 +742203,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L719",
+      "source_location": "L715",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -742214,7 +742214,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-people-panel.tsx",
-      "source_location": "L734",
+      "source_location": "L730",
       "weight": 1.0,
       "_origin": "ast"
     },
