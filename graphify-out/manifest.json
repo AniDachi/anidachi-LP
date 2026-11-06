@@ -390,9 +390,9 @@
     "semantic_hash": "36308950ab5526f30362d99a6ae2826f"
   },
   "apps/extension/src/popup-app.tsx": {
-    "mtime": 1793962390.9462163,
-    "seen": 1793962525.06333,
-    "ast_hash": "9fa4094aae1cb2beb92d4a06c98a6cac",
+    "mtime": 1793971646.334001,
+    "seen": 1793972444.712491,
+    "ast_hash": "9895fc7aa98629842d1df7c51f79dce4",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-styles.ts": {
@@ -450,9 +450,9 @@
     "semantic_hash": "c0512c914b34023f94a02fcb98cb161f"
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1793961173.6128337,
-    "seen": 1793961761.804092,
-    "ast_hash": "f04f72682d87644d2d11e23981b25271",
+    "mtime": 1793975250.4047189,
+    "seen": 1793975501.835447,
+    "ast_hash": "acb4a6ee4bcd10e4dc172c524a99e561",
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
@@ -8148,9 +8148,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/chrome-extension-room-demo.tsx": {
-    "mtime": 1793355774.5064232,
-    "seen": 1793424347.672341,
-    "ast_hash": "169ce3dcdeeb619beed3dd1aa1553d59",
+    "mtime": 1793975619.471072,
+    "seen": 1793975630.0461261,
+    "ast_hash": "46293f53ad800d2e9bf85dab583dcd31",
     "semantic_hash": ""
   },
   "apps/web/components/extension-example-frame.tsx": {
@@ -8340,15 +8340,15 @@
     "semantic_hash": ""
   },
   "apps/web/lib/use-room-demo.test.ts": {
-    "mtime": 1789800607.3477192,
-    "seen": 1789807056.437293,
-    "ast_hash": "d02a59c7192e5d9389d56e2810e91763",
+    "mtime": 1793975132.8662002,
+    "seen": 1793975501.835451,
+    "ast_hash": "7c8cba913bdffb5c9fc72090a06b1882",
     "semantic_hash": ""
   },
   "apps/web/lib/use-room-demo.ts": {
-    "mtime": 1789800607.347284,
-    "seen": 1789807056.437294,
-    "ast_hash": "8a33e2a29900e0cd334b1551d4002a4b",
+    "mtime": 1793975132.8658803,
+    "seen": 1793975501.8354518,
+    "ast_hash": "7c61c0d68b50f762dcfa701c3552eeeb",
     "semantic_hash": ""
   },
   "apps/web/types/extension-preview.d.ts": {
@@ -8832,9 +8832,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/popup-plan-access.test.tsx": {
-    "mtime": 1793770565.9320514,
-    "seen": 1793771177.881519,
-    "ast_hash": "d28cb66f76f96df5b6f1c5f7b60cfa1a",
+    "mtime": 1793972143.6865532,
+    "seen": 1793972444.712495,
+    "ast_hash": "3bbffbe6e90702d24054b0ea834a717f",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20260928083738_unified_free_trial_eligibility.sql": {
@@ -9288,15 +9288,15 @@
     "semantic_hash": "582b3b2bdb26df6f28187b5e71c67685"
   },
   "apps/extension/src/popup-welcome.tsx": {
-    "mtime": 1793355774.4054801,
-    "seen": 1793424347.672173,
-    "ast_hash": "476525cb4aa8971533858d78436f3484",
+    "mtime": 1793974426.289968,
+    "seen": 1793974432.7510688,
+    "ast_hash": "e1e4ce89f8d9ffb6d4d527b08789c304",
     "semantic_hash": ""
   },
   "apps/extension/test/popup-welcome.test.tsx": {
-    "mtime": 1793355774.4281938,
-    "seen": 1793424347.672195,
-    "ast_hash": "a4b7f60eb8b64259eb8042a0833deb09",
+    "mtime": 1793971646.528736,
+    "seen": 1793972444.712496,
+    "ast_hash": "78533b50be4cb1fc8be27125b0d63981",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-setting-row.tsx": {
@@ -12162,9 +12162,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/capsule-friends-panel.tsx": {
-    "mtime": 1793958489.0944498,
-    "seen": 1793958498.5423832,
-    "ast_hash": "5c4000589afc496e3905b5f04aeb1d54",
+    "mtime": 1793975239.2497928,
+    "seen": 1793975501.8354409,
+    "ast_hash": "351ecb9ce45c0509d0c114072c4d0463",
     "semantic_hash": ""
   },
   "apps/extension/src/capsule-friends-styles.ts": {
@@ -12214,5 +12214,47 @@
     "seen": 1793964929.0888991,
     "ast_hash": "",
     "semantic_hash": "08108c8f660fc2572b9b9079814c779f"
+  },
+  "apps/extension/src/image-assets.d.ts": {
+    "mtime": 1793971829.6911898,
+    "seen": 1793972444.712487,
+    "ast_hash": "f675942ae5963e641c51a9ee7c1847ed",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/assets/welcome-chalk-path.png": {
+    "mtime": 1793971658.2746224,
+    "seen": 1793972444.7992709,
+    "ast_hash": "",
+    "semantic_hash": "7ff6abad8a126af7a8c4ead9a2f5eb40"
+  },
+  "docs/superpowers/plans/2026-11-06-compact-chalk-welcome.md": {
+    "mtime": 1793976249.0296063,
+    "seen": 1793976385.3936992,
+    "ast_hash": "",
+    "semantic_hash": "5b22a3a3ef1286f9fc1fe24b6ce9db05"
+  },
+  "apps/extension/src/assets/welcome-chalk-numbers.png": {
+    "mtime": 1793972892.5328596,
+    "seen": 1793973083.650837,
+    "ast_hash": "",
+    "semantic_hash": "1c79a3739f4363f9e9d22645cf3eda2d"
+  },
+  "apps/extension/src/friend-invite-link.ts": {
+    "mtime": 1793975239.2304542,
+    "seen": 1793975501.835445,
+    "ast_hash": "5d8d09d5beaca2f1c0a75792b9553eb1",
+    "semantic_hash": ""
+  },
+  "apps/web/components/chrome-extension-friends-demo.tsx": {
+    "mtime": 1793975566.6789665,
+    "seen": 1793975572.243204,
+    "ast_hash": "58fe32a59acfa79c893d8a792e8080a0",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/chrome-extension-friends-demo.test.ts": {
+    "mtime": 1793975566.6794324,
+    "seen": 1793975572.24321,
+    "ast_hash": "4d38c59d9eff073278267c3c908d6c0c",
+    "semantic_hash": ""
   }
 }

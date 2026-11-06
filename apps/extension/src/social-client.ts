@@ -24,6 +24,8 @@ import {
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
+import type { FriendInviteLink } from "./friend-invite-link";
+export type { FriendInviteLink } from "./friend-invite-link";
 
 const SOCIAL_HTTP_MESSAGE_TYPE = "ANIDACHI_SOCIAL_HTTP";
 const INVALID_ACCOUNT_RESPONSE_MESSAGE =
@@ -69,11 +71,6 @@ export interface SaveFriendGroupInput {
   memberIds: string[];
   create: boolean;
   expectedUpdatedAt: string | null;
-}
-
-export interface FriendInviteLink {
-  url: string;
-  expiresAt: string;
 }
 
 export interface UpdateFriendGroupInput {

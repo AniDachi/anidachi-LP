@@ -111,11 +111,11 @@ describe("Popup current account plan", () => {
     await act(async () => fresh.resolve(access("free")));
     expect(container.querySelector(".plan-badge")?.textContent).toBe("Free");
   });
-  it("loads notification settings when opened from the welcome", async () => {
+  it("loads notification settings from the header while the welcome is visible", async () => {
     vi.spyOn(chrome.storage.local, "get").mockImplementation(async () => ({}));
     vi.stubGlobal("IntersectionObserver", class { observe() {} disconnect() {} });
     await mount();
-    const link = container.querySelector<HTMLButtonElement>(".popup-welcome-settings")!;
+    const link = container.querySelector<HTMLButtonElement>('[aria-label="Open settings"]')!;
     expect(link).not.toBeNull();
     const shell = container.querySelector<HTMLElement>(".popup-shell")!;
     shell.scrollTop = 180;

@@ -12,12 +12,11 @@ let host: HTMLDivElement;
 let get: ReturnType<typeof vi.fn>;
 let set: ReturnType<typeof vi.fn>;
 const dismiss = vi.fn();
-const openSettings = vi.fn();
 let inView = true;
 let visibilityChanged: ((visible: boolean) => void) | undefined;
 
 beforeEach(() => {
-  data = {}; openSettings.mockReset(); dismiss.mockReset(); inView = true; visibilityChanged = undefined;
+  data = {}; dismiss.mockReset(); inView = true; visibilityChanged = undefined;
   vi.stubGlobal("IntersectionObserver", class {
     constructor(private callback: IntersectionObserverCallback) {}
     observe(target: Element) {
@@ -33,7 +32,7 @@ beforeEach(() => {
 });
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); });
 async function render(active = true) {
-  await act(async () => root.render(<StrictMode><PopupWelcome active={active} onOpenSettings={openSettings} onDismiss={dismiss} /></StrictMode>));
+  await act(async () => root.render(<StrictMode><PopupWelcome active={active} onDismiss={dismiss} /></StrictMode>));
 }
 async function remount() { await act(async () => root.unmount()); root = createRoot(host); await render(); }
 function button(label: string) { return [...host.querySelectorAll("button")].find(b => b.textContent === label)!; }
@@ -88,18 +87,6 @@ it("does not consume the welcome while the Watch tab is hidden", async () => {
   await render(true);
   expect(button("Got it")).toBeTruthy();
 });
-it("opens Settings directly from the explanation", async () => {
-  await render();
-  expect(button("Settings")).toBeTruthy();
-  await act(async () => button("Settings").click());
-  expect(openSettings).toHaveBeenCalledOnce();
-  await render(false);
-  await render(true);
-  expect(button("Got it")).toBeTruthy();
-  expect(data).toEqual({});
-  await remount();
-  expect(button("Got it")).toBeTruthy();
-});
 it("links to this channel's setup guide without acknowledging or changing recording", async () => {
   data["anidachi.historyRecordingChoice:owner-a"] = { enabled: false };
   await render();
@@ -112,7 +99,6 @@ it("links to this channel's setup guide without acknowledging or changing record
   await act(async () => guide.click());
   expect(set).not.toHaveBeenCalled();
   expect(dismiss).not.toHaveBeenCalled();
-  expect(openSettings).not.toHaveBeenCalled();
   expect(data).toEqual({ "anidachi.historyRecordingChoice:owner-a": { enabled: false } });
   await remount();
   expect(button("Got it")).toBeTruthy();
@@ -121,8 +107,8 @@ it("does not consume the welcome if its storage read completes after hiding", as
   let resolve!: (value: Record<string, unknown>) => void;
   get.mockImplementationOnce(() => new Promise(r => { resolve = r; }));
   // Avoid StrictMode here to isolate the one pending read.
-  await act(async () => root.render(<PopupWelcome active onOpenSettings={openSettings} />));
-  await act(async () => root.render(<PopupWelcome active={false} onOpenSettings={openSettings} />));
+  await act(async () => root.render(<PopupWelcome active />));
+  await act(async () => root.render(<PopupWelcome active={false} />));
   await act(async () => resolve({}));
   expect(data).toEqual({});
   expect(host.querySelector("section")).toBeNull();

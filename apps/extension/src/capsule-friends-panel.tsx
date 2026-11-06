@@ -19,8 +19,8 @@ import type {
 	FriendGroup,
 	FriendListItem,
 	InviteTargets,
-	FriendInviteLink,
-} from "./social-client";
+} from "@anidachi/protocol";
+import type { FriendInviteLink } from "./friend-invite-link";
 import type { RoomInviteTargetStatus } from "./room-invite-target-status";
 import {
 	capsuleInvitePresentation,
