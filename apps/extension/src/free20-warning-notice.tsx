@@ -44,8 +44,7 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
       <div className="free20-notice-sleeve">
         <button className="free20-notice-dismiss" type="button"
           aria-label={kind === "warning" ? "Dismiss hosting time warning" : "Dismiss room closed notification"} onClick={dismiss}>
-          <span className="free20-notice-dismiss-grip" aria-hidden="true" />
-          <X size={16} strokeWidth={1.5} aria-hidden="true" />
+          <X size={14} strokeWidth={1.7} aria-hidden="true" />
         </button>
       </div>
       <div className="free20-notice-message-clip">

@@ -11220,10 +11220,10 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-01-free20-overlay-design-staging.md": {
-    "mtime": 1793784953.7843368,
-    "seen": 1793785253.991756,
+    "mtime": 1793969032.9910848,
+    "seen": 1793969411.761591,
     "ast_hash": "",
-    "semantic_hash": "769ce68d4928c1473e72ee53f3ca4c8d"
+    "semantic_hash": "3aaad049253d32af2370fe6cd844798b"
   },
   "apps/api/src/hosting-time-storage.ts": {
     "mtime": 1793513874.5541778,
@@ -11400,15 +11400,15 @@
     "semantic_hash": ""
   },
   "apps/extension/src/free20-warning-notice.tsx": {
-    "mtime": 1793685811.393836,
-    "seen": 1793686800.9452538,
-    "ast_hash": "e83d344223e8864d6a30205d5d50472f",
+    "mtime": 1793968707.9075165,
+    "seen": 1793969132.2016,
+    "ast_hash": "e30cf5fe43606056b2389e22a3a6f300",
     "semantic_hash": ""
   },
   "apps/extension/src/free20-warning-styles.ts": {
-    "mtime": 1793686369.4474926,
-    "seen": 1793686800.945257,
-    "ast_hash": "d0e3b2cd13d9b1f2a2e8ea04cea4b78f",
+    "mtime": 1793968990.7842524,
+    "seen": 1793969132.2016032,
+    "ast_hash": "8407bdd45101a4d6bd91053f19d318ff",
     "semantic_hash": ""
   },
   "apps/extension/src/use-free20-warning.ts": {
