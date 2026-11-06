@@ -257,7 +257,7 @@ test("cardless trial cannot use legacy cancellation or restore Portal", async ()
 		});
 		await assert.rejects(
 			f.service[method]("owner", row.id, returnUrl),
-			/trial renewal controls/i,
+			/renewal controls/i,
 		);
 		assert.ok(!f.calls.includes("portal"));
 	}

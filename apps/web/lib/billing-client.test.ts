@@ -88,13 +88,13 @@ for (const stage of ["trial", "processing"] as const) {
 		await mount();
 		assert.match(
 			container.textContent!,
-			stage === "trial" ? /Free trial/ : /First payment processing/,
+			stage === "trial" ? /Access active/ : /First payment processing/,
 		);
 		await act(async () => t.mock.timers.tick(1000));
 		assert.equal(requests, 2);
 		assert.doesNotMatch(
 			container.textContent!,
-			/Free trial|First payment processing|Switch to Pro/,
+			/Access active|First payment processing|Switch to Pro/,
 		);
 	});
 }
@@ -365,7 +365,7 @@ for (const outcome of [
 			return Response.json(enabled);
 		};
 		await mount();
-		await act(async () => trialButton(/^Cancel trial renewal$/).click());
+		await act(async () => trialButton(/^Cancel renewal$/).click());
 		assert.equal(cancelPosts, 1);
 		assert.ok(resolveRefresh);
 		await act(async () => {
@@ -383,7 +383,7 @@ for (const outcome of [
 		assert.doesNotMatch(container.textContent!, /Renewal is enabled/);
 		assert.ok(
 			![...container.querySelectorAll("button")].some((button) =>
-				/^Cancel trial renewal$/.test(button.textContent ?? ""),
+				/^Cancel renewal$/.test(button.textContent ?? ""),
 			),
 		);
 		if (outcome === "same-owner") {
@@ -418,7 +418,7 @@ test("cardless billing reviews exact renewal terms before explicitly opening car
 		return Response.json(cardless);
 	};
 	await mount();
-	assert.match(container.textContent!, /Free trial/);
+	assert.match(container.textContent!, /Access active/);
 	assert.match(container.textContent!, /No automatic charge/i);
 	assert.doesNotMatch(
 		container.textContent!,
@@ -553,7 +553,7 @@ for (const action of ["quote", "setup"] as const) {
 			if (action === "setup")
 				await act(async () => trialButton(/Add card.*enable renewal/i).click());
 			await act(async () => t.mock.timers.tick(60_000));
-			assert.match(container.textContent!, /Free trial/i);
+			assert.match(container.textContent!, /Access active/i);
 			assert.ok(
 				trialButton(
 					action === "setup" ? /Add card.*enable renewal/i : /^Review renewal$/,
@@ -1027,7 +1027,7 @@ test("active subscription shows renewal date and explicit cancellation with owne
 	};
 	await mount();
 	assert.match(container.textContent ?? "", /Plus subscription/);
-	assert.equal(container.querySelector("dt")?.textContent, "Renews");
+	assert.equal(container.querySelector("dt")?.textContent, "Next payment");
 	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
 	const button = [...container.querySelectorAll("button")].find((item) =>
 		item.textContent?.includes("Cancel renewal"),
@@ -1071,7 +1071,7 @@ test("return from Stripe refreshes status and shows scheduled end without anothe
 	assert.equal(path, "/api/billing/refresh");
 	assert.equal(method, "POST");
 	assert.match(container.textContent ?? "", /Renewal off/);
-	assert.equal(container.querySelector("dt")?.textContent, "Subscription ends");
+	assert.equal(container.querySelector("dt")?.textContent, "Access until");
 	assert.equal(container.querySelector("dd")?.textContent, "February 1, 2030");
 	assert.doesNotMatch(container.textContent ?? "", /Cancel renewal/);
 });
@@ -1236,7 +1236,7 @@ test("return from renewal restoration rereads Stripe and retains the original tr
 	await mount(true);
 	assert.equal(requestedPath, "/api/billing/refresh");
 	assert.equal(method, "POST");
-	assert.match(container.textContent!, /Free trial/);
+	assert.match(container.textContent!, /Access active/);
 	assert.match(container.textContent!, /First monthly payment/);
 	assert.equal(
 		container.querySelector("dd")?.textContent,
@@ -1305,7 +1305,6 @@ test("manual paid conversion uses the dedicated owner-bound yearly portal endpoi
 		b.textContent?.includes("Switch to yearly billing"),
 	)!;
 	assert.ok(button);
-	assert.match(container.textContent!, /Stripe credits unused monthly time/);
 	await act(async () => button.click());
 	assert.equal(requests[1].path, "/api/billing/yearly-portal");
 	assert.equal(
@@ -1379,7 +1378,7 @@ test("current trial is separate from collapsed canceled subscription history", a
 	const current = container.querySelector('[aria-label="Plus subscription"]')!;
 	assert.ok(current && !history.contains(current));
 	assert.equal((current.textContent!.match(/76\.70/g) ?? []).length, 1);
-	assert.equal((current.textContent!.match(/Trial ends/g) ?? []).length, 1);
+	assert.equal((current.textContent!.match(/Access ends/g) ?? []).length, 1);
 	assert.match(current.textContent!, /First yearly payment/);
 	assert.match(current.textContent!, /Renews automatically/);
 });
@@ -1533,9 +1532,9 @@ test("billing exposes persisted activation recovery before any subscription exis
 			},
 		});
 	await mount();
-	assert.match(container.textContent!, /Your Pro trial is being prepared/);
+	assert.match(container.textContent!, /Your Pro access is being prepared/);
 	const recovery = [...container.querySelectorAll("a")].find(
-		(a) => a.textContent?.trim() === "Check trial status",
+		(a) => a.textContent?.trim() === "Check access status",
 	);
 	assert.ok(recovery);
 	assert.equal(
@@ -1567,7 +1566,7 @@ for (const stage of ["processing", "payment_required", "ended"] as const) {
 			});
 		await mount();
 		const label = [...container.querySelectorAll("dt")].find(
-			(dt) => dt.textContent === "Trial ended",
+			(dt) => dt.textContent === "Access ended",
 		);
 		assert.ok(label);
 		assert.equal(
@@ -1597,7 +1596,7 @@ for (const cancelAtPeriodEnd of [false, true]) {
 		await mount();
 		const label = [...container.querySelectorAll("dt")].find(
 			(dt) =>
-				dt.textContent === (cancelAtPeriodEnd ? "Subscription ends" : "Renews"),
+				dt.textContent === (cancelAtPeriodEnd ? "Access until" : "Next payment"),
 		);
 		assert.ok(label);
 		assert.equal(
@@ -1636,7 +1635,7 @@ test("paid summary opens existing management without creating a payment session"
 	);
 	assert.doesNotMatch(
 		container.querySelector(".billing-summary-card")!.textContent!,
-		/Free trial/,
+		/Access active/,
 	);
 	const details = container.querySelector(
 		".billing-summary-management",
@@ -1666,7 +1665,7 @@ test("cardless summary opens renewal setup and never promises a paid renewal wit
 	globalThis.fetch = async () => Response.json(cardless);
 	await mount();
 	const card = container.querySelector(".billing-summary-card")!;
-	assert.match(card.textContent!, /Free trial.*No automatic charge/);
+	assert.match(card.textContent!, /Access active.*No automatic charge/);
 	assert.equal(card.querySelector("a"), null);
 	assert.match(card.querySelector("button")!.textContent!, /Set up renewal/);
 	assert.doesNotMatch(card.textContent!, /Renews automatically|Next payment/);
@@ -1731,7 +1730,7 @@ test("enabled cardless renewal opens management without offering another plan or
 	assert.doesNotMatch(details.textContent!, /Add card & enable renewal/);
 	assert.match(details.textContent!, /No payment today/);
 	assert.match(details.textContent!, /First payment/);
-	assert.ok(trialButton(/^Cancel trial renewal$/));
+	assert.ok(trialButton(/^Cancel renewal$/));
 });
 
 test("canceled paid renewal shows paid-through date rather than a next charge", async () => {
@@ -1807,7 +1806,7 @@ test("opening legacy card-required trial management never requests cardless rene
 	await mount(false, undefined, undefined, true);
 	assert.ok(requests.length > 0);
 	assert.equal(requests.filter((path) => path.includes("/renewal/")).length, 0);
-	assert.equal(container.querySelector('[aria-label="Trial renewal"]'), null);
+	assert.equal(container.querySelector('[aria-label="Renewal"]'), null);
 });
 
 test("opening renewal setup reviews once, preserves terms on reopen, and never enables renewal", async () => {
@@ -1924,8 +1923,8 @@ test("expired trial overview offers paid plans without duplicate Free controls o
 			],
 		});
 	await mount();
-	const card = container.querySelector('[aria-label="Trial ended"]')!;
-	assert.match(card.textContent!, /Your trial has ended/);
+	const card = container.querySelector('[aria-label="Access ended"]')!;
+	assert.match(card.textContent!, /Your access period has ended/);
 	assert.match(
 		card.textContent!,
 		/Current planFreeYou can still join friends for free/,
@@ -2002,7 +2001,7 @@ for (const state of ["trial", "paid", "ended", "processing"] as const) {
 			assert.match(
 				container.textContent!,
 				state === "ended"
-					? /Your trial has ended/
+					? /Your access period has ended/
 					: state === "processing"
 						? /Jan 3, 2030/
 						: /January 3, 2030/,

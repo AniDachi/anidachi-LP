@@ -145,7 +145,7 @@ test("cardless trial rejects old plan mutation even when Schedule is absent from
 	Object.assign(f.trial, { trial_mode: "cardless" });
 	await assert.rejects(
 		f.service.quote("owner", "local-row", "pro"),
-		/trial renewal controls/i,
+		/renewal controls/i,
 	);
 	assert.equal(f.updates.length, 0);
 });

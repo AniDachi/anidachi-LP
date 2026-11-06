@@ -137,7 +137,7 @@ const messageRows = [
   },
   {
     message: "This room needs a host with Plus or Pro",
-    meaning: "In a legacy room, the person who created it no longer has the paid or existing-trial access required by that room.",
+    meaning: "In a legacy room, the person who created it no longer has the Plus or Pro access required by that room.",
     fix: "For a legacy room, restore its required hosting access or create a new Free20 room. Free20 allows up to 4 people and 20 host minutes per UTC day; exhausted time resets at 00:00 UTC. If asked to update AniDachi, update before joining the new room.",
   },
   {

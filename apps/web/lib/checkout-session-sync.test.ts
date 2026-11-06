@@ -127,12 +127,12 @@ test("trial success uses the checkout plan and rechecks at its original end", as
 			},
 		});
 	await mount("cs_trial");
-	assert.match(container.textContent!, /Your Plus trial/);
-	assert.match(container.textContent!, /cancel your trial/);
+	assert.match(container.textContent!, /Your Plus access/);
+	assert.match(container.textContent!, /Manage renewal in your subscription settings/);
 	assert.doesNotMatch(container.textContent!, /Your Pro trial/);
 	await act(async () => t.mock.timers.tick(1000));
 	assert.equal(requests, 2);
-	assert.equal(title(), "Your trial has ended");
+	assert.equal(title(), "Your access period has ended");
 	assert.doesNotMatch(
 		container.textContent!,
 		/Ready to watch|cancel your trial/,
@@ -186,10 +186,10 @@ for (const stage of [
 			});
 		await mount("cs_trial");
 		const expected = {
-			trial: "Your free trial has started",
+			trial: "Your access is active",
 			processing: "First payment processing",
 			payment_required: "Payment needs attention",
-			ended: "Your trial has ended",
+			ended: "Your access period has ended",
 			paid: "Subscription confirmed",
 		};
 		assert.equal(title(), expected[stage]);

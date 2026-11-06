@@ -170,7 +170,7 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				active.trial_end * 1000 > (deps.now ?? Date.now)())
 		)
 			throw new SubscriptionCheckoutError(
-				"Use the trial renewal controls to confirm or cancel payment after your trial.",
+				"Use the renewal controls to confirm or cancel your next payment.",
 				409,
 			);
 		if (deps.ensurePromotion) {

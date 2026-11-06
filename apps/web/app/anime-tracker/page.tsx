@@ -140,7 +140,7 @@ export default function AnimeTrackerPage() {
       </h2>
       <p className="mb-8 leading-relaxed text-ani-muted">
         Free can open saved history, Resume, and delete it. Recording and editing
-        progress need your own active Plus/Pro access, including a trial.
+        progress need your own active Plus/Pro access.
         Automatic recording also needs your permission, with YouTube enabled
         separately. Async catch-up is planned, not
         available today. Details are on{" "}

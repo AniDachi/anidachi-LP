@@ -142,10 +142,10 @@ export function CheckoutSessionSync({
 					(payload.checkoutSubscription?.planCode === "plus" || payload.checkoutSubscription?.planCode === "pro");
 				if (trial && trial.stage !== "paid") {
 					const headings = {
-						trial: "Your free trial has started",
+						trial: "Your access is active",
 						processing: "First payment processing",
 						payment_required: "Payment needs attention",
-						ended: "Your trial has ended",
+						ended: "Your access period has ended",
 					};
 					setState({
 						status: trial.stage === "trial" ? "synced" : "inactive",
@@ -154,7 +154,7 @@ export function CheckoutSessionSync({
 						onboardingReady: onboardingReady && trial.stage === "trial",
 						message:
 							trial.stage === "trial"
-								? `Your ${checkoutPlanLabel} trial ends ${formatBillingTime(trial.endsAt)} (your local time).`
+								? `Your ${checkoutPlanLabel} access ends ${formatBillingTime(trial.endsAt)} (your local time).`
 								: trial.stage === "processing"
 									? "We are waiting for your first payment to be confirmed. Check Account → Subscription for the current access and payment status."
 									: trial.stage === "payment_required"
@@ -301,7 +301,7 @@ export function CheckoutSessionStatus({
 			) : null}
 			{isSynced && state.trialActive ? (
 				<p className={styles.trialNote}>
-					View renewal details or cancel your trial in{" "}
+					Manage renewal in{" "}
 					<Link href="/account/billing">your subscription settings</Link>.
 				</p>
 			) : null}

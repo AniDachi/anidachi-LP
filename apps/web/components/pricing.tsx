@@ -364,7 +364,7 @@ export function Pricing({
 				// An unconfirmed public choice is not consent to an immediate charge.
 				// Show the verified paid terms and require a new, explicit choice.
 				setCheckoutError(
-					"A free trial is not available for this account. Review the subscription terms below before continuing.",
+					"Review the subscription terms below before continuing.",
 				);
 				return;
 			}
@@ -614,8 +614,8 @@ export function Pricing({
 					{showTrialTerms ? (
 						<p id="pricing-trial-terms" className="pricing-plans__trial-terms">
 							{offer?.trialMode === "cardless"
-								? "One 3-day trial per eligible account. Changing plans does not restart it."
-								: "Card required. One trial per account. Cancel before your trial ends to avoid a charge."}
+								? "One offer per eligible account. Changing plans does not extend its duration."
+								: "Card required. One offer per account. Cancel before your first payment to avoid a charge."}
 						</p>
 					) : null}
 					<p className="pricing-plans__terms">
@@ -722,14 +722,12 @@ function TierCardBody({
 	const trialOffered = hasConfirmedTrialOffer(offer);
 	const ctaLabel =
 		offer?.action === "trial"
-			? "Start 3-day free trial"
+			? `Continue with ${tier.label}`
 			: offer?.action === "manage"
 				? "Manage subscription"
 				: offer?.action === "subscribe"
 					? `Subscribe to ${tier.label}`
-					: trialOffered
-						? "Try 3 days free"
-						: `Choose ${tier.label}`;
+					: `Choose ${tier.label}`;
 	const description = tier.audience;
 	const recurringAmount = selectedPrice
 		? formatMonthlyPrice(selectedPrice)
@@ -745,7 +743,12 @@ function TierCardBody({
 					? `3 days free, then ${recurringAmount}/${unit} automatically.`
 					: offer?.action === "manage"
 						? null
-						: `Renews at ${recurringAmount}/${unit}.`;
+						: yearly ||
+							(offer.action === "sign_in" &&
+								offer.trialAvailable &&
+								offer.trialMode === "cardless")
+							? `Renews at ${recurringAmount}/${unit}.`
+							: "Renews automatically. Cancel anytime.";
 	const termsDetail =
 		trialOffered && offer?.trialMode === "cardless"
 			? `Continue for ${recurringAmount}/${unit} only if you enable renewal.`
@@ -753,7 +756,9 @@ function TierCardBody({
 				? null
 				: offer.action === "manage"
 					? "Manage your current plan and renewal in Account → Subscription."
-					: "Cancel renewal anytime in Account → Subscription.";
+					: yearly
+						? "Cancel renewal anytime in Account → Subscription."
+						: null;
 
 	return (
 		<>
@@ -772,25 +777,23 @@ function TierCardBody({
 				>
 					<div className="pricing-plans__price-line">
 						<span className="pricing-plans__amount">{price}</span>
-						<span className="pricing-plans__suffix">
-							{!paidTier
-								? "No subscription"
-								: yearly
-									? "per month, approx."
-									: "per month"}
-						</span>
+						{paidTier ? (
+							<span className="pricing-plans__suffix">
+								{yearly ? "per month, approx." : "per month"}
+							</span>
+						) : null}
 					</div>
-					<p className="pricing-plans__billing">
-						{yearly ? (
-							<>
-								Billed <strong>{recurringAmount} / year</strong>
-							</>
-						) : paidTier ? (
-							"Billed monthly."
-						) : (
-							"No card needed."
-						)}
-					</p>
+					{yearly || !paidTier ? (
+						<p className="pricing-plans__billing">
+							{yearly ? (
+								<>
+									Billed <strong>{recurringAmount} / year</strong>
+								</>
+							) : (
+								"No card needed."
+							)}
+						</p>
+					) : null}
 					{yearlySavings ? (
 						<p className="pricing-plans__savings">
 							Save <strong>{yearlySavings} / year</strong> vs monthly

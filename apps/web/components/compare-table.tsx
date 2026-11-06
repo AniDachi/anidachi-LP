@@ -2,7 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import {
+	ArrowRight,
+	Bookmark,
+	ChevronDown,
+	Link as LinkIcon,
+	MessageCircle,
+	Monitor,
+	Users,
+	Video,
+	type LucideIcon,
+} from "lucide-react";
+import { AnidachiLogo } from "@/components/anidachi-logo";
 import { trackConversion } from "@/lib/conversion-events";
 import styles from "./compare-table.module.css";
 
@@ -33,9 +44,14 @@ type Product = "anidachi" | Alternative;
 
 // Public information checked 2026-09-30; the section notes link the sources.
 // "Not listed" means undocumented there, never a claim of feature absence.
-const rows: { feature: string; values: Record<Product, string> }[] = [
+const rows: {
+	feature: string;
+	icon: LucideIcon;
+	values: Record<Product, string>;
+}[] = [
 	{
-		feature: "Where you watch",
+		feature: "Platforms",
+		icon: Monitor,
 		values: {
 			anidachi: "Crunchyroll, YouTube, Netflix",
 			teleparty: "YouTube, Netflix + more",
@@ -45,6 +61,7 @@ const rows: { feature: string; values: Record<Product, string> }[] = [
 	},
 	{
 		feature: "Watching together",
+		icon: Users,
 		values: {
 			anidachi: "Synced players",
 			teleparty: "Synced players",
@@ -53,25 +70,18 @@ const rows: { feature: string; values: Record<Product, string> }[] = [
 		},
 	},
 	{
-		feature: "Text chat",
+		feature: "Chat & reactions",
+		icon: MessageCircle,
 		values: {
 			anidachi: "On your video",
-			teleparty: "Chat sidebar",
-			crunchyrollParty: "Live chat",
-			discord: "Channel or DM",
+			teleparty: "Chat sidebar · Custom reactions (Premium)",
+			crunchyrollParty: "Live chat & reactions",
+			discord: "Channel or DM · Message reactions",
 		},
 	},
 	{
-		feature: "Reactions",
-		values: {
-			anidachi: "On your video",
-			teleparty: "Custom reactions (Premium)",
-			crunchyrollParty: "Live reactions",
-			discord: "On messages",
-		},
-	},
-	{
-		feature: "Voice & video calls",
+		feature: "Voice & video",
+		icon: Video,
 		values: {
 			anidachi: "Built in",
 			teleparty: "Premium",
@@ -80,7 +90,8 @@ const rows: { feature: string; values: Record<Product, string> }[] = [
 		},
 	},
 	{
-		feature: "Invite your friends",
+		feature: "Invites",
+		icon: LinkIcon,
 		values: {
 			anidachi: "Friends, groups & links",
 			teleparty: "Party link",
@@ -90,6 +101,7 @@ const rows: { feature: string; values: Record<Product, string> }[] = [
 	},
 	{
 		feature: "Watch progress",
+		icon: Bookmark,
 		values: {
 			anidachi: "Save on Plus / Pro",
 			teleparty: "Not listed",
@@ -146,10 +158,13 @@ export function CompareTable() {
 					<thead>
 						<tr>
 							<th scope="col" className={styles.featureHeading}>
-								Feature
+								<span className="sr-only">Feature</span>
 							</th>
 							<th scope="col" className={styles.ours}>
-								AniDachi
+								<span className={styles.brandHeading}>
+									<AnidachiLogo size={24} aria-hidden />
+									<span>AniDachi</span>
+								</span>
 							</th>
 							{alternatives.map((product) => (
 								<th
@@ -157,8 +172,12 @@ export function CompareTable() {
 									scope="col"
 									className={styles.alternative}
 									data-selected={selected === product.id}
+									aria-label={product.label}
 								>
-									{product.label}
+									<span className={styles.fullLabel}>{product.label}</span>
+									<span className={styles.shortLabel} aria-hidden="true">
+										{product.shortLabel}
+									</span>
 								</th>
 							))}
 						</tr>
@@ -166,7 +185,12 @@ export function CompareTable() {
 					<tbody>
 						{rows.map((row) => (
 							<tr key={row.feature}>
-								<th scope="row">{row.feature}</th>
+								<th scope="row">
+									<span className={styles.featureLabel}>
+										<row.icon size={19} strokeWidth={1.5} aria-hidden="true" />
+										<span>{row.feature}</span>
+									</span>
+								</th>
 								<td className={styles.ours}>{row.values.anidachi}</td>
 								{alternatives.map((product) => (
 									<td

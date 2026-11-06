@@ -66,7 +66,7 @@ const faq = [
   {
     question: "When does a watchlist title become progress?",
     answer:
-      "When you play it on your own Crunchyroll or YouTube tab in desktop Chrome. Recording needs your own Plus or Pro access, including a trial, and your permission. Free can still open saved history, Resume, and delete it.",
+      "When you play it on your own Crunchyroll or YouTube tab in desktop Chrome. Recording needs your own Plus or Pro access, and your permission. Free can still open saved history, Resume, and delete it.",
   },
   {
     question: "How is this different from a queue or a diary?",

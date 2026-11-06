@@ -101,7 +101,7 @@ test("shared Free20 copy distinguishes metering, media permission and personal h
   assert.match(copy.PRICING_HISTORY_NOTE, /view, resume and delete.*Free/);
   assert.match(copy.PRICING_HISTORY_NOTE, /Saving or editing.*your own Plus or Pro/);
   assert.match(copy.PRICING_ROOM_SIZE_RANGE, /4 people on Free, 6 people with a Plus host or 15 with a Pro host/);
-  assert.match(copy.PRICING_EXISTING_TRIAL_NOTE, /New trials are no longer offered/);
+  assert.match(copy.PRICING_CANCELLATION_NOTE, /current access period ends/);
 });
 
 test("the five-person Discord example requires paid capacity beyond Free's four-person cap", () => {

@@ -105,7 +105,7 @@ export function CardlessTrialControls({
 				if (!disposed) {
 					if (Date.parse(value.firstChargeAt) !== Date.parse(trial.endsAt))
 						throw new Error(
-							"Your trial changed. Refresh subscription status before continuing.",
+							"Your access changed. Refresh subscription status before continuing.",
 						);
 					previewCache.current = {
 						key,
@@ -200,7 +200,7 @@ export function CardlessTrialControls({
 		return null;
 	if (trial.renewalState === "pending" && !pending)
 		return (
-			<section className="billing-trial-controls" aria-label="Trial renewal">
+			<section className="billing-trial-controls" aria-label="Renewal">
 				<h2>Confirming your renewal</h2>
 				<p>Refresh status to check this change before continuing.</p>
 			</section>
@@ -237,25 +237,24 @@ export function CardlessTrialControls({
 		});
 	};
 	return (
-		<section className="billing-trial-controls" aria-label="Trial renewal">
+		<section className="billing-trial-controls" aria-label="Renewal">
 			<header className="billing-renewal-heading">
 				<h2>
 					{pending ? (
 						"Confirming your change"
 					) : enabled ? (
-						"Manage trial renewal"
+						"Manage renewal"
 					) : (
 						<>
-							Keep <span>{planCode === "pro" ? "Pro" : "Plus"}</span> after your
-							trial
+							Keep <span>{planCode === "pro" ? "Pro" : "Plus"}</span> active
 						</>
 					)}
 				</h2>
 				{!pending && (
 					<p>
 						{enabled
-							? "Your trial is active. Renewal is enabled."
-							: "Your trial is active. Renewal is off."}
+							? "Your access is active. Renewal is enabled."
+							: "Your access is active. Renewal is off."}
 					</p>
 				)}
 			</header>
@@ -391,7 +390,7 @@ export function CardlessTrialControls({
 											maximumFractionDigits: 0,
 										}).format(0)}
 									</p>
-									<p className="ac-muted">Your trial continues</p>
+									<p className="ac-muted">Your access continues</p>
 								</div>
 								<div>
 									<p className="billing-timeline-label">First payment</p>
@@ -411,7 +410,7 @@ export function CardlessTrialControls({
 								{card
 									? "No payment today. Confirming enables "
 									: "No payment today. Completing card setup enables "}
-								{displayed.billingPeriod} automatic renewal after your trial.
+								{displayed.billingPeriod} automatic renewal after your current access period.
 								<br />
 								Cancel before the first payment to avoid a charge.
 							</p>
@@ -474,7 +473,7 @@ export function CardlessTrialControls({
 				>
 					{pending && !trial.renewalEnabled
 						? "Cancel renewal setup"
-						: "Cancel trial renewal"}
+						: "Cancel renewal"}
 				</button>
 			)}
 			{onBack && (
