@@ -336,15 +336,6 @@ export function ExtensionInstallHub({
                 </div>
               </li>
             </ol>
-            <p className="-mt-6 mb-10 text-sm leading-relaxed text-ani-muted md:-mt-10 md:mb-16">
-              Watching on Crunchyroll? See our{" "}
-              <Link
-                href="/guides/crunchyroll-watch-party-chrome-extension"
-                className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
-              >
-                setup guide
-              </Link>.
-            </p>
           </>}
         />
       ) : (
