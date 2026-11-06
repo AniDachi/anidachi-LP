@@ -7,6 +7,7 @@ import {
 export async function processSubscriptionWebhookEvent(
 	event: Stripe.Event,
 	deps: {
+		expectedLivemode?: boolean;
 		sync: (subscriptionId: string) => Promise<void>;
 		alert: (payload: SubscriptionAlertPayload) => Promise<void>;
 		completeSetup?: (sessionId: string) => Promise<void>;
@@ -14,15 +15,19 @@ export async function processSubscriptionWebhookEvent(
 		reconcileCancellation?: (subscriptionId: string) => Promise<void>;
 	},
 ): Promise<void> {
+	if (
+		deps.expectedLivemode !== undefined &&
+		event.livemode !== deps.expectedLivemode
+	)
+		throw new Error("Stripe webhook mode mismatch.");
 	const reconcile = async (subscriptionId: string) => {
-		if (!event.livemode) await deps.reconcileCancellation?.(subscriptionId);
+		await deps.reconcileCancellation?.(subscriptionId);
 	};
 	const sync = async (subscriptionId: string) => {
 		await deps.sync(subscriptionId);
 		await reconcile(subscriptionId);
 	};
 	if (event.type === "invoice.created") {
-		if (event.livemode) return;
 		if (!deps.retentionInvoice)
 			throw new Error("Retention invoice handler unavailable; retry delivery.");
 		const subscriptionId = invoiceSubscriptionId(event.data.object);

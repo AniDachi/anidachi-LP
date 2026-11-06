@@ -228,7 +228,7 @@ test("native reconciliation errors retry signed delivery and never create anothe
 	);
 	assert.equal(legacy, 0);
 });
-test("live event sync never invokes TEST native reconciliation", async () => {
+test("live event sync reconciles its native cancellation allowance", async () => {
 	let reconciled = 0;
 	await processSubscriptionWebhookEvent(
 		fixture("customer.subscription.updated", { id: "sub_live" }, true),
@@ -240,7 +240,7 @@ test("live event sync never invokes TEST native reconciliation", async () => {
 			},
 		},
 	);
-	assert.equal(reconciled, 0);
+	assert.equal(reconciled, 1);
 });
 
 test("native draft event never invokes legacy Stripe discount fulfillment when no uninstall claim exists", async () => {
@@ -276,4 +276,59 @@ test("native draft event never invokes legacy Stripe discount fulfillment when n
 	);
 	assert.equal(native, 1);
 	assert.equal(writes, 0);
+});
+
+test("LIVE draft-created reconciles and fulfills accepted retention independently of issuance flags", async () => {
+	const calls: string[] = [];
+	await processSubscriptionWebhookEvent(
+		fixture(
+			"invoice.created",
+			{
+				id: "in_live",
+				livemode: true,
+				parent: { subscription_details: { subscription: "sub_live" } },
+			},
+			true,
+		),
+		{
+			expectedLivemode: true,
+			sync: async () => {},
+			alert: async () => {},
+			reconcileCancellation: async () => {
+				calls.push("reconcile");
+			},
+			retentionInvoice: async () => {
+				calls.push("invoice");
+			},
+		},
+	);
+	assert.deepEqual(calls, ["reconcile", "invoice"]);
+});
+
+test("webhook mode mismatch is rejected before any durable or provider handler", async () => {
+	for (const expectedLivemode of [true, false]) {
+		let calls = 0;
+		await assert.rejects(
+			processSubscriptionWebhookEvent(
+				fixture("invoice.created", {}, !expectedLivemode),
+				{
+					expectedLivemode,
+					sync: async () => {
+						calls++;
+					},
+					alert: async () => {
+						calls++;
+					},
+					reconcileCancellation: async () => {
+						calls++;
+					},
+					retentionInvoice: async () => {
+						calls++;
+					},
+				},
+			),
+			/mode mismatch/,
+		);
+		assert.equal(calls, 0);
+	}
 });

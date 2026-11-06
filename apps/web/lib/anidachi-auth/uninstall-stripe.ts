@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import { verifiedBillingPrice } from "./billing-price";
 import type { UninstallPlan } from "./uninstall-offer";
@@ -16,6 +17,7 @@ export type UninstallCatalog = Record<UninstallPlan, Stripe.Price>;
 export function verifyUninstallCatalog(
 	prices: Stripe.Price[],
 	ids: string[],
+	expectedLive = resolveStripeMode() === "live",
 ): UninstallCatalog {
 	if (prices.length !== 2 || new Set(ids).size !== 2)
 		throw new Error("Offer catalog unavailable.");
@@ -23,7 +25,7 @@ export function verifyUninstallCatalog(
 		const verified = verifiedBillingPrice(
 			price,
 			ids[i],
-			false,
+			expectedLive,
 			true,
 			"monthly",
 		);
@@ -42,13 +44,14 @@ export function verifyUninstallCoupon(
 	campaign: string,
 	catalog: UninstallCatalog,
 	requireValid = true,
+	expectedLive = resolveStripeMode() === "live",
 ) {
 	const products = Object.values(catalog).map(
 		(p) => stripeObjectId(p.product) ?? "",
 	);
 	if (
 		coupon.id !== couponId ||
-		coupon.livemode ||
+		coupon.livemode !== expectedLive ||
 		(requireValid && !coupon.valid) ||
 		coupon.percent_off !== 40 ||
 		coupon.amount_off !== null ||
@@ -65,11 +68,12 @@ export function verifyUninstallCustomer(
 	customer: Stripe.Customer | Stripe.DeletedCustomer,
 	customerId: string,
 	userId: string,
+	expectedLive = resolveStripeMode() === "live",
 ) {
 	if (
 		customer.deleted ||
 		customer.id !== customerId ||
-		customer.livemode ||
+		customer.livemode !== expectedLive ||
 		customer.metadata.userId !== userId
 	)
 		throw new Error("Offer customer ownership unavailable.");
@@ -79,12 +83,13 @@ export function verifyUninstallCustomer(
 export function hasPositiveSubscriptionInvoice(
 	invoices: Stripe.ApiList<Stripe.Invoice>,
 	customerId: string,
+	expectedLive = resolveStripeMode() === "live",
 ): boolean {
 	if (invoices.has_more) throw new Error("Offer invoice history incomplete.");
 	for (const invoice of invoices.data) {
 		if (
 			stripeObjectId(invoice.customer) !== customerId ||
-			invoice.livemode ||
+			invoice.livemode !== expectedLive ||
 			invoice.status !== "paid" ||
 			!Number.isSafeInteger(invoice.total)
 		)
@@ -99,11 +104,12 @@ export function renewalIneligibility(
 	catalog: UninstallCatalog,
 	customer: Stripe.Customer,
 	userId: string,
+	expectedLive = resolveStripeMode() === "live",
 ): string | null {
 	if (
 		stripeObjectId(sub.customer) !== customer.id ||
 		sub.metadata.userId !== userId ||
-		sub.livemode
+		sub.livemode !== expectedLive
 	)
 		throw new Error("Subscription owner mismatch.");
 	if (sub.status === "past_due" || sub.status === "unpaid")
@@ -120,10 +126,7 @@ export function renewalIneligibility(
 		return "Subscription billing is paused. Review it in subscription management.";
 	if (sub.schedule || sub.pending_update)
 		return "A subscription change is pending. Check it in subscription management before trying again.";
-	if (
-		sub.pending_invoice_item_interval ||
-		sub.billing_thresholds
-	)
+	if (sub.pending_invoice_item_interval || sub.billing_thresholds)
 		return "Your subscription has special billing settings. Review them in subscription management.";
 	if (
 		sub.discounts.length ||

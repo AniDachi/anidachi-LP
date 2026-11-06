@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import type { CancellationOffer } from "./cancellation-retention-store";
 
@@ -32,11 +33,12 @@ export function cancellationCouponParams(
 export function verifyCancellationCoupon(
 	coupon: Stripe.Coupon,
 	offer: CancellationOffer,
+	expectedLive = resolveStripeMode() === "live",
 ): void {
 	const terms = cancellationCouponParams(offer);
 	if (
 		coupon.id !== offer.coupon_id ||
-		coupon.livemode !== false ||
+		coupon.livemode !== expectedLive ||
 		coupon.percent_off !== 40 ||
 		coupon.amount_off !== null ||
 		coupon.currency !== null ||

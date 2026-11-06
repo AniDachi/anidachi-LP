@@ -1,0 +1,224 @@
+# Free20: 0.1.5 Store review and production preparation
+
+Status: preparation only. The owner authorized a review ZIP from accepted staging
+on November 6 and confirmed **0.1.4** as the highest uploaded Store version.
+The new version is **0.1.5**. This does not authorize main promotion, production
+activation, LIVE provider writes, Store upload/publication or public ZIP hosting.
+
+Execution plan: [release preparation](../../superpowers/plans/2026-11-06-free20-store-release-preparation.md).
+Product contract: [Free20](../../daily-free20-contract.md) and
+[current master plan](../../superpowers/plans/2026-10-30-daily-free20-transition.md).
+
+## Source and environment inventory
+
+The preparation branch starts at accepted staging
+`dc988034df904157cf0bbb9e29bbfe9d41e82a04` (PR #521). Production main remains
+`9da93cd9891b6155051fc550957635c089fc8f3a`. Their tree comparison contains **504
+changed files**, including ten migrations; the earlier 514 estimate was incorrect.
+This includes website, SEO, auth, history, social and runtime work, not just Free20.
+Freeze the final merged staging SHA in the artifact receipt; do not identify a
+dirty working-tree build as that SHA.
+
+Read-only provider inventory on November 6:
+
+| Plane | Staging | Production |
+| --- | --- | --- |
+| Supabase | `cyppqpprkygjloyfvvvj`, 93 migrations | `bynsjjxzatxndzjkogim`, 83 migrations, latest `20261022124234` |
+| SQL policy | Free20 and abuse enabled, new trials disabled | Old schema/policy; new flags not present |
+| Original activation | `2026-09-29T15:48:48.80082Z` | `2026-10-03T16:44:10.213666Z` |
+| Worker | `anidachi-api-staging`, version `95b6b52b-f109-4d74-966f-f5ebec76851c` | `anidachi-api-production`, version `3ea773eb-f258-4713-a314-9abeb4012f49` |
+| Worker Free20 accounting | `true` | absent/off |
+| Stripe connection | AniDachi sandbox, `livemode=false` | LIVE account unavailable through current connectors |
+
+Cloudflare account: `d60ffabe1c032c70f433ff6affebc646`. Vercel project:
+`prj_E6UFEzEZYaarqkbfLRJFS1lHzNER`. Inventory reads do not change customer data.
+Vercel environment metadata establishes configured key names, not working Stripe
+objects, matching secret pairs or successful payments. Recheck current aliases
+and CI at delivery; record exact deployments in the PR/artifact receipt.
+
+Pending production migrations, in order:
+
+1. `20261031074738_daily_free20_room_admission.sql`
+2. `20261031100000_free20_account_status.sql`
+3. `20261101081311_free20_purchase_delivery.sql`
+4. `20261101092311_free20_trial_retirement_guard.sql`
+5. `20261101094401_free20_daily_warning.sql`
+6. `20261101102723_free20_client_admission.sql`
+7. `20261103120000_free20_abuse.sql`
+8. `20261104133355_uninstall_retention_campaigns.sql`
+9. `20261105120000_cancellation_retention.sql`
+10. `20261105142000_uninstall_feedback_admin_read.sql`
+
+Save SHA256 for each exact file with the frozen release receipt. Apply the entire
+reviewed file, including checked function-body patches. A previously initialized
+local fixture was stale despite containing the migration's tables; table presence
+alone is not function parity. Fresh local replay of current post-October-31 files
+passed 2,190 SQL assertions in 57 suites. The baseline image contains the first
+Free20 migration; this is not a fresh replay of all 93 historical migrations.
+
+## Compatibility during Store review
+
+Production does not yet have `/api/me/hosting-status`. The candidate extension
+handles its generic 404 only by a fresh authenticated, current-owner read of
+`/api/me/entitlements?hostingStatusVersion=1`. A complete, consistent old hosting
+contract without the capability marker selects the existing legacy presentation.
+The old server still authorizes every room. No quota or paid access is invented.
+
+New web returns `hostingStatusVersion: 1` when explicitly requested, independent
+of Free20 activation. Any present marker prohibits generic-404 fallback. A
+confirmed new status also latches support for that login, including concurrent
+requests. Errors, malformed bodies, owner changes and unknown versions fail closed.
+The old `hosting` object and unrequested entitlements responses are unchanged.
+
+This permits review against the current production service. Free20's public
+availability still begins at the coordinated server activation, not ZIP creation.
+This compatibility covers existing account and room controls, not new website
+pages: current production has no `/uninstall` route. The new uninstall screen and
+retention flow require the coordinated web deployment. Disclose that dependency
+in reviewer notes and settle reviewer access to those screens before submission;
+do not describe the old production website as the complete new flow. Deploying
+an earlier compatible website bridge would require separate owner authorization.
+Supply a suitable authorized test account through the Store's private reviewer
+fields; do not put credentials in this repository or ZIP. Automated transport
+tests are not a claim that a Store reviewer or a loaded production package has
+completed an authenticated session.
+
+Old installed clients remain subject to the existing Free20 admission/version
+guard after activation. Verify the exact published 0.1.4 upgrade path separately;
+do not assume every installation updates immediately.
+
+## LIVE retention prerequisites
+
+The code now validates TEST and LIVE independently through the existing Stripe
+mode resolver. No LIVE campaign was enabled by this work. Exact opt-ins:
+
+| Campaign | LIVE settings |
+| --- | --- |
+| Uninstall first month, including eligible former subscribers | `STRIPE_UNINSTALL_FIRST_ENABLED_LIVE=true`, `STRIPE_UNINSTALL_FIRST_COUPON_ID_LIVE` |
+| Uninstall next monthly renewal | `STRIPE_UNINSTALL_RENEWAL_ENABLED_LIVE=true`, `STRIPE_UNINSTALL_RENEWAL_COUPON_ID_LIVE` |
+| Native cancellation offer | `STRIPE_CANCELLATION_RETENTION_ENABLED_LIVE=1` |
+
+There is no unsuffixed or cross-mode fallback. Wrong-mode customers, prices,
+coupons, subscriptions and invoices are rejected. The signed webhook also checks
+mode before recording event processing. Turning issuance off preserves fulfillment
+and reconciliation of accepted claims. All new paths share the existing one-time
+account allowance; no second discount is introduced.
+
+Before enabling LIVE offers, with separate authorization:
+
+- Inspect the actual AniDachi LIVE account. Current connectors expose only Sandbox;
+  do not infer LIVE readiness from staging or environment names.
+- Verify Plus/Pro monthly and annual price IDs, currency, amounts and recurring
+  intervals. Native cancellation requires four distinct products, and exactly one
+  active sale price on each monthly product. Stripe coupon scope is by **product**,
+  not monthly/yearly price interval. Keep annual conversion available and undiscounted.
+- If separating existing annual sale products, retain the old annual IDs in
+  `STRIPE_PRICE_IDS_PLUS_YEARLY_LEGACY_LIVE` and
+  `STRIPE_PRICE_IDS_PRO_YEARLY_LEGACY_LIVE`. Archive old sale prices only after
+  new annual targets and the dedicated yearly portal configuration are verified.
+  Do not reprice existing subscriptions or alter their IDs, periods or anchors.
+- Verify the ordinary cancellation portal and dedicated yearly confirmation
+  configuration. The account's owner-checked Cancel action prepares the private
+  offer; generic portal sessions do not have a global coupon. Check that unrelated
+  Stripe retention rules do not supersede this owner-specific coupon.
+- Update the **existing** LIVE webhook's event selection to include `invoice.created`
+  while preserving endpoint ID/URL, signing secret, pinned API version and existing
+  lifecycle events. Do not run an endpoint-creation script as an update.
+- Validate current coupons and accepted/pending obligations before issuance.
+  New offers remain disabled until schema, handler delivery and provider proof agree.
+
+Primary references: [Stripe coupon product scope](https://docs.stripe.com/billing/subscriptions/coupons)
+and [cancellation offers](https://docs.stripe.com/customer-management/cancellation-page).
+Stripe API remains pinned to `2025-08-27.basil`; no SDK/API upgrade is part of this release.
+
+## Ordered launch after Store approval
+
+1. **Freeze and review.** Deliver the preparation PR to staging, follow CI and
+   hosted smoke, then freeze source and build the exact 0.1.5 production ZIP.
+   Record ZIP SHA256, byte size, public-key fingerprint, permissions, extension ID
+   and build ID. User staging reload and authenticated/two-user acceptance remain
+   distinct from automated checks.
+2. **Store review only.** The owner uploads the reviewed ZIP and selects deferred
+   publication, leaving automatic publication off. Keep the same ZIP after approval.
+   Chrome documents a 30-day window to publish an approved deferred submission:
+   [publish documentation](https://developer.chrome.com/docs/webstore/publish).
+   Approval does not itself authorize this agent to publish or change production.
+3. **Fresh go/no-go inventory.** After approval and owner launch authorization,
+   recheck main/staging, active rooms, migration versions, pending payments and
+   accepted discount obligations. Record current rollback versions. Resolve LIVE
+   access/configuration before promising working production retention offers.
+4. **Schema first.** Pre-apply only the ten reviewed pending migrations with their
+   original versions/hashes while Free20/abuse issuance gates remain off. Use the
+   reviewed CLI migration path and exact production project; stop on unexpected
+   pending versions. Verify schema/functions/permissions, unchanged account rights,
+   and preserved original `activation_at`. Do not rewrite migration history.
+   A single main merge is insufficient: Vercel and DB workflows run independently.
+5. **Compatible web.** Promote the accepted candidate through a staging-to-main PR
+   after schema readiness. Verify Vercel Production READY at the exact SHA, auth,
+   private API behavior, checkout/webhook health and disabled-policy responses.
+   Never push main directly. Ensure old web instances no longer accept new trials
+   before the eventual policy switch.
+6. **Compatible Worker.** Dispatch the manual production Worker workflow with
+   `production_ready_sha` equal to that verified main SHA. It requires schema and
+   compatible web first. Add the production accounting flag through a reviewed
+   `[env.production.vars]` config change; dashboard-only changes are overwritten
+   by Wrangler deployment. Verify deployed version, bindings and health.
+7. **Runtime ready, SQL last.** Deliver and verify production web flags
+   `ANIDACHI_FREE20_ACCOUNTING_ENABLED=true` and
+   `ANIDACHI_FREE20_ABUSE_ENABLED=true`, together with the Worker accounting flag.
+   Verify same-environment internal authentication and existing abuse context keys
+   without printing secrets. Only then atomically enable SQL Free20/abuse and disable
+   new trials using expected-revision guards. Increment revision; preserve the
+   original activation timestamp, existing trial/manual/paid rights and usage.
+   Rehearse the exact SQL transaction and its no-op/revision-conflict behavior first.
+8. **Verify, then publish.** Verify authenticated Free/paid/guest admission, settlement,
+   quota exhaustion, owner-visible reset time and purchase transition on the final
+   production versions. Enable individually verified LIVE retention campaigns.
+   The owner then publishes the exact approved Store package. Update production
+   build/download metadata only for that artifact; never replace it with a rebuild
+   while claiming the old review/hash. Public ZIP hosting is a separate approved action.
+9. **Observe.** Check errors, denied admissions, settlement recovery, duplicate
+   payment events, invite delivery and update-required behavior for old clients.
+   Use only AniDachi analytics project `813335` if analytics is consulted.
+
+## Rollback boundaries
+
+Before activation, restore the prior compatible web/Worker versions with gates
+off; leave additive schema and immutable payment records intact. A disabled offer
+flag stops new issuance, not accepted invoice obligations.
+
+After Free20 rooms exist, do not blindly turn all three gates off: SQL admission,
+web callbacks and Worker accounting form one contract. Prefer a forward fix or
+drain affected rooms through normal terminal settlement before restoring legacy
+runtime. Preserve daily ledgers, marker reservations, cumulative ACKs and accepted
+payments; never reset usage or delete an unsettled room to simplify rollback.
+The exact incident procedure depends on observed failure and requires a new
+operator decision. A Store rollback requires a higher reviewed version.
+
+## Store text and reviewer notes
+
+Keep the existing Store identity `gpkolofebdhfpapbbgdkdkmlmjfidgmn` and name
+**AniDachi: Watch Together, Synced Watch Party**. Production endpoints are
+`https://www.anidachi.app` and
+`https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss`.
+
+Suggested change notes:
+
+> Daily free hosting time, clearer room controls, friends and invitations,
+> improved onboarding, and fixes for account status and room transitions.
+
+Listing content should describe synced watching on YouTube, Crunchyroll and
+Netflix, room links/friends, chat/reactions and optional voice/video. Explain the
+20-minute daily host allowance and paid plans in pricing details, without trial
+promises or implying the extension supplies paid streaming subscriptions. Watching
+alone does not spend the allowance; guests do not spend their own host allowance.
+
+Recording is controlled in Settings; eligible Plus/Pro access and YouTube consent
+still gate collection. The compact welcome is not consent and does not explain
+recording. Privacy now retains the actual defaults, eligibility and deletion
+description without that stale welcome claim. Review Store privacy disclosures
+against the exact package; no additional host permissions are requested here.
+
+Before public launch, inspect the saved listing, screenshots, pricing and privacy
+page together. This document is preparation text, not proof that Store fields or
+the public production website have already been updated.

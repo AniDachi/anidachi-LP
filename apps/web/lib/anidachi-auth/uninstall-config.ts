@@ -3,17 +3,17 @@ import { resolveStripeMode } from "./stripe-env";
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 import { UNINSTALL_REQUEST, verifyUninstallCatalog } from "./uninstall-stripe";
 
-/** Deliberately TEST-only, with no unsuffixed or LIVE campaign fallback. */
+/** Each deployment opts in independently; no unsuffixed/cross-mode fallback. */
 export function uninstallCampaignConfig() {
-	const test = resolveStripeMode() === "test";
+	const suffix = resolveStripeMode() === "live" ? "LIVE" : "TEST";
 	return {
 		firstCoupon:
-			test && process.env.STRIPE_UNINSTALL_FIRST_ENABLED_TEST === "true"
-				? (process.env.STRIPE_UNINSTALL_FIRST_COUPON_ID_TEST ?? null)
+			process.env[`STRIPE_UNINSTALL_FIRST_ENABLED_${suffix}`] === "true"
+				? (process.env[`STRIPE_UNINSTALL_FIRST_COUPON_ID_${suffix}`] ?? null)
 				: null,
 		renewalCoupon:
-			test && process.env.STRIPE_UNINSTALL_RENEWAL_ENABLED_TEST === "true"
-				? (process.env.STRIPE_UNINSTALL_RENEWAL_COUPON_ID_TEST ?? null)
+			process.env[`STRIPE_UNINSTALL_RENEWAL_ENABLED_${suffix}`] === "true"
+				? (process.env[`STRIPE_UNINSTALL_RENEWAL_COUPON_ID_${suffix}`] ?? null)
 				: null,
 	};
 }

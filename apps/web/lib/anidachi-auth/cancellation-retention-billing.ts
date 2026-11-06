@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import type { BillingPromotion } from "../billing-view";
 import type { CancellationOffer } from "./cancellation-retention-store";
@@ -24,9 +25,10 @@ export function cancellationBillingSnapshot(
 	offer: CancellationOffer,
 	now: number,
 	freshCoupon?: Stripe.Coupon,
+	expectedLive = resolveStripeMode() === "live",
 ): BillingPromotion | undefined {
 	if (
-		sub.livemode ||
+		sub.livemode !== expectedLive ||
 		sub.id !== offer.stripe_subscription_id ||
 		stripeObjectId(sub.customer) !== offer.stripe_customer_id ||
 		sub.metadata.userId !== offer.user_id
@@ -55,7 +57,7 @@ export function cancellationBillingSnapshot(
 	const coupon = freshCoupon ?? native.coupon;
 	if (coupon.id !== native.coupon.id)
 		throw new Error("Cancellation billing coupon mismatch.");
-	verifyCancellationCoupon(coupon, offer);
+	verifyCancellationCoupon(coupon, offer, expectedLive);
 	if (coupon.times_redeemed !== 1) return undefined;
 	// An already-open monthly offer can be explicitly accepted after conversion.
 	// Explain its scope while showing the ordinary annual amount.

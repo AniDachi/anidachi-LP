@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import type { PricingOffer } from "../pricing-offer";
 import { verifiedBillingPrice } from "./billing-price";
@@ -68,6 +69,7 @@ export type UninstallServiceDeps = {
 };
 export function createUninstallService(deps: UninstallServiceDeps) {
 	const now = deps.now ?? Date.now;
+	const expectedLive = resolveStripeMode() === "live";
 	const revisions = uninstallRevisions(deps.secret, now);
 	/** Presentation only: never revoke an accepted obligation or release its
 	 * lifetime allowance. Issuance gates/catalog changes cannot hide a promise. */
@@ -90,7 +92,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 			);
 			if (
 				sub.id !== claim.stripe_subscription_id ||
-				sub.livemode ||
+				sub.livemode !== expectedLive ||
 				stripeObjectId(sub.customer) !== customer.id ||
 				sub.metadata.userId !== claim.user_id
 			)
@@ -131,7 +133,13 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 					},
 					now(),
 				);
-			verifiedBillingPrice(item.price, claim.price_id, false, false, "monthly");
+			verifiedBillingPrice(
+				item.price,
+				claim.price_id,
+				expectedLive,
+				false,
+				"monthly",
+			);
 			return claimedUninstallOffer(claim, now());
 		} catch {
 			return claimedUninstallOffer(
@@ -193,7 +201,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				subs.has_more ||
 				subs.data.some(
 					(s) =>
-						s.livemode ||
+						s.livemode !== expectedLive ||
 						stripeObjectId(s.customer) !== account.customerId ||
 						s.metadata.userId !== userId,
 				)
@@ -264,7 +272,7 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 						stripeObjectId(i.customer) !== account.customerId ||
 						stripeObjectId(i.parent?.subscription_details?.subscription) !==
 							sub.id ||
-						i.livemode ||
+						i.livemode !== expectedLive ||
 						i.lines.has_more,
 				)
 			)
@@ -274,7 +282,9 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 					i.lines.data.some((l) => l.period.start === item.current_period_end),
 				)
 			)
-				return manage("Your next bill is already being processed, so this offer can’t change it.");
+				return manage(
+					"Your next bill is already being processed, so this offer can’t change it.",
+				);
 			const planCode = catalog.plus.id === item.price.id ? "plus" : "pro";
 			const price = calculateUninstallPrice(
 				planCode,
@@ -322,7 +332,9 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 				} as UninstallOffer,
 			};
 		if (customer?.discount)
-			return manage("Your account already has a discount. Discounts can’t be combined.");
+			return manage(
+				"Your account already has a discount. Discounts can’t be combined.",
+			);
 		if (!config.firstCoupon)
 			return {
 				offer: {
@@ -333,24 +345,34 @@ export function createUninstallService(deps: UninstallServiceDeps) {
 			};
 		if (account.grant === "first") {
 			const binding = account.firstBinding;
-			if (!binding || binding.user_id !== userId ||
+			if (
+				!binding ||
+				binding.user_id !== userId ||
 				binding.stripe_customer_id !== account.customerId ||
-				binding.coupon_id !== config.firstCoupon)
+				binding.coupon_id !== config.firstCoupon
+			)
 				throw new Error("First-month reservation needs reconciliation.");
 			const codes = await deps.stripe.promotionCodes.list(
-				{ customer: binding.stripe_customer_id, limit: 100 }, REQUEST,
+				{ customer: binding.stripe_customer_id, limit: 100 },
+				REQUEST,
 			);
-			const owned = codes.data.filter((c) =>
-				c.metadata?.anidachiCampaign === UNINSTALL_FIRST_CAMPAIGN);
+			const owned = codes.data.filter(
+				(c) => c.metadata?.anidachiCampaign === UNINSTALL_FIRST_CAMPAIGN,
+			);
 			if (codes.has_more || owned.length !== 1)
 				throw new Error("First-month promotion needs reconciliation.");
 			const status = uninstallPromotionStatus(owned[0], binding);
-			if (status !== "available") return {
-				offer: { ...base, kind: "disabled", reason: status === "used"
-					? "Your one-time 40% discount has already been used."
-					: "Your reserved discount is no longer available. Contact support for help."
-				} as UninstallOffer,
-			};
+			if (status !== "available")
+				return {
+					offer: {
+						...base,
+						kind: "disabled",
+						reason:
+							status === "used"
+								? "Your one-time 40% discount has already been used."
+								: "Your reserved discount is no longer available. Contact support for help.",
+					} as UninstallOffer,
+				};
 		}
 		// Stripe history alone cannot see an active legacy entitlement or a
 		// pending cardless activation. Use the same purchase authority as Checkout

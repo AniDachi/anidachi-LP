@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import type { BillingPromotion } from "../billing-view";
 import type { RetentionClaim } from "./retention-invoice";
@@ -8,12 +9,13 @@ export function retentionBillingSnapshot(
 	sub: Stripe.Subscription,
 	claim: RetentionClaim,
 	now: number,
+	expectedLive = resolveStripeMode() === "live",
 ): BillingPromotion | undefined {
 	if (claim.state === "ineligible") return undefined;
 	if (claim.state === "reconciliation") return { state: "unavailable" };
 	const item = sub.items.data[0];
 	if (
-		sub.livemode ||
+		sub.livemode !== expectedLive ||
 		sub.id !== claim.stripe_subscription_id ||
 		stripeObjectId(sub.customer) !== claim.stripe_customer_id ||
 		sub.metadata.userId !== claim.user_id

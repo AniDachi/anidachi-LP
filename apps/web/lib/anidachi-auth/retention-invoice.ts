@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import { verifiedBillingPrice } from "./billing-price";
 import { type UninstallPlan, uninstallDiscount } from "./uninstall-offer";
@@ -39,9 +40,10 @@ export type RetentionInvoiceDeps = {
 const subscriptionOf = (i: Stripe.Invoice) =>
 	stripeObjectId(i.parent?.subscription_details?.subscription);
 function verifiedInvoice(i: Stripe.Invoice, c: RetentionClaim): boolean {
+	const expectedLive = resolveStripeMode() === "live";
 	const line = i.lines.data[0];
 	return (
-		!i.livemode &&
+		i.livemode === expectedLive &&
 		stripeObjectId(i.customer) === c.stripe_customer_id &&
 		subscriptionOf(i) === c.stripe_subscription_id &&
 		i.billing_reason === "subscription_cycle" &&
@@ -72,6 +74,7 @@ function applied(i: Stripe.Invoice, c: RetentionClaim): boolean {
 		typeof d === "string" ||
 		"deleted" in d ||
 		d.coupon.id !== c.coupon_id ||
+		d.coupon.livemode !== (resolveStripeMode() === "live") ||
 		d.coupon.metadata?.anidachiCampaign !== UNINSTALL_RENEWAL_CAMPAIGN ||
 		d.coupon.percent_off !== 40 ||
 		d.coupon.duration !== "once" ||
@@ -101,8 +104,9 @@ export async function fulfillRetentionInvoice(
 	eventInvoice: Stripe.Invoice,
 	deps: RetentionInvoiceDeps,
 ): Promise<void> {
+	const expectedLive = resolveStripeMode() === "live";
 	if (
-		eventInvoice.livemode ||
+		eventInvoice.livemode !== expectedLive ||
 		eventInvoice.billing_reason !== "subscription_cycle"
 	)
 		return;
@@ -131,7 +135,7 @@ export async function fulfillRetentionInvoice(
 	let invoice = await read();
 	if (
 		invoice.id !== eventInvoice.id ||
-		invoice.livemode ||
+		invoice.livemode !== expectedLive ||
 		stripeObjectId(invoice.customer) !== c.stripe_customer_id ||
 		subscriptionOf(invoice) !== c.stripe_subscription_id
 	)
@@ -195,7 +199,7 @@ export async function fulfillRetentionInvoice(
 	);
 	if (
 		sub.id !== subscriptionId ||
-		sub.livemode ||
+		sub.livemode !== expectedLive ||
 		stripeObjectId(sub.customer) !== customer.id ||
 		sub.metadata.userId !== c.user_id
 	)
@@ -235,14 +239,14 @@ export async function fulfillRetentionInvoice(
 	const price = verifiedBillingPrice(
 		item.price,
 		c.price_id,
-		false,
+		expectedLive,
 		false,
 		"monthly",
 	);
 	if (
 		price.unitAmount !== c.unit_amount ||
 		coupon.id !== c.coupon_id ||
-		coupon.livemode ||
+		coupon.livemode !== expectedLive ||
 		!coupon.valid ||
 		coupon.percent_off !== 40 ||
 		coupon.amount_off !== null ||
