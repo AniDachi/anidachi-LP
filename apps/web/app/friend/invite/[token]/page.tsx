@@ -44,7 +44,9 @@ export default async function FriendInvitePage({ params }: Props) {
   } catch (error) {
     const message =
       error instanceof SocialApiError
-        ? error.message
+        ? error.status === 404
+          ? "This invite is no longer available. Ask for a new link."
+          : error.message
         : "This friend invite could not be loaded.";
     return <InviteError message={message} />;
   }
@@ -55,16 +57,16 @@ export default async function FriendInvitePage({ params }: Props) {
 
   return (
     <AuthPageShell maxWidth="max-w-md">
-      <p className="text-sm font-medium tracking-[-0.01em] text-ani-muted">
+      <p className="mb-5 text-sm font-medium tracking-[-0.01em] text-ani-muted">
         AniDachi
       </p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-ani-text">Add friend</h1>
-      <p className="mt-2 text-sm text-ani-muted">
-        Accept the invite to add this person to your AniDachi friends.
-      </p>
-      <div className="mt-6">
-        <FriendInviteClient key={session.userId} sender={preview.sender} token={preview.token} ownerUserId={session.userId} alreadyFriends={preview.alreadyFriends} />
-      </div>
+      <FriendInviteClient
+        key={`${session.userId}:${preview.token}`}
+        sender={preview.sender}
+        token={preview.token}
+        ownerUserId={session.userId}
+        alreadyFriends={preview.alreadyFriends}
+      />
     </AuthPageShell>
   );
 }

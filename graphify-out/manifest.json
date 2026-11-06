@@ -1296,15 +1296,15 @@
     "semantic_hash": "7d9b7c83bd8ae4d25839c9cabf9ff7bf"
   },
   "apps/web/app/friend/invite/[token]/friend-invite-client.tsx": {
-    "mtime": 1791473521.9541545,
-    "seen": 1791473766.329555,
-    "ast_hash": "7be08ef7eaf5b3cee8848fe5e8d54446",
+    "mtime": 1793960444.0851643,
+    "seen": 1793960448.7681239,
+    "ast_hash": "8dc25bf93f432254a01f4d3bf4ab13f0",
     "semantic_hash": ""
   },
   "apps/web/app/friend/invite/[token]/page.tsx": {
-    "mtime": 1791473521.954233,
-    "seen": 1791473766.329556,
-    "ast_hash": "6f30592f9f007fc1b0fcc75b1d839b31",
+    "mtime": 1793960444.1069329,
+    "seen": 1793960448.768127,
+    "ast_hash": "fdb99bc57013089c9ba3108a5571959c",
     "semantic_hash": ""
   },
   "apps/web/app/friends/friends-client.tsx": {
@@ -12186,9 +12186,21 @@
     "semantic_hash": ""
   },
   "docs/extension-capsule-friends.md": {
-    "mtime": 1793958257.0646377,
-    "seen": 1793958498.627115,
+    "mtime": 1793960060.7349079,
+    "seen": 1793960379.9841511,
     "ast_hash": "",
-    "semantic_hash": "09213301a4d7c35ee2286695385bb7a6"
+    "semantic_hash": "c613d1b05ab02f9ea5dcf1bfc255b638"
+  },
+  "apps/web/app/friend/invite/[token]/friend-invite-client.test.tsx": {
+    "mtime": 1793959999.104775,
+    "seen": 1793960379.9061499,
+    "ast_hash": "d8ba8b071d8939ca4b0ea066b31a8e74",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/friend-invite-client.test.ts": {
+    "mtime": 1793959999.12778,
+    "seen": 1793960379.906157,
+    "ast_hash": "d25b8f283ac302081d085e9aba0225d7",
+    "semantic_hash": ""
   }
 }

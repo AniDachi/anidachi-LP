@@ -65,6 +65,20 @@ New link does not revoke an earlier unused link; each link remains single-use
 under the existing expiry and issuance limits. The sender uses New link for the
 next person; the extension does not claim to know when a shared URL was consumed.
 
+## Website invitation landing page
+
+The recipient page keeps the sender's identity and a single Add friend action.
+After confirmed acceptance, or when the users are already friends, it shows
+You're now friends without a second action. Friendship links do not join a room
+or offer a room transition, even when created from the capsule inside a room.
+
+Sign-in preserves the invitation path. If the session expires on the open page,
+the acceptance response replaces the action with Sign in to the same invitation.
+Unavailable links show their reason; transient failures remain retryable. The
+client only confirms success when the server returns an accepted friendship and
+continues to send the displayed account's owner header. Changes to this web page
+require a web deployment; updating the extension folder alone does not ship them.
+
 ## Validation and release boundary
 
 Regression coverage lives in `capsule-friends-model.test.ts`,
