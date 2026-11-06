@@ -39,7 +39,7 @@ describe("useInterfacePreferences", () => {
       const view = await render(<Harness storage={storage} />);
       await flush();
       expect(readPreferences(view.container)).toEqual(stored ?? {
-        version: 1, mainControlVisibility: "always-visible", participantPillVisibility: "always-visible",
+        version: 1, mainControlVisibility: "always-visible", participantPillVisibility: "smart",
       });
       expect(storage.write).not.toHaveBeenCalled();
       await unmount(view.root);
@@ -61,7 +61,7 @@ describe("useInterfacePreferences", () => {
     expect(readPreferences(view.container)).toEqual({
       version: 1,
       mainControlVisibility: "always-visible",
-      participantPillVisibility: "always-visible",
+      participantPillVisibility: "smart",
     });
 
     await unmount(view.root);

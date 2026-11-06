@@ -1,4 +1,4 @@
-import type { Participant } from "@anidachi/protocol";
+import type { Participant, RoomMediaSnapshot } from "@anidachi/protocol";
 import { VolumeX } from "lucide-react";
 import {
 	type PointerEvent,
@@ -25,6 +25,7 @@ const EMPTY_REACTION_CUE_PARTICIPANT_IDS: ReadonlySet<string> = new Set();
 
 export interface RoomRailProps {
 	activeParticipantId?: string;
+	mediaSnapshot?: RoomMediaSnapshot | null;
 	getParticipantAudioPreference(
 		participantId: string,
 	): ParticipantAudioPreference;
@@ -40,6 +41,7 @@ export interface RoomRailProps {
 
 export function RoomRail({
 	activeParticipantId,
+	mediaSnapshot,
 	getParticipantAudioPreference,
 	onParticipantAudioChange,
 	participants,
@@ -312,8 +314,17 @@ export function RoomRail({
 						const speaking = speakingParticipantIds.includes(item.id);
 						const reacting = reactionCueParticipantIds.has(item.id);
 						const active = item.id === activeParticipantId;
+						// Versioned rooms no longer maintain the legacy Participant.mediaSeat.
+						// Match the current session so a reconnect cannot reuse an old grant.
+						const mediaState = mediaSnapshot?.participants.find(
+							(state) => state.participantSessionId === item.participantSessionId,
+						);
 						const hasParticipantAudioControl =
-							!active && item.mediaSeat === "joined";
+							!active && (mediaSnapshot === undefined
+								? item.mediaSeat === "joined"
+								: Boolean(mediaState && ("mediaSeatGranted" in mediaState
+									? mediaState.mediaSeatGranted
+									: mediaState.microphoneGranted)));
 						const participantAudioPreference = hasParticipantAudioControl
 							? getParticipantAudioPreference(item.id)
 							: null;
@@ -411,11 +422,11 @@ export function RoomRail({
 												}
 												preference={participantAudioPreference}
 											/>
-										) : (
+										) : active ? (
 											<span className="room-rail-status room-rail-self-status">
 												{speaking ? "You · speaking" : `You · ${roleLabel}`}
 											</span>
-										)}
+										) : null}
 									</div>
 									{participantAudioPreference?.muted ? (
 										<VolumeX

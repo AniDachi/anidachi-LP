@@ -2697,8 +2697,26 @@ ${popupSettingsStyles}
   }
 
   .popup-profile-button:focus-visible {
-    outline: 2px solid var(--ad-focus);
+    /* The avatar itself carries the focus ring, matching the capsule panel. */
+    outline: none;
+  }
+
+  .popup-profile-button .popup-profile-avatar {
+    outline: 2px solid transparent;
     outline-offset: 2px;
+    transition: outline-color 160ms ease, filter 160ms ease;
+  }
+
+  .popup-profile-button:not(:disabled):hover .popup-profile-avatar,
+  .popup-profile-button:focus-visible .popup-profile-avatar {
+    outline-color: var(--ad-accent);
+    filter: brightness(1.12);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .popup-profile-button .popup-profile-avatar {
+      transition: none;
+    }
   }
 
   .popup-profile-copy {

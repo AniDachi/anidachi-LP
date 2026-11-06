@@ -6,9 +6,9 @@ Status: Implemented; staging visual acceptance pending
 
 Add an `Interface` settings section to the extension panel for controlling the
 visibility behavior of the main AniDachi control and the side participant
-pills. Following the September 15 onboarding correction, both controls default
-to Always visible when no valid preference is stored. Saved Auto hide / Smart
-choices remain unchanged. The compact animated preview uses the same
+pills. Following the November 6 correction, the main control defaults to
+Always visible and participant pills default to Smart when no valid preference
+is stored. All valid saved choices remain unchanged. The compact animated preview uses the same
 presentation policy as the live overlay.
 
 This work changes extension-local presentation and local preferences only. It
@@ -111,7 +111,7 @@ duplicate side pill. The existing rendered-video readiness rule remains the
 source of truth, so a participant returns to the rail if their video surface
 disappears.
 
-`Smart` remains an opt-in low-obstruction mode:
+`Smart` is the first-install, low-obstruction mode:
 
 - quiet participants remain hidden;
 - a speaking no-video participant automatically appears as a compact pill;
@@ -128,7 +128,10 @@ disappears.
 
 The current participant may show microphone activity but never receives a
 listener volume or mute control. Remote media-seat participants retain their
-existing local output controls. A muted remote participant has a persistent,
+existing local output controls. In media-v3 rooms the rail uses the current
+participant session's `mediaSeatGranted`; v2 uses `microphoneGranted`. Only legacy
+rooms use `Participant.mediaSeat`. A missing versioned snapshot or mismatched
+session never falls back to a legacy grant. A muted remote participant has a persistent,
 recognizable mute marker in the compact state so a saved mute cannot be
 mistaken for a transport failure.
 
@@ -212,12 +215,12 @@ The immutable defaults are:
 {
   version: 1,
   mainControlVisibility: "always-visible",
-  participantPillVisibility: "always-visible"
+  participantPillVisibility: "smart"
 }
 ```
 
-These defaults make the player interface discoverable for an unconfigured
-installation. Valid stored choices are neither replaced nor rewritten on load.
+These defaults keep the main control discoverable and quiet participant pills
+out of the way for an unconfigured installation. Valid stored choices are neither replaced nor rewritten on load.
 The overlay waits for preference hydration before pinning either surface, so a
 saved Auto hide / Smart choice does not briefly flash the new defaults. The
 preference is device/profile-local rather than account-scoped and works before
@@ -310,8 +313,8 @@ provider-specific policy.
 
 Verify on both Crunchyroll and YouTube in normal, theater, and fullscreen modes:
 
-- an unconfigured installation shows the launcher immediately and quiet eligible
-  pills in a room; saved Auto hide / Smart choices remain unchanged;
+- an unconfigured installation shows the launcher immediately and uses Smart
+  participant pills in a room; all valid saved choices remain unchanged;
 - main-control `Always visible` stays present without an edge glow;
 - Auto hide still uses deliberate edge intent and does not flicker;
 - Open mic does not pin the main control in Auto hide mode; participant voice

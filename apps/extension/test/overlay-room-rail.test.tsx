@@ -1,4 +1,4 @@
-import type { Participant } from "@anidachi/protocol";
+import type { Participant, RoomMediaSnapshot } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -303,6 +303,55 @@ describe("RoomRail", () => {
 		await unmount(view.root);
 	});
 
+	it.each(["smart", "always-visible"] as const)("exposes v3 listener controls from the current seat in %s mode", async (visibilityMode) => {
+		const view = await renderRail({
+			visibilityMode,
+			participants: [{ ...participant("remote", "Remote User", "viewer"), mediaSeat: "none", participantSessionId: "remote-session" }],
+			mediaSnapshot: mediaSnapshot(3),
+		});
+		const remoteSlot = getSlots(view.container)[0];
+		await pointer(remoteSlot, "pointerover");
+		expect(remoteSlot.getAttribute("data-presentation")).toBe("expanded");
+		expect(remoteSlot.querySelector('input[aria-label="Remote User volume"]')).not.toBeNull();
+		expect(remoteSlot.querySelector('.room-rail-self-status')).toBeNull();
+		await unmount(view.root);
+	});
+
+	it("uses the v2 microphone grant instead of the legacy seat", async () => {
+		const view = await renderRail({
+			visibilityMode: "always-visible",
+			participants: [{ ...participant("remote", "Remote User", "viewer"), mediaSeat: "none", participantSessionId: "remote-session" }],
+			mediaSnapshot: mediaSnapshot(2),
+		});
+		expect(view.container.querySelector('input[type="range"]')).not.toBeNull();
+		await unmount(view.root);
+	});
+
+	it.each([
+		{ name: "pending snapshot", snapshot: null },
+		{ name: "revoked seat", snapshot: mediaSnapshot(3, false) },
+		{ name: "old participant session", snapshot: { ...mediaSnapshot(3), participants: [{ ...mediaSnapshot(3).participants[0], participantSessionId: "old-session" }] } },
+	])("does not use a legacy seat with a $name", async ({ snapshot }) => {
+		const view = await renderRail({
+			visibilityMode: "always-visible",
+			participants: [{ ...participant("remote", "Remote User", "viewer"), participantSessionId: "remote-session" }],
+			mediaSnapshot: snapshot as RoomMediaSnapshot | null,
+		});
+		expect(view.container.querySelector('input[type="range"]')).toBeNull();
+		expect(view.container.textContent).not.toContain("You");
+		await unmount(view.root);
+	});
+
+	it("never exposes local listener controls with a v3 seat", async () => {
+		const view = await renderRail({
+			visibilityMode: "always-visible",
+			participants: [{ ...participant("local", "Local User", "host"), participantSessionId: "remote-session" }],
+			mediaSnapshot: mediaSnapshot(3),
+		});
+		expect(view.container.querySelector('input[type="range"]')).toBeNull();
+		await unmount(view.root);
+	});
+
 	it("uses initials when a participant has no profile avatar", async () => {
 		const view = await renderRail({ visibilityMode: "always-visible" });
 		const remoteAvatar = getSlots(view.container)[1]?.querySelector(
@@ -362,6 +411,7 @@ describe("RoomRail", () => {
 });
 
 interface RenderRailOverrides {
+	mediaSnapshot?: RoomMediaSnapshot | null;
 	getParticipantAudioPreference?(
 		participantId: string,
 	): ParticipantAudioPreference;
@@ -387,6 +437,7 @@ async function renderRail(overrides: RenderRailOverrides): Promise<{
 		root.render(
 			<RoomRail
 				activeParticipantId="local"
+				mediaSnapshot={overrides.mediaSnapshot}
 				getParticipantAudioPreference={
 					overrides.getParticipantAudioPreference ??
 					getDefaultParticipantAudioPreference
@@ -485,4 +536,13 @@ function rect(
 		y: top,
 		toJSON: () => ({}),
 	} as DOMRect;
+}
+
+function mediaSnapshot(version: 2 | 3, granted = true): RoomMediaSnapshot {
+	const common = { type: "ROOM_MEDIA_SNAPSHOT" as const, roomId: "room", roomGeneration: 1, snapshotSequence: 1, closingAt: null };
+	const capabilities = { hostPlanCode: "free" as const, maxParticipants: 4 as const, maxCameras: 4 as const, capabilityRevision: 1, capabilitiesValidUntil: "2030-01-01T00:00:00.000Z" };
+	const state = { participantSessionId: "remote-session", cameraGranted: false, microphoneGranted: version === 2 && granted, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0, cameraIntentSequence: 0, microphoneIntentSequence: 0 };
+	return version === 3
+		? { ...common, capabilities: { ...capabilities, mediaProtocolVersion: 3, maxMediaSeats: 4 }, participants: [{ ...state, mediaSeatGranted: granted, seatRevision: 1 }] }
+		: { ...common, capabilities: { ...capabilities, mediaProtocolVersion: 2, maxMicrophones: 4 }, participants: [state] };
 }

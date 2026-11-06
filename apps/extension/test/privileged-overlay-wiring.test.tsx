@@ -3623,7 +3623,50 @@ describe("privileged overlay wiring", () => {
 		} finally { await unmount(view.root); }
 	});
 
-	it("shows the launcher and quiet participant pills for a fresh installation", async () => {
+	it("wires current v3 grants into remote pill volume controls", async () => {
+		installActiveHostRoomRuntime();
+		vi.spyOn(RoomClient.prototype, "send").mockReturnValue("sent");
+		const audioOutput = vi.spyOn(P2PMediaController.prototype, "setParticipantAudioOutput");
+		let options!: Parameters<RoomClient["connect"]>[0];
+		let client!: RoomClient;
+		let media!: import("@anidachi/protocol").RoomMediaV3Snapshot;
+		const remote = { ...hostParticipant(), id: "remote", displayName: "Jamie", role: "viewer" as const, mediaSeat: "none" as const, participantSessionId: "remote-session" };
+		vi.mocked(RoomClient.prototype.connect).mockImplementation(function(this: RoomClient, next) {
+			client = this; options = next;
+			this.media = new RoomMediaSession(next.roomId, next.participantSessionId);
+			this.media.bindRoomGeneration(1);
+			media = RoomMediaSnapshotSchema.parse({ type: "ROOM_MEDIA_SNAPSHOT", roomId: "room-a", roomGeneration: 1, snapshotSequence: 1, closingAt: null,
+				capabilities: { mediaProtocolVersion: 3, hostPlanCode: "free", maxParticipants: 4, maxMediaSeats: 4, maxCameras: 4, capabilityRevision: 1, capabilitiesValidUntil: "2026-09-15T12:30:00Z" },
+				participants: [next.participantSessionId, "remote-session"].map(participantSessionId => ({ participantSessionId, mediaSeatGranted: true, seatRevision: 0, cameraGranted: false, microphoneGranted: false, cameraIntentSequence: 0, microphoneIntentSequence: 0, cameraRevocationEpoch: 0, microphoneRevocationEpoch: 0 }))
+			}) as import("@anidachi/protocol").RoomMediaV3Snapshot;
+			next.onStatus("connected");
+		});
+		const view = await renderOverlay();
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await vi.waitFor(() => expect(options).toBeDefined());
+			await act(async () => {
+				options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{ ...hostParticipant(), participantSessionId: options.participantSessionId, mediaSeat: "none" }, remote] });
+				client.media!.consume(media); options.onEvent(media);
+			});
+			await flushMountedWork(); await flushRoomActionWork();
+			await click(button(view.container, "Close Anidachi controls"));
+			const remotePill = view.container.querySelector('.room-rail-slot[data-participant-id="remote"]')!;
+			await act(async () => remotePill.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })));
+			expect(remotePill.querySelector('input[aria-label="Jamie volume"]')).not.toBeNull();
+			await click(button(view.container, "Mute Jamie"));
+			expect(audioOutput).toHaveBeenLastCalledWith("remote", { muted: true, volume: 1 });
+			await act(async () => {
+				media = { ...media, snapshotSequence: 2, participants: media.participants.map(p => p.participantSessionId === "remote-session" ? { ...p, mediaSeatGranted: false, seatRevision: 1 } : p) };
+				client.media!.consume(media); options.onEvent(media);
+			});
+			expect(remotePill.querySelector('input[type="range"]')).toBeNull();
+			expect(remotePill.textContent).not.toContain("You");
+		} finally { await unmount(view.root); }
+	});
+
+	it("shows the launcher and uses Smart participant pills for a fresh installation", async () => {
 		installActiveHostRoomRuntime({ mediaSeat: "joined" });
 		const view = await renderOverlay();
 		try {
@@ -3637,8 +3680,8 @@ describe("privileged overlay wiring", () => {
 			expect(primaryRoomAction(view.container).disabled).toBe(false);
 			await click(button(view.container, "Close Anidachi controls"));
 			await flushMountedWork();
-			expect(view.container.querySelector(".room-rail")?.getAttribute("data-visibility-mode")).toBe("always-visible");
-			expect(view.container.querySelectorAll('.room-rail-slot[data-presentation="compact"]').length).toBeGreaterThan(0);
+			expect(view.container.querySelector(".room-rail")?.getAttribute("data-visibility-mode")).toBe("smart");
+			expect(view.container.querySelectorAll('.room-rail-slot[data-presentation="hidden"]').length).toBeGreaterThan(0);
 			expect(extensionStorage.values.has(INTERFACE_PREFERENCES_STORAGE_KEY)).toBe(false);
 		} finally { await unmount(view.root); }
 	});
