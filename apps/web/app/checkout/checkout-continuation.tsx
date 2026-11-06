@@ -130,7 +130,7 @@ export function CheckoutContinuation({
 					};
 					setStage("pending");
 					setMessage(
-						"Your trial is being prepared. You can safely check its status here.",
+						"Your access is being prepared. You can safely check its status here.",
 					);
 				} else {
 					if (result.state !== "unavailable") recovery.current = null;
@@ -144,7 +144,7 @@ export function CheckoutContinuation({
 							revision,
 						});
 						setMessage(
-							"The free trial is no longer available. You can choose a subscription below.",
+							"This offer is no longer available. You can choose a subscription below.",
 						);
 						return;
 					}
@@ -211,7 +211,7 @@ export function CheckoutContinuation({
 						// Reconciliation has not reserved an activation yet, so this is still a new grant.
 						const retry = request.current;
 						if (!retry || retry.owner !== offer.ownerUserId)
-							throw new Error("Please review the trial confirmation again.");
+							throw new Error("Please review the access confirmation again.");
 						const context = await prepareTrialBrowserContext(
 							offer.ownerUserId,
 							retry.id,
@@ -325,7 +325,7 @@ export function CheckoutContinuation({
 						revision: offer.trialOfferRevision,
 					});
 					setMessage(
-						"The free trial is no longer available. You can choose a subscription below.",
+						"This offer is no longer available. You can choose a subscription below.",
 					);
 					setStage("subscribe");
 					return;
@@ -505,7 +505,7 @@ export function CheckoutContinuation({
 		<AuthPageShell maxWidth="max-w-md">
 			<div className="text-center">
 				<AnidachiLogo size={48} className="mx-auto" />
-				<h1 className="mt-6 text-3xl font-semibold tracking-tight">Your free trial has started</h1>
+				<h1 className="mt-6 text-3xl font-semibold tracking-tight">Your access is active</h1>
 				<OnboardingReturn token={onboarding} owner={completedOwner} extensionId={extensionId} />
 				<Link className="text-sm text-ani-muted underline underline-offset-4" href="/account/billing">Manage subscription</Link>
 			</div>
@@ -556,7 +556,7 @@ export function CheckoutContinuation({
 					>
 						<Loader2 size={18} className="animate-spin" aria-hidden="true" />
 						{reviewedCardless.current
-							? "Confirming your trial…"
+							? "Confirming your access…"
 							: "Opening secure checkout…"}
 					</p>
 				)}
@@ -602,7 +602,7 @@ export function CheckoutContinuation({
 						</p>
 						{stage === "pending" ? (
 							<Button className="mt-5 w-full" onClick={() => void start()}>
-								Check trial status
+								Check access status
 							</Button>
 						) : (
 							<div className="mt-5">

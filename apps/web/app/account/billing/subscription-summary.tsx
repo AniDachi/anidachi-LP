@@ -112,7 +112,7 @@ export function SubscriptionSummary({
 			? trial.renewalEnabled || trial.renewalState === "enabled"
 			: Boolean(trial && !off);
 	const status = trial
-		? "Free trial"
+		? "Access active"
 		: paid
 			? off
 				? "Renewal off"
@@ -127,7 +127,7 @@ export function SubscriptionSummary({
 		? "A renewal change is being confirmed."
 		: trial
 			? enabled
-				? "Renewal is enabled. Your first payment is scheduled for the end of your trial."
+				? "Renewal is enabled. Your first payment is scheduled for the date shown."
 				: "No automatic charges."
 			: paid
 				? off
@@ -138,7 +138,7 @@ export function SubscriptionSummary({
 					: attention
 						? "Payment has not been completed."
 						: s.trial?.stage === "ended"
-							? "Your trial has ended."
+							? "Your access period has ended."
 							: s.status === "paused"
 								? "This subscription is paused."
 								: "Refresh your status or contact support for help.";
@@ -159,8 +159,8 @@ export function SubscriptionSummary({
 		? "Review the pending change and check its status."
 		: trial
 			? enabled
-				? "Review or cancel your renewal before the trial ends."
-				: `Keep ${plan} after your trial.`
+				? "Review or cancel your renewal before the first payment."
+				: `Keep ${plan} after your current access period.`
 			: paid
 				? "Manage renewal and billing preferences."
 				: processing
@@ -179,7 +179,7 @@ export function SubscriptionSummary({
 				? "Manage renewal"
 				: trial.mode === "cardless"
 					? "Set up renewal"
-					: "Manage trial"
+					: "Manage access"
 			: paid
 				? "Manage subscription"
 				: onPayment
@@ -376,10 +376,10 @@ export function EndedTrialSummary({
 	hostingMode?: "unknown" | "legacy" | "free20";
 }) {
 	return (
-		<section className="billing-ended" aria-label="Trial ended">
+		<section className="billing-ended" aria-label="Access ended">
 			<div className="billing-ended-message">
 				<h2>
-					Your <span>trial</span> has ended.
+					Your <span>access period</span> has ended.
 				</h2>
 				<p>
 					{hostingMode === "free20"

@@ -30,13 +30,13 @@ export function createTrialContextHandler(deps: Deps = {}) {
 				request.headers.get("content-type")?.split(";")[0]?.trim() !==
 					"application/json"
 			)
-				return json({ error: "Open AniDachi to start your trial." }, 403);
+				return json({ error: "Open AniDachi to continue." }, 403);
 			const user = await (
 				deps.getUser ??
 				((r) =>
 					resolveWebsiteSession(r.cookies.get(REFRESH_TOKEN_COOKIE)?.value))
 			)(request);
-			if (!user) return json({ error: "Sign in to start your trial." }, 401);
+			if (!user) return json({ error: "Sign in to continue." }, 401);
 			if (request.headers.get(BILLING_OWNER_HEADER) !== user.id)
 				return json(
 					{ error: "Your signed-in account changed. Reload this page." },
@@ -44,12 +44,12 @@ export function createTrialContextHandler(deps: Deps = {}) {
 				);
 			const text = await request.text();
 			if (text.length > 512)
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			let requestId: unknown;
 			try {
 				requestId = JSON.parse(text)?.requestId;
 			} catch {
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			}
 			if (
 				typeof requestId !== "string" ||
@@ -57,7 +57,7 @@ export function createTrialContextHandler(deps: Deps = {}) {
 					requestId,
 				)
 			)
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			if (
 				!(await (deps.allowRequest ?? ((u) => allowTrialAction(u, "context")))(
 					user.id,

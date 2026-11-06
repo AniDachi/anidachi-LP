@@ -34924,7 +34924,7 @@
       "community_name": "react",
       "file_type": "code",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L102"
+      "source_location": "L114"
     },
     {
       "id": "apps_web_components_footer_pricing_cta_footerpricingcta",
@@ -34983,7 +34983,7 @@
       "file_type": "code",
       "norm_label": "howitworks()",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L38"
+      "source_location": "L35"
     },
     {
       "id": "apps_web_components_join_discord_button_joindiscordbutton",
@@ -38092,7 +38092,7 @@
       "community_name": "[slug]/page.tsx",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L54"
+      "source_location": "L51"
     },
     {
       "id": "apps_web_lib_watch_page_rich_content_buildwatchhowtosteps",
@@ -59115,7 +59115,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L88"
+      "source_location": "L82"
     },
     {
       "id": "apps_web_app_resources_group_watch_onboarding_page_groupwatchonboardingpage",
@@ -70724,7 +70724,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L104"
+      "source_location": "L105"
     },
     {
       "id": "apps_web_app_account_billing_billing_client_formatdate",
@@ -70735,7 +70735,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L90"
+      "source_location": "L91"
     },
     {
       "id": "apps_web_lib_anidachi_auth_billing_billingerror_constructor",
@@ -86791,7 +86791,7 @@
       "community_name": "PrimaryCheckoutCta",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L96"
+      "source_location": "L93"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_crunchyroll_guide_paid_mention",
@@ -86801,7 +86801,7 @@
       "community_name": "PrimaryCheckoutCta",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L115"
+      "source_location": "L112"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_discord_compare_youtube_faq",
@@ -86811,7 +86811,7 @@
       "community_name": "PrimaryCheckoutCta",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L80"
+      "source_location": "L77"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_teleparty_compare_faq",
@@ -86821,7 +86821,7 @@
       "community_name": "PrimaryCheckoutCta",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L64"
+      "source_location": "L61"
     },
     {
       "id": "apps_web_lib_pricing_tiers_pricing_plus_short",
@@ -101346,7 +101346,7 @@
       "community_name": "react",
       "file_type": "code",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L36"
+      "source_location": "L47"
     },
     {
       "id": "apps_web_components_footer_pricing_cta",
@@ -101411,7 +101411,7 @@
       "file_type": "code",
       "norm_label": "howtosteps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L148"
+      "source_location": "L121"
     },
     {
       "id": "apps_web_components_how_it_works_steps",
@@ -101422,7 +101422,7 @@
       "file_type": "code",
       "norm_label": "steps",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L7"
+      "source_location": "L6"
     },
     {
       "id": "apps_web_components_join_discord_button",
@@ -101712,7 +101712,7 @@
       "community_name": "react",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L45"
+      "source_location": "L42"
     },
     {
       "id": "apps_web_lib_pricing_tiers",
@@ -113966,7 +113966,7 @@
       "community_name": "getResolvedSiteOrigin",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L92"
+      "source_location": "L89"
     },
     {
       "id": "apps_web_lib_site_url",
@@ -116103,7 +116103,7 @@
       "community_name": ".next/**",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L112"
+      "source_location": "L109"
     },
     {
       "id": "docs_superpowers_plans_2026_06_20_social_rooms_subscriptions_execution_plan_phase_0_contract_and_plan",
@@ -122666,7 +122666,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L104"
+      "source_location": "L101"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_async_host_snippet",
@@ -122676,7 +122676,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L61"
+      "source_location": "L58"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_cancellation_note",
@@ -122686,7 +122686,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L42"
+      "source_location": "L39"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_compare_overview",
@@ -122696,7 +122696,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L58"
+      "source_location": "L55"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_compare_overview_youtube",
@@ -122706,7 +122706,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L89"
+      "source_location": "L86"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_free_tier_table",
@@ -122716,7 +122716,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L99"
+      "source_location": "L96"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_host_pricing_table",
@@ -122726,7 +122726,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L100"
+      "source_location": "L97"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_is_anidachi_free_youtube_answer",
@@ -122736,7 +122736,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L74"
+      "source_location": "L71"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_plus_price_line",
@@ -122746,7 +122746,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L103"
+      "source_location": "L100"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_price_table",
@@ -122756,7 +122756,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L101"
+      "source_location": "L98"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_rave_compare_faq",
@@ -122766,7 +122766,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L67"
+      "source_location": "L64"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_rave_compare_youtube_faq",
@@ -122776,7 +122776,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L86"
+      "source_location": "L83"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_teleparty_compare_youtube_faq",
@@ -122786,7 +122786,7 @@
       "community_name": "pricing-copy.ts",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L83"
+      "source_location": "L80"
     },
     {
       "id": "apps_web_lib_pricing_copy_propolicy",
@@ -129058,7 +129058,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L50"
+      "source_location": "L49"
     },
     {
       "id": "apps_web_app_pricing_page_metadata",
@@ -129068,7 +129068,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L20"
+      "source_location": "L19"
     },
     {
       "id": "apps_web_app_resources_group_watch_onboarding_page",
@@ -129151,7 +129151,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L70"
+      "source_location": "L67"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_first_checklist_faq",
@@ -129161,7 +129161,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L106"
+      "source_location": "L103"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_friends_need_subscription_answer",
@@ -129171,7 +129171,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L48"
+      "source_location": "L45"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_friends_need_youtube_answer",
@@ -129181,7 +129181,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L77"
+      "source_location": "L74"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_group_onboarding",
@@ -129191,7 +129191,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L109"
+      "source_location": "L106"
     },
     {
       "id": "apps_web_lib_pricing_copy_pricing_host_model",
@@ -129211,7 +129211,7 @@
       "community_name": "getGuideLinks",
       "file_type": "code",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L51"
+      "source_location": "L48"
     },
     {
       "id": "apps_web_lib_pricing_tiers_pricing_pro_short",
@@ -134723,7 +134723,7 @@
       "community_name": "billing.ts",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L60"
+      "source_location": "L61"
     },
     {
       "id": "apps_web_app_api_billing_cancellation_portal_route",
@@ -172959,7 +172959,7 @@
       "label": "revalidate",
       "file_type": "code",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "_origin": "ast",
       "community": 5,
       "community_name": "getGuideLinks"
@@ -176212,7 +176212,7 @@
       "label": "subscriptionPriceLabel()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L81",
+      "source_location": "L82",
       "_callable": true,
       "_origin": "ast"
     },
@@ -176221,7 +176221,7 @@
       "label": "BillingClientProps",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L97",
+      "source_location": "L98",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -176231,7 +176231,7 @@
       "label": "BillingWorkspace()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L107",
+      "source_location": "L108",
       "_callable": true,
       "_origin": "ast"
     },
@@ -176240,7 +176240,7 @@
       "label": "changeTrial()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L612",
+      "source_location": "L613",
       "_callable": true,
       "_origin": "ast"
     },
@@ -176249,7 +176249,7 @@
       "label": "openStripe()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L686",
+      "source_location": "L687",
       "_callable": true,
       "_origin": "ast"
     },
@@ -176258,7 +176258,7 @@
       "label": "BillingView()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L784",
+      "source_location": "L785",
       "_callable": true,
       "_origin": "ast"
     },
@@ -176565,7 +176565,7 @@
       "label": "alternatives",
       "file_type": "code",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L9",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -176573,7 +176573,7 @@
       "label": "Alternative",
       "file_type": "code",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L31",
+      "source_location": "L42",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -176583,7 +176583,7 @@
       "label": "Product",
       "file_type": "code",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L32",
+      "source_location": "L43",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast"
@@ -192463,7 +192463,7 @@
       "label": "cardlessRenewalContext()",
       "file_type": "code",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "_callable": true,
       "_origin": "ast"
     },
@@ -215060,14 +215060,6 @@
       "_origin": "ast"
     },
     {
-      "id": "apps_web_lib_pricing_copy_pricing_existing_trial_note",
-      "label": "PRICING_EXISTING_TRIAL_NOTE",
-      "file_type": "code",
-      "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L39",
-      "_origin": "ast"
-    },
-    {
       "id": "apps_web_lib_pricing_tiers_pricingfreetier",
       "label": "pricingFreeTier()",
       "file_type": "code",
@@ -231443,6 +231435,41 @@
       "rationale": "The handoff records 50 focused checks, typecheck, 1758 web tests with six skips, and real pages with fixture data at desktop/mobile. Approved delivery still requires successful CI, merge, READY staging and hosted homepage/pricing verification. Earlier READY staging, CI #514 and SQL readbacks do not establish acceptance of the new block or exact release artifact.",
       "status": "documented local evidence; approved delivery checks remain separately recorded",
       "_origin": "semantic"
+    },
+    {
+      "id": "packages_protocol_src_index_trialinstallationproofschema",
+      "label": "packages_protocol_src_index_trialinstallationproofschema",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_protocol_src_index_trial_installation_message",
+      "label": "packages_protocol_src_index_trial_installation_message",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_account_billing_paid_subscription_facts",
+      "label": "paid-subscription-facts.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "label": "PaidSubscriptionFacts()",
+      "file_type": "code",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L9",
+      "_callable": true,
+      "_origin": "ast"
     }
   ],
   "links": [
@@ -277432,7 +277459,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L237",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
@@ -338607,7 +338634,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -338618,7 +338645,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -338629,7 +338656,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -340773,7 +340800,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L6",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -381371,7 +381398,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast",
@@ -381383,7 +381410,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -381394,7 +381421,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -383442,7 +383469,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L6",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -432180,7 +432207,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -432190,7 +432217,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -432200,7 +432227,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L104",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -443751,7 +443778,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L20",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -443761,7 +443788,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L50",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -443771,7 +443798,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L88",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -445934,7 +445961,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L36",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -445944,7 +445971,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L102",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -461863,7 +461890,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L109",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -461873,7 +461900,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L112",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -461883,7 +461910,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L115",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -461943,7 +461970,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L42",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -461953,7 +461980,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L45",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -461963,7 +461990,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L48",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -461973,7 +462000,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L51",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -461983,7 +462010,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L54",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -461993,7 +462020,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L58",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -462003,7 +462030,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L61",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -462013,7 +462040,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L64",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -462023,7 +462050,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L67",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -462033,7 +462060,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L70",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -462043,7 +462070,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L74",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -462053,7 +462080,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L77",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -462063,7 +462090,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L80",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -462073,7 +462100,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L83",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -462083,7 +462110,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L86",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -462093,7 +462120,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L89",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -462103,7 +462130,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L92",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -462113,7 +462140,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L96",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -462123,7 +462150,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L99",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -462133,7 +462160,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L100",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -462143,7 +462170,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L101",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -462153,7 +462180,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L103",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -462163,7 +462190,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L104",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -462173,7 +462200,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L106",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -557561,7 +557588,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L16",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -559041,7 +559068,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -571056,7 +571083,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -571089,7 +571116,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -571099,7 +571126,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L148",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -571109,7 +571136,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L38",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -571119,7 +571146,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -571202,7 +571229,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -571212,7 +571239,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L784",
+      "source_location": "L785",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -571222,7 +571249,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L107",
+      "source_location": "L108",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -571252,7 +571279,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client",
@@ -571351,7 +571378,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L86",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
@@ -571362,7 +571389,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L86",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionpricelabel",
@@ -571372,7 +571399,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L612",
+      "source_location": "L613",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571382,7 +571409,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L686",
+      "source_location": "L687",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571393,7 +571420,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L177",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571404,7 +571431,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L216",
+      "source_location": "L217",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571415,7 +571442,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L188",
+      "source_location": "L189",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571427,7 +571454,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L210",
+      "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571438,7 +571465,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L322",
+      "source_location": "L323",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingworkspace",
@@ -571449,7 +571476,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1120",
+      "source_location": "L1127",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -571460,7 +571487,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1080",
+      "source_location": "L1081",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -571471,7 +571498,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L830",
+      "source_location": "L831",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -571493,7 +571520,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1163",
+      "source_location": "L1165",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -571504,7 +571531,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1171",
+      "source_location": "L1173",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -571515,7 +571542,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1162",
+      "source_location": "L1164",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_billingview",
@@ -571537,7 +571564,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1359",
+      "source_location": "L1362",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -571548,7 +571575,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1334",
+      "source_location": "L1337",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -571559,7 +571586,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1358",
+      "source_location": "L1361",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -571570,7 +571597,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1354",
+      "source_location": "L1357",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
@@ -572799,7 +572826,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L15",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -572810,7 +572837,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L15",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_app_pricing_page",
@@ -573244,7 +573271,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L31",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_compare_table",
@@ -573254,7 +573281,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L9",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_compare_table",
@@ -573265,7 +573292,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L7",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_compare_table",
@@ -573275,7 +573302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/compare-table.tsx",
-      "source_location": "L32",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast",
       "source": "apps_web_components_compare_table",
@@ -579795,7 +579822,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -582433,17 +582460,6 @@
       "confidence_score": 0.85,
       "source_file": "scripts/graphify_update_test.py",
       "source_location": "L51",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_checkout_success_preview_test",
-      "target": "apps_web_app_dev_checkout_success_page_checkoutsuccesspreviewpage",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/checkout-success-preview.test.ts",
-      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617819,7 +617835,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L512",
+      "source_location": "L513",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617830,7 +617846,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L534",
+      "source_location": "L535",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617841,7 +617857,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L274",
+      "source_location": "L273",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617852,7 +617868,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L275",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617863,7 +617879,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/cardless-trial-controls.tsx",
-      "source_location": "L277",
+      "source_location": "L276",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617885,7 +617901,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L926",
+      "source_location": "L927",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -620248,7 +620264,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -620259,7 +620275,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L244",
+      "source_location": "L245",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641955,7 +641971,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641966,7 +641982,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L737",
+      "source_location": "L738",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641977,7 +641993,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1079",
+      "source_location": "L1080",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -641988,7 +642004,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1087",
+      "source_location": "L1088",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -647076,7 +647092,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L12",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -647087,7 +647103,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L12",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648879,23 +648895,12 @@
     },
     {
       "source": "apps_web_components_how_it_works",
-      "target": "ref_next",
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_components_how_it_works",
       "target": "apps_web_components_install_link",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648906,7 +648911,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -650209,7 +650214,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L873",
+      "source_location": "L876",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -661558,17 +661563,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_app_anime_tracker_page",
-      "target": "apps_web_components_table_of_contents_tocheading",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/anime-tracker/page.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_web_app_anime_watch_party_page",
       "target": "apps_web_lib_pricing_tiers_pricing_starting_at",
       "relation": "imports",
@@ -661690,17 +661684,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_app_crunchyroll_watch_history_page",
-      "target": "apps_web_components_table_of_contents_tocheading",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/crunchyroll-watch-history/page.tsx",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_web_app_discord_watch_party_page",
       "target": "apps_web_lib_pricing_tiers_pricing_plus_short",
       "relation": "imports",
@@ -661785,17 +661768,6 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/anime-watch-party-ideas/page.tsx",
       "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_guides_anime_watchlist_page",
-      "target": "apps_web_components_table_of_contents_tocheading",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/guides/anime-watchlist/page.tsx",
-      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -662229,17 +662201,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_web_app_guides_how_to_remove_shows_from_continue_watching_on_crunchyroll_page",
-      "target": "apps_web_components_table_of_contents_tocheading",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll/page.tsx",
-      "source_location": "L10",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_web_app_guides_how_to_run_an_online_anime_club_page",
       "target": "apps_web_components_table_of_contents_tocheading",
       "relation": "imports",
@@ -662390,17 +662351,6 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/rave-alternatives-for-youtube/page.tsx",
       "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_guides_resume_anime_page",
-      "target": "apps_web_components_table_of_contents_tocheading",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/guides/resume-anime/page.tsx",
-      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -662851,50 +662801,6 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/onboarding-return-client.ts",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_trial_abuse_client",
-      "target": "packages_protocol_src_trial_abuse_trialchallengeschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/trial-abuse-client.ts",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_trial_abuse_client",
-      "target": "packages_protocol_src_trial_abuse_trialinstallationproofschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/trial-abuse-client.ts",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_trial_abuse_client",
-      "target": "packages_protocol_src_trial_abuse_trial_installation_message",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/trial-abuse-client.ts",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_trial_abuse_client",
-      "target": "packages_protocol_src_trial_abuse_trialinstallationproof",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/trial-abuse-client.ts",
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
@@ -663940,7 +663846,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L201",
+      "source_location": "L202",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -664149,7 +664055,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/checkout/trial-start-view.tsx",
-      "source_location": "L81",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667336,7 +667242,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L750",
+      "source_location": "L751",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667348,7 +667254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L625",
+      "source_location": "L626",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667360,31 +667266,31 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L658",
+      "source_location": "L659",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_web_app_account_billing_billing_client_billingworkspace_openstripe",
       "target": "apps_web_lib_billing_navigation_billingownerchangederror",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L713",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_account_billing_billing_client_billingworkspace_openstripe",
-      "target": "apps_web_lib_billing_navigation_guardbillingnavigation",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
       "source_location": "L714",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_billingworkspace_openstripe",
+      "target": "apps_web_lib_billing_navigation_guardbillingnavigation",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L715",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667396,7 +667302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L916",
+      "source_location": "L917",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667408,7 +667314,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L966",
+      "source_location": "L967",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667420,7 +667326,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1002",
+      "source_location": "L1003",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667432,7 +667338,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L1070",
+      "source_location": "L1071",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667720,7 +667626,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/checkout/trial-start-view.tsx",
-      "source_location": "L48",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -668404,7 +668310,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/crunchyroll-watch-history/page.tsx",
-      "source_location": "L180",
+      "source_location": "L179",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -671308,7 +671214,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll/page.tsx",
-      "source_location": "L303",
+      "source_location": "L302",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674248,7 +674154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L91",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674260,7 +674166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L97",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674272,7 +674178,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L121",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674284,7 +674190,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L122",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674296,7 +674202,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L123",
+      "source_location": "L117",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676288,7 +676194,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-welcome-hero.tsx",
-      "source_location": "L332",
+      "source_location": "L323",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676300,7 +676206,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-welcome-hero.tsx",
-      "source_location": "L338",
+      "source_location": "L329",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676312,7 +676218,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-welcome-hero.tsx",
-      "source_location": "L394",
+      "source_location": "L385",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676516,7 +676422,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L42",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676528,7 +676434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/how-it-works.tsx",
-      "source_location": "L75",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -677116,7 +677022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L801",
+      "source_location": "L804",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -677128,7 +677034,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L837",
+      "source_location": "L840",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -677464,7 +677370,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/lib/billing-client.test.ts",
-      "source_location": "L1976",
+      "source_location": "L1975",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -698630,23 +698536,12 @@
     },
     {
       "source": "apps_web_app_pricing_page",
-      "target": "apps_web_lib_pricing_copy_pricing_existing_trial_note",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_pricing_page",
       "target": "packages_protocol_src_index_getplanpolicy",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/pricing/page.tsx",
-      "source_location": "L16",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -698697,17 +698592,6 @@
     {
       "source": "apps_web_app_terms_page",
       "target": "apps_web_lib_pricing_copy_pricing_free20_metering_note",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/app/terms/page.tsx",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_app_terms_page",
-      "target": "apps_web_lib_pricing_copy_pricing_existing_trial_note",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -700056,16 +699940,6 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/pricing-copy.ts",
       "source_location": "L33",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_web_lib_pricing_copy",
-      "target": "apps_web_lib_pricing_copy_pricing_existing_trial_note",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/pricing-copy.ts",
-      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -702823,7 +702697,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/account/billing/billing-client.tsx",
-      "source_location": "L832",
+      "source_location": "L833",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -737444,6 +737318,263 @@
       "source_location": "lines 72-77",
       "weight": 1.0,
       "_origin": "semantic"
+    },
+    {
+      "source": "apps_web_components_compare_table",
+      "target": "apps_web_components_anidachi_logo",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/compare-table.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_components_compare_table",
+      "target": "apps_web_components_anidachi_logo_anidachilogo",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/compare-table.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_components_compare_table_comparetable",
+      "target": "apps_web_components_anidachi_logo_anidachilogo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/compare-table.tsx",
+      "source_location": "L165",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_abuse_client",
+      "target": "packages_protocol_src_index_trialchallengeschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-abuse-client.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_abuse_client",
+      "target": "packages_protocol_src_index_trialinstallationproofschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-abuse-client.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_abuse_client",
+      "target": "packages_protocol_src_index_trial_installation_message",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-abuse-client.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_trial_abuse_client",
+      "target": "packages_protocol_src_index_trialinstallationproof",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/trial-abuse-client.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_trial_plan_change_createtrialplanchangeservice",
+      "target": "apps_web_lib_anidachi_auth_stripe_plans_stripesubscriptioncancellationscheduled",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/trial-plan-change.ts",
+      "source_location": "L183",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_checkout_success_success_preview_successpreview",
+      "target": "apps_web_app_success_success_content_successpageframe",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/dev/checkout-success/success-preview.tsx",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_dev_checkout_success_success_preview_successpreview",
+      "target": "apps_web_app_success_checkout_session_sync_checkoutsessionstatus",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/dev/checkout-success/success-preview.tsx",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_lib_checkout_success_preview_test",
+      "target": "apps_web_app_dev_checkout_success_page_checkoutsuccesspreviewpage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/checkout-success-preview.test.ts",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_paid_subscription_facts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client",
+      "target": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts",
+      "target": "apps_web_lib_billing_view",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts",
+      "target": "apps_web_lib_billing_view_billingperiodunit",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts",
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts",
+      "target": "apps_web_lib_billing_view_formatmonthlyprice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts",
+      "target": "apps_web_lib_billing_view_billingsubscription",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts",
+      "target": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "target": "apps_web_lib_billing_view_formatmonthlyprice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "target": "apps_web_lib_billing_view_billingperiodunit",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "target": "apps_web_lib_billing_view_formatbillingtime",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/account/billing/paid-subscription-facts.tsx",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_web_app_account_billing_billing_client_subscriptionfacts",
+      "target": "apps_web_app_account_billing_paid_subscription_facts_paidsubscriptionfacts",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/account/billing/billing-client.tsx",
+      "source_location": "L1334",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [

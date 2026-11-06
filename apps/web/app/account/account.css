@@ -385,7 +385,11 @@ body:has(.account-notifications:modal) { overflow: hidden; }
 .billing-summary-management:has(.billing-trial-controls) > summary { width: 100%; max-width: 980px; margin-inline: auto; }
 .billing-summary-management > summary:focus-visible { outline: 2px solid #ffad6e; outline-offset: 4px; }
 .billing-summary-management-body { padding-top: 28px; }
-.billing-paid-management { padding: 32px; margin-top: 20px; border: 1px solid var(--account-line); border-radius: 18px; background: #ffffff03; }
+.billing-paid-management { padding: 32px; margin-top: 12px; border: 1px solid var(--account-line); border-radius: 18px; background: #ffffff03; }
+.ac-billing-editing { max-width: 920px; gap: 24px; }
+.billing-management-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.billing-management-heading > h2 { order: -1; }
+.billing-management-heading > .billing-summary-status { margin: 0; padding: 5px 12px; border: 1px solid var(--account-line); border-radius: 999px; font-size: 13px; line-height: 1.5; }
 .billing-management-heading h2 { font-size: 28px; font-weight: 600; letter-spacing: -.035em; }
 @media (max-width: 600px) { .billing-paid-management { padding: 24px; } }
 @media (min-width: 761px) and (max-width: 1023px) {
@@ -435,7 +439,44 @@ body:has(.account-notifications:modal) { overflow: hidden; }
 .billing-unavailable p { margin-top: 14px; max-width: 56ch; color: var(--summary-muted); font-size: 17px; line-height: 1.6; }
 .billing-paid-management .billing-actions:empty { display: none; }
 
-.billing-management-heading h2 { margin-top: 8px; }
+.billing-management-heading h2 { margin-top: 0; }
 .billing-management-access { margin-top: 16px; color: var(--account-muted); font-size: 16px; line-height: 1.6; }
 .billing-summary-management-body > .ac-button { margin-top: 24px; }
 .billing-paid-management .ac-button { min-height: 48px; padding: 12px 18px; border-radius: 10px; font-size: 16px; }
+
+/* Billing details: payment first, then one readable row per action. */
+.billing-payment-overview { margin-top: 32px; }
+.billing-payment-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+.billing-payment-facts dt { margin-bottom: 10px; color: var(--account-muted); font-size: 14px; line-height: 1.5; }
+.billing-payment-date { font-size: clamp(22px, 2.5vw, 28px); font-weight: 500; letter-spacing: -.035em; line-height: 1.4; }
+.billing-payment-amount { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; font-size: clamp(30px, 3vw, 38px); font-weight: 500; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.billing-payment-amount > span { color: var(--account-muted); font-size: 16px; font-weight: 400; letter-spacing: normal; }
+.billing-payment-amount > .billing-discount-label { padding: 5px 9px; border-radius: 6px; background: #ff994f12; color: #ffad73; font-size: 13px; font-weight: 500; line-height: 1.4; }
+.billing-payment-facts .billing-payment-unavailable { font-size: 22px; line-height: 1.4; }
+.billing-payment-facts .billing-payment-caption { margin-top: 10px; max-width: 35ch; color: var(--account-muted); font-size: 14px; font-weight: 400; line-height: 1.6; letter-spacing: normal; }
+.billing-paid-management > .billing-actions { display: grid; gap: 0; margin-top: 24px; border-top: 1px solid var(--account-line); }
+.billing-paid-management > .billing-actions > .ac-muted { margin: 20px 0; }
+.billing-paid-management > .billing-actions > .ac-renewal-action { padding: 22px 0; }
+.billing-paid-management > .billing-actions > .ac-renewal-action + .ac-renewal-action { border-top: 1px solid var(--account-line); }
+.billing-paid-management > .billing-actions > .ac-renewal-action:last-child { padding-bottom: 0; }
+.billing-paid-management > .billing-actions > .billing-management-action { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; }
+.billing-action-description h3 { font-size: 16px; font-weight: 500; line-height: 1.5; }
+.billing-action-description p { margin-top: 5px; max-width: 46ch; font-size: 14px; line-height: 1.6; }
+.billing-paid-management .billing-management-action > .ac-button { min-height: 44px; min-width: 188px; font-size: 14px; }
+.billing-summary-management[open] > .billing-paid-management { animation: billing-details-in 180ms ease-out; }
+@keyframes billing-details-in { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 700px) {
+ .billing-paid-management { padding: 24px; }
+ .billing-management-heading h2 { font-size: 25px; }
+ .billing-paid-management > .billing-actions > .billing-management-action { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+ .billing-paid-management .billing-management-action > .ac-button { justify-self: start; }
+}
+@media (max-width: 480px) {
+ .billing-paid-management { padding: 22px 20px; }
+ .billing-payment-facts { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+ .billing-payment-overview { margin-top: 26px; }
+ .billing-payment-date { font-size: 24px; }
+ .billing-payment-amount { font-size: 36px; }
+ .billing-paid-management .billing-management-action > .ac-button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .billing-summary-management[open] > .billing-paid-management { animation: none; } }

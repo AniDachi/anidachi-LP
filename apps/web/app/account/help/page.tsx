@@ -26,7 +26,7 @@ export default function AccountHelpPage() {
         <ul className="help-facts">
           <li>Sign in on Crunchyroll, YouTube, or Netflix with your own account. AniDachi does not share logins.</li>
           <li>Use a Crunchyroll title, a Netflix movie or episode, or a full youtube.com/watch page. Shorts, embeds, and browse/homepage previews do not sync.</li>
-          <li>If the browser blocked autoplay, or an ad paused sync, click Resume sync in the player.</li>
+          <li>Sync resumes automatically after ads. If your browser blocks playback, click Resume sync in the player.</li>
           <li>Join a Free, Plus, or Pro host for free. {PRICING_FREE20_SUMMARY}</li>
         </ul>
         <div className="help-links">

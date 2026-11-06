@@ -38,38 +38,38 @@ export async function postTrialAction<T extends { state: string }>(
 	});
 	const value = await response.json();
 	if (response.status === 401)
-		throw new Error("Sign in again to manage your trial.");
+		throw new Error("Sign in again to manage your access.");
 	if (value.ownerUserId !== undefined && value.ownerUserId !== owner)
 		throw new Error(
 			"Your account changed. Reload this page before continuing.",
 		);
 	if (value.ownerUserId !== owner || !states.has(value.state))
 		throw new Error(
-			value.error ?? "Your trial could not be confirmed. Please try again.",
+			value.error ?? "Your access could not be confirmed. Please try again.",
 		);
 	return value as T;
 }
 
 export function trialResultMessage(state: string): string {
 	const messages: Record<string, string> = {
-		trial_used: "A free trial has already been used here",
+		trial_used: "This offer has already been used.",
 		trial_busy:
-			"Another trial is still being confirmed here. Please try again in a moment.",
-		context_required: "Please refresh the trial confirmation and try again.",
+			"Another request is still being confirmed here. Please try again in a moment.",
+		context_required: "Please refresh the access confirmation and try again.",
 		pending:
-			"Your trial change is still being confirmed. Check its status before trying again.",
+			"Your change is still being confirmed. Check its status before trying again.",
 		expired:
-			"This trial or confirmation has expired. Refresh your billing status to see the available options.",
+			"This access period or confirmation has expired. Refresh your billing status to see the available options.",
 		superseded:
-			"A newer trial change exists. Refresh your billing status before continuing.",
+			"A newer change exists. Refresh your billing status before continuing.",
 		offer_changed:
 			"The offer changed. Review the current terms before continuing.",
 		ineligible:
-			"This account has no new free trial available. Review your billing status or choose a plan.",
+			"Review your billing status or choose a plan.",
 		verification_required:
-			"Sign in again with your verified email to start this trial.",
+			"Sign in again with your verified email to continue.",
 		unavailable:
-			"Your trial could not be confirmed. Check its status or try again in a moment.",
+			"Your access could not be confirmed. Check its status or try again in a moment.",
 	};
 	return messages[state] ?? "Refresh your billing status to continue.";
 }

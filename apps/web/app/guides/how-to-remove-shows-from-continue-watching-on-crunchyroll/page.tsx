@@ -269,8 +269,7 @@ export default function HowToRemoveShowsFromContinueWatchingPage() {
 					Watching controls leave that library as it is.
 				</p>
 				<p className="text-foreground/80 leading-relaxed mb-4">
-					Recording and editing that progress need your own Plus or Pro access,
-					including a trial. Saved history, Resume, and deletion stay available
+					Recording and editing that progress need your own Plus or Pro access. Saved history, Resume, and deletion stay available
 					on Free. Automatic recording also needs permission in the extension.
 					Install from{" "}
 					<Link href="/extension" className="text-brand-orange hover:underline">

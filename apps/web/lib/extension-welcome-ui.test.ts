@@ -81,7 +81,7 @@ test("verified trial waits for installation detection, then shows all three plat
 		},
 	};
 	await mount(trial);
-	assert.match(el.textContent!, /3-day trial is active/);
+	assert.match(el.textContent!, /access is active/);
 	assert.equal(el.querySelector('a[href*="chromewebstore"]'), null);
 	await act(async () =>
 		reply({ type: "anidachi:website-presence:v1", installed: true }),
@@ -103,7 +103,7 @@ test("inactive and failed verification never show a successful trial or paid pla
 		await mount({ kind });
 		assert.doesNotMatch(
 			el.textContent!,
-			/trial is active|plan is active|No automatic charge/,
+			/access is active|plan is active|No automatic charge/,
 		);
 		assert.equal(el.querySelector('a[href="https://www.youtube.com"]'), null);
 		await act(async () => root!.unmount());
@@ -123,7 +123,7 @@ test("expiry retires successful copy without a recurring API poll", async (t) =>
 	await mount({ ...trial, expiresInMs: 500 } as ExtensionWelcome);
 	now = 500;
 	await act(async () => t.mock.timers.tick(500));
-	assert.doesNotMatch(el.textContent!, /3-day trial is active/);
+	assert.doesNotMatch(el.textContent!, /access is active/);
 	assert.equal(refreshes, 1);
 	await act(async () => t.mock.timers.tick(60000));
 	assert.equal(refreshes, 1);
@@ -175,7 +175,7 @@ test("mobile opens the install panel without starting another trial or exposing 
 	);
 	assert.ok(el.querySelector("dialog[open]"));
 	assert.equal(el.querySelector('a[href="https://www.netflix.com"]'), null);
-	assert.match(el.textContent!, /3-day trial is active/);
+	assert.match(el.textContent!, /access is active/);
 	const originalShare = navigator.share;
 	const originalClipboard = navigator.clipboard;
 	const copied: string[] = [];
@@ -212,7 +212,7 @@ test("mobile opens the install panel without starting another trial or exposing 
 test("delayed hydration cannot extend a trial that has already ended", async (t) => {
 	t.mock.method(performance, "now", () => 2000);
 	await mount({ ...trial, expiresInMs: 1000 } as ExtensionWelcome);
-	assert.doesNotMatch(el.textContent!, /3-day trial is active/);
+	assert.doesNotMatch(el.textContent!, /access is active/);
 	assert.equal(refreshes, 1);
 });
 
@@ -243,11 +243,11 @@ test("refreshed snapshots age from their request, not the original document", as
 			),
 		),
 	);
-	assert.match(el.textContent!, /3-day trial is active/);
+	assert.match(el.textContent!, /access is active/);
 	assert.equal(refreshes, 1);
 	now += 800;
 	await act(async () => t.mock.timers.tick(800));
-	assert.doesNotMatch(el.textContent!, /3-day trial is active/);
+	assert.doesNotMatch(el.textContent!, /access is active/);
 	assert.equal(refreshes, 2);
 });
 
@@ -281,7 +281,7 @@ test("Free20 exhausted and manual welcome keep install and platform next steps",
 		await mount(welcome);
 		assert.ok(el.querySelector('a[href*="chromewebstore"]'));
 		assert.ok(el.querySelector('a[href="https://www.youtube.com"]'));
-		assert.doesNotMatch(el.textContent!, /trial is active|plan is active/);
+		assert.doesNotMatch(el.textContent!, /access is active|plan is active/);
 		if (welcome.kind === "free20") assert.match(el.textContent!, /00:00 UTC/);
 		await act(async () => root!.unmount());
 		root = undefined;

@@ -150,8 +150,7 @@ export default function CrunchyrollWatchHistoryPage() {
 				list does not clear that record.
 			</p>
 			<p className="mb-8 leading-relaxed text-ani-muted">
-				Recording and editing need your own Plus or Pro access, including a
-				trial, plus permission in the extension. YouTube recording is a
+				Recording and editing need your own Plus or Pro access, plus permission in the extension. YouTube recording is a
 				separate switch. Free can open saved history, Resume, and delete it.
 				Details are on{" "}
 				<Link href="/pricing" className="text-brand-orange hover:underline">

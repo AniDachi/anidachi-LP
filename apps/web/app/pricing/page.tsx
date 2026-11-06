@@ -4,7 +4,6 @@ import {
 	PRICING_IS_ANIDACHI_FREE_ANSWER,
 	PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
 	PRICING_HISTORY_NOTE,
-	PRICING_EXISTING_TRIAL_NOTE,
 } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 
@@ -71,17 +70,12 @@ const faq = [
 	{
 		question: "How do I cancel my subscription?",
 		answer:
-			"Open Account → Subscription and choose Cancel renewal. You keep access until the end of your current paid period or existing trial, and the subscription won’t renew.",
+			"Open Account → Subscription and choose Cancel renewal. You keep access until the end of your current access period, and the subscription won’t renew.",
 	},
 	{
 		question: "Do I still need Crunchyroll, YouTube, or Netflix?",
 		answer:
 			"Yes. Everyone needs their own access to the same video. A streaming subscription is required if the service charges for that title. AniDachi syncs your players; it doesn’t provide the video.",
-	},
-	{
-		question: "What happens to existing trials?",
-		answer:
-			`${PRICING_EXISTING_TRIAL_NOTE} Trials without a card end automatically unless you enable renewal. Trials started with a card renew unless canceled. Switching plans doesn’t restart a trial.`,
 	},
 ];
 

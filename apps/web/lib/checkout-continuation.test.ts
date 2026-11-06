@@ -125,9 +125,9 @@ test("onboarding trial stays on confirmation until activated and then offers the
 	const el = await mount("plus", "monthly", false, true, undefined, undefined, token);
 	assert.equal(starts, 0);
 	assert.equal(el.querySelector<HTMLAnchorElement>('a[href*="/pricing"]')?.href, `http://localhost/pricing?plan=plus&billing=monthly&onboarding=${token}`);
-	await act(async () => button(el, /Start my 3-day trial/).click());
+	await act(async () => button(el, /Confirm access/).click());
 	assert.equal(starts, 1);
-	assert.match(el.textContent!, /Your free trial has started/);
+	assert.match(el.textContent!, /Your access is active/);
 	assert.notEqual(window.location.pathname, "/account/billing");
 });
 test("starting trial keeps the confirmation and button stable until the result", async () => {
@@ -140,16 +140,16 @@ test("starting trial keeps the confirmation and button stable until the result",
 		return pending.promise;
 	};
 	const el = await mount();
-	const start = button(el, /Start my 3-day trial/i);
+	const start = button(el, /Confirm access/i);
 	await act(async () => {
 		start.click();
 		start.click();
 	});
-	assert.equal(button(el, /Start my 3-day trial/i), start);
+	assert.equal(button(el, /Confirm access/i), start);
 	assert.ok(start.disabled);
 	assert.match(el.textContent!, /No card required/);
 	await act(async () => window.dispatchEvent(new Event("blur")));
-	assert.equal(button(el, /Start my 3-day trial/i), start);
+	assert.equal(button(el, /Confirm access/i), start);
 	assert.equal(starts, 1);
 	pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" }));
 	await act(async () => {});
@@ -187,7 +187,7 @@ test("confirmation reuses fresh same-operation browser proof while activation st
 			});
 		},
 	);
-	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
 	assert.equal(contexts, 1);
 	assert.equal(verdicts, 1);
 	assert.equal(starts, 1);
@@ -201,7 +201,7 @@ test("email verification uses a real provider sign-in instead of looping through
 					{ status: 409 },
 				);
 	const el = await mount("pro", "monthly");
-	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
 	assert.match(el.textContent!, /verified email/i);
 	for (const provider of ["google", "discord"]) {
 		const anchor = el.querySelector<HTMLAnchorElement>(
@@ -239,7 +239,7 @@ test("cardless selection survives sign-in but only an explicit confirmation star
 	assert.equal(posts.length, 0);
 	assert.match(
 		el.querySelector("h1")!.textContent!,
-		/Try Pro free.*for 3 days/,
+		/Confirm Pro access/,
 	);
 	assert.match(el.textContent!, /no card/i);
 	assert.match(el.textContent!, /no automatic charge/i);
@@ -253,7 +253,7 @@ test("cardless selection survives sign-in but only an explicit confirmation star
 			?.getAttribute("href"),
 		"/pricing?plan=pro&billing=monthly",
 	);
-	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
 	assert.equal(posts.length, 1);
 	assert.equal(posts[0].url, "/api/billing/trial/start");
 	assert.equal(posts[0].owner, "owner-a");
@@ -281,7 +281,7 @@ test("a changed offer or account never turns cardless consent into a card Checko
 			return Response.json({ url: "https://checkout.stripe.com/unwanted" });
 		};
 		const el = await mount();
-		await act(async () => button(el, /Start my 3-day trial/i).click());
+		await act(async () => button(el, /Confirm access/i).click());
 		assert.equal(posts, 0);
 		assert.match(el.textContent!, /changed|no longer available/i);
 		await act(async () => root?.unmount());
@@ -316,9 +316,9 @@ test("pending activation resumes the owned operation instead of making a new sta
 		});
 	};
 	const el = await mount();
-	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
 	assert.match(el.textContent!, /being prepared/i);
-	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Check access status/i).click());
 	assert.deepEqual(urls, [
 		"/api/billing/trial/start",
 		"/api/billing/trial/recover",
@@ -344,15 +344,15 @@ test("a terminal recovery result retires the failed request before a new explici
 		);
 	};
 	const el = await mount();
-	await act(async () => button(el, /Start my 3-day trial/i).click());
-	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
+	await act(async () => button(el, /Check access status/i).click());
 	await act(async () => button(el, /Try again/i).click());
 	assert.equal(
 		requestIds.length,
 		1,
 		"a fresh offer still needs explicit confirmation",
 	);
-	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
 	assert.equal(requestIds.length, 2);
 	assert.notEqual(requestIds[0], requestIds[1]);
 });
@@ -379,9 +379,9 @@ test("an unavailable recovery keeps the owned activation instead of starting a r
 				);
 	};
 	const el = await mount();
-	await act(async () => button(el, /Start my 3-day trial/i).click());
-	await act(async () => button(el, /Check trial status/i).click());
-	await act(async () => button(el, /Check trial status/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
+	await act(async () => button(el, /Check access status/i).click());
+	await act(async () => button(el, /Check access status/i).click());
 	assert.deepEqual(posts, [
 		"/api/billing/trial/start",
 		"/api/billing/trial/recover",
@@ -396,7 +396,7 @@ test("a harmless window blur keeps the same trial operation and revalidates its 
 			? Response.json(cardlessOffer)
 			: pending.promise;
 	const el = await mount();
-	await act(async () => button(el, /Start my 3-day trial/i).click());
+	await act(async () => button(el, /Confirm access/i).click());
 	await act(async () => window.dispatchEvent(new Event("blur")));
 	await act(async () =>
 		pending.resolve(Response.json({ state: "active", ownerUserId: "owner-a" })),
@@ -718,11 +718,11 @@ test("a new document discovers the persisted activation after cardless starts ar
 		);
 	};
 	const first = await mount("plus", "yearly");
-	assert.match(first.textContent!, /Check trial status/);
+	assert.match(first.textContent!, /Check access status/);
 	await act(async () => root?.unmount());
 	root = null;
 	const reloaded = await mount("plus", "yearly");
-	assert.match(reloaded.textContent!, /Check trial status/);
+	assert.match(reloaded.textContent!, /Check access status/);
 	assert.deepEqual(
 		posts,
 		[0, 1].map(() => ({
@@ -754,7 +754,7 @@ test("extension Plus trial intent survives login, refresh and OAuth retry", () =
 	}
 	assert.equal(
 		getLoginContext(path).subtitle,
-		"Plus is selected. Review your trial offer after sign-in.",
+		"Plus is selected. Review your offer after sign-in.",
 	);
 	for (const query of [
 		"confirm=trial&confirm=trial",
@@ -801,7 +801,7 @@ for (const mode of ["cardless", "card_required"] as const) {
 			button(
 				el,
 				mode === "cardless"
-					? /Start my 3-day trial/
+					? /Confirm access/
 					: /Continue to card checkout/,
 			).click(),
 		);
@@ -839,8 +839,8 @@ test("used browser offers plans without a retry loop or starting paid Checkout",
 				);
 	};
 	const el = await mount("plus", "monthly");
-	await act(async () => button(el, /Start my 3-day trial/i).click());
-	assert.match(el.textContent!, /free trial is no longer available/);
+	await act(async () => button(el, /Confirm access/i).click());
+	assert.match(el.textContent!, /offer is no longer available/);
 	assert.ok(button(el, /Subscribe to Plus/));
 	assert.equal(
 		[...el.querySelectorAll("button")].some((b) =>
@@ -905,10 +905,10 @@ test("legacy reconciliation retry reacquires the extension proof before a new re
 					"b".repeat(43),
 			}),
 		);
-		await act(async () => button(el, /Start my 3-day trial/i).click());
+		await act(async () => button(el, /Confirm access/i).click());
 		assert.equal(starts.length, 1);
 		assert.deepEqual(starts[0].extensionProof, proofs[0]);
-		await act(async () => button(el, /Check trial status/i).click());
+		await act(async () => button(el, /Check access status/i).click());
 		assert.equal(starts.length, 2);
 		assert.equal(
 			contexts,
@@ -919,7 +919,7 @@ test("legacy reconciliation retry reacquires the extension proof before a new re
 		assert.equal(starts[1].requestId, starts[0].requestId);
 		assert.deepEqual(starts[1].extensionProof, proofs[1]);
 		assert.notEqual(proofs[1].challenge, proofs[0].challenge);
-		assert.match(el.textContent!, /free trial is no longer available/);
+		assert.match(el.textContent!, /offer is no longer available/);
 	} finally {
 		if (previousChrome === undefined) delete runtimeGlobal.chrome;
 		else runtimeGlobal.chrome = previousChrome;
@@ -945,7 +945,7 @@ test("used browser gets ordinary purchase before any trial confirmation or activ
 	);
 	assert.doesNotMatch(
 		el.textContent!,
-		/Start my 3-day trial|already been used here|This account has no free trial/,
+		/Confirm access|already been used here|This account has no free trial/,
 	);
 	assert.ok(button(el, /Subscribe to Plus/));
 	assert.equal(starts, 0);
@@ -961,7 +961,7 @@ test("busy marker or outage shows retry, not either purchase or trial", async ()
 	assert.ok(button(el, /Try again/));
 	assert.doesNotMatch(
 		el.textContent!,
-		/Start my 3-day trial|Subscribe to Plus/,
+		/Confirm access|Subscribe to Plus/,
 	);
 });
 test("initial lookup uses a compact accessible loader without subscription copy or premature price", async () => {
@@ -1002,9 +1002,9 @@ test("unknown activation recovery bypasses new marker checks and keeps its origi
 				: { state: "trial_busy", ownerUserId: value.ownerUserId },
 		);
 	});
-	await act(async () => button(el, /Start my 3-day trial/).click());
-	assert.ok(button(el, /Check trial status/));
-	await act(async () => button(el, /Check trial status/).click());
+	await act(async () => button(el, /Confirm access/).click());
+	assert.ok(button(el, /Check access status/));
+	await act(async () => button(el, /Check access status/).click());
 	assert.equal(checks, 1);
 	assert.equal(starts, 1);
 	assert.equal(recoveries, 1);

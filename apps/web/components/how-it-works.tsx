@@ -1,6 +1,5 @@
 import { Chrome, LogIn, Play, Users, MessageSquare, Clock3 } from "lucide-react";
 import { HomeSectionHeader } from "@/components/home-section-header";
-import Link from "next/link";
 import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 import { InstallLink } from "@/components/install-link";
 
@@ -24,7 +23,7 @@ const steps = [
     icon: Users,
     title: "Create or join a room",
     description:
-      "Create a room and share the link. You get 20 free minutes a day for up to 4 people; friends join free.",
+      "Create a room and share the link, or join a friend's room.",
   },
   {
     icon: MessageSquare,
@@ -32,8 +31,6 @@ const steps = [
     description: "Watch in sync, chat and share reactions.",
   },
 ];
-
-const platformLinkClass = "font-medium text-ani-progress underline-offset-4 hover:underline";
 
 export function HowItWorks() {
   return (
@@ -82,22 +79,6 @@ export function HowItWorks() {
                         Chrome Web Store
                       </InstallLink>.
                     </>
-                  ) : i === 2 ? (
-                    <>
-                      {step.description} Guides:{" "}
-                      <Link href="/watch-crunchyroll-together" className={platformLinkClass}>
-                        Crunchyroll watch party
-                      </Link>
-                      ,{" "}
-                      <Link href="/watch-youtube-together" className={platformLinkClass}>
-                        YouTube watch party
-                      </Link>
-                      , and{" "}
-                      <Link href="/netflix-watch-party" className={platformLinkClass}>
-                        Netflix watch party
-                      </Link>
-                      .
-                    </>
                   ) : (
                     step.description
                   )}
@@ -111,14 +92,8 @@ export function HowItWorks() {
           aria-labelledby="async-coming-soon"
           className="mx-auto mt-8 max-w-2xl border-t border-ani-line pt-6"
         >
-          <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-5">
-            <span
-              aria-hidden="true"
-              className="col-start-1 row-start-1 flex h-9 w-9 items-center justify-center rounded-full border border-ani-control-border font-semibold tabular-nums text-sm text-ani-text"
-            >
-              {steps.length + 1}
-            </span>
-            <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2.5">
+          <div className="pl-[3.25rem] sm:pl-14">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Clock3
                 className="h-4 w-4 shrink-0 text-ani-progress"
                 aria-hidden="true"
@@ -133,10 +108,8 @@ export function HowItWorks() {
                 Coming soon
               </span>
             </div>
-            <p className="col-start-2 mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
-              Mark episodes at your pace, leave
-              reactions, and chat so friends can catch up on their schedule.
-              Live sync is available now.
+            <p className="mt-1.5 text-[0.95rem] leading-relaxed text-ani-muted">
+              Catch up with friends on your own schedule.
             </p>
           </div>
         </aside>

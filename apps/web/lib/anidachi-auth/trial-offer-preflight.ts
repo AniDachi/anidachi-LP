@@ -75,12 +75,12 @@ export function createTrialOfferHandler(deps: Deps = {}) {
 				);
 			const text = await request.text();
 			if (text.length > 6144)
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			let input: { requestId?: unknown; extensionProof?: unknown };
 			try {
 				input = JSON.parse(text);
 			} catch {
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			}
 			if (
 				!input ||
@@ -89,7 +89,7 @@ export function createTrialOfferHandler(deps: Deps = {}) {
 					input.requestId,
 				)
 			)
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			if (
 				!(await (deps.allowRequest ?? ((u) => allowTrialAction(u, "offer")))(
 					owner,

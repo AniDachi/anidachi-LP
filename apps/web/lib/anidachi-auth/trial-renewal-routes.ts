@@ -112,13 +112,13 @@ export function createTrialRenewalHandler(
 				request.headers.get("content-type")?.split(";")[0]?.trim() !==
 					"application/json"
 			)
-				return json({ error: "Open AniDachi to manage trial renewal." }, 403);
+				return json({ error: "Open AniDachi to manage renewal." }, 403);
 			const user = await (
 				deps.getUser ??
 				((r: NextRequest) =>
 					resolveWebsiteSession(r.cookies.get(REFRESH_TOKEN_COOKIE)?.value))
 			)(request);
-			if (!user) return json({ error: "Sign in to manage your trial." }, 401);
+			if (!user) return json({ error: "Sign in to manage your access." }, 401);
 			if (request.headers.get(BILLING_OWNER_HEADER) !== user.id)
 				return json(
 					{ error: "Your signed-in account changed. Reload this page." },
@@ -127,15 +127,15 @@ export function createTrialRenewalHandler(
 			ownerUserId = user.id;
 			const raw = await request.text();
 			if (raw.length > 4096)
-				return json({ error: "Invalid trial renewal request." }, 400);
+				return json({ error: "Invalid renewal request." }, 400);
 			let body: unknown;
 			try {
 				body = JSON.parse(raw);
 			} catch {
-				return json({ error: "Invalid trial renewal request." }, 400);
+				return json({ error: "Invalid renewal request." }, 400);
 			}
 			if (!validBody(action, body))
-				return json({ error: "Review your trial renewal first." }, 400);
+				return json({ error: "Review your renewal first." }, 400);
 			if (
 				!(await (
 					deps.allowRequest ??

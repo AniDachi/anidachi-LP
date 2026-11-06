@@ -104,7 +104,7 @@ export function createTrialPlanChangeService(deps: Deps = defaults) {
 		if (trial.trial_mode === "cardless")
 			throw new BillingError(
 				409,
-				"Use the trial renewal controls to confirm the price and period after your trial.",
+				"Use the renewal controls to confirm the price and billing period.",
 			);
 		const originalStart = Date.parse(trial.trial_started_at) / 1000,
 			originalEnd = Date.parse(trial.trial_ends_at) / 1000;

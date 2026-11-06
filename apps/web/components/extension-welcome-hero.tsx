@@ -270,16 +270,7 @@ export function ExtensionWelcomeHero({
 				) : active ? (
 					<>
 						Your <span className={styles.welcomeAccent}>{plan}</span>
-						{welcome.kind === "trial" ? (
-							<>
-								<br />
-								{welcome.cardlessWithoutRenewal
-									? "3-day trial is active."
-									: "trial is active."}
-							</>
-						) : (
-							<> plan is active.</>
-						)}
+						{welcome.kind === "trial" ? " access is active." : " plan is active."}
 					</>
 				) : checking ? (
 					"Checking your access…"
@@ -290,7 +281,7 @@ export function ExtensionWelcomeHero({
 				) : welcome.kind === "error" ? (
 					"Let’s check your access."
 				) : (
-					"Check your subscription."
+					"Check your account."
 				)}
 			</h1>
 			<p className={styles.welcomeDescription}>
@@ -309,10 +300,10 @@ export function ExtensionWelcomeHero({
 							: expired
 								? "This access check has expired. Try again for your current status."
 								: welcome.kind === "sign_in"
-									? "Use the account you chose for your trial or subscription."
+									? "Use your AniDachi account to finish setup."
 									: welcome.kind === "error"
 										? "We couldn’t confirm your access. Try again in a moment."
-										: "There’s no active trial or subscription to confirm for this account."}
+										: "View your account for current access and available plans."}
 			</p>
 			{active ? (
 				<>
@@ -438,7 +429,7 @@ export function ExtensionWelcomeHero({
 										: "/account/billing"
 								}
 							>
-								{welcome.kind === "sign_in" ? "Sign in" : "View subscription"}
+								{welcome.kind === "sign_in" ? "Sign in" : "View account"}
 							</Link>
 						</Button>
 					)}

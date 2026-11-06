@@ -104,7 +104,7 @@ test("eligible Free sees card-required trial and cannot mistake Free for hosting
 	const el = await mount();
 	assert.equal(
 		[...el.querySelectorAll("button")].filter((b) =>
-			b.textContent?.includes("Start 3-day free trial"),
+			b.textContent?.includes("Continue with"),
 		).length,
 		2,
 	);
@@ -125,7 +125,7 @@ test("cardless pricing explains no automatic payment and opens explicit trial co
 	const el = await mount();
 	for (const tier of ["plus", "pro"]) {
 		const card = el.querySelector(`[aria-labelledby="pricing-${tier}-title"]`)!;
-		assert.match(card.textContent!, /Start 3-day free trial/);
+		assert.match(card.textContent!, /Continue with/);
 		const terms = card.querySelector(`#pricing-${tier}-terms`)!;
 		assert.match(terms.textContent!, /No card required/i);
 		assert.match(terms.textContent!, /No automatic charge/i);
@@ -133,7 +133,7 @@ test("cardless pricing explains no automatic payment and opens explicit trial co
 	}
 	assert.doesNotMatch(
 		el.textContent!,
-		/then .* automatically|Cancel before your trial ends/i,
+		/then .* automatically|Cancel before your first payment/i,
 	);
 	await act(async () => plusButton(el).click());
 	assert.equal(posts, 0);
@@ -152,7 +152,7 @@ test("a signed-out cardless offer remains conditional on eligibility after login
 	const el = await mount();
 	assert.doesNotMatch(
 		el.textContent!,
-		/No card required|Start 3-day free trial/i,
+		/No card required|Continue with/i,
 	);
 	assert.doesNotMatch(el.textContent!, /automatically/);
 	await act(async () => plusButton(el).click());
@@ -169,7 +169,7 @@ test("used trial and current subscribers get paid or management actions", async 
 		const el = await mount();
 		assert.doesNotMatch(
 			el.textContent!,
-			/Start 3-day free trial|Try 3 days free|No card required/,
+			/Continue with|Try 3 days free|No card required/,
 		);
 		assert.match(
 			el.textContent!,
@@ -186,7 +186,7 @@ test("authority outage does not invent trial eligibility", async () => {
 	const el = await mount();
 	assert.doesNotMatch(
 		el.textContent!,
-		/Start 3-day free trial|Try 3 days free|30 min/,
+		/Continue with|Try 3 days free|30 min/,
 	);
 	assert.match(plusButton(el).textContent!, /Choose Plus/);
 	assert.equal(plusButton(el).disabled, false);
@@ -216,7 +216,7 @@ test("public monthly and annual plans render without any server catalog", async 
 	assert.match(html, /Loading options for Plus/);
 	assert.doesNotMatch(
 		html,
-		/Try 3 days free|One trial per account|Card required/,
+		/Try 3 days free|One offer per account|Card required/,
 	);
 	assert.doesNotMatch(html, /Renews at/);
 	globalThis.fetch = async () => Response.json({}, { status: 503 });
@@ -249,7 +249,7 @@ test("guest pricing advertises a trial only while the server offers it", async (
 		const el = await mount();
 		assert.match(
 			plusButton(el).textContent!,
-			available ? /Try 3 days free/ : /Choose Plus/,
+			/Choose Plus/,
 		);
 		assert.equal(!!el.querySelector("#pricing-trial-terms"), available);
 		for (const id of plusButton(el)
@@ -390,7 +390,7 @@ test("an expired offer refresh cannot turn a trial click into a paid subscriptio
 	};
 	const el = await mount();
 	await act(async () => t.mock.timers.tick(60_000));
-	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.match(plusButton(el).textContent!, /Continue with/);
 	await act(async () => plusButton(el).click());
 	refresh.resolve(Response.json({ ...offer, action: "subscribe" }));
 	await act(async () => {});
@@ -409,7 +409,7 @@ test("server-rendered pricing shows published prices before the account request"
 	assert.match(html, /\$7\.99/);
 	assert.match(html, /\$14\.99/);
 	assert.match(html, /Loading options for Plus/);
-	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
+	assert.doesNotMatch(html, /Continue with|Try 3 days free/);
 	assert.match(html, /Yearly|Save 20%/);
 });
 
@@ -423,7 +423,7 @@ test("published yearly pricing is present in server HTML before account availabi
 	assert.match(html, /\$76\.70/);
 	assert.match(html, /\$143\.90/);
 	assert.match(html, /Loading options for Plus/);
-	assert.doesNotMatch(html, /Start 3-day free trial|Try 3 days free/);
+	assert.doesNotMatch(html, /Continue with|Try 3 days free/);
 });
 
 test("returning to the tab keeps prices visible while account availability is rechecked", async () => {
@@ -436,7 +436,7 @@ test("returning to the tab keeps prices visible while account availability is re
 	await act(async () => window.dispatchEvent(new Event("focus")));
 	assert.match(el.textContent!, /\$7\.99/);
 	assert.match(el.textContent!, /\$14\.99/);
-	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.match(plusButton(el).textContent!, /Continue with/);
 	assert.equal(plusButton(el).disabled, false);
 	refresh.resolve(
 		Response.json({ ...offer, ownerUserId: "other", action: "subscribe" }),
@@ -504,7 +504,7 @@ test("a known replacement owner clears the old trial display even if its marker 
 					{ status: 503 },
 				),
 	);
-	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.match(plusButton(el).textContent!, /Continue with/);
 	owner = "other";
 	await act(async () => window.dispatchEvent(new Event("focus")));
 	assert.doesNotMatch(plusButton(el).textContent!, /trial/);
@@ -564,7 +564,7 @@ test("returning after an account change supersedes the initial pending lookup", 
 	await act(async () => old.resolve(Response.json(offer)));
 	assert.equal(reads, 2);
 	assert.match(plusButton(el).textContent!, /Subscribe to Plus/);
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+	assert.doesNotMatch(el.textContent!, /Continue with/);
 });
 
 test("expired availability disables stale trial and hosting promises without erasing prices", async (t) => {
@@ -583,7 +583,7 @@ test("expired availability disables stale trial and hosting promises without era
 	assert.match(el.textContent!, /30 min/);
 	await act(async () => t.mock.timers.tick(1000));
 	assert.match(el.textContent!, /\$7\.99/);
-	assert.match(plusButton(el).textContent!, /Start 3-day free trial/);
+	assert.match(plusButton(el).textContent!, /Continue with/);
 	assert.doesNotMatch(el.textContent!, /30 min/);
 	assert.equal(plusButton(el).disabled, false);
 });
@@ -720,7 +720,7 @@ test("published amounts remain visible without granting trial during an outage",
 	assert.match(el.textContent!, /\$7\.99/);
 	await act(async () => periodButton(el, "Yearly").click());
 	assert.match(el.textContent!, /\$76\.70/);
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+	assert.doesNotMatch(el.textContent!, /Continue with/);
 	assert.equal(plusButton(el).disabled, false);
 });
 
@@ -763,7 +763,7 @@ test("monthly sign-in carries the selected plan and period into checkout", async
 		});
 	const el = await mount({});
 	const signIn = plusButton(el);
-	assert.match(signIn.textContent!, /Try 3 days free/);
+	assert.match(signIn.textContent!, /Choose Plus/);
 	await act(async () => signIn.click());
 	const next = new URL(window.location.href).searchParams.get("next");
 	assert.equal(next, "/checkout?plan=plus&billing=monthly");
@@ -839,7 +839,7 @@ test("cardless pricing waits for browser verdict, then shows purchase without a 
 		return Response.json({ ...offer, trialMode: "cardless" });
 	};
 	const el = await mount({}, () => verdict.promise);
-	assert.doesNotMatch(el.textContent!, /Start 3-day free trial/);
+	assert.doesNotMatch(el.textContent!, /Continue with/);
 	verdict.resolve(
 		Response.json({
 			state: "ready",
@@ -867,7 +867,7 @@ test("cardless pricing cannot turn a marker lookup outage into a paid offer", as
 	);
 	assert.doesNotMatch(
 		plusButton(el).textContent!,
-		/Start 3-day free trial|Subscribe to Plus/,
+		/Continue with|Subscribe to Plus/,
 	);
 	await act(async () => plusButton(el).click());
 	assert.match(el.textContent!, /temporarily unavailable/);
@@ -992,7 +992,7 @@ for (const phase of ["proof", "response"] as const)
 			assert.equal(requests, phase === "proof" ? 0 : 1);
 			assert.doesNotMatch(
 				el.textContent!,
-				/Start 3-day free trial|No card required/i,
+				/Continue with|No card required/i,
 			);
 			assert.equal(window.location.pathname, "/pricing");
 			Reflect.deleteProperty(document, "visibilityState");

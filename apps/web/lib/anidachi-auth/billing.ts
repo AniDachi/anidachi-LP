@@ -142,7 +142,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 			(trial.user_id !== userId ||
 				trial.stripe_subscription_id !== row.stripe_subscription_id)
 		)
-			throw new BillingError(503, "Trial ownership could not be verified.");
+			throw new BillingError(503, "Access ownership could not be verified.");
 		if (
 			trial?.trial_mode === "cardless" &&
 			trial.first_payment_state !== "paid" &&
@@ -150,7 +150,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 		)
 			throw new BillingError(
 				409,
-				"Use the trial renewal controls to confirm or cancel payment after your trial.",
+				"Use the renewal controls to confirm or cancel your next payment.",
 			);
 		const result = await deps.sync(stripe, row.stripe_subscription_id, {
 			expectedUserId: userId,
@@ -323,12 +323,12 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 							)
 								throw new BillingError(
 									503,
-									"Trial ownership could not be verified.",
+									"Access ownership could not be verified.",
 								);
 							const now = Date.parse(access.history.serverTime);
 							const end = Date.parse(record.trial_ends_at);
 							if (!Number.isFinite(now) || !Number.isFinite(end))
-								throw new BillingError(503, "Trial timing unavailable.");
+								throw new BillingError(503, "Access dates are unavailable.");
 							const live = row.status === "active" || row.status === "trialing";
 							const cardless = record.trial_mode === "cardless";
 							const renewalEnabled = !!record.renewal_operation_id;

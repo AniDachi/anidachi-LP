@@ -36,11 +36,8 @@ export const PRICING_FREE20_MEDIA_NOTE =
 export const PRICING_HOST_MODEL =
   `${PRICING_FREE20_SUMMARY} Friends join on Free accounts, and the host's plan sets the room limits. ${PRICING_HISTORY_NOTE} Crunchyroll, YouTube, and Netflix are supported.`;
 
-export const PRICING_EXISTING_TRIAL_NOTE =
-  "New trials are no longer offered. Existing trials keep their original end date and renewal terms.";
-
 export const PRICING_CANCELLATION_NOTE =
-  "Cancel renewal from Account → Subscription. Access continues until your current trial or paid period ends.";
+  "Cancel renewal from Account → Subscription. Access continues until your current access period ends.";
 
 export const PRICING_IS_ANIDACHI_FREE_ANSWER =
   `Yes. ${PRICING_FREE20_SUMMARY} Friends can join your room for free. No card is needed for Free.`;

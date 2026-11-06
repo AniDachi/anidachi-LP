@@ -319,7 +319,7 @@ test("legacy checkout cannot open a generic Portal for a cardless trial", async 
 	f.activeSubscription(1, true);
 	await assert.rejects(
 		f.service.prepareSubscriptionCheckout(input),
-		/trial renewal controls/i,
+		/renewal controls/i,
 	);
 	assert.equal(f.createCalls, 0);
 });
