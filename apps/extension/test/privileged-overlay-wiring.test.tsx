@@ -29,6 +29,7 @@ import { voiceModePreferenceStorageKeyForUser } from "../src/voice-mode-preferen
 import type { RoomSessionRecord } from "../src/room-session-storage";
 import {
 	createRoomInvite,
+	createFriendInviteLink,
 	listInviteTargets,
 	listRoomInvites,
 } from "../src/social-client";
@@ -81,6 +82,7 @@ vi.mock("../src/p2p-ice", async (importOriginal) => ({
 vi.mock("../src/social-client", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../src/social-client")>()),
 	createRoomInvite: vi.fn(),
+	createFriendInviteLink: vi.fn(),
 	listInviteTargets: vi.fn(),
 	listRoomInvites: vi.fn(),
 }));
@@ -97,6 +99,7 @@ describe("privileged overlay wiring", () => {
 		vi.mocked(listInviteTargets).mockReset();
 		vi.mocked(listRoomInvites).mockReset();
 		vi.mocked(createRoomInvite).mockReset();
+		vi.mocked(createFriendInviteLink).mockReset();
 	});
 
 	it("shows the first-run tour in the production overlay without creating a room or capturing media", async () => {
@@ -1742,7 +1745,7 @@ describe("privileged overlay wiring", () => {
 		);
 		await flushMountedWork();
 
-		expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
+		expect(button(view.container, "Sent")).toBeInstanceOf(HTMLButtonElement);
 		expect(listRoomInvites).toHaveBeenCalledTimes(1);
 
 		await act(async () => {
@@ -1775,6 +1778,90 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
+
+  it("creates capsule friendship links for the current owner and drops a previous account's link", async () => {
+    let currentSession = sessionFor("user-a");
+    installActiveHostRoomRuntime({getSession: () => currentSession});
+    vi.mocked(listInviteTargets).mockResolvedValue({friends:[],groups:[]});
+    vi.mocked(listRoomInvites).mockResolvedValue({...invitesResponse("pending"),sent:[]});
+    const old = deferred<Awaited<ReturnType<typeof createFriendInviteLink>>>();
+    vi.mocked(createFriendInviteLink).mockReturnValue(old.promise);
+    const view = await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      await click(button(view.container,"Create room"));
+      await click(await waitForButton(view.container,"Invite friends and groups"));
+      await flushMountedWork(); await click(button(view.container,"Add friend")); await flushMountedWork();
+      expect(createFriendInviteLink).toHaveBeenCalledWith(currentSession.accessToken,"user-a");
+      await click(button(view.container,"Close Anidachi controls"));
+      await click(button(view.container,"Open Anidachi controls"));
+      await flushMountedWork();
+      await click(button(view.container,"Add friend"));await flushMountedWork();
+      expect(createFriendInviteLink).toHaveBeenCalledTimes(1);
+
+      currentSession = sessionFor("user-b");
+      await act(async()=>extensionStorage.storage.setItem(AUTH_TOKENS_KEY,currentSession));
+      await flushMountedWork();
+      old.resolve({url:"https://staging.anidachi.app/friend/invite/old-owner",expiresAt:"2099-01-01T00:00:00Z"});
+      await flushMountedWork();
+      expect(view.container.querySelector('input[aria-label="Friend invitation link"]')).toBeNull();
+      expect(view.container.innerHTML).not.toContain("old-owner");
+    } finally { await unmount(view.root); }
+  });
+
+  it("locks repeated and overlapping invitations while unrelated friends can still be invited",async()=>{
+    installActiveHostRoomRuntime();
+    const first=inviteFriend(); const second={...first,user:{...first.user,userId:"friend-two",displayName:"Friend Two"}};
+    vi.mocked(listInviteTargets).mockResolvedValue({friends:[first,second],groups:[{id:"group-a",name:"Our group",archivedAt:null,createdAt:first.requestedAt,updatedAt:first.updatedAt,members:[first,second].map(f=>({user:f.user,addedAt:f.requestedAt}))}]});
+    vi.mocked(listRoomInvites).mockResolvedValue({...invitesResponse("pending"),sent:[]});
+    const sent=deferred<Awaited<ReturnType<typeof createRoomInvite>>>(); vi.mocked(createRoomInvite).mockReturnValue(sent.promise);
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls")); await click(button(view.container,"Create room"));
+      await click(await waitForButton(view.container,"Invite friends and groups")); await flushMountedWork();
+      const invite=button(view.container,"Invite: Ads Mag");
+      await act(async()=>{invite.click();invite.click();});await flushMountedWork();
+      expect(createRoomInvite).toHaveBeenCalledTimes(1);
+      await click(button(view.container,"Groups"));expect(button(view.container,"Sending invitation: Our group").disabled).toBe(true);
+      await click(button(view.container,"Friends"));expect(button(view.container,"Invite: Friend Two").disabled).toBe(false);
+      await click(button(view.container,"Invite: Friend Two"));await flushMountedWork();expect(createRoomInvite).toHaveBeenCalledTimes(2);
+      sent.resolve({created:true,invite:invitesResponse("pending").sent[0]!});await flushMountedWork();
+    } finally {await unmount(view.root);}
+  });
+
+  it("retries a failed send with the same idempotency key instead of claiming it was sent",async()=>{
+    installActiveHostRoomRuntime();vi.mocked(listInviteTargets).mockResolvedValue({friends:[inviteFriend()],groups:[]});
+    vi.mocked(listRoomInvites).mockResolvedValue({...invitesResponse("pending"),sent:[]});
+    vi.mocked(createRoomInvite).mockRejectedValueOnce(Error("offline")).mockResolvedValueOnce({created:true,invite:invitesResponse("pending").sent[0]!});
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));
+      await click(await waitForButton(view.container,"Invite friends and groups"));await flushMountedWork();await click(button(view.container,"Invite: Ads Mag"));await flushMountedWork();
+      expect(button(view.container,"Retry: Ads Mag").disabled).toBe(false);await click(button(view.container,"Retry: Ads Mag"));await flushMountedWork();
+      expect(createRoomInvite).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(createRoomInvite).mock.calls[1]?.[1].clientActionId).toBe(vi.mocked(createRoomInvite).mock.calls[0]?.[1].clientActionId);
+    } finally {await unmount(view.root);}
+  });
+
+  it("keeps the newest friend list after an older response and refreshes it on focus",async()=>{
+    installActiveHostRoomRuntime();
+    const old=deferred<Awaited<ReturnType<typeof listInviteTargets>>>();
+    vi.mocked(listInviteTargets).mockReturnValueOnce(old.promise).mockResolvedValue({friends:[{...inviteFriend(),user:{...inviteFriend().user,displayName:"New Friend"}}],groups:[]});
+    vi.mocked(listRoomInvites).mockResolvedValue({...invitesResponse("pending"),sent:[]});
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));
+      await click(await waitForButton(view.container,"Invite friends and groups"));await flushMountedWork();
+      await click(button(view.container,"Close friends and groups"));await click(button(view.container,"Invite friends and groups"));await flushMountedWork();
+      old.resolve({friends:[inviteFriend()],groups:[]});await flushMountedWork();
+      expect(view.container.textContent).toContain("New Friend");expect(view.container.textContent).not.toContain("Ads Mag");
+      vi.spyOn(document,"visibilityState","get").mockReturnValue("visible");
+      const before=vi.mocked(listInviteTargets).mock.calls.length;
+      await act(async()=>window.dispatchEvent(new Event("focus")));await flushMountedWork();
+      expect(vi.mocked(listInviteTargets).mock.calls.length).toBeGreaterThan(before);
+      expect(view.container.textContent).toContain("New Friend");
+    } finally {await unmount(view.root);}
+  });
 	it("opens the invite panel before its first network load finishes", async () => {
 		installActiveHostRoomRuntime();
 		const targets = deferred<Awaited<ReturnType<typeof listInviteTargets>>>();
@@ -1790,9 +1877,9 @@ describe("privileged overlay wiring", () => {
 		);
 
 		const panelOpenedBeforeLoad =
-			view.container.querySelector(".invite-panel") instanceof HTMLDivElement;
+			view.container.querySelector(".cf-reveal[data-open=true]") instanceof HTMLDivElement;
 		const loadingVisibleBeforeLoad =
-			view.container.querySelector(".invite-panel-loading") !== null;
+			view.container.querySelector(".cf-loading") !== null;
 		const closeButtonBeforeLoad = [
 			...view.container.querySelectorAll("button"),
 		].find(
@@ -1868,7 +1955,7 @@ describe("privileged overlay wiring", () => {
 		await flushMountedWork();
 
 		expect(view.container.textContent).not.toContain("Invite sent to Ads Mag");
-		expect(view.container.textContent).not.toContain("Pending");
+		expect(view.container.textContent).not.toContain("Sent");
 		await unmount(view.root);
 	});
 
@@ -4544,7 +4631,7 @@ describe("privileged overlay wiring", () => {
 		await click(button(view.container, "Invite"));
 		await flushMountedWork();
 
-		expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
+		expect(button(view.container, "Sent")).toBeInstanceOf(HTMLButtonElement);
 
 		olderInvites.resolve({
 			meta: { serverTime: "2026-08-22T08:01:00.000Z", schemaVersion: 1 },
@@ -4553,7 +4640,7 @@ describe("privileged overlay wiring", () => {
 		});
 		await flushMountedWork();
 
-		expect(button(view.container, "Pending")).toBeInstanceOf(HTMLButtonElement);
+		expect(button(view.container, "Sent")).toBeInstanceOf(HTMLButtonElement);
 		await unmount(view.root);
 	});
 

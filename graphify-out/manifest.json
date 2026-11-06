@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793784673.3927457,
-    "seen": 1793785100.462049,
-    "ast_hash": "e268854127d764cb3b77f9473d8dd051",
+    "mtime": 1793958177.6912022,
+    "seen": 1793958498.5423858,
+    "ast_hash": "cdc92cabc42ef09a25a80a1af01540b0",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -456,9 +456,9 @@
     "semantic_hash": "e2ca5a2b0c455ec0aeb9a1acff897bcd"
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1793686209.4454658,
-    "seen": 1793686800.94526,
-    "ast_hash": "5420a29607f8e7081db5f62dccc95e36",
+    "mtime": 1793958567.498366,
+    "seen": 1793958572.1580842,
+    "ast_hash": "0a23ae4cd3bc4e7edd96191d87294f97",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -5706,9 +5706,9 @@
     "semantic_hash": "e10eabda789cf1436be998f1322db8e4"
   },
   "apps/extension/test/privileged-overlay-wiring.test.tsx": {
-    "mtime": 1793784673.3689501,
-    "seen": 1793785100.462053,
-    "ast_hash": "11a5ed4eeb7eab55e1757cae08bd5d00",
+    "mtime": 1793958066.1448684,
+    "seen": 1793958498.542391,
+    "ast_hash": "ab4d3b08738fbcc39fd63d026674ebe6",
     "semantic_hash": ""
   },
   "scripts/graphify-code-update.mjs": {
@@ -12154,5 +12154,41 @@
     "seen": 1793944580.789576,
     "ast_hash": "d228e755ef9c6c6834738cab358f4ebd",
     "semantic_hash": ""
+  },
+  "apps/extension/src/capsule-friends-model.ts": {
+    "mtime": 1793958489.0941203,
+    "seen": 1793958498.54238,
+    "ast_hash": "5ddd24f0ce04bef3a52235e1781314a0",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/capsule-friends-panel.tsx": {
+    "mtime": 1793958489.0944498,
+    "seen": 1793958498.5423832,
+    "ast_hash": "5c4000589afc496e3905b5f04aeb1d54",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/capsule-friends-styles.ts": {
+    "mtime": 1793957764.428729,
+    "seen": 1793958498.5423841,
+    "ast_hash": "c712861d63eed72ead03a96a0c05ae09",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/capsule-friends-model.test.ts": {
+    "mtime": 1793957764.972958,
+    "seen": 1793958498.542388,
+    "ast_hash": "d47c356cf6d636b4a804cc32f41680e5",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/capsule-friends-panel.test.tsx": {
+    "mtime": 1793958113.0931,
+    "seen": 1793958498.542389,
+    "ast_hash": "41cf72418cef675427f77dfb7e0d5366",
+    "semantic_hash": ""
+  },
+  "docs/extension-capsule-friends.md": {
+    "mtime": 1793958257.0646377,
+    "seen": 1793958498.627115,
+    "ast_hash": "",
+    "semantic_hash": "09213301a4d7c35ee2286695385bb7a6"
   }
 }
