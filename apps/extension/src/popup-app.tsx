@@ -940,13 +940,14 @@ export function PopupApp() {
 
       <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
         <PopupWelcome active={activeTab === "resources" && !settingsOpen && !authChecking}
-          onOpenSettings={() => void toggleSettings()}
           onDismiss={() => shellRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus()} />
+        <div className="popup-watch-content">
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
           refreshSignal={historySession.revision}
         />
+        </div>
       </PopupRetainedPanel>
       <PopupRetainedPanel key={`${accountUser?.id}:friends`} active={activeTab === "friends"} tab="friends">
         <PopupPeoplePanel
