@@ -7063,6 +7063,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{roomRailVisible ? (
 						<RoomRail
+							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
 							activeParticipantId={participant?.id}
 							getParticipantAudioPreference={getParticipantAudioPreference}
 							onParticipantAudioChange={handleParticipantAudioChange}

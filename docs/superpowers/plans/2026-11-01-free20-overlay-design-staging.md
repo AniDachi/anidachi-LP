@@ -2,6 +2,29 @@
 
 Parent: [Daily Free20 transition](2026-10-30-daily-free20-transition.md), block 6.
 
+## November 6: Notice dismissal and participant controls
+
+The owner accepted the local notice refinement and authorized review and staging
+delivery together with the participant-controls correction. The notice now has
+a compact, permanently visible close icon and a right-facing curved divider.
+Hover changes color only; the strip does not expand or shift. Keyboard dismissal,
+focus restoration, reduced motion, hidden-capsule entry, host-only eligibility,
+server once-per-day claims and authoritative room-end behavior remain unchanged.
+At narrow player widths the pricing action leaves enough space for the closed
+room text instead of overlapping it.
+
+The accompanying participant change defaults fresh side pills to Smart without
+overwriting saved settings. Remote volume uses the current participant-session's
+v3 seat or v2 microphone grant, preserving legacy fallback only for legacy rooms.
+Both account-avatar entry points now highlight on hover and keyboard focus.
+
+Verification and exact delivery identity are recorded in the staging PR and
+local delivery receipt. These are extension-only presentation changes: no Web,
+Worker, protocol, database, policy, environment or permission changes. Automated
+and source-component checks do not establish live two-user audio acceptance.
+Rollback is the previous reviewed extension artifact or a staging revert/rebuild;
+main, production and Store publication remain separate actions.
+
 ## Authorized scope
 
 The owner requested transfer of the accepted local prototype into the real

@@ -22,7 +22,7 @@ export function getDefaultInterfacePreferences(): InterfacePreferencesV1 {
   return {
     version: INTERFACE_PREFERENCES_VERSION,
     mainControlVisibility: "always-visible",
-    participantPillVisibility: "always-visible",
+    participantPillVisibility: "smart",
   };
 }
 

@@ -10,7 +10,7 @@ export const free20WarningStyles = `
     pointer-events: none;
     color: #eeedeb;
   }
-  .free20-notice-layout { --dismiss-width: 34px; position: absolute; inset: 0; }
+  .free20-notice-layout { --dismiss-width: 32px; position: absolute; inset: 0; }
   .free20-notice-announcement {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
@@ -21,7 +21,7 @@ export const free20WarningStyles = `
     transition: clip-path 330ms cubic-bezier(.4, 0, .25, 1);
   }
   .free20-notice-sleeve::before {
-    content: ''; position: absolute; inset: 0 0 0 var(--dismiss-width);
+    content: ''; position: absolute; inset: 0;
     border-radius: 16px; background: #222224; border: 1px solid #ffffff18;
     z-index: 1; pointer-events: none;
   }
@@ -31,7 +31,7 @@ export const free20WarningStyles = `
   }
   .free20-notice-message-clip {
     position: absolute; inset: 0 var(--free20-capsule-width, 78px) 0 var(--dismiss-width);
-    overflow: hidden; border-radius: 16px 0 0 16px; clip-path: inset(0 0 0 100%);
+    overflow: hidden; clip-path: inset(0 0 0 100%);
     transition: clip-path 330ms cubic-bezier(.4, 0, .25, 1); pointer-events: none;
   }
   .free20-warning-notice[data-open=true] .free20-notice-message-clip {
@@ -101,27 +101,23 @@ export const free20WarningStyles = `
     44% { transform: translateX(.9px) rotate(.5deg); }
   }
 
-  /* The square tail stays beneath the sleeve, keeping the hover tab connected. */
+  /* A visible close end with a right-facing arc, sharing the strip's outline. */
   .free20-notice-dismiss {
-    position: absolute; top: 0; left: 0; height: 32px; width: calc(var(--dismiss-width) + 32px);
-    padding: 0; border-radius: 16px 0 0 16px; border: 1px solid #ffffff20; border-right: 0;
-    background: #2d2d30; color: #eeece9; box-shadow: none; cursor: pointer;
-    transform: translateX(calc(var(--dismiss-width) - 14px)); pointer-events: none;
-    transition: transform 280ms cubic-bezier(.22, 1, .36, 1), background 180ms ease, border-color 180ms ease;
+    position: absolute; top: 0; left: 0; z-index: 2; height: 32px; width: var(--dismiss-width);
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; border-radius: 16px; border: 1px solid #ffffff20;
+    background: #303033; color: #d3d0ce; box-shadow: none; cursor: pointer;
+    pointer-events: none;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
   }
   .free20-warning-notice[data-open=true] .free20-notice-dismiss { pointer-events: auto; }
-  .free20-notice-dismiss-grip { position: absolute; left: 6px; top: 10px; width: 1.5px; height: 10px; border-radius: 2px; background: #929196; transition: opacity 100ms ease; }
   .free20-notice-dismiss svg {
-    position: absolute; left: calc(var(--dismiss-width) / 2 - 8px); top: 8px; width: 16px; height: 16px;
-    opacity: 0; transform: translateX(4px); transition: opacity 140ms ease, transform 200ms cubic-bezier(.22, 1, .36, 1); pointer-events: none;
+    width: 14px; height: 14px; pointer-events: none;
   }
-  .free20-notice-dismiss:is(:hover, :focus-visible) { transform: translateX(0); background: #37373b; border-color: #ffffff2b; color: #efeeec; }
-  .free20-notice-dismiss:is(:hover, :focus-visible) .free20-notice-dismiss-grip { opacity: 0; }
-  .free20-notice-dismiss:is(:hover, :focus-visible) svg { opacity: 1; transform: translateX(0); transition-delay: 65ms; }
+  .free20-notice-dismiss:is(:hover, :focus-visible) { background: #3b3b3f; border-color: #ffffff36; color: #fff7ef; }
   .free20-notice-dismiss:focus-visible { outline: none; box-shadow: inset 0 0 0 2px #f3ae78; }
   .free20-notice-dismiss:active { background: #404044; }
   @container free20-notice (max-width: 379px) {
-    .free20-notice-layout { --dismiss-width: 30px; }
     .free20-notice-message { gap: 7px; padding-left: 7px; padding-right: 7px; }
     .free20-notice-copy { gap: 5px; }
     .free20-notice-context { max-width: 36px; font-size: 9px; line-height: 10px; }
@@ -143,16 +139,11 @@ export const free20WarningStyles = `
     .free20-notice-message { gap: 5px; padding-left: 5px; padding-right: 5px; }
     .free20-notice-copy { gap: 4px; }
     .free20-notice-digits { font-size: 15px; }
-    .free20-notice-plans { min-width: 72px; padding: 0 5px; font-size: 9px; }
+    .free20-notice-plans { min-width: 60px; padding: 0 5px; font-size: 9px; }
     .free20-notice-plans > svg { display: none; }
   }
   @container free20-notice (max-width: 259px) {
     .free20-notice-plans { width: 52px; min-width: 52px; padding: 0 2px; font-size: 8.5px; }
-  }
-  @media (hover: none) {
-    .free20-notice-dismiss { transform: translateX(0); }
-    .free20-notice-dismiss-grip { opacity: 0; }
-    .free20-notice-dismiss svg { opacity: 1; transform: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .free20-warning-notice *, .free20-warning-notice *::before { animation: none !important; transition: none !important; }

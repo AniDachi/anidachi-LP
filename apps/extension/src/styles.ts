@@ -250,6 +250,26 @@ ${extensionThemeTokens}
     gap: 3px;
   }
 
+  .panel-header .panel-account-link {
+    cursor: pointer;
+    text-decoration: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: outline-color 160ms ease, filter 160ms ease;
+  }
+
+  .panel-header .panel-account-link:hover,
+  .panel-header .panel-account-link:focus-visible {
+    outline-color: var(--ad-accent);
+    filter: brightness(1.12);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel-header .panel-account-link {
+      transition: none;
+    }
+  }
+
   .panel-account-title-row {
     display: flex;
     align-items: center;
