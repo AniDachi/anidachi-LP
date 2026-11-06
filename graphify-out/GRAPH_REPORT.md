@@ -6,7 +6,7 @@ AST uses no LLM. Codex semantic token usage is unavailable.
 # Graph Report - anidachi-LP-monorepo  (2026-11-06)
 
 ## Corpus Check
-- Large corpus: 2052 files · ~1,965,963 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
+- Large corpus: 2052 files · ~1,965,961 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
 
 ## Summary
 - 18975 nodes · 44159 edges · 1321 communities (725 shown, 596 thin omitted)

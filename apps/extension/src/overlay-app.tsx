@@ -6655,7 +6655,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					) : null}
 
           {roomId && authAuthenticated ? <CapsuleFriendsPanel
-            key={`${accountUser?.id ?? "anonymous"}:${roomId}`}
+            key={capsuleFriendLinkScope}
             open={invitePanelOpen} linkCache={capsuleFriendLinkCache} targets={inviteTargets} loading={inviteTargetsLoading}
             statuses={inviteTargetStatuses} participants={participants} membershipReady={inviteMembershipReady}
             sending={inviteSendingTargets} failedTargets={inviteFailedTargets} notice={inviteNotice}

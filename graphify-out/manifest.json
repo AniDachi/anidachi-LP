@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1793958177.6912022,
-    "seen": 1793958498.5423858,
-    "ast_hash": "cdc92cabc42ef09a25a80a1af01540b0",
+    "mtime": 1793958758.7591152,
+    "seen": 1793958767.1089559,
+    "ast_hash": "9f00cb5cb0426e3bd111b69e285265ad",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
