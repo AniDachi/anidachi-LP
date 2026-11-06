@@ -216,9 +216,9 @@
     "semantic_hash": "f71dc685935a53b4651782cd99f80685"
   },
   "apps/extension/entrypoints/background.ts": {
-    "mtime": 1793803581.4369876,
-    "seen": 1793804855.4327402,
-    "ast_hash": "0193e949477c190b361415222fa6b942",
+    "mtime": 1793988059.7494886,
+    "seen": 1793988337.4375098,
+    "ast_hash": "7794d2a8cc801b6d6f2c6b209bde8fb6",
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/content.tsx": {
@@ -2802,9 +2802,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.ts": {
-    "mtime": 1793701430.5048296,
-    "seen": 1793706992.320962,
-    "ast_hash": "21a05436337dd494c40b82ad6a316e43",
+    "mtime": 1793987655.20199,
+    "seen": 1793987888.756193,
+    "ast_hash": "850dd25e4776813eaab2418feb73859d",
     "semantic_hash": ""
   },
   "apps/web/lib/tiktok/api.test.ts": {
@@ -3120,9 +3120,9 @@
     "semantic_hash": "008cbb7aa3e7e7917fd1e68946868fb6"
   },
   "packages/protocol/src/index.ts": {
-    "mtime": 1793701237.9396753,
-    "seen": 1793706992.320966,
-    "ast_hash": "b79bb3a073a6d50af46b20281d47d805",
+    "mtime": 1793987655.1027718,
+    "seen": 1793987888.756199,
+    "ast_hash": "ca8ab3a63f0215042e52bb8df9db4c36",
     "semantic_hash": ""
   },
   "packages/protocol/src/limits.ts": {
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793980908.8663344,
-    "seen": 1793981754.616129,
+    "mtime": 1793987825.823969,
+    "seen": 1793988337.514027,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "e161e412c5c85b0f3f3a323da0aaf51f"
+    "semantic_hash": "c8a2c63acc87f6c17cee28d5d423cc08"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -6186,9 +6186,9 @@
     "semantic_hash": "c97cf3aebcbc55f9bc51e0dbc9ec3fff"
   },
   "apps/extension/test/background-invite-notification-wiring.test.ts": {
-    "mtime": 1793803623.7376616,
-    "seen": 1793804855.4327512,
-    "ast_hash": "a15b702298ffdf8909fd70b9c890a462",
+    "mtime": 1793988036.3222544,
+    "seen": 1793988337.437515,
+    "ast_hash": "484208cebf862b1762c81aa34b1aba54",
     "semantic_hash": ""
   },
   "apps/extension/test/popup-inbox-convergence.test.tsx": {
@@ -11814,15 +11814,15 @@
     "semantic_hash": "00b0ac3c6d0af688737e1aa2ad47d5de"
   },
   "apps/extension/src/uninstall-url.ts": {
-    "mtime": 1793803623.7177324,
-    "seen": 1793804855.4327428,
-    "ast_hash": "ed17b55beba0ef785cbdab69f81026b9",
+    "mtime": 1793988059.7281706,
+    "seen": 1793988337.4375129,
+    "ast_hash": "363feb1f6037d44e4b7b49b1eb47fc86",
     "semantic_hash": ""
   },
   "apps/extension/test/uninstall-url.test.ts": {
-    "mtime": 1793803607.5864348,
-    "seen": 1793804855.4327521,
-    "ast_hash": "1f16d9b3da879ead4c5ac853c1a11e32",
+    "mtime": 1793988036.3016129,
+    "seen": 1793988337.437515,
+    "ast_hash": "6f312fceee6b6a14db654921820dc09a",
     "semantic_hash": ""
   },
   "apps/web/app/api/uninstall/checkout/route.ts": {
@@ -12258,15 +12258,39 @@
     "semantic_hash": ""
   },
   "docs/releases/free20/production-preparation-2026-11-06.md": {
-    "mtime": 1793981422.0290926,
-    "seen": 1793981500.6455019,
+    "mtime": 1793987825.7749903,
+    "seen": 1793988337.514029,
     "ast_hash": "",
-    "semantic_hash": "d92f18cfd52b04404f8b9d84953ae9fc"
+    "semantic_hash": "1a110ec68ab2aabd5ab833aadea5c839"
   },
   "docs/superpowers/plans/2026-11-06-free20-store-release-preparation.md": {
-    "mtime": 1793980952.042943,
-    "seen": 1793981500.645503,
+    "mtime": 1793987825.7972739,
+    "seen": 1793988337.514029,
     "ast_hash": "",
-    "semantic_hash": "3739eef5156bb5abb813fd5558cfe4df"
+    "semantic_hash": "7f246d840b03368bff84e58dae89e106"
+  },
+  "apps/web/app/api/extension/uninstall-capability/route.ts": {
+    "mtime": 1793987655.1778746,
+    "seen": 1793987888.7561889,
+    "ast_hash": "ba077766393abcb0a677d09db3851c0f",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/extension-uninstall-capability.test.ts": {
+    "mtime": 1793987694.6604178,
+    "seen": 1793987888.75619,
+    "ast_hash": "8bedc9dfd4743a4c70ff6b6c4060ddf4",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/extension-uninstall.test.ts": {
+    "mtime": 1793987694.6306727,
+    "seen": 1793987888.756194,
+    "ast_hash": "c40cd9f48791ffa099cc5e055a9c8af2",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/extension-uninstall.ts": {
+    "mtime": 1793987655.0543277,
+    "seen": 1793987888.756196,
+    "ast_hash": "503714f6f5a533448e7beb29c305f7f1",
+    "semantic_hash": ""
   }
 }

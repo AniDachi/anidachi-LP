@@ -111,7 +111,7 @@ contracts and the current server while issuance gates remain independent.
 - [x] Check old/new-client compatibility, rollback semantics and payment recovery.
 - [x] Perform one independent whole-branch review; fix material findings with
   regression tests and rerun affected checks.
-- [ ] Update docs/Graphify, run `pnpm dev:check`, open PR into staging and follow
+- [x] Update docs/Graphify, run `pnpm dev:check`, open PR into staging and follow
   CI/deployment. Refresh the existing staging extension folder if its source changed.
 
 ### Task 5: Prepare the review ZIP and post-approval cutover
@@ -121,10 +121,31 @@ contracts and the current server while issuance gates remain independent.
 **Interfaces:** consumes an accepted immutable source SHA, verified Store version,
 production public VAPID key, identity and production runtime endpoints.
 
-- [ ] Build/validate production ZIP, record SHA256/source/version/permissions and
+- [x] Build/validate production ZIP, record SHA256/source/version/permissions and
   inspect actual bundle for staging/test endpoints and accidental secrets.
-- [ ] Document reviewer behavior before activation and precise deferred-publication
+- [x] Document reviewer behavior before activation and precise deferred-publication
   sequence: compatible migrations/code, production verification, activation,
   Store publication, observation and rollback. No unapproved execution.
-- [ ] Report the actual artifact and clearly identify remaining owner/provider
+- [x] Report the actual artifact and clearly identify remaining owner/provider
   inputs or live acceptance gates before upload/promotion.
+
+### Task 6: Optional uninstall compatibility before the website rollout
+
+Owner decision on November 7: keep uninstall silent until the production website
+supports the approved page, then enable it automatically for all installations.
+No early main promotion, page redesign, billing changes or production writes.
+
+**Files:** extension `uninstall-url.ts` and background; additive public web
+capability route; shared versioned schema; staging metadata exception; release docs.
+
+- [x] Reproduce unconditional registration against an unavailable site; cover
+  arrival/rollback, transient failure, timeout, cache and concurrent lifecycle calls.
+- [x] Register only the fixed canonical page after an explicit same-origin
+  version-1 capability; no auth, identifiers, redirects or remote code.
+- [x] Refresh without reinstall through browser startup/hourly alarms and a bounded
+  persistent cache; leave account/room startup independent of the optional work.
+- [ ] Complete relevant web/extension/protocol checks, independent branch review,
+  Graphify refresh and staging delivery. Verify the deployed capability and the
+  actual built extension against old and new servers.
+- [ ] Freeze a new 0.1.5 candidate and mark the November 6 ZIP superseded; keep both
+  immutable receipts. Refresh the same staging tester folder and Store handoff.

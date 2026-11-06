@@ -1,5 +1,24 @@
 # Current Development State
 
+## Store uninstall rollout compatibility: November 7, 2026
+
+The owner chose compatibility before launch: no early production website/backfill.
+The 0.1.5 candidate keeps Chrome's optional uninstall URL empty until the same
+website explicitly supports the approved page. Public versioned metadata at
+`GET /api/extension/uninstall-capability` ships with `/uninstall` and its APIs after
+their schema. It does not grant discounts or change any account/room entitlement.
+The extension sends no account/cookie/installation identity, accepts no redirects
+or server-supplied URL, and has a five-second deadline. An hourly cached background
+refresh and browser startup enable the page without reinstall. Explicit absence
+clears it; transient failures preserve a previously verified registration.
+
+This is identical for users and Store reviewers, and is disclosed in the
+[release runbook](releases/free20/production-preparation-2026-11-06.md). The only
+staging gate exception is anonymous capability GET; page and customer APIs remain
+password-protected/noindex. The new candidate must supersede the November 6 ZIP
+with its own source/build/hash receipt. Main promotion, production activation,
+LIVE changes and Store upload/publication still require their separate launch steps.
+
 ## Free20 Store candidate preparation: November 6, 2026
 
 The owner authorized the remaining release preparation and a production-channel

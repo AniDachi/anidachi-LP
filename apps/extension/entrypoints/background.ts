@@ -2,7 +2,7 @@ import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
 import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
 import { WEB_HTTP_BASE } from "../src/constants";
-import { registerUninstallUrl } from "../src/uninstall-url";
+import { registerUninstallUrl, UNINSTALL_URL_REFRESH_ALARM } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
 import { registerOnboardingCheckoutBridge } from "../src/onboarding-checkout-bridge";
@@ -405,6 +405,10 @@ export default defineBackground(() => {
   });
 
   chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === UNINSTALL_URL_REFRESH_ALARM) {
+      void registerUninstallUrl({ force: true });
+      return;
+    }
     if (isRoomInviteNotificationRetryAlarm(alarm.name)) {
       void handleRoomInviteNotificationRetryAlarm(alarm.name).catch(() => undefined);
       return;
@@ -438,7 +442,10 @@ export default defineBackground(() => {
     )
       .catch(() => undefined);
   };
-  chrome.runtime.onStartup?.addListener(() => reconcileStoredWebsiteSession(true));
+  chrome.runtime.onStartup?.addListener(() => {
+    void registerUninstallUrl({ force: true });
+    reconcileStoredWebsiteSession(true);
+  });
   chrome.runtime.onInstalled?.addListener(() => {
     void registerUninstallUrl();
     reconcileStoredWebsiteSession(false);
