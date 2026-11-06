@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-10-19.
+Last updated: 2026-11-06.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -256,6 +256,14 @@ its exact source/version/hash and verify current-server compatibility;
 Store publication and production promotion remain separate explicit gates.
 Use the preparation procedure above for this transition, rather than
 deploying main solely to create a review ZIP.
+
+The owner authorized the same narrow sequence for Free20 on November 6:
+accepted frozen staging may supply **0.1.5** for Store review while production
+remains unchanged. The highest uploaded version was confirmed as 0.1.4. Follow
+the [Free20 runbook](releases/free20/production-preparation-2026-11-06.md), including
+old-server compatibility, schema-before-web-before-Worker delivery and deferred
+Store publication. This does not authorize LIVE configuration or production
+activation before approval, or replace the exact reviewed ZIP with a later build.
 
 ## Important Invariant
 

@@ -224,7 +224,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 				: {}),
 		};
 		let coupon: string | null = null;
-		if (intent === "cancel" && deps.mode() === "test") {
+		if (intent === "cancel") {
 			let timer: ReturnType<typeof setTimeout> | undefined;
 			try {
 				// Bound the whole optional preparation, not each chained provider read.

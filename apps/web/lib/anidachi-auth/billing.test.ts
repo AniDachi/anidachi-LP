@@ -906,7 +906,7 @@ test("repeated native cancel requests reuse the prepared coupon without putting 
 	}
 	assert.equal(f.calls.filter((c) => c === "portal").length, 2);
 });
-test("live cancellation does not invoke optional TEST preparation", async () => {
+test("live cancellation injects the owner-scoped offer just like staging", async () => {
 	let prepared = 0;
 	const f = fixture({
 		mode: "live",
@@ -917,9 +917,9 @@ test("live cancellation does not invoke optional TEST preparation", async () => 
 		},
 	});
 	await f.service.cancellationPortal("owner", row.id, returnUrl);
-	assert.equal(prepared, 0);
+	assert.equal(prepared, 1);
 	assert.equal(
-		f.params()?.flow_data?.subscription_cancel?.retention,
-		undefined,
+		f.params()?.flow_data?.subscription_cancel?.retention?.coupon_offer?.coupon,
+		"coupon_native",
 	);
 });

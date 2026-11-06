@@ -49,7 +49,8 @@ export async function readBillingPromotions(
 	deps = defaultDeps,
 ): Promise<Record<string, BillingPromotion | undefined>> {
 	const original = await deps.readProductHuntBilling(userId, rows);
-	if (deps.mode() !== "test" || !rows.length) return original;
+	if (!rows.length) return original;
+	const expectedLive = deps.mode() === "live";
 	const knownNativeRows = new Set<string>();
 	const unavailable = (preserveNative: boolean) => ({
 		...original,
@@ -140,6 +141,7 @@ export async function readBillingPromotions(
 			),
 			account.customerId,
 			userId,
+			expectedLive,
 		);
 		if (knownNativeRows.size && isLegacyDiscount(customer.discount))
 			throw new Error("Billing legacy campaign conflict.");
@@ -154,7 +156,7 @@ export async function readBillingPromotions(
 			// Validate an observed owner before a later coupon read can fail.
 			if (
 				sub.id !== row.stripe_subscription_id ||
-				sub.livemode ||
+				sub.livemode !== expectedLive ||
 				stripeObjectId(sub.customer) !== customer.id ||
 				sub.metadata.userId !== userId
 			)
@@ -189,6 +191,7 @@ export async function readBillingPromotions(
 							},
 						},
 						native,
+						expectedLive,
 					);
 				}
 				// Stripe may omit optional coupon scope in embedded discount objects.
@@ -207,6 +210,7 @@ export async function readBillingPromotions(
 					native,
 					Date.now(),
 					coupon,
+					expectedLive,
 				);
 				if (snapshot?.nextPrice && customer.discount)
 					throw new Error(
@@ -218,7 +222,12 @@ export async function readBillingPromotions(
 				if (customer.discount && claim.state === "accepted")
 					original[row.id] = { state: "unavailable" };
 				else {
-					const snapshot = retentionBillingSnapshot(sub, claim, Date.now());
+					const snapshot = retentionBillingSnapshot(
+						sub,
+						claim,
+						Date.now(),
+						expectedLive,
+					);
 					if (snapshot) original[row.id] = snapshot;
 				}
 			} else if (account.grant === "first") {
@@ -235,7 +244,7 @@ export async function readBillingPromotions(
 					discounts.length !== 1 ||
 					first.coupon.percent_off !== 40 ||
 					first.coupon.duration !== "once" ||
-					sub.livemode ||
+					sub.livemode !== expectedLive ||
 					sub.metadata.userId !== userId ||
 					stripeObjectId(sub.customer) !== customer.id ||
 					sub.items.has_more ||

@@ -1,3 +1,4 @@
+import { resolveStripeMode } from "./stripe-env";
 import type Stripe from "stripe";
 import {
 	UNINSTALL_REQUEST as REQUEST,
@@ -19,19 +20,27 @@ export type UninstallBinding = {
 export function uninstallPromotionStatus(
 	code: Stripe.PromotionCode,
 	binding: UninstallBinding,
+	expectedLive = resolveStripeMode() === "live",
 ): "available" | "used" | "inactive" {
 	if (
-		!binding.id || !binding.user_id || !binding.stripe_customer_id ||
+		!binding.id ||
+		!binding.user_id ||
+		!binding.stripe_customer_id ||
 		stripeObjectId(code.customer) !== binding.stripe_customer_id ||
-		code.livemode || code.coupon.id !== binding.coupon_id ||
-		code.max_redemptions !== 1 || code.expires_at !== null ||
-		code.restrictions.first_time_transaction || code.restrictions.minimum_amount ||
+		code.livemode !== expectedLive ||
+		code.coupon.id !== binding.coupon_id ||
+		code.max_redemptions !== 1 ||
+		code.expires_at !== null ||
+		code.restrictions.first_time_transaction ||
+		code.restrictions.minimum_amount ||
 		code.metadata?.userId !== binding.user_id ||
 		code.metadata?.campaignBindingId !== binding.id ||
 		code.metadata?.anidachiCampaign !== UNINSTALL_FIRST_CAMPAIGN ||
 		!Number.isInteger(code.times_redeemed) ||
-		code.times_redeemed < 0 || code.times_redeemed > 1
-	) throw new Error("First-month promotion ownership or terms changed.");
+		code.times_redeemed < 0 ||
+		code.times_redeemed > 1
+	)
+		throw new Error("First-month promotion ownership or terms changed.");
 	if (code.times_redeemed === 1) return "used";
 	return code.active ? "available" : "inactive";
 }

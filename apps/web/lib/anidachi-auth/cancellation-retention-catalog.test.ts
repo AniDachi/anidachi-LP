@@ -238,3 +238,28 @@ test("catalog fails closed on missing, ambiguous, paginated or alternate active 
 		}
 	}
 });
+
+test("LIVE catalog verifies monthly product isolation and rejects TEST prices", async () => {
+	await configured(async (f) => {
+		const keys = ["PLUS", "PRO", "PLUS_YEARLY", "PRO_YEARLY"].map(
+			(k) => `STRIPE_PRICE_ID_${k}_LIVE`,
+		);
+		const saved = keys.map((k) => process.env[k]);
+		process.env.VERCEL_ENV = "production";
+		keys.forEach((k, i) => (process.env[k] = f.prices[i].id));
+		f.prices.forEach((p) => (p.livemode = true));
+		try {
+			assert.deepEqual((await verifyCancellationCatalog(f.stripe)).productIds, [
+				"prod_plus",
+				"prod_pro",
+			]);
+			f.prices[0].livemode = false;
+			await assert.rejects(verifyCancellationCatalog(f.stripe));
+		} finally {
+			keys.forEach((k, i) => {
+				if (saved[i] === undefined) delete process.env[k];
+				else process.env[k] = saved[i];
+			});
+		}
+	});
+});

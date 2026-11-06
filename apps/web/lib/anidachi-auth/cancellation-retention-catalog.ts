@@ -12,13 +12,13 @@ const unavailable = () =>
 
 /**
  * Verify product-scoped coupons cannot discount an annual or alternate price.
- * Read fresh before issuance; no catalog mutation and no LIVE offer support.
+ * Read fresh before issuance in the resolved mode; never mutate the catalog.
  */
 export async function verifyCancellationCatalog(stripe: Stripe): Promise<{
 	productIds: [string, string];
 	monthlyPriceIds: [string, string];
 }> {
-	if (resolveStripeMode() !== "test") throw unavailable();
+	const expectedLive = resolveStripeMode() === "live";
 	const entries = (["monthly", "yearly"] as const).flatMap((period) =>
 		(["plus", "pro"] as const).map((plan) => ({
 			plan,
@@ -38,7 +38,7 @@ export async function verifyCancellationCatalog(stripe: Stripe): Promise<{
 			const verified = verifiedBillingPrice(
 				price,
 				priceId!,
-				false,
+				expectedLive,
 				true,
 				period,
 			);
@@ -74,7 +74,7 @@ export async function verifyCancellationCatalog(stripe: Stripe): Promise<{
 			)
 				throw unavailable();
 			const listed = inventory.data[0];
-			verifiedBillingPrice(listed, price.id, false, true, "monthly");
+			verifiedBillingPrice(listed, price.id, expectedLive, true, "monthly");
 			const listedProduct =
 				typeof listed.product === "string"
 					? listed.product

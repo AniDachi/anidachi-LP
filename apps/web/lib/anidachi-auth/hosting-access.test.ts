@@ -93,6 +93,10 @@ test("entitlements endpoint exposes additive hosting metadata without changing h
 	assert.deepEqual(body.hosting, hosting);
 	assert.equal(body.planCode, "free");
 	assert.equal(body.entitlementsVersion, 1);
+	assert.equal("hostingStatusVersion" in body, false);
+	const capability = new NextRequest(request.url + "?hostingStatusVersion=1");
+	assert.equal((await (await handlers.getEntitlements(capability)).json()).hostingStatusVersion, 1);
+	assert.equal("hostingStatusVersion" in await (await handlers.getAccess(capability)).json(), false);
 	assert.equal(
 		"hosting" in (await (await handlers.getAccess(request)).json()),
 		false,

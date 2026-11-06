@@ -31,7 +31,10 @@ export function createCancellationRetentionService(
 	const isTest = deps.isTest ?? (() => resolveStripeMode() === "test");
 	const enabled =
 		deps.enabled ??
-		(() => process.env.STRIPE_CANCELLATION_RETENTION_ENABLED_TEST === "1");
+		(() =>
+			process.env[
+				`STRIPE_CANCELLATION_RETENTION_ENABLED_${isTest() ? "TEST" : "LIVE"}`
+			] === "1");
 	const catalog =
 		deps.catalog ?? (() => verifyCancellationCatalog(deps.stripe));
 	async function readCoupon(offer: CancellationOffer) {
@@ -41,7 +44,7 @@ export function createCancellationRetentionService(
 				{ expand: ["applies_to"] },
 				REQUEST,
 			);
-			verifyCancellationCoupon(coupon, offer);
+			verifyCancellationCoupon(coupon, offer, !isTest());
 			return coupon;
 		} catch (error) {
 			if (isMissingCancellationCoupon(error)) return null;
@@ -49,7 +52,6 @@ export function createCancellationRetentionService(
 		}
 	}
 	async function reconcile(userId: string): Promise<void> {
-		if (!isTest()) return;
 		const offer = await deps.store.pending(userId);
 		if (!offer) return;
 		if (offer.user_id !== userId || offer.state !== "pending")
@@ -65,12 +67,13 @@ export function createCancellationRetentionService(
 			),
 			offer.stripe_customer_id,
 			userId,
+			!isTest(),
 		);
 		// Stripe TEST clocks can keep an old portal redeemable after real-time
 		// coupon expiry. Establish monotonic provider clock expiry BEFORE the final
 		// zero-redemption read. Clock uncertainty blocks release, never acceptance.
 		const clockId = stripeObjectId(customer.test_clock);
-		if (customer.test_clock != null && !clockId)
+		if (customer.test_clock != null && (!clockId || !isTest()))
 			throw new Error("Cancellation clock ownership unavailable.");
 		let clockAllowsExpiry = !clockId;
 		if (clockId) {
@@ -109,7 +112,6 @@ export function createCancellationRetentionService(
 		customerId: string,
 		subscriptionId: string,
 	): Promise<string | null> {
-		if (!isTest()) return null;
 		await reconcile(userId); // Rollback disables issuance, never accepted-grant reconciliation.
 		if (!enabled()) return null;
 		const account = await deps.store.account(userId);
@@ -132,16 +134,21 @@ export function createCancellationRetentionService(
 			),
 			catalog(),
 		]);
-		const customer = verifyUninstallCustomer(rawCustomer, customerId, userId);
+		const customer = verifyUninstallCustomer(
+			rawCustomer,
+			customerId,
+			userId,
+			!isTest(),
+		);
 		if (
 			sub.id !== subscriptionId ||
-			sub.livemode ||
+			sub.livemode !== !isTest() ||
 			stripeObjectId(sub.customer) !== customerId ||
 			sub.metadata.userId !== userId ||
 			subs.has_more ||
 			subs.data.some(
 				(s) =>
-					s.livemode ||
+					s.livemode !== !isTest() ||
 					stripeObjectId(s.customer) !== customerId ||
 					s.metadata.userId !== userId,
 			)
@@ -179,12 +186,12 @@ export function createCancellationRetentionService(
 			(sub.trial_end && sub.trial_end * 1000 > now())
 		)
 			return null;
-		verifiedBillingPrice(item.price, item.price.id, false, true, "monthly");
+		verifiedBillingPrice(item.price, item.price.id, !isTest(), true, "monthly");
 		if (
 			invoices.has_more ||
 			invoices.data.some(
 				(i) =>
-					i.livemode ||
+					i.livemode !== !isTest() ||
 					stripeObjectId(i.customer) !== customerId ||
 					stripeObjectId(i.parent?.subscription_details?.subscription) !==
 						subscriptionId ||
@@ -246,7 +253,7 @@ export function createCancellationRetentionService(
 				cancellationCouponParams(offer),
 				{ ...REQUEST, idempotencyKey: `cancellation-retention-v1:${offer.id}` },
 			);
-			verifyCancellationCoupon(coupon, offer);
+			verifyCancellationCoupon(coupon, offer, !isTest());
 		}
 		if (
 			coupon.times_redeemed !== 0 ||

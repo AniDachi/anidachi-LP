@@ -9,7 +9,10 @@ import {
 } from "./retention-invoice";
 import { retentionBillingSnapshot } from "./uninstall-billing";
 import { uninstallCampaignConfig } from "./uninstall-config";
-import { ensureUninstallPromotion, type UninstallBinding } from "./uninstall-promotion";
+import {
+	ensureUninstallPromotion,
+	type UninstallBinding,
+} from "./uninstall-promotion";
 import {
 	createUninstallService,
 	type UninstallServiceDeps,
@@ -27,7 +30,7 @@ function price(plan: string, amount: number) {
 	return {
 		id: "price_" + plan,
 		active: true,
-		livemode: false,
+		livemode: process.env.VERCEL_ENV === "production",
 		currency: "usd",
 		unit_amount: amount,
 		type: "recurring",
@@ -41,7 +44,7 @@ function coupon(campaign = UNINSTALL_FIRST_CAMPAIGN) {
 	return {
 		id: "coupon_" + campaign,
 		valid: true,
-		livemode: false,
+		livemode: process.env.VERCEL_ENV === "production",
 		percent_off: 40,
 		amount_off: null,
 		duration: "once",
@@ -54,7 +57,7 @@ function coupon(campaign = UNINSTALL_FIRST_CAMPAIGN) {
 function customer() {
 	return {
 		id: "cus_owner",
-		livemode: false,
+		livemode: process.env.VERCEL_ENV === "production",
 		metadata: { userId },
 		discount: null,
 	} as unknown as Stripe.Customer;
@@ -65,7 +68,7 @@ function subscription() {
 		customer: "cus_owner",
 		metadata: { userId },
 		status: "active",
-		livemode: false,
+		livemode: process.env.VERCEL_ENV === "production",
 		discounts: [],
 		items: {
 			has_more: false,
@@ -86,7 +89,7 @@ function paidInvoice(total = 799) {
 	return {
 		id: "in_paid",
 		customer: "cus_owner",
-		livemode: false,
+		livemode: process.env.VERCEL_ENV === "production",
 		status: "paid",
 		total,
 		parent: { subscription_details: { subscription: "sub_owner" } },
@@ -194,15 +197,27 @@ function fixture() {
 		reserveFirst() {
 			account.grant = "first";
 			account.firstBinding = {
-				id: "binding", user_id: userId, stripe_customer_id: "cus_owner",
-				coupon_id: coupon().id, created_at: new Date(at).toISOString(),
+				id: "binding",
+				user_id: userId,
+				stripe_customer_id: "cus_owner",
+				coupon_id: coupon().id,
+				created_at: new Date(at).toISOString(),
 			};
 			const code = {
-				id: "promo_owner", customer: "cus_owner", coupon: coupon(),
-				max_redemptions: 1, expires_at: null, times_redeemed: 0,
-				active: true, livemode: false,
+				id: "promo_owner",
+				customer: "cus_owner",
+				coupon: coupon(),
+				max_redemptions: 1,
+				expires_at: null,
+				times_redeemed: 0,
+				active: true,
+				livemode: process.env.VERCEL_ENV === "production",
 				restrictions: { first_time_transaction: false },
-				metadata: { userId, campaignBindingId: "binding", anidachiCampaign: UNINSTALL_FIRST_CAMPAIGN },
+				metadata: {
+					userId,
+					campaignBindingId: "binding",
+					anidachiCampaign: UNINSTALL_FIRST_CAMPAIGN,
+				},
 			} as unknown as Stripe.PromotionCode;
 			codes = [code];
 			return code;
@@ -454,42 +469,67 @@ for (const history of ["database", "stripe", "both"] as const)
 		const offer = await f.service.offer(userId);
 		assert.equal(offer.kind, "first_month");
 		if (offer.kind !== "first_month") throw Error("Missing returning offer");
-		for (const price of offer.prices) await f.service.checkout(userId, {
-			expectedOwnerUserId: userId, revision: offer.revision,
-			planCode: price.planCode, expectedPrice: price, requestId: userId,
-		}, "https://anidachi.test");
+		for (const price of offer.prices)
+			await f.service.checkout(
+				userId,
+				{
+					expectedOwnerUserId: userId,
+					revision: offer.revision,
+					planCode: price.planCode,
+					expectedPrice: price,
+					requestId: userId,
+				},
+				"https://anidachi.test",
+			);
 		assert.equal(f.checkoutCalls, 2);
 	});
 test("unused first-month reservation survives ordinary paid history; redemption prevents another offer and checkout", async () => {
 	const f = fixture();
-	f.account.hasPaid = true; f.setInvoices([paidInvoice()]);
+	f.account.hasPaid = true;
+	f.setInvoices([paidInvoice()]);
 	const code = f.reserveFirst();
 	const offer = await f.service.offer(userId);
 	assert.equal(offer.kind, "first_month");
 	if (offer.kind !== "first_month") throw Error("Missing reserved offer");
-	code.times_redeemed = 1; code.active = false;
+	code.times_redeemed = 1;
+	code.active = false;
 	const used = await f.service.offer(userId);
 	assert.equal(used.kind, "disabled");
 	assert.match("reason" in used ? used.reason : "", /already been used/);
-	await assert.rejects(() => f.service.checkout(userId, {
-		expectedOwnerUserId: userId, revision: offer.revision,
-		planCode: "plus", expectedPrice: offer.prices[0], requestId: userId,
-	}, "https://anidachi.test"));
+	await assert.rejects(() =>
+		f.service.checkout(
+			userId,
+			{
+				expectedOwnerUserId: userId,
+				revision: offer.revision,
+				planCode: "plus",
+				expectedPrice: offer.prices[0],
+				requestId: userId,
+			},
+			"https://anidachi.test",
+		),
+	);
 	assert.equal(f.checkoutCalls, 0);
 });
 test("reserved renewal cannot become a new purchase after the subscription ends", async () => {
-	const f = fixture(); f.account.hasPaid = true; f.account.grant = "renewal";
+	const f = fixture();
+	f.account.hasPaid = true;
+	f.account.grant = "renewal";
 	assert.equal((await f.service.offer(userId)).kind, "disabled");
 });
 test("inactive, foreign, changed and missing first promotions never expose a fresh allowance", async () => {
-	const f = fixture(); const code = f.reserveFirst();
+	const f = fixture();
+	const code = f.reserveFirst();
 	code.active = false;
 	assert.equal((await f.service.offer(userId)).kind, "disabled");
-	code.active = true; code.metadata!.userId = "foreign";
+	code.active = true;
+	code.metadata!.userId = "foreign";
 	assert.equal((await f.service.offer(userId)).kind, "unavailable");
-	code.metadata!.userId = userId; code.max_redemptions = 2;
+	code.metadata!.userId = userId;
+	code.max_redemptions = 2;
 	assert.equal((await f.service.offer(userId)).kind, "unavailable");
-	code.max_redemptions = 1; f.account.firstBinding!.coupon_id = "changed";
+	code.max_redemptions = 1;
+	f.account.firstBinding!.coupon_id = "changed";
 	assert.equal((await f.service.offer(userId)).kind, "unavailable");
 	f.account.firstBinding = null;
 	assert.equal((await f.service.offer(userId)).kind, "unavailable");
@@ -717,13 +757,16 @@ for (const [status, expected] of [
 	["incomplete", /payment is incomplete.*finish it/],
 	["paused", /billing is paused.*Review it/],
 	["trialing", /no paid renewal.*Check your subscription details/],
-] as const) test(`${status} explains the billing restriction without offering checkout`, async () => {
-	const f = fixture(); f.paid(); f.s.status = status;
-	const offer = await f.service.offer(userId);
-	assert.equal(offer.kind, "manage");
-	assert.match("reason" in offer ? offer.reason : "", expected);
-	assert.equal(f.checkoutCalls, 0);
-});
+] as const)
+	test(`${status} explains the billing restriction without offering checkout`, async () => {
+		const f = fixture();
+		f.paid();
+		f.s.status = status;
+		const offer = await f.service.offer(userId);
+		assert.equal(offer.kind, "manage");
+		assert.match("reason" in offer ? offer.reason : "", expected);
+		assert.equal(f.checkoutCalls, 0);
+	});
 test("multiple/foreign subscriptions and missing catalog fail closed", async () => {
 	const f = fixture();
 	f.setSubs([f.s, { ...f.s, id: "sub_two" }]);
@@ -782,7 +825,7 @@ function invoiceFixture() {
 	const invoice = {
 		id: "in_target",
 		customer: "cus_owner",
-		livemode: false,
+		livemode: process.env.VERCEL_ENV === "production",
 		status: "draft",
 		currency: "usd",
 		billing_reason: "subscription_cycle",
@@ -1053,73 +1096,74 @@ for (const [label, mutate] of [
 			"display exclusion does not release the durable promise",
 		);
 	});
-for (const hasPaid of [false, true]) test(`new-subscription promotion stays account-bound and single-use (previously paid: ${hasPaid})`, async () => {
-	const catalog = { plus: price("plus", 799), pro: price("pro", 1499) };
-	let codes: Stripe.PromotionCode[] = [];
-	let writes = 0;
-	const binding = {
-		id: "binding",
-		user_id: userId,
-		stripe_customer_id: "cus_owner",
-		coupon_id: coupon().id,
-		created_at: new Date(at).toISOString(),
-	};
-	const stripe = {
-		coupons: { retrieve: async () => coupon() },
-		customers: { retrieve: async () => customer() },
-		invoices: { list: async () => list(hasPaid ? [paidInvoice()] : []) },
-		promotionCodes: {
-			list: async () => list(codes),
-			create: async (
-				params: Stripe.PromotionCodeCreateParams,
-				options: Stripe.RequestOptions,
-			) => {
-				writes++;
-				assert.equal(options.idempotencyKey, "uninstall-first-promo:binding");
-				assert.equal(params.code, undefined);
-				const code = {
-					...params,
-					id: "promo_owner",
-					coupon: coupon(),
-					active: true,
-					livemode: false,
-					expires_at: null,
-					times_redeemed: 0,
-					restrictions: { first_time_transaction: false },
-				} as unknown as Stripe.PromotionCode;
-				codes = [code];
-				return code;
+for (const hasPaid of [false, true])
+	test(`new-subscription promotion stays account-bound and single-use (previously paid: ${hasPaid})`, async () => {
+		const catalog = { plus: price("plus", 799), pro: price("pro", 1499) };
+		let codes: Stripe.PromotionCode[] = [];
+		let writes = 0;
+		const binding = {
+			id: "binding",
+			user_id: userId,
+			stripe_customer_id: "cus_owner",
+			coupon_id: coupon().id,
+			created_at: new Date(at).toISOString(),
+		};
+		const stripe = {
+			coupons: { retrieve: async () => coupon() },
+			customers: { retrieve: async () => customer() },
+			invoices: { list: async () => list(hasPaid ? [paidInvoice()] : []) },
+			promotionCodes: {
+				list: async () => list(codes),
+				create: async (
+					params: Stripe.PromotionCodeCreateParams,
+					options: Stripe.RequestOptions,
+				) => {
+					writes++;
+					assert.equal(options.idempotencyKey, "uninstall-first-promo:binding");
+					assert.equal(params.code, undefined);
+					const code = {
+						...params,
+						id: "promo_owner",
+						coupon: coupon(),
+						active: true,
+						livemode: process.env.VERCEL_ENV === "production",
+						expires_at: null,
+						times_redeemed: 0,
+						restrictions: { first_time_transaction: false },
+					} as unknown as Stripe.PromotionCode;
+					codes = [code];
+					return code;
+				},
 			},
-		},
-	} as unknown as Stripe;
-	const deps = {
-		stripe,
-		catalog,
-		now: () => at,
-		accountHistory: async () => ({
-			customerIds: ["cus_owner"],
-			hasPaid,
-		}),
-		claim: async () => binding,
-	};
-	const input = { userId, customerId: "cus_owner", couponId: coupon().id };
-	assert.equal(await ensureUninstallPromotion(input, deps), "promo_owner");
-	assert.equal(await ensureUninstallPromotion(input, deps), "promo_owner");
-	assert.equal(writes, 1);
-	codes[0].times_redeemed = 1;
-	await assert.rejects(
-		() => ensureUninstallPromotion(input, deps),
-		/unavailable/,
-	);
-	codes = [];
-	binding.created_at = new Date(at - 24 * 3600_000).toISOString();
-	await assert.rejects(
-		() => ensureUninstallPromotion(input, deps),
-		/reconciliation/,
-	);
-	assert.equal(writes, 1);
-});
-test("campaign config ignores unsuffixed and LIVE values and never enables production", () => {
+		} as unknown as Stripe;
+		const deps = {
+			stripe,
+			catalog,
+			now: () => at,
+			accountHistory: async () => ({
+				customerIds: ["cus_owner"],
+				hasPaid,
+			}),
+			claim: async () => binding,
+		};
+		const input = { userId, customerId: "cus_owner", couponId: coupon().id };
+		assert.equal(await ensureUninstallPromotion(input, deps), "promo_owner");
+		assert.equal(await ensureUninstallPromotion(input, deps), "promo_owner");
+		assert.equal(writes, 1);
+		codes[0].times_redeemed = 1;
+		await assert.rejects(
+			() => ensureUninstallPromotion(input, deps),
+			/unavailable/,
+		);
+		codes = [];
+		binding.created_at = new Date(at - 24 * 3600_000).toISOString();
+		await assert.rejects(
+			() => ensureUninstallPromotion(input, deps),
+			/reconciliation/,
+		);
+		assert.equal(writes, 1);
+	});
+test("campaign config requires the exact mode's flag and coupon without unsuffixed fallback", () => {
 	const keys = [
 		"VERCEL_ENV",
 		"STRIPE_UNINSTALL_FIRST_ENABLED_TEST",
@@ -1149,4 +1193,72 @@ test("accepted native cancellation allowance prevents first offer after subscrip
 	f.account.grant = "cancellation";
 	const offer = await createUninstallService(f.deps).offer(userId);
 	assert.equal(offer.kind, "disabled");
+});
+
+test("LIVE uninstall offers, restoration and invoice fulfillment preserve the lifetime monthly promise", async () => {
+	const old = process.env.VERCEL_ENV;
+	process.env.VERCEL_ENV = "production";
+	try {
+		const free = fixture();
+		assert.equal((await free.service.offer(userId)).kind, "first_month");
+		free.reserveFirst();
+		assert.equal((await free.service.offer(userId)).kind, "first_month");
+		const paid = fixture();
+		paid.paid();
+		const offer = await paid.service.offer(userId);
+		assert.equal(offer.kind, "renewal");
+		if (offer.kind !== "renewal") throw Error("renewal required");
+		await paid.service.claim(userId, {
+			expectedOwnerUserId: userId,
+			revision: offer.revision,
+		});
+		assert.equal((await paid.service.offer(userId)).kind, "claimed");
+		assert.equal(
+			retentionBillingSnapshot(paid.s, paid.claim!, at)?.nextPrice?.unitAmount,
+			479,
+		);
+		const f = invoiceFixture();
+		await fulfillRetentionInvoice(structuredClone(f.invoice), f.deps);
+		await fulfillRetentionInvoice(structuredClone(f.invoice), f.deps);
+		assert.equal(f.writes, 1);
+		assert.equal(f.c.state, "applied");
+		const wrong = invoiceFixture();
+		wrong.invoice.livemode = false;
+		await fulfillRetentionInvoice(wrong.invoice, wrong.deps);
+		assert.equal(wrong.writes, 0);
+	} finally {
+		if (old === undefined) delete process.env.VERCEL_ENV;
+		else process.env.VERCEL_ENV = old;
+	}
+});
+
+test("LIVE uninstall campaign requires its own exact opt-in and coupon IDs", () => {
+	const settings: Record<string, string> = {
+		VERCEL_ENV: "production",
+		STRIPE_UNINSTALL_FIRST_ENABLED_TEST: "true",
+		STRIPE_UNINSTALL_FIRST_COUPON_ID_TEST: "test_coupon",
+		STRIPE_UNINSTALL_FIRST_ENABLED: "true",
+		STRIPE_UNINSTALL_FIRST_COUPON_ID: "fallback_coupon",
+		STRIPE_UNINSTALL_FIRST_ENABLED_LIVE: "true",
+		STRIPE_UNINSTALL_FIRST_COUPON_ID_LIVE: "live_coupon",
+		STRIPE_UNINSTALL_RENEWAL_ENABLED_LIVE: "true",
+		STRIPE_UNINSTALL_RENEWAL_COUPON_ID_LIVE: "live_renewal",
+	};
+	const saved = new Map(Object.keys(settings).map((k) => [k, process.env[k]]));
+	Object.assign(process.env, settings);
+	try {
+		assert.deepEqual(uninstallCampaignConfig(), {
+			firstCoupon: "live_coupon",
+			renewalCoupon: "live_renewal",
+		});
+		delete process.env.STRIPE_UNINSTALL_FIRST_ENABLED_LIVE;
+		assert.equal(uninstallCampaignConfig().firstCoupon, null);
+		process.env.STRIPE_UNINSTALL_FIRST_ENABLED_LIVE = "true";
+		delete process.env.STRIPE_UNINSTALL_FIRST_COUPON_ID_LIVE;
+		assert.equal(uninstallCampaignConfig().firstCoupon, null);
+	} finally {
+		for (const [k, v] of saved)
+			if (v === undefined) delete process.env[k];
+			else process.env[k] = v;
+	}
 });

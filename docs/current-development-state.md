@@ -1,5 +1,49 @@
 # Current Development State
 
+## Free20 Store candidate preparation: November 6, 2026
+
+The owner authorized the remaining release preparation and a production-channel
+review ZIP from accepted, frozen staging, while production stays unchanged until
+Store approval and an explicit launch decision. The highest uploaded version is
+owner-confirmed **0.1.4**; the candidate is **0.1.5**. This supersedes the narrower
+November 5 ZIP restriction below, not the main/LIVE/Store publication boundaries.
+Use the [execution plan](superpowers/plans/2026-11-06-free20-store-release-preparation.md)
+and [cutover runbook](releases/free20/production-preparation-2026-11-06.md).
+
+Preparation starts at staging `dc988034df904157cf0bbb9e29bbfe9d41e82a04` (#521),
+after the website, invitation/friends, compact welcome and homepage demo work.
+Main remains `9da93cd9891b6155051fc550957635c089fc8f3a`. The full tree diff is 504
+files and ten migrations. Provider reads confirm 93 staging versus 83 production
+migrations, Free20/abuse enabled only on staging, and the unchanged production
+Worker. Final delivery/build SHAs and hashes belong in the preparation PR and
+artifact receipt; the base SHA is not a claim about a later build.
+
+Release audit found TEST-only retention gates in the otherwise complete staging
+flow. The preparation makes uninstall/cancellation issuance, restoration, invoice
+fulfillment, billing display and the actual Cancel entry point mode-aware, with
+strict object/owner checks and independent exact `_LIVE` opt-ins. LIVE remains
+off; accepted obligations continue when new issuance is disabled. No pricing,
+lifetime-discount rule, paid subscription or billing-period restriction changes.
+The available Stripe connectors expose only Sandbox; LIVE catalog/webhook proof
+is still required before enabling production offers.
+
+New extension compatibility also needed a bounded old-server read: current main
+lacks `/api/me/hosting-status`. Generic 404 now requires a valid authenticated,
+same-owner legacy entitlements contract; new web's opt-in capability marker and a
+same-login support latch prevent downgrade after Free20 support is confirmed.
+No error grants quota or skips server admission. The compact welcome's obsolete
+privacy claim was removed without changing recording preferences or collection.
+
+Preparation evidence: web 1,774 passed with six existing skips; extension 2,861
+passed plus the later focused concurrency regression; API 329, protocol 285,
+Worker runtime 182, room harness 39/39, and all-plane type checks passed. A fresh
+isolated SQL fixture passed 2,190 assertions across 57 suites after current
+post-October-31 migrations. These counts are separate suites, not a combined
+number of production scenarios. Independent review found and fixed the LIVE
+Cancel entry gate and a concurrent compatibility-response downgrade.
+Authenticated loaded-artifact, two-user, actual Store update and LIVE purchase
+acceptance remain separate; do not infer them from this automated evidence.
+
 ## Free20 release preparation: November 5, 2026
 
 The owner requested an updated plan and careful preparation for a production

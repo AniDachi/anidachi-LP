@@ -9,7 +9,7 @@ import { UNINSTALL_RENEWAL_CAMPAIGN } from "./uninstall-stripe";
 import { cancellationCouponParams } from "./cancellation-retention-stripe";
 import { readBillingPromotions } from "./uninstall-billing-server";
 
-function fixture(accepted = false) {
+function fixture(accepted = false, live = false) {
 	const row = {
 		id: "local",
 		user_id: "owner",
@@ -35,7 +35,7 @@ function fixture(accepted = false) {
 	const coupon = {
 		...cancellationCouponParams(offer),
 		id: offer.coupon_id,
-		livemode: false,
+		livemode: live,
 		amount_off: null,
 		currency: null,
 		duration_in_months: null,
@@ -46,7 +46,7 @@ function fixture(accepted = false) {
 		id: "sub_owner",
 		customer: "cus_owner",
 		metadata: { userId: "owner" },
-		livemode: false,
+		livemode: live,
 		status: "active",
 		discounts: accepted ? [{ coupon }] : [],
 		items: {
@@ -77,7 +77,7 @@ function fixture(accepted = false) {
 	let reads = 0;
 	const deps: NonNullable<Parameters<typeof readBillingPromotions>[2]> = {
 		readProductHuntBilling: async () => ({}),
-		mode: () => "test",
+		mode: () => (live ? "live" : "test"),
 		readClaim: async () => null,
 		readAccount: async (userId, options) => {
 			assert.equal(userId, "owner");
@@ -104,7 +104,7 @@ function fixture(accepted = false) {
 				customers: {
 					retrieve: async () => ({
 						id: "cus_owner",
-						livemode: false,
+						livemode: live,
 						metadata: { userId: "owner" },
 					}),
 				},
@@ -321,7 +321,9 @@ async function attachPartialNativeCoupon(
 		expand: ["applies_to"],
 	});
 	delete coupon.applies_to;
-	f.sub.discounts = [{ id: "di_native", coupon }] as unknown as Stripe.Discount[];
+	f.sub.discounts = [
+		{ id: "di_native", coupon },
+	] as unknown as Stripe.Discount[];
 	return coupon;
 }
 const unavailableProvider = async () => {
@@ -418,4 +420,11 @@ test("observed legacy discounts and invalid native shape remain blocked before l
 	shape.sub.items.has_more = true;
 	shape.stripe.coupons.retrieve = unavailableProvider;
 	assert.deepEqual((await shape.read()).local, { state: "unavailable" });
+});
+
+test("LIVE billing displays accepted monthly cancellation discount and rejects TEST subscription", async () => {
+	const f = fixture(true, true);
+	assert.equal((await f.read()).local?.nextPrice?.unitAmount, 479);
+	f.sub.livemode = false;
+	assert.equal((await f.read()).local?.state, "unavailable");
 });

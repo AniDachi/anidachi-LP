@@ -15,7 +15,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 	let pending: CancellationOffer | null = null;
 	let grant = false;
 	let enabled = true;
-	let testMode = true;
+	let testMode = process.env.VERCEL_ENV !== "production";
 	let missing = true;
 	let readFailure = false;
 	let delayRead = 0;
@@ -32,7 +32,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 		id: "price_plus",
 		object: "price",
 		active: true,
-		livemode: false,
+		livemode: !testMode,
 		type: "recurring",
 		currency: "usd",
 		unit_amount: 799,
@@ -43,7 +43,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 	};
 	const sub = {
 		id: "sub_1",
-		livemode: false,
+		livemode: !testMode,
 		customer: "cus_1",
 		metadata: { userId: "user_1" },
 		status: "active",
@@ -74,7 +74,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 	const invoice = {
 		id: "in_paid",
 		status: "paid",
-		livemode: false,
+		livemode: !testMode,
 		total: 799,
 		customer: "cus_1",
 		parent: { subscription_details: { subscription: "sub_1" } },
@@ -120,7 +120,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 	};
 	const customer = {
 		id: "cus_1",
-		livemode: false,
+		livemode: !testMode,
 		metadata: { userId: "user_1" },
 		discount: null,
 		test_clock: null as string | null,
@@ -165,7 +165,7 @@ function fixture(options: Partial<CancellationRetentionDeps> = {}) {
 					...input,
 					object: "coupon",
 					id: input.id!,
-					livemode: false,
+					livemode: !testMode,
 					amount_off: null,
 					currency: null,
 					duration_in_months: null,
@@ -448,12 +448,12 @@ test("TEST issuance gate uses only exact suffixed value and never LIVE or unsuff
 	}
 });
 
-test("live mode never reads pending state or reconciles TEST coupons", async () => {
+test("LIVE reconciliation rejects TEST ownership without consuming the grant", async () => {
 	const f = fixture();
 	await prepare(f);
 	f.coupon.times_redeemed = 1;
 	f.live();
-	await f.service.reconcile("user_1");
+	await assert.rejects(f.service.reconcile("user_1"), /ownership/);
 	assert.equal(f.grant, false);
 	assert.ok(f.pending);
 });
@@ -562,4 +562,24 @@ test("customer and item discounts each prevent native discount stacking", async 
 	itemDiscount.sub.items.data[0].discounts = ["di_item"];
 	assert.equal(await prepare(itemDiscount), null);
 	assert.equal(itemDiscount.writes.length, 0);
+});
+
+test("LIVE cancellation issues monthly coupon and reconciles acceptance with issuance disabled", async () => {
+	const old = process.env.VERCEL_ENV;
+	process.env.VERCEL_ENV = "production";
+	try {
+		const f = fixture();
+		assert.ok(await prepare(f));
+		assert.equal(f.coupon.livemode, true);
+		assert.equal(f.writes.length, 1);
+		f.disable();
+		f.coupon.times_redeemed = 1;
+		await f.service.reconcile("user_1");
+		assert.equal(f.grant, true);
+		assert.equal(await prepare(f), null);
+		assert.equal(f.writes.length, 1);
+	} finally {
+		if (old === undefined) delete process.env.VERCEL_ENV;
+		else process.env.VERCEL_ENV = old;
+	}
 });

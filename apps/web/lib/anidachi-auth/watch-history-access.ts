@@ -73,6 +73,10 @@ export function createAccountAccessHandlers(
 			const body = metadata
 				? {
 						entitlementsVersion: 1,
+						// Endpoint capability, not the Free20 activation state. Opt-in
+						// keeps existing strict entitlement consumers unchanged.
+						...(request.nextUrl.searchParams.get("hostingStatusVersion") === "1"
+							? { hostingStatusVersion: 1 } : {}),
 						ownerUserId: session.userId,
 						serverTime: result.history.serverTime,
 						planCode: result.policy.planCode,

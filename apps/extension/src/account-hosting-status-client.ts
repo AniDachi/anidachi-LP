@@ -3,6 +3,7 @@ import { ACCOUNT_HOSTING_OWNER_HEADER, acceptAccountHostingStatus, type AccountH
 import { getStoredAuthTokens, isSameExtensionAuthSession } from "./auth-tokens";
 import { refreshExtensionSession } from "./auth-client";
 import { WEB_HTTP_BASE } from "./constants";
+import { HostingAccountAccessSchema } from "./hosting-access-client";
 
 const TYPE = "ANIDACHI_ACCOUNT_HOSTING_STATUS";
 type Message = { type: typeof TYPE; ownerUserId: string; fresh?: boolean };
@@ -16,6 +17,9 @@ type Dependencies = { getSession: typeof getStoredAuthTokens; refresh: typeof re
 const defaults: Dependencies = { getSession: getStoredAuthTokens, refresh: refreshExtensionSession };
 type Result = ({ ok: true } & AccountHostingRead) | { ok: false };
 const pending = new WeakMap<typeof defaults, Map<string, Promise<Result>>>();
+const supportedLogin = new WeakMap<Dependencies, string>();
+const loginKey = (session: NonNullable<Awaited<ReturnType<typeof getStoredAuthTokens>>>) =>
+  JSON.stringify([session.user.id, session.authSessionId ?? [session.authRevision, session.accessToken, session.refreshToken]]);
 
 export async function handleAccountHostingStatusMessage(message: Message, dependencies = defaults): Promise<Result> {
   const session = await dependencies.getSession().catch(() => null);
@@ -40,12 +44,11 @@ async function load(message: Message, dependencies: typeof defaults, initial: No
   const read = async (): Promise<Result> => {
     try {
       let session = initial;
-      const current = async () => {
-        const stored = await dependencies.getSession();
-        return !controller.signal.aborted && (dependencies.request && session.authSessionId
+      const isCurrent = (stored: Awaited<ReturnType<typeof getStoredAuthTokens>>) =>
+        !controller.signal.aborted && (dependencies.request && session.authSessionId
           ? stored?.user.id === session.user.id && stored.authSessionId === session.authSessionId
           : isSameExtensionAuthSession(session, stored));
-      };
+      const current = async () => isCurrent(await dependencies.getSession());
       const fetchStatus = () => (dependencies.request ?? fetch)(new URL("/api/me/hosting-status", WEB_HTTP_BASE), {
         headers: { Authorization: `Bearer ${session.accessToken}`, [ACCOUNT_HOSTING_OWNER_HEADER]: message.ownerUserId },
         credentials: "omit", cache: "no-store", redirect: "error", signal: controller.signal,
@@ -62,13 +65,34 @@ async function load(message: Message, dependencies: typeof defaults, initial: No
         response = await fetchStatus();
       }
       if (controller.signal.aborted || (response.status !== 200 && response.status !== 404)) return failure;
-      const body: unknown = await response.json();
+      const body: unknown = await response.json().catch(() => null);
       if (!(await current())) return failure;
       if (response.status === 404) {
-        return body && typeof body === "object" && "code" in body && body.code === "FREE20_DISABLED"
+        if (body && typeof body === "object" && "code" in body && body.code === "FREE20_DISABLED") {
+          supportedLogin.set(dependencies, loginKey(session));
+          return { ok: true, mode: "legacy" };
+        }
+        if (supportedLogin.get(dependencies) === loginKey(session)) return failure;
+        // The released backend predates this endpoint. A 404 alone is never
+        // authority: require its authenticated, owner-bound hosting contract.
+        // New servers advertise the endpoint independently of activation, so a
+        // missing/broken route there cannot downgrade to the legacy display.
+        const stored = await dependencies.getSession();
+        if (!stored || !isCurrent(stored)) return failure;
+        session = stored; // The background transport may have rotated its token.
+        const legacyResponse = await (dependencies.request ?? fetch)(new URL("/api/me/entitlements?hostingStatusVersion=1", WEB_HTTP_BASE), {
+          headers: { Authorization: `Bearer ${session.accessToken}`, [ACCOUNT_HOSTING_OWNER_HEADER]: message.ownerUserId, "x-anidachi-history-owner": message.ownerUserId },
+          credentials: "omit", cache: "no-store", redirect: "error", signal: controller.signal,
+        });
+        if (legacyResponse.status !== 200) return failure;
+        const legacyBody: unknown = await legacyResponse.json();
+        if (!(await current()) || !legacyBody || typeof legacyBody !== "object" || "hostingStatusVersion" in legacyBody) return failure;
+        const legacy = HostingAccountAccessSchema.safeParse(legacyBody);
+        return supportedLogin.get(dependencies) !== loginKey(session) && legacy.success && legacy.data.ownerUserId === message.ownerUserId && legacy.data.hosting
           ? { ok: true, mode: "legacy" } : failure;
       }
       const status = acceptAccountHostingStatus(message.ownerUserId, body);
+      if (status) supportedLogin.set(dependencies, loginKey(session));
       return status ? { ok: true, mode: "free20", status } : failure;
     } catch { return failure; }
   };
