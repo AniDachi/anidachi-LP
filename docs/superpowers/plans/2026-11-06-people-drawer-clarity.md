@@ -35,9 +35,13 @@ The implementation choice is the existing dialog with one explicit copy action.
   Preserve existing group selection, stable retry ID and conflict tests.
 - [x] Inspect actual components in the local fixture: populated/empty lists,
   copy/re-copy, creation/editing and narrow width.
-- [ ] Run extension typecheck/tests, dev check, review and Graphify refresh.
-- [ ] Build/validate the narrow staging artifact; back up and refresh the same
-  tester folders and ZIPs. Do not push or deploy this local block automatically.
+- [x] Run extension typecheck/tests, dev check, review and Graphify refresh.
+- [x] Build/validate the narrow staging artifact; back up and refresh the same
+  tester folders and ZIPs.
+
+On November 6 the owner authorized a complete review followed by a staging PR
+and merge when checks pass. Production promotion remains separate. The release
+PR and local delivery receipt record the deployed commit and artifact identity.
 
 Rollback: restore the prior tester artifact or revert this local change.
 
@@ -45,5 +49,5 @@ Local verification: extension typecheck and 169 files / 2838 tests pass; the
 independent source review found no actionable issues. Actual-component fixture
 was inspected at 392 and 320 pixels, including a successful local group save and
 reopening with the selected friends intact. This is fixture evidence, not real
-two-account friend acceptance. Delivery evidence will be recorded in
+two-account friend acceptance. Delivery evidence is recorded in
 `artifacts/people-clarity-20261106/` (ignored, local only).

@@ -79,7 +79,7 @@ client only confirms success when the server returns an accepted friendship and
 continues to send the displayed account's owner header. Changes to this web page
 require a web deployment; updating the extension folder alone does not ship them.
 
-## Toolbar Inbox follow-up (local, November 6)
+## Toolbar Inbox follow-up (November 6)
 
 The toolbar drawer keeps live account-cache subscriptions and the existing
 background push reconciliation. Opening Inbox, returning focus/visibility, or
@@ -112,15 +112,17 @@ Inbox and People. Durable cache contents and counters are never guessed locally.
 After successful acceptance, the join destination opens before the refresh;
 opening failure remains retryable. Duplicate actions share the existing lock,
 and late old-account results cannot open a room or change another account's UI.
-This follow-up is local until a separate staging PR is accepted.
+This follow-up is included in the owner-authorized staging review and delivery.
 
-## Toolbar People clarity (local, November 6)
+## Toolbar People clarity (November 6)
 
 Friends uses Add friend, and Groups uses Create group. Empty lists present one
 central action without empty search or a redundant zero count. Nonempty lists
 retain search, existing row actions and the Friends / Groups switch.
 
-Add friend keeps a short one-person explanation and Copy invite link. That
+Add friend keeps a short one-person explanation and Copy link (accessible name:
+Copy invite link). Confirmation replaces that button label with Copied without
+a duplicate message beneath it. That
 explicit click creates and copies the link in one operation; opening the dialog
 alone does not create one. A valid link is reused, expiry is checked at click,
 and New link creates a replacement for another friend without silently copying
@@ -130,7 +132,7 @@ are locked, and late old-account results cannot reach the clipboard or dialog.
 The group dialog keeps name and friend selection, a selected count, and distinct
 Create group / Save changes actions. Initial focus goes to the name. Private-list
 semantics, empty groups, 100-member limit, draft retention, conflict/retry handling
-and deletion confirmation are unchanged. This is a local UI change with no
+and deletion confirmation are unchanged. This is a UI change with no
 server migration or new permissions; see the [follow-up plan](superpowers/plans/2026-11-06-people-drawer-clarity.md).
 
 ## Validation and release boundary
@@ -147,8 +149,18 @@ No media, Free20 accounting, protocol, Worker or database behavior changes in
 this block. The real-WebRTC harness is not required for this UI-only integration;
 the existing signaling harness and extension regressions cover the affected
 boundary. After loading the refreshed staging folder, check actual friend-link
-acceptance and room invitation delivery with two accounts. Before merging, record
-that result separately from source, unit and local visual evidence.
+acceptance and room invitation delivery with two accounts. Record that result
+separately from source, unit and local visual evidence before production promotion.
 
-Rollback is the prior reviewed extension artifact; no database rollback or
-server flag change is needed.
+The owner authorized staging delivery on November 6 after reviewing the local
+UI. Release checks passed: web typecheck, 1765 web tests (six optional history
+RPC/evidence cases skipped), extension typecheck, 169 files / 2838 extension
+tests, 39 signaling-harness scenarios and `pnpm dev:check`. Actual-component
+preview evidence covers People, group selection and saving, Inbox, capsule
+invitations and the web acceptance page. This does not claim a real two-account
+staging session. The release PR and ignored local delivery receipt carry CI,
+deployment, artifact and independent-review results; this document does not
+predeclare the staging merge or a production release.
+
+Rollback is the prior reviewed extension artifact plus a revert of this web
+page change through staging. No database rollback or server flag change is needed.
