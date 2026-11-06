@@ -87,6 +87,13 @@ regaining connectivity also rereads the authoritative inbox using a fresh
 session. Concurrent events and reads within five seconds coalesce; no polling,
 new permission, API, or notification subscription behavior is introduced.
 
+The Inbox tab shows a compact orange count of unseen invitations from the same
+account-owned server snapshot used by the toolbar icon. It stays until the
+existing seen acknowledgement updates that snapshot, including when Settings
+covers Inbox. Zero is hidden; the visual count is capped at 99, with the full
+count in the accessible tab name. The label and underline stay in place when
+the count changes. Switching accounts cannot retain the previous owner's count.
+
 Cached cards stay in place during refresh, with only the refresh icon spinning.
 An actual read failure retains the list and a concise Retry message; stale
 mutation controls remain disabled. Missed invitations say Room ended and have

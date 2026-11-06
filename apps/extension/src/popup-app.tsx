@@ -1,3 +1,4 @@
+import { PopupNavigation } from "./popup-navigation";
 import { PopupRetainedPanel, usePopupNavigation } from "./use-popup-navigation";
 import { forgetPopupView } from "./popup-view-state";
 import {
@@ -93,7 +94,7 @@ import {
   setCachedSocialSnapshotForUser,
 } from "./social-snapshot-cache";
 
-export type PopupTab = "resources" | "friends" | "inbox";
+export { PopupNavigation, type PopupTab } from "./popup-navigation";
 
 type SocialPanelData = SocialSnapshot;
 
@@ -934,7 +935,8 @@ export function PopupApp() {
         onClose={() => setSettingsOpen(false)} />}
 
       <div hidden={settingsOpen}>
-      <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
+      <PopupNavigation activeTab={activeTab} onSelect={setActiveTab}
+        inboxUnseenCount={accountUser?.id && inboxState.ownerUserId === accountUser.id ? popupInboxBadgeCount(inboxModel) : 0} />
 
       <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
         <PopupWelcome active={activeTab === "resources" && !settingsOpen && !authChecking}
@@ -984,56 +986,6 @@ export function PopupApp() {
   );
 }
 
-export function PopupNavigation({
-  activeTab,
-  onSelect,
-}: {
-  activeTab: PopupTab;
-  onSelect: (tab: PopupTab) => void;
-}) {
-  return (
-    <div className="popup-tabs" role="tablist" aria-label="Popup sections">
-      <PopupNavigationButton
-        active={activeTab === "resources"}
-        label="Watch"
-        onClick={() => onSelect("resources")}
-      />
-      <PopupNavigationButton
-        active={activeTab === "friends"}
-        label="People"
-        onClick={() => onSelect("friends")}
-      />
-      <PopupNavigationButton
-        active={activeTab === "inbox"}
-        label="Inbox"
-        onClick={() => onSelect("inbox")}
-      />
-    </div>
-  );
-}
-
-function PopupNavigationButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-selected={active}
-      className="popup-tab"
-      data-active={active}
-      role="tab"
-      type="button"
-      onClick={onClick}
-    >
-      <span className="popup-tab-label">{label}</span>
-    </button>
-  );
-}
 
 function isPopupPeopleActionKey(value: string | null): value is PopupPeopleActionKey {
   return value === "create-friend-link" || Boolean(value && ["save-group:", "delete-group:", "remove-friend:"].some((prefix) => value.startsWith(prefix)));

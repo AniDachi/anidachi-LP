@@ -436,7 +436,7 @@ describe("Popup People integration boundaries", () => {
     }
   });
 
-  it("renders clean Watch, People, and Inbox navigation without counters", async () => {
+  it("renders clean Watch, People, and Inbox navigation without a counter when nothing is unread", async () => {
     const onSelect = vi.fn();
     const view = await renderElement(<PopupNavigation activeTab="resources" onSelect={onSelect} />);
 

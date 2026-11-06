@@ -1572,7 +1572,7 @@
         "confidence": "EXTRACTED",
         "confidence_score": 1.0,
         "source_file": "docs/extension-capsule-friends.md",
-        "source_location": "lines 110-125",
+        "source_location": "lines 117-132",
         "_origin": "semantic"
       }
     ]
@@ -7506,19 +7506,6 @@
       "source_location": "L1196"
     },
     {
-      "id": "apps_extension_src_popup_app_popuptab",
-      "label": "PopupTab",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "popup-watch-drawer.tsx",
-      "file_type": "code",
-      "norm_label": "popuptab",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L96"
-    },
-    {
       "id": "apps_extension_src_popup_view_state_historyview",
       "label": "HistoryView",
       "_callable": true,
@@ -11276,7 +11263,7 @@
       "file_type": "code",
       "norm_label": "accountinboxstate",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L113"
+      "source_location": "L114"
     },
     {
       "id": "apps_extension_src_popup_app_authsessionstate",
@@ -11289,7 +11276,7 @@
       "file_type": "code",
       "norm_label": "authsessionstate",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L115"
+      "source_location": "L116"
     },
     {
       "id": "apps_extension_src_popup_app_popupnotice",
@@ -11302,7 +11289,7 @@
       "file_type": "code",
       "norm_label": "popupnotice",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L105"
+      "source_location": "L106"
     },
     {
       "id": "apps_extension_src_popup_app_popupsocialactionkey",
@@ -11315,7 +11302,7 @@
       "file_type": "code",
       "norm_label": "popupsocialactionkey",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L100"
+      "source_location": "L101"
     },
     {
       "id": "apps_extension_src_popup_app_socialpaneldata",
@@ -11328,7 +11315,7 @@
       "file_type": "code",
       "norm_label": "socialpaneldata",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L98"
+      "source_location": "L99"
     },
     {
       "id": "apps_extension_src_popup_app_socialpanelstate",
@@ -11341,7 +11328,7 @@
       "file_type": "code",
       "norm_label": "socialpanelstate",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L111"
+      "source_location": "L112"
     },
     {
       "id": "apps_extension_src_room_invite_notifications_roominvitenotificationstatus",
@@ -59948,7 +59935,7 @@
       "file_type": "code",
       "norm_label": "getinitials()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1062"
+      "source_location": "L1014"
     },
     {
       "id": "apps_extension_src_popup_app_ispopuppeopleactionkey",
@@ -59960,7 +59947,7 @@
       "file_type": "code",
       "norm_label": "ispopuppeopleactionkey()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1038"
+      "source_location": "L990"
     },
     {
       "id": "apps_extension_src_popup_app_ispopuppeopleactionnotice",
@@ -59972,7 +59959,7 @@
       "file_type": "code",
       "norm_label": "ispopuppeopleactionnotice()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1042"
+      "source_location": "L994"
     },
     {
       "id": "apps_extension_src_popup_app_mapsocialstatetopeoplepresentation",
@@ -59984,7 +59971,7 @@
       "file_type": "code",
       "norm_label": "mapsocialstatetopeoplepresentation()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L121"
+      "source_location": "L122"
     },
     {
       "id": "apps_extension_src_popup_app_popupapp",
@@ -59996,7 +59983,7 @@
       "file_type": "code",
       "norm_label": "popupapp()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L159"
+      "source_location": "L160"
     },
     {
       "id": "apps_extension_src_popup_app_popupinboxbadgecount",
@@ -60008,31 +59995,7 @@
       "file_type": "code",
       "norm_label": "popupinboxbadgecount()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L144"
-    },
-    {
-      "id": "apps_extension_src_popup_app_popupnavigation",
-      "label": "PopupNavigation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "popup-app.tsx",
-      "file_type": "code",
-      "norm_label": "popupnavigation()",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L987"
-    },
-    {
-      "id": "apps_extension_src_popup_app_popupnavigationbutton",
-      "label": "PopupNavigationButton()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "popup-app.tsx",
-      "file_type": "code",
-      "norm_label": "popupnavigationbutton()",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1015"
+      "source_location": "L145"
     },
     {
       "id": "apps_extension_src_popup_app_profileavatar",
@@ -60044,7 +60007,7 @@
       "file_type": "code",
       "norm_label": "profileavatar()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1048"
+      "source_location": "L1000"
     },
     {
       "id": "apps_extension_src_popup_app_unseenaccountinboxitems",
@@ -60056,7 +60019,7 @@
       "file_type": "code",
       "norm_label": "unseenaccountinboxitems()",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L148"
+      "source_location": "L149"
     },
     {
       "id": "apps_extension_src_room_invite_notifications_consumepopuprouteintent",
@@ -231655,7 +231618,7 @@
       "label": "Local browser rehearsal",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 116-118",
+      "source_location": "lines 123-125",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232295,7 +232258,7 @@
       "label": "Extension and friendship regression coverage",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-115",
+      "source_location": "lines 119-122",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232308,7 +232271,7 @@
       "label": "Room signaling harness",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 115-123",
+      "source_location": "lines 122-130",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232321,7 +232284,7 @@
       "label": "Narrow staging build and artifact validator",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 115-116",
+      "source_location": "lines 122-123",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232334,7 +232297,7 @@
       "label": "Two-account staging acceptance",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 130-132",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232347,7 +232310,7 @@
       "label": "Unchanged runtime behavior boundary",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 13-14, 51-52, 120-123",
+      "source_location": "lines 13-14, 51-52, 127-130",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232360,7 +232323,7 @@
       "label": "Prior reviewed extension artifact rollback",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 127-128",
+      "source_location": "lines 134-135",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232432,7 +232395,7 @@
       "label": "Toolbar Inbox",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 82-108",
+      "source_location": "lines 82-115",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232484,7 +232447,7 @@
       "label": "Retained cached Inbox cards",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 90-93",
+      "source_location": "lines 97-100",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232497,7 +232460,7 @@
       "label": "Missed room invitations",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 92-93",
+      "source_location": "lines 99-100",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232510,7 +232473,7 @@
       "label": "Internal social bridge",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-96",
+      "source_location": "lines 102-103",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232523,7 +232486,7 @@
       "label": "Invitation-instance feedback",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-102",
+      "source_location": "lines 102-109",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232536,7 +232499,7 @@
       "label": "Canonical Inbox reconciliation",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-103",
+      "source_location": "lines 102-110",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232549,7 +232512,7 @@
       "label": "Terminal invitation action removal",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 97-99",
+      "source_location": "lines 104-106",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232562,7 +232525,7 @@
       "label": "Transient mutation retry",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 99-102",
+      "source_location": "lines 106-109",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232575,7 +232538,7 @@
       "label": "Friend-request conflict reconciliation",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 102-103",
+      "source_location": "lines 109-110",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232588,7 +232551,7 @@
       "label": "Durable Inbox cache and counters",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 103",
+      "source_location": "lines 110",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232601,7 +232564,7 @@
       "label": "Accepted Join navigation",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 105-106",
+      "source_location": "lines 112-113",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232614,7 +232577,7 @@
       "label": "Duplicate Inbox action lock",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 106",
+      "source_location": "lines 113",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232627,7 +232590,7 @@
       "label": "Old-account result guard",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 106-107",
+      "source_location": "lines 113-114",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232640,7 +232603,7 @@
       "label": "Toolbar Inbox local release boundary",
       "file_type": "rationale",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 108",
+      "source_location": "lines 115",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232653,7 +232616,7 @@
       "label": "capsule-friends-model.test.ts",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232666,7 +232629,7 @@
       "label": "capsule-friends-panel.test.tsx",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232679,7 +232642,7 @@
       "label": "privileged-overlay-wiring.test.tsx",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232692,7 +232655,7 @@
       "label": "Forbidden response",
       "file_type": "concept",
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 99-100",
+      "source_location": "lines 106-107",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -232734,6 +232697,146 @@
       "file_type": "code",
       "source_file": "apps/extension/test/popup-inbox-convergence.test.tsx",
       "source_location": "L85",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "label": "Inbox tab unseen count",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-95",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The Inbox tab shows a compact orange count of unseen invitations from the account-owned server snapshot; it persists until seen acknowledgement updates that snapshot, including when Settings covers Inbox.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_account_owned_unseen_snapshot",
+      "label": "Account-owned unseen snapshot",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-95",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The Inbox tab and toolbar icon use the same account-owned server snapshot; switching accounts cannot retain the prior owner count.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_toolbar_icon",
+      "label": "Toolbar icon",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-91",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Uses the same server snapshot of unseen invitations as the Inbox tab count.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_seen_acknowledgement",
+      "label": "Seen acknowledgement",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 91-93",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The existing seen acknowledgement updates the server snapshot before the unseen count clears, including when Settings covers Inbox.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_settings",
+      "label": "Settings",
+      "file_type": "concept",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 92-93",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Can cover Inbox; covering Inbox does not bypass the acknowledgement-driven unseen-count lifecycle.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_accessible_unseen_count_display",
+      "label": "Accessible unseen-count display",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 93-94",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Zero is hidden; the visible count is capped at 99 while the full count appears in the accessible tab name.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_stable_inbox_tab_positioning",
+      "label": "Stable Inbox tab positioning",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 94-95",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The tab label and underline stay in place when the count changes.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_extension_capsule_friends_unseen_count_account_isolation",
+      "label": "Unseen-count account isolation",
+      "file_type": "rationale",
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 95",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Switching accounts cannot retain the previous owner count.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "apps_extension_src_popup_navigation",
+      "label": "popup-navigation.tsx",
+      "file_type": "code",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_popup_navigation_popuptab",
+      "label": "PopupTab",
+      "file_type": "code",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L1",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_popup_navigation_popupnavigation",
+      "label": "PopupNavigation()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L3",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_popup_navigation_popupnavigationbutton",
+      "label": "PopupNavigationButton()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L34",
       "_callable": true,
       "_origin": "ast"
     }
@@ -249674,7 +249777,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1045",
+      "source_location": "L997",
       "weight": 1.0
     },
     {
@@ -249685,7 +249788,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L188",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -249696,7 +249799,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L195",
+      "source_location": "L196",
       "weight": 1.0
     },
     {
@@ -249707,7 +249810,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L196",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -249718,7 +249821,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L211",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -249729,7 +249832,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L215",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -249740,7 +249843,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L245",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -249751,7 +249854,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L246",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -249762,7 +249865,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L247",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -249773,7 +249876,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L248",
+      "source_location": "L249",
       "weight": 1.0
     },
     {
@@ -249784,7 +249887,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L249",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -249795,7 +249898,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L264",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -249806,7 +249909,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L268",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -249817,7 +249920,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L269",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -249828,7 +249931,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L281",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -249839,7 +249942,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L282",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -249850,7 +249953,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L287",
+      "source_location": "L288",
       "weight": 1.0
     },
     {
@@ -249861,7 +249964,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L294",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -249872,7 +249975,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L322",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -249883,7 +249986,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L328",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -249894,7 +249997,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L333",
+      "source_location": "L334",
       "weight": 1.0
     },
     {
@@ -249905,7 +250008,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L338",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -249916,7 +250019,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L375",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -249927,7 +250030,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L389",
+      "source_location": "L390",
       "weight": 1.0
     },
     {
@@ -249938,7 +250041,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L390",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -249949,7 +250052,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L390",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -249960,7 +250063,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L475",
+      "source_location": "L476",
       "weight": 1.0
     },
     {
@@ -249971,7 +250074,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L480",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
@@ -249982,7 +250085,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L603",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -249993,7 +250096,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L610",
+      "source_location": "L611",
       "weight": 1.0
     },
     {
@@ -250004,7 +250107,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L615",
+      "source_location": "L616",
       "weight": 1.0
     },
     {
@@ -250015,7 +250118,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L619",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -250026,7 +250129,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L628",
+      "source_location": "L629",
       "weight": 1.0
     },
     {
@@ -250037,7 +250140,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L641",
+      "source_location": "L642",
       "weight": 1.0
     },
     {
@@ -250048,7 +250151,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L698",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -250059,7 +250162,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L707",
+      "source_location": "L708",
       "weight": 1.0
     },
     {
@@ -250070,7 +250173,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L715",
+      "source_location": "L716",
       "weight": 1.0
     },
     {
@@ -250081,7 +250184,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L735",
+      "source_location": "L736",
       "weight": 1.0
     },
     {
@@ -250092,7 +250195,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L749",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -250103,7 +250206,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L766",
+      "source_location": "L767",
       "weight": 1.0
     },
     {
@@ -250114,7 +250217,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L784",
+      "source_location": "L785",
       "weight": 1.0
     },
     {
@@ -250125,7 +250228,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L786",
+      "source_location": "L787",
       "weight": 1.0
     },
     {
@@ -250136,7 +250239,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L828",
+      "source_location": "L829",
       "weight": 1.0
     },
     {
@@ -250147,7 +250250,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L844",
+      "source_location": "L845",
       "weight": 1.0
     },
     {
@@ -250158,7 +250261,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L848",
+      "source_location": "L849",
       "weight": 1.0
     },
     {
@@ -250169,7 +250272,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1059",
+      "source_location": "L1011",
       "weight": 1.0
     },
     {
@@ -300818,7 +300921,7 @@
       "confidence": "EXTRACTED",
       "context": "export",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -310600,7 +310703,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -310611,7 +310714,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -310622,7 +310725,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -310633,7 +310736,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -310644,7 +310747,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -310655,7 +310758,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -310666,7 +310769,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -310677,7 +310780,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -310688,7 +310791,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -310699,7 +310802,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -310710,7 +310813,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310721,7 +310824,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310732,7 +310835,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310743,7 +310846,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310754,7 +310857,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310765,7 +310868,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310776,7 +310879,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310787,7 +310890,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310798,7 +310901,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -310809,7 +310912,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -310820,7 +310923,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -310831,7 +310934,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -310842,7 +310945,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -310853,7 +310956,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -310864,7 +310967,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -310875,7 +310978,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -310886,7 +310989,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -310897,7 +311000,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -310908,7 +311011,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -310919,7 +311022,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -310930,7 +311033,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -310941,7 +311044,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -310952,7 +311055,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -310963,7 +311066,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -310974,7 +311077,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -310985,7 +311088,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -310996,7 +311099,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -311007,7 +311110,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -311018,7 +311121,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -311029,7 +311132,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -311040,7 +311143,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -311051,7 +311154,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -311062,7 +311165,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -311073,7 +311176,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311084,7 +311187,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311095,7 +311198,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311106,7 +311209,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311117,7 +311220,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311128,7 +311231,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311139,7 +311242,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311150,7 +311253,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311161,7 +311264,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311172,7 +311275,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311183,7 +311286,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311194,7 +311297,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -311205,7 +311308,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -311216,7 +311319,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -311227,7 +311330,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -311515,17 +311618,6 @@
       "context": "import",
       "source_file": "apps/extension/src/popup-styles.ts",
       "source_location": "L4",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_view_state",
-      "target": "apps_extension_src_popup_app_popuptab",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "import",
-      "source_file": "apps/extension/src/popup-view-state.ts",
-      "source_location": "L1",
       "weight": 1.0
     },
     {
@@ -315959,17 +316051,6 @@
       "context": "import",
       "source_file": "apps/extension/src/use-interface-preferences.ts",
       "source_location": "L3",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_use_popup_navigation",
-      "target": "apps_extension_src_popup_app_popuptab",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "import",
-      "source_file": "apps/extension/src/use-popup-navigation.tsx",
-      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -321060,17 +321141,6 @@
     {
       "source": "apps_extension_test_popup_people_panel_test",
       "target": "apps_extension_src_popup_app_popupinboxbadgecount",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "context": "import",
-      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_test_popup_people_panel_test",
-      "target": "apps_extension_src_popup_app_popupnavigation",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -361474,7 +361544,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -361485,7 +361555,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -361496,7 +361566,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -361507,7 +361577,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -361518,7 +361588,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -361529,7 +361599,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -361540,7 +361610,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -361551,7 +361621,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -361562,7 +361632,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -361573,7 +361643,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -361584,7 +361654,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -361595,7 +361665,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -361606,7 +361676,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -361617,7 +361687,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -361628,7 +361698,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -361639,7 +361709,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L65",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -361650,7 +361720,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -361661,7 +361731,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -361672,7 +361742,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -397420,7 +397490,7 @@
       "confidence": "EXTRACTED",
       "context": "re-export",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -412375,7 +412445,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1038",
+      "source_location": "L990",
       "weight": 1.0
     },
     {
@@ -412385,7 +412455,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1042",
+      "source_location": "L994",
       "weight": 1.0
     },
     {
@@ -412395,7 +412465,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1048",
+      "source_location": "L1000",
       "weight": 1.0
     },
     {
@@ -412405,7 +412475,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1062",
+      "source_location": "L1014",
       "weight": 1.0
     },
     {
@@ -412415,7 +412485,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -412425,7 +412495,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L111",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -412435,7 +412505,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L113",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -412445,7 +412515,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L115",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -412455,7 +412525,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L121",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -412465,7 +412535,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L144",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -412475,7 +412545,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L148",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -412485,27 +412555,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L159",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_app",
-      "target": "apps_extension_src_popup_app_popuptab",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L96",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_app",
-      "target": "apps_extension_src_popup_app_popupnavigation",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L987",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -412515,7 +412565,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -412525,17 +412575,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L100",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_popup_app",
-      "target": "apps_extension_src_popup_app_popupnavigationbutton",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L1015",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -527355,7 +527395,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -527366,7 +527406,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -527377,7 +527417,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -527388,7 +527428,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -527399,7 +527439,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0
     },
     {
@@ -557291,7 +557331,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -557302,7 +557342,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -557313,7 +557353,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L238",
+      "source_location": "L239",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -589394,7 +589434,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -589405,7 +589445,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -589416,7 +589456,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -589427,7 +589467,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L65",
+      "source_location": "L66",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -589438,7 +589478,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L67",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -589449,7 +589489,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L67",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -590733,7 +590773,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L734",
+      "source_location": "L735",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -590780,7 +590820,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -590791,7 +590831,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -638423,7 +638463,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -638434,29 +638474,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L890",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_popup_app_popupapp",
-      "target": "apps_extension_src_popup_app_popupnavigation",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L937",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_extension_src_popup_app_popupnavigation",
-      "target": "apps_extension_src_popup_app_popupnavigationbutton",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L996",
+      "source_location": "L891",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -663879,7 +663897,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L678",
+      "source_location": "L679",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667234,7 +667252,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L903",
+      "source_location": "L904",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667246,7 +667264,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L930",
+      "source_location": "L931",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667258,7 +667276,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L939",
+      "source_location": "L941",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667270,7 +667288,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L940",
+      "source_location": "L942",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667282,7 +667300,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L950",
+      "source_location": "L952",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -667294,7 +667312,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L965",
+      "source_location": "L967",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -719158,7 +719176,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -719180,7 +719198,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L240",
+      "source_location": "L241",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -737957,7 +737975,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 116-118",
+      "source_location": "lines 123-125",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738956,7 +738974,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-115",
+      "source_location": "lines 119-122",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738967,7 +738985,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 115-123",
+      "source_location": "lines 122-130",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738978,7 +738996,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 115-116",
+      "source_location": "lines 122-123",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -738989,7 +739007,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 116-118",
+      "source_location": "lines 123-125",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739000,7 +739018,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 130-132",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739011,7 +739029,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 120-123",
+      "source_location": "lines 127-130",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739022,7 +739040,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 127-128",
+      "source_location": "lines 134-135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739451,7 +739469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739462,7 +739480,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-113",
+      "source_location": "lines 119-120",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739473,7 +739491,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 130-132",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739484,7 +739502,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 130-132",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739495,7 +739513,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 123-125",
+      "source_location": "lines 130-132",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739506,7 +739524,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 120-123",
+      "source_location": "lines 127-130",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739517,7 +739535,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 120-128",
+      "source_location": "lines 127-135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739827,7 +739845,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 82-108",
+      "source_location": "lines 82-115",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739871,7 +739889,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 90-93",
+      "source_location": "lines 97-100",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739882,7 +739900,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 92-93",
+      "source_location": "lines 99-100",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739893,7 +739911,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-96",
+      "source_location": "lines 102-103",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739904,7 +739922,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-102",
+      "source_location": "lines 102-109",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739915,7 +739933,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-103",
+      "source_location": "lines 102-110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739926,7 +739944,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 97-99",
+      "source_location": "lines 104-106",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739937,7 +739955,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 99-102",
+      "source_location": "lines 106-109",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739948,7 +739966,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 102-103",
+      "source_location": "lines 109-110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739959,7 +739977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 103",
+      "source_location": "lines 110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739970,7 +739988,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 105-106",
+      "source_location": "lines 112-113",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739981,7 +739999,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 106",
+      "source_location": "lines 113",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -739992,7 +740010,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 106-107",
+      "source_location": "lines 113-114",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740003,7 +740021,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 108",
+      "source_location": "lines 115",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740014,7 +740032,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 84-85, 103",
+      "source_location": "lines 84-85, 110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740025,7 +740043,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 84-88, 95-103",
+      "source_location": "lines 84-88, 102-110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740036,7 +740054,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-97",
+      "source_location": "lines 102-104",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740047,7 +740065,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-99",
+      "source_location": "lines 102-106",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740058,7 +740076,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 97-99",
+      "source_location": "lines 104-106",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740069,7 +740087,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 99-102",
+      "source_location": "lines 106-109",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740080,7 +740098,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 95-103",
+      "source_location": "lines 102-110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740091,7 +740109,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 84-93",
+      "source_location": "lines 84-100",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740102,7 +740120,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 102-103",
+      "source_location": "lines 109-110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740113,7 +740131,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 102-103",
+      "source_location": "lines 109-110",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740124,7 +740142,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 105-106",
+      "source_location": "lines 112-113",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740135,7 +740153,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 105-107",
+      "source_location": "lines 112-114",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740146,7 +740164,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740157,7 +740175,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740168,7 +740186,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 112-114",
+      "source_location": "lines 119-121",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740179,7 +740197,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 99-100",
+      "source_location": "lines 106-107",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740190,7 +740208,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 99-100",
+      "source_location": "lines 106-107",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -740201,7 +740219,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -740212,7 +740230,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -740223,7 +740241,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -740234,7 +740252,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -740712,7 +740730,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L454",
+      "source_location": "L455",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -740724,7 +740742,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-app.tsx",
-      "source_location": "L261",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -740761,6 +740779,279 @@
       "confidence_score": 0.85,
       "source_file": "apps/extension/test/social-client.test.ts",
       "source_location": "L46",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_inbox",
+      "target": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-95",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "target": "docs_extension_capsule_friends_account_owned_unseen_snapshot",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-91",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_toolbar_icon",
+      "target": "docs_extension_capsule_friends_account_owned_unseen_snapshot",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-91",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "target": "docs_extension_capsule_friends_seen_acknowledgement",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 91-93",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_seen_acknowledgement",
+      "target": "docs_extension_capsule_friends_account_owned_unseen_snapshot",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 91-93",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_settings",
+      "target": "docs_extension_capsule_friends_seen_acknowledgement",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 92-93",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "target": "docs_extension_capsule_friends_accessible_unseen_count_display",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 93-94",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "target": "docs_extension_capsule_friends_stable_inbox_tab_positioning",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 94-95",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_account_owned_unseen_snapshot",
+      "target": "docs_extension_capsule_friends_unseen_count_account_isolation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-95",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "target": "docs_extension_capsule_friends_unseen_count_account_isolation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 95",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_extension_capsule_friends_capsule_friends_and_invitations",
+      "target": "docs_extension_capsule_friends_inbox_tab_unseen_count",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/extension-capsule-friends.md",
+      "source_location": "lines 90-95",
+      "weight": 1.0,
+      "_origin": "semantic"
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_navigation",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_navigation",
+      "relation": "imports_from",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_navigation_popupnavigation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_navigation_popupnavigation",
+      "relation": "re_exports",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_navigation_popuptab",
+      "relation": "re_exports",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app_popupapp",
+      "target": "apps_extension_src_popup_app_popupinboxbadgecount",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L939",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_navigation",
+      "target": "apps_extension_src_popup_navigation_popuptab",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_navigation",
+      "target": "apps_extension_src_popup_navigation_popupnavigation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_navigation",
+      "target": "apps_extension_src_popup_navigation_popupnavigationbutton",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_navigation_popupnavigation",
+      "target": "apps_extension_src_popup_navigation_popupnavigationbutton",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-navigation.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test",
+      "target": "apps_extension_src_popup_app_popupinboxpanel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app",
+      "target": "apps_extension_src_popup_navigation",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_test_popup_people_panel_test",
+      "target": "apps_extension_src_popup_navigation_popupnavigation",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-people-panel.test.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_extension_src_popup_app_popupapp",
+      "target": "apps_extension_src_popup_navigation_popupnavigation",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/popup-app.tsx",
+      "source_location": "L938",
       "weight": 1.0,
       "_origin": "ast"
     }
@@ -742335,7 +742626,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/extension-capsule-friends.md",
-      "source_location": "lines 110-125",
+      "source_location": "lines 117-132",
       "_origin": "semantic"
     }
   ],

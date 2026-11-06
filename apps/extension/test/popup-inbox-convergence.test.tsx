@@ -99,7 +99,7 @@ async function mount() {
   await settle();
 }
 async function openInbox() {
-  const tab = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((button) => button.textContent === "Inbox");
+  const tab = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((button) => button.querySelector(".popup-tab-label")?.textContent === "Inbox");
   expect(tab).toBeDefined();
   await act(async () => tab!.click());
   await settle();
@@ -262,10 +262,12 @@ describe("open Popup inbox convergence", () => {
     await publish(inbox(A, T2, [FIRST]));
     expect(seenCalls).toBe(0);
     expect(badge).toBe("1");
+    expect(container.querySelector(".popup-tab-count")?.textContent).toBe("1");
     await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Close settings"]')!.click());
     await settle();
     expect(seenCalls).toBe(1);
     expect(badge).toBe("");
+    expect(container.querySelector(".popup-tab-count")).toBeNull();
   });
   it("renders a background publication without reopening or refetching and disposes its subscription", async () => {
     await mount(); await openInbox();
@@ -296,6 +298,7 @@ describe("open Popup inbox convergence", () => {
     expect(inboxText()).toContain("Second sender");
     expect(inboxText()).not.toContain("First sender");
     expect(await getCachedAccountInboxForUser(A)).toBeNull();
+    expect(container.querySelector(".popup-tab-count")).toBeNull();
   });
 
   it("does not overwrite a newer background snapshot with the initial slow GET", async () => {
@@ -316,6 +319,7 @@ describe("open Popup inbox convergence", () => {
     seen = async () => acknowledgement.promise;
     await mount(); await openInbox();
     expect(seenCalls).toBe(1);
+    expect(container.querySelector(".popup-tab-count")?.textContent).toBe("1");
     // The concurrent GET observed FIRST unread, but SECOND was already seen.
     const concurrent = inbox(A, T3, [FIRST, SECOND], T3);
     concurrent.items[0]!.seenAt = null; concurrent.counts.unseen = 1;
@@ -324,6 +328,7 @@ describe("open Popup inbox convergence", () => {
     await settle();
     expect(inboxText()).toContain("Second sender");
     expect(badge).toBe("");
+    expect(container.querySelector(".popup-tab-count")).toBeNull();
     const cached = (await getCachedAccountInboxForUser(A))!.data;
     expect(cached.meta.serverTime).toBe(T3);
     expect(cached.items).toHaveLength(2);

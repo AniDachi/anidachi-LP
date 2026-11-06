@@ -390,15 +390,15 @@
     "semantic_hash": "36308950ab5526f30362d99a6ae2826f"
   },
   "apps/extension/src/popup-app.tsx": {
-    "mtime": 1793961594.3911023,
-    "seen": 1793961761.804069,
-    "ast_hash": "6dd6a7fba1afe2dcde20ae75ac98cff0",
+    "mtime": 1793962390.9462163,
+    "seen": 1793962525.06333,
+    "ast_hash": "9fa4094aae1cb2beb92d4a06c98a6cac",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-styles.ts": {
-    "mtime": 1790862084.2855303,
-    "seen": 1790862436.821826,
-    "ast_hash": "f06a4b639f5b306c923d22422c1031f4",
+    "mtime": 1793962390.9986393,
+    "seen": 1793962525.063335,
+    "ast_hash": "654469dbf0955c96be3d1b1c1d5f55a3",
     "semantic_hash": ""
   },
   "apps/extension/src/privacy-sanitizer.ts": {
@@ -4896,9 +4896,9 @@
     "semantic_hash": "a550facece2e1b0b49624408e437434a"
   },
   "apps/extension/test/popup-people-panel.test.tsx": {
-    "mtime": 1793961330.5158584,
-    "seen": 1793961761.8041012,
-    "ast_hash": "b8dde68cd2f1cbbe6452fb6c71d54b55",
+    "mtime": 1793962391.0192726,
+    "seen": 1793962525.063336,
+    "ast_hash": "50c4294c4a3e6c05eeadf64b3938a3f8",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-07-popup-people-social-directory.md": {
@@ -6192,9 +6192,9 @@
     "semantic_hash": ""
   },
   "apps/extension/test/popup-inbox-convergence.test.tsx": {
-    "mtime": 1793961582.3309839,
-    "seen": 1793961761.804095,
-    "ast_hash": "79d6b2b9d590850701ce929365ea6cc3",
+    "mtime": 1793962348.4230196,
+    "seen": 1793962525.063336,
+    "ast_hash": "db77c68dc674a35a2431398757a6b749",
     "semantic_hash": ""
   },
   "apps/extension/test/room-invite-notification-runtime.test.ts": {
@@ -12186,10 +12186,10 @@
     "semantic_hash": ""
   },
   "docs/extension-capsule-friends.md": {
-    "mtime": 1793961594.3914092,
-    "seen": 1793961762.0492852,
+    "mtime": 1793962391.037423,
+    "seen": 1793962525.141932,
     "ast_hash": "",
-    "semantic_hash": "bdffc9d199554e867256649135aa47a3"
+    "semantic_hash": "7c048c2d1d76f78de628448784462a51"
   },
   "apps/web/app/friend/invite/[token]/friend-invite-client.test.tsx": {
     "mtime": 1793959999.104775,
@@ -12201,6 +12201,12 @@
     "mtime": 1793959999.12778,
     "seen": 1793960379.906157,
     "ast_hash": "d25b8f283ac302081d085e9aba0225d7",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/popup-navigation.tsx": {
+    "mtime": 1793962390.946079,
+    "seen": 1793962525.063333,
+    "ast_hash": "4faedab74954c02f79b1a69d4b41a0d1",
     "semantic_hash": ""
   }
 }

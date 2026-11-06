@@ -2923,6 +2923,44 @@ ${popupSettingsStyles}
     box-shadow: none;
   }
 
+  .popup-tab .popup-tab-copy,
+  .popup-tab[data-active="true"] .popup-tab-copy {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .popup-tab .popup-tab-count,
+  .popup-tab[data-active="true"] .popup-tab-count {
+    position: absolute;
+    left: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--ad-accent-strong);
+    color: #19120c;
+    box-shadow: none;
+    font-size: 10px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
   .popup-watch-screen {
     gap: 8px;
   }
