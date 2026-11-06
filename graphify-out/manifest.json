@@ -8160,9 +8160,9 @@
     "semantic_hash": ""
   },
   "apps/web/components/extension-install-hub.tsx": {
-    "mtime": 1793355774.507166,
-    "seen": 1793424347.672343,
-    "ast_hash": "09faf43f287d1095da50bb7c5d1dd9cf",
+    "mtime": 1793948024.8532622,
+    "seen": 1793948110.617888,
+    "ast_hash": "a22ea985344003969f134a9df4094226",
     "semantic_hash": ""
   },
   "apps/web/components/overlay-interface-preview.tsx": {
@@ -8238,9 +8238,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/extension-install-faq.ts": {
-    "mtime": 1793532534.260763,
-    "seen": 1793533463.160964,
-    "ast_hash": "b1ffde7ea477eea739e043b387e26383",
+    "mtime": 1793948024.9168215,
+    "seen": 1793948110.617891,
+    "ast_hash": "4c42e1740a3caf6b8cf92b9574f67fc1",
     "semantic_hash": ""
   },
   "apps/web/lib/extension-using-examples.test.ts": {
@@ -8250,9 +8250,9 @@
     "semantic_hash": ""
   },
   "apps/web/lib/extension-using-guide.ts": {
-    "mtime": 1793532534.2608604,
-    "seen": 1793533463.160964,
-    "ast_hash": "f6797e88aeb8e3a988f2eb95cdce6d9b",
+    "mtime": 1793948024.8953948,
+    "seen": 1793948110.6178932,
+    "ast_hash": "d5608890e4e78704e4161ddd13bbf8d2",
     "semantic_hash": ""
   },
   "apps/web/lib/home-scroll-assist.test.ts": {

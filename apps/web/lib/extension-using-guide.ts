@@ -24,19 +24,19 @@ export const extensionUsingSteps = [
   },
   {
     name: "Create a room",
-    text: `Choose Create room, then copy the invite to share it with friends. ${PRICING_FREE20_SUMMARY}`,
+    text: `Choose Create room to start your room. ${PRICING_FREE20_SUMMARY}`,
   },
   {
     name: "Invite a friend",
-    text: "Click the person-plus button next to End room to open Friends & groups. Choose Invite beside a friend or group. You can also copy the room link and send it yourself.",
+    text: "Click Invite friends to open Friends & groups, then choose Invite beside a friend or group. Or copy the room link and share it.",
   },
   {
     name: "Media seats",
-    text: "Hosts control microphone and camera access in People. The round radio button is white when access is on and grey when it is off. Guests without access can still listen and chat. Up to four cameras can be on at once.",
+    text: "In People, the host controls microphone and camera access with the round button: white means on, gray means off. Guests without access can still listen and chat. Up to four cameras can be on at once.",
   },
   {
     name: "Reactions",
-    text: "In Settings → Reactions, turn on Quick reactions. Press a number from 1–0 to send its emoji. Click an emoji slot to choose a different one.",
+    text: "In Settings → Reactions, turn on Quick reactions. Press 1–9 or 0 to send its emoji. Click an emoji to change it.",
   },
   {
     name: "Send a message",
@@ -48,14 +48,14 @@ export const extensionUsingSteps = [
   },
   {
     name: "Microphone & camera",
-    text: "Yellow microphone: hold V to talk. Click it for an always-on microphone in green; click again to return to push to talk. The camera button turns video on or off. These examples never use your microphone or camera.",
+    text: "Hold V to talk. Click the microphone to keep it on; click again to switch back. Click the camera to turn video on or off. These examples never use your microphone or camera.",
   },
   {
     name: "Interface",
-    text: "In Settings → Interface, choose when the player controls appear. Auto hide reveals the capsule near the player edge. Smart shows participant pills when someone speaks or you hover the edge.",
+    text: "In Settings → Interface, choose when controls appear. Auto hide shows the capsule when you hover near the player edge. Smart shows participant pills when someone speaks or you hover the edge.",
   },
   {
     name: "Room",
-    text: "In Settings → Room, choose how your microphone and camera start in each room. Last used remembers your previous choice. You can also set a fixed starting mode.",
+    text: "In Settings → Room, choose how your microphone and camera start. Use Last used to remember your previous choice, or pick a fixed mode.",
   },
 ] as const;

@@ -9,6 +9,8 @@ import {
   Download,
   EllipsisVertical,
   Pin,
+  Puzzle,
+  SquarePlay,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FAQSection } from "@/components/faq-section";
@@ -313,30 +315,35 @@ export function ExtensionInstallHub({
           setup={welcome ? undefined : <>
             <ol className={styles.setupSteps} aria-label="Install AniDachi">
               <li>
-                <span className={styles.setupNumber} aria-hidden="true">1</span>
-                <h3>Install</h3>
-                <p>Add to Chrome, then confirm.</p>
+                <Puzzle className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
+                <div>
+                  <h3>Install</h3>
+                  <p>Add AniDachi to Chrome.</p>
+                </div>
               </li>
               <li>
-                <span className={styles.setupNumber} aria-hidden="true">2</span>
-                <h3>Pin</h3>
-                <p>Pin AniDachi from Extensions.</p>
+                <Pin className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
+                <div>
+                  <h3>Pin</h3>
+                  <p>Pin it from the Extensions menu.</p>
+                </div>
               </li>
               <li>
-                <span className={styles.setupNumber} aria-hidden="true">3</span>
-                <h3>Open a video</h3>
-                <p>Open the capsule and sign in.</p>
+                <SquarePlay className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
+                <div>
+                  <h3>Open a video</h3>
+                  <p>Open AniDachi and sign in.</p>
+                </div>
               </li>
             </ol>
             <p className="-mt-6 mb-10 text-sm leading-relaxed text-ani-muted md:-mt-10 md:mb-16">
-              Watching anime? Here is{" "}
+              Watching on Crunchyroll? See our{" "}
               <Link
                 href="/guides/crunchyroll-watch-party-chrome-extension"
                 className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
               >
-                how the Crunchyroll extension works
-              </Link>{" "}
-              for a group watch party.
+                setup guide
+              </Link>.
             </p>
           </>}
         />

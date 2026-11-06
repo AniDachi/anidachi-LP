@@ -2297,7 +2297,7 @@
       "community_name": "overlay-using-mocks.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L42"
+      "source_location": "L44"
     },
     {
       "id": "apps_web_app_account_watch_library_watch_library_data_dependencies",
@@ -19237,7 +19237,7 @@
       "community_name": "overlay-using-mocks.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L50"
+      "source_location": "L52"
     },
     {
       "id": "apps_web_components_extension_install_hub_chromepinmock",
@@ -19248,7 +19248,7 @@
       "community_name": "overlay-using-mocks.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L103"
+      "source_location": "L105"
     },
     {
       "id": "apps_web_components_overlay_using_mocks_noop",
@@ -41328,7 +41328,7 @@
       "community_name": "extension-install-hub.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L44"
+      "source_location": "L46"
     },
     {
       "id": "apps_web_components_extension_install_hub_extensioninstallhub",
@@ -41339,7 +41339,7 @@
       "community_name": "extension-install-hub.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L125"
+      "source_location": "L127"
     },
     {
       "id": "apps_web_components_extension_install_hub_extensioninstallhub_copychromeextensions",
@@ -41350,7 +41350,7 @@
       "community_name": "extension-install-hub.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L164"
+      "source_location": "L166"
     },
     {
       "id": "apps_web_components_extension_install_hub_extensioninstallhub_copydesktoplink",
@@ -41361,7 +41361,7 @@
       "community_name": "extension-install-hub.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L174"
+      "source_location": "L176"
     },
     {
       "id": "apps_web_components_extension_install_hub_extensioninstallhub_ondownloadclick",
@@ -41372,7 +41372,7 @@
       "community_name": "extension-install-hub.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L192"
+      "source_location": "L194"
     },
     {
       "id": "apps_web_lib_extension_install_compatibility_test_renderhub",
@@ -162136,7 +162136,7 @@
       "community_name": "extension-install-hub.tsx",
       "file_type": "code",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L242"
+      "source_location": "L244"
     },
     {
       "id": "apps_web_components_home_home_sections_module",
@@ -277492,7 +277492,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L151",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -277503,7 +277503,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L155",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -277515,7 +277515,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L181",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
@@ -277527,7 +277527,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L197",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -299722,7 +299722,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L164",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -299732,7 +299732,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L174",
+      "source_location": "L176",
       "weight": 1.0
     },
     {
@@ -302512,7 +302512,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L221",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -340917,7 +340917,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -340928,7 +340928,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -340939,7 +340939,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L15",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -340950,7 +340950,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -340961,7 +340961,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -340972,7 +340972,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -340983,7 +340983,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -340994,7 +340994,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -341005,7 +341005,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -341016,7 +341016,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -341027,7 +341027,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -341038,7 +341038,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -341049,7 +341049,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -341060,7 +341060,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -383633,7 +383633,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -383644,7 +383644,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -383655,7 +383655,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L15",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -383666,7 +383666,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -383677,7 +383677,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -383688,7 +383688,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -383710,7 +383710,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -383721,7 +383721,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -383732,7 +383732,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -446129,7 +446129,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L103",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -446139,7 +446139,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -446149,7 +446149,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -446159,7 +446159,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L44",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -446169,7 +446169,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L50",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -446179,7 +446179,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L192",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -539453,7 +539453,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -539464,7 +539464,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -539475,7 +539475,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -539486,7 +539486,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -539497,7 +539497,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -539508,7 +539508,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -539519,7 +539519,7 @@
       "confidence": "EXTRACTED",
       "context": "import",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -539540,7 +539540,7 @@
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L242",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -539551,7 +539551,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L141",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -539562,7 +539562,7 @@
       "confidence": "EXTRACTED",
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L135",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -539574,7 +539574,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -539586,7 +539586,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L243",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -580645,7 +580645,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L277",
+      "source_location": "L279",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -580656,7 +580656,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L361",
+      "source_location": "L368",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648363,7 +648363,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648374,7 +648374,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648385,7 +648385,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648396,7 +648396,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648407,7 +648407,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L37",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648418,7 +648418,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L37",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648429,7 +648429,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648440,7 +648440,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648451,7 +648451,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648462,7 +648462,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L40",
+      "source_location": "L42",
       "weight": 1.0,
       "type_only": true,
       "_origin": "ast"
@@ -648474,7 +648474,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L40",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648485,7 +648485,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L377",
+      "source_location": "L384",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -648496,7 +648496,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L403",
+      "source_location": "L410",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -664308,7 +664308,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L150",
+      "source_location": "L152",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -664319,7 +664319,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676050,7 +676050,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L110",
+      "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676062,7 +676062,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L253",
+      "source_location": "L255",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676074,7 +676074,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L255",
+      "source_location": "L257",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676086,7 +676086,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L268",
+      "source_location": "L270",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676098,7 +676098,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L269",
+      "source_location": "L271",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676110,7 +676110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L298",
+      "source_location": "L300",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676122,7 +676122,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L312",
+      "source_location": "L314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676134,7 +676134,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L345",
+      "source_location": "L352",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676146,7 +676146,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L411",
+      "source_location": "L418",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676158,7 +676158,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L427",
+      "source_location": "L434",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -676170,7 +676170,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.85,
       "source_file": "apps/web/components/extension-install-hub.tsx",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast"
     },
