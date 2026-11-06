@@ -7,7 +7,7 @@ export const extensionInstallFaq = [
   {
     question: "How do I finish setup after installing?",
     answer:
-      "Open Chrome’s extensions menu, pin AniDachi, then open a Crunchyroll episode, full YouTube watch page, or Netflix title and sign in when asked. Join a friend for free, or create your own room on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro.",
+      "Pin AniDachi from Chrome’s Extensions menu. Open a video on Crunchyroll, YouTube, or Netflix, then click the AniDachi capsule and sign in. Create a room or open a friend’s invite link to join.",
   },
   {
     question: "How do I confirm the installation in Chrome?",
@@ -27,6 +27,6 @@ export const extensionInstallFaq = [
   {
     question: "What permissions does AniDachi ask for?",
     answer:
-      "Narrow hosts only: YouTube, Crunchyroll, Netflix, AniDachi, and our API. The extension does not request access to every website. See /security for the full permission list.",
+      "AniDachi runs on YouTube, Crunchyroll and Netflix and connects to its own services. It does not request access to every website. See the Security page for the full permission list.",
   },
 ];
