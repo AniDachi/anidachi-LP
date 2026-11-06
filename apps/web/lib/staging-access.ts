@@ -1,3 +1,5 @@
+import { EXTENSION_UNINSTALL_CAPABILITY_PATH } from "@anidachi/protocol";
+
 export const STAGING_ACCESS_COOKIE = "anidachi_staging_access";
 export const STAGING_ACCESS_PATH = "/__anidachi/staging-access";
 
@@ -248,6 +250,9 @@ export function canBypassStagingGate(params: {
   if (params.method === "OPTIONS") return true;
   if (isStaticAssetPath(params.pathname)) return true;
   if (params.pathname === STAGING_ACCESS_PATH) return true;
+  // Public deployment metadata contains no identity, account or offer data.
+  // The uninstall page, feedback and billing APIs remain password-gated.
+  if (params.pathname === EXTENSION_UNINSTALL_CAPABILITY_PATH && params.method === "GET") return true;
   if (params.pathname === "/api/auth/refresh") return true;
   if (params.pathname.startsWith("/api/extension/auth/")) return true;
   if (params.pathname === "/api/stripe/webhook" && params.method === "POST") {

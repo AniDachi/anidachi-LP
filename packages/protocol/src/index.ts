@@ -36,3 +36,4 @@ export * from "./free20-warning";
 
 export * from "./free20-client";
 export * from "./free20-abuse";
+export * from "./extension-uninstall";

@@ -72,12 +72,29 @@ The old `hosting` object and unrequested entitlements responses are unchanged.
 
 This permits review against the current production service. Free20's public
 availability still begins at the coordinated server activation, not ZIP creation.
-This compatibility covers existing account and room controls, not new website
-pages: current production has no `/uninstall` route. The new uninstall screen and
-retention flow require the coordinated web deployment. Disclose that dependency
-in reviewer notes and settle reviewer access to those screens before submission;
-do not describe the old production website as the complete new flow. Deploying
-an earlier compatible website bridge would require separate owner authorization.
+
+On November 7 the owner chose rollout compatibility instead of an early production
+website deployment. Before the site supports `/uninstall`, the extension leaves
+Chrome's optional uninstall URL empty. It only registers the canonical `/uninstall`
+after a version-1 `{ available: true }` response from the same website's public
+`GET /api/extension/uninstall-capability`. That metadata ships with the page and
+APIs, **after their schema**; it asserts deployment support, not discount eligibility
+or successful payments. No account, cookie or installation identifier is sent.
+
+The background checks at install/worker start, browser startup and an hourly alarm,
+with an hour-long cache across MV3 restarts and a five-second request deadline.
+There are no redirects or response-supplied URLs. Explicit absence (404/410 or
+versioned false) clears the optional URL. Network/server/unknown-response failures
+preserve a previously verified page; without one they leave uninstall silent.
+An explicit site rollback is detected on the next refresh. Initial network failure
+can delay activation until the next successful check; no reinstall is required.
+All installations and reviewers use the same behavior. Staging exposes only this
+anonymous metadata GET; its page, feedback, billing and account surfaces remain
+password-gated and noindex.
+
+The new uninstall screen and retention flow still require the coordinated web
+deployment and independently verified LIVE configuration. Disclose the transition
+in reviewer notes; do not describe the old production website as the new flow.
 Supply a suitable authorized test account through the Store's private reviewer
 fields; do not put credentials in this repository or ZIP. Automated transport
 tests are not a claim that a Store reviewer or a loaded production package has
@@ -158,6 +175,10 @@ Stripe API remains pinned to `2025-08-27.basil`; no SDK/API upgrade is part of t
    private API behavior, checkout/webhook health and disabled-policy responses.
    Never push main directly. Ensure old web instances no longer accept new trials
    before the eventual policy switch.
+   Verify `/api/extension/uninstall-capability` returns the versioned metadata and
+   `/uninstall` plus its APIs work against the migrated production schema. The
+   installed candidate registers the page at its next background refresh (within
+   an hour while Chrome is running, or at browser startup), without a new ZIP.
 6. **Compatible Worker.** Dispatch the manual production Worker workflow with
    `production_ready_sha` equal to that verified main SHA. It requires schema and
    compatible web first. Add the production accounting flag through a reviewed
@@ -206,6 +227,17 @@ Suggested change notes:
 
 > Daily free hosting time, clearer room controls, friends and invitations,
 > improved onboarding, and fixes for account status and room transitions.
+
+Private reviewer rollout note (keep this accurate at submission time):
+
+> This package uses AniDachi's production services. During review, existing account
+> and room access remains available through the current production backend. Daily
+> free hosting and the uninstall survey/offer page are part of a coordinated server
+> rollout before public release. The optional uninstall tab stays disabled until
+> the website advertises support, then uses the same page for every installation.
+> There is no reviewer-specific behavior. Please keep publication deferred; we
+> will activate the compatible server deployment before manually publishing the
+> approved package. No remote executable code is downloaded by this capability check.
 
 Listing content should describe synced watching on YouTube, Crunchyroll and
 Netflix, room links/friends, chat/reactions and optional voice/video. Explain the

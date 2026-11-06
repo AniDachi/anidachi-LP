@@ -4,6 +4,10 @@ const boundary = vi.hoisted(() => ({
   restore: vi.fn<() => Promise<boolean>>(),
   reconcile: vi.fn(), retryAlarm: vi.fn(), maintenance: vi.fn(),
   website: vi.fn(), history: vi.fn(), departures: vi.fn(),
+  uninstall: vi.fn(),
+}));
+vi.mock("../src/uninstall-url", async (original) => ({
+  ...await original<object>(), registerUninstallUrl: boundary.uninstall,
 }));
 vi.mock("wxt/utils/define-background", () => ({ defineBackground: (main: () => void) => main }));
 vi.mock("../src/room-invite-notifications", async (original) => ({
@@ -49,18 +53,23 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("background uninstall URL registration", () => {
-  it.each([
-    ["staging", "https://staging.anidachi.app", "https://staging.anidachi.app/uninstall"],
-    ["production", "https://www.anidachi.app", "https://www.anidachi.app/uninstall"],
-  ])("registers the static %s URL on background start and install/update", async (channel, base, expected) => {
-    vi.stubEnv("WXT_EXTENSION_CHANNEL", channel);
-    vi.stubEnv("WXT_WEB_HTTP_BASE", base);
+  it("checks availability on background start and install/update without waiting on it", async () => {
+    boundary.uninstall.mockImplementation(() => new Promise(() => {}));
     await start();
-    expect(chrome.runtime.setUninstallURL).toHaveBeenCalledExactlyOnceWith(expected);
+    expect(boundary.uninstall).toHaveBeenCalledOnce();
     handlers.get("installed")!({ reason: "update" });
     await flush();
-    expect(chrome.runtime.setUninstallURL).toHaveBeenNthCalledWith(2, expected);
+    expect(boundary.uninstall).toHaveBeenCalledTimes(2);
     expect(boundary.website).toHaveBeenCalledOnce();
+  });
+  it("refreshes on its hourly alarm and browser startup without touching invitation state", async () => {
+    await start();
+    handlers.get("alarm")!({ name: "anidachi-uninstall-capability" });
+    expect(boundary.uninstall).toHaveBeenCalledTimes(2);
+    expect(boundary.uninstall).toHaveBeenLastCalledWith({ force: true });
+    expect(boundary.reconcile).not.toHaveBeenCalled();
+    handlers.get("startup")!();
+    expect(boundary.uninstall).toHaveBeenLastCalledWith({ force: true });
   });
 });
 
