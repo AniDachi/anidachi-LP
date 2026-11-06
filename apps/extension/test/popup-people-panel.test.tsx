@@ -509,7 +509,7 @@ describe("Popup People integration boundaries", () => {
     expect(onDeclineFriendRequest).toHaveBeenCalledWith(INCOMING_FRIENDSHIP_ID);
     expect(onAcceptInvite).toHaveBeenCalledWith(INBOX_INVITE_ID);
     expect(onDeclineInvite).toHaveBeenCalledWith(INBOX_INVITE_ID);
-    expect(view.container.textContent).toContain("Missed invite");
+    expect(view.container.textContent).toContain("Room ended");
 
     await unmount(view.root);
   });
@@ -547,7 +547,7 @@ describe("Popup People integration boundaries", () => {
     await unmount(view.root);
   });
 
-  it("marks cached inbox data stale and disables actions until refresh settles", async () => {
+  it("keeps cached inbox content stable and disables actions until refresh settles", async () => {
     const inbox = accountInbox([
       inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", NOW),
       inboxRoomInvite(INBOX_INVITE_ID, "active", NOW),
@@ -573,9 +573,8 @@ describe("Popup People integration boundaries", () => {
       />,
     );
 
-    expect(view.container.querySelector('[data-state="stale"]')?.textContent).toContain(
-      "Refreshing inbox",
-    );
+    expect(view.container.querySelector(".inbox-status")).toBeNull();
+    expect(view.container.querySelector(".inbox-spin")).not.toBeNull();
     for (const button of view.container.querySelectorAll<HTMLButtonElement>(
       ".inbox-actions button",
     )) {
@@ -955,7 +954,7 @@ describe("PopupApp social mutations", () => {
 
 		await click(await findButton(view.container, "Inbox"));
 		await click(await findButton(view.container, "Return to room"));
-		await waitFor(() => expect(view.container.textContent).toContain("Could not open room"));
+		await waitFor(() => expect(view.container.textContent).toContain("Couldn’t open this room. Try again."));
 		expect(await findButton(view.container, "Return to room")).toBeInstanceOf(HTMLButtonElement);
 		expect(view.container.textContent).not.toContain("Decline");
 	});

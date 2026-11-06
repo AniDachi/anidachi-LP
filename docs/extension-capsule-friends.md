@@ -79,6 +79,34 @@ client only confirms success when the server returns an accepted friendship and
 continues to send the displayed account's owner header. Changes to this web page
 require a web deployment; updating the extension folder alone does not ship them.
 
+## Toolbar Inbox follow-up (local, November 6)
+
+The toolbar drawer keeps live account-cache subscriptions and the existing
+background push reconciliation. Opening Inbox, returning focus/visibility, or
+regaining connectivity also rereads the authoritative inbox using a fresh
+session. Concurrent events and reads within five seconds coalesce; no polling,
+new permission, API, or notification subscription behavior is introduced.
+
+Cached cards stay in place during refresh, with only the refresh icon spinning.
+An actual read failure retains the list and a concise Retry message; stale
+mutation controls remain disabled. Missed invitations say Room ended and have
+no Join action.
+
+The internal social bridge preserves HTTP status. A rejected Join/Decline no
+longer sets the whole inbox to a mutation-error state: the popup records feedback
+for that invitation instance and rereads the canonical list. Confirmed ended,
+missing, or resolved invitations lose their actions even if that reread
+fails. Transient failures allow retry after a successful refresh. A forbidden response
+is retryable because friendship eligibility can recover. Feedback is
+scoped to owner, creation time, activity and state, so resends and Return cards
+do not inherit earlier errors. Friend-request conflicts similarly reconcile
+Inbox and People. Durable cache contents and counters are never guessed locally.
+
+After successful acceptance, the join destination opens before the refresh;
+opening failure remains retryable. Duplicate actions share the existing lock,
+and late old-account results cannot open a room or change another account's UI.
+This follow-up is local until a separate staging PR is accepted.
+
 ## Validation and release boundary
 
 Regression coverage lives in `capsule-friends-model.test.ts`,
