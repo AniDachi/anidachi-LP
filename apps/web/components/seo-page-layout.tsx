@@ -57,6 +57,72 @@ function formatIsoDate(iso: string): string {
   });
 }
 
+/** Dates plus the About / Editorial Policy accountability line shared by SEO layouts. */
+export function EditorialByline({
+  datePublished,
+  dateModified,
+}: {
+  datePublished: string;
+  dateModified: string;
+}) {
+  return (
+    <p className="not-prose mt-8 border-t border-ani-line pt-4 text-xs leading-relaxed text-ani-muted">
+      Published {formatIsoDate(datePublished)}
+      {dateModified !== datePublished
+        ? ` · Updated ${formatIsoDate(dateModified)}`
+        : null}
+      {" · "}
+      By{" "}
+      <Link href="/about" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
+        AniDachi
+      </Link>
+      {" · "}
+      <Link
+        href="/editorial-policy"
+        className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
+      >
+        Editorial policy
+      </Link>
+    </p>
+  );
+}
+
+/** Visible breadcrumb trail shared by SEO layouts (BreadcrumbList JSON-LD is emitted separately). */
+export function SeoBreadcrumbNav({ breadcrumbs }: { breadcrumbs: { name: string; url: string }[] }) {
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="border-b border-ani-line bg-ani-canvas"
+    >
+      <div className="container mx-auto px-4 py-3.5">
+        <ol className="flex flex-wrap items-center gap-2 text-sm tracking-[-0.01em] text-ani-muted">
+          {breadcrumbs.map((crumb, i) => (
+            <li key={crumb.url} className="flex items-center gap-2">
+              {i > 0 && (
+                <span className="text-ani-line" aria-hidden="true">
+                  /
+                </span>
+              )}
+              {i < breadcrumbs.length - 1 ? (
+                <Link
+                  href={crumb.url}
+                  className="transition-colors duration-200 hover:text-ani-text"
+                >
+                  {crumb.name}
+                </Link>
+              ) : (
+                <span className="max-w-[min(100%,12rem)] truncate font-medium text-ani-text sm:max-w-xs md:max-w-md">
+                  {crumb.name}
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </nav>
+  );
+}
+
 export function SeoPageLayout({
   breadcrumbs,
   title,
@@ -81,24 +147,7 @@ export function SeoPageLayout({
   const pageTemplate = conversionTemplate ?? inferPageTemplateFromPath(url);
 
   const editorialByline = showEditorialByline ? (
-    <p className="not-prose mt-8 border-t border-ani-line pt-4 text-xs leading-relaxed text-ani-muted">
-      Published {formatIsoDate(datePublished)}
-      {dateModified !== datePublished
-        ? ` · Updated ${formatIsoDate(dateModified)}`
-        : null}
-      {" · "}
-      By{" "}
-      <Link href="/about" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
-        AniDachi
-      </Link>
-      {" · "}
-      <Link
-        href="/editorial-policy"
-        className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
-      >
-        Editorial policy
-      </Link>
-    </p>
+    <EditorialByline datePublished={datePublished} dateModified={dateModified} />
   ) : null;
 
   const articleBody = (
@@ -129,36 +178,7 @@ export function SeoPageLayout({
         id="main-content"
         className="min-h-screen bg-ani-canvas"
       >
-        <nav
-          aria-label="Breadcrumb"
-          className="border-b border-ani-line bg-ani-canvas"
-        >
-          <div className="container mx-auto px-4 py-3.5">
-            <ol className="flex flex-wrap items-center gap-2 text-sm tracking-[-0.01em] text-ani-muted">
-              {breadcrumbs.map((crumb, i) => (
-                <li key={crumb.url} className="flex items-center gap-2">
-                  {i > 0 && (
-                    <span className="text-ani-line" aria-hidden="true">
-                      /
-                    </span>
-                  )}
-                  {i < breadcrumbs.length - 1 ? (
-                    <Link
-                      href={crumb.url}
-                      className="transition-colors duration-200 hover:text-ani-text"
-                    >
-                      {crumb.name}
-                    </Link>
-                  ) : (
-                    <span className="max-w-[min(100%,12rem)] truncate font-medium text-ani-text sm:max-w-xs md:max-w-md">
-                      {crumb.name}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </nav>
+        <SeoBreadcrumbNav breadcrumbs={breadcrumbs} />
 
         {hasToc ? (
           <div className="container mx-auto max-w-6xl px-4 py-10 lg:py-16">
