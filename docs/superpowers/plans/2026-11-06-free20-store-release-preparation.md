@@ -18,19 +18,23 @@ WXT/React, Stripe API `2025-08-27.basil`, pnpm 11.2.2, Node 22.23.1.
 [transition plan](2026-10-30-daily-free20-transition.md), and the owner's
 2026-11-06 instruction to prepare the ZIP and production launch after Store approval.
 
-**Current checkpoint (November 7):** preparation Tasks 1–6 are complete; the owner
-reports Store approval of 0.1.5. The owner has authorized reconciling main into the
-release branch, preparing production Worker configuration, and delivering those
-changes through staging (Task 7). Follow the concrete
+**Current checkpoint (November 7):** Tasks 1–7 are complete. After owner-reported
+Store approval and explicit production authorization, Task 8 delivered the database,
+Web, Worker and LIVE configuration and activated Free20/abuse with new trials off.
+Production acceptance and owner Store publication remain open. Follow the concrete
 [remaining launch checklist](../../releases/free20/production-preparation-2026-11-06.md#remaining-launch-checklist)
-for the next phase; production/LIVE writes and publication remain separate.
+and the dated production receipt; do not rebuild the approved 0.1.5 ZIP.
 
 ## Global Constraints
 
-- Source starts at accepted staging `dc988034df904157cf0bbb9e29bbfe9d41e82a04`;
-  current main is `9da93cd9891b6155051fc550957635c089fc8f3a`.
-- Do not promote to main, activate production, change LIVE Stripe, upload or publish
-  the Store item in this preparation. Read-only production inspection is allowed.
+- Preparation started at staging `dc988034df904157cf0bbb9e29bbfe9d41e82a04` and
+  main `9da93cd9891b6155051fc550957635c089fc8f3a`. Task 8 promoted accepted staging
+  `b0f2befc608d4fee00051ca00524efb707800219` through PR #471 to main
+  `940bc8b01a03982326c643a4b4ab92ec73fa9dc6`.
+- Tasks 1–7 allowed preparation and staging only. The owner's subsequent explicit
+  launch authorization covers Task 8 production/LIVE operations. Store publication
+  remains the owner's action; public ZIP hosting and replacing the approved ZIP
+  are not included.
 - Existing product decisions remain: 1,200 host seconds per UTC day; paid/manual
   and existing trial rights preserved; no new trials; one lifetime 40% allowance
   across uninstall/cancellation, monthly only, no stacking, no annual-switch lock.
@@ -175,7 +179,8 @@ Evidence remains under `artifacts/chrome-web-store-0.1.5-release-20261107/`.
   dashboard or publication check.
 - [x] Recheck exact main/staging, hosted web/Worker, policy and migration versions;
   compare pending migrations to the frozen release hashes.
-- [x] Recheck LIVE connection availability: both connections expose Sandbox only.
+- [x] Initial LIVE connection check exposed Sandbox only; subsequent owner
+  reauthorization restored AniDachi LIVE access before Task 8.
 - [x] Preview main/staging merge locally without updating either branch: one
   conflict in `apps/web/app/watch-youtube-together/page.tsx`; main-only SEO work
   must be preserved before promotion. The final-tree diff now contains 514 files.
@@ -195,7 +200,40 @@ production promotion, LIVE changes and Store publication remain separate.
 - [x] Prepare the explicit production accounting binding for staging; verify the
   exact-SHA manual production gate and channel isolation with existing checks.
 - [x] Verify the immutable approved ZIP and all recorded extension build inputs.
-- [ ] Run relevant checks, production dry-run and fresh independent branch review;
+- [x] Run relevant checks, production dry-run and fresh independent branch review;
   refresh docs/Graphify and deliver a reviewed PR into staging.
-- [ ] Verify hosted staging delivery and unchanged production, then report the
+- [x] Verify hosted staging delivery and unchanged production, then report the
   remaining concrete production prerequisites.
+
+Delivery: PR #524 merged as `b0f2befc`; CI, Rooms/P2P, Worker, migrations, Vercel
+and post-deployment staging smoke passed. The separate production authorization
+below followed this completed staging checkpoint.
+
+### Task 8: Authorized production deployment and activation
+
+Owner instruction: "понял, тогда работай внимательно и аккуратно" after the
+concrete schema-first production sequence was explained. The owner additionally
+confirmed creating the LIVE renewal coupon while retaining one lifetime allowance.
+
+- [x] Record fresh active-room/payment inventory, rollback versions and frozen hashes.
+- [x] Dry-run and apply the ten exact original-version migrations before main;
+  verify 93 migrations, 91 function/ACL matches and unchanged account-rights digests.
+- [x] Set production version metadata to 0.1.5; merge PR #471 and verify READY Web.
+- [x] Dispatch the exact-main-SHA Worker workflow and verify production bindings.
+- [x] Separate annual sale products without changing existing subscriptions; configure
+  legacy aliases, dedicated annual portal and monthly-only LIVE retention templates.
+- [x] Add `invoice.created` to the existing webhook; enable verified LIVE gates.
+- [x] Correct canonical production origin with independent environment scopes;
+  verify canonical/extension authentication and foreign-origin rejection.
+- [x] Rehearse guarded activation and revision conflict, then enable SQL Free20/abuse
+  and disable new trials as revision 4, retaining original activation and rights.
+- [x] Verify public offer, monthly pricing, authenticated account/uninstall rendering,
+  empty inspected error logs and unchanged approved ZIP/build inputs.
+- [ ] Complete loaded approved/old-client and real Free/paid/guest room, quota/reset,
+  invitation and LIVE purchase acceptance on final production versions.
+- [ ] Owner publishes the approved 0.1.5; observe actual Store update and rollout.
+
+Deployment IDs, provider configuration and exact evidence boundaries are in the
+[production receipt](../../releases/free20/production-preparation-2026-11-06.md#production-launch-receipt-november-7-2026).
+Keep ledgers and accepted payment obligations intact; after activation use the
+documented forward-fix or normal terminal-drain procedure, not a blind gates-off reset.
