@@ -18,6 +18,12 @@ WXT/React, Stripe API `2025-08-27.basil`, pnpm 11.2.2, Node 22.23.1.
 [transition plan](2026-10-30-daily-free20-transition.md), and the owner's
 2026-11-06 instruction to prepare the ZIP and production launch after Store approval.
 
+**Current checkpoint (November 7):** preparation Tasks 1–6 are complete; the owner
+reports Store approval of 0.1.5. The post-approval work currently authorized is
+documentation and read-only inventory. Follow the concrete
+[remaining launch checklist](../../releases/free20/production-preparation-2026-11-06.md#remaining-launch-checklist)
+for the next phase; production/LIVE writes and publication remain separate.
+
 ## Global Constraints
 
 - Source starts at accepted staging `dc988034df904157cf0bbb9e29bbfe9d41e82a04`;
@@ -144,8 +150,29 @@ capability route; shared versioned schema; staging metadata exception; release d
   version-1 capability; no auth, identifiers, redirects or remote code.
 - [x] Refresh without reinstall through browser startup/hourly alarms and a bounded
   persistent cache; leave account/room startup independent of the optional work.
-- [ ] Complete relevant web/extension/protocol checks, independent branch review,
+- [x] Complete relevant web/extension/protocol checks, independent branch review,
   Graphify refresh and staging delivery. Verify the deployed capability and the
   actual built extension against old and new servers.
-- [ ] Freeze a new 0.1.5 candidate and mark the November 6 ZIP superseded; keep both
+- [x] Freeze a new 0.1.5 candidate and mark the November 6 ZIP superseded; keep both
   immutable receipts. Refresh the same staging tester folder and Store handoff.
+
+Delivery: PR #523 merged as `d702613bc39ea99613166a5edc9cb13270117f93`; PR and
+post-merge CI, Rooms/P2P, deployment and staging smoke passed. The final production
+and staging artifacts passed isolated compiled-background checks. Extension 2,879,
+web 1,776 (six existing skips), protocol 293 and all-plane type checks passed.
+The final ZIP SHA256 is
+`358757aa77168fb515fd3df7be28f60d677b2536dffc45536f88b84c2aef33a3`.
+Evidence remains under `artifacts/chrome-web-store-0.1.5-release-20261107/`.
+
+### Post-approval handoff: read-only checkpoint
+
+- [x] Record the owner's approval report without claiming an independent Store
+  dashboard or publication check.
+- [x] Recheck exact main/staging, hosted web/Worker, policy and migration versions;
+  compare pending migrations to the frozen release hashes.
+- [x] Recheck LIVE connection availability: both connections expose Sandbox only.
+- [x] Preview main/staging merge locally without updating either branch: one
+  conflict in `apps/web/app/watch-youtube-together/page.tsx`; main-only SEO work
+  must be preserved before promotion. The final-tree diff now contains 514 files.
+- [ ] Complete the separately tracked remaining launch checklist before production
+  activation and owner publication. This planning checkpoint does not close it.

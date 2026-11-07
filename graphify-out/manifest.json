@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793987825.823969,
-    "seen": 1793988337.514027,
+    "mtime": 1794045313.5616176,
+    "seen": 1794045957.340971,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "c8a2c63acc87f6c17cee28d5d423cc08"
+    "semantic_hash": "afbc1d2272ef10e9eda5b048aa8eeef6"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -12258,16 +12258,16 @@
     "semantic_hash": ""
   },
   "docs/releases/free20/production-preparation-2026-11-06.md": {
-    "mtime": 1793987825.7749903,
-    "seen": 1793988337.514029,
+    "mtime": 1794045313.4827895,
+    "seen": 1794045957.340974,
     "ast_hash": "",
-    "semantic_hash": "1a110ec68ab2aabd5ab833aadea5c839"
+    "semantic_hash": "bdc68cf9cb515089f579f73b618b152b"
   },
   "docs/superpowers/plans/2026-11-06-free20-store-release-preparation.md": {
-    "mtime": 1793987825.7972739,
-    "seen": 1793988337.514029,
+    "mtime": 1794045313.511595,
+    "seen": 1794045957.340975,
     "ast_hash": "",
-    "semantic_hash": "7f246d840b03368bff84e58dae89e106"
+    "semantic_hash": "266f91571f7808e9c2e87a60f2a0446e"
   },
   "apps/web/app/api/extension/uninstall-capability/route.ts": {
     "mtime": 1793987655.1778746,

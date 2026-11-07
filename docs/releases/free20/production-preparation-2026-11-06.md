@@ -1,13 +1,91 @@
 # Free20: 0.1.5 Store review and production preparation
 
-Status: preparation only. The owner authorized a review ZIP from accepted staging
-on November 6 and confirmed **0.1.4** as the highest uploaded Store version.
-The new version is **0.1.5**. This does not authorize main promotion, production
-activation, LIVE provider writes, Store upload/publication or public ZIP hosting.
+Status on November 7: the owner reports Chrome Web Store approval of **0.1.5**.
+The approved candidate remains held for the coordinated production launch. Store
+dashboard status/publication has not been independently inspected. Current work
+is plan refresh and read-only preflight; it does not authorize main promotion,
+production activation, LIVE writes, Store publication or public ZIP hosting.
 
 Execution plan: [release preparation](../../superpowers/plans/2026-11-06-free20-store-release-preparation.md).
 Product contract: [Free20](../../daily-free20-contract.md) and
 [current master plan](../../superpowers/plans/2026-10-30-daily-free20-transition.md).
+
+## Post-approval checkpoint: November 7, 2026
+
+The final review candidate came from staging PR #523, source
+`d702613bc39ea99613166a5edc9cb13270117f93`, and supersedes the November 6 candidate.
+Keep the exact approved ZIP; changing a provider setting is not a reason to rebuild
+it. The immutable receipt is under
+`artifacts/chrome-web-store-0.1.5-release-20261107/` (local, ignored).
+
+- Version: `0.1.5`; extension ID: `gpkolofebdhfpapbbgdkdkmlmjfidgmn`.
+- ZIP SHA256: `358757aa77168fb515fd3df7be28f60d677b2536dffc45536f88b84c2aef33a3`.
+- Production website: READY `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke`, main
+  `9da93cd9891b6155051fc550957635c089fc8f3a`.
+- Staging website: READY `dpl_G691FEgXQh9aLpW3JQV2k4LhNUVt`, source `d702613b`.
+- Production Worker: `3ea773eb-f258-4713-a314-9abeb4012f49`, 100% traffic,
+  no `ANIDACHI_FREE20_ACCOUNTING_ENABLED` binding. Staging Worker:
+  `8a293e3a-5986-4380-8fad-e972878bfcc2`, accounting enabled.
+- Production DB still has 83 migrations, staging 93. The ten pending files below
+  exactly match the frozen release's SHA256 manifest. Production policy revision 3
+  retains its original activation timestamp and trials enabled; the two Free20
+  policy columns are absent. Staging revision 5 has Free20/abuse on and trials off.
+- Both Stripe connections still expose only AniDachi Sandbox (`livemode=false`).
+  This is a connection limitation, not proof that LIVE objects do not exist.
+- Production GitHub `WXT_EXTENSION_VERSION` remains `0.1.4`. Set it to `0.1.5`
+  before the authorized main build; a workflow-generated ZIP must not replace the
+  already approved archive under the same approval/hash claim.
+
+The fresh final-tree difference is **514 files**, versus the historical 504-file
+preparation-base comparison below. GitHub's compare API returned only 300 files;
+the complete count comes from local Git after fetching the exact remote refs.
+Main has 13 commits outside staging, including production SEO changes. Promotion
+PR [#471](https://github.com/AniDachi/anidachi-LP/pull/471) is open, auto-merge off,
+and conflicting. A local `git merge-tree --write-tree --messages origin/main
+origin/staging` preview confirmed one conflict:
+`apps/web/app/watch-youtube-together/page.tsx`. No merge, branch update, schema
+change or deployment was performed by the preview.
+
+Readback evidence: `artifacts/free20-post-approval-20261107/provider-readback.json`
+and `merge-preview.json` (local, ignored). These are dated inventory results, not
+production acceptance or a substitute for a fresh check at the launch window.
+
+### Remaining launch checklist
+
+- [x] Owner reported Store approval; preserve the frozen candidate and receipt.
+- [x] Refresh web/Worker/DB/Git inventory and verify pending migration hashes.
+- [ ] Obtain access to AniDachi LIVE Stripe and complete the read-only catalog,
+  coupon, portal and existing-webhook inventory described below. Do not request
+  secret keys in chat. Prepare exact changes before requesting LIVE-write approval.
+- [ ] Reconcile main's production-only changes on a feature branch from current
+  staging. Resolve the YouTube-page conflict while preserving current SEO work and
+  the reviewed Free20 copy. Run web check/tests, inspect that page, and deliver
+  through a PR to staging. Do not resolve by replacing an entire side blindly.
+  Recheck the merge result and its difference from the frozen extension/protocol
+  inputs; any runtime change requires compatibility review before using the
+  already approved ZIP. Documentation-only or website-only reconciliation does
+  not by itself require an extension rebuild.
+- [ ] Prepare the explicit production accounting flag in `apps/api/wrangler.toml`
+  through staging; review environment isolation, API check/tests, the existing
+  deployment gate and a production dry run. Adding a dashboard-only flag is not
+  durable because the deployment uses this config. Do not deploy production yet.
+- [ ] Record owner release authorization, current rollback versions and a fresh
+  active-room/pending-payment inventory at the actual launch window. Verify the
+  original 0.1.4 client's update-required behavior and the approved candidate's
+  authenticated behavior; earlier automated evidence is not this acceptance.
+- [ ] Apply and verify the ten migrations before merging main. The existing main
+  push migration workflow must then be a no-op, avoiding a race with Vercel.
+- [ ] Promote compatible web, verify its exact SHA, then dispatch production
+  Worker with that full `production_ready_sha`. Configure and verify LIVE billing
+  and web/Worker flags before the final SQL policy switch. Preserve account rights,
+  original activation, usage and accepted payment/discount obligations.
+- [ ] Verify the coordinated production behavior, including Free/paid/guest rooms,
+  time/closure, purchase transition, invitations and uninstall offers. Publish the
+  already approved 0.1.5 only after this checkpoint; observe the rollout.
+
+Detailed ordering and rollback boundaries below remain authoritative. LIVE access
+and the website merge conflict are current preparation blockers; approval from
+the Store does not remove either one.
 
 ## Source and environment inventory
 
