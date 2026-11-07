@@ -2,6 +2,9 @@ import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
+import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
+import { HubHero } from "@/components/hub-hero";
+import { StoreReviews } from "@/components/store-reviews";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import {
 	SeoGuideAnswer,
@@ -218,12 +221,17 @@ export default function WatchCrunchyrollTogetherPage() {
 				description="Host a Crunchyroll watch party with AniDachi — synced playback and live chat on each person's account."
 				url="/watch-crunchyroll-together"
 				datePublished="2026-04-23"
-				dateModified="2026-10-08"
+				dateModified="2026-11-07"
 				faq={faq}
 				headings={tocHeadings}
-				aboveFoldCta
+				midContentSlot={<StoreReviews />}
 			>
 				<SeoGuideTitle>Watch Crunchyroll Together with Friends</SeoGuideTitle>
+				<HubHero
+					pagePath="/watch-crunchyroll-together"
+					lead="Everyone opens the episode on their own Crunchyroll account. AniDachi keeps play, pause and seeking in sync, with live chat."
+					finePrint={`${PRICING_FREE20_SUMMARY} Friends join free.`}
+				/>
 
 				<h2 id="answer" className="scroll-mt-24">
 					Short Answer
@@ -235,16 +243,16 @@ export default function WatchCrunchyrollTogetherPage() {
 						open the episode on each person&apos;s own tab, and playback stays
 						in sync with live chat.
 					</strong>{" "}
-					Discord screen share often black-screens; Teleparty can sync
-					Crunchyroll live but is not Crunchyroll-first. AniDachi rooms are live
-					today. Async catch-up is planned. Step-by-step:{" "}
+					Step-by-step:{" "}
 					<Link href="/guides/how-to-watch-crunchyroll-with-friends">
 						how to watch Crunchyroll with friends
 					</Link>
-					. Start from the <Link href="/extension">AniDachi install page</Link>.
-					Friends join free; {PRICING_FREE20_SUMMARY}{" "}
-					<Link href="/pricing">Compare plans</Link>.
+					.
 				</SeoGuideAnswer>
+
+				<div className="not-prose my-10">
+					<ChromeExtensionDemo />
+				</div>
 
 				<h2 id="quick-answers" className="scroll-mt-24">
 					Does Crunchyroll have a watch party — and does Teleparty work?

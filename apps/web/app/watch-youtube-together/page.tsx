@@ -12,10 +12,14 @@ import {
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
+import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
+import { HubHero } from "@/components/hub-hero";
+import { StoreReviews } from "@/components/store-reviews";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
+  PRICING_FREE20_SUMMARY,
   PRICING_PLUS_PRICE_LINE,
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
@@ -241,14 +245,19 @@ export default function WatchYoutubeTogetherPage() {
         description="The complete guide to YouTube watch parties: live sync, chat, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
-        dateModified="2026-10-29"
+        dateModified="2026-11-07"
         faq={faq}
         headings={tocHeadings}
         itemList={startHereItemList}
         articleImage={articleImageAbsolute}
-        aboveFoldCta
+        midContentSlot={<StoreReviews />}
       >
         <SeoGuideTitle>YouTube Watch Party: Watch YouTube Together With Friends</SeoGuideTitle>
+        <HubHero
+          pagePath="/watch-youtube-together"
+          lead="Everyone watches on their own YouTube player. AniDachi keeps play, pause and seeking in sync, with live chat."
+          finePrint={`${PRICING_FREE20_SUMMARY} Friends join free. Works on full youtube.com/watch pages in desktop Chrome, not Shorts or embeds.`}
+        />
 
         <h2 id="answer" className="scroll-mt-24">
           Short Answer
@@ -260,15 +269,13 @@ export default function WatchYoutubeTogetherPage() {
             invite to your friends. Everyone watches on their own player, and
             play, pause and seeking stay in sync.
           </strong>{" "}
-          Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit, and friends join free.
           YouTube itself has no watch-together button for regular videos on
-          desktop. Start from the{" "}
-          <Link href="/extension">AniDachi install page</Link>. Extension details:{" "}
-          <Link href="/guides/youtube-watch-party-chrome-extension">
-            YouTube watch party Chrome extension
-          </Link>
-          . Compare free live-only tools below after you know the AniDachi path.
+          desktop.
         </SeoGuideAnswer>
+
+        <div className="not-prose my-10">
+          <ChromeExtensionDemo />
+        </div>
 
         <h2
           id="start-here"
