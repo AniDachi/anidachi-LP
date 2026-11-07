@@ -1,17 +1,110 @@
 # Free20: 0.1.5 Store review and production preparation
 
-Status on November 7: the owner reports Chrome Web Store approval of **0.1.5**.
-The approved candidate remains held for the coordinated production launch. Store
-dashboard status/publication has not been independently inspected. Current work
-includes owner-authorized reconciliation/configuration delivery to staging and
-read-only LIVE inventory; it does not authorize main promotion,
-production activation, LIVE writes, Store publication or public ZIP hosting.
+Status on November 7: **production deployment and Free20 activation completed**
+under the owner's explicit launch authorization. The owner reports Chrome Web
+Store approval of **0.1.5**; publication remains the owner's action and has not been
+verified complete. Preserve the approved ZIP. Real production room/payment and
+loaded-client acceptance remain distinct from the verified deployment below.
+Public ZIP hosting and replacing the approved package are not authorized.
 
 Execution plan: [release preparation](../../superpowers/plans/2026-11-06-free20-store-release-preparation.md).
 Product contract: [Free20](../../daily-free20-contract.md) and
 [current master plan](../../superpowers/plans/2026-10-30-daily-free20-transition.md).
 
-## Post-approval checkpoint: November 7, 2026
+## Production launch receipt: November 7, 2026
+
+The owner approved the explained production sequence, then instructed careful
+execution. A later explicit confirmation approved the renewal coupon template
+while preserving one lifetime 40% allowance. This authorization supersedes the
+earlier preparation-only boundary for the operations recorded here, not Store
+publication or unrelated customer changes.
+
+| Plane | Delivered state |
+| --- | --- |
+| Accepted staging | PR #524, `b0f2befc608d4fee00051ca00524efb707800219`; staging checks/deploy/smoke successful |
+| Production Git | PR [#471](https://github.com/AniDachi/anidachi-LP/pull/471), main `940bc8b01a03982326c643a4b4ab92ec73fa9dc6` |
+| Production Web | READY `dpl_9sBQJ2NMeWzfnPRz2CBVdUoCSMem`, exact main SHA, both production aliases |
+| Production Worker | Version `ad430c1c-a43b-47c7-82c2-e8e56bcf22f4`, 100%; manual exact-SHA [run 42367694938](https://github.com/AniDachi/anidachi-LP/actions/runs/42367694938) succeeded |
+| Production DB | `bynsjjxzatxndzjkogim`: 93 migrations; 91 relevant functions/ACLs match staging |
+| SQL policy | Revision **4**: `free20_enabled=true`, `free20_abuse_enabled=true`, `trials_enabled=false` |
+| Original activation | `2026-10-03T16:44:10.213666Z`, unchanged |
+| Runtime gates | Web accounting/abuse true; Worker accounting true; production-only internal origins |
+| Approved artifact | 0.1.5, source `d702613bc39ea99613166a5edc9cb13270117f93`; SHA256 `358757aa77168fb515fd3df7be28f60d677b2536dffc45536f88b84c2aef33a3` |
+
+All ten migration files below were applied with their original versions before
+main promotion; the subsequent main migration workflow was a successful no-op.
+Main CI `42366462199`, extension build `42366462170` and migrations `42366462160`
+succeeded. The build variable is now 0.1.5; its CI artifact does not replace the
+approved archive. All 493 recorded build inputs, 15 ZIP entries and ten migration
+hashes match the frozen receipt (2,895,529 bytes).
+
+The activation transaction was rehearsed with rollback and a revision-conflict
+check before the guarded revision-3-to-4 update. Existing manual/trial grants and
+subscription record digests remained unchanged across schema and activation.
+No usage was reset, no customer was charged or repriced, and no real subscription
+was cancelled or discount claim accepted during this release.
+
+### LIVE billing delivered
+
+Account `acct_1RlmiCAGc1Bd58Cj`, `livemode=true`. Monthly prices remain
+`price_1TknUGAGc1Bd58CjxImsjOEH` (Plus, USD 7.99) and
+`price_1TknW0AGc1Bd58CjkxcMVEx0` (Pro, USD 14.99).
+
+| Purpose | LIVE object |
+| --- | --- |
+| Plus annual sale | `prod_anidachi_plus_yearly_free20` / `price_1UZ7J4AGc1Bd58CjRfKFaMtl`, USD 76.70/year |
+| Pro annual sale | `prod_anidachi_pro_yearly_free20` / `price_1UZ7JNAGc1Bd58CjBXeqXSYM`, USD 143.90/year |
+| Annual confirmation portal | `bpc_1UZ7MiAGc1Bd58CjkixI3v4U`, non-default, two annual products only, price update / always invoice / unchanged anchor |
+| First-month template | `anidachi_uninstall_first_40_once_live_2026` |
+| Next-renewal template | `anidachi_uninstall_renewal_40_once_live_2026` |
+| Existing webhook | `we_1TWGwEAGc1Bd58CjSA30Ttxu`; added `invoice.created`; same URL, signing secret and `2025-06-30.basil` version |
+
+Both coupon templates are 40%, duration once, restricted to the two monthly
+products. Each monthly product has exactly one active sale price. Old annual
+prices `price_1UM3mvAGc1Bd58CjUnlK9JNl` and `price_1UM3njAGc1Bd58CjaAxFnifl`
+are archived for new sales and configured as legacy recognition aliases. Existing
+annual subscriptions, items, periods and anchors are untouched. Default and old
+annual portal configurations are preserved.
+
+All three exact LIVE issuance gates are enabled. Separate templates serve different
+flows; **they do not create separate allowances**. Production grant uniqueness and
+the first/renewal/cancellation RPC guards enforce one lifetime allowance per account
+and customer, including pending reservations. Native cancellation still creates a
+private single-use offer on demand; no public or global retention promo was added.
+The actual app catalog/coupon validators passed against fresh, read-only LIVE
+responses, including recognition of both legacy annual IDs. This validates
+configuration, not a completed customer payment.
+
+### Verification and remaining acceptance
+
+- The canonical origin mismatch was corrected with a Production-only
+  `NEXT_PUBLIC_SITE_URL=https://www.anidachi.app`; the old shared value remains
+  Preview-only and the exact staging override is unchanged. Redeployment was
+  required. Canonical web and approved extension origins reach authentication
+  (401 without credentials); a foreign origin remains rejected (403).
+- Public offer at `2026-11-07T11:29:22.815922Z` returned revision 4,
+  `hostingModel=daily_free20`, `trialAvailable=false`. The legacy `trialMode`
+  contract field is not an available trial offer.
+- Worker health, unauthenticated ICE rejection, unsigned webhook rejection and
+  versioned uninstall capability passed. Final Web error/fatal log counts were
+  empty in the inspected 30-minute window.
+- Read-only authenticated browser inspection loaded account billing, pricing and
+  uninstall. Pricing selected Monthly and showed Free 20 minutes / 4 people,
+  Plus USD 7.99 and Pro USD 14.99. Uninstall displayed the eligible one-month offer,
+  optional survey and Store reinstall link; no claim/payment buttons were pressed.
+- No real production Free/paid/guest room, two-user session, quota exhaustion,
+  UTC reset, purchase transition or installed old/new Store-client acceptance was
+  completed by these deployment checks. Those and owner publication remain open.
+
+Sanitized local evidence is under `artifacts/free20-production-launch-20261107/`.
+Prelaunch rollback Web was `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke`, Worker
+`3ea773eb-f258-4713-a314-9abeb4012f49`. These are historical references, **not an
+instruction to roll back blindly after activation**; preserve ledgers and payment
+obligations and follow the rollback boundaries below.
+
+## Historical prelaunch checkpoint: November 7, 2026
+
+The following inventory describes the state before the authorized launch above.
 
 The final review candidate came from staging PR #523, source
 `d702613bc39ea99613166a5edc9cb13270117f93`, and supersedes the November 6 candidate.
@@ -67,7 +160,7 @@ production acceptance or a substitute for a fresh check at the launch window.
 - [x] Obtain access to AniDachi LIVE Stripe and complete the read-only catalog,
   coupon, portal and existing-webhook inventory described below. Do not request
   secret keys in chat. Prepare exact changes before requesting LIVE-write approval.
-- [ ] Reconcile main's production-only changes on a feature branch from current
+- [x] Reconcile main's production-only changes on a feature branch from current
   staging. Resolve the YouTube-page conflict while preserving current SEO work and
   the reviewed Free20 copy. Run web check/tests, inspect that page, and deliver
   through a PR to staging. Do not resolve by replacing an entire side blindly.
@@ -75,17 +168,17 @@ production acceptance or a substitute for a fresh check at the launch window.
   inputs; any runtime change requires compatibility review before using the
   already approved ZIP. Documentation-only or website-only reconciliation does
   not by itself require an extension rebuild.
-- [ ] Prepare the explicit production accounting flag in `apps/api/wrangler.toml`
+- [x] Prepare the explicit production accounting flag in `apps/api/wrangler.toml`
   through staging; review environment isolation, API check/tests, the existing
   deployment gate and a production dry run. Adding a dashboard-only flag is not
   durable because the deployment uses this config. Do not deploy production yet.
-- [ ] Record owner release authorization, current rollback versions and a fresh
-  active-room/pending-payment inventory at the actual launch window. Verify the
-  original 0.1.4 client's update-required behavior and the approved candidate's
-  authenticated behavior; earlier automated evidence is not this acceptance.
-- [ ] Apply and verify the ten migrations before merging main. The existing main
+- [x] Record owner release authorization, current rollback versions and a fresh
+  active-room/pending-payment inventory at the actual launch window.
+- [ ] Verify the original 0.1.4 client's update-required behavior and the approved
+  candidate's authenticated behavior; automated evidence is not this acceptance.
+- [x] Apply and verify the ten migrations before merging main. The existing main
   push migration workflow must then be a no-op, avoiding a race with Vercel.
-- [ ] Promote compatible web, verify its exact SHA, then dispatch production
+- [x] Promote compatible web, verify its exact SHA, then dispatch production
   Worker with that full `production_ready_sha`. Configure and verify LIVE billing
   and web/Worker flags before the final SQL policy switch. Preserve account rights,
   original activation, usage and accepted payment/discount obligations.
@@ -93,11 +186,11 @@ production acceptance or a substitute for a fresh check at the launch window.
   time/closure, purchase transition, invitations and uninstall offers. Publish the
   already approved 0.1.5 only after this checkpoint; observe the rollout.
 
-Detailed ordering and rollback boundaries below remain authoritative. LIVE access
-is restored and the conflict is resolved locally. Staging delivery, the provider
-changes documented below and coordinated production launch remain separate steps.
+Detailed ordering and rollback boundaries below remain authoritative. Technical
+deployment and activation are recorded above. The unchecked acceptance and owner
+publication steps remain open; deployment checks do not silently close them.
 
-## Source and environment inventory
+## Historical source and environment inventory
 
 The preparation branch starts at accepted staging
 `dc988034df904157cf0bbb9e29bbfe9d41e82a04` (PR #521). Production main remains
@@ -124,7 +217,7 @@ Vercel environment metadata establishes configured key names, not working Stripe
 objects, matching secret pairs or successful payments. Recheck current aliases
 and CI at delivery; record exact deployments in the PR/artifact receipt.
 
-Pending production migrations, in order:
+Production migration batch (pending at inventory, applied at launch), in order:
 
 1. `20261031074738_daily_free20_room_admission.sql`
 2. `20261031100000_free20_account_status.sql`
@@ -146,7 +239,7 @@ Free20 migration; this is not a fresh replay of all 93 historical migrations.
 
 ## Compatibility during Store review
 
-Production does not yet have `/api/me/hosting-status`. The candidate extension
+Before the launch, production lacked `/api/me/hosting-status`. The candidate extension
 handles its generic 404 only by a fresh authenticated, current-owner read of
 `/api/me/entitlements?hostingStatusVersion=1`. A complete, consistent old hosting
 contract without the capability marker selects the existing legacy presentation.
@@ -194,7 +287,7 @@ do not assume every installation updates immediately.
 
 ## LIVE retention prerequisites
 
-### Verified LIVE inventory: November 7
+### Historical LIVE inventory before configuration: November 7
 
 Read-only inventory of `acct_1RlmiCAGc1Bd58Cj` completed with `livemode=true` and
 no truncated pages. No subscriptions, payments or provider objects were changed.
