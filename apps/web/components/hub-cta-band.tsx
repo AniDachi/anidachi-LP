@@ -15,11 +15,14 @@ export function HubCtaBand({
   heading,
   body,
   placement = "content_after_compare",
+  ctaLabel = INSTALL_CTA_LABEL,
 }: {
   pagePath: string;
   heading: string;
   body: string;
   placement?: string;
+  /** Same platform-specific text as the hero button. */
+  ctaLabel?: string;
 }) {
   const pageTemplate = inferPageTemplateFromPath(pagePath);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -72,7 +75,7 @@ export function HubCtaBand({
             });
           }}
         >
-          {INSTALL_CTA_LABEL}
+          {ctaLabel}
         </InstallLink>
       </Button>
     </div>

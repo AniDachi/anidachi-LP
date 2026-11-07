@@ -1,24 +1,31 @@
 import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { InstallLink } from "@/components/install-link";
+import { getPlanPolicy } from "@anidachi/protocol";
+import { HubCtaBand } from "@/components/hub-cta-band";
+import {
+  HUB_INSTALL_STEP,
+  HubFeatureGrid,
+  HubLandingLayout,
+} from "@/components/hub-landing-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import {
-  SeoGuideAnswer,
   SeoGuideBulletList,
   SeoGuideNote,
   SeoGuideOptions,
   SeoGuideRelated,
-  SeoGuideSteps,
-  SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
-import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { INSTALL_HOWTO_STEP_TEXT } from "@/lib/install-cta";
+import type { TocHeading } from "@/components/table-of-contents";
 import { PRICING_PLUS_SHORT, PRICING_PRO_SHORT } from "@/lib/pricing-copy";
 import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
+
+const PAGE_PATH = "/netflix-watch-party";
+const FREE_ROOM = getPlanPolicy("free").maxParticipants;
+const PLUS_ROOM = getPlanPolicy("plus").maxParticipants;
+const PRO_ROOM = getPlanPolicy("pro").maxParticipants;
 
 const PAGE_TITLE = "Netflix Watch Party: Watch Together in Sync";
 const PAGE_DESCRIPTION =
@@ -53,22 +60,20 @@ const SOURCES = [
   { href: "https://help.netflix.com/en/node/24853", label: "Netflix Help: watching in another country" },
 ];
 
+/** One step list for the visible "How it works" section and the HowTo JSON-LD, so they always match. */
 const howToSteps = [
-  {
-    name: "Install AniDachi in desktop Chrome",
-    text: `${INSTALL_HOWTO_STEP_TEXT} Start from /extension and sign in to AniDachi.`,
-  },
+  HUB_INSTALL_STEP,
   {
     name: "Open the Netflix title",
-    text: "Sign in to your own Netflix account and start the movie or episode, so the address bar shows netflix.com/watch/ and the player is on screen.",
+    text: "Sign in to your own Netflix account and start the movie or episode. The address bar should read netflix.com/watch/ followed by a number; the browse row and the info page are not the player.",
   },
   {
     name: "Create the room",
-    text: `Click the AniDachi capsule at the top-right of the player and choose Create room. ${PRICING_FREE20_SUMMARY}`,
+    text: "Click the AniDachi capsule at the top-right of the player and choose Create room.",
   },
   {
     name: "Share the invite link",
-    text: "Copy the room link or invite friends from Friends & groups. Friends join free with AniDachi and their own Netflix access, and playback stays in sync.",
+    text: "Copy the room link into your group chat, or invite saved friends and groups. Friends join free and play the same title on their own Netflix, in sync.",
   },
 ];
 
@@ -81,7 +86,7 @@ const faq = [
   {
     question: "How do I start a Netflix watch party?",
     answer:
-      "Install AniDachi from /extension in desktop Chrome, open the Netflix movie or episode on your own account, click the AniDachi capsule on the player and choose Create room, then send the invite link. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join free.",
+      `Install AniDachi from the Chrome Web Store in desktop Chrome, open the Netflix movie or episode on your own account, click the AniDachi capsule on the player and choose Create room, then send the invite link. ${PRICING_FREE20_SUMMARY} Friends join free.`,
   },
   {
     question: "Does everyone need Netflix for a watch party?",
@@ -101,7 +106,7 @@ const faq = [
   {
     question: "How many people can join a Netflix watch party on AniDachi?",
     answer:
-      "Up to 6 people including the host when the host has Plus, or up to 15 with Pro. Friends join free. Up to four cameras can be on at once.",
+      `Up to ${FREE_ROOM} people including the host on Free, ${PLUS_ROOM} on Plus, or ${PRO_ROOM} on Pro. Friends join free. Up to four cameras can be on at once.`,
   },
   {
     question: "Why is my Netflix watch party not syncing?",
@@ -116,15 +121,12 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
-  { id: "answer", label: "Short answer", level: 2 },
   { id: "how-it-works", label: "How it works", level: 2 },
   { id: "what-works", label: "What works and the limits", level: 2 },
   { id: "everyone-needs-netflix", label: "Does everyone need Netflix?", level: 2 },
   { id: "not-working", label: "Watch party not working", level: 2 },
-  { id: "discord", label: "Netflix on Discord", level: 2 },
   { id: "vs-teleparty", label: "AniDachi vs Teleparty", level: 2 },
   { id: "plan", label: "Plan your night", level: 2 },
-  { id: "more", label: "More Netflix guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
@@ -136,21 +138,19 @@ export default function NetflixWatchPartyPage() {
         description="Sync a Netflix movie or episode across desktop Chrome with AniDachi, each person on their own Netflix account."
         steps={howToSteps}
       />
-      <SeoPageLayout
+      <HubLandingLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Netflix watch party", url: "/netflix-watch-party" },
+          { name: "Netflix Watch Party", url: "/netflix-watch-party" },
         ]}
         title={PAGE_TITLE}
         description={PAGE_DESCRIPTION}
-        url="/netflix-watch-party"
+        url={PAGE_PATH}
         datePublished="2026-10-08"
-        dateModified="2026-10-20"
+        dateModified="2026-11-07"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
-        aboveFoldCta
-        conversionTemplate="pillar"
         itemList={[
           { name: "Netflix Party", url: "/netflix-party", position: 1 },
           {
@@ -177,78 +177,31 @@ export default function NetflixWatchPartyPage() {
           },
           { name: "Teleparty Netflix", url: "/guides/teleparty-netflix", position: 8 },
         ]}
-      >
-        <SeoGuideTitle>Netflix Watch Party</SeoGuideTitle>
-        <SeoGuideAnswer id="answer">
-          <p>
+        h1="Netflix Watch Party"
+        heroLead="Netflix has no watch party button. AniDachi adds one."
+        heroCtaLabel="Start a Netflix Watch Party"
+        heroWorksOn={["Netflix", "Crunchyroll", "YouTube"]}
+        heroFinePrint="20 free minutes a day. Friends join free."
+        answer={
+          <>
             <strong>
-              Netflix has no built-in watch party. AniDachi syncs a Netflix movie or
-              episode across desktop Chrome: everyone plays it on their own Netflix
-              account, and friends join free.
+              Netflix has no built-in watch party. AniDachi syncs a Netflix movie
+              or episode across desktop Chrome: everyone plays it on their own
+              Netflix account, and friends join free.
             </strong>{" "}
-            {PRICING_FREE20_SUMMARY} Rooms add chat,
-            reactions, voice and video, with push-to-talk on the V key.
-          </p>
-          <p>
-            To start one, install AniDachi, open the movie or episode on
-            netflix.com/watch, click the AniDachi capsule on the player, choose
-            Create room and send the link to your friends.
-          </p>
-        </SeoGuideAnswer>
-
-        <h2 id="how-it-works" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
-          How a Netflix watch party works
-        </h2>
-        <p className="mb-6 leading-relaxed text-ani-muted">
-          A watch party is not one stream sent to everyone. Each person runs Netflix
-          in their own Chrome tab, on their own account, and AniDachi keeps those
-          players at the same moment. When the host presses pause, every player
-          pauses. When the host skips back to rewatch a scene, everyone jumps with
-          them. That is why the picture stays at full Netflix quality for each
-          viewer: nobody is watching a compressed copy of someone else&apos;s screen.
-        </p>
-        <SeoGuideSteps
-          steps={[
-            {
-              name: "Install AniDachi in desktop Chrome",
-              text: (
-                <>
-                  Open the <Link href="/extension">AniDachi install page</Link>, choose
-                  Add to Chrome on the official Chrome Web Store listing, and sign in.
-                  Friends do the same before the night.
-                </>
-              ),
-            },
-            {
-              name: "Open the Netflix title",
-              text: "Sign in to your own Netflix account and start the movie or episode. The address bar should read netflix.com/watch/ followed by a number. The browse row and the title's info page are not the player.",
-            },
-            {
-              name: "Create the room",
-              text: `Click the AniDachi capsule at the top-right of the player and choose Create room. ${PRICING_FREE20_SUMMARY}`,
-            },
-            {
-              name: "Share the invite link",
-              text: "Copy the room link and paste it into your group chat, or use the person-plus button to invite saved friends and groups. Friends join free and play the same title on their own Netflix.",
-            },
-          ]}
-        />
-        <p className="mb-6 leading-relaxed text-ani-muted">
-          Ready to try it?{" "}
-          <InstallLink href="/extension" className="text-brand-orange hover:underline">
-            Add AniDachi to Chrome and host your first Netflix room
-          </InstallLink>
-          . If you only want the click-by-click version for a friend group, the{" "}
-          <Link
-            href="/guides/how-to-watch-netflix-with-friends"
-            className="text-brand-orange hover:underline"
-          >
-            how to watch Netflix with friends
-          </Link>{" "}
-          guide walks through it with a troubleshooting box.
-        </p>
-
-        <h2 id="what-works" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+            Rooms add chat, reactions, voice and video, with push-to-talk on the
+            V key.
+          </>
+        }
+        steps={{
+          id: "how-it-works",
+          heading: "How a Netflix Watch Party Works",
+          intro:
+            "Each person runs Netflix in their own Chrome tab, on their own account, and AniDachi keeps the players at the same moment. Nobody watches a compressed copy of someone else's screen.",
+          items: howToSteps,
+        }}
+      >
+        <h2 id="what-works" className="scroll-mt-24">
           What works today, and the limits
         </h2>
         <p className="mb-4 leading-relaxed text-ani-muted">
@@ -269,11 +222,11 @@ export default function NetflixWatchPartyPage() {
             { feature: "Netflix plan with ads", values: { status: "Not yet confirmed" } },
           ]}
         />
-        <SeoGuideBulletList
+        <HubFeatureGrid
           items={[
             {
               title: "Room size",
-              body: `A Plus host (${PRICING_PLUS_SHORT}) can have up to 6 people in the room, including themselves. A Pro host (${PRICING_PRO_SHORT}) can have up to 15.`,
+              body: `Free rooms hold up to ${FREE_ROOM} people, including the host. A Plus host (${PRICING_PLUS_SHORT}) can have up to ${PLUS_ROOM}, and a Pro host (${PRICING_PRO_SHORT}) up to ${PRO_ROOM}.`,
             },
             {
               title: "Voice and video",
@@ -297,7 +250,7 @@ export default function NetflixWatchPartyPage() {
 
         <h2
           id="everyone-needs-netflix"
-          className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text"
+          className="scroll-mt-24"
         >
           Does everyone need Netflix?
         </h2>
@@ -322,7 +275,7 @@ export default function NetflixWatchPartyPage() {
           Everyone still pays for Netflix as usual.
         </p>
 
-        <h2 id="not-working" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        <h2 id="not-working" className="scroll-mt-24">
           Netflix watch party not working?
         </h2>
         <p className="mb-4 leading-relaxed text-ani-muted">
@@ -362,7 +315,7 @@ export default function NetflixWatchPartyPage() {
           ]}
         />
 
-        <h2 id="discord" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        <h2 id="discord" className="scroll-mt-24">
           Netflix on Discord
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
@@ -379,7 +332,7 @@ export default function NetflixWatchPartyPage() {
           .
         </p>
 
-        <h2 id="vs-teleparty" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        <h2 id="vs-teleparty" className="scroll-mt-24">
           AniDachi vs Teleparty on Netflix
         </h2>
         <p className="mb-4 leading-relaxed text-ani-muted">
@@ -397,7 +350,7 @@ export default function NetflixWatchPartyPage() {
             {
               feature: "Cost to host a Netflix party",
               values: {
-                anidachi: "Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
+                anidachi: PRICING_FREE20_SUMMARY,
                 teleparty: "Free tier",
               },
             },
@@ -411,7 +364,7 @@ export default function NetflixWatchPartyPage() {
             {
               feature: "People per party",
               values: {
-                anidachi: "Up to 6 (Plus) or 15 (Pro)",
+                anidachi: `Up to ${FREE_ROOM} (Free), ${PLUS_ROOM} (Plus) or ${PRO_ROOM} (Pro)`,
                 teleparty: "Up to 1,000+",
               },
             },
@@ -447,7 +400,14 @@ export default function NetflixWatchPartyPage() {
           .
         </p>
 
-        <h2 id="plan" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        <HubCtaBand
+          pagePath={PAGE_PATH}
+          ctaLabel="Start a Netflix Watch Party"
+          heading="Start your Netflix watch party"
+          body="Install AniDachi, open a movie or episode and send the invite. 20 free minutes a day, and friends join free."
+        />
+
+        <h2 id="plan" className="scroll-mt-24">
           Plan your night
         </h2>
         <SeoGuideOptions
@@ -487,7 +447,7 @@ export default function NetflixWatchPartyPage() {
           ]}
         />
 
-        <h2 id="more" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        <h2 id="more" className="scroll-mt-24">
           More Netflix guides
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
@@ -539,7 +499,7 @@ export default function NetflixWatchPartyPage() {
           ))}
           . AniDachi is not affiliated with Netflix or Teleparty.
         </p>
-      </SeoPageLayout>
+      </HubLandingLayout>
     </>
   );
 }

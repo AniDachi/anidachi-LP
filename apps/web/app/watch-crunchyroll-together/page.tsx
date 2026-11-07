@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
 import { HubCtaBand } from "@/components/hub-cta-band";
-import { HubFeatureGrid, HubLandingLayout } from "@/components/hub-landing-layout";
+import { HUB_INSTALL_STEP, HubFeatureGrid, HubLandingLayout } from "@/components/hub-landing-layout";
 import { getPlanPolicy } from "@anidachi/protocol";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import {
@@ -13,8 +13,6 @@ import {
 	SeoGuideRelated,
 } from "@/components/seo-guide-blocks";
 import type { TocHeading } from "@/components/table-of-contents";
-import { InstallLink } from "@/components/install-link";
-import { CHROME_WEB_STORE_URL, INSTALL_HOWTO_STEP_TEXT } from "@/lib/install-cta";
 import {
 	PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
@@ -95,35 +93,18 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
-	{ id: "answer", label: "Short answer", level: 2 },
 	{ id: "step-by-step", label: "Step-by-step", level: 2 },
-	{
-		id: "quick-answers",
-		label: "Does Crunchyroll have a watch party?",
-		level: 2,
-	},
+	{ id: "quick-answers", label: "Does Crunchyroll have a watch party?", level: 2 },
 	{ id: "compare-methods", label: "Compare methods", level: 2 },
 	{ id: "group-watch", label: "Crunchyroll group watch tips", level: 2 },
-	{
-		id: "anidachi-difference",
-		label: "What makes AniDachi different",
-		level: 2,
-	},
-	{
-		id: "continue-watching",
-		label: "Continue Watching and watch history",
-		level: 2,
-	},
-	{ id: "related", label: "Related guides", level: 2 },
+	{ id: "anidachi-difference", label: "What makes AniDachi different", level: 2 },
+	{ id: "continue-watching", label: "Continue Watching and watch history", level: 2 },
 	{ id: "faq", label: "FAQ", level: 2 },
 ];
 
 /** One step list for the visible "How to watch" section and the HowTo JSON-LD, so they always match. */
 const howToSteps = [
-	{
-		name: "Install AniDachi",
-		text: INSTALL_HOWTO_STEP_TEXT,
-	},
+	HUB_INSTALL_STEP,
 	{
 		name: "Open a Crunchyroll episode",
 		text: "Open the episode in desktop Chrome. AniDachi detects the player automatically.",
@@ -153,7 +134,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				breadcrumbs={[
 					{ name: "Home", url: "/" },
 					{
-						name: "Watch Crunchyroll Together",
+						name: "Crunchyroll Watch Party",
 						url: "/watch-crunchyroll-together",
 					},
 				]}
@@ -187,28 +168,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				steps={{
 					id: "step-by-step",
 					heading: "How to Watch Crunchyroll Together (Step by Step)",
-					// Same words as the HowTo JSON-LD; step 1 links its Store listing, as on the homepage.
-					items: howToSteps.map((step, i) =>
-						i === 0
-							? {
-									...step,
-									text: (
-										<>
-											Open the{" "}
-											<InstallLink
-												href={CHROME_WEB_STORE_URL}
-												storePlacement="hub_how_it_works"
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												official AniDachi Chrome Web Store listing
-											</InstallLink>{" "}
-											and choose Add to Chrome.
-										</>
-									),
-								}
-							: step,
-					),
+					items: howToSteps,
 				}}
 			>
 				<h2 id="quick-answers" className="scroll-mt-24">
@@ -335,6 +295,7 @@ export default function WatchCrunchyrollTogetherPage() {
 
 				<HubCtaBand
 					pagePath={PAGE_PATH}
+					ctaLabel="Start a Crunchyroll Watch Party"
 					heading="Start your Crunchyroll watch party"
 					body="Install AniDachi, open an episode and send the invite. 20 free minutes a day, and friends join free."
 				/>
