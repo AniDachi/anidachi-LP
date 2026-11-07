@@ -19,8 +19,9 @@ WXT/React, Stripe API `2025-08-27.basil`, pnpm 11.2.2, Node 22.23.1.
 2026-11-06 instruction to prepare the ZIP and production launch after Store approval.
 
 **Current checkpoint (November 7):** preparation Tasks 1–6 are complete; the owner
-reports Store approval of 0.1.5. The post-approval work currently authorized is
-documentation and read-only inventory. Follow the concrete
+reports Store approval of 0.1.5. The owner has authorized reconciling main into the
+release branch, preparing production Worker configuration, and delivering those
+changes through staging (Task 7). Follow the concrete
 [remaining launch checklist](../../releases/free20/production-preparation-2026-11-06.md#remaining-launch-checklist)
 for the next phase; production/LIVE writes and publication remain separate.
 
@@ -28,7 +29,7 @@ for the next phase; production/LIVE writes and publication remain separate.
 
 - Source starts at accepted staging `dc988034df904157cf0bbb9e29bbfe9d41e82a04`;
   current main is `9da93cd9891b6155051fc550957635c089fc8f3a`.
-- Do not merge main, activate production, change LIVE Stripe, upload or publish
+- Do not promote to main, activate production, change LIVE Stripe, upload or publish
   the Store item in this preparation. Read-only production inspection is allowed.
 - Existing product decisions remain: 1,200 host seconds per UTC day; paid/manual
   and existing trial rights preserved; no new trials; one lifetime 40% allowance
@@ -49,6 +50,10 @@ for the next phase; production/LIVE writes and publication remain separate.
 Environment isolation through offer issuance, restoration, invoice/webhook handling
 and billing presentation; lifetime allowance races; monthly-only coupon scope;
 old-client compatibility and rollout order; exact artifact provenance and permissions.
+
+For Task 7, review the complete main-to-staging reconciliation, preserved SEO
+routes and redirects, Free20 copy consistency, isolated production Worker binding,
+manual deployment gate, and unchanged inputs of the approved extension archive.
 
 ### Task 1: Freeze the inventory and release gates
 
@@ -176,3 +181,21 @@ Evidence remains under `artifacts/chrome-web-store-0.1.5-release-20261107/`.
   must be preserved before promotion. The final-tree diff now contains 514 files.
 - [ ] Complete the separately tracked remaining launch checklist before production
   activation and owner publication. This planning checkpoint does not close it.
+
+### Task 7: Reconcile release history and prepare the production Worker binding
+
+Owner authorization on November 7 covers local preparation and staging delivery;
+production promotion, LIVE changes and Store publication remain separate.
+
+**Files:** merge of main `9da93cd9` into the release branch based on accepted staging
+`d702613b`; `apps/api/wrangler.toml`; release/current-state/SEO guidance and graph.
+
+- [x] Resolve the two YouTube copy conflicts with accepted Free20 wording, retaining
+  the main SEO work and existing routes, redirects and metadata.
+- [x] Prepare the explicit production accounting binding for staging; verify the
+  exact-SHA manual production gate and channel isolation with existing checks.
+- [x] Verify the immutable approved ZIP and all recorded extension build inputs.
+- [ ] Run relevant checks, production dry-run and fresh independent branch review;
+  refresh docs/Graphify and deliver a reviewed PR into staging.
+- [ ] Verify hosted staging delivery and unchanged production, then report the
+  remaining concrete production prerequisites.

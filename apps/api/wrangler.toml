@@ -48,6 +48,9 @@ workers_dev = true
 [env.production.vars]
 ANIDACHI_ENV = "production"
 ANIDACHI_WEB_INTERNAL_BASE_URL = "https://www.anidachi.app"
+# Deployment is manual and gated on the exact main SHA after schema/Web readiness.
+# Room admission remains governed by the separately activated SQL policy.
+ANIDACHI_FREE20_ACCOUNTING_ENABLED = "true"
 
 [env.production.triggers]
 crons = ["* * * * *", "*/2 * * * *"]

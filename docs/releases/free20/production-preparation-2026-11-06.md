@@ -3,7 +3,8 @@
 Status on November 7: the owner reports Chrome Web Store approval of **0.1.5**.
 The approved candidate remains held for the coordinated production launch. Store
 dashboard status/publication has not been independently inspected. Current work
-is plan refresh and read-only preflight; it does not authorize main promotion,
+includes owner-authorized reconciliation/configuration delivery to staging and
+read-only LIVE inventory; it does not authorize main promotion,
 production activation, LIVE writes, Store publication or public ZIP hosting.
 
 Execution plan: [release preparation](../../superpowers/plans/2026-11-06-free20-store-release-preparation.md).
@@ -30,8 +31,9 @@ it. The immutable receipt is under
   exactly match the frozen release's SHA256 manifest. Production policy revision 3
   retains its original activation timestamp and trials enabled; the two Free20
   policy columns are absent. Staging revision 5 has Free20/abuse on and trials off.
-- Both Stripe connections still expose only AniDachi Sandbox (`livemode=false`).
-  This is a connection limitation, not proof that LIVE objects do not exist.
+- The initial readback exposed only Sandbox. After the owner completed Stripe
+  reauthorization, AniDachi LIVE `acct_1RlmiCAGc1Bd58Cj` became available and the
+  read-only catalog, coupons, portals and webhook inventory completed below.
 - Production GitHub `WXT_EXTENSION_VERSION` remains `0.1.4`. Set it to `0.1.5`
   before the authorized main build; a workflow-generated ZIP must not replace the
   already approved archive under the same approval/hash claim.
@@ -46,6 +48,14 @@ origin/staging` preview confirmed one conflict:
 `apps/web/app/watch-youtube-together/page.tsx`. No merge, branch update, schema
 change or deployment was performed by the preview.
 
+The subsequent owner-authorized local merge of main into the release branch
+resolved both copy hunks in favor of the accepted Free20 wording. Its final web,
+extension, protocol and workflow trees are byte-identical to staging `d702613b`:
+the main SEO content was already present, but its ancestry had not been reconciled.
+The only runtime configuration change is the explicit production Worker accounting
+binding; the manual exact-main-SHA deployment gate is unchanged. This source
+preparation does not change the deployed production Worker or SQL policy.
+
 Readback evidence: `artifacts/free20-post-approval-20261107/provider-readback.json`
 and `merge-preview.json` (local, ignored). These are dated inventory results, not
 production acceptance or a substitute for a fresh check at the launch window.
@@ -54,7 +64,7 @@ production acceptance or a substitute for a fresh check at the launch window.
 
 - [x] Owner reported Store approval; preserve the frozen candidate and receipt.
 - [x] Refresh web/Worker/DB/Git inventory and verify pending migration hashes.
-- [ ] Obtain access to AniDachi LIVE Stripe and complete the read-only catalog,
+- [x] Obtain access to AniDachi LIVE Stripe and complete the read-only catalog,
   coupon, portal and existing-webhook inventory described below. Do not request
   secret keys in chat. Prepare exact changes before requesting LIVE-write approval.
 - [ ] Reconcile main's production-only changes on a feature branch from current
@@ -84,8 +94,8 @@ production acceptance or a substitute for a fresh check at the launch window.
   already approved 0.1.5 only after this checkpoint; observe the rollout.
 
 Detailed ordering and rollback boundaries below remain authoritative. LIVE access
-and the website merge conflict are current preparation blockers; approval from
-the Store does not remove either one.
+is restored and the conflict is resolved locally. Staging delivery, the provider
+changes documented below and coordinated production launch remain separate steps.
 
 ## Source and environment inventory
 
@@ -184,6 +194,43 @@ do not assume every installation updates immediately.
 
 ## LIVE retention prerequisites
 
+### Verified LIVE inventory: November 7
+
+Read-only inventory of `acct_1RlmiCAGc1Bd58Cj` completed with `livemode=true` and
+no truncated pages. No subscriptions, payments or provider objects were changed.
+The sanitized receipt is
+`artifacts/free20-post-approval-20261107/stripe-live-readback.json` (ignored).
+
+| Plan | Existing monthly price | Existing annual price | Shared product |
+| --- | --- | --- | --- |
+| Plus | `price_1TknUGAGc1Bd58CjxImsjOEH`, USD 7.99 | `price_1UM3mvAGc1Bd58CjUnlK9JNl`, USD 76.70 | `prod_UkI4IkKa86J733` |
+| Pro | `price_1TknW0AGc1Bd58CjkxcMVEx0`, USD 14.99 | `price_1UM3njAGc1Bd58CjaAxFnifl`, USD 143.90 | `prod_UkI6Udvl3VpihD` |
+
+The two existing coupons are historical, invalid repeating offers; neither is the
+new one-time 40% offer. The default portal is `bpc_1UEiR1AGc1Bd58CjV6IRKFT5`;
+the existing annual-change portal is `bpc_1UM3ppAGc1Bd58CjWCK4qaN4`. Neither listed
+configuration has native retention configured. No account-specific retention
+session has been exercised by this inventory.
+
+Keep generic portals free of a global retention coupon. The implemented Cancel
+renewal flow creates its private single-use coupon on demand after checking the
+account's lifetime allowance and monthly-only catalog. Absence of such a coupon
+before an eligible request is expected; no blanket dashboard offer is needed.
+
+The enabled webhook is `we_1TWGwEAGc1Bd58CjSA30Ttxu`, targeting
+`https://www.anidachi.app/api/stripe/webhook`, pinned to `2025-06-30.basil`.
+It subscribes to checkout completion, subscription create/update/delete,
+invoice paid/payment failed/payment action required. `invoice.created` is missing.
+Preserve this endpoint's pinned version independently of the application's
+`2025-08-27.basil` API version; do not rotate its signing secret.
+
+The concrete future LIVE change is to give annual sale prices distinct products
+at the same amounts, preserve existing annual subscriptions through legacy IDs,
+prepare the yearly-change portal, and create the approved monthly-only, one-time
+40% campaign coupons. Add `invoice.created` only after its handler/schema are
+delivered. Enable issuance only after the existing one-per-account and provider
+validation gates pass. None of these LIVE mutations is authorized by this inventory.
+
 The code now validates TEST and LIVE independently through the existing Stripe
 mode resolver. No LIVE campaign was enabled by this work. Exact opt-ins:
 
@@ -201,8 +248,8 @@ account allowance; no second discount is introduced.
 
 Before enabling LIVE offers, with separate authorization:
 
-- Inspect the actual AniDachi LIVE account. Current connectors expose only Sandbox;
-  do not infer LIVE readiness from staging or environment names.
+- Recheck the actual AniDachi LIVE account against the dated inventory above;
+  access alone does not establish LIVE readiness.
 - Verify Plus/Pro monthly and annual price IDs, currency, amounts and recurring
   intervals. Native cancellation requires four distinct products, and exactly one
   active sale price on each monthly product. Stripe coupon scope is by **product**,

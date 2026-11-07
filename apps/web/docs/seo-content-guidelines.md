@@ -22,13 +22,13 @@ Netflix launched in production on 2026-10-19 (Web/Worker `b48de0e9`, Chrome Web 
 
 Current features: live synchronized players, on-player chat and reactions, voice/video calls, and personal watch history. Each person uses their own access to the video.
 
-Free accounts join Plus/Pro/trial hosts; creating rooms requires the host's own Plus or Pro access. Plus supports 6 people including the host, Pro 15; friends join free. Recording and editing personal history require each viewer's own paid/trial access. Automatic recording additionally requires permission in the extension; YouTube has a separate recording switch. Saved history, Resume and deletion remain available on Free.
+Approved Free20 release copy: Free includes 20 host minutes per UTC day for up to 4 people, including the host. Plus supports 6 people and Pro 15, with no daily hosting time limit; friends join free without spending their own hosting minutes. Recording and editing personal history require each viewer's own eligible access. Automatic recording additionally requires permission in the extension; YouTube has a separate recording switch. Saved history, Resume and deletion remain available on Free.
 
-Plus and Pro offer monthly/yearly billing and one 3-day trial per eligible account, including existing Free accounts that have not used it. Describe the current server offer: a card-required trial renews automatically unless renewal is canceled before the end; a cardless trial requires no card and ends without payment unless the user explicitly enables renewal with the displayed plan, period, price and first-charge date. Existing card-required trials retain their original terms. Cardless rollout remains gated; do not claim it is enabled in an environment merely because its code exists. Do not promise a new trial for switching plans or billing periods.
+Plus and Pro offer monthly/yearly billing, with monthly selected by default. Do not advertise new trials or include trial language in acquisition copy. Existing paid/manual and previously granted trial rights retain their conditions in the backend; they are not new offers. Free20 is active on staging and still awaits the coordinated production launch. Source copy is release preparation, not proof of current production activation; follow the [launch runbook](../../../docs/releases/free20/production-preparation-2026-11-06.md).
 
 **Planned only:** async catch-up, shared group progress, persistent room context/chat and replayed reactions. Never sell these as current features or paid-plan benefits. Mark future mentions clearly; do not include them among instructions users can follow today.
 
-Use `lib/pricing-copy.ts` for shared commercial copy. Legacy Free hosting/quota data in the protocol is compatibility data, not a current marketing offer. Update visible text, FAQ/HowTo JSON-LD and search/social metadata together.
+Use `lib/pricing-copy.ts` for shared commercial copy. The Free20 contract defines the release offer; older protocol fields do not define its limits. Update visible text, FAQ/HowTo JSON-LD and search/social metadata together.
 
 **Not supported:** Disney+, Hulu, Amazon Prime Video sync.
 **Not affiliated** with Crunchyroll, Sony, YouTube, Google, or Netflix.
@@ -213,4 +213,4 @@ Owner-approved exceptions to the safety rules above, newest first.
 - [ ] Inbound links planned
 - [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
-*Last updated: 2026-10-17 (Netflix launch copy; existing URL/title and canonical safeguards retained)*
+*Last updated: 2026-11-07 (approved Free20 release copy; production activation remains separately gated; URL/title and canonical safeguards retained)*
