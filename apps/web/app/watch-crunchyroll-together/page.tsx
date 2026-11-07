@@ -145,7 +145,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				dateModified="2026-11-07"
 				faq={faq}
 				headings={tocHeadings}
-				h1="Watch Crunchyroll Together with Friends"
+				h1="Crunchyroll Watch Party"
 				heroLead="Crunchyroll has no watch party button. AniDachi adds one."
 				heroCtaLabel="Start a Crunchyroll Watch Party"
 				heroWorksOn={["Crunchyroll", "YouTube", "Netflix"]}

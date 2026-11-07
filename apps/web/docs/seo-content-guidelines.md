@@ -170,6 +170,7 @@ Owner-approved exceptions to the safety rules above, newest first.
 - **2026-11-07, platform hub layout and pillar headings (owner in chat, ANI-28, ANI-8):** `/watch-crunchyroll-together`, `/watch-anime-together`, `/watch-youtube-together`, `/netflix-watch-party` and `/discord-watch-party` moved to `HubLandingLayout` (homepage-style hero, demo, reviews and steps, then a centered reading section). Same URLs, canonicals and JSON-LD types; HowTo data now comes from the same step list as the visible steps. Approved heading changes:
   - `/watch-anime-together` title: "Watch Anime Together Online: Sync with Friends" (ANI-8; was "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)", too long).
   - `/watch-youtube-together` H1: "YouTube Watch Party: Watch YouTube Together" (was "… With Friends").
+  - `/watch-crunchyroll-together` H1: "Crunchyroll Watch Party" (was "Watch Crunchyroll Together with Friends"; matches the page title, breadcrumb and the higher-volume query, 480 vs 170 a month in the US. "Watch Crunchyroll together" stays in the URL and the steps heading).
   - `/discord-watch-party` H1: "Discord Watch Party" (was "Discord Watch Party: Three Ways to Watch Together"; the three ways stay in the short answer and the page title).
 
 - **2026-11-07, pruning and force-index removal (owner in chat, ANI-25, ANI-14, ANI-16):** evidence in the [indexing diagnosis](../../../docs/releases/seo/2026-11-03-indexing-diagnosis.md) (URL Inspection of all 392 sitemap URLs, Nov 3).
