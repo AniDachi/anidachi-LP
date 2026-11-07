@@ -333,6 +333,14 @@ export default function WatchAnimeTogetherPage() {
         >
           watch anime free with friends
         </Link>
+        . To keep Discord for voice while each person streams their own
+        player, read the{" "}
+        <Link
+          href="/discord-watch-party"
+          className="text-brand-orange hover:underline"
+        >
+          Discord watch party guide
+        </Link>
         .
       </p>
 
@@ -506,7 +514,11 @@ export default function WatchAnimeTogetherPage() {
         All Anime Watch Guides ({animeList.length} titles)
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        Every title below has its own watchroom guide — step-by-step setup, genre-specific FAQs, and Crunchyroll watch-party tips:
+        Every title below has its own watchroom guide with step-by-step setup, genre-specific FAQs, and Crunchyroll watch-party tips. The{" "}
+        <Link href="/watch" className="text-brand-orange hover:underline">
+          anime A to Z index
+        </Link>{" "}
+        groups the same titles with genre hubs and films:
       </p>
       <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {animeList.map((anime) => (

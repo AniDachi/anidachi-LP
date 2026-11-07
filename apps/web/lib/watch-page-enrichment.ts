@@ -632,3 +632,11 @@ export const WATCH_ENRICHMENT: Record<string, WatchEnrichment> = {
     ],
   },
 };
+
+/** dateModified for watch pages that only use the shared template (last template content edit). */
+export const WATCH_PAGE_TEMPLATE_DATE_MODIFIED = "2026-10-01";
+
+/** The content date a `/watch/{slug}-with-friends` page shows; also its sitemap lastmod. */
+export function getWatchPageDateModified(slug: string): string {
+  return WATCH_ENRICHMENT[slug]?.updated ?? WATCH_PAGE_TEMPLATE_DATE_MODIFIED;
+}

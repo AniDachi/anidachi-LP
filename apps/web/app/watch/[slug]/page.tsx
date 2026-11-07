@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { WATCH_ENRICHMENT } from "@/lib/watch-page-enrichment";
+import { WATCH_ENRICHMENT, getWatchPageDateModified } from "@/lib/watch-page-enrichment";
 import { getWatchGenreHubs, getWatchRelated } from "@/lib/watch-related";
 import { animeList, isMovieEntry, type AnimeEntry } from "@/lib/anime-data";
 import { getMalIdForSlug } from "@/lib/anime-mal-ids";
@@ -43,10 +43,6 @@ interface Props {
 function getAnimeBySlug(rawSlug: string): AnimeEntry | undefined {
   const slug = rawSlug.replace(/-with-friends$/, "");
   return animeList.find((a) => a.slug === slug);
-}
-
-function getPageLastModified(): string {
-  return "2026-10-01";
 }
 
 /** The layout appends " | AniDachi"; keep the rendered title at 60 characters or less. */
@@ -224,7 +220,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
   const faq = enrichment
     ? [...enrichment.faq, ...buildWatchPageFaq(anime, episodesDisplay)]
     : buildWatchPageFaq(anime, episodesDisplay);
-  const dateModified = enrichment?.updated ?? getPageLastModified();
+  const dateModified = getWatchPageDateModified(anime.slug);
   const isMovie = isMovieEntry(anime);
 
   const genreBits = (jikan?.genres?.length
