@@ -77,12 +77,14 @@ export function nextRoomPolicyAlarm(
 	now: number,
 	meter: RoomMeterState,
 	active: boolean,
+	quotaWarning = true,
+	finiteTime = true,
 ): number {
 	const expiry = Date.parse(state.lease.capabilities.capabilitiesValidUntil);
 	const candidates = state.closingAt
 		? [state.closingAt]
 		: [state.refreshAt, expiry];
-	if (state.lease.capabilities.hostPlanCode === "free") {
+	if (finiteTime && state.lease.capabilities.hostPlanCode === "free") {
 		const midnight = (Math.floor(now / 86400000) + 1) * 86400000;
 		candidates.push(midnight);
 		if (!state.budget || state.budget.day !== meter.day) candidates.push(now);
@@ -91,7 +93,7 @@ export function nextRoomPolicyAlarm(
 			// display seconds; ordinary frames must not move the quota alarm.
 			const remainingMs = state.budget.allowedSeconds * 1000 - meter.accumulatedMs;
 			candidates.push(meter.activeSince + Math.max(0, remainingMs));
-			if (state.quotaWarnedDay !== meter.day)
+			if (quotaWarning && state.quotaWarnedDay !== meter.day)
 				candidates.push(meter.activeSince + Math.max(0, remainingMs - 300_000));
 		}
 	}

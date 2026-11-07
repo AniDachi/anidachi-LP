@@ -48,7 +48,7 @@ const faq = [
   {
     question: "How do I watch these anime with my long-distance partner?",
     answer:
-      "A Plus, Pro, or trial host can create a live AniDachi room on Crunchyroll and invite a Free partner. Choose a shared time for synchronized playback. If schedules differ, watch independently and discuss later in a separate chat; built-in async catch-up is coming soon.",
+      "A Free, Plus, or Pro host can create a live AniDachi room on Crunchyroll and invite a Free partner. Choose a shared time for synchronized playback. If schedules differ, watch independently and discuss later in a separate chat; built-in async catch-up is coming soon.",
   },
 ];
 
@@ -340,7 +340,7 @@ export default function BestAnimeForLongDistanceRelationshipsPage() {
         How to Watch These With Your Long-Distance Partner
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        For Crunchyroll series on this list, a Plus, Pro, or trial host can
+        For Crunchyroll series on this list, a Free, Plus, or Pro host can
         create an AniDachi live room. If your schedules never align:
       </p>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">

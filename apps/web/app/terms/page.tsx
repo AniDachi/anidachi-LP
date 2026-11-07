@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY, PRICING_FREE20_METERING_NOTE } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingArticle } from "@/components/marketing-article";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <MarketingArticle path="/terms" title="Terms of Service" updated="October 17, 2026">
+    <MarketingArticle path="/terms" title="Terms of Service" updated="November 6, 2026">
       <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
@@ -51,11 +52,11 @@ export default function TermsPage() {
                 AniDachi provides watchrooms for synchronized viewing on
                 supported platforms (Crunchyroll, YouTube, and Netflix), with chat,
                 reactions, and related social features through a Chrome
-                extension and website. Free accounts can join rooms hosted on
-                Plus or Pro, including rooms hosted during an active trial.
-                Creating your own room and recording or editing personal watch
-                progress require your own Plus or Pro access, including an
-                active trial. Recording also needs your permission in the
+                extension and website. {PRICING_FREE20_SUMMARY}{" "}
+                {PRICING_FREE20_METERING_NOTE} Friends join for free.
+                Recording and editing personal watch progress require your own
+                Plus or Pro access.
+                Recording also needs your permission in the
                 extension, with a separate setting for YouTube. Saved history
                 remains available to read, resume and delete on Free. Planned
                 features may be described as coming soon and are not guaranteed
@@ -109,24 +110,18 @@ export default function TermsPage() {
                 .
               </p>
               <p className="mt-4">
-                New and existing Free accounts with an unused trial can try
-                Plus or Pro for three days, when offered on the pricing page.
-                There is one trial per account across both plans and billing
-                periods. A trial offered without a card lasts 72 hours and ends
-                without a payment unless you explicitly add a card and enable
-                renewal. Having a saved card alone does not enable renewal.
-                Before enabling it, you review the selected plan, billing period,
-                price and first payment date. Completing that card setup authorizes
-                Stripe to charge for the selected subscription at the original
-                trial end and renew it thereafter unless you cancel renewal.
-                Trials started with a card retain the terms confirmed at checkout:
-                they renew automatically unless canceled before the trial ends.
-                Changing plans or billing periods does not restart or extend a trial.
+                Access already confirmed for your account keeps its agreed end date
+                and payment terms. Access without renewal ends without an automatic
+                charge. Having a saved card alone does not enable renewal.
+                Before enabling renewal, you review the selected plan, billing
+                period, price and first payment date. Confirming authorizes Stripe
+                to charge on that date and renew thereafter unless you cancel
+                renewal. An existing promotional access period is not extended
+                by changing plans or billing periods.
               </p>
               <p className="mt-4">
-                You can cancel renewal from Account → Subscription. Trial
-                access continues until the original trial end; paid access
-                continues until the end of the paid billing period. For refund
+                You can cancel renewal from Account → Subscription. Access continues
+                until the end date shown in your account. For refund
                 requests, email{" "}
                 <a
                   href="mailto:anidachi.app@gmail.com"

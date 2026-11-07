@@ -155,7 +155,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
         items={[
           {
             title: "AniDachi",
-            body: "Syncs Netflix movies and episodes in desktop Chrome, with chat, reactions, voice and video. The host needs Plus or Pro, including a 3-day trial; friends join free.",
+            body: "Syncs Netflix movies and episodes in desktop Chrome, with chat, reactions, voice and video. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join free.",
           },
           {
             title: "Teleparty",

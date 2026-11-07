@@ -52,9 +52,9 @@ test("local preview switches paid and trial UI without account or payment reques
 	);
 	assert.equal(
 		container.querySelector("h1")?.textContent,
-		"Your free trial has started",
+		"Your access is active",
 	);
-	assert.match(container.textContent!, /Your Plus trial ends/);
+	assert.match(container.textContent!, /Your Plus access ends/);
 	await act(async () =>
 		buttons()
 			.find((b) => b.textContent === "Paid Plus")!

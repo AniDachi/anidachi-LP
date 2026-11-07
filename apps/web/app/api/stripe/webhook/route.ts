@@ -3,16 +3,21 @@ import type Stripe from "stripe";
 
 import {
 	beginStripeEventProcessing,
+	getSubscriptionOwner,
 	markStripeEventFailed,
 	markStripeEventProcessed,
 } from "@/lib/anidachi-auth/db";
+import { reconcileCancellationRetention } from "@/lib/anidachi-auth/cancellation-retention";
+import { fulfillRetentionInvoice } from "@/lib/anidachi-auth/retention-invoice";
 import {
 	createStripeClient,
 	getStripeWebhookSecret,
+	resolveStripeMode,
 } from "@/lib/anidachi-auth/stripe-env";
 import { syncStripeSubscriptionById } from "@/lib/anidachi-auth/stripe-subscription-sync";
 import { processSubscriptionWebhookEvent } from "@/lib/anidachi-auth/stripe-webhook-events";
 import { finalizeTrialSetupSession } from "@/lib/anidachi-auth/trial-renewal-server";
+import { retentionInvoiceStore } from "@/lib/anidachi-auth/uninstall-store";
 import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 
 export async function POST(request: NextRequest) {
@@ -58,6 +63,13 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 	}
 
+	const expectedLivemode = resolveStripeMode() === "live";
+	if (event.livemode !== expectedLivemode)
+		return NextResponse.json(
+			{ error: "Webhook mode mismatch" },
+			{ status: 400 },
+		);
+
 	const shouldProcess = await beginStripeEventProcessing({
 		eventId: event.id,
 		eventType: event.type,
@@ -68,6 +80,13 @@ export async function POST(request: NextRequest) {
 
 	try {
 		await processSubscriptionWebhookEvent(event, {
+			expectedLivemode,
+			reconcileCancellation: async (subscriptionId) => {
+				const owner = await getSubscriptionOwner(subscriptionId);
+				if (owner) await reconcileCancellationRetention(owner, stripe);
+			},
+			retentionInvoice: (invoice) =>
+				fulfillRetentionInvoice(invoice, { stripe, ...retentionInvoiceStore }),
 			sync: async (subscriptionId) => {
 				await syncStripeSubscriptionById(stripe, subscriptionId);
 			},

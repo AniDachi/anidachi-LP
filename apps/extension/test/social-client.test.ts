@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   acceptFriendRequest,
+  acceptRoomInvite,
   acceptFriendRequestHttpMessage,
   acceptInviteHttpMessage,
   addFriendGroupMemberFromApi,
@@ -39,6 +40,12 @@ const FRIENDSHIP_ID = "33333333-3333-4333-8333-333333333333";
 const GROUP_ID = "44444444-4444-4444-8444-444444444444";
 const ARCHIVED_GROUP_ID = "55555555-5555-4555-8555-555555555555";
 const CLIENT_ACTION_ID = "66666666-6666-4666-8666-666666666666";
+
+it.each([403, 404, 409, 410, 429, 503])("preserves HTTP %s through the background bridge for invitation actions", async status => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "Not available" }), { status })));
+  vi.stubGlobal("chrome", { runtime: { sendMessage: handleSocialHttpMessage } });
+  await expect(acceptRoomInvite("access-token", INVITE_ID)).rejects.toMatchObject({ status });
+});
 
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {

@@ -94,16 +94,14 @@ export function PanelMediaControls({
 		: cameraOn
 			? "Turn camera off"
 			: "Turn camera on";
+	// Confirm the selected mode without cycling through capture startup states.
+	// Real failures still override the mode hint; device status remains separate.
 	const micHint =
 		microphoneStatus === "error"
 			? "Microphone unavailable"
-			: microphoneStatus === "connecting"
-				? "Connecting microphone…"
-				: openMic && microphoneStatus === "off"
-					? "Microphone is off"
-					: openMic
-						? "Mic is always on"
-						: "Hold V to talk";
+			: openMic
+				? "Microphone always on"
+				: "Hold V to talk";
 	return (
 		<div
 			className="panel-media-dock"

@@ -35,7 +35,7 @@ export async function prepareTrialBrowserContext(
 		context.state !== "ready" ||
 		(context.extensionId !== null && !/^[a-p]{32}$/.test(context.extensionId))
 	)
-		throw new Error("Trial confirmation is unavailable. Please try again.");
+		throw new Error("Access confirmation is unavailable. Please try again.");
 	return context;
 }
 export async function requestTrialInstallationProof(
@@ -62,7 +62,7 @@ export async function requestTrialInstallationProof(
 		const abort = () =>
 			finish(
 				undefined,
-				signal.reason ?? new Error("Trial confirmation canceled"),
+				signal.reason ?? new Error("Access confirmation canceled"),
 			);
 		const timer = setTimeout(() => finish(), timeoutMs);
 		signal.addEventListener("abort", abort, { once: true });
@@ -85,7 +85,7 @@ export async function requestTrialInstallationProof(
 					if (!parsed.success || parsed.data.challenge !== context.challenge)
 						return finish(
 							undefined,
-							new Error("Please refresh the trial confirmation and try again."),
+							new Error("Please refresh the access confirmation and try again."),
 						);
 					finish(parsed.data);
 				},

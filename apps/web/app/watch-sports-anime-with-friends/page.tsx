@@ -164,7 +164,7 @@ export default function WatchSportsAnimeWithFriendsPage() {
       <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           <span className="font-medium text-foreground">Install AniDachi and create a watchroom.</span>{" "}
-          A Plus, Pro, or trial host creates the room and sends an invite before the first match. Free friends can join.
+          A Free, Plus, or Pro host creates the room and sends an invite before the first match. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">Keep a tournament bracket.</span>{" "}

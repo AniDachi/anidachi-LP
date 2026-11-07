@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
@@ -50,7 +51,7 @@ const faq = [
 	{
 		question: "Is there a Crunchyroll watch party extension?",
 		answer:
-			"Yes. Crunchyroll has no built-in watch party, so groups use Chrome extensions. AniDachi is one: it adds a room to the Crunchyroll player in desktop Chrome, keeps everyone's own player in sync, and adds chat, voice and video. Friends join free; the host needs Plus, Pro or a trial.",
+			`Yes. Crunchyroll has no built-in watch party, so groups use Chrome extensions. AniDachi is one: it adds a room to the Crunchyroll player in desktop Chrome, keeps everyone's own player in sync, and adds chat, voice and video. Friends join free; ${PRICING_FREE20_SUMMARY}`,
 	},
 	{
 		question: "How do I install the Crunchyroll party extension?",
@@ -75,7 +76,7 @@ const faq = [
 	{
 		question: "Do my friends need the extension too?",
 		answer:
-			"Yes. Everyone in the room installs AniDachi on their own computer and plays the episode on their own Crunchyroll account. Guests can join on a free AniDachi account; only the person who creates the room needs Plus or Pro, including a trial.",
+			`Yes. Everyone in the room installs AniDachi on their own computer and plays the episode on their own Crunchyroll account. Guests can join on a free AniDachi account; ${PRICING_FREE20_SUMMARY}`,
 	},
 ];
 
@@ -251,8 +252,7 @@ export default function CrunchyrollExtensionsPage() {
 							body: (
 								<>
 									With the episode playing, open the capsule and choose Create
-									room, then copy the invite. Creating rooms needs Plus or Pro,
-									including the 3-day trial for eligible accounts; see{" "}
+									room, then copy the invite. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; see{" "}
 									<Link href="/pricing">AniDachi pricing</Link>. You control
 									play, pause, seek and the episode for the whole room.
 								</>
@@ -363,7 +363,7 @@ export default function CrunchyrollExtensionsPage() {
 					options={[
 						{
 							title: "AniDachi",
-							body: "Crunchyroll, YouTube and Netflix rooms in desktop Chrome. Synced players, on-player chat and reactions, voice and video calls. Host needs Plus, Pro or a trial; friends join free.",
+							body: "Crunchyroll, YouTube and Netflix rooms in desktop Chrome. Synced players, on-player chat and reactions, voice and video calls. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join free.",
 							highlight: true,
 						},
 						{

@@ -138,7 +138,7 @@ export default function CrunchyrollPartyAlternativePage() {
         What AniDachi adds
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
-        AniDachi adds live sync, anime detection, chat, cameras, and microphones. Hosts need active Plus ({PRICING_PLUS_SHORT}) or Pro ({PRICING_PRO_SHORT}) access, including an active trial; friends can join on Free accounts. Viewers with their own Plus or Pro access can enable personal history.
+        AniDachi adds live sync, anime detection, chat, cameras, and microphones. Free includes 20 host minutes per UTC day for up to 4 people; Plus ({PRICING_PLUS_SHORT}) and Pro ({PRICING_PRO_SHORT}) have no daily hosting time limit; friends can join on Free accounts. Viewers with their own Plus or Pro access can enable personal history.
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Review plans on{" "}

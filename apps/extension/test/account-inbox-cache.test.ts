@@ -33,6 +33,7 @@ import {
   publishAccountInboxForUser,
 } from "../src/account-inbox-cache";
 import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
+import { socialSnapshotCacheKeyForUser } from "../src/social-snapshot-cache";
 
 const NOW = "2026-08-09T12:00:00.000Z";
 const USER_A = "00000000-0000-4000-8000-000000000001";
@@ -47,6 +48,19 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("account inbox cache", () => {
+  it("invalidates only the owner's People cache for changed invitations, not seen acknowledgements", async () => {
+    await setCachedAccountInboxForUser(USER_A, withRequest(NOW));
+    const key = socialSnapshotCacheKeyForUser(USER_A);
+    const other = socialSnapshotCacheKeyForUser(USER_B);
+    storageState.map.set(key, { cached: true });
+    storageState.map.set(other, { cached: true });
+    await setCachedAccountInboxForUser(USER_A, withRequest("2026-08-09T12:00:01.000Z", NOW));
+    expect(storageState.map.has(key)).toBe(true);
+    await setCachedAccountInboxForUser(USER_A, { ...inbox(USER_A), meta: { ...inbox(USER_A).meta, serverTime: "2026-08-09T12:00:02.000Z" } });
+    expect(storageState.map.has(key)).toBe(false);
+    expect(storageState.map.has(other)).toBe(true);
+  });
+
   it("uses an account-specific key and returns only the requested owner's response", async () => {
     await setCachedAccountInboxForUser(USER_A, inbox(USER_A));
 

@@ -25,6 +25,7 @@ export interface RoomSocketVerifiedIdentity {
 }
 
 export interface RoomSocketAttachment {
+  hostingTimeVersion?: 1;
   admission: RoomSocketAdmission;
   connectedAt: number;
   lastSeenAt: number;
@@ -105,6 +106,10 @@ export function parseRoomSocketAttachment(
     schemaVersion: ROOM_SOCKET_ATTACHMENT_VERSION,
     verified,
   };
+  if (value.hostingTimeVersion !== undefined) {
+    if (value.hostingTimeVersion !== 1) return null;
+    attachment.hostingTimeVersion = 1;
+  }
 
 	if (
 		typeof value.participantSessionId === "string" &&
@@ -153,6 +158,7 @@ export function attachmentToVerifiedRoomToken(
 export function updateRoomSocketAttachment(
   attachment: RoomSocketAttachment,
   patch: {
+    hostingTimeVersion?: 1;
     lastSeenAt?: number;
     admission?: RoomSocketAdmission;
     participant?: Participant;
@@ -167,6 +173,7 @@ export function updateRoomSocketAttachment(
   if (patch.participant) {
     next.participant = patch.participant;
   }
+  if (patch.hostingTimeVersion === 1) next.hostingTimeVersion = 1;
   if (patch.participantSessionId !== undefined) {
     next.participantSessionId = patch.participantSessionId;
   }

@@ -10,10 +10,17 @@ type Props = { headingLevel?: 1 | 2; showPlanMatrix?: boolean };
 
 function SelectedPricing(props: Props) {
 	const search = useSearchParams();
-	const period = search.get("billing") === "monthly" ? "monthly" : "yearly";
+	const period = search.get("billing") === "yearly" ? "yearly" : "monthly";
 	const parsed = search.getAll("onboarding").length === 1 ? OnboardingTokenSchema.safeParse(search.get("onboarding")) : null;
 	const onboarding = parsed?.success ? parsed.data : undefined;
-	return <Pricing {...props} key={`${period}:${onboarding ?? ""}`} initialPeriod={period} onboarding={onboarding} />;
+	return (
+		<Pricing
+			{...props}
+			key={`${period}:${onboarding ?? ""}`}
+			initialPeriod={period}
+			onboarding={onboarding}
+		/>
+	);
 }
 
 /** The public page stays static; no yearly price is painted for a monthly link. */
@@ -29,7 +36,7 @@ export function PricingSelection(props: Props) {
 					<div className="container relative mx-auto px-4">
 						<HomeSectionHeader
 							title="Watch together. Choose your plan."
-							description="Join friends for free, or host your own room with Plus or Pro."
+							description="Watch together. Find the plan that fits your group."
 							titleAs={props.headingLevel === 1 ? "h1" : "h2"}
 							align="center"
 						/>

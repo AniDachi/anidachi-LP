@@ -153,7 +153,7 @@ for (const [status, expected] of [
 		);
 		assert.doesNotMatch(
 			card.textContent!,
-			/Next payment|Renews automatically|Trial ends/,
+			/Next payment|Renews automatically|Access ends/,
 		);
 		const button = card.querySelector("button")!;
 		assert.match(button.textContent!, /Complete payment in Stripe/);
@@ -193,7 +193,7 @@ test("failed first payment shows recovery without an expired trial or paid claim
 	);
 	assert.doesNotMatch(
 		card.textContent!,
-		/Active until|Trial ends|Next payment|Active subscription/,
+		/Active until|Access ends|Next payment|Active subscription/,
 	);
 	await act(async () => card.querySelector("button")!.click());
 	assert.deepEqual(actions, ["subscription-a:payment"]);
@@ -226,7 +226,7 @@ for (const cancelAtPeriodEnd of [false, true]) {
 			"plus",
 		);
 		const card = container.querySelector(".billing-summary-card")!;
-		assert.match(card.textContent!, /Free trial/);
+		assert.match(card.textContent!, /Access active/);
 		assert.match(
 			card.textContent!,
 			cancelAtPeriodEnd ? /No automatic charges/ : /Renewal is enabled/,
@@ -335,4 +335,139 @@ test("billing details retain plan, problem and actual account access", async () 
 		buttons.find((b) => b.textContent?.includes("View billing details")),
 	);
 	assert.deepEqual(actions, [], "returning from details does not open Stripe");
+});
+
+test("native monthly offer shows one renewal, permits annual and never uses Product Hunt copy", async () => {
+	await mount(
+		{
+			...subscription,
+			canSwitchToYearly: true,
+			promotion: {
+				state: "active",
+				campaign: "cancellation_retention",
+				percentOff: 40,
+				endsAt: "2030-02-04T16:00:00Z",
+				nextPrice: {
+					unitAmount: 479,
+					currency: "usd",
+					billingPeriod: "monthly",
+				},
+			},
+		},
+		"plus",
+	);
+	assert.match(container.textContent!, /\$4\.79/);
+	assert.match(container.textContent!, /next monthly renewal only/);
+	assert.doesNotMatch(container.textContent!, /first 3 months|ANIHUNT/);
+	await act(async () =>
+		container
+			.querySelector<HTMLButtonElement>(".billing-summary-card button")!
+			.click(),
+	);
+	assert.match(container.textContent!, /Switch to yearly billing/);
+	const payment = container.querySelector(".billing-payment-overview")!;
+	assert.match(payment.textContent!, /Amount\$4\.7940% off/);
+	assert.match(payment.textContent!, /Next month only\. Then \$7\.99\/month/);
+	assert.doesNotMatch(payment.textContent!, /first 3 months|Plan price/);
+	assert.doesNotMatch(
+		container.querySelector(".billing-paid-management")!.textContent!,
+		/This discount applies to monthly billing only|Taxes and credits|Unused monthly time|Renews automatically/,
+	);
+	assert.doesNotMatch(
+		container.textContent!,
+		/Yearly billing is available after/,
+	);
+});
+test("stale native acceptance after annual conversion shows full annual price without a future monthly promise", async () => {
+	await mount(
+		{
+			...subscription,
+			price: { unitAmount: 7670, currency: "usd", billingPeriod: "yearly" },
+			promotion: { state: "active", campaign: "cancellation_retention" },
+		},
+		"plus",
+	);
+	assert.match(container.textContent!, /\$76\.70/);
+	assert.match(container.textContent!, /monthly billing only/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/next monthly renewal|first 3 months|ANIHUNT|Amount unavailable/,
+	);
+	await act(async () =>
+		container.querySelector<HTMLButtonElement>(".billing-summary-card button")!.click(),
+	);
+	const payment = container.querySelector(".billing-payment-overview")!;
+	assert.match(payment.textContent!, /Amount\$76\.70/);
+	assert.match(payment.textContent!, /Yearly billing/);
+	assert.doesNotMatch(payment.textContent!, /40% off|\$4\.79|Next month only/);
+});
+
+test("known pending native verification outage withholds next amount while retaining annual action", async () => {
+	await mount(
+		{
+			...subscription,
+			canSwitchToYearly: true,
+			promotion: { state: "unavailable", campaign: "cancellation_retention" },
+		},
+		"plus",
+	);
+	assert.match(
+		container.querySelector(".billing-summary-card")!.textContent!,
+		/Amount unavailable/,
+	);
+	assert.doesNotMatch(container.textContent!, /40% off|ANIHUNT|first 3 months/);
+	await act(async () =>
+		container
+			.querySelector<HTMLButtonElement>(".billing-summary-card button")!
+			.click(),
+	);
+	assert.match(container.textContent!, /Switch to yearly billing/);
+	const payment = container.querySelector(".billing-payment-overview")!;
+	assert.match(payment.textContent!, /Amount unavailable/);
+	assert.doesNotMatch(payment.textContent!, /\$7\.99|\$4\.79|40% off/);
+	assert.doesNotMatch(
+		container.textContent!,
+		/Yearly billing is available after/,
+	);
+});
+
+test("renewal-off details show access end and do not promise a discounted payment", async () => {
+	await mount({
+		...subscription,
+		cancelAtPeriodEnd: true,
+		canCancel: false,
+		canRestoreRenewal: true,
+		promotion: {
+			state: "active",
+			campaign: "uninstall_renewal",
+			percentOff: 40,
+			nextPrice: { unitAmount: 479, currency: "usd", billingPeriod: "monthly" },
+		},
+	}, "plus");
+	await act(async () =>
+		container.querySelector<HTMLButtonElement>(".billing-summary-card button")!.click(),
+	);
+	const payment = container.querySelector(".billing-payment-overview")!;
+	assert.match(payment.textContent!, /Access until.*No renewal payments/);
+	assert.match(payment.textContent!, /Plan price\$7\.99 \/ month/);
+	assert.doesNotMatch(payment.textContent!, /Next payment|40% off|\$4\.79|Renews automatically/);
+});
+
+test("first-month offer details use the verified regular renewal amount", async () => {
+	await mount({
+		...subscription,
+		promotion: {
+			state: "active",
+			campaign: "uninstall_first",
+			percentOff: 40,
+			nextPrice: { unitAmount: 799, currency: "usd", billingPeriod: "monthly" },
+		},
+	}, "plus");
+	await act(async () =>
+		container.querySelector<HTMLButtonElement>(".billing-summary-card button")!.click(),
+	);
+	const payment = container.querySelector(".billing-payment-overview")!;
+	assert.match(payment.textContent!, /Amount\$7\.99/);
+	assert.match(payment.textContent!, /First-month discount applied\. Next renewal at the regular price/);
+	assert.doesNotMatch(payment.textContent!, /40% off|\$4\.79|Next month only/);
 });

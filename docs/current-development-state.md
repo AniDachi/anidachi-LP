@@ -1,5 +1,654 @@
 # Current Development State
 
+## Free20 Store approval and launch preflight: November 7, 2026
+
+The owner reports Chrome Web Store approval of **0.1.5**. This is an owner report,
+not an independent Store dashboard/publication check. The final frozen candidate
+is staging PR #523 at `d702613bc39ea99613166a5edc9cb13270117f93`, ZIP SHA256
+`358757aa77168fb515fd3df7be28f60d677b2536dffc45536f88b84c2aef33a3`; it replaced
+the November 6 candidate. Preserve this exact approved artifact. The owner has
+authorized the next preparation block and its staging delivery; production
+promotion, LIVE mutations and Store publication remain separate.
+
+Fresh readback: production web is still READY at main `9da93cd9891b6155051fc550957635c089fc8f3a`;
+production Worker remains `3ea773eb-f258-4713-a314-9abeb4012f49`, with accounting
+off/absent. Production has 83 migrations versus staging's 93; the ten pending
+files match the frozen receipt. SQL production revision 3 still has trials enabled
+and no Free20 policy columns. Staging revision 5 has Free20/abuse enabled and
+trials disabled; its web serves `d702613b`, Worker `8a293e3a-5986-4380-8fad-e972878bfcc2`.
+
+After owner reauthorization, AniDachi LIVE `acct_1RlmiCAGc1Bd58Cj` is accessible.
+Read-only inventory confirms Plus/Pro prices, but annual/monthly prices still share
+products; new once-only 40% coupons and native retention configuration are absent,
+and the existing webhook lacks `invoice.created`. The concrete preparation work
+and exact provider IDs are in the launch runbook; no LIVE object was changed.
+
+The main/staging YouTube conflict is resolved locally using approved Free20 copy.
+The resulting web/extension/protocol/workflow trees exactly match staging `d702613b`:
+main's SEO content was already retained, and the merge reconciles its ancestry.
+The production accounting flag is now prepared in Wrangler source, with the
+existing exact-main-SHA manual deployment gate intact. Staging delivery of this
+preparation is pending. Promotion PR #471 remains open with auto-merge off.
+The pre-reconciliation final-tree comparison was 514 files, not the earlier
+preparation-base 504 count. The approved ZIP and all 493 recorded build inputs
+remain unchanged.
+The production build variable is still 0.1.4 and must become 0.1.5 at authorized
+launch; do not substitute a rebuilt artifact for the approved ZIP.
+
+Use the refreshed [launch checklist](releases/free20/production-preparation-2026-11-06.md#remaining-launch-checklist)
+and [preparation completion record](superpowers/plans/2026-11-06-free20-store-release-preparation.md).
+Schema-first deployment, compatible web, manually gated Worker, final SQL switch,
+production acceptance and owner publication remain pending. No production/LIVE
+write or Store publication is authorized or performed by this preparation.
+
+## Store uninstall rollout compatibility: November 7, 2026
+
+The owner chose compatibility before launch: no early production website/backfill.
+The 0.1.5 candidate keeps Chrome's optional uninstall URL empty until the same
+website explicitly supports the approved page. Public versioned metadata at
+`GET /api/extension/uninstall-capability` ships with `/uninstall` and its APIs after
+their schema. It does not grant discounts or change any account/room entitlement.
+The extension sends no account/cookie/installation identity, accepts no redirects
+or server-supplied URL, and has a five-second deadline. An hourly cached background
+refresh and browser startup enable the page without reinstall. Explicit absence
+clears it; transient failures preserve a previously verified registration.
+
+This is identical for users and Store reviewers, and is disclosed in the
+[release runbook](releases/free20/production-preparation-2026-11-06.md). The only
+staging gate exception is anonymous capability GET; page and customer APIs remain
+password-protected/noindex. The new candidate must supersede the November 6 ZIP
+with its own source/build/hash receipt. Main promotion, production activation,
+LIVE changes and Store upload/publication still require their separate launch steps.
+
+## Free20 Store candidate preparation: November 6, 2026
+
+The owner authorized the remaining release preparation and a production-channel
+review ZIP from accepted, frozen staging, while production stays unchanged until
+Store approval and an explicit launch decision. The highest uploaded version is
+owner-confirmed **0.1.4**; the candidate is **0.1.5**. This supersedes the narrower
+November 5 ZIP restriction below, not the main/LIVE/Store publication boundaries.
+Use the [execution plan](superpowers/plans/2026-11-06-free20-store-release-preparation.md)
+and [cutover runbook](releases/free20/production-preparation-2026-11-06.md).
+
+Preparation starts at staging `dc988034df904157cf0bbb9e29bbfe9d41e82a04` (#521),
+after the website, invitation/friends, compact welcome and homepage demo work.
+Main remains `9da93cd9891b6155051fc550957635c089fc8f3a`. The full tree diff is 504
+files and ten migrations. Provider reads confirm 93 staging versus 83 production
+migrations, Free20/abuse enabled only on staging, and the unchanged production
+Worker. Final delivery/build SHAs and hashes belong in the preparation PR and
+artifact receipt; the base SHA is not a claim about a later build.
+
+Release audit found TEST-only retention gates in the otherwise complete staging
+flow. The preparation makes uninstall/cancellation issuance, restoration, invoice
+fulfillment, billing display and the actual Cancel entry point mode-aware, with
+strict object/owner checks and independent exact `_LIVE` opt-ins. LIVE remains
+off; accepted obligations continue when new issuance is disabled. No pricing,
+lifetime-discount rule, paid subscription or billing-period restriction changes.
+The available Stripe connectors expose only Sandbox; LIVE catalog/webhook proof
+is still required before enabling production offers.
+
+New extension compatibility also needed a bounded old-server read: current main
+lacks `/api/me/hosting-status`. Generic 404 now requires a valid authenticated,
+same-owner legacy entitlements contract; new web's opt-in capability marker and a
+same-login support latch prevent downgrade after Free20 support is confirmed.
+No error grants quota or skips server admission. The compact welcome's obsolete
+privacy claim was removed without changing recording preferences or collection.
+
+Preparation evidence: web 1,774 passed with six existing skips; extension 2,861
+passed plus the later focused concurrency regression; API 329, protocol 285,
+Worker runtime 182, room harness 39/39, and all-plane type checks passed. A fresh
+isolated SQL fixture passed 2,190 assertions across 57 suites after current
+post-October-31 migrations. These counts are separate suites, not a combined
+number of production scenarios. Independent review found and fixed the LIVE
+Cancel entry gate and a concurrent compatibility-response downgrade.
+Authenticated loaded-artifact, two-user, actual Store update and LIVE purchase
+acceptance remain separate; do not infer them from this automated evidence.
+
+## Free20 release preparation: November 5, 2026
+
+The owner requested an updated plan and careful preparation for a production
+extension ZIP, with the next work discussed before release actions. After the
+site audit, the owner approved a first local homepage/pricing clarity fix, then
+approved delivering that completed block to staging through a PR.
+This does not authorize a production/LIVE change, production ZIP build or
+Store upload/publication.
+
+The [master plan](superpowers/plans/2026-10-30-daily-free20-transition.md),
+[product rules](superpowers/specs/2026-10-30-daily-free20-design.md) and
+[handoff](superpowers/plans/2026-10-30-daily-free20-handoff.md) now distinguish
+implemented staging features from remaining release verification. Free20,
+anti-abuse, live paid transition, warning/exhaustion screens, monthly pricing,
+uninstall/cancellation offers and the feedback inbox are implemented; they are
+not new development tasks. The latest rule is one lifetime 40% allowance shared
+by the new offers, including eligible former subscribers, without blocking
+billing-period changes. Earlier independent-campaign and default-off entries
+below are dated history, not the current product contract.
+
+Readback: staging `dc0eeb0458cde8232df22577a8964a093990fe65` (#514), READY Vercel
+`dpl_J3zD6iuENS1LGq3ncBJCgQWYFkrc` on the staging alias, and successful CI
+`42042530777`. Staging SQL revision 5 has Free20 and anti-abuse enabled and trials
+disabled, with the original activation timestamp preserved. Production alias
+still serves `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke` from main
+`9da93cd9891b6155051fc550957635c089fc8f3a`.
+
+The website audit found that expiring personal billing offers also erased public
+Free20 plan details. The local fix retains the last confirmed public catalog
+through offer expiry, focus refresh and account replacement, while checkout still
+requires fresh owner/price authority. A newly confirmed hosting mode replaces the
+catalog; legacy 30-minute promises still expire at their server deadline.
+
+Homepage and pricing copy now use shorter English explanations: 20 minutes/day,
+four people including the host, four cameras/mics, free guests and personal-history
+access. Metering, UTC reset and renewal instructions stay in separate FAQ answers;
+the first six homepage questions cover the core product choices. Monthly remains
+the default, with explicit yearly selection and full annual charges unchanged.
+
+Local evidence: 50 focused pricing/copy checks, web typecheck, and the full web
+suite (1758 passed, six existing skips). Actual Next pages were inspected through
+a read-only synthetic-offer preview at desktop 1280×720 and mobile 390×844,
+including monthly/yearly, Free/subscriber actions and FAQ interactions. This is
+not an authenticated checkout. The delivery PR records the exact merged SHA,
+CI result and hosted staging verification separately. No server, database,
+extension, environment or pricing-policy change is included.
+
+Welcome, Help and Privacy copy remain separate follow-up findings. The full
+candidate audit and production-gap inventory are still pending. Runtime checks,
+owner acceptance, current Store version and an exact production artifact remain
+distinct evidence. The release diff includes more than Free20; do not infer its
+scope from the most recent PR alone.
+
+## Uninstall feedback inbox: November 5, 2026
+
+The owner selected `/kreatli-email-crm` as the inbox for existing uninstall
+responses. Its **Uninstall feedback** tab reads the saved date, reason and
+optional comment, newest first, in pages of 50. Refresh reloads the first page;
+load failures preserve already loaded responses and offer retry. An expired CRM
+session clears the displayed responses and asks for CRM login again.
+
+`/api/kreatli-crm/uninstall-feedback` checks the existing CRM session before
+reading or parsing pagination. The additive migration `20261105142000` exposes
+only a bounded, service-role-only SQL projection; ordinary website login and
+anonymous clients cannot read it or the underlying table. Account identifiers
+and anti-abuse hashes are excluded. No new credentials, public feed, exports or
+response mutations are introduced. The survey remains voluntary; `(optional)`
+appears only beside **Add a note**, not beside its question heading.
+
+Delivered schema-first to staging through [PR #514](https://github.com/AniDachi/anidachi-LP/pull/514). The PR records exact checks,
+deployed SHA and hosted evidence; local fixture views do not establish
+owner-authenticated staging acceptance. Reverting the web change hides the
+inbox without deleting responses or changing feedback submission and billing.
+
+## Monthly cancellation offer: November 5, 2026
+
+The owner approved a native Stripe cancellation offer: **40% off one monthly
+renewal**, using the same **one lifetime discount per account** as `/uninstall`.
+Annual conversion remains available and receives no reduction from this coupon.
+The [design](superpowers/specs/2026-11-05-cancellation-retention-design.md) and
+[delivery plan](superpowers/plans/2026-11-05-cancellation-retention.md) record scope,
+provider evidence and the schema/catalog/runtime activation order. The delivery
+PR records the deployed commit, completed gates and exact staging activation;
+owner acceptance remains separate before production promotion.
+
+A short-lived private reservation serializes native and uninstall offers before
+a coupon is created. Opening or declining the offer does not consume the lifetime
+allowance; verified Stripe redemption does. Expired unused reservations release
+only after authoritative provider evidence. TEST customers with a test clock also
+require that clock to be ready and past the redemption deadline. Provider errors
+retain uncertainty without blocking ordinary subscription cancellation.
+
+The offer is attached to the owner-checked **Cancel** action from AniDachi billing
+into Stripe. Generic Stripe management sessions retain normal cancellation but
+have no global retention coupon. New annual sales use separate products at the
+same prices; legacy annual IDs remain recognized and existing subscriptions are
+not repriced. A stale monthly cancellation tab can still redeem after annual
+conversion; this consumes the allowance while the annual price stays unchanged.
+The account page must show that actual price and monthly-only applicability.
+
+Local integration evidence: 1732 web tests passed with six existing skips, web
+typecheck, 49 new plus 33 existing SQL checks, and five concurrent SQL scenarios.
+A subsequent review fix preserved annual availability during a provider outage
+for a verified pending native offer, without promising a discounted amount; all
+162 affected checks and typecheck passed. Other campaigns and unknown ownership
+still fail closed. These are scoped runs, not counts to add together. Disposable Stripe TEST proof confirmed paid
+Plus invoices 799 -> 479 -> 799 cents, Pro 1499 -> 899 -> 1499, ordinary declining
+without redemption, expired cached-offer rejection, and separate-product annual
+conversion with zero coupon reduction. Native provider proof is distinct from
+owner-authenticated hosted account acceptance. No extension, Worker, protocol,
+production or Store release is part of this change. The eventual PR/receipt
+records final CI, deployed SHA and activation; main requires separate
+accepted promotion.
+
+## Returning subscribers: uninstall offer correction, November 5, 2026
+
+Approved by the owner for staging delivery on November 5 after local review.
+The delivery PR records the deployed commit and hosted checks; full hosted flow
+acceptance remains with the owner before any production promotion.
+The owner clarified that former subscribers without a current subscription may
+use an unused lifetime 40% allowance for the first month of a new monthly Plus/Pro
+subscription. Ordinary paid history no longer excludes them. Both offer reads
+and promotion provisioning use this rule; shared purchase authority still blocks
+active access and pending changes. Existing first-month grants require a verified
+binding and customer-bound promotion: unused resumes, redeemed/inactive does not
+offer another discount, missing or inconsistent evidence fails closed.
+The real page describes a new subscription rather than a first-ever purchase.
+The existing shared SQL lifetime constraint and one-redemption Stripe restriction
+remain unchanged. No migration, coupon replacement or extension change is needed.
+The local scenario gallery uses real web components with isolated fixture APIs;
+it is visual evidence, not Stripe, authenticated staging or production acceptance.
+
+## Uninstall offers and feedback, November 4, 2026
+
+The owner authorized the real `/uninstall` flow for staging after reviewing the
+local design. The [implementation plan](superpowers/plans/2026-11-04-uninstall-retention-staging.md)
+records the latest rule: **one lifetime 40% discount per account**, shared between
+the first paid monthly Plus/Pro purchase and one next monthly renewal of an
+existing paid subscription. Separate Stripe coupons do not grant separate rights.
+No new trial, yearly offer, stacked discount, immediate renewal charge or second
+subscription is introduced. ANIHUNT40 and Free20 accounting are unchanged.
+
+The server owns eligibility, actual prices, account identity and immutable
+reservations. First purchase reuses the existing Checkout recovery authority;
+retention binds the exact renewal invoice before applying an invoice-only coupon.
+Duplicate/lost responses reconcile the same operation. Saved offers are checked
+against current subscription conditions on return; changed or unconfirmed terms
+cannot appear as a successful future discount. Optional feedback is private,
+bounded, idempotent and rate-limited. Extension removal opens the channel URL
+without identifying query parameters; visiting the page is not proof of removal.
+
+Delivery requires the additive migration `20261104133355`, the compatible signed
+`invoice.created` receiver, then explicit TEST campaign gates scoped only to
+Preview branch `staging`. Disabling new offers retains fulfillment of accepted
+renewals. Rollback must preserve those obligations and their durable records.
+The delivery PR records the deployed SHA, webhook/configuration readback and the
+matching extension artifact. Main, LIVE Stripe and Store release need a separate
+accepted promotion.
+
+Local backend evidence includes web typecheck, 1602 passing tests with six skips,
+focused restored-claim regressions, 33 SQL assertions and actual SQL concurrency.
+Real Sandbox proof verified both discounted first invoices, both exact discounted
+renewals, following full-price invoices, same-operation replay and isolation of
+manual/annual-proration invoices. These checks do not replace owner login,
+hosted Checkout and loaded-extension acceptance. Evidence is under ignored
+`artifacts/uninstall-retention-20261104/`; the PR records later UI/delivery checks.
+
+## Free20 exhausted-host screen, November 4, 2026
+
+The owner approved the [exhausted-host screen](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-4-agreed-exhausted-host-screen-local-candidate)
+and its delivery through a PR into `staging`, followed by refreshing the existing
+unpacked extension folder. The screen shows `Daily limit reached`, a highlighted
+local renewal date/time and the channel pricing action, without a zero timer or
+reset countdown. The renewal instant remains server-owned; presentation uses
+the device timezone and existing monotonic clock. Unknown renewal retains retry
+and requires fresh server allowance before creation. Paid, guest and legacy
+flows retain their existing rules.
+
+The local candidate passed 2788 extension tests, typecheck, narrow staging build
+validation and source-component visual inspection. The delivery PR records
+independent review, CI, the accepted staging SHA and final artifact identity;
+local evidence is under ignored `artifacts/free20-limit-screen-20261104/`.
+Loaded Chrome and two-participant acceptance remain distinct from these checks.
+This is extension presentation only: no SQL, Worker, protocol, policy flag,
+production or Store change. Rollback restores the prior verified extension or
+reverts the UI commit and rebuilds.
+
+## Free20 anti-abuse staging activation, November 4, 2026
+
+The owner authorized enabling the delivered protection after testers reported
+fresh allowances when switching accounts in one browser. At
+`2026-11-03T17:24:37.315292Z` (November 4 locally), staging SQL policy advanced
+from revision 4 to 5 with `free20_abuse_enabled=true`. Base Free20 remains enabled,
+trials remain disabled, and the original activation and other policy flags were
+preserved. The previously active unprotected room ended through its normal
+lifecycle; the guarded transaction and independent readback found zero
+unprotected nonterminal Free20 rooms. No account, grant or usage was reset.
+
+Web `ANIDACHI_FREE20_ABUSE_ENABLED=true` is scoped only to Preview branch
+`staging`. During preflight the enabled endpoint rejected even the intended
+origin. The existing sensitive `NEXT_PUBLIC_SITE_URL` value could not be read;
+it was explicitly set to the documented `https://staging.anidachi.app` in that
+same branch scope. Fresh READY deployment `dpl_32QuwjzMUj5HJHEaec3sF8owhQge`,
+from reviewed staging source `74ae3484938baa62385466e10496acebfdd08337`, serves
+the staging alias. Site and approved extension origins now reach authentication
+and reject an intentionally invalid bearer with 401 `UNAUTHORIZED`; an unrelated
+origin receives 403 `FREE20_CONTEXT_ORIGIN_INVALID`. No request used user tokens.
+
+[Staging smoke 41684000582](https://github.com/AniDachi/anidachi-LP/actions/runs/41684000582)
+and direct Worker smoke passed. Worker remains `f39a67e5-8a95-4e47-8916-cea88b720361`
+at 100%; no Worker flag, secret or new migration was added. The same ZIP and both
+unpacked folders were rechecked against all 13 files of delivered build
+`03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`; no replacement is needed
+for this configuration activation. The owner reloads/tests Chrome himself.
+
+Main remains `9da93cd9`, production Web `dpl_6FTnPJHmRWPZ4hX9LLZRuF9VaBke`
+and production Worker `3ea773eb-f258-4713-a314-9abeb4012f49` are unchanged.
+PR471 remains open without auto-merge. Ignored activation evidence is under
+`artifacts/free20-abuse-activation-20261104/`; the
+[runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md#authorized-activation-receipt-november-4-2026)
+records the sequence and rollback. Enabled authenticated A/B browser use,
+two-participant spending, browser cookie-policy behavior, paid purchase during
+spending and live UTC rollover still require acceptance. Gate activation and
+unauthenticated probes are not evidence that those scenarios passed.
+
+## Free20 shared-browser/installation staging delivery, November 3, 2026
+
+The owner-approved [anti-abuse design](superpowers/specs/2026-11-03-free20-abuse-design.md)
+is implemented through Tasks 1–5 on `codex/free20-abuse-adaptation`, with final
+candidate source `c367453c5d15aacf2ee447b10e0aed2907cdf7c7` and completed local
+review/readiness evidence. [PR502](https://github.com/AniDachi/anidachi-LP/pull/502)
+merged to `staging` as `03efd89983ff06cbba1651f63e073f5f21b06fe1` after the
+schema-first workflow from frozen feature head `8a4e479c`. Compatible Web,
+Worker and the matching staging extension were delivered with the new anti-abuse
+protection disabled. That historical delivery snapshot is superseded by the
+November 4 activation receipt above; existing daily Free20 remained enabled.
+The [implementation plan](superpowers/plans/2026-11-03-free20-abuse-adaptation.md)
+records completed local and hosted delivery evidence and outstanding acceptance; the
+[delivery runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
+requires schema before compatible runtime, matching extension and SQL activation.
+
+The effective daily allowance is the smallest remainder of the account, signed
+browser and proved installation, each capped at 1200 seconds per UTC day. Changing
+accounts or replacing one marker cannot restore spent time; a replacement inherits
+the greatest known account/paired/bound-scope consumption. A fresh account after
+resetting both markers remains a known design limit. No IP linking, fingerprinting,
+new secret or permission is added. Historical trial eligibility remains separate.
+
+Postgres owns scoped usage, exclusive unsettled reservations and cumulative delta
+settlement. A new context on an existing room requires the DO to stop host spending,
+settle the old interval, attach scopes and durably install the effective checkpoint
+before host admission resumes. Original bindings survive reconnect, paid upgrade,
+gate disable and unknown settlement until durable terminal completion. Paid/trial/
+manual precedence, guest entry, room links, capacities and media controls retain
+their contracts. For new free hosting, missing proof or blocked cookies yields
+retryable unavailable;
+the existing silent auth flow supplies no equivalent first-party enrollment fallback.
+
+Local evidence includes a fresh full-file migration replay (109/109 abuse assertions,
+users 0, cron off, no network), eight actual SQL race groups, protocol/Web/API checks,
+workerd transfer cases and 2759 passing extension tests. Earlier full suite counts
+are overlapping snapshots, not totals to add. Local real-WebRTC passed legacy 26/26
+and all four-participant v3 scenarios, with 12/12 decoded first-frame samples
+(p95 1931.8 ms), using the actual source engine, local Worker, isolated Chromium and
+fake media without external TURN. These are not hosted or physical-network results.
+The final 13-file narrow candidate `artifacts/free20-abuse-20261103/candidate-c367453c/`
+validated, with exact identity in `final-candidate-receipt.json`; that preparation
+did not replace the stable folder. The later CI artifact delivery is recorded
+below. Build output includes ineffective dynamic imports
+and oversized-chunk warnings, whose baseline ancestry was not independently verified.
+
+Whole-branch review at `78ae94a9` found no Critical/Important issue and parked one
+P3 about test fault boundaries. The test-only CI lint correction `df8c047e` was
+independently approved with 45/45 focused tests and full Web lint/check; `c367453c`
+restores Graphify header-import resolution. These corrections change no product
+behavior. CI [41635669181](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669181),
+[E2E Rooms 41635669420](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669420),
+[P2P 41635669076](https://github.com/AniDachi/anidachi-LP/actions/runs/41635669076)
+and Vercel preview succeeded; the full Worker runtime now has a passing 182-case
+run. Graphify completed 62 changed AST sources and nine semantic sources, plus
+one unchanged protocol dependency for header resolution; `graph/validation-final.json`
+records preservation and hash validation. These receipts precede this final docs
+update; they do not claim its commit has already been reviewed or tested by CI.
+
+The authorized delivery applied migration `20261103120000` through workflow
+[41640338430](https://github.com/AniDachi/anidachi-LP/actions/runs/41640338430).
+Hosted comparison matched all 30 function definitions/signatures/ACLs, three
+private tables, default-false columns and the cleanup job. Policy revision 4,
+original activation and trial flags were preserved; SQL `free20_abuse_enabled`
+is false and Web `ANIDACHI_FREE20_ABUSE_ENABLED` is absent. No protected rooms
+or bindings existed at the post-migration check.
+
+Web READY `dpl_GgJ8Gdzf1afeeFBaAS6VVdWBVKzY` serves `staging.anidachi.app`
+from `03efd899`; Worker version `f39a67e5-8a95-4e47-8916-cea88b720361` serves
+100% of staging after workflow
+[41640597041](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597041).
+[CI 41640597001](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597001),
+[extension build 41640597196](https://github.com/AniDachi/anidachi-LP/actions/runs/41640597196),
+[staging smoke 41641051077](https://github.com/AniDachi/anidachi-LP/actions/runs/41641051077)
+and the Worker smoke passed. Web probes meet the staging access gate; the new
+Worker transfer route rejects an unauthenticated call. These checks do not
+exercise authenticated enrollment or transfer.
+
+Artifact `13231299833`, build ID
+`03efd89983ff06cbba1651f63e073f5f21b06fe1-staging-246`, replaced both known
+unpacked folders, including the owner's
+`/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging`.
+The different previous local builds were backed up separately; all 13 delivered
+file hashes now match the validated CI artifact. Stable extension identity and
+narrow permissions are unchanged. Delivery evidence and backups are under
+`artifacts/free20-abuse-staging-delivery-20261103/`; the implementation ledger
+is archived under `artifacts/free20-abuse-20261103/sdd-record/`.
+
+The owner reloads Chrome himself. At delivery, room re-inventory, exact staging
+Web/SQL activation and enabled acceptance remained ahead. Actual Chrome
+cookie-policy behavior, A/B switching, two-participant spending, purchase during
+spending and live UTC rollover remain pending. No account/grant/usage reset,
+production promotion or Store release is part of this delivery. Main remains
+`9da93cd9`; production Web and Worker remain on their prior deployments.
+Successful delivery does not establish production readiness.
+
+## Free20 capsule notice and paid refresh correction, November 3, 2026
+
+The owner approved transferring the refined local notice into the real staging
+extension, together with investigation of renewed paid-plan UI flicker. The
+[overlay plan](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-3-capsule-notice-and-paid-refresh)
+records the bounded implementation and delivery gates. The 300-second warning
+uses the existing server claim and authoritative room clock. Its strip emerges
+from beneath the actual capsule, displaying remaining time and View plans.
+Only a host's confirmed Free20 quota-ended event produces Room closed / Daily
+limit reached; it does not force the controls panel open or end a room locally.
+
+Source and both local artifact folders contained the previous lifecycle fixes;
+their absence from staging was not reproduced. A distinct same-login credential
+rotation did reproduce loss of fresh paid metadata and temporary quota loading
+elements. Account display continuity now uses the logical login while a separate
+credential epoch retires pending reads. Original expiry, UTC, room/settlement and
+account replacement fences remain. The approved Creating room label is included.
+
+Local extension tests/typecheck and isolated source-component browser inspection
+are recorded in the delivery PR, along with independent review, required CI,
+staging build validation and exact unpacked-folder receipt. They do not prove
+that Chrome loaded the folder or replace authenticated two-participant, purchase,
+mixed-client and UTC-reset acceptance. No server accounting, protocol, flags,
+permissions, main, production or Store changes are included.
+
+## Accepted Free20 overlay lifecycle corrections, November 2, 2026
+
+The owner tested the successive local staging-channel builds and authorized
+merging their accumulated corrections into `staging`. The
+[overlay plan](superpowers/plans/2026-11-01-free20-overlay-design-staging.md#november-2-accepted-local-lifecycle-corrections)
+records the final behavior: fresh time/plan continuity on tab/window return,
+intentional hover after creation, paid presentation without quota placeholders,
+guest entry without personal hosting controls, and a ready-data transition after
+guest departure. Room-session initialization errors remain owner-scoped even
+when a later identity refresh clears ordinary auth messages.
+
+Local verification includes 2666 extension tests, typecheck, narrow staging
+artifact validation, isolated source-browser scenarios and independent review.
+The owner reported that the delivered UI now works normally. The staging PR
+records final CI/merge and rebuilt-folder evidence; that delivery is not a
+production promotion or a substitute for outstanding two-participant, purchase,
+mixed-client and UTC-reset acceptance. Server accounting, policy flags, shared
+protocol, permissions and media grants are unchanged by these corrections.
+
+## Free20 staging delivery and controlled activation, November 1, 2026
+
+The owner authorized completing the necessary staging transition and rehearsal:
+retire new trials, finish current entry screens, add supported-client admission
+and the once-per-day warning, then enable and test Free20 on staging. Production,
+main, Store publication, LIVE Stripe and discount campaigns remain separate.
+The [active readiness plan](superpowers/plans/2026-11-01-free20-staging-readiness.md)
+defines the cross-plane contracts, delivery gates and rollback limits.
+
+Readiness implementation was independently reviewed and merged through
+[PR490](https://github.com/AniDachi/anidachi-LP/pull/490) at staging commit
+`86873422a8e890a1329c35cdf0d2c2e838a55b9c`. Its schema-first workflow
+`41305002458` succeeded from the frozen feature head before runtime merge;
+89 migration versions and all 14 checked function bodies/signatures match the
+repository, including historical wrappers. Exact runtime deployments, extension
+artifact and the later conditional SQL cutover are tracked by that PR's
+execution receipts. Source configuration is not proof that SQL is enabled.
+The [activation runbook](superpowers/plans/2026-11-01-free20-staging-activation-runbook.md)
+keeps compatible runtime flags first and the policy update last.
+
+The owner selected one warning at **300 seconds** remaining, beside the capsule,
+with View plans and dismiss. It must not pause/dim video or move camera/microphone
+controls. Final visual refinement continues on the enabled staging system.
+Accepted trial/payment operations, original expiry/renewal terms, current paid
+and manual access, usage and pinned room capacities remain intact.
+
+The dormant trial-retirement guard is committed at `2997ddb6` and independently
+approved: 463 SQL assertions, five real concurrency scenario groups, Web check
+and 1457 passing Web tests with six preexisting external-artifact skips. This is
+implementation evidence, not hosted activation. The initial November1 pre-cutover
+inventory had policy revision3, Free20=false/trials=true and both runtime opt-ins
+absent; this is a historical baseline, not the current activation receipt.
+Warning server `6a28f9e0` and client `2a0090f0` plus room-sequence correction
+`7ce01f48` were independently reviewed before their PR490 delivery.
+Server evidence: protocol281, Web1470/six existing skips, SQL211/five concurrency
+groups. Client evidence:2581 full-suite tests, then45 focused fix tests/check.
+Supported-host admission `14997bf6` is independently approved: new marked-room
+hosts require the explicit Free20 client header, including rooms upgraded to
+paid time. Old guests, unmarked paid/trial/manual rooms and existing sockets
+retain their behavior. Final locked create authority covers paid expiry between
+preflight and admission. Protocol283, Web1486/six existing skips, API325,
+extension2588 plus61 focused bridge tests, SQL539/eight new concurrency groups
+and room harness39 pass.
+
+Entry-screen candidate `f78d3a1b`, with fixes `3e25376a` and `17274faf`, is
+independently reviewed. Pricing has an explicit policy mode; onboarding reuses
+the current account status; billing and explicit install welcome show current
+owner-bound availability. Unknown status never fabricates allowance or revives
+a new trial. Legacy canHost/1800 policy, original active-trial terms, paid caps,
+history rights and camera/microphone behavior remain intact. Welcome retires
+expiry work on departure, offers explicit retry after expiry and bounds local
+pending UI to ten seconds without claiming to abort Next's network request.
+The [presentation design](superpowers/specs/2026-11-01-free20-presentation-design.md)
+records the website's observable owner/lifecycle/expiry boundary, including
+unobservable same-owner relogin. Web1502/six existing skips and extension2590
+pass; later fixes pass29 focused tests, all three reviewer probes and Web check.
+
+Public-copy alignment was reviewed and included in the same PR490 delivery:
+107 pages and 10 shared sources preserve third-party facts and existing trial
+terms. The final reviewed artifact, hosted configuration and enabled acceptance
+are separate Task6 gates; do not treat source or this authorization as a release.
+The owner chose to inspect the interface himself after the unpacked-folder
+update. Validated artifact delivery precedes controlled staging enablement;
+Chrome Reload and visible acceptance follow and remain production gates.
+The owner currently has no second participant. Available solo
+checks may proceed, but joint metering/pause/warning, upgrade while spending
+and loaded mixed-client acceptance remain explicitly pending. A solo Sandbox
+checkout, if a suitable normally authenticated test account is available,
+cannot substitute for those joint scenarios.
+
+## Free20 purchase delivery candidate, November 1, 2026
+
+The owner approved connecting confirmed subscription synchronization to the still
+active Free20 room. The [bounded delivery plan](superpowers/plans/2026-11-01-free20-purchase-delivery.md)
+adds an atomic SQL refresh outbox after the existing final subscription/trial
+commit, a targeted post-commit delivery, and independent retry recovery. The
+Worker receives only an owner/room/generation/revision-bound request to revalidate
+current authority; the command carries no paid grant or allowance.
+
+The existing serialized accounting transition retains pending ACKs, UTC and quota
+fences. It preserves link, participants and original seats/media caps. Completed
+revisions survive eviction; stale replies cannot consume a newer queued revision.
+Confirmed terminal targets can retire; late payment never revives a room.
+
+The existing exact server flag selects the new v4 billing commit; while off, Web
+retains v2/v3. Additive SQL must be present before activation. A distinct two-minute
+Worker cron retries the outbox using existing internal service authorization.
+Staging config contains only that trigger; its invitations stay on Supabase Cron.
+The existing production notification trigger is preserved in source configuration.
+No flag, price, renewal rule, trial-start policy or production deployment changes
+are part of this candidate. The PR carries exact tests, review and staging receipt.
+Real Sandbox purchase, enabled-flow acceptance, trial retirement, old-client
+transition and final interface work remain separate activation/release gates.
+
+## Free20 extension time wiring, November 1, 2026
+
+PR486 follow-up: same-user token refresh cleared the live timer and fenced out
+new time events on the still-open connection. The approved correction adds a
+stable local logical login ID while retaining credential freshness for HTTP.
+Ordinary refresh preserves the room timer; real logout or login replacement
+retires the previous room synchronously. Scope and regression requirements are
+in the [time-wiring plan](superpowers/plans/2026-11-01-free20-live-time.md#token-refresh-correction).
+The correction does not activate Free20.
+
+The owner approved the next bounded block: authoritative time before a room,
+during a room and after quota exhaustion, with staging delivery and an updated
+unpacked extension. The [implementation plan](superpowers/plans/2026-11-01-free20-live-time.md)
+keeps commercial activation, new-trial retirement, payment push delivery and
+warning decisions outside this block.
+
+The candidate uses the separate account hosting-status read for idle state and
+negotiated `HOSTING_TIME` events for live rooms. The event carries bounded
+freshness and owner/room/generation/sequence fences. Socket opt-in survives
+hibernation; a separate durable display sequence is saved before sending.
+Presence, authority and UTC changes update the display; playback frames do not.
+Unlimited display provenance uses an opt-in internal HTTP header and a separate
+metadata row, preserving the previous strict accounting checkpoint and stored
+accounting shape. Missing provenance produces unknown display, not new rights.
+
+The accepted overlay layout remains the baseline. Exact local verification,
+staging deployment and installed-artifact receipts belong in the PR; source
+presence is not loaded-browser acceptance. Free20 flags remain off until the
+remaining trial, purchase, compatibility and enabled-flow gates are complete.
+
+## Intermediate extension overlay design, November 1, 2026
+
+The owner authorized transferring the accepted Free20 mockup into a staging
+extension for continued design iteration. See the bounded
+[overlay delivery plan](superpowers/plans/2026-11-01-free20-overlay-design-staging.md).
+The candidate adds account/plan links, scoped clipboard feedback, icon-only sync
+motion with honest `Sync sent` feedback, and the accepted finite-time action row.
+Camera/microphone stay in their existing dock. Existing server-authoritative
+legacy quota data supplies finite time; unknown, paid and guest states do not
+receive a fabricated zero or a new 1200-second allowance.
+
+This design delivery was not Free20 activation or final design acceptance. The
+next time-wiring block is recorded above; cessation of new trials, purchase
+delivery and enabled end-to-end testing remain separate. Server gates, main,
+production and Store are unchanged. The
+staging PR and local artifact receipt carry delivery/verification evidence;
+source presence alone does not prove a browser has loaded that artifact.
+
+## Free20 disabled server candidate, October 31, 2026
+
+The owner-approved daily Free20 migration is tracked in the
+[active transition plan](superpowers/plans/2026-10-30-daily-free20-transition.md)
+and [contract/evidence record](daily-free20-contract.md). Blocks1A/2A/2B/3A
+reached staging through PRs476–479; block4A reached staging through PR480
+(`5bc4b215`). Graphify repair PR481 followed at `c4a4750c`. Block5A reached
+staging through PR482; PR483 (`ec46a6c0`) maps unavailable room authority to503
+in both create and connect handlers.
+
+Block5A prepares default-off SQL/Web/Worker admission and renewal. The additive
+`hosting_commercial_policy.free20_enabled` defaults false; existing rooms retain
+null `hosting_time_mode`. New daily rooms pin `daily_free20`, and Worker admission
+uses that durable mode instead of inferring it from a Free media plan. Web and
+Worker still require exact `ANIDACHI_FREE20_ACCOUNTING_ENABLED=true`; neither
+runtime flag nor the SQL switch is enabled by deployment. SQL serializes account
+admission, keeps the active-room assignment through settlement, and rechecks
+1200-second UTC usage. Confirmed paid time can continue a pinned Free-capacity
+room; terminal deadlines and ended rooms are never revived.
+
+The separately approved block5B prepares `GET /api/me/hosting-status` for later
+website/extension consumers, with a required expected-owner header and a new
+strict versioned contract. Existing me/entitlements/room-quota responses remain
+unchanged. The gated SQL projection returns the current paid/trial/manual source,
+UTC reset and active assignment. Idle/guest Free reads committed account usage;
+an active Free host reads its actual finite DO meter and then rechecks account
+identity/assignment. Unknown, pending or expired authority produces503, never a
+successful zero/null allowance. These on-demand reads do not settle room usage,
+reserve minutes, add polling or issue room tokens. Both server and SQL gates stay
+off; UI, live room snapshot events, trial-start changes and purchase delivery are
+separate work. See the contract record for consistency, request bounds and rollback.
+
+Local evidence and the exact staging delivery receipt belong in this block's PR.
+Checkout/event delivery, actual Sandbox purchase, stopping new trial offers,
+public account/quota/time UI and old Store acceptance remain open. This is not
+activation-ready; setting the flags alone is not an approved launch. Production,
+main and Store are outside this block; older launch permissions below are historical.
+
 ## Authorized production launch, October 19, 2026
 
 The owner confirmed Store 0.1.4 is approved and waiting for manual publication,

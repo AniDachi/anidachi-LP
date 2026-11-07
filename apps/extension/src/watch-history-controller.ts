@@ -124,6 +124,7 @@ export function createWatchHistoryController(
 	let meaningful = false;
 	let resumeAwaitingPlayback = false;
 	let heartbeatAt: number | null = null;
+	let persistedCheckpoint: string | null = null;
 	let interaction = dependencies.isPlaying();
 	let disposed = false;
 	let revision = 0;
@@ -174,6 +175,7 @@ export function createWatchHistoryController(
 		meaningful = false;
 		resumeAwaitingPlayback = false;
 		heartbeatAt = null;
+		persistedCheckpoint = null;
 		dependencies.onObservation?.(null);
 	}
 	function apply(next: NonNullable<typeof authority>) {
@@ -344,6 +346,9 @@ export function createWatchHistoryController(
 				authority = { ...captured, capturePaused: true };
 			return false;
 		}
+		// Only successful, still-authorized local writes can suppress an idle
+		// heartbeat. Metadata and presentation changes remain real checkpoints.
+		persistedCheckpoint = JSON.stringify([observation, meaningful, displayMode]);
 		if (queue && dependencies.onPersisted) {
 			const refreshCatalog =
 				interaction && kind !== "source_change" && kind !== "pagehide";
@@ -385,7 +390,7 @@ export function createWatchHistoryController(
 		if (disposed) return;
 		if (!allowed()) {
 			reset();
-			if (shouldRefreshAutomatically()) void refreshAuthority();
+			if ((kind !== "heartbeat" || playing) && shouldRefreshAutomatically()) void refreshAuthority();
 			return;
 		}
 		// The sample conveys no authority: changed account/lease/consent revisions
@@ -414,6 +419,9 @@ export function createWatchHistoryController(
 		}
 		if (kind === "ended" && !resumeAwaitingPlayback) meaningful = true;
 		previousTime = playing ? observation.currentTime : null;
+		const displayMode = isActivePresentationKind(kind) ? "mine" : null;
+		if (kind === "heartbeat" && !playing &&
+			persistedCheckpoint === JSON.stringify([observation, meaningful, displayMode])) return;
 		const queue = meaningful && (kind !== "heartbeat" || playing);
 		const flush =
 			queue &&
@@ -424,7 +432,7 @@ export function createWatchHistoryController(
 			(await persist(
 				observation,
 				kind,
-				isActivePresentationKind(kind) ? "mine" : null,
+				displayMode,
 				queue,
 				flush,
 			)) &&
@@ -454,6 +462,12 @@ export function createWatchHistoryController(
 		observe: queueCapture,
 		notePlaybackInteraction: async () => {
 			interaction = true;
+			// Idle time never extends a lease. Resume wakes validation immediately;
+			// normal capture still requires a current lease and genuine progress.
+			if (dependencies.isPlaying() && shouldRefreshAutomatically()) {
+				await refreshAuthority();
+				if (allowed() && dependencies.isPlaying()) await queueCapture("heartbeat");
+			}
 		},
 		noteSeeking: async () => {
 			previousTime = null;

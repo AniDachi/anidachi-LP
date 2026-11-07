@@ -64,12 +64,12 @@ const faq = [
   {
     question: "How do you host an anime watch party online?",
     answer:
-      "Install AniDachi on desktop Chrome and open a Crunchyroll episode; the extension detects the player automatically. A Plus, Pro, or trial host chooses Create room and shares its invite. Free friends can join using their own Crunchyroll access for synced playback and live chat.",
+      "Install AniDachi on desktop Chrome and open a Crunchyroll episode; the extension detects the player automatically. A Free, Plus, or Pro host chooses Create room and shares its invite. Free friends can join using their own Crunchyroll access for synced playback and live chat.",
   },
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes — for free, Discord screen sharing works over any distance. Crunchyroll Party or AniDachi give everyone playback on their own streaming accounts with live sync. AniDachi requires a Plus, Pro, or trial host; Free friends can join. Live rooms need a shared start time and async catch-up is coming soon. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
+      "Yes — for free, Discord screen sharing works over any distance. Crunchyroll Party or AniDachi give everyone playback on their own streaming accounts with live sync. AniDachi requires a Free, Plus, or Pro host; Free friends can join. Live rooms need a shared start time and async catch-up is coming soon. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
   },
   {
     question: "How do you stream anime together online?",
@@ -180,7 +180,7 @@ export default function WatchAnimeTogetherPage() {
       <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
-          See AniDachi pricing — Free to join, Plus or Pro to host
+          See AniDachi pricing — Free daily hosting, Plus or Pro without a daily time limit
         </Link>{" "}
         — with a clear refund path, then create your first
         watchroom in minutes.
@@ -267,7 +267,7 @@ export default function WatchAnimeTogetherPage() {
               <>
                 Crunchyroll-focused watchrooms with live sync, real-time chat, and
                 personal history on Plus or Pro. Each person streams on their own account in
-                full quality. Free to join; Plus for hosts starts at {PRICING_STARTING_AT}.
+                full quality. Free daily hosting; Plus starts at {PRICING_STARTING_AT}.
               </>
             ),
           },
@@ -531,7 +531,7 @@ export default function WatchAnimeTogetherPage() {
         links={[
           { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together" },
                     { href: "/watch-youtube-together", label: "YouTube Watch Party" },
-                    { href: "/pricing", label: "See pricing — Free to join, Plus from $7.99/mo to host" },
+                    { href: "/pricing", label: "See pricing — Free daily hosting; Plus from $7.99/mo" },
                     { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" }
         ]}
       />

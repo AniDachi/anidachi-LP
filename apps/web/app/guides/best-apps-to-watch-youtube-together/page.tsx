@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
@@ -55,7 +56,7 @@ const faq = [
   {
     question: "Is there a free app to watch YouTube together?",
     answer:
-      "Watch2Gether has a free tier and Discord voice is free. AniDachi guests join on Free; hosting requires Plus or Pro access, including an active trial. See pricing for current plans.",
+      `Watch2Gether has a free tier and Discord voice is free. AniDachi guests join on Free; ${PRICING_FREE20_SUMMARY} See pricing for current plans.`,
   },
   {
     question: "Is AniDachi free?",

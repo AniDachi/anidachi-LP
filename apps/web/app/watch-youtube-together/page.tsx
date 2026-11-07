@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "YouTube Watch Party: Watch YouTube Together",
     description:
-      "Live YouTube rooms with AniDachi. Free friends join a Plus, Pro, or trial host.",
+      "Live YouTube rooms with AniDachi. Free friends join a Free, Plus, or Pro host.",
   },
 };
 
@@ -67,7 +67,7 @@ const faq = [
   {
     question: "How do I watch YouTube together with friends?",
     answer:
-      "Install AniDachi and open a full youtube.com/watch page. A Plus, Pro, or trial host chooses Create room and shares its invite; Free friends can join. Everyone watches on their own YouTube player with live sync and chat. Shorts, embeds, and homepage feeds are not supported.",
+      "Install AniDachi and open a full youtube.com/watch page. A Free, Plus, or Pro host chooses Create room and shares its invite; Free friends can join. Everyone watches on their own YouTube player with live sync and chat. Shorts, embeds, and homepage feeds are not supported.",
   },
   {
     question: "Can you watch YouTube together asynchronously?",
@@ -150,7 +150,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "With active Plus, Pro, or trial access, create an AniDachi room for the video. Free friends can join.",
+    text: "With active Free, Plus, or Pro access, create an AniDachi room for the video. Free friends can join.",
   },
   {
     name: "Share the invite link",
@@ -260,7 +260,7 @@ export default function WatchYoutubeTogetherPage() {
             invite to your friends. Everyone watches on their own player, and
             play, pause and seeking stay in sync.
           </strong>{" "}
-          The host needs Plus or Pro (a trial counts), and friends join free.
+          Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit, and friends join free.
           YouTube itself has no watch-together button for regular videos on
           desktop. Start from the{" "}
           <Link href="/extension">AniDachi install page</Link>. Extension details:{" "}

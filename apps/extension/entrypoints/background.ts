@@ -1,3 +1,8 @@
+import { storage } from "wxt/utils/storage";
+import { createFree20AbuseClient } from "../src/free20-abuse-client";
+import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
+import { WEB_HTTP_BASE } from "../src/constants";
+import { registerUninstallUrl, UNINSTALL_URL_REFRESH_ALARM } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
 import { registerOnboardingCheckoutBridge } from "../src/onboarding-checkout-bridge";
@@ -7,6 +12,8 @@ import {
   PLAYER_INTRODUCTION_MESSAGE,
 } from "../src/player-onboarding-storage";
 import { handleHostingAccessMessage, isHostingAccessMessage } from "../src/hosting-access-client";
+import { handleAccountHostingStatusMessage, isAccountHostingStatusMessage } from "../src/account-hosting-status-client";
+import { handleFree20WarningMessage, isFree20WarningMessage } from "../src/free20-warning-client";
 import { defineBackground } from "wxt/utils/define-background";
 import { handleRoomQuotaStatusMessage, isRoomQuotaStatusMessage } from "../src/room-quota-status-client";
 import {
@@ -14,12 +21,14 @@ import {
   isAccountInboxHttpMessage,
 } from "../src/account-inbox-client";
 import {
+  refreshExtensionSession,
   handleAuthMessage,
   handleWebsiteAuthCookieChange,
   isAuthMessage,
   reconcileExtensionSessionAgainstWebsite,
 } from "../src/auth-client";
 import {
+  getStoredAuthTokens,
   AUTH_TOKENS_STORAGE_KEY,
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
@@ -268,7 +277,14 @@ async function waitForAdmissionCompletion(
 }
 
 export default defineBackground(() => {
-  registerTrialInstallationBridge();
+  void registerUninstallUrl();
+  const installation = createInstallationSigners({
+    get: () => storage.getItem(TRIAL_INSTALLATION_STORAGE_KEY),
+    set: value => storage.setItem(TRIAL_INSTALLATION_STORAGE_KEY, value),
+  });
+  registerTrialInstallationBridge(installation.trial);
+  const free20 = createFree20AbuseClient({ baseUrl: WEB_HTTP_BASE, getSession: getStoredAuthTokens, refresh: refreshExtensionSession, sign: installation.free20 });
+  const hostingDependencies = { getSession: getStoredAuthTokens, refresh: refreshExtensionSession, request: free20.request };
   registerWebsitePresence();
   registerOnboardingCheckoutBridge();
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
@@ -289,7 +305,7 @@ export default defineBackground(() => {
       return true;
     }
 
-    const privilegedRoomResponse = dispatchPrivilegedRoomRuntimeMessage(message, sender);
+    const privilegedRoomResponse = dispatchPrivilegedRoomRuntimeMessage(message, sender, { roomDependencies: { request: free20.request } });
     if (privilegedRoomResponse) {
       void privilegedRoomResponse.then(
         sendResponse,
@@ -312,6 +328,14 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (isAccountHostingStatusMessage(message)) {
+      void handleAccountHostingStatusMessage(message, hostingDependencies).then(sendResponse);
+      return true;
+    }
+    if (isFree20WarningMessage(message)) {
+      void handleFree20WarningMessage(message).then(sendResponse);
+      return true;
+    }
     if (isHostingAccessMessage(message)) {
       void handleHostingAccessMessage(message).then(sendResponse);
       return true;
@@ -354,6 +378,7 @@ export default defineBackground(() => {
     const change = changes[AUTH_TOKENS_STORAGE_KEY];
     const previous = normalizeExtensionAuthTokens(change.oldValue);
     const next = normalizeExtensionAuthTokens(change.newValue);
+    free20.onSessionChanged(next);
     void handleWatchHistoryAuthSessionChange(previous, next).catch(() => undefined);
     void handleAuthSessionChanged(
       previous,
@@ -380,6 +405,10 @@ export default defineBackground(() => {
   });
 
   chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === UNINSTALL_URL_REFRESH_ALARM) {
+      void registerUninstallUrl({ force: true });
+      return;
+    }
     if (isRoomInviteNotificationRetryAlarm(alarm.name)) {
       void handleRoomInviteNotificationRetryAlarm(alarm.name).catch(() => undefined);
       return;
@@ -413,8 +442,14 @@ export default defineBackground(() => {
     )
       .catch(() => undefined);
   };
-  chrome.runtime.onStartup?.addListener(() => reconcileStoredWebsiteSession(true));
-  chrome.runtime.onInstalled?.addListener(() => reconcileStoredWebsiteSession(false));
+  chrome.runtime.onStartup?.addListener(() => {
+    void registerUninstallUrl({ force: true });
+    reconcileStoredWebsiteSession(true);
+  });
+  chrome.runtime.onInstalled?.addListener(() => {
+    void registerUninstallUrl();
+    reconcileStoredWebsiteSession(false);
+  });
 
   void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
   void drainRoomDepartureRetries().catch(() => undefined);

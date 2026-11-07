@@ -34,6 +34,7 @@ import { GHOST_CAM_SIZE_STEPS } from "../../extension/src/ghost-cam-size";
 import { OverlayLayoutChatPreview } from "../../extension/src/overlay-layout-chat-preview";
 import type { Participant, RoomMediaV3Snapshot } from "@anidachi/protocol";
 import { ExtensionSettingsPreview } from "./extension-settings-preview";
+import { ChromeExtensionFriendsDemo } from "./chrome-extension-friends-demo";
 import {
 	getRoomDemoScene,
 	useDemoTyping,
@@ -108,7 +109,7 @@ const SCENE_STYLES = `
   .demo-cursor[data-phase="pill"] .demo-click { animation-delay: 750ms; }
   .demo-cursor[data-phase="open"] .demo-click { animation-delay: 1200ms; }
   .demo-cursor:is([data-phase="copy-link"],[data-phase="open-invites"]) .demo-click { animation-delay: 300ms; }
-  .demo-cursor[data-phase="friends"] .demo-click { animation-delay: 600ms; }
+  .demo-cursor[data-phase="friends"] .demo-click { animation-delay: 900ms; }
   .demo-cursor[data-phase="camera"] .demo-click { animation-delay: 250ms; }
   .demo-cursor[data-phase="camera-on"] .demo-click { animation-delay: 150ms; }
   .demo-cursor[data-phase="send"] .demo-click { animation-delay: 350ms; }
@@ -160,9 +161,6 @@ const SCENE_STYLES = `
     .demo-social-preview .message-composer { bottom: 178px; }
     .demo-shortcut { bottom: 240px; }
   }
-  .demo-invite-reveal { animation: demo-panel-in 220ms ease both; }
-  .demo-invite-reveal[data-accepted="true"] { overflow:hidden; animation:demo-invite-dismiss 280ms 920ms ease-in-out forwards; }
-  @keyframes demo-invite-dismiss { from { max-height:220px; opacity:1; } to { max-height:0; opacity:0; padding-block:0; margin-top:0; border-width:0; } }
   @keyframes demo-click { from { opacity: .8; transform: scale(.25); } to { opacity: 0; transform: scale(1.5); } }
 
   @keyframes demo-panel-in { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: translateY(0); } }
@@ -268,7 +266,9 @@ function useDemoCursor(shadowRoot: ShadowRoot | null, phase: RoomDemoPhase) {
 		const target = shadowRoot.querySelector<HTMLElement>(
 			targetName === "camera"
 				? ".panel-media-camera"
-				: `[data-demo-target="${targetName}"]`,
+				: targetName === "invite-friend"
+					? ".demo-friends-preview .cf-invite"
+					: `[data-demo-target="${targetName}"]`,
 		);
 		if (!canvas || !target) return;
 		const measure = () => {
@@ -283,77 +283,27 @@ function useDemoCursor(shadowRoot: ShadowRoot | null, phase: RoomDemoPhase) {
 			});
 		};
 		measure();
+		// Follow the actual button while the attached Friends window unfolds.
+		const started = performance.now();
+		let frame = 0;
+		const followReveal = () => {
+			measure();
+			if (performance.now() - started < 400)
+				frame = requestAnimationFrame(followReveal);
+		};
+		if (targetName === "invite-friend")
+			frame = requestAnimationFrame(followReveal);
 		const observer = new ResizeObserver(measure);
 		observer.observe(canvas);
 		observer.observe(target);
 		canvas.addEventListener("scroll", measure, true);
 		return () => {
+			cancelAnimationFrame(frame);
 			observer.disconnect();
 			canvas.removeEventListener("scroll", measure, true);
 		};
 	}, [shadowRoot, targetName]);
 	return { position, visible: Boolean(targetName) };
-}
-
-function InvitationPreview({ phase }: { phase: RoomDemoPhase }) {
-	const sending = phase === "inviting";
-	const sent = phase === "invited";
-	const accepted = phase === "accepted";
-	return (
-		<div className="invite-panel demo-invite-reveal" data-accepted={accepted}>
-			<div className="invite-panel-header">
-				<div className="invite-panel-heading">
-					<strong>Friends & groups</strong>
-					<span>{accepted ? "1 friend joined" : "1 available"}</span>
-				</div>
-				<button type="button" className="invite-panel-refresh" tabIndex={-1}>
-					<RefreshCw size={14} />
-				</button>
-			</div>
-			{accepted && (
-				<div className="invite-status-message" data-tone="success">
-					<span className="invite-status-mark">✓</span>
-					<span>Emma accepted your invitation.</span>
-				</div>
-			)}
-			<section className="invite-target-section">
-				<div className="invite-target-section-title">
-					<span>Friends</span>
-					<b>1</b>
-				</div>
-				<div className="invite-target-row">
-					<div className="participant-main">
-						<span className="mini-avatar">E</span>
-						<span className="invite-target-copy">
-							<strong>Emma</strong>
-							<small>@emma</small>
-						</span>
-					</div>
-					<button
-						type="button"
-						className="button compact invite-target-action"
-						data-demo-target="invite-friend"
-						data-state={accepted ? "accepted" : sent ? "pending" : "idle"}
-						disabled={sending || sent || accepted}
-						tabIndex={-1}
-					>
-						{accepted ? (
-							<>
-								<Check size={12} />
-								Joined
-							</>
-						) : sending ? (
-							"Sending…"
-						) : sent ? (
-							"Pending"
-						) : (
-							"Invite"
-						)}
-					</button>
-				</div>
-			</section>
-		</div>
-	);
 }
 
 function PeoplePreview({
@@ -961,6 +911,12 @@ function RoomScene({
 													type="button"
 													className="panel-icon-action reveal-action"
 													data-demo-target="invite-menu"
+													aria-label={
+														invitePanelOpen
+															? "Close friends and groups"
+															: "Invite friends and groups"
+													}
+													aria-expanded={invitePanelOpen}
 													tabIndex={-1}
 												>
 													<UserPlus size={14} />
@@ -975,7 +931,10 @@ function RoomScene({
 											</div>
 										)}
 									</div>
-									{invitePanelOpen && <InvitationPreview phase={phase} />}
+									<ChromeExtensionFriendsDemo
+										phase={phase}
+										open={invitePanelOpen}
+									/>
 									<div className="panel-sync-card">
 										<CurrentResourcePanel
 											entry={{

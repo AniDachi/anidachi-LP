@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallLink } from "@/components/install-link";
@@ -45,7 +46,7 @@ const faq = [
   {
     question: "Can you watch Netflix together for free?",
     answer:
-      "Yes, if everyone already has Netflix. A countdown on a video call costs nothing, and Teleparty's free tier syncs Netflix with text chat. AniDachi is free to join, but the host needs Plus or Pro, including a 3-day trial for eligible accounts.",
+      `Yes, if everyone already has Netflix. A countdown on a video call costs nothing, and Teleparty's free tier syncs Netflix with text chat. AniDachi is free to join. ${PRICING_FREE20_SUMMARY}`,
   },
   {
     question: "Why is Netflix black when I share my screen?",
@@ -154,7 +155,7 @@ export default function WatchNetflixTogetherPage() {
               countdown: "Free",
               discord: "Free",
               teleparty: "Free; Premium $6.59/mo",
-              anidachi: "Free to join; host needs Plus or Pro",
+              anidachi: "Free to join; Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit",
             },
           },
           {
@@ -253,7 +254,7 @@ export default function WatchNetflixTogetherPage() {
           },
           {
             title: "Cons",
-            body: "Desktop Chrome only, no phones. The host needs Plus or Pro (a 3-day trial for eligible accounts). Rooms hold up to 6 people with Plus or 15 with Pro.",
+            body: "Desktop Chrome only, no phones. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. Rooms hold up to 6 people with Plus or 15 with Pro.",
           },
           { title: "Best for", body: "Friends or couples on laptops who want to see and hear each other while they watch." },
         ]}
@@ -277,7 +278,7 @@ export default function WatchNetflixTogetherPage() {
         options={[
           {
             title: "Two laptops, want to see each other",
-            body: "AniDachi. Sync and a video call in one place, and only one of you pays to host.",
+            body: "AniDachi. Sync and a video call in one place, and only one of you hosts on Free, Plus, or Pro.",
             highlight: true,
           },
           {

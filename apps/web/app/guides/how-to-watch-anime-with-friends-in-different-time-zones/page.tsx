@@ -77,7 +77,7 @@ const howToSteps = [
   },
   {
     name: "Create the watchroom",
-    text: "Open the Crunchyroll episode; AniDachi detects it automatically. A host with Plus or Pro access, including an active trial, chooses Create room for the live session.",
+    text: "Open the Crunchyroll episode; AniDachi detects it automatically. A host on Free, Plus, or Pro chooses Create room for the live session.",
   },
   {
     name: "Share the session invite",

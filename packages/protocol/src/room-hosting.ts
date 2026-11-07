@@ -38,7 +38,11 @@ export const RoomHostingAdmissionSchema = z
 		roomId: z.string().min(1).max(128),
 		roomGeneration: positive,
 		allowed: z.boolean(),
-		code: z.enum(["ROOM_ENDED", "HOST_SUBSCRIPTION_REQUIRED"]).optional(),
+		/** Internal durable cohort, independent of frozen media plan. */
+		hostingTimeMode: z.literal("daily_free20").optional(),
+		code: z
+			.enum(["ROOM_ENDED", "HOST_SUBSCRIPTION_REQUIRED", "QUOTA_EXHAUSTED"])
+			.optional(),
 		cutover: RoomHostingCutoverSchema.optional(),
 	})
 	.refine((v) =>

@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
@@ -44,7 +45,7 @@ const howToSteps = [
   },
   {
     name: "Host creates a watchroom",
-    text: "Open the Crunchyroll episode; AniDachi detects it automatically. The host needs Plus or Pro access, including an active trial, to choose Create room. Friends can join on Free accounts.",
+    text: `Open the Crunchyroll episode; AniDachi detects it automatically. ${PRICING_FREE20_SUMMARY} Friends can join on Free accounts.`,
   },
   {
     name: "Paste the invite into Discord",
@@ -195,7 +196,7 @@ export default function SwitchFromDiscordScreenSharePage() {
           <li>Agree on a safe episode boundary before discussing past episodes.</li>
         </ul>
         <p className="text-foreground/80 leading-relaxed mb-8">
-          To choose Plus or Pro access for hosting, including trial options, open{" "}
+          For Free daily hosting or Plus and Pro without a daily hosting time limit, open{" "}
           <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
             AniDachi pricing
           </Link>

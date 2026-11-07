@@ -1,3 +1,4 @@
+import { PopupNavigation } from "./popup-navigation";
 import { PopupRetainedPanel, usePopupNavigation } from "./use-popup-navigation";
 import { forgetPopupView } from "./popup-view-state";
 import {
@@ -14,6 +15,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   accountInboxItemInstanceKey,
+  accountInboxSocialSignature,
   getCachedAccountInboxForUser,
   mergeAccountInboxResponses,
   publishAccountInboxForUser,
@@ -39,6 +41,7 @@ import {
 } from "./auth-client";
 import {
   AUTH_TOKENS_STORAGE_KEY,
+  extensionAuthSessionKey,
   type ExtensionAuthTokens,
   normalizeExtensionAuthTokens,
 } from "./auth-tokens";
@@ -56,7 +59,8 @@ import {
   PopupPeoplePanel,
   type PopupPeoplePresentationState,
 } from "./popup-people-panel";
-import { PopupInboxPanel, type InboxInviteAction } from "./popup-inbox-panel";
+import { PopupInboxPanel, inboxActionNoticeKey, type InboxItemNotice, type InboxInviteAction } from "./popup-inbox-panel";
+import { RoomApiError } from "./room-client";
 export { PopupInboxPanel } from "./popup-inbox-panel";
 import { popupStyles } from "./popup-styles";
 import { PopupWatchHistoryPanel } from "./popup-watch-history";
@@ -90,7 +94,7 @@ import {
   setCachedSocialSnapshotForUser,
 } from "./social-snapshot-cache";
 
-export type PopupTab = "resources" | "friends" | "inbox";
+export { PopupNavigation, type PopupTab } from "./popup-navigation";
 
 type SocialPanelData = SocialSnapshot;
 
@@ -188,10 +192,17 @@ export function PopupApp() {
   const [busyInviteAction, setBusyInviteAction] = useState<InboxInviteAction | null>(null);
   const [busySocialAction, setBusySocialAction] = useState<PopupSocialActionKey | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
+  const [inboxItemNotices, setInboxItemNotices] = useState<Record<string, InboxItemNotice>>({});
   const accountGateRef = useRef(createAccountRequestGate());
   const popupSyncGateRef = useRef(createAsyncGenerationGate());
   const socialLoadGateRef = useRef(createAsyncGenerationGate());
   const inboxLoadGateRef = useRef(createAsyncGenerationGate());
+  const inboxLastReadAtRef = useRef(0);
+  const inboxReadPendingRef = useRef(false);
+  const foregroundSyncPendingRef = useRef(false);
+  const socialInboxRef = useRef<{ owner: string; signature: string } | null>(null);
+  const [socialInboxRevision, setSocialInboxRevision] = useState(0);
+  const socialRevisionSeenRef = useRef(0);
   const socialMutationInFlightRef = useRef(false);
   const seenInboxSignatureRef = useRef<string | null>(null);
   const pendingSeenInboxItemsRef = useRef(new Set<string>());
@@ -201,7 +212,7 @@ export function PopupApp() {
     if (!userId && previousUserId) forgetPopupView();
     accountGateRef.current.activate(userId);
 
-    setSocialState((current) =>
+    if (previousUserId !== userId) setSocialState((current) =>
       userId ? accountLoadingState(userId, current) : signedOutAccountState(),
     );
     setInboxState((current) =>
@@ -210,6 +221,9 @@ export function PopupApp() {
     setSocialNotice(null);
 
     if (previousUserId !== userId) {
+      setInboxItemNotices({});
+      inboxLastReadAtRef.current = 0;
+      inboxReadPendingRef.current = false;
       socialLoadGateRef.current.begin();
       inboxLoadGateRef.current.begin();
       setBusyInviteId(null);
@@ -224,10 +238,11 @@ export function PopupApp() {
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
   const hostingDisplay = useHostingAccess({
     ownerUserId: accountUser?.id ?? null,
-    sessionKey: tokens?.refreshToken ?? null,
+    sessionKey: extensionAuthSessionKey(tokens),
+    credentialKey: tokens ? JSON.stringify([tokens.authRevision, tokens.accessToken, tokens.refreshToken, tokens.profileRevision]) : null,
     enabled: Boolean(accountUser),
   });
-  const currentPlan = hostingDisplay.state.access?.planCode ?? null;
+  const currentPlan = hostingDisplay.presentationPlanCode;
   const [activeTab, setActiveTab] = usePopupNavigation(accountUser?.id ?? null, shellRef, settingsOpen);
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
@@ -235,7 +250,7 @@ export function PopupApp() {
   const peopleActionNotice = isPopupPeopleActionNotice(socialNotice) ? socialNotice : null;
 
   const loadSocialForTokens = useCallback(
-    async (tokens: ExtensionAuthTokens, parentIsCurrent: () => boolean = () => true) => {
+    async (tokens: ExtensionAuthTokens, parentIsCurrent: () => boolean = () => true, force = true) => {
       const request = accountGateRef.current.capture(tokens.user.id);
       if (!request) return false;
       const loadGeneration = socialLoadGateRef.current.begin();
@@ -260,6 +275,7 @@ export function PopupApp() {
                   error: null,
                 },
           );
+          if (!force && isSocialSnapshotCacheFresh(cached)) return true;
         }
 
         const [directory, invites] = await Promise.all([
@@ -293,6 +309,8 @@ export function PopupApp() {
       const request = accountGateRef.current.capture(tokens.user.id);
       if (!request) return false;
       const loadGeneration = inboxLoadGateRef.current.begin();
+      inboxLastReadAtRef.current = Date.now();
+      inboxReadPendingRef.current = true;
       seenInboxSignatureRef.current = null;
       const isCurrent = () =>
         parentIsCurrent() &&
@@ -336,6 +354,8 @@ export function PopupApp() {
           ),
         );
         return false;
+      } finally {
+        if (inboxLoadGateRef.current.isCurrent(loadGeneration)) inboxReadPendingRef.current = false;
       }
     },
     [],
@@ -346,6 +366,7 @@ export function PopupApp() {
       options: {
         interactive?: boolean;
         tokens?: ExtensionAuthTokens;
+        refreshSocial?: boolean;
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       const syncGeneration = popupSyncGateRef.current.begin();
@@ -379,7 +400,7 @@ export function PopupApp() {
         if (!request) return null;
         setAuthSession({ status: "ready", tokens, error: null });
         await Promise.all([
-          loadSocialForTokens(tokens, isCurrentSync),
+          options.refreshSocial ? loadSocialForTokens(tokens, isCurrentSync) : Promise.resolve(),
           loadInboxForTokens(tokens, isCurrentSync),
         ]);
         if (!isCurrentSync() || !accountGateRef.current.isCurrent(request)) return null;
@@ -426,18 +447,23 @@ export function PopupApp() {
     [activateAccount, syncPopupData],
   );
 
-  const acceptInvite = useCallback(
-    async (inviteId: string) => {
-      if (socialMutationInFlightRef.current) return;
-      socialMutationInFlightRef.current = true;
+  const respondToInvite = useCallback(
+    async (inviteId: string, action: InboxInviteAction) => {
+      if (socialMutationInFlightRef.current || inboxState.status !== "ready") return;
+      const item = inboxState.data.items.find(item => item.kind === "room-invite" && item.inviteId === inviteId);
+      if (!item || item.state === "missed") return;
+      const noticeKey = inboxActionNoticeKey(item);
+      if (inboxItemNotices[noticeKey]?.terminal) return;
       const activeUserId = accountGateRef.current.currentUserId();
       const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
-      if (!request) {
-        socialMutationInFlightRef.current = false;
-        return;
-      }
+      if (!request) return;
+      socialMutationInFlightRef.current = true;
+      let actionTokens: ExtensionAuthTokens | null = null;
       setBusyInviteId(inviteId);
-      setBusyInviteAction("join");
+      setBusyInviteAction(action);
+      setInboxItemNotices(current => {
+        const next = { ...current }; delete next[noticeKey]; return next;
+      });
       try {
         const tokens = await requestCurrentExtensionSession();
         if (!accountGateRef.current.isCurrent(request)) return;
@@ -445,21 +471,36 @@ export function PopupApp() {
           transitionToResolvedSession(tokens);
           return;
         }
-        const accepted = await acceptRoomInvite(tokens.accessToken, inviteId);
+        actionTokens = tokens;
+        if (action === "join") {
+          const accepted = await acceptRoomInvite(tokens.accessToken, inviteId);
+          if (!accountGateRef.current.isCurrent(request)) return;
+          // Opening the accepted destination must not wait for unrelated reads.
+          await chrome.tabs.create({ url: accepted.joinUrl });
+        } else {
+          await declineRoomInvite(tokens.accessToken, inviteId);
+        }
         if (!accountGateRef.current.isCurrent(request)) return;
         setAuthSession({ status: "ready", tokens, error: null });
-        await Promise.all([loadSocialForTokens(tokens), loadInboxForTokens(tokens)]);
-        if (!accountGateRef.current.isCurrent(request)) return;
-        await chrome.tabs.create({ url: accepted.joinUrl });
+        if (item.state !== "returnable") {
+          setInboxItemNotices(current => ({ ...current, [noticeKey]: {
+            terminal: true, text: action === "join" ? "Room opened" : "Invitation declined",
+          } }));
+        }
+        await loadInboxForTokens(tokens);
       } catch (error) {
         if (!accountGateRef.current.isCurrent(request)) return;
-        setInboxState((current) =>
-          accountErrorState(
-            request.userId,
-            current,
-            error instanceof Error ? error.message : "Could not accept invite",
-          ),
-        );
+        const status = error instanceof RoomApiError ? error.status : undefined;
+        const terminal = status !== undefined && [404, 409, 410].includes(status);
+        const text = status === 410 ? "Room ended" : terminal ? "Invitation no longer available"
+          : status === 403 ? "This invitation isn’t available right now."
+          : status === 429 ? "Please wait a moment and try again."
+          : action === "join" ? "Couldn’t open this room. Try again." : "Couldn’t decline. Try again.";
+        setInboxItemNotices(current => ({ ...current, [noticeKey]: { terminal, text } }));
+        // Mutation failures belong to this invitation, not the whole Inbox.
+        // Reread even after ambiguous network failures: the server may have
+        // accepted the action. Never rewrite durable counts or cache locally.
+        if (actionTokens) await loadInboxForTokens(actionTokens);
       } finally {
         socialMutationInFlightRef.current = false;
         if (accountGateRef.current.isCurrent(request)) {
@@ -468,51 +509,10 @@ export function PopupApp() {
         }
       }
     },
-    [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
+    [inboxState, inboxItemNotices, loadInboxForTokens, transitionToResolvedSession],
   );
-
-  const declineInvite = useCallback(
-    async (inviteId: string) => {
-      if (socialMutationInFlightRef.current) return;
-      socialMutationInFlightRef.current = true;
-      const activeUserId = accountGateRef.current.currentUserId();
-      const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
-      if (!request) {
-        socialMutationInFlightRef.current = false;
-        return;
-      }
-      setBusyInviteId(inviteId);
-      setBusyInviteAction("decline");
-      try {
-        const tokens = await requestCurrentExtensionSession();
-        if (!accountGateRef.current.isCurrent(request)) return;
-        if (tokens?.user.id !== request.userId) {
-          transitionToResolvedSession(tokens);
-          return;
-        }
-        await declineRoomInvite(tokens.accessToken, inviteId);
-        if (!accountGateRef.current.isCurrent(request)) return;
-        setAuthSession({ status: "ready", tokens, error: null });
-        await Promise.all([loadSocialForTokens(tokens), loadInboxForTokens(tokens)]);
-      } catch (error) {
-        if (!accountGateRef.current.isCurrent(request)) return;
-        setInboxState((current) =>
-          accountErrorState(
-            request.userId,
-            current,
-            error instanceof Error ? error.message : "Could not decline invite",
-          ),
-        );
-      } finally {
-        socialMutationInFlightRef.current = false;
-        if (accountGateRef.current.isCurrent(request)) {
-          setBusyInviteId(null);
-          setBusyInviteAction(null);
-        }
-      }
-    },
-    [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
-  );
+  const acceptInvite = useCallback((inviteId: string) => respondToInvite(inviteId, "join"), [respondToInvite]);
+  const declineInvite = useCallback((inviteId: string) => respondToInvite(inviteId, "decline"), [respondToInvite]);
 
   const runSocialAction = useCallback(
     async (
@@ -531,6 +531,10 @@ export function PopupApp() {
         return false;
       }
       let actionTokens: ExtensionAuthTokens | null = null;
+      const friendRequest = /^(accept|decline)-friend:/.test(key)
+        ? inboxState.data?.items.find(item => item.kind === "friend-request" && key.endsWith(`:${item.friendshipId}`))
+        : null;
+      const friendNoticeKey = friendRequest ? inboxActionNoticeKey(friendRequest) : null;
       setBusySocialAction(key);
       setSocialNotice(null);
       try {
@@ -565,6 +569,15 @@ export function PopupApp() {
         return true;
       } catch (error) {
         if (!accountGateRef.current.isCurrent(request)) return false;
+        if (friendNoticeKey && actionTokens) {
+          const status = error instanceof RoomApiError ? error.status : undefined;
+          const terminal = status !== undefined && [404, 409, 410].includes(status);
+          setInboxItemNotices(current => ({ ...current, [friendNoticeKey]: {
+            terminal, text: terminal ? "Request no longer available" : "Couldn’t update this request. Try again.",
+          } }));
+          await Promise.all([loadInboxForTokens(actionTokens), loadSocialForTokens(actionTokens)]);
+          return false;
+        }
         // Reconcile revisions and removed friendships without overwriting the
         // open draft. Reopening after a conflict must use the latest group.
         if (key.startsWith("save-group:") && actionTokens) {
@@ -582,7 +595,7 @@ export function PopupApp() {
         if (accountGateRef.current.isCurrent(request)) setBusySocialAction(null);
       }
     },
-    [loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
+    [inboxState.data, loadInboxForTokens, loadSocialForTokens, transitionToResolvedSession],
   );
 
   const saveGroup = useCallback(
@@ -637,6 +650,46 @@ export function PopupApp() {
   useEffect(() => {
     void syncPopupData();
   }, [syncPopupData]);
+
+  useEffect(() => {
+    if (activeTab !== "inbox" || settingsOpen || !accountUser?.id) return;
+    const refreshVisibleInbox = () => {
+      if (document.visibilityState === "hidden" || socialMutationInFlightRef.current ||
+        foregroundSyncPendingRef.current || inboxReadPendingRef.current ||
+        Date.now() - inboxLastReadAtRef.current < 5_000) return;
+      // Entry/focus/connectivity events often arrive together. Revalidate once,
+      // with a fresh session; never add a polling loop or blank cached content.
+      foregroundSyncPendingRef.current = true;
+      inboxLastReadAtRef.current = Date.now();
+      void syncPopupData().finally(() => { foregroundSyncPendingRef.current = false; });
+    };
+    refreshVisibleInbox();
+    window.addEventListener("focus", refreshVisibleInbox);
+    window.addEventListener("online", refreshVisibleInbox);
+    document.addEventListener("visibilitychange", refreshVisibleInbox);
+    return () => {
+      window.removeEventListener("focus", refreshVisibleInbox);
+      window.removeEventListener("online", refreshVisibleInbox);
+      document.removeEventListener("visibilitychange", refreshVisibleInbox);
+    };
+  }, [activeTab, settingsOpen, accountUser?.id, syncPopupData]);
+
+  useEffect(() => {
+    if (!inboxState.data || !inboxState.ownerUserId) return;
+    const next = { owner: inboxState.ownerUserId, signature: accountInboxSocialSignature(inboxState.data) };
+    const previous = socialInboxRef.current;
+    socialInboxRef.current = next;
+    if (previous?.owner === next.owner && previous.signature !== next.signature)
+      setSocialInboxRevision(value => value + 1);
+  }, [inboxState.data, inboxState.ownerUserId]);
+
+  useEffect(() => {
+    if (activeTab !== "friends" || settingsOpen || !tokens) return;
+    let current = true;
+    void loadSocialForTokens(tokens, () => current, socialRevisionSeenRef.current !== socialInboxRevision)
+      .then(loaded => { if (current && loaded) socialRevisionSeenRef.current = socialInboxRevision; });
+    return () => { current = false; };
+  }, [activeTab, settingsOpen, tokens?.user.id, tokens?.accessToken, tokens?.refreshToken, socialInboxRevision, loadSocialForTokens]);
 
   useEffect(() => {
     if (authSession.status !== "ready") return;
@@ -882,17 +935,19 @@ export function PopupApp() {
         onClose={() => setSettingsOpen(false)} />}
 
       <div hidden={settingsOpen}>
-      <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
+      <PopupNavigation activeTab={activeTab} onSelect={setActiveTab}
+        inboxUnseenCount={accountUser?.id && inboxState.ownerUserId === accountUser.id ? popupInboxBadgeCount(inboxModel) : 0} />
 
       <PopupRetainedPanel key={`${accountUser?.id}:resources`} active={activeTab === "resources"} tab="resources">
         <PopupWelcome active={activeTab === "resources" && !settingsOpen && !authChecking}
-          onOpenSettings={() => void toggleSettings()}
           onDismiss={() => shellRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus()} />
+        <div className="popup-watch-content">
         <PopupWatchHistoryPanel
           key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
           refreshSignal={historySession.revision}
         />
+        </div>
       </PopupRetainedPanel>
       <PopupRetainedPanel key={`${accountUser?.id}:friends`} active={activeTab === "friends"} tab="friends">
         <PopupPeoplePanel
@@ -904,13 +959,14 @@ export function PopupApp() {
           onRemoveFriend={removeFriendFromPeople}
           onDismissNotice={() => setSocialNotice(null)}
           onOpenDashboard={() => void openAccount("/account/friends")}
-          onRefresh={() => void syncPopupData()}
+          onRefresh={() => void syncPopupData({ refreshSocial: true })}
           onSignIn={() => void syncPopupData({ interactive: true })}
           state={peoplePresentationState}
         />
       </PopupRetainedPanel>
       <PopupRetainedPanel key={`${accountUser?.id}:inbox`} active={activeTab === "inbox"} tab="inbox">
         <PopupInboxPanel
+              itemNotices={inboxItemNotices}
           actionNotice={socialNotice}
           busyFriendRequestActionKey={busySocialAction}
           busyInviteId={busyInviteId}
@@ -931,56 +987,6 @@ export function PopupApp() {
   );
 }
 
-export function PopupNavigation({
-  activeTab,
-  onSelect,
-}: {
-  activeTab: PopupTab;
-  onSelect: (tab: PopupTab) => void;
-}) {
-  return (
-    <div className="popup-tabs" role="tablist" aria-label="Popup sections">
-      <PopupNavigationButton
-        active={activeTab === "resources"}
-        label="Watch"
-        onClick={() => onSelect("resources")}
-      />
-      <PopupNavigationButton
-        active={activeTab === "friends"}
-        label="People"
-        onClick={() => onSelect("friends")}
-      />
-      <PopupNavigationButton
-        active={activeTab === "inbox"}
-        label="Inbox"
-        onClick={() => onSelect("inbox")}
-      />
-    </div>
-  );
-}
-
-function PopupNavigationButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-selected={active}
-      className="popup-tab"
-      data-active={active}
-      role="tab"
-      type="button"
-      onClick={onClick}
-    >
-      <span className="popup-tab-label">{label}</span>
-    </button>
-  );
-}
 
 function isPopupPeopleActionKey(value: string | null): value is PopupPeopleActionKey {
   return value === "create-friend-link" || Boolean(value && ["save-group:", "delete-group:", "remove-friend:"].some((prefix) => value.startsWith(prefix)));

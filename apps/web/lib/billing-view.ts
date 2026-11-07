@@ -48,6 +48,7 @@ export function formatBillingTime(value: string, timeZone?: string): string {
 }
 
 export type BillingPromotion = {
+	campaign?: "uninstall_first" | "uninstall_renewal" | "cancellation_retention";
 	state: "active" | "unavailable";
 	percentOff?: number;
 	endsAt?: string;
@@ -118,8 +119,8 @@ export function subscriptionStatusLabel(
 		subscription.trial.stage !== "paid"
 	) {
 		return {
-			trial: "Free trial",
-			ended: "Trial ended",
+			trial: "Access active",
+			ended: "Access ended",
 			processing: "First payment processing",
 			payment_required: "Payment needs attention",
 		}[subscription.trial.stage];
@@ -131,11 +132,11 @@ export function subscriptionStatusLabel(
 		return "First payment processing";
 	if (subscription.trial?.stage === "payment_required")
 		return "Payment needs attention";
-	if (subscription.trial?.stage === "ended") return "Trial ended";
-	if (subscription.trial?.stage === "trial") return "Free trial";
+	if (subscription.trial?.stage === "ended") return "Access ended";
+	if (subscription.trial?.stage === "trial") return "Access active";
 	const labels: Record<string, string> = {
 		active: "Active",
-		trialing: "Trial",
+		trialing: "Access active",
 		past_due: "Payment overdue",
 		unpaid: "Unpaid",
 		canceled: "Canceled",
@@ -153,9 +154,9 @@ export function subscriptionDateLabel(
 		subscription.trial?.mode === "cardless" &&
 		subscription.trial.stage !== "paid"
 	)
-		return "Trial ends";
+		return "Access ends";
 	if (subscription.cancelAtPeriodEnd) return "Subscription ends";
-	if (subscription.status === "trialing") return "Trial ends";
+	if (subscription.status === "trialing") return "Access ends";
 	if (subscription.status === "active") return "Renews";
 	return "Billing period ends";
 }

@@ -13,6 +13,7 @@ const EXCLUDED_URL_PATHS = new Set([
   "/success",
   "/checkout",
   "/login",
+  "/uninstall",
   "/join",
   "/join/complete",
   "/friends",

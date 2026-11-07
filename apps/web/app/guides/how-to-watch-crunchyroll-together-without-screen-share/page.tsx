@@ -58,7 +58,7 @@ const howToStepsPlain = [
   },
   {
     name: "Create a watchroom",
-    text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room. Friends can join on Free accounts.",
+    text: "AniDachi detects the episode automatically. On Free, Plus, or Pro, choose Create room. Friends can join on Free accounts.",
   },
   {
     name: "Share the invite",
@@ -101,7 +101,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: `Free accounts can join an active Plus or Pro host, including a trial host. ${PRICING_CR_PRICING_SNIPPET}`,
+    answer: `Friends join rooms for free. ${PRICING_CR_PRICING_SNIPPET}`,
   },
 ];
 

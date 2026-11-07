@@ -70,7 +70,7 @@ const howToSteps = [
   },
   {
     name: "Create a watchroom",
-    text: "AniDachi detects the episode automatically. With your own Plus or Pro access, including an active trial, choose Create room from the overlay. Friends can join on Free accounts.",
+    text: "AniDachi detects the episode automatically. On Free, Plus, or Pro, choose Create room from the overlay. Friends can join on Free accounts.",
   },
   {
     name: "Share the invite link",

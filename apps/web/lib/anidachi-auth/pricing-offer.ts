@@ -15,7 +15,9 @@ const defaults = {
 	async policy() {
 		const { data, error } = await db()
 			.from("hosting_commercial_policy")
-			.select("activation_at,trials_enabled,cardless_trials_enabled,revision")
+			.select(
+				"activation_at,trials_enabled,cardless_trials_enabled,revision,free20_enabled",
+			)
 			.eq("singleton", true)
 			.abortSignal(AbortSignal.timeout(8000))
 			.single();
@@ -24,6 +26,7 @@ const defaults = {
 			activation_at: string | null;
 			trials_enabled: boolean;
 			cardless_trials_enabled?: boolean;
+			free20_enabled?: boolean;
 			revision?: number;
 		};
 	},
@@ -73,6 +76,23 @@ export async function getPricingOffer(
 		const now = Date.parse(access.history.serverTime);
 		if (!Number.isFinite(now)) throw new Error("Offer authority unavailable");
 		const activation = Date.parse(access.hosting.hostingActivationAt ?? "");
+		const currentActivation = Date.parse(commercialPolicy.activation_at ?? "");
+		// Eligibility and offer terms are separate reads. Only the same
+		// policy revision and activation may be combined into an offer.
+		const offerAuthorityCurrent =
+			Number.isSafeInteger(commercialPolicy.revision) &&
+			(commercialPolicy.revision ?? 0) > 0 &&
+			commercialPolicy.revision === access.hosting.hostingPolicyVersion &&
+			((commercialPolicy.activation_at === null &&
+				access.hosting.hostingActivationAt === null) ||
+				(Number.isFinite(currentActivation) &&
+					currentActivation === activation));
+		const trialAvailable =
+			!manage &&
+			paidHostingActive &&
+			offerAuthorityCurrent &&
+			commercialPolicy.trials_enabled === true &&
+			access.hosting.trialEligibility === "eligible";
 		const expiry = Date.parse(access.selectedPlanExpiresAt ?? "");
 		const validForMs = Math.max(
 			0,
@@ -85,10 +105,16 @@ export async function getPricingOffer(
 			),
 		);
 		return {
-			...trialOfferFields(commercialPolicy, paidHostingActive),
+			...trialOfferFields(
+				commercialPolicy,
+				paidHostingActive && offerAuthorityCurrent,
+			),
 			...(pendingTrialActivation ? { pendingTrialActivation } : {}),
-			validForMs,
-			trialAvailable: !manage && access.hosting.trialEligibility === "eligible",
+			hostingModel: offerAuthorityCurrent
+				? publicHostingModel(commercialPolicy, paidHostingActive)
+				: undefined,
+			validForMs: !manage && !offerAuthorityCurrent ? 0 : validForMs,
+			trialAvailable,
 			ownerUserId: userId,
 			prices: { plus, pro },
 			yearlyPrices,
@@ -96,11 +122,7 @@ export async function getPricingOffer(
 				access.hosting.hostingActivationAt !== null &&
 				Date.parse(access.hosting.hostingActivationAt) <=
 					Date.parse(access.history.serverTime),
-			action: manage
-				? "manage"
-				: access.hosting.trialEligibility === "eligible"
-					? "trial"
-					: "subscribe",
+			action: manage ? "manage" : trialAvailable ? "trial" : "subscribe",
 		};
 	}
 	const data = await deps.policy();
@@ -118,6 +140,7 @@ export async function getPricingOffer(
 			data.activation_at && Date.parse(data.activation_at) > now
 				? Math.min(60_000, Date.parse(data.activation_at) - now)
 				: 60_000,
+		hostingModel: publicHostingModel(data, paidHostingActive),
 		ownerUserId: null,
 		prices: { plus, pro },
 		yearlyPrices: await yearly,
@@ -148,4 +171,18 @@ function trialOfferFields(
 			? { trialOfferRevision: String(policy.revision) }
 			: {}),
 	};
+}
+
+function publicHostingModel(
+	policy: { free20_enabled?: boolean },
+	paidHostingActive: boolean,
+): PricingOffer["hostingModel"] {
+	if (typeof policy.free20_enabled !== "boolean") return undefined;
+	return paidHostingActive &&
+		policy.free20_enabled === true &&
+		process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true"
+		? "daily_free20"
+		: paidHostingActive
+			? "paid_hosting"
+			: "legacy";
 }

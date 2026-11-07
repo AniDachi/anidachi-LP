@@ -8,9 +8,11 @@ import {
 } from "./pricing-tiers";
 
 function valuesFor(feature: RegExp) {
-  const rows = PRICING_PLAN_MATRIX_ROWS.filter((row) => feature.test(row.feature));
-  assert.equal(rows.length, 1, `Expected one pricing row for ${feature}`);
-  return rows[0]!.values;
+	const rows = PRICING_PLAN_MATRIX_ROWS.filter((row) =>
+		feature.test(row.feature),
+	);
+	assert.equal(rows.length, 1, `Expected one pricing row for ${feature}`);
+	return rows[0]!.values;
 }
 
 test("saved history and resume stay available on Free after a paid plan ends", () => {
@@ -36,20 +38,61 @@ test("published room limits and platform access match the active plan policies",
   const hosting = valuesFor(/host your own room/i);
   const platforms = valuesFor(/^platforms$/i);
 
-  for (const tier of ["free", "plus", "pro"] satisfies PricingTierId[]) {
-    const policy = getPlanPolicy(tier);
-    assert.equal(people[tier], `Up to ${policy.maxParticipants}`);
-    assert.equal(cameras[tier], `Up to ${policy.maxCameras}`);
-    assert.equal(microphones[tier], `Up to ${policy.maxMicrophones}`);
-    assert.equal(hosting[tier], policy.dailyHostSeconds === null
-      ? "No daily limit"
-      : `${policy.dailyHostSeconds / 60} min/day`);
-    assert.equal(platforms[tier], "Crunchyroll, YouTube, Netflix");
-  }
+	for (const tier of ["free", "plus", "pro"] satisfies PricingTierId[]) {
+		const policy = getPlanPolicy(tier);
+		assert.equal(people[tier], `Up to ${policy.maxParticipants}`);
+		assert.equal(cameras[tier], `Up to ${policy.maxCameras}`);
+		assert.equal(microphones[tier], `Up to ${policy.maxMicrophones}`);
+		assert.equal(
+			hosting[tier],
+			policy.dailyHostSeconds === null
+				? "No daily limit"
+				: `${policy.dailyHostSeconds / 60} min/day`,
+		);
+		assert.equal(platforms[tier], "Crunchyroll, YouTube, Netflix");
+	}
 
-  assert.deepEqual(PRICING_TIERS.map(({ id, priceDisplay }) => ({ id, priceDisplay })), [
-    { id: "free", priceDisplay: "$0" },
-    { id: "plus", priceDisplay: "$7.99" },
-    { id: "pro", priceDisplay: "$14.99" },
-  ]);
+	assert.deepEqual(
+		PRICING_TIERS.map(({ id, priceDisplay }) => ({ id, priceDisplay })),
+		[
+			{ id: "free", priceDisplay: "$0" },
+			{ id: "plus", priceDisplay: "$7.99" },
+			{ id: "pro", priceDisplay: "$14.99" },
+		],
+	);
+});
+
+test("explicit Free20 matrix is separate from legacy and unknown offers stay neutral", async () => {
+	const { pricingFreeTier, pricingMatrixRows } = await import(
+		"./pricing-tiers"
+	);
+	assert.match(
+		pricingFreeTier("daily_free20").features.join(" "),
+		/20 free minutes every day/,
+	);
+	assert.match(
+		pricingFreeTier("daily_free20").features.join(" "),
+		/4 cameras & 4 mics/,
+	);
+	assert.match(
+		pricingFreeTier("daily_free20").features.join(" "),
+		/delete saved history/,
+	);
+	assert.equal(
+		pricingMatrixRows("daily_free20").find(
+			(row) => row.feature === "Host your own room",
+		)!.values.free,
+		"20 min/day",
+	);
+	assert.equal(
+		pricingMatrixRows("legacy").find(
+			(row) => row.feature === "Host your own room",
+		)!.values.free,
+		"30 min/day",
+	);
+	assert.doesNotMatch(
+		pricingFreeTier(undefined).features.join(" "),
+		/20|30|create.*Plus or Pro|Join only/,
+	);
+	assert.equal(getPlanPolicy("free").dailyHostSeconds, 1800);
 });

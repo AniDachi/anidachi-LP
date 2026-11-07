@@ -15,7 +15,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
   PRICING_PLUS_SHORT,
-  PRICING_TRIAL_NOTE,
+  PRICING_FREE20_SUMMARY,
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getSeoSiteOrigin();
@@ -25,7 +25,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Free YouTube Watch Party Options",
   description:
-    "Compare free YouTube watch party options. AniDachi guests join free; hosts need Plus or Pro, including an active trial. Compare Teleparty and Watch2Gether.",
+    `Compare free YouTube watch party options. AniDachi guests join free; ${PRICING_FREE20_SUMMARY} Compare Teleparty and Watch2Gether.`,
   alternates: { canonical: "/guides/youtube-watch-party-free" },
   openGraph: {
     title: "Free YouTube Watch Party Options",
@@ -46,7 +46,7 @@ const faq = [
   {
     question: "Is there a free YouTube watch party?",
     answer:
-      "You can join an AniDachi room on a Free account when its host has active Plus or Pro access, including a trial. Creating your own room requires that access. Teleparty and Watch2Gether offer other live-sync options.",
+      "AniDachi supports Free daily hosting and free joining. Free hosts get 20 host minutes per UTC day for up to 4 people, including the host. Teleparty and Watch2Gether offer other live-sync options.",
   },
   {
     question: "Is AniDachi free for YouTube watch parties?",
@@ -55,7 +55,7 @@ const faq = [
   {
     question: "What is the best free YouTube watch party app?",
     answer:
-      "Watch2Gether offers browser rooms, while Teleparty offers extension-based live sync. With AniDachi, friends join free when a host has active Plus or Pro access, including a trial. See best apps to watch YouTube together for a fuller comparison.",
+      "Watch2Gether offers browser rooms, while Teleparty offers extension-based live sync. AniDachi supports Free daily hosting and free joining. See best apps to watch YouTube together for a fuller comparison.",
   },
   {
     question: "Does YouTube itself offer a free watch party?",
@@ -64,7 +64,7 @@ const faq = [
   },
   {
     question: "When should the host upgrade from Free?",
-    answer: `Choose Plus (${PRICING_PLUS_SHORT} on monthly billing) or Pro to create your own rooms. ${PRICING_TRIAL_NOTE} Guests can stay on Free; see pricing for renewal and cancellation terms.`,
+    answer: `Host on Free with 20 host minutes per UTC day for up to 4 people, or choose Plus (${PRICING_PLUS_SHORT} on monthly billing) or Pro without a daily hosting time limit. Guests can stay on Free; see pricing for renewal and cancellation terms.`,
   },
 ];
 
@@ -112,10 +112,9 @@ export default function YoutubeWatchPartyFreePage() {
       <SeoGuideAnswer>
 
         <strong>
-          AniDachi is free to join when the room host has Plus or Pro access,
-          including an active trial. Free accounts cannot create rooms.
+          {PRICING_FREE20_SUMMARY}
         </strong>{" "}
-        To host your own live watch party, choose a plan on{" "}
+        See current hosting options on{" "}
         <Link href="/pricing">
           /pricing
         </Link>{" "}
@@ -132,8 +131,7 @@ export default function YoutubeWatchPartyFreePage() {
       </h2>
       <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi Free:</strong> Join an active Plus or Pro host, including
-          a trial host. Creating rooms requires your own Plus or Pro access.
+          <strong>AniDachi Free:</strong> 20 host minutes per UTC day for up to 4 people, including the host. Friends join free.
         </li>
         <li>
           <strong>Teleparty:</strong> Free live YouTube sync — confirm support in{" "}
@@ -165,8 +163,8 @@ export default function YoutubeWatchPartyFreePage() {
         When Hosts Upgrade
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
-        Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro to host.{" "}
-        {PRICING_TRIAL_NOTE} Guests keep Free accounts.
+        Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro for larger rooms and hosting without a daily time limit.{" "}
+        {PRICING_FREE20_SUMMARY} Guests keep Free accounts.
         Full plan details:{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
           pricing

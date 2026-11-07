@@ -3,6 +3,7 @@ import test from "node:test";
 import type Stripe from "stripe";
 import { yearlyBillingPortal } from "./yearly-billing";
 import type { SubscriptionRow, BillingCustomerRow } from "./db";
+import type { PaidPlanCode } from "./plan-entitlements";
 
 function fixture() {
 	const now = Date.parse("2030-01-15T00:00:00Z");
@@ -109,9 +110,12 @@ function fixture() {
 		getCustomer: async () => customer,
 		createStripe: () => stripe,
 		mode: () => "test" as const,
-		planCode: () => "plus" as const,
+		planCode: (priceId: string | null | undefined): PaidPlanCode | null =>
+			["price_plus_month", "price_plus_year"].includes(priceId ?? "")
+				? ("plus" as const)
+				: null,
 		priceId: (_plan: string, period?: string) =>
-			period === "yearly" ? target.id : price.id,
+			period === "yearly" ? "price_plus_year" : "price_plus_month",
 		configurationId: () => config.id,
 		now: () => now,
 	};
@@ -123,6 +127,7 @@ function fixture() {
 		config,
 		invoice,
 		sessions,
+		deps,
 		open: () =>
 			yearlyBillingPortal(
 				"owner",
@@ -273,6 +278,60 @@ test("ownership, unpaid invoices and unsafe portal configuration block yearly co
 		const f = fixture();
 		mutate(f);
 		await assert.rejects(f.open());
+		assert.equal(f.sessions.length, 0);
+	}
+});
+
+test("annual conversion accepts the configured same-plan annual target on a separate product", async () => {
+	const f = fixture();
+	f.target.product = "prod_plus_annual";
+	f.config.features.subscription_update.products = [
+		{
+			...f.config.features.subscription_update.products![0],
+			product: "prod_plus_annual",
+			prices: ["price_plus_year"],
+		},
+	];
+	f.sub.discounts = [
+		{
+			id: "di_retention",
+			end: null,
+			coupon: {
+				id: "coupon_retention",
+				metadata: { anidachiRetention: "cancellation" },
+			},
+		} as unknown as Stripe.Discount,
+	];
+	await f.open();
+	assert.equal(f.sessions.length, 1);
+	assert.deepEqual(f.sessions[0].flow_data?.subscription_update_confirm, {
+		subscription: "sub_owner",
+		items: [{ id: "si_owner", price: "price_plus_year", quantity: 1 }],
+	});
+});
+
+test("annual target must have a known matching plan and valid configured price shape", async () => {
+	const mutations: ((f: ReturnType<typeof fixture>) => void)[] = [
+		(f) => {
+			f.deps.planCode = (id) => (id === "price_plus_month" ? "plus" : null);
+		},
+		(f) => {
+			f.deps.planCode = (id) => (id === "price_plus_month" ? "plus" : "pro");
+		},
+		(f) => {
+			f.target.id = "price_unknown";
+		},
+		(f) => {
+			f.target.currency = "eur";
+		},
+		(f) => {
+			f.target.recurring!.interval = "month";
+		},
+	];
+	for (const mutate of mutations) {
+		const f = fixture();
+		mutate(f);
+		await assert.rejects(f.open, /yearly price.*verified/i);
 		assert.equal(f.sessions.length, 0);
 	}
 });

@@ -42,6 +42,91 @@ function trackingRooms() {
 }
 
 describe("worker routes", () => {
+  it("guards Free20 refresh commands before resolving a Durable Object", async () => {
+    const rooms = trackingRooms();
+    const body = { refreshVersion: 1, revision: 1, ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "refresh-room", roomGeneration: 1 };
+    for (const [authorization, enabled, value, expected] of [
+      [undefined, "true", body, 401], ["Bearer incorrect", "true", body, 401],
+      ["Bearer internal-secret", undefined, body, 404], ["Bearer internal-secret", "TRUE", body, 404],
+      ["Bearer internal-secret", "false", body, 404],
+      ["Bearer internal-secret", "true", { ...body, roomId: "different" }, 400],
+      ["Bearer internal-secret", "true", { ...body, revision: 0 }, 400],
+      ["Bearer internal-secret", "true", { ...body, allowance: 1200 }, 400],
+    ] as const) {
+      const response = await app.request("/internal/rooms/refresh-room/free20-refresh", {
+        method: "POST", headers: authorization ? { Authorization: authorization } : {}, body: JSON.stringify(value),
+      }, { ...internalEnv, ANIDACHI_FREE20_ACCOUNTING_ENABLED: enabled, ROOMS: rooms.namespace });
+      expect(response.status).toBe(expected);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    }
+    expect(rooms.calls).toEqual([]);
+  });
+
+  it("forwards a bound refresh and returns retryable failure after lost DO transport", async () => {
+    const body = { refreshVersion: 1, revision: 7, ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "refresh-room", roomGeneration: 1 };
+    const fetch = vi.fn(async (request: Request) => {
+      expect(request.url).toBe("https://room.internal/internal/free20-refresh");
+      expect(request.headers.get("authorization")).toBe("Bearer internal-secret");
+      expect(await request.json()).toEqual(body);
+      return Response.json({ request: body, outcome: "applied" }, { headers: { "Cache-Control": "private, no-store" } });
+    });
+    const env = { ...internalEnv, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true", ROOMS: {
+      idFromName: (name: string) => { expect(name).toBe("refresh-room"); return name; }, get: () => ({ fetch }),
+    } };
+    const refresh = () => app.request("/internal/rooms/refresh-room/free20-refresh", {
+      method: "POST", headers: { Authorization: "Bearer internal-secret" }, body: JSON.stringify(body),
+    }, env);
+    const receipt = await refresh();
+    expect(await receipt.json()).toEqual({ request: body, outcome: "applied" });
+    fetch.mockRejectedValueOnce(new Error("lost DO response"));
+    const unavailable = await refresh();
+    expect(unavailable.status).toBe(503);
+    expect(unavailable.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("guards Free20 status reads before resolving any Durable Object", async () => {
+    const rooms = trackingRooms();
+    const body = { ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "status-room", roomGeneration: 1 };
+    for (const [authorization, enabled, value, expected] of [
+      [undefined, "true", body, 401],
+      ["Bearer incorrect", "true", body, 401],
+      ["Bearer internal-secret", "false", body, 404],
+      ["Bearer internal-secret", "true", { ...body, roomId: "different" }, 400],
+      ["Bearer internal-secret", "true", { ...body, roomGeneration: 0 }, 400],
+      ["Bearer internal-secret", "true", { ...body, allowance: 1200 }, 400],
+    ] as const) {
+      const response = await app.request("/internal/rooms/status-room/free20-status", {
+        method: "POST", headers: authorization ? { Authorization: authorization } : {}, body: JSON.stringify(value),
+      }, { ...internalEnv, ANIDACHI_FREE20_ACCOUNTING_ENABLED: enabled, ROOMS: rooms.namespace });
+      expect(response.status).toBe(expected);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    }
+    expect(rooms.calls).toEqual([]);
+  });
+
+  it("forwards only a validated Free20 binding and converts lost DO reads to unavailable", async () => {
+    const body = { ownerUserId: "f6250000-0000-4000-8000-000000000001", roomId: "status-room", roomGeneration: 1 };
+    const names: string[] = [];
+    const fetch = vi.fn(async (request: Request) => {
+      expect(request.url).toBe("https://room.internal/internal/free20-status");
+      expect(request.headers.get("authorization")).toBe("Bearer internal-secret");
+      expect(await request.json()).toEqual(body);
+      return Response.json({ liveStatusVersion: 1 }, { headers: { "Cache-Control": "private, no-store" } });
+    });
+    const env = { ...internalEnv, ANIDACHI_FREE20_ACCOUNTING_ENABLED: "true", ROOMS: {
+      idFromName: (name: string) => { names.push(name); return name; }, get: () => ({ fetch }),
+    } };
+    const read = () => app.request("/internal/rooms/status-room/free20-status", {
+      method: "POST", headers: { Authorization: "Bearer internal-secret" }, body: JSON.stringify(body),
+    }, env);
+    expect((await read()).status).toBe(200);
+    expect(names).toEqual(["status-room"]);
+    fetch.mockRejectedValueOnce(new Error("DO unavailable"));
+    const unavailable = await read();
+    expect(unavailable.status).toBe(503);
+    expect(await unavailable.json()).toEqual({ code: "HOSTING_STATUS_UNAVAILABLE" });
+  });
+
   it("serves room-scoped ICE credentials through bearer auth with no-store CORS", async () => {
     const roomToken = await signRoomTokenForTest(
       {

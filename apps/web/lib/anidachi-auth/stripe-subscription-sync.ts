@@ -1,5 +1,10 @@
+import { after } from "next/server";
 import type Stripe from "stripe";
 import { verifyCardlessTrialCreated } from "./cardless-trial";
+import {
+	deferFree20PurchaseDelivery,
+	type drainFree20PurchaseDelivery,
+} from "./free20-purchase-delivery";
 
 import {
 	beginStripeSubscriptionRefresh,
@@ -98,6 +103,8 @@ export type SyncStripeSubscriptionDeps = {
 		lease: StripeRefreshLease,
 	) => Promise<void>;
 	expectedUserId?: string;
+	defer?: (task: () => Promise<void>) => void;
+	drainFree20?: typeof drainFree20PurchaseDelivery;
 };
 
 /** All entry points refetch AFTER acquiring durable authority; never trust event snapshots. */
@@ -228,6 +235,13 @@ export async function syncStripeSubscriptionById(
 			},
 			lease,
 		);
+		// SQL v4 has already committed its durable target. This only offers an
+		// owner-scoped latency improvement; scheduler/lease recovery owns retries.
+		if (process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true") {
+			deferFree20PurchaseDelivery(userId, deps.defer ?? after, {
+				drain: deps.drainFree20,
+			});
+		}
 		return {
 			userId,
 			stripeCustomerId,

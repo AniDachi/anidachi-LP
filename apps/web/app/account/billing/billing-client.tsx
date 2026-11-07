@@ -54,7 +54,9 @@ import {
 	EndedTrialSummary,
 } from "./subscription-summary";
 
+import { useAccountHostingStatus } from "@/lib/use-account-hosting-status";
 import { useBillingTimeZone } from "./use-billing-time-zone";
+import { PaidSubscriptionFacts } from "./paid-subscription-facts";
 
 const PLAN_NAMES = { free: "Free", plus: "Plus", pro: "Pro" };
 
@@ -527,9 +529,9 @@ function BillingWorkspace({
 						setRenewalPreviewRevision((n) => n + 1);
 						setNotice(
 							result.state === "active"
-								? "Renewal is confirmed. Your original trial end stays the same."
+								? "Renewal is confirmed. Your current access end date stays the same."
 								: result.state === "canceled"
-									? "Renewal is off. Your remaining trial access stays available."
+									? "Renewal is off. Access continues until the date shown."
 									: trialResultMessage(result.state),
 						);
 					}
@@ -542,7 +544,7 @@ function BillingWorkspace({
 					setError(
 						failure instanceof Error
 							? failure.message
-							: "Could not confirm trial renewal. Refresh its status.",
+							: "Could not confirm renewal. Refresh its status.",
 					);
 				}
 			} finally {
@@ -828,6 +830,11 @@ export function BillingView({
 	const current =
 		owned?.subscriptions.filter((s) => !isPastSubscription(s)) ?? [];
 	const previous = owned?.subscriptions.filter(isPastSubscription) ?? [];
+	const hostingTime = useAccountHostingStatus(
+		ownerUserId,
+		undefined,
+		owned?.planCode === "free" && current.length === 0,
+	);
 	const endedTrial =
 		owned?.planCode === "free" &&
 		current.length === 0 &&
@@ -853,7 +860,7 @@ export function BillingView({
 		);
 	const editing = current.some(isExpanded);
 	return (
-		<div className="ac-page ac-billing ac-billing-clean" aria-busy={busy}>
+		<div className={`ac-page ac-billing ac-billing-clean${editing ? " ac-billing-editing" : ""}`} aria-busy={busy}>
 			{editing && <h1 className="sr-only">Subscription</h1>}
 			<header className="billing-header" hidden={editing}>
 				<h1>Subscription</h1>
@@ -906,14 +913,14 @@ export function BillingView({
 			{owned && (
 				<>
 					{owned.pendingTrialActivation && (
-						<section aria-label="Trial request status">
+						<section aria-label="Access request status">
 							<BillingSummaryCard
-								status="Trial setup pending"
+								status="Access setup pending"
 								plan={PLAN_NAMES[owned.pendingTrialActivation.planCode]}
-								primary="Your trial is being prepared"
+								primary="Your access is being prepared"
 								secondary={`Current account access: ${PLAN_NAMES[owned.planCode]}.`}
-								actionTitle="Check your trial"
-								actionDescription={`Your ${PLAN_NAMES[owned.pendingTrialActivation.planCode]} trial is being prepared. Check this request before starting another checkout.`}
+								actionTitle="Check your access"
+								actionDescription={`Your ${PLAN_NAMES[owned.pendingTrialActivation.planCode]} access is being prepared. Check this request before starting another checkout.`}
 							>
 								<Link
 									className="billing-summary-button"
@@ -922,12 +929,42 @@ export function BillingView({
 										billing: owned.pendingTrialActivation.billingPeriod,
 									})}
 								>
-									Check trial status <ArrowRight size={20} aria-hidden />
+									Check access status <ArrowRight size={20} aria-hidden />
 								</Link>
 							</BillingSummaryCard>
 						</section>
 					)}
-					{endedTrial && <EndedTrialSummary />}
+					{owned.planCode === "free" && current.length === 0 && (
+						<section
+							className="billing-access"
+							aria-label="Current hosting time"
+						>
+							<h2>Hosting time</h2>
+							<p aria-live="polite">
+								{hostingTime.status
+									? hostingTime.status.activeRoom
+										? "You’re already in a room. Return to it before creating another."
+										: hostingTime.status.access.kind === "daily_free"
+											? `${Math.ceil((hostingTime.remainingSeconds ?? 0) / 60)} host minutes remaining today. Resets at 00:00 UTC.${hostingTime.remainingSeconds === 0 ? " Join friends free, or upgrade for no daily host limit." : " Up to 4 people, including you."}`
+											: "Your hosting access has no daily time limit."
+									: hostingTime.mode === "legacy"
+										? "Your current plan’s hosting rules apply."
+										: hostingTime.busy
+											? "Checking current hosting time…"
+											: "Hosting time is unavailable. Try again to check your access."}
+							</p>
+							{hostingTime.mode !== "legacy" && (
+								<button
+									type="button"
+									onClick={hostingTime.refresh}
+									disabled={hostingTime.busy}
+								>
+									Refresh hosting time
+								</button>
+							)}
+						</section>
+					)}
+					{endedTrial && <EndedTrialSummary hostingMode={hostingTime.mode} />}
 					{!endedTrial &&
 						!owned.pendingTrialActivation &&
 						current.length === 0 && (
@@ -952,7 +989,11 @@ export function BillingView({
 									}
 									actionDescription={
 										owned.planCode === "free"
-											? "Explore Plus and Pro for your own rooms and more."
+											? hostingTime.mode === "free20"
+												? "Explore Plus and Pro for hosting without a daily time limit and personal watch history."
+												: hostingTime.mode === "legacy"
+													? "Explore Plus and Pro for your own rooms and more."
+													: "Check your hosting access and explore plan options."
 											: "See available subscription options."
 									}
 								>
@@ -973,13 +1014,23 @@ export function BillingView({
 											<ChevronDown size={16} aria-hidden />
 										</summary>
 										<ul className="ac-plan-limits">
-											{owned.hosting &&
-											owned.serverTime &&
-											owned.hosting.hostingActivationAt &&
-											Date.parse(owned.hosting.hostingActivationAt) <=
-												Date.parse(owned.serverTime) ? (
+											{hostingTime.mode === "free20" ? (
 												<li>
-													Join a Plus, Pro or trial host for free. Creating your
+													Free includes 20 host minutes per UTC day for up to 4
+													people. Time counts with a guest present, including
+													while paused; waiting alone uses no time. Resets at
+													00:00 UTC with no carryover. Joining friends does not
+													spend your own hosting time.
+												</li>
+											) : hostingTime.mode !== "legacy" ? (
+												<li>Refresh to check your current hosting access.</li>
+											) : owned.hosting &&
+												owned.serverTime &&
+												owned.hosting.hostingActivationAt &&
+												Date.parse(owned.hosting.hostingActivationAt) <=
+													Date.parse(owned.serverTime) ? (
+												<li>
+													Join a Plus or Pro host for free. Creating your
 													own room needs Plus or Pro.
 												</li>
 											) : owned.hosting && owned.serverTime ? (
@@ -1052,14 +1103,21 @@ export function BillingView({
 									</button>
 								)}
 								<div className="billing-actions">
-									{subscription.promotion?.state === "active" && (
+									{subscription.promotion?.state === "active" &&
+									 subscription.promotion.campaign !== "cancellation_retention" && (
 										<p className="ac-muted">
 											Yearly billing is available after your discount ends.
 										</p>
 									)}
 									{subscription.canSwitchToYearly &&
 									subscription.planCode !== "free" ? (
-										<div className="ac-renewal-action">
+										<div className="ac-renewal-action billing-management-action">
+											<div className="billing-action-description">
+												<h3>Yearly billing</h3>
+												{subscription.canChangeTrialPlan && (
+													<p>Keep your access end date. Review the yearly total before confirming.</p>
+												)}
+											</div>
 											<button
 												className="ac-button"
 												type="button"
@@ -1077,11 +1135,6 @@ export function BillingView({
 											>
 												Switch to yearly billing
 											</button>
-											<p className="ac-muted">
-												{subscription.canChangeTrialPlan
-													? "Keep your remaining trial days. Review the full yearly charge before confirming."
-													: "Starts immediately. Stripe credits unused monthly time and shows the amount due before you confirm."}
-											</p>
 										</div>
 									) : null}
 									{subscription.canChangeTrialPlan ? (
@@ -1112,16 +1165,16 @@ export function BillingView({
 														{billingPeriodUnit(
 															planQuote.quote.billingPeriod ?? "monthly",
 														)}{" "}
-														after your trial. Taxes, discounts and credits may
+														after your current access period. Taxes, discounts and credits may
 														change the final total.
 													</p>
 													<p>
-														Your trial still ends{" "}
+														Your current access ends{" "}
 														{formatBillingTime(planQuote.quote.trialEndsAt)}. No
-														extra trial days.{" "}
+														extension of this period.{" "}
 														{planQuote.quote.renewalCanceled
 															? "Your renewal stays canceled."
-															: "Your subscription renews automatically after the trial."}
+															: "Your subscription renews automatically on that date."}
 													</p>
 													<button
 														type="button"
@@ -1150,7 +1203,15 @@ export function BillingView({
 										</div>
 									) : null}
 									{subscription.canCancel ? (
-										<div className="ac-renewal-action">
+										<div className="ac-renewal-action billing-management-action">
+											<div className="billing-action-description">
+												<h3>Renewal</h3>
+												{subscription.trial?.stage === "trial" ? (
+													<p>Cancel before your first payment to avoid a charge. Access stays until the date shown.</p>
+												) : subscription.status !== "active" || (subscription.trial && subscription.trial.stage !== "paid") ? (
+													<p>Confirm cancellation in Stripe to stop future renewals.</p>
+												) : null}
+											</div>
 											<button
 												type="button"
 												disabled={busy}
@@ -1164,7 +1225,10 @@ export function BillingView({
 										</div>
 									) : null}
 									{subscription.canRestoreRenewal ? (
-										<div className="ac-renewal-action">
+										<div className="ac-renewal-action billing-management-action">
+											<div className="billing-action-description">
+												<h3>Renewal</h3>
+											</div>
 											<button
 												type="button"
 												className="ac-button"
@@ -1178,19 +1242,6 @@ export function BillingView({
 										</div>
 									) : null}
 								</div>
-								{(subscription.canCancel || subscription.canRestoreRenewal) && (
-									<p className="billing-action-note">
-										{subscription.canCancel
-											? subscription.trial?.stage === "trial"
-												? "Cancel before your trial ends to avoid a charge. Access stays until then."
-												: subscription.status === "active" &&
-														(!subscription.trial ||
-															subscription.trial.stage === "paid")
-													? "Cancel renewal in Stripe. Access stays until the end of your paid period."
-													: "Confirm cancellation in Stripe to stop future renewals."
-											: "Restore renewal in Stripe. Your current end date stays the same."}
-									</p>
-								)}
 							</SubscriptionPresentation>
 						</section>
 					))}
@@ -1279,6 +1330,9 @@ function SubscriptionFacts({
 	const trial = subscription.trial;
 	const inTrial = trial?.stage === "trial";
 	const cardless = trial?.mode === "cardless";
+	if (subscription.status === "active" && (!trial || trial.stage === "paid")) {
+		return <PaidSubscriptionFacts subscription={subscription} timeZone={timeZone} />;
+	}
 	const showTrialDeadline = inTrial || (cardless && trial.stage !== "paid");
 	const price = subscriptionPriceLabel(subscription);
 	const paymentPeriod =
@@ -1298,8 +1352,8 @@ function SubscriptionFacts({
 					<dt>
 						{showTrialDeadline
 							? inTrial
-								? "Trial ends"
-								: "Trial ended"
+								? "Access ends"
+								: "Access ended"
 							: subscriptionDateLabel(subscription)}
 					</dt>
 					<dd>
@@ -1319,9 +1373,30 @@ function SubscriptionFacts({
 			<div className="billing-terms">
 				{subscription.promotion?.state === "active" && (
 					<p>
-						ANIHUNT40: 40% off until{" "}
-						{formatBillingTime(subscription.promotion.endsAt!, timeZone)}.
-						Monthly renewal continues at the regular price after that.
+						{subscription.promotion.campaign === "cancellation_retention" ? (
+							<>
+								{subscription.promotion.nextPrice
+									? "40% off your next monthly renewal only. Later renewals remain at the regular price. "
+									: ""}
+								This discount applies to monthly billing only.
+							</>
+						) : subscription.promotion.campaign === "uninstall_renewal" ? (
+							<>
+								40% off your next eligible monthly renewal only. Later renewals
+								remain at the regular price.
+							</>
+						) : subscription.promotion.campaign === "uninstall_first" ? (
+							<>
+								Your one-time first-month discount is applied. Later renewals
+								remain at the regular price.
+							</>
+						) : (
+							<>
+								ANIHUNT40: 40% off until{" "}
+								{formatBillingTime(subscription.promotion.endsAt!, timeZone)}.
+								Monthly renewal continues at the regular price after that.
+							</>
+						)}
 					</p>
 				)}
 				{inTrial && (
@@ -1330,11 +1405,11 @@ function SubscriptionFacts({
 							? trial.renewalState === "pending"
 								? "A renewal change is being confirmed. Check the controls below for its current status."
 								: trial.renewalState === "enabled"
-									? "Renewal is enabled. Your first payment is scheduled for the end of your trial."
+									? "Renewal is enabled. Your first payment is scheduled for the date shown."
 									: "No automatic charge. Access ends after 3 days unless you choose to enable renewal."
 							: subscription.cancelAtPeriodEnd
-								? "No payment scheduled. Access continues until your trial ends."
-								: "Renews automatically after your trial."}
+								? "No payment scheduled. Access continues until the date shown."
+								: "Renews automatically after your current access period."}
 					</p>
 				)}
 				{!inTrial &&
@@ -1363,7 +1438,7 @@ function SubscriptionFacts({
 				)}
 				{trial?.stage === "ended" && (
 					<p className="billing-warning">
-						Your trial has ended. Check your current account access before
+						Your access period has ended. Check your current account access before
 						creating a room.
 					</p>
 				)}

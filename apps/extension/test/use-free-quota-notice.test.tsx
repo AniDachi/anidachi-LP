@@ -29,6 +29,31 @@ describe("Free quota countdown", () => {
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
+  it("exposes actual idle time without spending it or reading on every tick", async () => {
+    await render({ request: vi.fn().mockResolvedValue(status(now, 754)) });
+    expect(current.availableSeconds).toBe(754);
+    await advance(3000);
+    expect(current.availableSeconds).toBe(754);
+    expect(options.request).toHaveBeenCalledTimes(1);
+    await render({ policyMode: "paid-hosting" });
+    expect(current.availableSeconds).toBeNull();
+  });
+  it("clears idle time across login changes and failed refresh", async () => {
+    await render({ request: vi.fn().mockResolvedValue(status(now, 754)) });
+    await advance(5000);
+    vi.mocked(options.request!).mockRejectedValue(new Error("offline"));
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    expect(current.availableSeconds).toBeNull();
+    await render({ sessionKey: "new-login" });
+    expect(current.availableSeconds).toBeNull();
+  });
+  it("rechecks a positive idle balance at reset instead of granting a new allowance locally", async () => {
+    const request = vi.fn().mockResolvedValueOnce(status(now, 754)).mockRejectedValue(new Error("offline"));
+    await render({ request });
+    await advance(10_000);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(current.availableSeconds).toBeNull();
+  });
   it("starts from server time even with an incorrect device date and counts elapsed time", async () => {
     await render(); expect(current.state).toMatchObject({ kind: "exhausted", remainingSeconds: 10 });
     await advance(3000); expect(current.state?.remainingSeconds).toBe(7);

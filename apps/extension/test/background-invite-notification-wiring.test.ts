@@ -4,6 +4,10 @@ const boundary = vi.hoisted(() => ({
   restore: vi.fn<() => Promise<boolean>>(),
   reconcile: vi.fn(), retryAlarm: vi.fn(), maintenance: vi.fn(),
   website: vi.fn(), history: vi.fn(), departures: vi.fn(),
+  uninstall: vi.fn(),
+}));
+vi.mock("../src/uninstall-url", async (original) => ({
+  ...await original<object>(), registerUninstallUrl: boundary.uninstall,
 }));
 vi.mock("wxt/utils/define-background", () => ({ defineBackground: (main: () => void) => main }));
 vi.mock("../src/room-invite-notifications", async (original) => ({
@@ -39,7 +43,7 @@ beforeEach(() => {
   boundary.restore.mockResolvedValue(false);
   vi.stubGlobal("self", { addEventListener: (name: string, handler: (...args: any[]) => void) => handlers.set(name, handler) });
   vi.stubGlobal("chrome", {
-    runtime: { onMessage: listener("message"), onStartup: listener("startup"), onInstalled: listener("installed") },
+    runtime: { setUninstallURL: vi.fn().mockResolvedValue(undefined), onMessage: listener("message"), onStartup: listener("startup"), onInstalled: listener("installed") },
     storage: { onChanged: listener("storage") },
     permissions: { onRemoved: listener("permissions") },
     alarms: { onAlarm: listener("alarm") },
@@ -47,6 +51,27 @@ beforeEach(() => {
   });
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+
+describe("background uninstall URL registration", () => {
+  it("checks availability on background start and install/update without waiting on it", async () => {
+    boundary.uninstall.mockImplementation(() => new Promise(() => {}));
+    await start();
+    expect(boundary.uninstall).toHaveBeenCalledOnce();
+    handlers.get("installed")!({ reason: "update" });
+    await flush();
+    expect(boundary.uninstall).toHaveBeenCalledTimes(2);
+    expect(boundary.website).toHaveBeenCalledOnce();
+  });
+  it("refreshes on its hourly alarm and browser startup without touching invitation state", async () => {
+    await start();
+    handlers.get("alarm")!({ name: "anidachi-uninstall-capability" });
+    expect(boundary.uninstall).toHaveBeenCalledTimes(2);
+    expect(boundary.uninstall).toHaveBeenLastCalledWith({ force: true });
+    expect(boundary.reconcile).not.toHaveBeenCalled();
+    handlers.get("startup")!();
+    expect(boundary.uninstall).toHaveBeenLastCalledWith({ force: true });
+  });
+});
 
 describe("background invitation retry wiring", () => {
   it("restores saved work on module start and online, without creating new external reconciliation", async () => {
@@ -105,6 +130,7 @@ describe("background invitation retry wiring", () => {
 describe("production introduction claim wiring", () => {
   it("claims once across concurrent tabs and keeps seen state across a background restart", async () => {
     vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
+    vi.stubEnv("WXT_WEB_HTTP_BASE", "https://www.anidachi.app");
     const values: Record<string, unknown> = { existingPreference: "preserved" };
     Object.assign(chrome.runtime, { id: "our-extension" });
     Object.assign(chrome.storage, { local: {
@@ -123,6 +149,7 @@ describe("production introduction claim wiring", () => {
 
   it("rejects other extensions and non-tab senders without consuming the introduction", async () => {
     vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
+    vi.stubEnv("WXT_WEB_HTTP_BASE", "https://www.anidachi.app");
     Object.assign(chrome.runtime, { id: "our-extension" });
     const get = vi.fn(async () => ({}));
     const set = vi.fn(async () => {});

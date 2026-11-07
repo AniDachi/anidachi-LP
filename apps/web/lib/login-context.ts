@@ -16,7 +16,7 @@ export function getLoginContext(
     return {
       headline: `Sign in to continue with ${plan}`,
       subtitle: checkout.confirmTrial
-        ? `${plan} is selected. Review your trial offer after sign-in.`
+        ? `${plan} is selected. Review your offer after sign-in.`
         : `Your ${checkout.billing} plan is selected. Continue to secure checkout after sign-in.`,
     };
   }

@@ -61,7 +61,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Chrome, Web",
     description:
-      "Join friends for free on Crunchyroll, YouTube, and Netflix. Host rooms with Plus or Pro, including during a trial, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Async catch-up is coming soon.",
+      "Join friends for free on Crunchyroll, YouTube, and Netflix. Host rooms on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Async catch-up is coming soon.",
     url: siteUrl,
     offers: {
       "@type": "AggregateOffer",
@@ -73,7 +73,7 @@ export function SoftwareApplicationJsonLd() {
         {
           "@type": "Offer",
           name: "AniDachi Free",
-          description: "Join a Plus, Pro or trial host for free. Free accounts cannot create rooms or record new personal history.",
+          description: "Join a Free, Plus, or Pro host for free. Free includes 20 host minutes per UTC day for up to 4 people. Recording personal history requires your own Plus or Pro access.",
           price: "0",
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
@@ -82,7 +82,7 @@ export function SoftwareApplicationJsonLd() {
         {
           "@type": "Offer",
           name: "AniDachi Plus",
-          description: "Monthly Plus subscription. Yearly billing is also available; see pricing for the yearly total and three-day trial terms.",
+          description: "Monthly Plus subscription. Yearly billing is also available; see pricing for the yearly total and billing terms.",
           price: "7.99",
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",
@@ -92,7 +92,7 @@ export function SoftwareApplicationJsonLd() {
         {
           "@type": "Offer",
           name: "AniDachi Pro",
-          description: "Monthly Pro subscription. Yearly billing is also available; see pricing for the yearly total and three-day trial terms.",
+          description: "Monthly Pro subscription. Yearly billing is also available; see pricing for the yearly total and billing terms.",
           price: "14.99",
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",

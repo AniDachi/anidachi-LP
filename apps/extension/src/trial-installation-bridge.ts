@@ -7,14 +7,14 @@ import {
 	TRIAL_INSTALLATION_STORAGE_KEY,
 } from "./trial-installation";
 
-export function registerTrialInstallationBridge() {
+export function registerTrialInstallationBridge(sharedSign?: ReturnType<typeof createTrialInstallationSigner>) {
 	const origins = [new URL(WEB_HTTP_BASE).origin];
 	if (
 		import.meta.env.WXT_EXTENSION_CHANNEL === "production" &&
 		!origins.includes("https://www.anidachi.app")
 	)
 		origins.push("https://www.anidachi.app");
-	const sign = createTrialInstallationSigner({
+	const sign = sharedSign ?? createTrialInstallationSigner({
 		get: () => storage.getItem(TRIAL_INSTALLATION_STORAGE_KEY),
 		set: (value) => storage.setItem(TRIAL_INSTALLATION_STORAGE_KEY, value),
 	});

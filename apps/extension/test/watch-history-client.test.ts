@@ -101,6 +101,82 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it.each(["same event", "new work", "signed out", "retry after offline", "stalled request"])("serializes concurrent clients: %s", async scenario => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    const first = progressEvent("00000000-0000-4000-8000-000000000011");
+    const second = progressEvent("00000000-0000-4000-8000-000000000012");
+    const entry = (event: ReturnType<typeof progressEvent>) => ({ event, request: personalRequest(event)!, key: "latest", slot: "latest" as const, persistedAt: 1 });
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 3, activeGenerations: { [owner]: 1 },
+      partitions: { [key]: { ...readyPartition(owner, false), outbox: { ownerUserId: owner, accountGeneration: 1, entries: [entry(first)] } } },
+    };
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = value; } },
+      getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+    });
+    let release!: () => void;
+    let currentSession: typeof session | null = session;
+    let deadline: AbortController | undefined;
+    const timeout = scenario === "stalled request" ? vi.spyOn(AbortSignal, "timeout").mockImplementation(() => {
+      deadline = new AbortController(); return deadline.signal;
+    }) : null;
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const sent: string[] = [];
+    const request = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      sent.push(body.event.clientEventId);
+      if (sent.length === 1) {
+        if (scenario === "stalled request") return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("Timeout", "AbortError")), { once: true });
+        });
+        await held;
+        if (scenario === "retry after offline") return Response.json({}, { status: 503 });
+      }
+      return Response.json(progressAck(body.event.clientEventId));
+    });
+    const makeClient = () => createWatchHistoryClient({ storage, getCurrentSession: async () => currentSession, fetch: request });
+    const firstDrain = makeClient().flush(session);
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    if (scenario === "new work") await storage.updateRoot(root => ({ ...root, partitions: {
+      ...root.partitions, [key]: { ...root.partitions[key]!, outbox: { ownerUserId: owner, accountGeneration: 1, entries: [entry(second)] } },
+    } }));
+    const nextDrain = makeClient().flush(session);
+    if (scenario === "signed out") currentSession = null;
+    if (scenario === "stalled request") deadline!.abort();
+    release();
+    const results = await Promise.all([firstDrain, nextDrain]);
+    timeout?.mockRestore();
+    if (scenario === "signed out") {
+      expect(results).toEqual([{ ok: false, status: "rejected" }, { ok: false, status: "rejected" }]);
+      expect(sent).toEqual([first.clientEventId]);
+      expect(stored.partitions[key]?.outbox.entries).toHaveLength(1);
+      return;
+    }
+    if (scenario === "retry after offline" || scenario === "stalled request") {
+      expect(results).toEqual([{ ok: false, status: "retryable" }, { ok: true, flushed: 1 }]);
+      expect(sent).toEqual([first.clientEventId, first.clientEventId]);
+      expect(stored.partitions[key]?.outbox.entries).toEqual([]);
+      return;
+    }
+    expect(results.every(result => result.ok)).toBe(true);
+    expect(sent).toEqual(scenario === "new work" ? [first.clientEventId, second.clientEventId] : [first.clientEventId]);
+    expect(stored.partitions[key]?.outbox.entries).toEqual([]);
+  });
+
+  it("does not fetch capture authority when a scheduled drain has no durable work", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 },
+      partitions: { [key]: { ...readyPartition(owner, false), accessLease: null } } };
+    const request = vi.fn();
+    const client = createWatchHistoryClient({ getCurrentSession: async () => session, fetch: request,
+      storage: createWatchHistoryStorage({ item: { getValue: async () => stored, setValue: async value => { stored = value; } },
+        getBytesInUse: async () => 0, quotaBytes: 1_000_000 }) });
+    expect(await client.flush(session)).toEqual({ ok: true, flushed: 0 });
+    expect(request).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["free", 426, "HISTORY_CLIENT_UPDATE_REQUIRED", "upgrade-required"],
     ["plus", 426, "HISTORY_CLIENT_UPDATE_REQUIRED", "upgrade-required"],

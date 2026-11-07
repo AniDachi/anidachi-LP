@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallLink } from "@/components/install-link";
@@ -36,7 +37,7 @@ const howToSteps = [
   },
   {
     name: "The host creates the room",
-    text: "The host starts the title so the address shows netflix.com/watch/, clicks the AniDachi capsule at the top-right of the player and chooses Create room. Hosting needs Plus or Pro, including a trial.",
+    text: `The host starts the title so the address shows netflix.com/watch/, clicks the AniDachi capsule at the top-right of the player and chooses Create room. ${PRICING_FREE20_SUMMARY}`,
   },
   {
     name: "The host shares the invite",
@@ -89,7 +90,7 @@ const faq = [
   {
     question: "Do my friends have to pay for AniDachi?",
     answer:
-      "No. Friends join on Free AniDachi accounts. Only the host needs Plus or Pro, and eligible accounts can start with a 3-day trial. Everyone still needs Netflix.",
+      `No. Friends join on Free AniDachi accounts. ${PRICING_FREE20_SUMMARY} Everyone still needs Netflix.`,
   },
   {
     question: "How many friends can watch Netflix together on AniDachi?",
@@ -144,8 +145,8 @@ export default function HowToWatchNetflixWithFriendsPage() {
           <p>
             <strong>
               To watch Netflix with friends online, everyone opens the same title on
-              their own Netflix account in desktop Chrome, and one host with AniDachi
-              Plus or Pro creates a room from the player and shares the link.
+              their own Netflix account in desktop Chrome, and one host on AniDachi
+              Free, Plus, or Pro creates a room from the player and shares the link.
             </strong>{" "}
             Friends join free, playback stays in sync, and the room has chat,
             reactions, voice and video. The seven steps are below.
@@ -205,10 +206,10 @@ export default function HowToWatchNetflixWithFriendsPage() {
         <p className="mb-6 leading-relaxed text-ani-muted">
           Who should host? Pick the friend with the steadiest connection and a
           laptop that stays plugged in, because the room follows the host&apos;s
-          play, pause and seeking. Only that person needs Plus or Pro; a Plus host
+          play, pause and seeking. Free hosts get 20 host minutes per UTC day for up to 4 people; a Plus host
           fits up to 6 people including themselves, and a Pro host up to 15. If
           the group meets every week, keep the same host and rotate who picks the
-          film instead. That way one plan covers everyone, and the host already
+          film instead. That way everyone knows who coordinates the room, and the host already
           knows where People, Settings and End room sit on the player.
         </p>
 
@@ -239,7 +240,7 @@ export default function HowToWatchNetflixWithFriendsPage() {
             },
             {
               feature: "Create room is not available",
-              values: { fix: "Creating rooms needs Plus or Pro, including a trial. Friends join free." },
+              values: { fix: `${PRICING_FREE20_SUMMARY} Friends join free.` },
             },
             {
               feature: "A friend is on a phone",

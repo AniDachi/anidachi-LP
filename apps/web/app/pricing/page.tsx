@@ -1,3 +1,10 @@
+import {
+	PRICING_FREE20_SUMMARY,
+	PRICING_FREE20_METERING_NOTE,
+	PRICING_IS_ANIDACHI_FREE_ANSWER,
+	PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+	PRICING_HISTORY_NOTE,
+} from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 
 import Link from "next/link";
@@ -10,9 +17,9 @@ import { getPlanPolicy } from "@anidachi/protocol";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-	title: { absolute: "AniDachi Pricing — Free to Join, Plus or Pro to Host" },
+	title: { absolute: "AniDachi Pricing — Free Daily Hosting, Plus and Pro" },
 	description:
-		"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms, and check your trial availability.",
+		PRICING_FREE20_SUMMARY,
 	alternates: { canonical: "/pricing" },
 	openGraph: {
 		images: [
@@ -26,7 +33,7 @@ export const metadata: Metadata = {
 
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free. Compare Plus and Pro for hosting Crunchyroll, YouTube, and Netflix watchrooms.",
+			PRICING_FREE20_SUMMARY,
 		url: "/pricing",
 	},
 	twitter: {
@@ -35,39 +42,40 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "AniDachi Pricing — Free Chrome Watch Party",
 		description:
-			"Join friends for free, or host your own room with Plus or Pro.",
+			PRICING_FREE20_SUMMARY,
 	},
 };
 
 const faq = [
 	{
 		question: "Is AniDachi free?",
-		answer:
-			"Yes. Install the extension and join a Plus, Pro or trial host for free. Plus and Pro include hosting and personal watch history. The plan cards above show the current hosting options.",
+		answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+	},
+	{
+		question: "How do my free minutes work?",
+		answer: PRICING_FREE20_METERING_NOTE,
 	},
 	{
 		question: "Do my friends need a paid AniDachi subscription?",
-		answer:
-			"No. Friends can join your room on Free accounts. Room size, microphone and camera limits follow the host's plan. Each viewer needs their own Plus or Pro access to record personal history.",
+		answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
 	},
 	{
 		question: "What's the difference between Plus and Pro?",
-		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Both include unlimited daily hosting and personal history on Crunchyroll, YouTube, and Netflix.`,
+		answer: `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people and ${getPlanPolicy("plus").maxMicrophones} microphones. Pro supports up to ${getPlanPolicy("pro").maxParticipants} people and ${getPlanPolicy("pro").maxMicrophones} microphones, with priority support. Room sizes include the host. Both plans have no daily time limit and include personal watch history.`,
 	},
 	{
-		question: "How does the free trial work?",
-		answer:
-			"If your account is eligible, you can try Plus or Pro once for 3 days. The plan cards show your current offer. A trial without a card ends automatically unless you add a card and explicitly enable renewal in Account → Subscription. You review the plan, price and first payment date before confirming. A trial started with a card keeps its original checkout terms and renews unless canceled. Switching plans does not restart the trial.",
+		question: "Can I keep my watch history on Free?",
+		answer: PRICING_HISTORY_NOTE,
 	},
 	{
 		question: "How do I cancel my subscription?",
 		answer:
-			"Open Account → Subscription and choose Cancel subscription. Trial access lasts until its original end; paid access lasts until the end of the paid period. Canceling renewal prevents the next scheduled charge.",
+			"Open Account → Subscription and choose Cancel renewal. You keep access until the end of your current access period, and the subscription won’t renew.",
 	},
 	{
 		question: "Do I still need Crunchyroll, YouTube, or Netflix?",
 		answer:
-			"Yes. Each person streams under their own Crunchyroll, YouTube, or Netflix account. AniDachi adds watchrooms, sync, and chat, plus history recording on paid plans — it does not replace a streaming subscription.",
+			"Yes. Everyone needs their own access to the same video. A streaming subscription is required if the service charges for that title. AniDachi syncs your players; it doesn’t provide the video.",
 	},
 ];
 

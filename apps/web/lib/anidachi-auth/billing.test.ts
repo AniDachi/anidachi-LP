@@ -115,6 +115,9 @@ function fixture(
 		trial?: import("./stripe-trial-state").SubscriptionTrialRecord | null;
 		now?: number;
 		portalUrl?: string;
+		prepareOffer?: () => Promise<string | null>;
+		portalFailure?: "offer" | "all";
+		reconcile?: () => Promise<void>;
 		renewal?: TrialRenewalOperation | null;
 		activation?: {
 			id: string;
@@ -163,6 +166,12 @@ function fixture(
 				create: async (params: Stripe.BillingPortal.SessionCreateParams) => {
 					calls.push("portal");
 					portalParams = params;
+					if (
+						options.portalFailure === "all" ||
+						(options.portalFailure === "offer" &&
+							params.flow_data?.subscription_cancel?.retention)
+					)
+						throw new Error("portal failed");
 					return {
 						url:
 							options.portalUrl ??
@@ -173,6 +182,8 @@ function fixture(
 		},
 	} as unknown as Stripe;
 	const service = createBillingService({
+		prepareCancellation: options.prepareOffer,
+		reconcileCancellation: options.reconcile,
 		readPromotions: async () =>
 			options.promotion ? { [row.id]: options.promotion } : {},
 		now: () => options.now ?? Date.parse("2029-12-31T00:00:00Z"),
@@ -246,7 +257,7 @@ test("cardless trial cannot use legacy cancellation or restore Portal", async ()
 		});
 		await assert.rejects(
 			f.service[method]("owner", row.id, returnUrl),
-			/trial renewal controls/i,
+			/renewal controls/i,
 		);
 		assert.ok(!f.calls.includes("portal"));
 	}
@@ -726,4 +737,189 @@ test("overview includes durable activation before Stripe subscription is committ
 	const result = await service.overview("owner");
 	assert.deepEqual(result.pendingTrialActivation, activation);
 	assert.equal(result.subscriptions.length, 0);
+});
+
+test("owner cancellation injects the prepared coupon only in the native deep link", async () => {
+	let prepared = 0;
+	const f = fixture({
+		prepareOffer: async () => {
+			prepared++;
+			return "coupon_native";
+		},
+	});
+	await f.service.cancellationPortal("owner", row.id, returnUrl);
+	assert.equal(prepared, 1);
+	assert.deepEqual(f.params()?.flow_data?.subscription_cancel?.retention, {
+		type: "coupon_offer",
+		coupon_offer: { coupon: "coupon_native" },
+	});
+});
+test("optional preparation failures and ordinary ineligibility preserve cancellation", async () => {
+	for (const prepareOffer of [
+		async () => null,
+		async () => {
+			throw Error("offer unavailable");
+		},
+	]) {
+		const f = fixture({ prepareOffer });
+		await f.service.cancellationPortal("owner", row.id, returnUrl);
+		assert.equal(
+			f.params()?.flow_data?.subscription_cancel?.retention,
+			undefined,
+		);
+	}
+});
+test("native session failure retries ordinary cancellation and preserves its failures", async () => {
+	const f = fixture({
+		prepareOffer: async () => "coupon_native",
+		portalFailure: "offer",
+	});
+	await f.service.cancellationPortal("owner", row.id, returnUrl);
+	assert.equal(f.calls.filter((c) => c === "portal").length, 2);
+	assert.equal(
+		f.params()?.flow_data?.subscription_cancel?.retention,
+		undefined,
+	);
+	await assert.rejects(
+		fixture({
+			prepareOffer: async () => "coupon_native",
+			portalFailure: "all",
+		}).service.cancellationPortal("owner", row.id, returnUrl),
+		/portal failed/,
+	);
+});
+test("restore, owner mismatch, canceled status and invalid configuration never prepare an offer", async () => {
+	let prepared = 0;
+	const prepareOffer = async () => {
+		prepared++;
+		return "coupon_native";
+	};
+	const restore = fixture({
+		prepareOffer,
+		syncResult: { ...result, cancelAtPeriodEnd: true },
+	});
+	await restore.service.renewalPortal("owner", row.id, returnUrl);
+	assert.equal(restore.params()?.flow_data, undefined);
+	for (const options of [
+		{ customerOwner: "other" },
+		{ syncResult: { ...result, status: "canceled" } },
+		{ config: null },
+	]) {
+		await assert.rejects(
+			fixture({ ...options, prepareOffer }).service.cancellationPortal(
+				"owner",
+				row.id,
+				returnUrl,
+			),
+		);
+	}
+	assert.equal(prepared, 0);
+});
+test("native campaign keeps annual conversion available while other promotion guards remain", async () => {
+	const saved = { ...process.env };
+	try {
+		process.env.STRIPE_MODE = "test";
+		process.env.STRIPE_PRICE_ID_PLUS_YEARLY_TEST = "price_yearly";
+		process.env.STRIPE_YEARLY_PORTAL_CONFIGURATION_ID_TEST = "bpc_yearly";
+		for (const state of ["active", "unavailable"] as const)
+			for (const campaign of [
+				"cancellation_retention",
+				"uninstall_renewal",
+				undefined,
+			] as const) {
+				const f = fixture({
+					access: trialAccess("2029-12-31T00:00:00Z"),
+					promotion: { state, campaign },
+				});
+				assert.equal(
+					(await f.service.overview("owner")).subscriptions[0]
+						.canSwitchToYearly,
+					campaign === "cancellation_retention",
+				);
+			}
+	} finally {
+		process.env = saved;
+	}
+});
+test("billing refresh reconciles outstanding allowance even when all subscriptions ended", async () => {
+	let reconciled = 0;
+	const f = fixture({
+		rows: [{ ...row, status: "canceled" }],
+		reconcile: async () => {
+			reconciled++;
+		},
+	});
+	await f.service.refresh("owner");
+	assert.equal(reconciled, 1);
+	assert.ok(!f.calls.includes("sync"));
+});
+
+test("optional preparation has a five-second total wait and late results never change ordinary cancellation", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] });
+	for (const late of ["resolve", "reject"] as const) {
+		let ready!: () => void;
+		const started = new Promise<void>((resolve) => {
+			ready = resolve;
+		});
+		let resolveOffer!: (coupon: string) => void;
+		let rejectOffer!: (error: Error) => void;
+		const offer = new Promise<string>((resolve, reject) => {
+			resolveOffer = resolve;
+			rejectOffer = reject;
+		});
+		const f = fixture({
+			prepareOffer: () => {
+				ready();
+				return offer;
+			},
+		});
+		const portal = f.service.cancellationPortal("owner", row.id, returnUrl);
+		await started;
+		assert.ok(!f.calls.includes("portal"));
+		t.mock.timers.tick(5000);
+		assert.match(await portal, /billing.stripe.com/);
+		assert.equal(
+			f.params()?.flow_data?.subscription_cancel?.retention,
+			undefined,
+		);
+		if (late === "resolve") resolveOffer("coupon_late");
+		else rejectOffer(Error("late preparation failure"));
+		await Promise.resolve();
+		await Promise.resolve();
+		assert.equal(f.calls.filter((c) => c === "portal").length, 1);
+		assert.equal(
+			f.params()?.flow_data?.subscription_cancel?.retention,
+			undefined,
+		);
+	}
+});
+
+test("repeated native cancel requests reuse the prepared coupon without putting retention on restore", async () => {
+	const f = fixture({ prepareOffer: async () => "coupon_same" });
+	for (let i = 0; i < 2; i++) {
+		await f.service.cancellationPortal("owner", row.id, returnUrl);
+		assert.equal(
+			f.params()?.flow_data?.subscription_cancel?.retention?.coupon_offer
+				?.coupon,
+			"coupon_same",
+		);
+	}
+	assert.equal(f.calls.filter((c) => c === "portal").length, 2);
+});
+test("live cancellation injects the owner-scoped offer just like staging", async () => {
+	let prepared = 0;
+	const f = fixture({
+		mode: "live",
+		config: { livemode: true },
+		prepareOffer: async () => {
+			prepared++;
+			return "coupon_native";
+		},
+	});
+	await f.service.cancellationPortal("owner", row.id, returnUrl);
+	assert.equal(prepared, 1);
+	assert.equal(
+		f.params()?.flow_data?.subscription_cancel?.retention?.coupon_offer?.coupon,
+		"coupon_native",
+	);
 });

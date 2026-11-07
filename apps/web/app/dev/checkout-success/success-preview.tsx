@@ -14,9 +14,9 @@ export function SuccessPreview({ children }: { children: ReactNode }) {
 	const state: SyncState = trial
 		? {
 				status: "synced",
-				heading: "Your free trial has started",
+				heading: "Your access is active",
 				trialActive: true,
-				message: `Your Plus trial ends ${trialEnd} (your local time).`,
+				message: `Your Plus access ends ${trialEnd} (your local time).`,
 			}
 		: { status: "synced", message: "Your AniDachi account is active on Plus." };
 

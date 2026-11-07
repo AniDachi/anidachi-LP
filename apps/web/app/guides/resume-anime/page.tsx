@@ -16,7 +16,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 const howToSteps = [
 	{
 		name: "Record with Plus or Pro",
-		text: "Your own Plus or Pro access, including a trial, plus recording permission in the extension, saves episode progress. YouTube has a separate recording switch.",
+		text: "Your own Plus or Pro access, plus recording permission in the extension, saves episode progress. YouTube has a separate recording switch.",
 	},
 	{
 		name: "Open Watch Library",
@@ -58,7 +58,7 @@ const faq = [
 	{
 		question: "Who can record progress?",
 		answer:
-			"Recording and editing need your own Plus or Pro access, including a trial, and recording permission in the extension. YouTube recording has a separate switch. Saved history, Resume, and deletion stay available on Free.",
+			"Recording and editing need your own Plus or Pro access, and recording permission in the extension. YouTube recording has a separate switch. Saved history, Resume, and deletion stay available on Free.",
 	},
 	{
 		question: "Is this Crunchyroll Continue Watching?",

@@ -47,7 +47,7 @@ const faq = [
   {
     question: "Should I use AniDachi instead of both?",
     answer:
-      "Consider AniDachi for Crunchyroll and YouTube live rooms with chat, reactions, voice/video, and personal history. A Plus, Pro, or trial host creates the room and Free friends can join; personal recording depends on each viewer's own subscription and permission. If free live sync across multiple platforms is enough, either extension works for occasional sessions.",
+      "Consider AniDachi for Crunchyroll and YouTube live rooms with chat, reactions, voice/video, and personal history. A Free, Plus, or Pro host creates the room and Free friends can join; personal recording depends on each viewer's own subscription and permission. If free live sync across multiple platforms is enough, either extension works for occasional sessions.",
   },
 ];
 
@@ -200,7 +200,7 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Live rooms on both Crunchyroll and YouTube.</li>
         <li>Chat, reactions, and voice/video beside each person’s player.</li>
-        <li>A Plus, Pro, or trial host can invite Free friends.</li>
+        <li>A Free, Plus, or Pro host can invite Free friends.</li>
         <li>Personal progress with each viewer’s own Plus/Pro access and recording permission.</li>
       </ul>
       <p className="text-foreground/80 leading-relaxed mb-8">

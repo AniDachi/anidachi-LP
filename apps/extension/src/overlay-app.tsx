@@ -15,15 +15,13 @@ import type {
 	WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import {
-	Check,
+	ArrowUpRight,
 	CircleHelp,
-	Copy,
 	Mic,
 	RefreshCw,
 	SendHorizontal,
 	Settings2,
 	SmilePlus,
-	UserPlus,
 	X,
 } from "lucide-react";
 import type {
@@ -46,10 +44,12 @@ import {
 } from "react";
 import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
+import { CapsuleFriendsPanel, createCapsuleFriendLinkCache } from "./capsule-friends-panel";
+import { subscribeToAccountInboxForUser, accountInboxSocialSignature } from "./account-inbox-cache";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { PlayerOnboarding } from "./player-onboarding";
-import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
-import { ANIDACHI_BUILD_ID } from "./constants";
+import { AUTH_TOKENS_KEY, extensionAuthSessionKey as roomAuthSessionKey, normalizeExtensionAuthTokens, type AuthenticatedUser, type ExtensionAuthTokens } from "./auth-tokens";
+import { ANIDACHI_BUILD_ID, WEB_HTTP_BASE } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { ANIDACHI_EMOJI_CATALOG } from "./emoji-catalog";
 import {
@@ -142,7 +142,6 @@ import {
 	copyRoomInviteText,
 	getPrimaryRoomActionKind,
 	getPrimaryRoomActionLabel,
-	isInviteCopiedFeedback,
 	ROOM_ACTION_FEEDBACK_DURATION_MS,
 	ROOM_END_CONFIRMATION_DURATION_MS,
 	type RoomActionFeedback,
@@ -159,6 +158,7 @@ import {
 	reduceVoiceSession,
 	shouldResetPersistedOpenMicAfterMediaSeatLoss,
 } from "./overlay-voice-session";
+import { PanelRoomActions, PanelTimeCounter, ROOM_START_PRESENTATION_TIMEOUT_MS, type PanelStartingTime } from "./panel-room-actions";
 import { PanelAccountTitle } from "./panel-account-title";
 import { PanelMediaControls } from "./panel-media-controls";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
@@ -202,13 +202,18 @@ import {
 	mergeRoomInviteTargetStatus,
 	type RoomInviteTargetStatus,
 	roomInviteEligibleRecipientIds,
-	roomInviteGroupStatus,
 	roomInviteTargetStatuses,
-	roomInviteTargetStatusLabel,
 } from "./room-invite-target-status";
 import { FreeQuotaNotice } from "./free-quota-notice";
 import { HostingPaywall } from "./hosting-paywall";
 import { useHostingAccess } from "./use-hosting-access";
+import { useAccountHostingStatus } from "./use-account-hosting-status";
+import { useRoomClosingPresentation } from "./use-room-closing-presentation";
+import { RoomHostingTime } from "./room-hosting-time";
+import { useRoomHostingTime } from "./use-room-hosting-time";
+import { useFree20Warning } from "./use-free20-warning";
+import { Free20WarningNotice } from "./free20-warning-notice";
+import { useCapsuleNoticePresentation } from "./use-capsule-notice-presentation";
 import { useFreeQuotaNotice, type QuotaExhaustion } from "./use-free-quota-notice";
 import {
 	applyRoomUsageSnapshot,
@@ -247,6 +252,7 @@ import {
 import { adoptWebsiteSessionWithRetry } from "./silent-session-adoption";
 import {
 	type CreateRoomInviteInput,
+	createFriendInviteLink,
 	createRoomInvite,
 	type FriendGroup,
 	type FriendListItem,
@@ -548,6 +554,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const authUserIdRef = useRef<string | null>(null);
 	const authUserIdInitializedRef = useRef(false);
 	const authGenerationRef = useRef(0);
+	const roomAuthSessionKeyRef = useRef<string | null>(null);
 	const authSessionKeyRef = useRef<string | null>(null);
 	const [participant, setParticipant] = useState<Participant | null>(null);
 	const [identityLoaded, setIdentityLoaded] = useState(false);
@@ -574,8 +581,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const voiceAudioPreferencesWriteTimerRef = useRef<number | null>(null);
 	const [authBusy, setAuthBusy] = useState(false);
 	const [authMessage, setAuthMessage] = useState<string | null>(null);
+	const [roomSessionLoadError, setRoomSessionLoadError] = useState<{ ownerUserId: string | null; message: string } | null>(null);
 	const [roomTerminalMessage, setRoomTerminalMessage] = useState<string | null>(null);
-	const roomActionMessage = authMessage ?? roomTerminalMessage;
+	const roomActionMessage = authMessage ?? (roomSessionLoadError?.ownerUserId === (participant?.id ?? null) ? roomSessionLoadError.message : null) ?? roomTerminalMessage;
 	const [hostingRequiredOwner, setHostingRequiredOwner] = useState<string | null>(null);
 	const [hostingPaywallOpen, setHostingPaywallOpen] = useState(false);
 	const [transientPanelNotice, setTransientPanelNotice] = useState<
@@ -608,6 +616,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const announcedRoomClosingRef = useRef<string | null>(null);
 	const [, setMediaRevision] = useState(0);
 	const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
+	const [hostingTimeClock] = useState(() => new RoomHostingTime());
+	const [, renderHostingTime] = useState(0);
 	const quotaMeteredMsRef = useRef(0);
 	const quotaTickAtRef = useRef<number | null>(null);
 	const quotaEndTriggeredRef = useRef(false);
@@ -618,9 +628,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const [introductionActive, setIntroductionActive] = useState(false);
 	const [messageComposerOpen, setMessageComposerOpen] = useState(false);
 	const [roomCreatePending, setRoomCreatePending] = useState(false);
+	const [roomStartPending, setRoomStartPending] = useState(false);
+	const [roomJoinAttempt, setRoomJoinAttempt] = useState<{
+		roomId: string; ownerUserId: string | null; sequence: number; pending: boolean;
+		startedAt: number; presentationExpired: boolean;
+	} | null>(null);
+	const [roomStartTime, setRoomStartTime] = useState<(PanelStartingTime & { sessionKey: string | null; roomId: string | null }) | null>(null);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
 		useState(false);
 	const [roomEndPending, setRoomEndPending] = useState(false);
+	const [roomSettlementRevision, setRoomSettlementRevision] = useState(0);
 	const [roomLeavePending, setRoomLeavePending] = useState(false);
 	const [roomActionFeedback, setRoomActionFeedback] =
 		useState<RoomActionFeedback | null>(null);
@@ -647,9 +664,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		null,
 	);
 	const [inviteTargetsLoading, setInviteTargetsLoading] = useState(false);
-	const [inviteSendingTarget, setInviteSendingTarget] = useState<string | null>(
-		null,
+	const [inviteSendingTargets, setInviteSendingTargets] = useState<
+		ReadonlyMap<string, readonly string[]>
+	>(() => new Map());
+	const inviteSendLocksRef = useRef(
+		new Map<string, { id: string; recipients: string[] }>(),
 	);
+	const [inviteFailedTargets, setInviteFailedTargets] = useState<
+		ReadonlySet<string>
+	>(() => new Set());
+	const inviteTargetsRequestEpochRef = useRef(0);
 	const [inviteNotice, setInviteNotice] = useState<InvitePanelNotice | null>(
 		null,
 	);
@@ -801,29 +825,71 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const interfacePreferences = useInterfacePreferences();
 	const roomJoinDefaults = useRoomJoinDefaults(accountUser?.id ?? null);
 	const [quotaExhaustion, setQuotaExhaustion] = useState<QuotaExhaustion | null>(null);
+	const [free20ClosedNotice, setFree20ClosedNotice] = useState<{
+		ownerUserId: string; loginKey: string; roomId: string; resetAt: number; expiresAt: number; monotonic: number; wall: number;
+	} | null>(null);
+	const hostingTimeSessionKey = authAuthenticated ? roomAuthSessionKeyRef.current : null;
+	// A changed cached tier is only a revalidation signal, never display authority.
+	const hostingTimeCredentialKey = authAuthenticated ? JSON.stringify([authRevision, authAccessToken, authSessionKey, accountUser?.plan]) : null;
+	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
+	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
+	const initialRoomTarget = getRoomIdFromHash() ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
+	const accountHostingTime = useAccountHostingStatus({
+		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
+		sessionKey: hostingTimeSessionKey,
+		credentialKey: hostingTimeCredentialKey,
+		guestRoom: !participants.some(p => p.id === accountUser?.id && p.role === "host") && Boolean(
+			roomId || roomJoinAttempt?.pending || (!roomCreatePending && !roomStartPending && !roomActionMessage && (
+				initialRoomTarget || (authAuthenticated && roomSessionLoadedForUserId !== participant?.id)
+			))
+		),
+		// Suppressed hosting reads also cover idle session discovery and our own
+		// pending creation. Only an actual room entry needs the guest plan reader.
+		guestPlanEnabled: !roomCreatePending && !roomStartPending && Boolean(
+			roomId || roomJoinAttempt?.pending || (!roomActionMessage && initialRoomTarget)
+		),
+		// Opening/closing the panel is presentation, not a new data session.
+		// Prefetch for the active player; account seconds never supply live time.
+		enabled: adapterActive || panelOpen || introductionActive || roomId !== null,
+		visible: panelOpen || introductionActive,
+		roomId,
+		settlementRevision: roomSettlementRevision,
+		exhaustion: quotaExhaustion,
+	});
+	const roomClosing = useRoomClosingPresentation({
+		loginKey: roomAuthSessionKeyRef.current, roomId, pending: roomEndPending,
+		ready: accountHostingTime.readComplete && (accountHostingTime.status !== null || accountHostingTime.mode === "legacy"),
+		failed: accountHostingTime.readComplete && accountHostingTime.error && !accountHostingTime.busy,
+	});
+	const roomLeaving = useRoomClosingPresentation({
+		loginKey: roomAuthSessionKeyRef.current, roomId, pending: roomLeavePending,
+		ready: accountHostingTime.readComplete && (accountHostingTime.status !== null || accountHostingTime.mode === "legacy"),
+		failed: accountHostingTime.readComplete && accountHostingTime.error && !accountHostingTime.busy,
+	});
+	const roomExitPending = roomClosing.closing || roomLeaving.closing;
 	const hostingDisplay = useHostingAccess({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
-		sessionKey: authSessionKey,
-		enabled: panelOpen || roomId !== null || introductionActive,
+		sessionKey: hostingTimeSessionKey,
+		credentialKey: hostingTimeCredentialKey,
+		enabled: (accountHostingTime.mode === "legacy" && (panelOpen || roomId !== null || introductionActive)) || hostingPaywallOpen,
 	});
-	const legacyQuotaEnabled = hostingDisplay.state.mode === "legacy";
-	const hostingPolicyModeRef = useRef(hostingDisplay.state.mode);
-	hostingPolicyModeRef.current = hostingDisplay.state.mode;
+	const legacyQuotaEnabled = !hostingTimeClock.observed && (hostingTimeClock.legacy ||
+		(accountHostingTime.mode === "legacy" && hostingDisplay.state.mode === "legacy"));
 	const freeQuotaNotice = useFreeQuotaNotice({
 		ownerUserId: authAuthenticated && !roomId ? accountUser?.id ?? null : null,
 		accessToken: authAccessToken,
 		sessionKey: authSessionKey,
 		visible: panelOpen && !roomId,
 		isFree: hostingDisplay.state.access?.planCode === "free",
-		policyMode: hostingDisplay.state.mode,
+		policyMode: accountHostingTime.mode === "legacy" ? hostingDisplay.state.mode : "unknown",
 		onQuotaRetired: hostingDisplay.invalidate,
 		exhaustion: quotaExhaustion,
 	});
-	const showFreeQuotaNotice = useCallback((resetAt?: string) => {
+	const showFreeQuotaNotice = useCallback((resetAt?: string, free20 = false, revealPanel = true) => {
 		const ownerUserId = authUserIdRef.current;
-		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt });
+		if (ownerUserId) setQuotaExhaustion({ ownerUserId, resetAt, free20, sessionKey: hostingTimeSessionKeyRef.current ?? undefined });
 		setAuthMessage(null);
-		setPanelOpen(true);
+		if (revealPanel) setPanelOpen(true);
 	}, []);
 	useEffect(() => {
 		if (roomId || (quotaExhaustion && quotaExhaustion.ownerUserId !== accountUser?.id)) setQuotaExhaustion(null);
@@ -1368,15 +1434,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		inviteActionIdsRef.current.clear();
 		inviteStatusRequestEpochRef.current += 1;
 		if (!roomId) {
+			hostingTimeClock.clear();
 			setPrivilegedRoomAuthority(null);
 			setRoomCapabilities(null);
-			setInvitePanelOpen(false);
-			setInviteTargets(null);
-			setInviteTargetsLoading(false);
-			setInviteSendingTarget(null);
-			clearInviteNotice();
-			setInviteTargetStatuses(new Map());
 		}
+		setInvitePanelOpen(false);
+		setInviteTargets(null);
+		setInviteTargetsLoading(false);
+		setInviteSendingTargets(new Map());
+		inviteSendLocksRef.current.clear();
+		setInviteFailedTargets(new Set());
+		inviteTargetsRequestEpochRef.current += 1;
+		clearInviteNotice();
+		setInviteTargetStatuses(new Map());
 		handledP2PSignalIdsRef.current.clear();
 		lastSeenP2PServerSeqRef.current = 0;
 		p2pSignalSequenceRef.current = 0;
@@ -1495,6 +1565,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		let cancelled = false;
 		const currentUserId = participant?.id ?? null;
+		setRoomSessionLoadError(null);
 		void migrateLegacyRoomSession(currentUserId)
 			.then((record) => {
 				if (cancelled) {
@@ -1516,9 +1587,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setExtensionContextInvalidated(
 					isExtensionContextInvalidatedError(error),
 				);
-				setAuthMessage(
-					authErrorMessage(error, "Failed to initialize Anidachi room state"),
-				);
+				setRoomSessionLoadError({ ownerUserId: currentUserId,
+					message: authErrorMessage(error, "Failed to initialize Anidachi room state") });
 			});
 		return () => {
 			cancelled = true;
@@ -1632,6 +1702,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			roomReconnectSuppressedRef.current = true;
 			roomJoinSequenceRef.current += 1;
 			roomJoinInFlightRef.current = null;
+			setRoomJoinAttempt(null);
 			if (roomReconnectTimerRef.current !== null) {
 				window.clearTimeout(roomReconnectTimerRef.current);
 				roomReconnectTimerRef.current = null;
@@ -1662,32 +1733,41 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	);
 
 	const syncAuthUserScopedState = useCallback(
-		(nextAuthUserId: string | null, reason: string) => {
+		(nextAuthUserId: string | null, reason: string, nextRoomAuthSessionKey: string | null) => {
 			const previousAuthUserId = authUserIdRef.current;
+			const previousRoomAuthSessionKey = roomAuthSessionKeyRef.current;
 			const wasInitialized = authUserIdInitializedRef.current;
 			authUserIdInitializedRef.current = true;
 
-			if (previousAuthUserId === nextAuthUserId) {
+			if (previousAuthUserId === nextAuthUserId && previousRoomAuthSessionKey === nextRoomAuthSessionKey) {
 				return;
 			}
 
 			authUserIdRef.current = nextAuthUserId;
+			roomAuthSessionKeyRef.current = nextRoomAuthSessionKey;
+			hostingTimeClock.clear();
+			roomEventOwnerRef.current = null;
 			setRoomTerminalMessage(null);
-			setHostingRequiredOwner(null);
-			setHostingPaywallOpen(false);
+			if (previousAuthUserId !== nextAuthUserId) {
+				setHostingRequiredOwner(null);
+				setHostingPaywallOpen(false);
+			}
 			authGenerationRef.current += 1;
 			inviteStatusRequestEpochRef.current += 1;
 			inviteActionIdsRef.current.clear();
 			setInviteTargets(null);
 			setInviteTargetsLoading(false);
-			setInviteSendingTarget(null);
+			setInviteSendingTargets(new Map());
+			inviteSendLocksRef.current.clear();
+			setInviteFailedTargets(new Set());
+			inviteTargetsRequestEpochRef.current += 1;
 			setInviteTargetStatuses(new Map());
 			clearInviteNotice();
 			if (!wasInitialized || previousAuthUserId === null) {
 				return;
 			}
 
-			logDebug("identity", "auth user changed; clearing local room session", {
+			logDebug("identity", "auth login changed; clearing local room session", {
 				reason,
 				previousAuthUserId,
 				nextAuthUserId,
@@ -1702,7 +1782,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const refreshRoomActionIdentity = useCallback(async (reason: string) => {
 		const result = await createCurrentParticipant({ requireVerified: true });
 		setRoomTerminalMessage(null);
-		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+		syncAuthUserScopedState(result.tokens?.user.id ?? null, reason, roomAuthSessionKey(result.tokens));
 		authSessionKeyRef.current = result.tokens?.refreshToken ?? null;
 		authAccessTokenRef.current = result.tokens?.accessToken ?? null;
 		participantRef.current = result.participant;
@@ -2238,6 +2318,59 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	]);
 	// Worker snapshots own accumulated room usage. The local interval only keeps
 	// the display moving between snapshots while host and guest are both live.
+	const sendHostingTimeRecovery = useCallback((event: ClientEvent) => clientRef.current.send(event), []);
+	const liveHostingTime = useRoomHostingTime(hostingTimeClock, Boolean(roomId && isConnected && roomSnapshotReady), sendHostingTimeRecovery);
+	const lastRoomAccountAccess = useRef<{ scope: string; kind: "daily_free" | "confirmed_unlimited" } | null>(null);
+	useEffect(() => {
+		if (!roomId || !isHost) { lastRoomAccountAccess.current = null; return; }
+		const snapshot = liveHostingTime?.snapshot;
+		if (!snapshot || snapshot.access.kind === "unknown") return;
+		const scope = JSON.stringify([hostingTimeSessionKey, snapshot.ownerUserId, snapshot.roomId, snapshot.roomGeneration]);
+		const previous = lastRoomAccountAccess.current;
+		lastRoomAccountAccess.current = { scope, kind: snapshot.access.kind };
+		const previousKind = previous?.scope === scope ? previous.kind : accountHostingTime.status?.access.kind ?? (
+			accountHostingTime.presentationPlanCode === null ? null : accountHostingTime.presentationPlanCode === "free" ? "daily_free" : "confirmed_unlimited"
+		);
+		// The live owner grant can change after purchase/expiry without a token
+		// change. Read the account's actual tier; never infer Plus/Pro from room caps.
+		// One read per accepted access transition, never one per timer snapshot.
+		if (previousKind && previousKind !== snapshot.access.kind) accountHostingTime.reconcile();
+	}, [roomId, isHost, hostingTimeSessionKey, liveHostingTime?.snapshot.ownerUserId, liveHostingTime?.snapshot.roomId,
+		liveHostingTime?.snapshot.roomGeneration, liveHostingTime?.snapshot.access.kind,
+		accountHostingTime.status?.access.kind, accountHostingTime.presentationPlanCode, accountHostingTime.reconcile]);
+	useEffect(() => {
+		// The snapshot timeout belongs to the admitted room. Identity refresh and
+		// HTTP creation can take longer; they must not consume its recovery window.
+		if (!roomStartPending || roomCreatePending || !roomId) return;
+		// Start the display cap and recovery timeout together. Otherwise the old
+		// digits can expire a frame before the neutral cancellation action arrives.
+		const expiresAt = performance.now() + ROOM_START_PRESENTATION_TIMEOUT_MS;
+		setRoomStartTime(current => current?.roomId === roomId
+			? { ...current, expiresAt: Math.min(current.expiresAt, expiresAt) } : current);
+		const timeout = setTimeout(() => setRoomStartPending(false), ROOM_START_PRESENTATION_TIMEOUT_MS);
+		return () => clearTimeout(timeout);
+	}, [roomStartPending, roomCreatePending, roomId]);
+	useEffect(() => {
+		if (!roomJoinAttempt) return;
+		const sequence = roomJoinAttempt.sequence;
+		const timeout = setTimeout(() => setRoomJoinAttempt(current => current?.sequence === sequence
+			? { ...current, presentationExpired: true } : current),
+			Math.max(0, roomJoinAttempt.startedAt + ROOM_START_PRESENTATION_TIMEOUT_MS - performance.now()));
+		return () => clearTimeout(timeout);
+	}, [roomJoinAttempt?.sequence]);
+	useEffect(() => {
+		if ((!roomCreatePending && !roomId) || (isConnected && roomSnapshotReady) ||
+			(!roomCreatePending && (status === "closed" || status === "error"))) setRoomStartPending(false);
+		if (!roomCreatePending && (!roomId || status === "closed" || status === "error")) setRoomStartTime(null);
+	}, [roomCreatePending, roomId, isConnected, roomSnapshotReady, status]);
+	const readFreshHostingTime = useCallback(() => { hostingTimeClock.checkContinuity(); return hostingTimeClock.read(); }, [hostingTimeClock]);
+	const free20Warning = useFree20Warning({
+		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
+		sessionKey: roomAuthSessionKeyRef.current, credentialRevision: authRevision,
+		isHost, connected: Boolean(isConnected && roomSnapshotReady), roomId,
+		roomGeneration, sourceGeneration, connectionGeneration: connectionGenerationRef.current,
+		reading: liveHostingTime, readFresh: readFreshHostingTime,
+	});
 	const quotaMeteringActive =
 		legacyQuotaEnabled && isConnected && isHost && roomQuota !== null &&
     (versionedMedia ? authoritativeQuota?.quota.metering === true : participantCount > 1);
@@ -2297,6 +2430,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				connectionGenerationRef.current += 1;
 			}
 			if (nextStatus !== "connected") selfSeatDefaultsRef.current = null;
+			if (nextStatus !== "connected" && previousStatus === "connected") setRoomStartTime(null);
+			if (nextStatus !== "connected") hostingTimeClock.beginTransport();
 			statusRef.current = nextStatus;
 			setStatus(nextStatus);
 			if (nextStatus === "connected") {
@@ -3424,7 +3559,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	// free-quota expiry, so the overlay settles on a clear message instead of
 	// jittering between connect attempts.
 	const terminateRoomSession = useCallback(
-		(message: string, feedback?: RoomActionFeedback) => {
+		(message: string, feedback?: RoomActionFeedback, revealPanel = true) => {
 			ghostCamSession.stop();
 			roomReconnectSuppressedRef.current = true;
 			if (roomReconnectTimerRef.current !== null) {
@@ -3452,7 +3587,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setRoomTerminalMessage(message || null);
 			if (feedback) showRoomActionFeedback(feedback);
 			announcedRoomClosingRef.current = null;
-			setPanelOpen(true);
+			if (revealPanel) setPanelOpen(true);
 		},
 		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop, showRoomActionFeedback],
 	);
@@ -3467,6 +3602,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			});
 
 			switch (event.type) {
+				case "HOSTING_TIME_LEGACY": {
+					if (hostingTimeClock.acceptLegacy(event)) renderHostingTime(n => n + 1);
+					return;
+				}
+				case "HOSTING_TIME": {
+					hostingTimeClock.checkContinuity();
+					if (document.visibilityState === "hidden") hostingTimeClock.suspend({ preserveDisplay: true });
+					if (hostingTimeClock.accept(event)) setRoomStartTime(null);
+					renderHostingTime(n => n + 1);
+					return;
+				}
 				case "MEDIA_SEAT_RESULT":
 				case "ROOM_MEDIA_SNAPSHOT":
 				case "MEDIA_INTENT_ACK":
@@ -3498,12 +3644,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				}
 				case "ROOM_ENDED": {
 					if (event.roomId !== roomIdRef.current) return;
-					if (event.reason === "quota_exhausted" && hostingPolicyModeRef.current === "legacy") {
+					if (event.reason === "host_ended" && isCurrentHost()) roomClosing.begin();
+					if (event.reason === "quota_exhausted") {
 						if (isCurrentHost()) {
 							const ended = new Date(event.endedAt);
 							const resetAt = new Date(Date.UTC(ended.getUTCFullYear(), ended.getUTCMonth(), ended.getUTCDate() + 1)).toISOString();
-							showFreeQuotaNotice(resetAt);
-							terminateRoomSession("");
+							const free20 = hostingTimeClock.observed;
+							const ownerUserId = authUserIdRef.current, loginKey = roomAuthSessionKeyRef.current;
+							if (free20 && ownerUserId && loginKey) setFree20ClosedNotice({
+								ownerUserId, loginKey, roomId: event.roomId, resetAt: Date.parse(resetAt),
+								monotonic: performance.now(), wall: Date.now(),
+								expiresAt: performance.now() + Math.max(0, Date.parse(resetAt) - event.endedAt),
+							});
+							showFreeQuotaNotice(resetAt, free20, !free20);
+							terminateRoomSession("", undefined, !free20);
 						} else {
 							terminateRoomSession("The host's Free time is used up. You can join another room or create your own.");
 						}
@@ -3551,6 +3705,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							toRoomGeneration: event.roomGeneration,
 							toSourceGeneration: event.sourceGeneration,
 						});
+						setRoomStartTime(null);
 					}
           if (roomGenerationRef.current > 0 && roomGenerationRef.current !== event.roomGeneration) {
             authoritativeQuotaRef.current = null;
@@ -3582,6 +3737,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					setSourceGeneration(event.sourceGeneration);
 					setRoomSourceProvider(snapshotProvider);
 					setParticipants(event.participants);
+					const timeSession = storedRoomSessionRef.current;
+					const localTimeParticipant = event.participants.find(p => p.id === timeSession?.ownerUserId);
+					const timeHost = event.participants.find(p => p.role === "host");
+					if (timeSession && localTimeParticipant?.participantSessionId === timeSession.participantSessionId && timeHost) {
+						hostingTimeClock.bind({ ownerUserId: timeHost.id, roomId: event.roomId, roomGeneration: event.roomGeneration });
+					} else hostingTimeClock.beginTransport();
           if (event.quota) {
             const previous = authoritativeQuotaRef.current;
             const next = acceptAuthoritativeQuota(previous, event.quota, event.serverSeq);
@@ -3658,6 +3819,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							source: event.source,
 							previousSource: event.previousSource,
 						});
+						setRoomStartTime(null);
 					}
 					roomGenerationRef.current = event.roomGeneration;
 					sourceGenerationRef.current = event.sourceGeneration;
@@ -3895,9 +4057,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			const sameRoomReconnect = roomIdRef.current === nextRoomId;
       const priorSession = storedRoomSessionRef.current;
       if (!priorSession || !roomSessionIdentityMatches(priorSession, nextStoredRoomSession)) {
+        hostingTimeClock.clear();
         authoritativeQuotaRef.current = null;
         setAuthoritativeQuota(null);
       }
+      hostingTimeClock.beginTransport();
       const eventOwner = {};
       roomEventOwnerRef.current = eventOwner;
 			if (!sameRoomReconnect) {
@@ -3937,6 +4101,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			storedRoomSessionRef.current = nextStoredRoomSession;
 			setStoredRoomSession(nextStoredRoomSession);
 			setRoomSessionLoadedForUserId(activeParticipant.id);
+			setRoomSessionLoadError(null);
 			roomReconnectSuppressedRef.current = false;
 			roomIdRef.current = nextRoomId;
 			setRoomId(nextRoomId);
@@ -3952,6 +4117,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				fingerprint: adapter.getFingerprint(),
 				video: videoDebugSnapshot(adapter.video),
 			});
+			const timeAuthSessionKey = roomAuthSessionKeyRef.current;
 			clientRef.current.connect({
 				...(admissionHandoff ? { admissionHandoff } : {}),
 				lastSeenP2PServerSeq: sameRoomReconnect
@@ -3968,6 +4134,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           if (roomEventOwnerRef.current !== eventOwner || !current || !roomSessionIdentityMatches(current, nextStoredRoomSession) ||
               roomIdRef.current !== nextRoomId || participantRef.current?.id !== activeParticipant.id ||
               ("roomId" in event && event.roomId !== nextRoomId)) return;
+          if (event.type === "HOSTING_TIME" && roomAuthSessionKeyRef.current !== timeAuthSessionKey) return;
           handleServerEventRef.current(event);
         },
 				onStatus: setRoomStatus,
@@ -4022,6 +4189,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 			const joinSequence = roomJoinSequenceRef.current + 1;
 			roomJoinSequenceRef.current = joinSequence;
+			setRoomJoinAttempt({ roomId: nextRoomId, ownerUserId: participantRef.current?.id ?? null, sequence: joinSequence, pending: true,
+				startedAt: performance.now(), presentationExpired: false });
 			logDebug("overlay.room", "join started", {
 				reason,
 				roomId: nextRoomId,
@@ -4130,6 +4299,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			} finally {
 				if (roomJoinInFlightRef.current?.sequence === joinSequence) {
 					roomJoinInFlightRef.current = null;
+					setRoomJoinAttempt(current => current?.sequence === joinSequence ? { ...current, pending: false } : current);
 				}
 			}
 		},
@@ -4143,6 +4313,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const cancelPendingRoomJoin = useCallback(() => {
 		roomJoinSequenceRef.current += 1;
 		roomJoinInFlightRef.current = null;
+		setRoomJoinAttempt(null);
 	}, []);
 
 	const clearRoomReconnectTimer = useCallback(() => {
@@ -4253,8 +4424,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 								roomId: reconnectRoomId,
 								resetAt: error.resetAt,
 							});
-							showFreeQuotaNotice(error.resetAt);
-							terminateRoomSession("");
+							// Connect reports the room host's budget, not the caller's.
+							// Only a verified host may latch personal exhaustion here.
+							if (isCurrentHost()) {
+								showFreeQuotaNotice(error.resetAt);
+								terminateRoomSession("");
+							} else {
+								terminateRoomSession(roomJoinUnavailableMessage(error));
+								accountHostingTime.refresh();
+							}
 							return;
 						}
 
@@ -4289,8 +4467,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}, delayMs);
 		},
 		[
+			accountHostingTime.refresh,
 			connectToExistingWebsiteRoom,
+			isCurrentHost,
 			showActiveRoomConflict,
+			showFreeQuotaNotice,
 			terminateRoomSession,
 		],
 	);
@@ -4307,6 +4488,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 
 		function handleVisibilityChange(): void {
+			if (document.visibilityState === "hidden") setRoomStartTime(null);
 			if (document.visibilityState === "visible") {
 				scheduleRoomReconnect("visible");
 			}
@@ -4318,6 +4500,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		// browser to tear the socket down. A real navigation discards the page; a
 		// bfcache freeze resumes via pageshow/visibility below.
 		function handlePageHide(): void {
+			setRoomStartTime(null);
 			if (roomIdRef.current) {
 				clientRef.current.close();
 			}
@@ -4437,7 +4620,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			reconnectActiveRoom: boolean,
 		) => {
 			const activeRoomId = roomIdRef.current;
-			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason);
+			syncAuthUserScopedState(result.tokens?.user.id ?? null, reason, roomAuthSessionKey(result.tokens));
 			if (authSessionKeyRef.current !== (result.tokens?.refreshToken ?? null)) {
 				setRoomTerminalMessage(null);
 			}
@@ -4517,13 +4700,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 		const unwatch = storage.watch(AUTH_TOKENS_KEY, (nextValue, previousValue) => {
 			invalidateWatchHistoryOnAuthStorageChange(watchHistoryControllerRef.current, nextValue, previousValue);
+			// Retire old room callbacks synchronously. A rapid logout/login can make
+			// the async identity refresh skip the intermediate signed-out result.
+			const tokens = normalizeExtensionAuthTokens(nextValue);
+			syncAuthUserScopedState(tokens?.user.id ?? null, "auth-storage", roomAuthSessionKey(tokens));
 			refreshIdentityFromStorage("auth-storage");
 		});
 		return () => {
 			disposed = true;
 			unwatch();
 		};
-	}, []);
+	}, [syncAuthUserScopedState]);
 
 	useEffect(() => {
 		if (!panelOpen || !identityLoaded) {
@@ -4656,6 +4843,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				if (authSessionKeyRef.current !== refreshed.sessionKey) return null;
 				if (isHostingSubscriptionRequiredError(error)) {
 					hostingDisplay.invalidate();
+					accountHostingTime.invalidate();
 					setHostingRequiredOwner(activeParticipant.id);
 					setHostingPaywallOpen(true);
 					setPanelOpen(true);
@@ -4674,6 +4862,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			if (roomIdRef.current) {
 				return null;
 			}
+			setRoomStartTime(current => current?.sessionKey === roomAuthSessionKeyRef.current ? { ...current, roomId: created.roomId } : null);
 
 			const nextRoomToken = created.roomToken;
 			const nextShareableLink =
@@ -4816,7 +5005,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					});
 					clearStoredRoomSession();
 					clearRoomHash();
-					showFreeQuotaNotice(error.resetAt);
+					releaseRoomTabLock();
+					setAuthMessage(null);
+					setRoomTerminalMessage(roomJoinUnavailableMessage(error));
+					// Admission has not established our role. Re-read our account
+					// instead of assigning the room host's exhausted quota to us.
+					accountHostingTime.refresh();
 					setPanelOpen(true);
 					return;
 				}
@@ -4845,9 +5039,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setAuthMessage(message);
 				setPanelOpen(true);
 			});
-			setPanelOpen(shouldOpenPanelForInitialRoom(hashRoomId, persistedRoomId));
+			// Restoring a room may re-enter this effect while admission is pending.
+			// Never close controls the user opened during that handoff.
+			if (shouldOpenPanelForInitialRoom(hashRoomId, persistedRoomId)) setPanelOpen(true);
 		}
 	}, [
+		accountHostingTime.refresh,
 		clearStoredRoomSession,
 		connectToExistingWebsiteRoom,
 		identityLoaded,
@@ -4880,15 +5077,20 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 
 		clearRoomActionFeedback();
+		const capturedAt = performance.now();
+		setRoomStartTime(accountHostingTime.remainingSeconds !== null && accountHostingTime.displayExpiresAt !== null ? {
+			seconds: accountHostingTime.remainingSeconds, capturedAt, wall: Date.now(),
+			expiresAt: accountHostingTime.displayExpiresAt,
+			sessionKey: roomAuthSessionKeyRef.current, roomId: null,
+		} : null);
 		setRoomCreatePending(true);
+		setRoomStartPending(true);
 		setPanelOpen(true);
 		setAuthMessage(null);
 		try {
 			await waitForOverlayPaint();
 			const created = await createAndConnectRoom("manual");
-			if (created) {
-				showRoomActionFeedback("room-created");
-			}
+			if (!created) setRoomStartPending(false);
 		} catch (error) {
 			if (showActiveRoomConflict(error)) {
 				logDebug("overlay.room", "create found another active room");
@@ -4923,6 +5125,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		clearRoomActionFeedback();
 		clearRoomEndConfirmation();
 		setRoomEndPending(true);
+		roomClosing.begin();
+		const endingLogin = roomAuthSessionKeyRef.current;
 		try {
 			const activeRoomId = roomIdRef.current;
 			if (!activeRoomId || !isHost) {
@@ -4934,6 +5138,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				"end-room",
 				privilegedRoomContext,
 				() => {
+					// ROOM_ENDED can already have returned this panel to idle while
+					// the end request was still settling. Its successful response is
+					// the point to replace that early read, never a newer login/room.
+					if (roomAuthSessionKeyRef.current !== endingLogin ||
+						(roomIdRef.current !== null && roomIdRef.current !== activeRoomId)) return;
+					setRoomSettlementRevision(revision => revision + 1);
 					roomReconnectSuppressedRef.current = true;
 					clearRoomReconnectTimer();
 					clientRef.current.close();
@@ -4966,6 +5176,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setAuthMessage(message);
 		} finally {
 			setRoomEndPending(false);
+			if (roomIdRef.current !== null && roomAuthSessionKeyRef.current === endingLogin) roomClosing.cancel();
 		}
 	};
 
@@ -5023,6 +5234,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 
 			let departureApplied = false;
+			roomLeaving.begin();
 			const outcome = await confirmExplicitRoomDeparture({
 				roomSession: departingSession,
 				cancelPendingJoin: cancelPendingRoomJoin,
@@ -5068,6 +5280,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			}
 		} finally {
 			setRoomLeavePending(false);
+			if (roomIdRef.current !== null) roomLeaving.cancel();
 		}
 	};
 
@@ -5078,7 +5291,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const copyInvite = async () => {
 		if (!roomId) {
 			logDebug("overlay.invite", "copy skipped without room");
-			return;
+			return false;
 		}
 
 		const invite =
@@ -5094,17 +5307,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			fallbackCopy,
 		);
 		if (!copied) {
-			setAuthMessage("Could not copy the invite link.");
 			logDebug("overlay.invite", "copy failed", { roomId });
-			return;
+			return false;
 		}
 
-		showRoomActionFeedback("invite-copied");
 		logDebug("overlay.invite", "copied", { roomId, invite });
+		return true;
 	};
 
 	const loadInviteTargetsForRoom = useCallback(async () => {
 		const activeRoomId = roomIdRef.current;
+		const targetsEpoch = ++inviteTargetsRequestEpochRef.current;
 		setInviteTargetsLoading(true);
 		clearInviteNotice();
 		if (!activeRoomId) {
@@ -5124,6 +5337,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		try {
 			const refreshed = await refreshRoomActionIdentity("invite-targets");
 			const { accessToken, accountGeneration, ownerUserId } = refreshed;
+			if (!isCurrentAccount() || roomIdRef.current !== activeRoomId) return;
 			requestOwnerUserId = ownerUserId;
 			requestAccountGeneration = accountGeneration;
 			const isCurrent = () =>
@@ -5145,7 +5359,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					.catch((error: unknown) => ({ ok: false as const, error })),
 			]);
 			if (!isCurrent()) return;
-			setInviteTargets(targets);
+			if (inviteTargetsRequestEpochRef.current === targetsEpoch) setInviteTargets(targets);
 			if (
 				inviteResult.ok &&
 				isCurrent() &&
@@ -5176,12 +5390,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				groupCount: targets.groups.length,
 			});
 		} catch (error) {
-			if (!isCurrentAccount() || roomIdRef.current !== activeRoomId) return;
+			if (!isCurrentAccount() || roomIdRef.current !== activeRoomId || inviteTargetsRequestEpochRef.current !== targetsEpoch) return;
 			const message = authErrorMessage(error, "Failed to load invite targets");
 			showInviteNotice(message, "error");
 			logDebug("overlay.invite", "targets failed", { message });
 		} finally {
-			if (isCurrentAccount() && roomIdRef.current === activeRoomId) {
+			if (isCurrentAccount() && roomIdRef.current === activeRoomId && inviteTargetsRequestEpochRef.current === targetsEpoch) {
 				setInviteTargetsLoading(false);
 			}
 		}
@@ -5191,18 +5405,18 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		const activeRoomId = roomIdRef.current;
 		if (!activeRoomId) return;
 		const statusRequestEpoch = ++inviteStatusRequestEpochRef.current;
-		const refreshed = await refreshRoomActionIdentity(
-			"invite-status-membership-change",
-		);
-		const { accessToken, accountGeneration, ownerUserId } = refreshed;
-		const isCurrent = () =>
-			ownerUserId !== null &&
-			authUserIdRef.current === ownerUserId &&
-			authGenerationRef.current === accountGeneration &&
-			roomIdRef.current === activeRoomId;
-		if (!accessToken || !isCurrent()) return;
-
 		try {
+			const refreshed = await refreshRoomActionIdentity(
+				"invite-status-membership-change",
+			);
+			const { accessToken, accountGeneration, ownerUserId } = refreshed;
+			const isCurrent = () =>
+				ownerUserId !== null &&
+				authUserIdRef.current === ownerUserId &&
+				authGenerationRef.current === accountGeneration &&
+				roomIdRef.current === activeRoomId;
+			if (!accessToken || !isCurrent()) return;
+
 			const invites = await listRoomInvites(accessToken, activeRoomId);
 			if (
 				!isCurrent() ||
@@ -5212,7 +5426,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			setInviteTargetStatuses(
 				roomInviteTargetStatuses(invites.sent, activeRoomId),
 			);
-		logDebug("overlay.invite", "status refreshed after membership changed", {
+			logDebug("overlay.invite", "status refreshed after membership changed", {
 				roomId: activeRoomId,
 			});
 		} catch (error) {
@@ -5230,8 +5444,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 
 		setInvitePanelOpen(true);
-		void loadInviteTargetsForRoom();
-	}, [invitePanelOpen, loadInviteTargetsForRoom]);
+	}, [invitePanelOpen]);
 
 	useEffect(() => {
 		const previous = inviteStatusMembershipRef.current;
@@ -5249,7 +5462,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		if (!invitePanelOpen) return;
 		inviteStatusMembershipRef.current = current;
 
-		if (!isHost || !roomId || current.userIdentity === previous.userIdentity) {
+		if (!roomId || current.userIdentity === previous.userIdentity) {
 			return;
 		}
 
@@ -5268,40 +5481,57 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			targetKey: string,
 			label: string,
 			input: Pick<CreateRoomInviteInput, "recipientUserIds" | "groupId">,
+			recipientIds: string[],
 		) => {
-			const activeRoomId = roomIdRef.current;
-			const refreshed = await refreshRoomActionIdentity("send-invite");
-			const { accessToken, accountGeneration, ownerUserId } = refreshed;
-			const isCurrent = () =>
-				ownerUserId !== null &&
-				authUserIdRef.current === ownerUserId &&
-				authGenerationRef.current === accountGeneration &&
-				roomIdRef.current === activeRoomId;
-			if (!activeRoomId || !accessToken) {
-				if (roomIdRef.current === activeRoomId && authGenerationRef.current === accountGeneration) showInviteNotice(
-					"Create a room and sign in before inviting friends.",
-					"error",
-				);
+			if (!roomIdRef.current || !inviteMembershipReady || !recipientIds.length)
 				return;
-			}
-			if (!isCurrent()) return;
-
-			setInviteSendingTarget(targetKey);
+			const occupied = new Set(
+				[...inviteSendLocksRef.current.values()].flatMap(
+					(lock) => lock.recipients,
+				),
+			);
+			if (
+				inviteSendLocksRef.current.has(targetKey) ||
+				recipientIds.some((id) => occupied.has(id))
+			)
+				return;
+			const lock = { id: crypto.randomUUID(), recipients: recipientIds };
+			inviteSendLocksRef.current.set(targetKey, lock);
+			setInviteSendingTargets((previous) =>
+				new Map(previous).set(targetKey, recipientIds),
+			);
+			setInviteFailedTargets((previous) => {
+				const next = new Set(previous);
+				next.delete(targetKey);
+				return next;
+			});
 			clearInviteNotice();
-			const requestKey = `${ownerUserId}:${activeRoomId}:${targetKey}`;
-			const clientActionId =
-				inviteActionIdsRef.current.get(requestKey) ?? crypto.randomUUID();
-			inviteActionIdsRef.current.set(requestKey, clientActionId);
+			const activeRoomId = roomIdRef.current;
+			const initialOwner = authUserIdRef.current;
+			const initialGeneration = authGenerationRef.current;
+			const isCurrent = () =>
+				authUserIdRef.current === initialOwner &&
+				authGenerationRef.current === initialGeneration &&
+				roomIdRef.current === activeRoomId &&
+				inviteSendLocksRef.current.get(targetKey) === lock;
 			try {
+				const { accessToken, ownerUserId } =
+					await refreshRoomActionIdentity("send-invite");
+				if (!isCurrent()) return;
+				if (!accessToken || !ownerUserId)
+					throw new Error("Sign in to invite friends.");
+				const requestKey = `${ownerUserId}:${activeRoomId}:${targetKey}`;
+				const clientActionId =
+					inviteActionIdsRef.current.get(requestKey) ?? crypto.randomUUID();
+				inviteActionIdsRef.current.set(requestKey, clientActionId);
 				const result = await createRoomInvite(accessToken, {
 					roomId: activeRoomId,
 					clientActionId,
 					...input,
 				});
 				if (!isCurrent()) return;
-				if (inviteActionIdsRef.current.get(requestKey) === clientActionId) {
+				if (inviteActionIdsRef.current.get(requestKey) === clientActionId)
 					inviteActionIdsRef.current.delete(requestKey);
-				}
 				inviteStatusRequestEpochRef.current += 1;
 				setInviteTargetStatuses((current) =>
 					mergeRoomInviteTargetStatus(current, targetKey, result.invite),
@@ -5313,49 +5543,141 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						: `An invite for ${label} already exists in this room.`,
 					result.created ? "success" : "info",
 				);
-				logDebug("overlay.invite", "sent", {
-					roomId: activeRoomId,
-					targetKey,
-					label,
-					created: result.created,
-				});
 			} catch (error) {
 				if (!isCurrent()) return;
-				const message = authErrorMessage(error, "Failed to send invite");
-				showInviteNotice(message, "error");
-				logDebug("overlay.invite", "send failed", {
-					roomId: activeRoomId,
-					targetKey,
-					message,
-				});
+				setInviteFailedTargets((previous) => new Set(previous).add(targetKey));
+				showInviteNotice(
+					authErrorMessage(error, "Could not send invitation. Try again."),
+					"error",
+				);
 			} finally {
-				if (isCurrent()) {
-					setInviteSendingTarget(null);
+				if (inviteSendLocksRef.current.get(targetKey) === lock) {
+					inviteSendLocksRef.current.delete(targetKey);
+					setInviteSendingTargets((previous) => {
+						const next = new Map(previous);
+						next.delete(targetKey);
+						return next;
+					});
 				}
 			}
 		},
-		[clearInviteNotice, refreshInviteStatusesForRoom, refreshRoomActionIdentity, showInviteNotice],
+		[
+			clearInviteNotice,
+			inviteMembershipReady,
+			refreshInviteStatusesForRoom,
+			refreshRoomActionIdentity,
+			showInviteNotice,
+		],
 	);
 
 	const sendDirectInvite = useCallback(
-		(friend: FriendListItem) =>
-			sendInviteToTarget(
-				`friend:${friend.user.userId}`,
-				friend.user.displayName,
-				{
-					recipientUserIds: [friend.user.userId],
-				},
-			),
-		[sendInviteToTarget],
+		(friend: FriendListItem) => {
+			const ids = roomInviteEligibleRecipientIds(
+				[friend.user.userId],
+				inviteTargetStatuses,
+				new Set(participants.map((person) => person.id)),
+			);
+			if (ids.length)
+				void sendInviteToTarget(
+					`friend:${friend.user.userId}`,
+					friend.user.displayName,
+					{ recipientUserIds: ids },
+					ids,
+				);
+		},
+		[inviteTargetStatuses, participants, sendInviteToTarget],
+	);
+	const sendGroupInvite = useCallback(
+		(group: FriendGroup) => {
+			const ids = roomInviteEligibleRecipientIds(
+				group.members.map((member) => member.user.userId),
+				inviteTargetStatuses,
+				new Set(participants.map((person) => person.id)),
+			);
+			if (ids.length)
+				void sendInviteToTarget(
+					`group:${group.id}`,
+					group.name,
+					{ groupId: group.id },
+					ids,
+				);
+		},
+		[inviteTargetStatuses, participants, sendInviteToTarget],
 	);
 
-	const sendGroupInvite = useCallback(
-		(group: FriendGroup) =>
-			sendInviteToTarget(`group:${group.id}`, group.name, {
-				groupId: group.id,
-			}),
-		[sendInviteToTarget],
-	);
+	const capsuleFriendLinkScope = `${accountUser?.id ?? ""}:${authGenerationRef.current}:${roomId ?? ""}`;
+	const capsuleFriendLinkCache = useMemo(createCapsuleFriendLinkCache, [
+		capsuleFriendLinkScope,
+	]);
+
+	const createCapsuleFriendLink = useCallback(async () => {
+		const owner = authUserIdRef.current;
+		const generation = authGenerationRef.current;
+		const room = roomIdRef.current;
+		const current = () =>
+			owner !== null &&
+			authUserIdRef.current === owner &&
+			authGenerationRef.current === generation &&
+			roomIdRef.current === room;
+		const identity = await refreshRoomActionIdentity("create-friend-link");
+		if (
+			!current() ||
+			!identity.accessToken ||
+			!identity.ownerUserId ||
+			identity.ownerUserId !== owner
+		)
+			throw new Error("Account changed. Open Add friend again.");
+		const link = await createFriendInviteLink(
+			identity.accessToken,
+			identity.ownerUserId,
+		);
+		if (!current()) throw new Error("Account changed. Open Add friend again.");
+		return link;
+	}, [refreshRoomActionIdentity]);
+
+	useEffect(() => {
+		if (!invitePanelOpen || !panelOpen || !roomId || !accountUser?.id) return;
+		let disposed = false;
+		let refreshing = false;
+		const refresh = () => {
+			if (disposed || refreshing || document.visibilityState === "hidden")
+				return;
+			refreshing = true;
+			void loadInviteTargetsForRoom().finally(() => {
+				refreshing = false;
+			});
+		};
+		refresh();
+		// Only an open, visible window refreshes. No background room/inbox polling.
+		const timer = window.setInterval(refresh, 30_000);
+		window.addEventListener("focus", refresh);
+		window.addEventListener("online", refresh);
+		document.addEventListener("visibilitychange", refresh);
+		let signature: string | null = null;
+		const unsubscribe = subscribeToAccountInboxForUser(
+			accountUser.id,
+			(inbox) => {
+				const next = accountInboxSocialSignature(inbox);
+				if (next === signature) return;
+				signature = next;
+				refresh();
+			},
+		);
+		return () => {
+			disposed = true;
+			window.clearInterval(timer);
+			unsubscribe();
+			window.removeEventListener("focus", refresh);
+			window.removeEventListener("online", refresh);
+			document.removeEventListener("visibilitychange", refresh);
+		};
+	}, [
+		invitePanelOpen,
+		panelOpen,
+		roomId,
+		accountUser?.id,
+		loadInviteTargetsForRoom,
+	]);
 
 	const saveDiagnostics = async (mode: DiagnosticMode) => {
 		setDiagnosticStatus(`Saving ${mode}...`);
@@ -6017,15 +6339,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		stopMicrophonePublication: stopMicrophoneForUnmount,
 	});
 
-	const roomActionsClassName = [
-		"panel-actions",
-		roomId ? "room-active" : "room-empty",
-		roomCreatePending ? "creating" : "",
-		roomEndPending ? "ending" : "",
-		roomLeavePending ? "leaving" : "",
-	]
-		.filter(Boolean)
-		.join(" ");
 	const primaryRoomActionKind = getPrimaryRoomActionKind({
 		isHost,
 		roomExists: Boolean(roomId),
@@ -6039,7 +6352,88 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		roomExists: Boolean(roomId),
 		roomLeavePending,
 	});
-	const inviteCopied = isInviteCopiedFeedback(roomActionFeedback);
+	const free20QuotaNotice = accountHostingTime.exhausted && accountUser ? {
+		ownerUserId: accountUser.id,
+		kind: accountHostingTime.error && !accountHostingTime.busy && !accountHostingTime.status ? "unavailable" as const : "exhausted" as const,
+		remainingSeconds: accountHostingTime.resetSeconds,
+	} : null;
+	const displayedQuotaNotice = accountHostingTime.mode === "legacy" ? freeQuotaNotice.state : free20QuotaNotice;
+	const refreshDisplayedQuota = accountHostingTime.mode === "legacy" ? freeQuotaNotice.retry : accountHostingTime.refresh;
+	// Resolving an invite/restored session is not the idle hosting screen. Keep
+	// personal quota out of that handoff, including before HTTP admission starts.
+	const currentJoinAttempt = roomJoinAttempt?.ownerUserId === (participant?.id ?? null) ? roomJoinAttempt : null;
+	const joiningRoom = !roomCreatePending && !roomStartPending && !roomExitPending && (
+		(!roomId && (
+			(!identityLoaded && Boolean(initialRoomTarget)) ||
+			(authAuthenticated && (
+				(roomSessionLoadedForUserId !== participant?.id && !roomActionMessage) ||
+				Boolean(initialRoomTarget && !roomActionMessage && currentJoinAttempt?.roomId !== initialRoomTarget) ||
+				Boolean(currentJoinAttempt?.pending)
+			))
+		)) ||
+		Boolean(roomId && currentJoinAttempt?.roomId === roomId && !currentJoinAttempt.presentationExpired &&
+			!roomSnapshotReady && !participants.length && status !== "closed" && status !== "error")
+	);
+	const quotaExhausted = !joiningRoom && !roomExitPending && !roomId && (
+		accountHostingTime.mode === "legacy" ? displayedQuotaNotice?.kind === "exhausted" : accountHostingTime.exhausted
+	);
+	const panelPlan = authAuthenticated
+		? accountHostingTime.mode === "legacy" ? hostingDisplay.presentationPlanCode : accountHostingTime.presentationPlanCode
+		: null;
+	const planReadFailed = accountHostingTime.mode === "legacy" ? hostingDisplay.state.error : accountHostingTime.error;
+	// Unknown is not Free. Preserve the last confirmed same-login appearance
+	// through revalidation/expiry, without retaining seconds or granting access.
+	// Fresh account/room observations still own every numeric timer and admission.
+	const hasFreeTimePresentation = accountHostingTime.presentationPlanCode === "free";
+	const idleTimePending = authAuthenticated && accountHostingTime.mode !== "legacy" &&
+		hasFreeTimePresentation && accountHostingTime.remainingSeconds === null;
+	const closedNoticeValid = Boolean(free20ClosedNotice && authAuthenticated &&
+		free20ClosedNotice.ownerUserId === accountUser?.id && free20ClosedNotice.loginKey === roomAuthSessionKeyRef.current &&
+		!roomId && !joiningRoom && !roomCreatePending &&
+		accountHostingTime.status?.access.kind !== "confirmed_unlimited" &&
+		(accountHostingTime.status?.period.resetAt ?? 0) <= free20ClosedNotice.resetAt &&
+		performance.now() < free20ClosedNotice.expiresAt &&
+		Math.abs(Date.now() - free20ClosedNotice.wall - (performance.now() - free20ClosedNotice.monotonic)) <= 2_000);
+	useEffect(() => {
+		if (!free20ClosedNotice) return;
+		if (!closedNoticeValid) { setFree20ClosedNotice(null); return; }
+		const timer = setTimeout(() => setFree20ClosedNotice(null), Math.max(0, free20ClosedNotice.expiresAt - performance.now()));
+		const resume = () => {
+			const mono = performance.now();
+			if (mono < free20ClosedNotice.monotonic || mono >= free20ClosedNotice.expiresAt ||
+				Math.abs(Date.now() - free20ClosedNotice.wall - (mono - free20ClosedNotice.monotonic)) > 2_000) setFree20ClosedNotice(null);
+		};
+		window.addEventListener("focus", resume);
+		window.addEventListener("pageshow", resume);
+		document.addEventListener("visibilitychange", resume);
+		return () => {
+			clearTimeout(timer);
+			window.removeEventListener("focus", resume);
+			window.removeEventListener("pageshow", resume);
+			document.removeEventListener("visibilitychange", resume);
+		};
+	}, [free20ClosedNotice, closedNoticeValid]);
+	const capsuleNoticeKind = closedNoticeValid ? "closed" : free20Warning.visible ? "warning" : null;
+	const capsuleNoticeKey = capsuleNoticeKind === "closed"
+		? JSON.stringify(["closed", free20ClosedNotice!.loginKey, free20ClosedNotice!.roomId, free20ClosedNotice!.resetAt])
+		: capsuleNoticeKind === "warning" ? JSON.stringify(["warning", roomAuthSessionKeyRef.current, roomId, roomGeneration, liveHostingTime?.snapshot.period.utcDay]) : null;
+	const capsuleNotice = useCapsuleNoticePresentation({
+		noticeKey: capsuleNoticeKey, bubbleVisible: topBubbleReveal.bubbleVisible || panelOpen,
+		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
+	});
+	useEffect(() => {
+		if (!capsuleNotice.present) return;
+		const bubble = topBubbleRef.current, root = overlayRootRef.current;
+		if (!bubble || !root) return;
+		const measure = () => {
+			const width = bubble.getBoundingClientRect().width;
+			if (width > 0) root.style.setProperty("--free20-capsule-width", `${width}px`);
+		};
+		measure();
+		const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+		observer?.observe(bubble);
+		return () => { observer?.disconnect(); root.style.removeProperty("--free20-capsule-width"); };
+	}, [capsuleNotice.present]);
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6078,13 +6472,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					!identityLoaded ? undefined : authAuthenticated ? accountUser?.plan ?? "free" : null
 				}
 				hosting={hostingDisplay.state}
-				onRefreshHosting={hostingDisplay.refresh}
+				accountHostingTime={accountHostingTime}
+				onRefreshHosting={accountHostingTime.mode === "legacy" ? hostingDisplay.refresh : accountHostingTime.refresh}
 				onActiveChange={setIntroductionActive}
 			/>
 			<div
 				className={[
 					"top-bubble-reveal",
 					panelOpen ? "panel-open" : "",
+					capsuleNotice.present ? "free20-notice-present" : "",
+					capsuleNotice.revealCapsule ? "free20-notice-reveal" : "",
 					topBubbleReveal.bubbleVisible ? "bubble-visible" : "",
 					topBubbleReveal.edgeGlowVisible ? "edge-glow" : "",
 				]
@@ -6092,6 +6489,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 					.join(" ")}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
+				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
+					kind={capsuleNoticeKind} remainingSeconds={capsuleNoticeKind === "warning" ? liveHostingTime?.remainingSeconds ?? null : null}
+					open={capsuleNotice.open} onDismiss={capsuleNotice.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}
 				<button
 					aria-controls="anidachi-mini-panel"
 					aria-expanded={panelOpen}
@@ -6130,29 +6530,33 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				>
 					<div className="panel-header">
 						<div className="panel-account">
-							<span className="mini-avatar panel-account-avatar">
-								{initials(accountAvatarLabel)}
-							</span>
+							<a className="mini-avatar panel-account-avatar panel-account-link" href={new URL("/account", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer" aria-label="Open your account in a new tab" title="Open your account">
+								{identityLoaded ? initials(accountAvatarLabel) : null}
+							</a>
 							<div className="panel-account-copy">
 								<PanelAccountTitle
 									displayName={accountDisplayName}
-									plan={
-										authAuthenticated ? hostingDisplay.state.access?.planCode ?? null : null
-									}
+									plan={panelPlan}
+									loading={!identityLoaded || (authAuthenticated && panelPlan === null && !planReadFailed)}
+									loadingIdentity={!identityLoaded}
 								/>
-								{roomId && !mediaV3 ? (
+								<div className="panel-account-secondary">
+								{panelPlan === "free" && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
+								{roomId && !mediaV3 && !joiningRoom ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
 									</div>
-								) : !authAuthenticated ? (
+								) : identityLoaded && !authAuthenticated ? (
 									<div className="panel-account-helper">
 										{accountHelperText}
 									</div>
 								) : null}
+								</div>
 							</div>
 						</div>
 						<div className="panel-header-actions">
-							{!authAuthenticated ? (
+							{accountHostingTime.mode === "legacy" && quotaExhausted && displayedQuotaNotice?.kind === "exhausted" && displayedQuotaNotice.remainingSeconds !== null ? <span role="timer" aria-label="Free time used up" aria-live="off"><PanelTimeCounter seconds={0} /></span> : null}
+							{identityLoaded && !authAuthenticated ? (
 								<button
 									className="button compact panel-sign-in-button"
 									type="button"
@@ -6161,10 +6565,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 										authBusy || !identityLoaded || extensionContextInvalidated
 									}
 								>
-									{authBusy || !identityLoaded ? "Wait" : "Sign in"}
+									Sign in
 								</button>
 							) : null}
-							{roomId && currentParticipant ? (
+							{roomId && currentParticipant && !joiningRoom ? (
 								<PanelMediaControls
 									cameraEnabled={camsEnabled}
 									cameraDisabled={!liveMediaAvailable}
@@ -6196,107 +6600,32 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</p>
 					) : null}
 
-					<div className={roomActionsClassName}>
-						<button
-							className={[
-								"button",
-								"primary",
-								"panel-primary-action",
-								primaryRoomActionKind !== "create" ? "room-exit" : "",
-								roomEndConfirmationPending ? "confirming" : "",
-								roomCreatePending ||
-								roomEndPending ||
-								roomLeavePending
-									? "loading"
-									: "",
-							]
-								.filter(Boolean)
-								.join(" ")}
-							type="button"
-							onClick={
-								primaryRoomActionKind === "leave"
-									? handleLeaveRoom
-									: primaryRoomActionKind === "end"
-										? handleRequestEndRoom
-										: handleCreateRoom
-							}
-							disabled={
-								!participant ||
-								extensionContextInvalidated ||
-								roomCreatePending ||
-								roomEndPending ||
-								roomLeavePending
-							}
-						>
-							<span aria-live="polite">{primaryRoomActionLabel}</span>
-						</button>
-						{roomId ? (
-							<div
-								className="panel-action-icons"
-								role="group"
-								aria-label="Room actions"
-							>
-								<button
-									aria-label={inviteCopied ? "Invite copied" : "Copy invite"}
-									className={`panel-icon-action reveal-action${inviteCopied ? " success" : ""}`}
-									title={inviteCopied ? "Invite copied" : "Copy invite"}
-									type="button"
-									onClick={copyInvite}
-									disabled={
-										roomCreatePending || roomEndPending || roomLeavePending
-									}
-									style={{ "--action-index": 0 } as CSSProperties}
-								>
-									{inviteCopied ? <Check size={14} /> : <Copy size={14} />}
-									{inviteCopied ? (
-										<span className="sr-only" role="status">
-											Invite copied
-										</span>
-									) : null}
-								</button>
-								<button
-									aria-label={
-										invitePanelOpen
-											? "Close friends and groups"
-											: "Invite friends and groups"
-									}
-									className="panel-icon-action reveal-action"
-									title={
-										invitePanelOpen
-											? "Close friends and groups"
-											: "Invite friends and groups"
-									}
-									type="button"
-									onClick={toggleInvitePanel}
-									disabled={
-										!authAuthenticated ||
-										roomCreatePending ||
-										roomEndPending ||
-										roomLeavePending
-									}
-									style={{ "--action-index": 1 } as CSSProperties}
-								>
-									<UserPlus size={14} />
-								</button>
-								<button
-									aria-label="Sync now"
-									className="panel-icon-action reveal-action"
-									title={isHost ? "Sync now" : "Only the host can sync"}
-									type="button"
-									onClick={() => playbackSyncController.broadcastHostState()}
-									disabled={
-										!isHost ||
-										roomCreatePending ||
-										roomEndPending ||
-										roomLeavePending
-									}
-									style={{ "--action-index": 2 } as CSSProperties}
-								>
-									<RefreshCw size={14} />
-								</button>
-							</div>
-						) : null}
-					</div>
+					{quotaExhausted ? <>
+						<FreeQuotaNotice state={displayedQuotaNotice!} onRetry={refreshDisplayedQuota} compact
+							dailyFree={accountHostingTime.mode === "free20"} renewal={accountHostingTime.renewal} />
+						<div className="panel-actions room-empty"><a className="button primary panel-primary-action panel-limit-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={15} aria-hidden="true" /></a></div>
+					</> : <PanelRoomActions key={roomAuthSessionKeyRef.current ?? "anonymous"}
+						scopeKey={`${roomAuthSessionKeyRef.current}:${roomGeneration}:${sourceGeneration}:${connectionGenerationRef.current}:${isConnected}`}
+						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
+						closing={roomExitPending} closingLabel={roomLeaving.closing ? "Leaving room" : "Closing room"}
+						joining={joiningRoom}
+						connectionStalled={Boolean(roomId && !inviteMembershipReady && !roomCreatePending && !roomStartPending && !joiningRoom)}
+						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
+						idleTimeUnavailable={((hasFreeTimePresentation || accountHostingTime.mode === "legacy") && (roomClosing.unavailable || roomLeaving.unavailable)) || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
+						onRetryHosting={accountHostingTime.refresh}
+						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
+							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}
+						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}
+						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
+						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
+						remainingSeconds={roomId ? (isConnected && isHost ? (hostingTimeClock.observed ? liveHostingTime?.remainingSeconds ?? null : quotaRemainingSeconds) : null) : (accountHostingTime.mode === "legacy" ? freeQuotaNotice.availableSeconds : accountHostingTime.remainingSeconds)}
+						awaitingHostingTime={isHost && !legacyQuotaEnabled && hasFreeTimePresentation && (!liveHostingTime || liveHostingTime.snapshot.access.kind === "unknown")}
+						retainIdleTimeWhileConnecting={accountHostingTime.mode === "legacy" && !hostingTimeClock.observed}
+						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : handleCreateRoom}
+						onCopyInvite={copyInvite} onSync={() => playbackSyncController.broadcastHostState()}
+						onToggleInvite={toggleInvitePanel} inviteOpen={invitePanelOpen} inviteDisabled={!authAuthenticated}
+						syncDisabled={!isConnected || !roomSnapshotReady || extensionContextInvalidated}
+					/>}
 					{transientPanelNotice ? (
 						<div
 							aria-live="polite"
@@ -6306,10 +6635,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							<span>{transientPanelNotice}</span>
 						</div>
 					) : null}
-					{!roomId && panelOpen && hostingPaywallOpen && hostingRequiredOwner === accountUser?.id ? (
+					{!joiningRoom && !roomExitPending && !roomId && panelOpen && hostingPaywallOpen && hostingRequiredOwner === accountUser?.id ? (
 						<HostingPaywall key={`${hostingRequiredOwner}:${authGenerationRef.current}`} state={hostingDisplay.state} onRefresh={hostingDisplay.refresh} onClose={() => setHostingPaywallOpen(false)} />
 					) : null}
-					{!roomId && hostingRequiredOwner !== accountUser?.id && freeQuotaNotice.state ? <FreeQuotaNotice state={freeQuotaNotice.state} onRetry={freeQuotaNotice.retry} /> : null}
+					{!joiningRoom && !roomExitPending && !quotaExhausted && !roomId && hostingRequiredOwner !== accountUser?.id && displayedQuotaNotice ? <FreeQuotaNotice state={displayedQuotaNotice} onRetry={refreshDisplayedQuota} /> : null}
 					{roomActionMessage ? (
 						<div className="auth-notice">
 							<span>{roomActionMessage}</span>
@@ -6324,202 +6653,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							) : null}
 						</div>
 					) : null}
-					{legacyQuotaEnabled && roomQuota ? (
-						<div className="quota-note">
-							<span>Free watch-party time today</span>
-							<strong>
-								{quotaRemainingSeconds === null ? "Checking room time…" : `${formatQuotaCountdown(quotaRemainingSeconds)} left`}
-							</strong>
-						</div>
-					) : null}
-					{invitePanelOpen ? (
-						<div className="invite-panel" aria-busy={inviteTargetsLoading}>
-							<div className="invite-panel-header">
-								<div className="invite-panel-heading">
-									<strong>Friends & groups</strong>
-									<span>
-										{inviteTargets
-											? `${inviteTargets.groups.length + inviteTargets.friends.length} available`
-											: "Choose who to invite"}
-									</span>
-								</div>
-								<button
-									aria-label="Refresh friends and groups"
-									className="invite-panel-refresh"
-									disabled={inviteTargetsLoading}
-									type="button"
-									onClick={loadInviteTargetsForRoom}
-									title="Refresh friends and groups"
-								>
-									<RefreshCw size={14} />
-								</button>
-							</div>
-							{inviteNotice ? (
-								<div
-									className="invite-status-message"
-									data-tone={inviteNotice.tone}
-									role={inviteNotice.tone === "error" ? "alert" : "status"}
-									aria-live="polite"
-								>
-									<span className="invite-status-mark" aria-hidden="true">
-										{inviteNotice.tone === "success" ? "✓" : "!"}
-									</span>
-									<span>{inviteNotice.message}</span>
-								</div>
-							) : null}
-							{inviteTargetsLoading && !inviteTargets ? (
-								<div
-									className="invite-panel-loading"
-									role="status"
-									aria-label="Loading friends and groups"
-								>
-									{[0, 1, 2].map((index) => (
-										<div className="invite-target-skeleton" key={index}>
-											<span />
-											<div>
-												<i />
-												<i />
-											</div>
-											<b />
-										</div>
-									))}
-								</div>
-							) : null}
-							{inviteTargets?.groups.length ? (
-								<section className="invite-target-section">
-									<div className="invite-target-section-title">
-										<span>Groups</span>
-										<b>{inviteTargets.groups.length}</b>
-									</div>
-									{inviteTargets.groups.map((group) => {
-										const targetKey = `group:${group.id}`;
-										const targetStatus = roomInviteGroupStatus(
-											inviteTargetStatuses,
-											group.members.map((member) => member.user.userId),
-										);
-										const currentRoomUserIds = new Set(participants.map((participant) => participant.id));
-										const eligibleMemberCount = inviteMembershipReady
-											? roomInviteEligibleRecipientIds(
-												group.members.map((member) => member.user.userId),
-												inviteTargetStatuses,
-												currentRoomUserIds,
-											).length
-											: 0;
-										const statusLabel = targetStatus
-											? roomInviteTargetStatusLabel(targetStatus)
-											: null;
-										return (
-											<div className="invite-target-row" key={group.id}>
-												<div className="participant-main">
-													<span className="mini-avatar">
-														{initials(group.name)}
-													</span>
-													<span className="invite-target-copy">
-														<strong>{group.name}</strong>
-														<small>
-															{group.members.length === 0
-																? "No members"
-																: `${group.members.length} ${group.members.length === 1 ? "member" : "members"}${statusLabel ? ` · ${statusLabel.toLowerCase()}` : ""}`}
-														</small>
-													</span>
-												</div>
-												<button
-													className="button compact invite-target-action"
-													data-state={
-														targetStatus?.state ??
-														(group.members.length === 0 ? "empty" : "idle")
-													}
-													disabled={
-														inviteSendingTarget !== null ||
-														group.members.length === 0 ||
-														!inviteMembershipReady || eligibleMemberCount === 0
-													}
-													onClick={() => sendGroupInvite(group)}
-													type="button"
-												>
-													{inviteSendingTarget === targetKey
-														? "Sending…"
-														: group.members.length === 0
-															? "No members"
-													: targetStatus && eligibleMemberCount === 0
-																? roomInviteTargetStatusLabel(targetStatus)
-																: targetStatus
-															? `Invite ${eligibleMemberCount}`
-																	: "Invite"}
-												</button>
-											</div>
-										);
-									})}
-								</section>
-							) : null}
-							{inviteTargets?.friends.length ? (
-								<section className="invite-target-section">
-									<div className="invite-target-section-title">
-										<span>Friends</span>
-										<b>{inviteTargets.friends.length}</b>
-									</div>
-									{inviteTargets.friends.map((friend) => {
-										const targetKey = `friend:${friend.user.userId}`;
-										const targetStatus = inviteTargetStatuses.get(targetKey);
-										const inRoom = inviteMembershipReady && participants.some((participant) => participant.id === friend.user.userId);
-										const eligible = inviteMembershipReady && roomInviteEligibleRecipientIds(
-											[friend.user.userId], inviteTargetStatuses,
-											new Set(participants.map((participant) => participant.id)),
-										).length === 1;
-										return (
-											<div
-												className="invite-target-row"
-												key={friend.user.userId}
-											>
-												<div className="participant-main">
-													<span className="mini-avatar">
-														{initials(friend.user.displayName)}
-													</span>
-													<span className="invite-target-copy">
-														<strong>{friend.user.displayName}</strong>
-														<small>
-															{friend.user.handle
-																? `@${friend.user.handle}`
-																: "Friend"}
-														</small>
-													</span>
-												</div>
-												<button
-													className="button compact invite-target-action"
-													data-state={targetStatus?.state ?? "idle"}
-													disabled={
-														inviteSendingTarget !== null ||
-														!eligible
-													}
-													onClick={() => sendDirectInvite(friend)}
-													type="button"
-												>
-													{inviteSendingTarget === targetKey
-														? "Sending…"
-													: inRoom
-														? "In room"
-														: eligible
-															? "Invite"
-															: targetStatus
-														? roomInviteTargetStatusLabel(targetStatus)
-															: "Invite"}
-												</button>
-											</div>
-										);
-									})}
-								</section>
-							) : null}
-							{inviteTargets &&
-							!inviteTargets.friends.length &&
-							!inviteTargets.groups.length &&
-							!inviteTargetsLoading ? (
-								<div className="footnote">
-									No friends or groups yet. Copy invite still works for one-off
-									watching.
-								</div>
-							) : null}
-						</div>
-					) : null}
+
+          {roomId && authAuthenticated ? <CapsuleFriendsPanel
+            key={capsuleFriendLinkScope}
+            open={invitePanelOpen} linkCache={capsuleFriendLinkCache} targets={inviteTargets} loading={inviteTargetsLoading}
+            statuses={inviteTargetStatuses} participants={participants} membershipReady={inviteMembershipReady}
+            sending={inviteSendingTargets} failedTargets={inviteFailedTargets} notice={inviteNotice}
+            onRefresh={() => { void loadInviteTargetsForRoom(); }} onClose={() => setInvitePanelOpen(false)}
+            onSendFriend={sendDirectInvite} onSendGroup={sendGroupInvite} onCreateLink={createCapsuleFriendLink}
+          /> : null}
 
 					{currentResourceEntry ? (
 						<div className="panel-sync-card">
@@ -6541,7 +6683,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						</div>
 					) : null}
 
-					{roomId && visibleParticipants.length ? (
+					<div className="panel-people-reveal" data-visible={Boolean(!joiningRoom && roomId && (!versionedMedia || (roomSnapshotReady && mediaReady)) && visibleParticipants.length)}><div>
+					{!joiningRoom && roomId && (!versionedMedia || (roomSnapshotReady && mediaReady)) && visibleParticipants.length ? (
 						<RoomPeopleSection
 							expanded={expandedPeopleRoomId === roomId}
 							onExpandedChange={(expanded) => setExpandedPeopleRoomId(expanded ? roomId : null)}
@@ -6573,6 +6716,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 							roomPeopleCountText={roomPeopleCountText}
 						/>
 					) : null}
+					</div></div>
 
 					<div className="settings-surface">
 						<div className="section-title settings-section-title">
@@ -6919,6 +7063,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
 					{roomRailVisible ? (
 						<RoomRail
+							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
 							activeParticipantId={participant?.id}
 							getParticipantAudioPreference={getParticipantAudioPreference}
 							onParticipantAudioChange={handleParticipantAudioChange}
@@ -7349,6 +7494,9 @@ function clearRoomHash(): void {
 }
 
 function roomJoinUnavailableMessage(error: { status?: number }): string {
+  if (isQuotaExhaustedError(error)) {
+    return "The host's Free time is used up. You can join another room or create your own.";
+  }
   if (isHostingSubscriptionRequiredError(error)) {
     return "This room needs a host with Plus or Pro. You can join another paid host’s room for free.";
   }
@@ -7384,13 +7532,6 @@ function activeRoomConflictMessage(
 		return "You already have an active watch room on Crunchyroll.";
 	}
 	return "You already have an active watch room on another supported site.";
-}
-
-function formatQuotaCountdown(remainingSeconds: number | null): string {
-	const total = Math.max(0, Math.floor(remainingSeconds ?? 0));
-	const minutes = Math.floor(total / 60);
-	const seconds = total % 60;
-	return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function shouldOpenPanelForInitialRoom(

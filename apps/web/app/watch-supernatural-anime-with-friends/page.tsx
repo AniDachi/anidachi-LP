@@ -97,7 +97,7 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
           Supernatural anime thrives on shared reactions — power reveals,
           world-building drops, and unexpected twists hit harder with an
           audience. Install AniDachi, open any Crunchyroll series below, and
-          let a Plus, Pro, or trial host create a room. Free friends can
+          let a Free, Plus, or Pro host create a room. Free friends can
           join to share every moment live.
         </strong>
       </p>
@@ -165,7 +165,7 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
-          With active Plus, Pro, or trial access, create the room and send its invite. Free friends can join.
+          With active Free, Plus, or Pro access, create the room and send its invite. Free friends can join.
         </li>
         <li>
           <span className="font-medium text-foreground">Establish power-system rules.</span>{" "}

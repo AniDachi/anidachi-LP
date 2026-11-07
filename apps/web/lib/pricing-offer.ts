@@ -7,6 +7,7 @@ export type PricingOffer = {
 	trialOfferRevision?: string;
 	ownerUserId: string | null;
 	paidHostingActive: boolean;
+	hostingModel?: "legacy" | "paid_hosting" | "daily_free20";
 	/** Missing in older responses means the trial offer is unconfirmed. */
 	trialAvailable?: boolean;
 	validForMs: number;

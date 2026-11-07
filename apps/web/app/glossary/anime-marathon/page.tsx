@@ -56,7 +56,7 @@ const faq = [
   {
     question: "How do I marathon anime with friends online?",
     answer:
-      "Install AniDachi in desktop Chrome. A Plus, Pro or trial host creates the room and shares an invite; friends join for free with their own access to each episode. AniDachi syncs the players and adds live chat, reactions, and calls. Agree on break points and check with the group before continuing.",
+      "Install AniDachi in desktop Chrome. A Free, Plus, or Pro host creates the room and shares an invite; friends join for free with their own access to each episode. AniDachi syncs the players and adds live chat, reactions, and calls. Agree on break points and check with the group before continuing.",
   },
 ];
 
@@ -182,7 +182,7 @@ export default function AnimeMarathonGlossaryPage() {
         </li>
         <li>
           <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
-          Every group member installs the Chrome extension and signs in. A Plus, Pro or trial host creates the room and shares an invite; friends join for free with their own access to the episodes.
+          Every group member installs the Chrome extension and signs in. A Free, Plus, or Pro host creates the room and shares an invite; friends join for free with their own access to the episodes.
         </li>
         <li>
           <span className="font-medium text-foreground">Plan break points at arc boundaries.</span>{" "}

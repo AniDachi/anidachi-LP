@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { UninstallFeedbackPanel } from "./uninstall-feedback-panel";
 import type { GmailUiStatus } from "@/lib/kreatli-crm/gmail-ui";
 import { isContactDue } from "@/lib/kreatli-crm/queue";
 import type { ImportPreviewLine } from "@/lib/kreatli-crm/import-merge";
@@ -49,7 +50,8 @@ type CrmTab =
   | "contacts"
   | "survey_leads"
   | "contact_forms"
-  | "feature_requests";
+  | "feature_requests"
+  | "uninstall_feedback";
 
 type SurveyDateRange = "all" | "7" | "30";
 
@@ -729,7 +731,7 @@ export function CrmClient({
             </p>
           ) : (
             <p className="text-sm text-foreground/70">
-              Submissions from /feature-requests and account feature requests.
+              {activeTab === "uninstall_feedback" ? "Reasons people removed the extension." : "Submissions from /feature-requests and account feature requests."}
             </p>
           )}
         </div>
@@ -770,7 +772,7 @@ export function CrmClient({
                 Export survey leads
               </Button>
             </>
-          ) : (
+          ) : activeTab === "uninstall_feedback" ? null : (
             <Button
               type="button"
               variant="secondary"
@@ -877,6 +879,15 @@ export function CrmClient({
           }}
         >
           Feature requests ({featureRequests.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "uninstall_feedback"}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${activeTab === "uninstall_feedback" ? "bg-brand-orange text-primary-foreground shadow-sm" : "text-foreground/60 hover:bg-brand-orange/10"}`}
+          onClick={() => setActiveTab("uninstall_feedback")}
+        >
+          Uninstall feedback
         </button>
       </div>
 
@@ -1322,7 +1333,7 @@ export function CrmClient({
             setExpandedFormId((cur) => (cur === id ? null : id))
           }
         />
-      ) : (
+      ) : activeTab === "uninstall_feedback" ? <UninstallFeedbackPanel /> : (
         <FormInboxSection
           kind="feature"
           rows={filteredFeatureRequests}

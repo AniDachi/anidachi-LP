@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
@@ -102,7 +103,7 @@ const flowSteps = [
 	},
 	{
 		name: "Host creates the room",
-		text: "With Plus, Pro or a trial, the host opens the movie, clicks the AniDachi capsule on the player and chooses Create room.",
+		text: "On Free, Plus, or Pro, the host opens the movie, clicks the AniDachi capsule on the player and chooses Create room.",
 	},
 	{
 		name: "Share the link and press play",
@@ -116,7 +117,7 @@ const optionRows = [
 		services: "Netflix, full YouTube watch pages, Crunchyroll",
 		devices: "Desktop Chrome or Chromium Edge",
 		talk: "On-player chat, voice and video",
-		cost: "Friends free; host on Plus, Pro or a trial",
+		cost: "Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
 	},
 	{
 		option: "Teleparty",
@@ -181,7 +182,7 @@ export default function WatchMoviesTogetherOnlinePage() {
 						their own account and a sync app keeps the players together.
 						AniDachi does this in desktop Chrome for Netflix films, full YouTube
 						movies and anime films on Crunchyroll, with chat, voice and video in
-						the room. Friends join free; the host needs Plus, Pro or a trial.
+						the room. Friends join free; {PRICING_FREE20_SUMMARY}
 					</strong>
 				</SeoGuideAnswer>
 

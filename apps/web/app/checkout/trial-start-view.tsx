@@ -23,10 +23,8 @@ export function TrialStartView({
 		>
 			<div className="w-full max-w-[490px] text-center">
 				<h1 className="text-[clamp(2.5rem,5vw,3.75rem)] leading-[1.08] font-semibold tracking-[-0.045em]">
-					Try <span className="text-[var(--ani-menu-accent)]">{label}</span>{" "}
-					free
-					<br />
-					for 3 days
+					Confirm <span className="text-[var(--ani-menu-accent)]">{label}</span>{" "}
+					access
 				</h1>
 				<p className="mx-auto mt-6 max-w-[390px] text-base leading-relaxed text-ani-muted sm:text-xl">
 					Create a room, invite your friends,
@@ -54,7 +52,7 @@ export function TrialStartView({
 					aria-describedby="trial-start-terms"
 					className="mt-8 h-auto min-h-[58px] w-full justify-between gap-4 rounded-[10px] px-6 py-4 text-base has-[>svg]:px-6 motion-reduce:transition-none motion-reduce:active:scale-100"
 				>
-					Start my 3-day trial
+					Confirm access
 					{busy ? (
 						<Loader2
 							className="size-5 animate-spin motion-reduce:animate-none"

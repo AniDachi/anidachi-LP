@@ -14,6 +14,8 @@ export interface AuthenticatedUser {
 }
 
 export interface ExtensionAuthTokens {
+  /** Local login identity: stable through refresh, replaced on each new login. */
+  authSessionId?: string;
   /** Durable credential generation, stored atomically with the credentials. */
   authRevision?: string;
   /** Metadata generation; advances independently of the credential family. */
@@ -21,6 +23,15 @@ export interface ExtensionAuthTokens {
   accessToken: string;
   refreshToken: string;
   user: AuthenticatedUser;
+}
+
+/** Presentation belongs to a login, not a rotating access/refresh token pair. */
+export function extensionAuthSessionKey(tokens: ExtensionAuthTokens | null): string | null {
+  if (!tokens) return null;
+  // Older backgrounds retain the conservative credential fence until migration.
+  return JSON.stringify(tokens.authSessionId
+    ? [tokens.user.id, "login", tokens.authSessionId]
+    : [tokens.user.id, "credentials", tokens.authRevision, tokens.accessToken, tokens.refreshToken]);
 }
 
 export interface AuthSessionStorageAdapter {
@@ -128,6 +139,9 @@ export function normalizeExtensionAuthTokens(
   if (!user) return null;
 
   return {
+    ...(typeof value.authSessionId === "string" && value.authSessionId
+      ? { authSessionId: value.authSessionId }
+      : {}),
     ...(typeof value.authRevision === "string" && value.authRevision
       ? { authRevision: value.authRevision }
       : {}),
@@ -159,13 +173,22 @@ export function createAuthSessionStorageAuthority(
       : tokens;
   }
 
+  function withNewLogin(tokens: ExtensionAuthTokens): ExtensionAuthTokens {
+    return adapter.durableRevision
+      ? { ...withRevision(tokens), authSessionId: crypto.randomUUID() }
+      : tokens;
+  }
+
   async function read(): Promise<ExtensionAuthTokens | null> {
     const current = await adapter.get();
     if (!current || !adapter.durableRevision ||
-      (current.authRevision && current.profileRevision !== undefined)) return current;
-    const migrated = current.authRevision
-      ? { ...current, profileRevision: 0 }
-      : withRevision(current);
+      (current.authSessionId && current.authRevision && current.profileRevision !== undefined)) return current;
+    const migrated = {
+      ...current,
+      authSessionId: current.authSessionId ?? crypto.randomUUID(),
+      authRevision: current.authRevision ?? crypto.randomUUID(),
+      profileRevision: current.profileRevision ?? 0,
+    };
     await adapter.set(migrated);
     return migrated;
   }
@@ -187,13 +210,13 @@ export function createAuthSessionStorageAuthority(
           current?.authRevision ?? (await adapter.getRevision?.()) ?? null;
         if (revision !== expectedRevision)
           return { committed: false, current, previous: current };
-        const next = withRevision(tokens);
+        const next = withNewLogin(tokens);
         await adapter.set(next);
         return { committed: true, current: next, previous: current };
       });
     },
     replace(tokens) {
-      return runSerialized(() => adapter.set(withRevision(tokens)));
+      return runSerialized(() => adapter.set(withNewLogin(tokens)));
     },
     clear() {
       return runSerialized(() =>
@@ -236,7 +259,13 @@ export function createAuthSessionStorageAuthority(
         const next = replacement && {
           ...(credentialsChanged ? withRevision(replacement) : replacement),
           ...(current.authRevision && !credentialsChanged ? { authRevision: current.authRevision } : {}),
-          ...(adapter.durableRevision ? { profileRevision } : {}),
+          ...(adapter.durableRevision ? {
+            profileRevision,
+            // Refresh/profile callers cannot replace the logical login identity.
+            authSessionId: replacement.user.id === current.user.id
+              ? current.authSessionId ?? crypto.randomUUID()
+              : crypto.randomUUID(),
+          } : {}),
         };
         const clearedRevision = !next && adapter.durableRevision ? crypto.randomUUID() : undefined;
         if (next) await adapter.set(next);

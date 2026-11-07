@@ -1,3 +1,7 @@
+import { type Free20ContextTransferRequest } from "@anidachi/protocol";
+import { FREE20_TRANSFER_KEY, FREE20_TRANSFER_EPOCH_KEY, parseFree20TransferRequest, parseFree20ScopeTransfer, transferFree20Scope, free20TransferReceiptKey, type Free20ScopeTransfer } from "./free20-scope-transfer";
+import { notifyWebFree20Context } from "./internal-web-client";
+import { PARTICIPANT_DISCONNECT_STORAGE_KEY, upsertParticipantDisconnect } from "./participant-disconnect";
 import {RoomMediaV3SnapshotSchema} from "@anidachi/protocol";
 import {
 	ROOM_POLICY_STORAGE_KEY,
@@ -7,7 +11,11 @@ import {
 	nextRoomPolicyAlarm,
 	type RoomPolicyState,
 } from "./room-capability";
-import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy } from "./internal-web-client";
+import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy, notifyWebFree20Budget } from "./internal-web-client";
+import { createFree20AccountingState, prepareFree20Accounting, acknowledgeFree20Accounting, settleFree20Accounting, type Free20AccountingState } from "./free20-room-accounting";
+import { readFree20LiveStatus, projectHostingTime, hostingTimeChangeKey, type HostingDisplayContext } from "./free20-live-status";
+import { nextHostingTimeSequence, readHostingTimeRight, writeHostingTimeRight } from "./hosting-time-storage";
+import { Free20LiveStatusRequestSchema, Free20RoomRefreshRequestSchema, type Free20RoomRefreshRequest, type Free20RoomRefreshReceipt } from "@anidachi/protocol";
 import {
 	roomUsageBuckets,
 	acknowledgeRoomUsageDay,
@@ -21,7 +29,7 @@ import {
   claimPresence,
   acknowledgePresence,
 } from "./room-presence-evidence";
-import { scheduled } from "./notification-scheduler";
+import { scheduled } from "./recovery-scheduler";
 import {
   parseMaintenanceMode,
   maintenanceHttpResponse,
@@ -96,6 +104,8 @@ import {
   readStoredP2PReplayMetadata,
   readStoredRoomLifecycle,
   readStoredRoomMeter,
+  readStoredFree20Accounting,
+  writeStoredFree20Accounting,
   readStoredRoomState,
   createStoredP2PReplayMetadata,
   writeNextP2PServerSeq,
@@ -135,6 +145,7 @@ import {
 } from "./telemetry";
 
 export interface Env {
+  ANIDACHI_FREE20_ACCOUNTING_ENABLED?: string;
   ANIDACHI_MAINTENANCE_MODE?: string;
   ROOMS: DurableObjectNamespace;
   CLOUDFLARE_TURN_KEY_ID?: string;
@@ -180,6 +191,64 @@ app.get("/", (c) => {
     );
   }
   return c.json({ ok: true, service: "anidachi-api" });
+});
+
+app.post("/internal/rooms/:roomId/free20-context", async (c) => {
+  const headers = { "Cache-Control": "private, no-store" };
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(authorization, c.env.ANIDACHI_INTERNAL_API_SECRET))
+    return c.json({ code: "UNAUTHORIZED" }, 401, headers);
+  const command = await parseFree20TransferRequest(c.req.raw);
+  if (!command || command.roomId !== c.req.param("roomId"))
+    return c.json({ code: "INVALID_TRANSFER_REQUEST" }, 400, headers);
+  try {
+    const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(command.roomId));
+    return await stub.fetch(new Request("https://room.internal/internal/free20-context", {
+      method: "POST", headers: { Authorization: authorization!, "Content-Type": "application/json" }, body: JSON.stringify(command),
+    }));
+  } catch { return c.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, 503, headers); }
+});
+
+app.post("/internal/rooms/:roomId/free20-refresh", async (c) => {
+  const headers = { "Cache-Control": "private, no-store" };
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(authorization, c.env.ANIDACHI_INTERNAL_API_SECRET))
+    return c.json({ code: "UNAUTHORIZED" }, 401, headers);
+  if (c.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+    return c.json({ code: "FREE20_DISABLED" }, 404, headers);
+  const command = Free20RoomRefreshRequestSchema.safeParse(await c.req.json().catch(() => null));
+  if (!command.success || command.data.roomId !== c.req.param("roomId"))
+    return c.json({ code: "INVALID_REFRESH_REQUEST" }, 400, headers);
+  try {
+    const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(command.data.roomId));
+    return await stub.fetch(new Request("https://room.internal/internal/free20-refresh", {
+      method: "POST", headers: { Authorization: authorization!, "Content-Type": "application/json" },
+      body: JSON.stringify(command.data),
+    }));
+  } catch {
+    return c.json({ code: "FREE20_REFRESH_UNAVAILABLE" }, 503, headers);
+  }
+});
+
+app.post("/internal/rooms/:roomId/free20-status", async (c) => {
+  const headers = { "Cache-Control": "private, no-store" };
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(authorization, c.env.ANIDACHI_INTERNAL_API_SECRET))
+    return c.json({ code: "UNAUTHORIZED" }, 401, headers);
+  if (c.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+    return c.json({ code: "FREE20_DISABLED" }, 404, headers);
+  const command = Free20LiveStatusRequestSchema.safeParse(await c.req.json().catch(() => null));
+  if (!command.success || command.data.roomId !== c.req.param("roomId"))
+    return c.json({ code: "INVALID_STATUS_REQUEST" }, 400, headers);
+  try {
+    const stub = c.env.ROOMS.get(c.env.ROOMS.idFromName(command.data.roomId));
+    return await stub.fetch(new Request("https://room.internal/internal/free20-status", {
+      method: "POST", headers: { Authorization: authorization!, "Content-Type": "application/json" },
+      body: JSON.stringify(command.data),
+    }));
+  } catch {
+    return c.json({ code: "HOSTING_STATUS_UNAVAILABLE" }, 503, headers);
+  }
 });
 
 app.post("/internal/rooms/:roomId/end", async (c) => {
@@ -546,6 +615,10 @@ export function persistRoomEndAfterDisablingAutoResponse(
   persist();
 }
 
+class Free20QuotaExhausted extends Error {
+  constructor(readonly endedAt: number) { super("Free20 allowance exhausted"); }
+}
+
 export class RoomDurableObject {
   private room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
@@ -568,7 +641,13 @@ export class RoomDurableObject {
   private nextP2PServerSeq = 1;
   private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
   private roomMeter: RoomMeterState;
+  private free20Accounting: Free20AccountingState | null;
+  private hostingTimeKey: string | null = null;
+  private hostingDisplayRight: HostingDisplayContext['displayTime'] = null;
+  private readonly hostingTimeRequestAt = new WeakMap<WebSocket,number>();
 	private roomPolicy: RoomPolicyState | null = null;
+  private scopeTransfer: Free20ScopeTransfer | null = null;
+  private scopeTransferEpoch = 0;
   private roomEndQueue: Promise<void> = Promise.resolve();
   private roomEndInProgress = false;
   private terminalIntent: RoomTerminalIntent | null = null;
@@ -587,6 +666,10 @@ export class RoomDurableObject {
     this.endedTombstone = readEndedRoomTombstone(state.storage);
 		this.roomMeter =
 			readStoredRoomMeter(state.storage) ?? createRoomMeterState();
+		this.free20Accounting = readStoredFree20Accounting(state.storage, this.roomMeter);
+    this.hostingDisplayRight = readHostingTimeRight(state.storage);
+    this.scopeTransfer = parseFree20ScopeTransfer(state.storage.kv.get(FREE20_TRANSFER_KEY));
+    this.scopeTransferEpoch = state.storage.kv.get<number>(FREE20_TRANSFER_EPOCH_KEY) ?? 0;
 		this.room = new RoomState(
 			roomId,
 			undefined,
@@ -626,6 +709,17 @@ export class RoomDurableObject {
 					null;
 				if (!!this.room.mediaSnapshot !== !!this.roomPolicy)
 					throw new Error("Missing durable room policy or media state");
+				if (this.free20Accounting) {
+					if (!this.roomPolicy || !this.isFreeRoom()) throw new Error("Missing Free20 room authority");
+					const budget = this.free20Accounting.budget;
+					const checkpoint = this.free20Accounting.unlimited ?? budget?.checkpoint;
+					if (checkpoint && (checkpoint.roomId !== this.room.roomId ||
+						checkpoint.roomGeneration !== this.room.roomGeneration ||
+						checkpoint.ownerUserId !== this.roomPolicy.hostId)) throw new Error("Free20 restore binding mismatch");
+					// SQL accounting is authoritative even if the later policy KV write was interrupted.
+					this.roomPolicy.budget = budget ? { day: budget.checkpoint.utcDay, allowedSeconds: budget.allowedSeconds } : null;
+					if (checkpoint) this.roomPolicy.refreshAt = Math.min(this.roomPolicy.refreshAt, checkpoint.refreshBy);
+				}
         if (this.terminalIntent?.finalizedAt !== null && this.terminalIntent) {
           // Recovery after Web ACK/intent commit but before the SQL tombstone.
           await this.applyTerminalRoomState(endedRoomTombstone(this.terminalIntent, {
@@ -649,6 +743,12 @@ export class RoomDurableObject {
 				),
       );
         this.restoreWebSocketsFromAttachments();
+        if (this.scopeTransfer) {
+          if (this.scopeTransfer.request.roomId !== this.room.roomId || this.scopeTransfer.request.ownerUserId !== this.roomPolicy?.hostId || this.roomMeter.activeSince !== null)
+            throw new Error("Invalid restored transfer fence");
+          this.room.disconnect(this.scopeTransfer.request.ownerUserId);
+          this.persistRoomState();
+        }
         if (this.roomPolicy) {
           // Preserve the durable interval and its original deadline until policy
           // servicing checks overdue exhaustion before UTC rollover. Recovery
@@ -687,7 +787,11 @@ export class RoomDurableObject {
         continue;
       }
 
-			this.verifiedBySocket.set(
+			if (this.scopeTransfer && attachment.verified.role === "host") {
+        socket.close(4002, "Session taken over");
+        continue;
+      }
+      this.verifiedBySocket.set(
 				socket,
 				attachmentToVerifiedRoomToken(attachment),
 			);
@@ -877,8 +981,48 @@ export class RoomDurableObject {
     return this.room.roomCapabilities.hostPlanCode === "free";
   }
 
+  private async publishHostingTime(force = false, recovery?: {socket:WebSocket;requestId:string}): Promise<void> {
+    const policy = this.roomPolicy;
+    if (this.endedTombstone || this.terminalIntent || policy?.endingReason) return;
+    const recipients = [...this.participantsBySocket.keys()].filter(socket =>
+      (!recovery || recovery.socket === socket) && socket.readyState === WebSocket.OPEN && this.getSocketAttachment(socket)?.hostingTimeVersion === 1);
+    if (recipients.length === 0) return;
+    if (!this.free20Accounting) {
+      const key = `legacy:${this.room.roomId}:${this.room.roomGeneration}`;
+      if (!force && key === this.hostingTimeKey) return;
+      for (const socket of recipients) this.send(socket, {
+        type: "HOSTING_TIME_LEGACY", roomId: this.room.roomId, roomGeneration: this.room.roomGeneration,
+      });
+      this.hostingTimeKey = key;
+      return;
+    }
+    if (!policy) return;
+    const now = Date.now();
+    const context: HostingDisplayContext = {
+      binding:{ownerUserId:policy.hostId,roomId:this.room.roomId,roomGeneration:this.room.roomGeneration,
+        utcDay:new Date(now).toISOString().slice(0,10)},
+      accounting:this.free20Accounting,meter:this.roomMeter,
+      validUntil:Math.min(policy.refreshAt,Date.parse(policy.lease.capabilities.capabilitiesValidUntil)),
+      terminal:false,displayTime:this.hostingDisplayRight ?? null,
+    };
+    const key = hostingTimeChangeKey(context);
+    if (!force && key === this.hostingTimeKey) return;
+    try {
+      const event = projectHostingTime(context,0,now);
+      if (!event) return;
+      event.snapshot.snapshotSequence = nextHostingTimeSequence(this.state.storage,now);
+      if (recovery) event.requestId = recovery.requestId;
+      await this.state.storage.sync();
+      this.hostingTimeKey=key;
+      for (const socket of recipients) this.send(socket,event);
+    } catch {
+      // Display failure cannot change accounting or grant time. The last
+      // observation expires locally; a subsequent lifecycle/recovery can retry.
+    }
+  }
+
   private shouldMeterRoom(): boolean {
-		if (!this.isFreeRoom() || this.roomPolicy?.endingReason) return false;
+		if (this.scopeTransfer || !this.isFreeRoom() || this.roomPolicy?.endingReason || this.free20Accounting?.unlimited) return false;
     let hostJoined = false;
     let guestJoined = false;
     for (const socket of this.participantsBySocket.keys()) {
@@ -895,6 +1039,74 @@ export class RoomDurableObject {
     if (next === this.roomMeter) return;
     writeStoredRoomMeter(this.state.storage, next, now);
     this.roomMeter = next;
+  }
+
+  private persistFree20Accounting(meter: RoomMeterState, accounting: Free20AccountingState, now: number): void {
+    writeStoredFree20Accounting(this.state.storage, meter, accounting, now);
+    this.roomMeter = meter;
+    this.free20Accounting = accounting;
+  }
+
+  private free20ExhaustedAt(policy: RoomPolicyState, now: number): number | null {
+    if (this.free20Accounting?.unlimited) return null;
+    const meter = this.roomMeter;
+    if (!policy.budget || policy.budget.day !== meter.day) return null;
+    // A departure can materialize the last second before the alarm runs.
+    // Stopping the interval must not make an already spent budget renewable.
+    if (meter.activeSince === null)
+      return meter.accumulatedMs >= policy.budget.allowedSeconds * 1000 ? now : null;
+    const at = meter.activeSince + Math.max(0, policy.budget.allowedSeconds * 1000 - meter.accumulatedMs);
+    const midnight = Date.parse(`${policy.budget.day}T00:00:00Z`) + 86400000;
+    return now >= at && at < midnight ? at : null;
+  }
+
+  private async refreshFree20RoomPolicy(policy: RoomPolicyState): Promise<RoomPolicyState> {
+    // One extra attempt is allowed only when bounded I/O straddles UTC midnight.
+    // This is an event-driven reconciliation, never a quota polling loop.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const now = Date.now();
+      const expired = this.free20ExhaustedAt(policy, now);
+      if (expired !== null) throw new Free20QuotaExhausted(expired);
+      const meter = reconcileRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), this.shouldMeterRoom(), now);
+      if (!this.free20Accounting) throw new Error("Free20 accounting not selected");
+      const pending = prepareFree20Accounting(this.free20Accounting, meter, this.room);
+      if (!pending.pending || !meter.day) throw new Error("Missing Free20 request");
+      this.persistFree20Accounting(meter, pending, now);
+      await this.state.storage.sync();
+      const response = await notifyWebFree20Budget(this.env, pending.pending);
+      const receivedAt = Date.now();
+      const expiredDuringRequest = this.free20ExhaustedAt(policy, receivedAt);
+      if (expiredDuringRequest !== null) throw new Free20QuotaExhausted(expiredDuringRequest);
+      if (new Date(receivedAt).toISOString().slice(0, 10) !== meter.day) continue;
+      if (response.policy.denied) throw new Error("Free20 media authority denied");
+      const token = await verifyRoomToken(response.policy.roomToken, this.room.roomId, this.env);
+      if (!token?.mediaLease || token.hostUserId !== policy.hostId || token.role !== "host" ||
+          token.mediaLease.roomGeneration !== this.room.roomGeneration) throw new Error("Invalid Free20 renewal authority");
+      const updated = renewRoomPolicy(policy, token.mediaLease);
+      if (updated === policy) throw new Error("Stale Free20 renewal");
+      const acceptedAt = Date.now();
+      const expiredDuringVerification = this.free20ExhaustedAt(policy, acceptedAt);
+      if (expiredDuringVerification !== null) throw new Free20QuotaExhausted(expiredDuringVerification);
+      if (new Date(acceptedAt).toISOString().slice(0, 10) !== meter.day) continue;
+      const result = acknowledgeFree20Accounting(pending, meter, response.checkpoint, {
+        ownerUserId: policy.hostId, roomId: this.room.roomId, roomGeneration: this.room.roomGeneration,
+        utcDay: meter.day,
+      }, acceptedAt);
+      const budget = result.state.budget;
+      const checkpoint = result.state.unlimited ?? budget?.checkpoint;
+      if (!checkpoint) throw new Error("Missing reconciled Free20 time authority");
+      this.persistFree20Accounting(result.meter, result.state, acceptedAt);
+      this.hostingDisplayRight = response.displayTime && result.state.unlimited ? {
+        ...response.displayTime,ownerUserId:policy.hostId,roomId:this.room.roomId,
+        roomGeneration:this.room.roomGeneration,checkpointSequence:result.state.unlimited.checkpointSequence,
+      } : null;
+      try { writeHostingTimeRight(this.state.storage,this.hostingDisplayRight,acceptedAt); }
+      catch { this.hostingDisplayRight=null; }
+      this.room.setMediaCapabilities(token.mediaLease.capabilities);
+      return { ...updated, budget: budget ? { day: budget.checkpoint.utcDay, allowedSeconds: budget.allowedSeconds } : null,
+        refreshAt: Math.min(updated.refreshAt, checkpoint.refreshBy) };
+    }
+    throw new Error("Free20 UTC period changed during reconciliation");
   }
 
   private reconcileRoomUsage(now: number): void {
@@ -917,7 +1129,11 @@ export class RoomDurableObject {
 			now,
 			this.roomMeter,
 			this.shouldMeterRoom(),
+			this.free20Accounting === null,
+			!this.free20Accounting?.unlimited,
 		);
+		if (this.free20Accounting && this.free20ExhaustedAt(this.roomPolicy, now) !== null)
+			this.roomPolicy.alarmAt = now;
 		await this.state.storage.transaction(async (transaction) => {
 			const stored = await transaction.get<RoomPolicyState>(ROOM_POLICY_STORAGE_KEY);
 			// Policy may change in place while awaiting storage. Never use an
@@ -936,6 +1152,17 @@ export class RoomDurableObject {
         await this.state.storage.sync();
         return !this.roomMeter.accountingBlocked;
       }
+			if (this.free20Accounting) {
+				const pending = prepareFree20Accounting(this.free20Accounting, this.roomMeter, this.room);
+				if (!pending.pending) throw new Error("Missing Free20 settlement request");
+				this.persistFree20Accounting(this.roomMeter, pending, Date.now());
+				await this.state.storage.sync();
+				const result = await notifyWebRoomPolicy(this.env, this.room.roomId, this.room.roomGeneration, pending.pending.usage, true);
+				const settled = settleFree20Accounting(pending, this.roomMeter, result.acknowledged);
+				this.persistFree20Accounting(settled.meter, settled.state, Date.now());
+				await this.state.storage.sync();
+				return true;
+			}
 			const result = await notifyWebRoomPolicy(
 				this.env,
 				this.room.roomId,
@@ -962,13 +1189,17 @@ export class RoomDurableObject {
 			return false;
 		}
 	}
-	private async serviceRoomPolicy(now: number): Promise<void> {
+	private async serviceRoomPolicy(now: number, forceFree20Refresh = false): Promise<void> {
 		let policy = this.roomPolicy;
-		if (!policy || this.endedTombstone || this.terminalIntent) return;
+		if (!policy || this.endedTombstone || this.terminalIntent || this.scopeTransfer) return;
     if (policy.endingReason && policy.closingAt !== null) {
       if (now >= policy.alarmAt) await this.endRoomExclusive({ reason: policy.endingReason, endedAt: policy.closingAt });
       return;
     }
+		if (this.free20Accounting && this.roomMeter.activeSince === null && this.free20ExhaustedAt(policy, now) !== null) {
+			await this.endRoomExclusive({ reason: "quota_exhausted", endedAt: now });
+			return;
+		}
 		if (
 			this.isFreeRoom() &&
 			policy.budget?.day === this.roomMeter.day &&
@@ -1000,13 +1231,13 @@ export class RoomDurableObject {
       reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now),
       now,
     );
-		const usage = roomUsageSummary(this.roomMeter, now);
+		let usage = roomUsageSummary(this.roomMeter, now);
 		const leaseExpiry = Date.parse(
 			policy.lease.capabilities.capabilitiesValidUntil,
 		);
 		if (now >= leaseExpiry) policy = failRoomPolicy(policy, leaseExpiry);
 		const needsBudget =
-			this.isFreeRoom() &&
+			this.isFreeRoom() && !this.free20Accounting?.unlimited &&
 			(!policy.budget ||
 				policy.budget.day !== usage.day ||
 				this.roomMeter.pending.length > 0);
@@ -1017,7 +1248,19 @@ export class RoomDurableObject {
 			});
 			return;
 		}
-		if (policy.closingAt === null && (now >= policy.refreshAt || needsBudget)) {
+		if (this.free20Accounting && (forceFree20Refresh || now >= policy.refreshAt || needsBudget || this.free20Accounting.pending)) {
+			try {
+				policy = await this.refreshFree20RoomPolicy(policy);
+				now = Date.now();
+				usage = roomUsageSummary(this.roomMeter, now);
+			} catch (error) {
+				const exhaustedAt = error instanceof Free20QuotaExhausted ? error.endedAt : null;
+				const endedAt = exhaustedAt ?? Date.now();
+				this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, endedAt), endedAt);
+				await this.endRoomExclusive({ reason: exhaustedAt === null ? "accounting_unavailable" : "quota_exhausted", endedAt });
+				return;
+			}
+		} else if (policy.closingAt === null && (now >= policy.refreshAt || needsBudget)) {
 			try {
 				// Cumulative usage is persisted locally before the bounded external call.
 				// Ordinary frames retain their durable activeSince anchor; only this
@@ -1141,7 +1384,7 @@ export class RoomDurableObject {
 				});
 				return;
 			}
-			if (remaining <= 300 && policy.quotaWarnedDay !== usage.day) {
+			if (!this.free20Accounting && remaining <= 300 && policy.quotaWarnedDay !== usage.day) {
 				policy.quotaWarnedDay = usage.day;
 				this.broadcast({
 					type: "ERROR",
@@ -1158,6 +1401,7 @@ export class RoomDurableObject {
 		await this.persistRoomPolicyDeadline(Date.now());
     // Existing policy alarms also publish day/budget renewal to connected clients.
     this.broadcast(this.currentRoomSnapshot(Date.now()));
+    await this.publishHostingTime();
   }
 
   private stopRoomUsage(now: number): RoomUsageSummary | undefined {
@@ -1293,8 +1537,235 @@ export class RoomDurableObject {
     }
   }
 
+  private async refreshFree20RoomExclusive(request: Free20RoomRefreshRequest): Promise<Response> {
+    const headers = { "Cache-Control": "private, no-store" };
+    const receipt = (outcome: Free20RoomRefreshReceipt["outcome"]) => Response.json({ request, outcome } satisfies Free20RoomRefreshReceipt, { headers });
+    const terminal = () => !!(this.endedTombstone || this.terminalIntent || this.roomEndInProgress || this.roomPolicy?.endingReason || this.roomPolicy?.closingAt != null);
+    try {
+      const policy = this.roomPolicy;
+      if (this.scopeTransfer) throw new Error("Free20 transfer pending");
+      if (policy && (policy.hostId !== request.ownerUserId || policy.lease.roomGeneration !== request.roomGeneration))
+        return receipt("stale");
+      if (terminal()) return receipt("terminal");
+      if (!policy || !this.isFreeRoom() || !this.free20Accounting)
+        throw new Error("Missing marked Free20 room authority");
+      const stored = await this.state.storage.get<unknown>("free20_refresh_completed_v1");
+      if (stored !== undefined) {
+        const completed = Free20RoomRefreshRequestSchema.parse(stored);
+        if (completed.ownerUserId !== request.ownerUserId || completed.roomId !== request.roomId || completed.roomGeneration !== request.roomGeneration)
+          throw new Error("Free20 refresh completion binding mismatch");
+        // This ACK says the command was processed, not that its time right is current.
+        if (completed.revision >= request.revision) return receipt("applied");
+      }
+      const previousRevision = policy.lease.capabilities.capabilityRevision;
+      await this.serviceRoomPolicy(Date.now(), true);
+      if (this.terminalIntent?.reason === "accounting_unavailable" || this.endedTombstone?.reason === "accounting_unavailable")
+        throw new Error("Free20 refresh authority unavailable");
+      if (terminal()) return receipt("terminal");
+      if (this.free20Accounting.pending || !this.roomPolicy || this.roomPolicy.lease.capabilities.capabilityRevision <= previousRevision)
+        throw new Error("Free20 refresh did not complete");
+      // Policy, cumulative ACK and meter must commit before the independent command
+      // high-water mark. A crash in between can repeat idempotent settlement safely.
+      await this.state.storage.sync();
+      await this.state.storage.put("free20_refresh_completed_v1", request);
+      await this.state.storage.sync();
+      return receipt("applied");
+    } catch {
+      return Response.json({ code: "FREE20_REFRESH_UNAVAILABLE" }, { status: 503, headers });
+    }
+  }
+
+  private async free20TransferBootstrap(request: Free20ContextTransferRequest): Promise<VerifiedRoomToken | null> {
+    if (this.roomPolicy) return null;
+    const pristine = () => !this.room.mediaSnapshot && !this.free20Accounting && !this.room.participants.length &&
+      !this.state.getWebSockets().length && this.roomMeter.activeSince === null && this.roomMeter.accumulatedMs === 0 &&
+      this.roomMeter.acknowledgedSeconds === 0 && this.roomMeter.pending.length === 0 && !this.roomMeter.accountingBlocked;
+    const terminal = () => !!(this.terminalIntent || this.endedTombstone || this.roomEndInProgress || this.roomPolicy?.closingAt != null);
+    if (!pristine() || terminal()) throw new Error("Uncertain uninitialized room");
+    const authority = await checkWebRoomAdmission(this.env, this.room.roomId, request.ownerUserId);
+    if (!authority.allowed || authority.hostingTimeMode !== "daily_free20" || authority.roomGeneration !== request.roomGeneration || terminal())
+      throw new Error("Missing bootstrap authority");
+    if (!this.roomPolicy && !pristine()) throw new Error("Room changed during bootstrap");
+    const response = await notifyWebRoomPolicy(this.env, this.room.roomId, this.room.roomGeneration, [], false);
+    const policy = response.policy as { denied?: boolean; roomToken?: unknown } | null;
+    if (terminal() || policy?.denied !== false || typeof policy.roomToken !== "string") throw new Error("Bootstrap denied");
+    const token = await verifyRoomToken(policy.roomToken, this.room.roomId, this.env);
+    if (terminal() || !token?.mediaLease || token.role !== "host" || token.sub !== request.ownerUserId || token.hostUserId !== request.ownerUserId ||
+      token.mediaLease.roomGeneration !== request.roomGeneration || token.mediaLease.capabilities.hostPlanCode !== "free")
+      throw new Error("Invalid bootstrap host authority");
+    if (!this.roomPolicy && !pristine()) throw new Error("Room changed during bootstrap");
+    const currentPolicy = this.roomPolicy as RoomPolicyState | null;
+    if (currentPolicy && currentPolicy.hostId !== request.ownerUserId) throw new Error("Bootstrap owner changed");
+    return token;
+  }
+
+  private async transferFree20ContextExclusive(request: Free20ContextTransferRequest): Promise<Response> {
+    if (this.roomPolicy?.hostId === request.ownerUserId && !this.endedTombstone && !this.terminalIntent) {
+      const disconnects = await readStoredParticipantDisconnects(this.state.storage);
+      const host = disconnects?.records.find(record => record.role === "host");
+      if (host && Date.now() >= host.deadlineAt) {
+        await this.endRoomExclusive({ reason: "host_disconnected", endedAt: host.deadlineAt });
+        return Response.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503, headers: { "Cache-Control": "private, no-store" } });
+      }
+    }
+    return transferFree20Scope(request, {
+      storage: this.state.storage,
+      pending: () => this.scopeTransfer,
+      terminal: () => !!(this.endedTombstone || this.terminalIntent || this.roomEndInProgress || this.roomPolicy?.endingReason || this.roomPolicy?.closingAt != null),
+      matches: r => !this.roomPolicy || (r.ownerUserId === this.roomPolicy.hostId && r.roomGeneration === this.room.roomGeneration),
+      start: async r => {
+        const bootstrap = await this.free20TransferBootstrap(r);
+        if (!this.roomPolicy && bootstrap?.mediaLease) {
+          // Only verified SQL-frozen capabilities may initialize a virgin DO.
+          // These caches cannot admit/spend before the atomic intent commit below.
+          this.roomPolicy = initialRoomPolicy(r.ownerUserId, bootstrap.mediaLease, Date.now());
+          this.room.setMediaCapabilities(bootstrap.mediaLease.capabilities);
+          if (bootstrap.capabilities) this.room.setCapabilities(bootstrap.capabilities);
+          this.free20Accounting = createFree20AccountingState();
+        }
+        if (!this.roomPolicy || !this.free20Accounting || !this.isFreeRoom()) throw new Error("Missing marked room authority");
+        const now = Date.now();
+        const exhaustedAt = this.free20ExhaustedAt(this.roomPolicy, now);
+        if (exhaustedAt !== null) { await this.endRoomExclusive({ reason: "quota_exhausted", endedAt: exhaustedAt }); throw new Error("Exhausted"); }
+        const previous = await readStoredParticipantDisconnects(this.state.storage);
+        const existing = previous?.records.find(record => record.userId === r.ownerUserId);
+        const host = this.socketsByParticipant.get(r.ownerUserId);
+        const session = host ? this.sessionIdBySocket.get(host) :
+          (bootstrap && !this.room.participants.length && this.roomMeter.accumulatedMs === 0 ? bootstrap.participantSessionId : undefined);
+        const disconnect = existing ?? (session ? createParticipantDisconnect({ userId: r.ownerUserId, role: "host", participantSessionId: session, disconnectedAt: now }) : null);
+        if (!disconnect) throw new Error("Missing host disconnect authority");
+        const intent: Free20ScopeTransfer = { version: 1, request: r, disconnect, fencedAt: now, nextAttemptAt: Math.min(now + 5000, disconnect.deadlineAt), phase: "stopped" };
+        const meter = reconcileRoomMeter(this.roomMeter, false, now);
+        // Memory also fails closed if storage has an uncertain result. No I/O is allowed until sync.
+        this.scopeTransfer = intent;
+        const epoch = this.scopeTransferEpoch + 1;
+        this.scopeTransferEpoch = epoch;
+        this.state.storage.transactionSync(() => {
+          this.state.storage.kv.put(FREE20_TRANSFER_KEY, intent);
+          this.state.storage.kv.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
+          this.persistRoomState();
+          this.state.storage.kv.put(FREE20_TRANSFER_EPOCH_KEY, epoch);
+          this.state.storage.kv.put(PARTICIPANT_DISCONNECT_STORAGE_KEY, upsertParticipantDisconnect(previous, disconnect, MAX_PERSISTED_PARTICIPANT_DISCONNECTS));
+          writeStoredFree20Accounting(this.state.storage, meter, this.free20Accounting!, now);
+        });
+        this.roomMeter = meter;
+        await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        await this.state.storage.sync();
+      },
+      save: async intent => {
+        // Repeating the atomic freeze also repairs an initial rolled-back transaction.
+        // Once frozen, accounting may already have advanced its UTC day. Only
+        // an initial failed freeze still has an interval to materialize.
+        const meter = this.roomMeter.activeSince === null ? this.roomMeter : reconcileRoomMeter(this.roomMeter, false, intent.fencedAt);
+        this.state.storage.transactionSync(() => {
+          this.state.storage.kv.put(FREE20_TRANSFER_KEY, intent);
+          this.state.storage.kv.put(ROOM_POLICY_STORAGE_KEY, this.roomPolicy);
+          this.persistRoomState();
+          this.state.storage.kv.put(FREE20_TRANSFER_EPOCH_KEY, this.scopeTransferEpoch);
+          writeStoredFree20Accounting(this.state.storage, meter, this.free20Accounting!, Date.now());
+        });
+        this.roomMeter = meter;
+        this.scopeTransfer = intent;
+        await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        await this.state.storage.sync();
+      },
+      detach: intent => this.detachHostForFree20Transfer(intent),
+      settle: () => this.settleRoomUsage(),
+      attach: r => notifyWebFree20Context(this.env, r),
+      checkpoint: async () => {
+        if (!this.roomPolicy) throw new Error("Missing transfer policy");
+        // Forced direct refresh inside this queue: no queued/self-fetch recursion.
+        this.roomPolicy = await this.refreshFree20RoomPolicy(this.roomPolicy);
+        this.persistRoomState();
+        await this.persistRoomPolicyDeadline(Date.now());
+        if (!this.free20Accounting || this.free20Accounting.pending) throw new Error("Unconfirmed transfer budget");
+        const exhaustedAt = this.free20ExhaustedAt(this.roomPolicy, Date.now());
+        if (exhaustedAt !== null) { await this.endRoomExclusive({ reason: "quota_exhausted", endedAt: exhaustedAt }); throw new Error("Exhausted"); }
+      },
+      complete: async intent => {
+        this.state.storage.transactionSync(() => {
+          this.state.storage.kv.put(free20TransferReceiptKey(intent.request), intent.request);
+          this.state.storage.kv.delete(FREE20_TRANSFER_KEY);
+        });
+        await this.state.storage.sync();
+        this.scopeTransfer = null;
+        await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+      },
+      expire: async endedAt => { await this.endRoomExclusive({ reason: "host_disconnected", endedAt }); },
+    });
+  }
+
+  private async detachHostForFree20Transfer(intent: Free20ScopeTransfer): Promise<void> {
+    // Preserve guests and host identity; terminal host-departure is intentionally not used.
+    const host = this.socketsByParticipant.get(intent.request.ownerUserId);
+    if (host) await this.beginParticipantDisconnect(host, intent.disconnect.disconnectedAt);
+    else {
+      await storeParticipantDisconnect(this.state.storage, intent.disconnect, MAX_PERSISTED_PARTICIPANT_DISCONNECTS, reconcileStoredRoomAlarm);
+      this.room.disconnect(intent.request.ownerUserId);
+      this.persistRoomState();
+    }
+    for (const socket of this.state.getWebSockets()) {
+      const attachment = this.getSocketAttachment(socket);
+      if (attachment?.verified.role !== "host") continue;
+      this.releaseAdmission(socket);
+      this.verifiedBySocket.delete(socket);
+      this.sessionIdBySocket.delete(socket);
+      this.send(socket, { type: "ERROR", code: "SESSION_TAKEN_OVER", message: "This room was opened in another session." });
+      socket.close(4002, "Session taken over");
+    }
+    await this.state.storage.sync();
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    const admissionTransferEpoch = this.scopeTransferEpoch;
+    if (request.method === "POST" && url.pathname === "/internal/free20-context") {
+      const headers = { "Cache-Control": "private, no-store" };
+      if (!hasValidInternalAuthorization(request.headers.get("authorization"), this.env.ANIDACHI_INTERNAL_API_SECRET))
+        return Response.json({ code: "UNAUTHORIZED" }, { status: 401, headers });
+      const command = await parseFree20TransferRequest(request);
+      if (!command || command.roomId !== this.room.roomId)
+        return Response.json({ code: "INVALID_TRANSFER_REQUEST" }, { status: 400, headers });
+      const operation = this.runRoomEndExclusively(() => this.transferFree20ContextExclusive(command));
+      this.state.waitUntil(operation.then(() => undefined));
+      return operation;
+    }
+    if (request.method === "POST" && url.pathname === "/internal/free20-refresh") {
+      const headers = { "Cache-Control": "private, no-store" };
+      if (!hasValidInternalAuthorization(request.headers.get("authorization"), this.env.ANIDACHI_INTERNAL_API_SECRET))
+        return Response.json({ code: "UNAUTHORIZED" }, { status: 401, headers });
+      if (this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+        return Response.json({ code: "FREE20_DISABLED" }, { status: 404, headers });
+      const command = Free20RoomRefreshRequestSchema.safeParse(await request.json().catch(() => null));
+      if (!command.success || command.data.roomId !== this.room.roomId)
+        return Response.json({ code: "INVALID_REFRESH_REQUEST" }, { status: 400, headers });
+      return this.runRoomEndExclusively(() => this.refreshFree20RoomExclusive(command.data));
+    }
+    if (request.method === "POST" && url.pathname === "/internal/free20-status") {
+      const headers = { "Cache-Control": "private, no-store" };
+      if (!hasValidInternalAuthorization(request.headers.get("authorization"), this.env.ANIDACHI_INTERNAL_API_SECRET))
+        return Response.json({ code: "UNAUTHORIZED" }, { status: 401, headers });
+      if (this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true")
+        return Response.json({ code: "FREE20_DISABLED" }, { status: 404, headers });
+      const command = Free20LiveStatusRequestSchema.safeParse(await request.json().catch(() => null));
+      if (!command.success) return Response.json({ code: "INVALID_STATUS_REQUEST" }, { status: 400, headers });
+      return this.runRoomEndExclusively(async () => {
+        try {
+          const policy = this.roomPolicy;
+          if (!policy || !this.isFreeRoom()) throw new Error("Missing finite room authority");
+          const now = Date.now();
+          const status = readFree20LiveStatus(command.data, {
+            binding: { ownerUserId: policy.hostId, roomId: this.room.roomId, roomGeneration: this.room.roomGeneration, utcDay: new Date(now).toISOString().slice(0, 10) },
+            accounting: this.free20Accounting, meter: this.roomMeter,
+            validUntil: Math.min(policy.refreshAt, Date.parse(policy.lease.capabilities.capabilitiesValidUntil)),
+            terminal: !!(this.endedTombstone || this.terminalIntent || this.roomEndInProgress || policy.endingReason || policy.closingAt !== null),
+          }, now);
+          return Response.json(status, { headers });
+        } catch {
+          return Response.json({ code: "HOSTING_STATUS_UNAVAILABLE" }, { status: 503, headers });
+        }
+      });
+    }
     if (request.method === "POST" && url.pathname === "/internal/end") {
 			if (
 				!hasValidInternalAuthorization(
@@ -1389,6 +1860,8 @@ export class RoomDurableObject {
       this.track("ws_token_reject");
       return new Response("Invalid room token", { status: 401 });
     }
+    if (verified.role === "host" && this.scopeTransfer)
+      return Response.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
     let authority;
     try {
       authority = await checkWebRoomAdmission(this.env, this.room.roomId, verified.sub);
@@ -1410,6 +1883,14 @@ export class RoomDurableObject {
     if (authority.roomGeneration !== this.room.roomGeneration) {
       return Response.json({ error: "ROOM_PROTOCOL_MISMATCH" }, { status: 426 });
     }
+    const dailyFree20 = authority.hostingTimeMode === "daily_free20";
+    if (dailyFree20 && (!verified.mediaLease || verified.mediaLease.capabilities.hostPlanCode !== "free" ||
+        (!this.free20Accounting && this.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED !== "true"))) {
+      return Response.json({ error: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
+    }
+    if (this.roomPolicy && dailyFree20 !== (this.free20Accounting !== null)) {
+      return Response.json({ error: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
+    }
 		if (this.room.mediaSnapshot && !verified.mediaLease)
 			return Response.json({ error: "ROOM_UPDATE_REQUIRED" }, { status: 426 });
 		if (verified.mediaLease) {
@@ -1428,6 +1909,8 @@ export class RoomDurableObject {
 				if (verified.capabilities)
 					this.room.setCapabilities(verified.capabilities);
 				this.persistRoomState();
+				if (dailyFree20)
+					this.persistFree20Accounting(this.roomMeter, createFree20AccountingState(), Date.now());
 				await this.persistRoomPolicyDeadline(Date.now());
 			} else if (
 				verified.hostUserId !== this.roomPolicy.hostId ||
@@ -1486,6 +1969,8 @@ export class RoomDurableObject {
       return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
     }
 
+    if (verified.role === "host" && (this.scopeTransfer || admissionTransferEpoch !== this.scopeTransferEpoch))
+      return Response.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
     const admissionId = crypto.randomUUID();
     const admittedAt = Date.now();
 		const reservation = this.admission.reserve(
@@ -1880,6 +2365,29 @@ export class RoomDurableObject {
       else await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
       return;
     }
+    if (this.scopeTransfer) {
+      const intent = this.scopeTransfer;
+      if (Date.now() >= intent.disconnect.deadlineAt) await this.endRoomExclusive({ reason: "host_disconnected", endedAt: intent.disconnect.deadlineAt });
+      else if (Date.now() >= intent.nextAttemptAt) await this.transferFree20ContextExclusive(intent.request);
+      else await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+      if (this.terminalIntent || this.endedTombstone) return;
+      if (this.scopeTransfer) {
+        // Transfer owns host accounting, but source/guest obligations still own
+        // their existing deadlines. Leaving a due source untouched spins the
+        // single shared alarm and can starve bounded transfer recovery.
+        const due = await claimDueStoredParticipantDisconnects(this.state.storage, Date.now(), reconcileStoredRoomAlarm);
+        for (const disconnect of due) {
+          if (disconnect.role === "host") {
+            await this.endRoomExclusive({ reason: "host_disconnected", endedAt: disconnect.deadlineAt });
+            return;
+          }
+          try { await this.deliverGuestParticipantDeparture(disconnect); } catch { /* durable retry retained */ }
+        }
+        await this.runRoomSourceDeliveryExclusively(false);
+        await this.state.storage.transaction(t => reconcileStoredRoomAlarm(t));
+        return;
+      }
+    }
 		if (this.roomPolicy) await this.serviceRoomPolicy(Date.now());
     if (this.endedTombstone) {
       await clearStoredRoomLifecycleAndAlarm(this.state.storage);
@@ -1980,6 +2488,11 @@ export class RoomDurableObject {
 	): Promise<void> {
     if (this.hasJoinDeadlineElapsed(socket)) return;
     const verified = this.verifiedBySocket.get(socket);
+    if (verified?.role === "host" && this.scopeTransfer) {
+      this.releaseAdmission(socket);
+      socket.close(4002, "Session taken over");
+      return;
+    }
     if (!verified) {
       socket.close(4000, "Invalid Anidachi socket state");
       return;
@@ -2037,6 +2550,15 @@ export class RoomDurableObject {
     this.touchSocketAttachment(socket);
 
     switch (event.type) {
+		case "HOSTING_TIME_REQUEST": {
+      const participantId=this.participantsBySocket.get(socket);
+      if (!participantId || this.socketsByParticipant.get(participantId)!==socket || this.getSocketAttachment(socket)?.hostingTimeVersion !== 1) return;
+      const now=Date.now();
+      if (now-(this.hostingTimeRequestAt.get(socket) ?? -Infinity)<5_000) return;
+      this.hostingTimeRequestAt.set(socket,now);
+      await this.runRoomEndExclusively(()=>this.publishHostingTime(true,{socket,requestId:event.requestId}));
+      return;
+    }
 		case "SET_MEDIA_SEAT":
 			await this.runRoomEndExclusively(async () => {
 				const userId = this.participantsBySocket.get(socket);
@@ -2343,6 +2865,7 @@ export class RoomDurableObject {
       participant: joined,
       participantSessionId: event.participantSessionId,
     };
+    if (event.hostingTimeVersion === 1) patch.hostingTimeVersion=1;
     const joinedAttachment = updateRoomSocketAttachment(attachment, patch);
 
     try {
@@ -2489,6 +3012,7 @@ export class RoomDurableObject {
       ...this.currentRoomSnapshot(replayAt),
       ...(p2pResyncRequired ? { p2pResyncRequired: true } : {}),
     });
+    await this.publishHostingTime(true);
     await this.sendRoomHistoryAuthority(socket);
     this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
@@ -3228,6 +3752,7 @@ export class RoomDurableObject {
     this.persistRoomState();
     this.reconcileRoomUsage(Date.now());
     this.track("ws_close", { value: this.room.participants.length });
+    await this.publishHostingTime();
 
     if (participant) {
 			if (!this.room.mediaSnapshot)

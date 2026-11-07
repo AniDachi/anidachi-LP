@@ -149,7 +149,7 @@ export default function WatchShonenAnimeWithFriendsPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Shonen is built for group reactions — install AniDachi, open any
-          Crunchyroll series below, and let a Plus, Pro, or trial host create a
+          Crunchyroll series below, and let a Free, Plus, or Pro host create a
           live room. Free friends can join to share the battles and reactions.
         </strong>{" "}
         Each person streams from their own Crunchyroll account at full quality.

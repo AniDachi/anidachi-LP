@@ -1,17 +1,22 @@
-import { readPendingTrialActivation } from "./cardless-trial-status";
+import type Stripe from "stripe";
 import type {
 	BillingOverview,
 	BillingSubscription,
 	BillingTrial,
 } from "../billing-view";
 import { resolveAccountEntitlements } from "./account-entitlements";
-import { readBillingPrice } from "./billing-price";
-import { readBillingDisplayPrice } from "./pricing-catalog";
+import type { readBillingPrice } from "./billing-price";
+import { readPendingTrialActivation } from "./cardless-trial-status";
 import {
 	getBillingCustomerByUserId,
 	getSubscriptionTrial,
 	listSubscriptionsForUser,
 } from "./db";
+import {
+	prepareCancellationRetention,
+	reconcileCancellationRetention,
+} from "./cancellation-retention";
+import { readBillingDisplayPrice } from "./pricing-catalog";
 import {
 	createStripeClient,
 	resolveStripeMode,
@@ -20,7 +25,7 @@ import {
 import { stripePriceIdForPlanCode } from "./stripe-plans";
 import { syncStripeSubscriptionById } from "./stripe-subscription-sync";
 import { readTrialRenewal } from "./trial-renewal-server";
-import { readProductHuntBilling } from "./product-hunt-billing-server";
+import { readBillingPromotions } from "./uninstall-billing-server";
 
 export class BillingError extends Error {
 	constructor(
@@ -62,7 +67,9 @@ function canRestoreRenewal(
 }
 
 type BillingDeps = {
-	readPromotions?: typeof readProductHuntBilling;
+	prepareCancellation?: typeof prepareCancellationRetention;
+	reconcileCancellation?: typeof reconcileCancellationRetention;
+	readPromotions?: typeof readBillingPromotions;
 	readActivation: typeof readPendingTrialActivation;
 	now?: () => number;
 	listSubscriptions: typeof listSubscriptionsForUser;
@@ -77,7 +84,9 @@ type BillingDeps = {
 };
 
 const defaultDeps: BillingDeps = {
-	readPromotions: readProductHuntBilling,
+	prepareCancellation: prepareCancellationRetention,
+	reconcileCancellation: reconcileCancellationRetention,
+	readPromotions: readBillingPromotions,
 	readActivation: readPendingTrialActivation,
 	listSubscriptions: listSubscriptionsForUser,
 	getCustomer: getBillingCustomerByUserId,
@@ -133,7 +142,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 			(trial.user_id !== userId ||
 				trial.stripe_subscription_id !== row.stripe_subscription_id)
 		)
-			throw new BillingError(503, "Trial ownership could not be verified.");
+			throw new BillingError(503, "Access ownership could not be verified.");
 		if (
 			trial?.trial_mode === "cardless" &&
 			trial.first_payment_state !== "paid" &&
@@ -141,7 +150,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 		)
 			throw new BillingError(
 				409,
-				"Use the trial renewal controls to confirm or cancel payment after your trial.",
+				"Use the renewal controls to confirm or cancel your next payment.",
 			);
 		const result = await deps.sync(stripe, row.stripe_subscription_id, {
 			expectedUserId: userId,
@@ -195,28 +204,74 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 				"Subscription renewal management is temporarily unavailable. Please try again or contact support.",
 			);
 		}
-		const portal = await stripe.billingPortal.sessions.create(
-			{
-				configuration: config.id,
-				customer: customer.stripe_customer_id,
-				return_url: returnUrl,
-				...(intent === "cancel"
+		const params: Stripe.BillingPortal.SessionCreateParams = {
+			configuration: config.id,
+			customer: customer.stripe_customer_id,
+			return_url: returnUrl,
+			...(intent === "cancel"
+				? {
+						flow_data: {
+							type: "subscription_cancel",
+							subscription_cancel: {
+								subscription: result.stripeSubscriptionId,
+							},
+							after_completion: {
+								type: "redirect",
+								redirect: { return_url: returnUrl },
+							},
+						},
+					}
+				: {}),
+		};
+		let coupon: string | null = null;
+		if (intent === "cancel") {
+			let timer: ReturnType<typeof setTimeout> | undefined;
+			try {
+				// Bound the whole optional preparation, not each chained provider read.
+				// Late work may leave an unused finite hold; it cannot change this portal.
+				const preparation =
+					deps
+						.prepareCancellation?.(
+							userId,
+							customer.stripe_customer_id,
+							result.stripeSubscriptionId,
+							stripe,
+						)
+						.catch(() => null) ?? Promise.resolve(null);
+				coupon = await Promise.race([
+					preparation,
+					new Promise<null>((resolve) => {
+						timer = setTimeout(() => resolve(null), 5000);
+					}),
+				]);
+			} catch {
+				// Retention is optional; ownership/config checks above remain mandatory.
+			} finally {
+				clearTimeout(timer);
+			}
+		}
+		const createPortal = (retentionCoupon: string | null) =>
+			stripe.billingPortal.sessions.create(
+				retentionCoupon
 					? {
+							...params,
 							flow_data: {
-								type: "subscription_cancel",
+								...params.flow_data!,
 								subscription_cancel: {
-									subscription: result.stripeSubscriptionId,
-								},
-								after_completion: {
-									type: "redirect",
-									redirect: { return_url: returnUrl },
+									...params.flow_data!.subscription_cancel!,
+									retention: {
+										type: "coupon_offer",
+										coupon_offer: { coupon: retentionCoupon },
+									},
 								},
 							},
 						}
-					: {}),
-			},
-			STRIPE_REQUEST,
-		);
+					: params,
+				STRIPE_REQUEST,
+			);
+		const portal = coupon
+			? await createPortal(coupon).catch(() => createPortal(null))
+			: await createPortal(null);
 		const url = new URL(portal.url);
 		if (
 			url.protocol !== "https:" ||
@@ -268,12 +323,12 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 							)
 								throw new BillingError(
 									503,
-									"Trial ownership could not be verified.",
+									"Access ownership could not be verified.",
 								);
 							const now = Date.parse(access.history.serverTime);
 							const end = Date.parse(record.trial_ends_at);
 							if (!Number.isFinite(now) || !Number.isFinite(end))
-								throw new BillingError(503, "Trial timing unavailable.");
+								throw new BillingError(503, "Access dates are unavailable.");
 							const live = row.status === "active" || row.status === "trialing";
 							const cardless = record.trial_mode === "cardless";
 							const renewalEnabled = !!record.renewal_operation_id;
@@ -386,7 +441,8 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 								),
 							price,
 							canSwitchToYearly:
-								!promotions[row.id] &&
+								(!promotions[row.id] ||
+									promotions[row.id]?.campaign === "cancellation_retention") &&
 								!cardlessTrial &&
 								price?.billingPeriod === "monthly" &&
 								row.plan_code !== "free" &&
@@ -426,7 +482,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 			const refreshable = rows.filter(
 				(row) => !["canceled", "incomplete_expired"].includes(row.status),
 			);
-			if (refreshable.length === 0) return;
+			if (refreshable.length === 0 && !deps.reconcileCancellation) return;
 			const stripe = deps.createStripe();
 			for (const row of refreshable) {
 				const result = await deps.sync(stripe, row.stripe_subscription_id, {
@@ -438,6 +494,7 @@ export function createBillingService(deps: BillingDeps = defaultDeps) {
 						"Subscription could not be refreshed. Please try again.",
 					);
 			}
+			await deps.reconcileCancellation?.(userId, stripe);
 		},
 
 		cancellationPortal: (userId: string, rowId: string, returnUrl: string) =>

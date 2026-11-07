@@ -102,15 +102,17 @@ export function SubscriptionSummary({
 				timeZone,
 			}).format(date)
 		: "";
+	const native = s.promotion?.campaign === "cancellation_retention";
 	const price = s.promotion
-		? s.promotion.nextPrice
+		? (s.promotion.nextPrice ??
+			(native && s.promotion.state === "active" ? s.price : undefined))
 		: (s.price ?? s.monthlyPrice);
 	const enabled =
 		trial?.mode === "cardless"
 			? trial.renewalEnabled || trial.renewalState === "enabled"
 			: Boolean(trial && !off);
 	const status = trial
-		? "Free trial"
+		? "Access active"
 		: paid
 			? off
 				? "Renewal off"
@@ -125,7 +127,7 @@ export function SubscriptionSummary({
 		? "A renewal change is being confirmed."
 		: trial
 			? enabled
-				? "Renewal is enabled. Your first payment is scheduled for the end of your trial."
+				? "Renewal is enabled. Your first payment is scheduled for the date shown."
 				: "No automatic charges."
 			: paid
 				? off
@@ -136,7 +138,7 @@ export function SubscriptionSummary({
 					: attention
 						? "Payment has not been completed."
 						: s.trial?.stage === "ended"
-							? "Your trial has ended."
+							? "Your access period has ended."
 							: s.status === "paused"
 								? "This subscription is paused."
 								: "Refresh your status or contact support for help.";
@@ -157,8 +159,8 @@ export function SubscriptionSummary({
 		? "Review the pending change and check its status."
 		: trial
 			? enabled
-				? "Review or cancel your renewal before the trial ends."
-				: `Keep ${plan} after your trial.`
+				? "Review or cancel your renewal before the first payment."
+				: `Keep ${plan} after your current access period.`
 			: paid
 				? "Manage renewal and billing preferences."
 				: processing
@@ -177,7 +179,7 @@ export function SubscriptionSummary({
 				? "Manage renewal"
 				: trial.mode === "cardless"
 					? "Set up renewal"
-					: "Manage trial"
+					: "Manage access"
 			: paid
 				? "Manage subscription"
 				: onPayment
@@ -209,13 +211,20 @@ export function SubscriptionSummary({
 					{note}
 					{s.promotion?.state === "active" && (
 						<span className="billing-summary-access">
-							40% off your first 3 months.
-							{(s.price ?? s.monthlyPrice) ? (
+							{native
+								? s.promotion.nextPrice
+									? "40% off your next monthly renewal only."
+									: "This discount applies to monthly billing only."
+								: "40% off your first 3 months."}
+							{(!native || s.promotion.nextPrice) &&
+							(s.price ?? s.monthlyPrice) ? (
 								<>
 									{" "}
 									Then {formatMonthlyPrice((s.price ?? s.monthlyPrice)!)} /
 									month.
 								</>
+							) : native ? (
+								""
 							) : (
 								" Then the regular monthly price."
 							)}
@@ -361,14 +370,24 @@ export function SubscriptionPresentation({
 }
 
 /** Shown only when the account is Free and has no unresolved subscription. */
-export function EndedTrialSummary() {
+export function EndedTrialSummary({
+	hostingMode = "unknown",
+}: {
+	hostingMode?: "unknown" | "legacy" | "free20";
+}) {
 	return (
-		<section className="billing-ended" aria-label="Trial ended">
+		<section className="billing-ended" aria-label="Access ended">
 			<div className="billing-ended-message">
 				<h2>
-					Your <span>trial</span> has ended.
+					Your <span>access period</span> has ended.
 				</h2>
-				<p>Choose Plus or Pro to create rooms again.</p>
+				<p>
+					{hostingMode === "free20"
+						? "Free includes daily host time. Choose Plus or Pro for hosting without a daily time limit."
+						: hostingMode === "legacy"
+							? "Choose Plus or Pro to create rooms again."
+							: "Check your current hosting access, or explore Plus and Pro."}
+				</p>
 				<Link
 					className="billing-summary-button billing-ended-button"
 					href="/pricing"

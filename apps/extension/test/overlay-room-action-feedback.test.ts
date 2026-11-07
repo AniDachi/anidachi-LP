@@ -13,7 +13,7 @@ describe("overlay room action feedback", () => {
     expect(ACTIVE_ROOM_CONFLICT_MESSAGE).toBe("You already have an active watch room.");
   });
 
-  it("prioritizes the room creation progress label", () => {
+  it("keeps the create label stable during admission", () => {
     expect(
       getPrimaryRoomActionLabel({
         feedback: "room-closed",
@@ -21,18 +21,18 @@ describe("overlay room action feedback", () => {
         roomEndPending: false,
         roomExists: false,
       }),
-    ).toBe("Creating room");
+    ).toBe("Create room");
   });
 
-  it("shows room creation success before returning to the active-room label", () => {
+  it("uses the active action immediately after creation", () => {
     expect(
       getPrimaryRoomActionLabel({
-        feedback: "room-created",
+        feedback: null,
         roomCreatePending: false,
         roomEndPending: false,
         roomExists: true,
       }),
-    ).toBe("Room created");
+    ).toBe("End room");
   });
 
   it("shows closing progress and then room closed success", () => {
@@ -131,7 +131,7 @@ describe("overlay room action feedback", () => {
 
   it("identifies only copied-invite feedback for the copy control", () => {
     expect(isInviteCopiedFeedback("invite-copied")).toBe(true);
-    expect(isInviteCopiedFeedback("room-created")).toBe(false);
+    expect(isInviteCopiedFeedback("room-closed")).toBe(false);
     expect(isInviteCopiedFeedback(null)).toBe(false);
   });
 

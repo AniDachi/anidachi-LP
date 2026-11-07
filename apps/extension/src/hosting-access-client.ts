@@ -10,7 +10,7 @@ import { refreshExtensionSession } from "./auth-client";
 import { WEB_HTTP_BASE } from "./constants";
 
 // Project only the additive display contract; existing entitlement fields stay compatible.
-const HostingAccountAccessSchema = AccountEntitlementsMetadataSchema.extend({
+export const HostingAccountAccessSchema = AccountEntitlementsMetadataSchema.extend({
 	planCode: PlanCodeSchema,
 	hosting: HostingAccessSchema.optional(),
 	hostingOffer: HostingOfferSchema.optional().catch(undefined),

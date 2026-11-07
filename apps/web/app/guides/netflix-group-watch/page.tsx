@@ -128,8 +128,8 @@ export default function NetflixGroupWatchPage() {
         ]}
       />
       <p className="mb-6 leading-relaxed text-ani-muted">
-        Both plans have a 3-day trial for eligible accounts, which is enough to test
-        a first group night. More than 15 people? Split into two rooms with two
+        Free includes 20 host minutes per UTC day for up to 4 people.
+        Plus and Pro have no daily hosting time limit. More than 15 people? Split into two rooms with two
         hosts, or use a tool built for very large parties; Teleparty says its
         parties hold 1,000 or more. The trade-offs are in{" "}
         <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">

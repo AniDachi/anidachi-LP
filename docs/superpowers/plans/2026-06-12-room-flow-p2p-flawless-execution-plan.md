@@ -19,6 +19,52 @@
 
 ---
 
+## Follow-up: Free20 scope transfer candidate, 2026-11-03
+
+The approved [anti-abuse plan](2026-11-03-free20-abuse-adaptation.md) implements
+the existing-room context change as a stopped-host transfer through the real DO
+presence/accounting lifecycle. Durable intent and frozen meter precede external
+I/O; settlement, scope attachment and effective checkpoint precede replacement
+host admission. Recovery keeps the original disconnect deadline and exact-payload
+receipt; it cannot revive an ended room or detach a replacement host on replay.
+Guest presence, room link, frozen capacities and media grants retain their contracts.
+
+Tasks 1–4 through `b219bf49` passed independent task review. Final focused workerd
+transfer cases are 24/24; the full 181-case runtime pass preceded the final
+three-line stopped-meter UTC correction. Room harness 39/39, extension 2759 tests,
+local real-WebRTC legacy 26/26 and all four-participant v3 scenarios passed.
+The latter uses source engine/local Worker/fake media/isolated Chromium without
+external TURN (12/12 first-frame samples, p95 1931.8 ms). No claim of a final full
+182-case run, physical-network transfer or hosted acceptance follows. New enforcement
+is still default off and undelivered; loaded Chrome cookie behavior and two-user
+acceptance remain separate [delivery gates](2026-11-03-free20-abuse-staging-runbook.md).
+
+## Follow-up: Free20 live display, 2026-11-01
+
+The owner-authorized [staging readiness plan](2026-11-01-free20-staging-readiness.md)
+continues with a once-per-UTC-day host warning at300seconds and explicit current
+host-client capability. Candidate `14997bf6` gates only new HTTP/SQL admissions
+to marked rooms, including marked rooms upgraded to paid time. Existing sockets,
+renewals, guests and media controllers keep their contracts. Independent review
+and local room harness39/API325/protocol283/extension2588 plus SQL role/race
+checks passed. This is local proof; actual loaded and two-participant staging
+rehearsal remains separate and is not implied by the candidate.
+
+The subsequent owner-approved [purchase delivery block](2026-11-01-free20-purchase-delivery.md)
+connects confirmed billing state to that display through the existing Worker
+accounting transition. An atomic outbox, bound revision receipt and independent
+recovery protect lost/duplicate delivery without changing room link, participants,
+media caps or terminal deadlines. Its PR records local/staging evidence; disabled
+candidate checks do not establish an enabled purchase or real-media acceptance.
+
+The approved [time wiring block](2026-11-01-free20-live-time.md) adds a negotiated,
+freshness-bounded display event without altering media signaling or caps. It
+preserves legacy sockets, durable accounting and ordering across hibernation;
+ordinary playback does not produce new time writes/events. Its PR records the
+protocol/API/runtime/room-harness checks, extension artifact and staging receipt.
+Free20 activation, physical two-device/provider acceptance and production remain
+separate; local runtime checks are not those acceptance results.
+
 ## Follow-up: Free quota reset notice, 2026-09-15
 
 The overlay now consumes `ROOM_ENDED.reason` to distinguish host quota exhaustion
@@ -294,6 +340,22 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 - Roadmap Progress Log and `current-development-state.md` reflect reality.
 
 ## Progress Log
+
+- 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
+  create/rejoin/renewal candidate pins a daily room mode and reuses account locks,
+  active-host assignment, cumulative settlement and pinned media. Actual SQL
+  concurrency and preservation, HTTP/workerd and room checks are recorded in the
+  Free20 block PR. No media transport, live flag or production/Store change;
+  public consumer, checkout and enabled staging acceptance remain separate gates.
+
+
+- **2026-10-31, `codex/daily-free20-paid-time`:** approved disabled Free20 block4A
+  adds a bounded time right independent of pinned room/media capabilities.
+  Free usage, including the callback tail, stays durable until cumulative ACK;
+  SQL restore/rollback, quota expiry, UTC and terminal behavior are covered by
+  workerd tests. [Scope and evidence](../../daily-free20-contract.md) distinguish
+  local checks/PR staging delivery from future live payment/browser acceptance.
+  No P2P, heartbeat, media quality or permission changes; activation remains off.
 
 - **2026-10-17, `codex/netflix-input-media-fixes`:** the [player input/media repair](2026-10-17-netflix-input-media-fixes.md) preserves reported v2/v3 camera publication across hibernation without treating a grant as capture, and routes held-key releases before composer/provider handlers. Regression evidence includes real forced-wake Worker snapshots and all-provider overlay keyboard fixtures. Exact full-suite/CI/staging results are recorded in the PR; loaded-artifact and cross-network media acceptance are still separate release gates.
 

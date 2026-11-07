@@ -1,3 +1,5 @@
+import { EXTENSION_UNINSTALL_CAPABILITY_PATH } from "@anidachi/protocol";
+
 export const STAGING_ACCESS_COOKIE = "anidachi_staging_access";
 export const STAGING_ACCESS_PATH = "/__anidachi/staging-access";
 
@@ -106,9 +108,12 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (method === "GET" && [
     "/api/me/entitlements",
     "/api/me/room-quota",
+    "/api/me/hosting-status",
     "/api/watch-history/v3/access",
     "/api/watch-history/v3/capacity",
   ].includes(pathname)) return true;
+  if (pathname === "/api/me/free20-context" && method === "POST") return true;
+  if (pathname === "/api/me/hosting-warning/claim" && method === "POST") return true;
   if (pathname === "/api/me/profile" && method === "PATCH") return true;
   if (pathname === "/api/friends" && method === "GET") return true;
   if (pathname === "/api/friends/requests" && method === "POST") return true;
@@ -245,6 +250,9 @@ export function canBypassStagingGate(params: {
   if (params.method === "OPTIONS") return true;
   if (isStaticAssetPath(params.pathname)) return true;
   if (params.pathname === STAGING_ACCESS_PATH) return true;
+  // Public deployment metadata contains no identity, account or offer data.
+  // The uninstall page, feedback and billing APIs remain password-gated.
+  if (params.pathname === EXTENSION_UNINSTALL_CAPABILITY_PATH && params.method === "GET") return true;
   if (params.pathname === "/api/auth/refresh") return true;
   if (params.pathname.startsWith("/api/extension/auth/")) return true;
   if (params.pathname === "/api/stripe/webhook" && params.method === "POST") {

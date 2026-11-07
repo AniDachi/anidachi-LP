@@ -92,13 +92,13 @@ function createCardlessTrialHandler(
 				request.headers.get("content-type")?.split(";")[0]?.trim() !==
 					"application/json"
 			)
-				return json({ error: "Open AniDachi to start your trial." }, 403);
+				return json({ error: "Open AniDachi to continue." }, 403);
 			const user = await (
 				deps.getUser ??
 				((r: NextRequest) =>
 					resolveWebsiteSession(r.cookies.get(REFRESH_TOKEN_COOKIE)?.value))
 			)(request);
-			if (!user) return json({ error: "Sign in to start your trial." }, 401);
+			if (!user) return json({ error: "Sign in to continue." }, 401);
 			if (request.headers.get(BILLING_OWNER_HEADER) !== user.id)
 				return json(
 					{ error: "Your signed-in account changed. Reload this page." },
@@ -106,19 +106,19 @@ function createCardlessTrialHandler(
 				);
 			const text = await request.text();
 			if (text.length > 4096)
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			let body: unknown;
 			try {
 				body = JSON.parse(text);
 			} catch {
-				return json({ error: "Invalid trial request." }, 400);
+				return json({ error: "Invalid access request." }, 400);
 			}
 			if (
 				!(action === "start"
 					? validTrialStartInput(body)
 					: validRecoveryInput(body))
 			)
-				return json({ error: "Review your trial offer first." }, 400);
+				return json({ error: "Review your offer first." }, 400);
 			if (
 				!(await (
 					deps.allowRequest ?? ((id: string) => allowTrialAction(id, "start"))
@@ -202,7 +202,7 @@ function createCardlessTrialHandler(
 			return json(
 				{
 					state: "unavailable",
-					error: "Your trial is temporarily unavailable. Please try again.",
+					error: "Your access is temporarily unavailable. Please try again.",
 				},
 				503,
 			);

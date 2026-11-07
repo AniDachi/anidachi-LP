@@ -7,12 +7,33 @@ import {
 export async function processSubscriptionWebhookEvent(
 	event: Stripe.Event,
 	deps: {
+		expectedLivemode?: boolean;
 		sync: (subscriptionId: string) => Promise<void>;
 		alert: (payload: SubscriptionAlertPayload) => Promise<void>;
 		completeSetup?: (sessionId: string) => Promise<void>;
+		retentionInvoice?: (invoice: Stripe.Invoice) => Promise<void>;
+		reconcileCancellation?: (subscriptionId: string) => Promise<void>;
 	},
 ): Promise<void> {
-	if (event.type === "checkout.session.completed") {
+	if (
+		deps.expectedLivemode !== undefined &&
+		event.livemode !== deps.expectedLivemode
+	)
+		throw new Error("Stripe webhook mode mismatch.");
+	const reconcile = async (subscriptionId: string) => {
+		await deps.reconcileCancellation?.(subscriptionId);
+	};
+	const sync = async (subscriptionId: string) => {
+		await deps.sync(subscriptionId);
+		await reconcile(subscriptionId);
+	};
+	if (event.type === "invoice.created") {
+		if (!deps.retentionInvoice)
+			throw new Error("Retention invoice handler unavailable; retry delivery.");
+		const subscriptionId = invoiceSubscriptionId(event.data.object);
+		if (subscriptionId) await reconcile(subscriptionId);
+		await deps.retentionInvoice(event.data.object);
+	} else if (event.type === "checkout.session.completed") {
 		const session = event.data.object;
 		if (session.mode === "setup" && session.metadata?.trialRenewalId) {
 			if (!deps.completeSetup)
@@ -32,7 +53,7 @@ export async function processSubscriptionWebhookEvent(
 			throw new Error(
 				"Completed subscription checkout is missing subscription.",
 			);
-		await deps.sync(subscriptionId);
+		await sync(subscriptionId);
 		// Test fixtures and a zero-dollar trial start must never announce a purchase.
 		if (
 			!event.livemode ||
@@ -64,7 +85,7 @@ export async function processSubscriptionWebhookEvent(
 			"customer.subscription.deleted",
 		].includes(event.type)
 	) {
-		await deps.sync((event.data.object as Stripe.Subscription).id);
+		await sync((event.data.object as Stripe.Subscription).id);
 	} else if (
 		[
 			"invoice.paid",
@@ -75,6 +96,6 @@ export async function processSubscriptionWebhookEvent(
 		const subscriptionId = invoiceSubscriptionId(
 			event.data.object as Stripe.Invoice,
 		);
-		if (subscriptionId) await deps.sync(subscriptionId);
+		if (subscriptionId) await sync(subscriptionId);
 	}
 }

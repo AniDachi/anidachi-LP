@@ -76,3 +76,19 @@ test("corrupt existing key is never silently replaced by a fresh identity", asyn
 	).rejects.toThrow();
 	expect(writes).toBe(0);
 });
+
+test("trial and Free20 enrollment share one persistent installation but distinct signing purposes", async () => {
+  const { createInstallationSigners } = await import("../src/trial-installation");
+  let saved: unknown = null, writes = 0;
+  const store = { get: async () => saved, set: async (value: unknown) => { saved = value; writes++; } };
+  const signers = createInstallationSigners(store);
+  const challenge = "a".repeat(180) + "." + "b".repeat(43);
+  const [trial, free] = await Promise.all([signers.trial(challenge), signers.free20(challenge)]);
+  expect(free.publicKey).toBe(trial.publicKey); expect(writes).toBe(1);
+  const restarted = await createInstallationSigners(store).free20(challenge);
+  expect(restarted.publicKey).toBe(free.publicKey); expect(writes).toBe(1);
+  const decode = (value: string) => Uint8Array.from(atob(value.replaceAll("-", "+").replaceAll("_", "/")), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey("spki", decode(free.publicKey), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+  expect(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key, decode(free.signature), new TextEncoder().encode("anidachi-free20-installation-v1\n" + challenge))).toBe(true);
+  expect(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key, decode(free.signature), new TextEncoder().encode("anidachi-trial-installation-v1\n" + challenge))).toBe(false);
+});

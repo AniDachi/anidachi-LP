@@ -56,7 +56,7 @@ const faq = [
   {
     question: "Can AniDachi host a Netflix movie night?",
     answer:
-      "Yes. A host with Plus or Pro, including a 3-day trial, opens the Netflix movie in desktop Chrome and creates a room. Friends join free with their own Netflix access.",
+      "Yes. A host on Free, Plus, or Pro opens the Netflix movie in desktop Chrome and creates a room. Friends join free with their own Netflix access.",
   },
   {
     question: "What if a friend cannot find the movie?",

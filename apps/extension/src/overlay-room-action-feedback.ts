@@ -1,5 +1,4 @@
 export type RoomActionFeedback =
-  | "room-created"
   | "invite-copied"
   | "room-closed"
   | "room-left";
@@ -47,7 +46,7 @@ export function getPrimaryRoomActionLabel({
   roomLeavePending = false,
 }: PrimaryRoomActionLabelInput): string {
   if (roomCreatePending) {
-    return "Creating room";
+    return "Create room";
   }
   if (roomLeavePending) {
     return "Leaving room";
@@ -57,9 +56,6 @@ export function getPrimaryRoomActionLabel({
   }
   if (roomEndConfirmationPending) {
     return "Press again to end";
-  }
-  if (feedback === "room-created" && roomExists) {
-    return "Room created";
   }
   if (feedback === "room-closed" && !roomExists) {
     return "Room closed";

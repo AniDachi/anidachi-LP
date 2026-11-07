@@ -1,31 +1,47 @@
 import { getPlanPolicy } from "@anidachi/protocol";
-import { PRICING_TRIAL_NOTE } from "./pricing-copy";
+import {
+  PRICING_FREE20_METERING_NOTE,
+  PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+  PRICING_IS_ANIDACHI_FREE_ANSWER,
+} from "./pricing-copy";
 
 export const homeFAQ = [
   {
-    question: "What streaming services does AniDachi support?",
-    answer:
-      "AniDachi’s Chrome extension supports full watchrooms on Crunchyroll, YouTube, and Netflix — live synced playback and chat on each person’s own stream today. Async catch-up is coming soon in a later batch. Shorts, embeds, and homepage feeds are not supported. Disney+ and other services are not supported yet.",
+    question: "Is AniDachi free?",
+    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
   },
   {
-    question: "Does Crunchyroll have a built-in watch party feature?",
+    question: "How do my free minutes work?",
+    answer: PRICING_FREE20_METERING_NOTE,
+  },
+  {
+    question: "What streaming services does AniDachi support?",
     answer:
-      "No. Crunchyroll does not offer a native watch-together feature. AniDachi fills this gap with a Chrome extension that syncs playback, detects anime automatically, and adds real-time chat on top of your existing Crunchyroll account.",
+      "Crunchyroll, YouTube and Netflix in desktop Chrome. AniDachi syncs each person’s own player and adds chat, reactions, voice and video. YouTube Shorts, embeds and homepage feeds are not supported.",
   },
   {
     question: "How do I watch Crunchyroll with friends using AniDachi?",
     answer:
-      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. With Plus or Pro, including during a trial, open the AniDachi panel, click 'Create room,' and share the invite link. Friends join for free with the extension and their own access to the episode.",
+      "Install AniDachi in desktop Chrome and open an episode on Crunchyroll. Open the AniDachi panel, click Create room and share the invite link. Friends need the extension and their own access to the episode.",
+  },
+  {
+    question: "Do all my friends need an AniDachi subscription?",
+    answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+  },
+  {
+    question: "What's the difference between Plus and Pro?",
+    answer:
+      `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people; Pro supports up to ${getPlanPolicy("pro").maxParticipants}, including the host. Both have no daily time limit and include personal watch history. Pro also has more microphones and priority support. Both offer monthly or yearly billing.`,
   },
   {
     question: "Can I watch YouTube together with AniDachi?",
     answer:
-      "Yes. Open a full youtube.com/watch page in desktop Chrome. A Plus, Pro or trial host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
+      "Yes. Open a full youtube.com/watch page in desktop Chrome. A Free, Plus, or Pro host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
   },
   {
     question: "Can I watch anime with friends asynchronously?",
     answer:
-      "Not yet — async catch-up is coming soon in a later batch. Today, AniDachi is built for live watchrooms: create a room, sync playback, and chat while everyone is online together. When async ships, you’ll be able to mark episodes and leave reactions for friends who catch up later.",
+      "Not yet. AniDachi currently supports live rooms where you watch and chat together. Async catch-up is coming soon.",
   },
   {
     question: "Do all my friends need a Crunchyroll account?",
@@ -33,24 +49,14 @@ export const homeFAQ = [
       "For Crunchyroll anime nights, each person needs their own Crunchyroll account to stream. For YouTube watchrooms, each person uses their own YouTube session. For Netflix, each person needs their own access to the same title. AniDachi handles the sync, watchrooms, and chat layer on top of the services that are available today.",
   },
   {
-    question: "Is AniDachi free?",
+    question: "Does Crunchyroll have a built-in watch party feature?",
     answer:
-      `Yes. You can join a Plus, Pro or trial host's room with a Free account. To create your own rooms and save personal watch progress, choose Plus or Pro. ${PRICING_TRIAL_NOTE}`,
-  },
-  {
-    question: "Do all my friends need an AniDachi subscription?",
-    answer:
-      "No. Only the host needs Plus or Pro, including during a trial. Friends join with Free accounts, and the host's plan sets the room size. Everyone needs the AniDachi extension and their own access to the video. Recording personal watch progress requires each viewer's own Plus or Pro plan.",
-  },
-  {
-    question: "What's the difference between Plus and Pro?",
-    answer:
-      `Plus lets you invite up to ${getPlanPolicy("plus").maxParticipants - 1} friends for free; Pro supports up to ${getPlanPolicy("pro").maxParticipants - 1}. Both include hosting without a daily time limit, chat, reactions, voice and video calls, and personal watch progress. Pro also includes more microphones and priority support. You can choose monthly or yearly billing for either plan.`,
+      "No. Crunchyroll does not offer a native watch-together feature. AniDachi fills this gap with a Chrome extension that syncs playback, detects anime automatically, and adds real-time chat on top of your existing Crunchyroll account.",
   },
   {
     question: "How is AniDachi different from Teleparty or Crunchyroll Party?",
     answer:
-      "AniDachi covers Crunchyroll, YouTube, and Netflix watchrooms, auto-detects titles, and tracks personal watch progress on paid plans. Unlike Teleparty or Crunchyroll Party, async catch-up is planned for a later batch so friends won’t need to be online at the same time when that ships. Live sync and on-player overlay are available now.",
+      "AniDachi syncs each person’s own player on Crunchyroll, YouTube and Netflix. Chat, reactions, voice and video stay on your video. Plus and Pro also save your personal watch progress.",
   },
   {
     question: "Does AniDachi work on mobile?",

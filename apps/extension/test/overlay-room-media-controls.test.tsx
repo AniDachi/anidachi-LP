@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RoomPeopleSection } from "../src/overlay-room-media-controls";
 import { PanelMediaControls } from "../src/panel-media-controls";
+import type { MicrophoneStatus, VoiceMode } from "../src/media-types";
 
 (
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -153,6 +154,36 @@ describe("PanelMediaControls", () => {
 		await click(microphone);
 		expect(onVoiceModeChange).not.toHaveBeenCalled();
 		await unmount(view.root);
+	});
+	it("keeps the selected microphone mode hint steady through startup and still reports failure", async () => {
+		let changeStatus!: (status: MicrophoneStatus) => void;
+		function Harness() {
+			const [mode, setMode] = useState<VoiceMode>("push-to-talk");
+			const [status, setStatus] = useState<MicrophoneStatus>("off");
+			changeStatus = setStatus;
+			return <PanelMediaControls cameraEnabled={false} onCameraToggle={vi.fn()}
+				voiceMode={mode} onVoiceModeChange={setMode} microphoneStatus={status}
+				microphoneFeedback={status === "error" ? "Microphone permission denied" : null} />;
+		}
+		const view = await render(<Harness />);
+		try {
+			const mic = view.container.querySelector<HTMLButtonElement>(".panel-media-mic")!;
+			await click(mic);
+			const hint = view.container.querySelector('[role="tooltip"]')!;
+			for (const status of ["off", "connecting", "on"] as const) {
+				await act(async () => changeStatus(status));
+				expect(hint.textContent).toBe("Microphone always on");
+				expect(mic.dataset.status).toBe(status);
+				expect(view.container.querySelector(".panel-media-mic-hint")?.getAttribute("data-visible")).toBe("true");
+			}
+			await act(async () => changeStatus("error"));
+			expect(hint.textContent).toBe("Microphone unavailable");
+			expect(mic.getAttribute("aria-description")).toBe("Microphone permission denied");
+			await act(async () => changeStatus("on"));
+			await click(mic);
+			expect(hint.textContent).toBe("Hold V to talk");
+			expect(mic.getAttribute("aria-pressed")).toBe("false");
+		} finally { await unmount(view.root); }
 	});
 });
 

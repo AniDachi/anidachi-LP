@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-09-08.
+Last updated: 2026-11-04.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -292,6 +292,25 @@ Before loading or distributing an artifact, inspect the generated
 
 The website is the owner of durable account and commercial data.
 
+The [uninstall flow](superpowers/plans/2026-11-04-uninstall-retention-staging.md)
+uses `/api/uninstall/offer`, `/checkout`, `/claim` and `/feedback` under that
+API prefix. Private SQL authority shares one lifetime discount between first
+purchase and next-renewal offers. First purchase uses the shared Checkout
+reservation/recovery path; signed `invoice.created` fulfills a reserved renewal
+on that invoice only. New issuance gates do not cancel accepted obligations.
+The extension registers the channel's `/uninstall` URL without identity data;
+feedback and billing policy stay on the website. No room protocol changes are
+needed. See the plan and delivery PR for staging validation boundaries.
+
+The existing `/kreatli-email-crm` admin displays saved uninstall feedback through
+`/api/kreatli-crm/uninstall-feedback`. Every read requires its existing CRM
+session, independently of ordinary website login. The private
+`list_uninstall_feedback_v1` RPC returns only date, reason, comment and an opaque
+submission ID for stable cursor pagination (50 rows plus one lookahead).
+The table remains inaccessible to client roles; only the server can execute the
+reader. Feedback is not exported or modified by this inbox. API responses are
+private/no-store and retain the internal route's noindex policy.
+
 Current responsibilities:
 
 - user sign-in through Google/Discord;
@@ -314,6 +333,19 @@ The Worker must not trust client-provided identity for authenticated rooms. The
 identity should come from a verified room token.
 
 ## Live Room API
+
+The local [Free20 anti-abuse candidate](superpowers/specs/2026-11-03-free20-abuse-design.md)
+adds Postgres-owned browser/installation daily scope ledgers alongside account
+usage. Web verifies the reused signed cookie and purpose-separated installation
+proof; the extension background owns enrollment and the short-lived context.
+Only server-verified scopes reach SQL. A changed context on an existing room uses
+a serialized DO transfer: stop host spending, settle, append scopes, persist the
+effective checkpoint, then resume host admission. Protected room accounting stays
+bound after disabling new admission enforcement. This is not a new media path.
+The [current state](current-development-state.md) and
+[schema-first staging runbook](superpowers/plans/2026-11-03-free20-abuse-staging-runbook.md)
+separate the default-off source candidate from hosted delivery and loaded-client
+acceptance; no production activation is implied.
 
 The live room API is responsible for fast ephemeral state, not durable business
 records.

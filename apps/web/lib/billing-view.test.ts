@@ -23,8 +23,8 @@ test("scheduled end of a cardless trial is not displayed as a canceled subscript
 			stage: "trial",
 		},
 	};
-	assert.equal(subscriptionStatusLabel(subscription), "Free trial");
-	assert.equal(subscriptionDateLabel(subscription), "Trial ends");
+	assert.equal(subscriptionStatusLabel(subscription), "Access active");
+	assert.equal(subscriptionDateLabel(subscription), "Access ends");
 	assert.equal(
 		subscriptionStatusLabel({
 			...subscription,
@@ -38,7 +38,7 @@ test("scheduled end of a cardless trial is not displayed as a canceled subscript
 			status: "canceled",
 			trial: { ...subscription.trial!, stage: "ended" },
 		}),
-		"Trial ended",
+		"Access ended",
 	);
 	assert.equal(
 		subscriptionStatusLabel({
@@ -46,7 +46,7 @@ test("scheduled end of a cardless trial is not displayed as a canceled subscript
 			status: "active",
 			trial: { ...subscription.trial!, stage: "ended" },
 		}),
-		"Trial ended",
+		"Access ended",
 	);
 });
 

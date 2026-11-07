@@ -1,3 +1,6 @@
+import { type Free20AbuseContext, Free20ContextError } from "./free20-abuse";
+import { buildFree20ContextTransfer, transferFree20RoomContext } from "./free20-abuse-transfer";
+import { RoomUpdateRequiredError } from "./room-update-required";
 import type {
   ActiveRoomConflictResponse,
   ActiveRoomRole,
@@ -113,6 +116,8 @@ export type SubscriptionRow = {
 };
 
 export type RoomRow = {
+	hosting_time_mode?: "daily_free20" | null;
+	free20_abuse_protected?: boolean;
 	media_lease?: unknown;
 	media_closing_at?: string | null;
   id: string;
@@ -595,8 +600,13 @@ export async function commitStripeSubscriptionRefresh(
 	params: StripeSubscriptionCommit,
 	lease: StripeRefreshLease,
 ): Promise<PlanCode> {
+	const rpc = process.env.ANIDACHI_FREE20_ACCOUNTING_ENABLED === "true"
+		? "commit_stripe_subscription_refresh_v4"
+		: params.trial?.trialMode === "cardless"
+			? "commit_stripe_subscription_refresh_v3"
+			: "commit_stripe_subscription_refresh_v2";
 	const { data, error } = await db()
-		.rpc(params.trial?.trialMode === "cardless" ? "commit_stripe_subscription_refresh_v3" : "commit_stripe_subscription_refresh_v2", {
+		.rpc(rpc, {
 			p_subscription_id: params.stripeSubscriptionId,
 			p_fence: lease.fence,
 			p_token: lease.token,
@@ -653,82 +663,203 @@ export type ActiveRoomClaimResult =
   | { outcome: "conflict"; activeRoom: ActiveRoomSummary };
 
 export async function createRoomWithActiveSession(params: {
-  hostUserId: string;
-  participantSessionId: string;
-  capabilities: RoomCapabilities;
+	hostUserId: string;
+	participantSessionId: string;
+	capabilities: RoomCapabilities;
 	mediaProtocolVersion?: number;
-  showId?: string;
-  episodeId?: string;
-  sourceProvider?: unknown;
-  sourceUrl?: unknown;
-  videoFingerprint?: unknown;
-  title?: string;
-  clientRequestId?: string;
+	free20ClientVersion?: 1 | null;
+	free20Context?: Free20AbuseContext | null;
+	showId?: string;
+	episodeId?: string;
+	sourceProvider?: unknown;
+	sourceUrl?: unknown;
+	videoFingerprint?: unknown;
+	title?: string;
+	clientRequestId?: string;
 }): Promise<ActiveRoomCreateResult> {
-  const sourceColumns = roomSourceCreationColumns({
-    sourceProvider: params.sourceProvider,
-    sourceUrl: params.sourceUrl,
-    videoFingerprint: params.videoFingerprint,
-  });
-	const result = await db().rpc("create_room_with_active_session_v3", {
-		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
-    p_host_user_id: params.hostUserId,
-    p_participant_session_id: params.participantSessionId,
-    p_show_id: params.showId ?? null,
-    p_episode_id: params.episodeId ?? null,
-    p_source_provider: sourceColumns.source_provider,
-    p_source_url: sourceColumns.source_url,
-    p_video_fingerprint: sourceColumns.video_fingerprint,
-    p_source_generation: sourceColumns.source_generation,
-    p_title: params.title ?? null,
-    p_client_request_id: params.clientRequestId ?? null,
-    p_host_plan_code: params.capabilities.hostPlanCode,
-    p_max_participants: params.capabilities.maxParticipants,
-    p_max_media_seats: params.capabilities.maxMediaSeats,
-    p_can_name_room: params.capabilities.canNameRoom,
-    p_can_send_push_invites: params.capabilities.canSendPushInvites,
-  });
-  if (result.error) {
+	const sourceColumns = roomSourceCreationColumns({
+		sourceProvider: params.sourceProvider,
+		sourceUrl: params.sourceUrl,
+		videoFingerprint: params.videoFingerprint,
+	});
+	const abuseEnabled = process.env.ANIDACHI_FREE20_ABUSE_ENABLED === "true";
+	const admit = () =>
+		db().rpc(
+			abuseEnabled
+				? "create_room_with_active_session_v5"
+				: "create_room_with_active_session_v4",
+			{
+				...(abuseEnabled
+					? {
+							p_free20_browser_hash: params.free20Context?.browser ?? null,
+							p_free20_installation_hash:
+								params.free20Context?.installation ?? null,
+						}
+					: {}),
+				p_media_protocol_version: params.mediaProtocolVersion ?? 1,
+				p_free20_client_version: params.free20ClientVersion ?? null,
+				p_host_user_id: params.hostUserId,
+				p_participant_session_id: params.participantSessionId,
+				p_show_id: params.showId ?? null,
+				p_episode_id: params.episodeId ?? null,
+				p_source_provider: sourceColumns.source_provider,
+				p_source_url: sourceColumns.source_url,
+				p_video_fingerprint: sourceColumns.video_fingerprint,
+				p_source_generation: sourceColumns.source_generation,
+				p_title: params.title ?? null,
+				p_client_request_id: params.clientRequestId ?? null,
+				p_host_plan_code: params.capabilities.hostPlanCode,
+				p_max_participants: params.capabilities.maxParticipants,
+				p_max_media_seats: params.capabilities.maxMediaSeats,
+				p_can_name_room: params.capabilities.canNameRoom,
+				p_can_send_push_invites: params.capabilities.canSendPushInvites,
+			},
+		);
+	let result = await admit();
+	if (
+		abuseEnabled &&
+		result.error?.message.includes("FREE20_CONTEXT_ATTACH_REQUIRED")
+	) {
+		if (!params.free20Context || !params.clientRequestId)
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		const original = await getActiveRoomByClientRequestId(
+			params.hostUserId,
+			params.clientRequestId,
+		);
+		if (
+			!original ||
+			original.host_user_id !== params.hostUserId ||
+			original.status === "ended" ||
+			original.free20_abuse_protected !== true
+		)
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		await transferFree20RoomContext(
+			buildFree20ContextTransfer(
+				params.hostUserId,
+				original.room_id,
+				params.free20Context,
+			),
+		);
+		result = await admit(); // Exactly one admission retry after durable applied receipt.
+	}
+	if (result.error) {
+		if (result.error.message.includes("FREE20_CONTEXT_BUSY"))
+			throw new Free20ContextError("FREE20_CONTEXT_BUSY");
+		if (
+			result.error.message.includes("FREE20_CONTEXT_REQUIRED") ||
+			result.error.message.includes("FREE20_CONTEXT_INVALID")
+		)
+			throw new Free20ContextError();
+		if (result.error.message.includes("FREE20_CONTEXT_ATTACH_REQUIRED"))
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		if (result.error.message.includes("QUOTA_EXHAUSTED"))
+			throw new Error("QUOTA_EXHAUSTED");
 		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
 			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
-		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+		if (
+			result.error.message.includes("ROOM_AUTHORITY_UNAVAILABLE") ||
+			result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") ||
+			["55P03", "57014"].includes(result.error.code)
+		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		if (result.error.message.includes("ROOM_UPDATE_REQUIRED_FREE20"))
+			throw new RoomUpdateRequiredError(true);
 		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
 			throw new Error("ROOM_UPDATE_REQUIRED");
-    throw new Error(`Failed to create active room: ${result.error.message}`);
-  }
-  const parsed = parseActiveRoomCreateRpcResult(result.data);
-  if (parsed.outcome === "conflict") return parsed;
-  return {
-    outcome: parsed.outcome,
-    room: parsed.roomRecord as RoomRow,
-  };
+		if (abuseEnabled) throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		throw new Error(`Failed to create active room: ${result.error.message}`);
+	}
+	const parsed = parseActiveRoomCreateRpcResult(result.data);
+	if (parsed.outcome === "conflict") return parsed;
+	return {
+		outcome: parsed.outcome,
+		room: parsed.roomRecord as RoomRow,
+	};
 }
 
 export async function claimActiveRoomSession(params: {
-  userId: string;
-  roomId: string;
-  role: ActiveRoomRole;
-  participantSessionId: string;
+	userId: string;
+	roomId: string;
+	role: ActiveRoomRole;
+	participantSessionId: string;
 	mediaProtocolVersion?: number;
+	free20ClientVersion?: 1 | null;
+	free20Context?: Free20AbuseContext | null;
 }): Promise<ActiveRoomClaimResult> {
-	const result = await db().rpc("claim_active_room_session_v3", {
-		p_media_protocol_version: params.mediaProtocolVersion ?? 1,
-    p_user_id: params.userId,
-    p_room_id: params.roomId,
-    p_role: params.role,
-    p_participant_session_id: params.participantSessionId,
-  });
-  if (result.error) {
+	const abuseEnabled = process.env.ANIDACHI_FREE20_ABUSE_ENABLED === "true";
+	const admit = () =>
+		db().rpc(
+			abuseEnabled
+				? "claim_active_room_session_v5"
+				: "claim_active_room_session_v4",
+			{
+				...(abuseEnabled
+					? {
+							p_free20_browser_hash: params.free20Context?.browser ?? null,
+							p_free20_installation_hash:
+								params.free20Context?.installation ?? null,
+						}
+					: {}),
+				p_media_protocol_version: params.mediaProtocolVersion ?? 1,
+				p_free20_client_version: params.free20ClientVersion ?? null,
+				p_user_id: params.userId,
+				p_room_id: params.roomId,
+				p_role: params.role,
+				p_participant_session_id: params.participantSessionId,
+			},
+		);
+	let result = await admit();
+	if (
+		abuseEnabled &&
+		result.error?.message.includes("FREE20_CONTEXT_ATTACH_REQUIRED")
+	) {
+		if (!params.free20Context || params.role !== "host")
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		const original = await getRoomById(params.roomId);
+		if (
+			!original ||
+			original.host_user_id !== params.userId ||
+			original.status === "ended" ||
+			original.free20_abuse_protected !== true
+		)
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		await transferFree20RoomContext(
+			buildFree20ContextTransfer(
+				params.userId,
+				original.room_id,
+				params.free20Context,
+			),
+		);
+		result = await admit();
+	}
+	if (result.error) {
+		if (result.error.message.includes("FREE20_CONTEXT_BUSY"))
+			throw new Free20ContextError("FREE20_CONTEXT_BUSY");
+		if (
+			result.error.message.includes("FREE20_CONTEXT_REQUIRED") ||
+			result.error.message.includes("FREE20_CONTEXT_INVALID")
+		)
+			throw new Free20ContextError();
+		if (result.error.message.includes("FREE20_CONTEXT_ATTACH_REQUIRED"))
+			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		if (result.error.message.includes("QUOTA_EXHAUSTED"))
+			throw new Error("QUOTA_EXHAUSTED");
 		if (result.error.message.includes("HOST_SUBSCRIPTION_REQUIRED"))
 			throw new Error("HOST_SUBSCRIPTION_REQUIRED");
-		if (result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") || ["55P03","57014"].includes(result.error.code))
+		if (
+			result.error.message.includes("ROOM_AUTHORITY_UNAVAILABLE") ||
+			result.error.message.includes("HISTORY_ACCESS_UNAVAILABLE") ||
+			["55P03", "57014"].includes(result.error.code)
+		)
 			throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
-    if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
-      throw new Error("ROOM_UPDATE_REQUIRED");
-    throw new Error(`Failed to claim active room: ${result.error.message}`);
-  }
-  return parseActiveRoomClaimRpcResult(result.data);
+		if (result.error.message.includes("ROOM_UPDATE_REQUIRED_FREE20"))
+			throw new RoomUpdateRequiredError(true);
+		if (result.error.message.includes("ROOM_UPDATE_REQUIRED"))
+			throw new Error("ROOM_UPDATE_REQUIRED");
+		if (abuseEnabled) throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+		throw new Error(`Failed to claim active room: ${result.error.message}`);
+	}
+	return parseActiveRoomClaimRpcResult(result.data);
 }
 
 export async function releaseActiveRoomSession(params: {
@@ -1041,4 +1172,12 @@ export async function commitRoomUsageDay(
 	)
 		throw new Error("Room usage acknowledgement unavailable");
 	return data;
+}
+
+/** Effective committed total of this room's account and every bound marker scope.
+ * This read remains active for protected rooms even when new admission is off. */
+export async function readFree20RoomUsage(roomId: string, day: string): Promise<number> {
+ const {data,error}=await db().rpc("read_free20_room_usage_v1",{p_room_id:roomId,p_day:day}).abortSignal(AbortSignal.timeout(2000));
+ if(error || !Number.isSafeInteger(data) || data<0)throw new Error("ROOM_AUTHORITY_UNAVAILABLE");
+ return data;
 }

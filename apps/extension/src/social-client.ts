@@ -24,6 +24,8 @@ import {
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
+import type { FriendInviteLink } from "./friend-invite-link";
+export type { FriendInviteLink } from "./friend-invite-link";
 
 const SOCIAL_HTTP_MESSAGE_TYPE = "ANIDACHI_SOCIAL_HTTP";
 const INVALID_ACCOUNT_RESPONSE_MESSAGE =
@@ -69,11 +71,6 @@ export interface SaveFriendGroupInput {
   memberIds: string[];
   create: boolean;
   expectedUpdatedAt: string | null;
-}
-
-export interface FriendInviteLink {
-  url: string;
-  expiresAt: string;
 }
 
 export interface UpdateFriendGroupInput {
@@ -170,7 +167,7 @@ export type SocialHttpMessageResponse =
   | { ok: true; invites: RoomInvitesResponse }
   | { ok: true; acceptedInvite: AcceptedRoomInviteResponse }
   | { ok: true; request: FriendListItem }
-  | { ok: false; error: string; code?: string };
+  | { ok: false; error: string; code?: string; status?: number };
 
 export function listSocialDirectoryHttpMessage(accessToken: string): SocialHttpMessage {
   return {
@@ -409,6 +406,8 @@ async function socialHttpError(response: Response, fallback: string): Promise<Ro
   return new RoomApiError(
     `${detail} (${response.status})`,
     typeof body?.code === "string" ? body.code : undefined,
+    undefined,
+    response.status,
   );
 }
 
@@ -912,7 +911,7 @@ export async function handleSocialHttpMessage(
     return { ok: false, error: "Unsupported social command" };
   } catch (error) {
     if (error instanceof RoomApiError) {
-      return { ok: false, error: error.message, code: error.code };
+      return { ok: false, error: error.message, code: error.code, status: error.status };
     }
     return {
       ok: false,
@@ -937,7 +936,7 @@ function assertSocialHttpResponse(
 }
 
 function socialBridgeError(response: Extract<SocialHttpMessageResponse, { ok: false }>): Error {
-  return new RoomApiError(response.error, response.code);
+  return new RoomApiError(response.error, response.code, undefined, response.status);
 }
 
 export async function listInviteTargets(accessToken: string): Promise<InviteTargets> {

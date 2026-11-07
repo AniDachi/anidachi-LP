@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
@@ -45,7 +46,7 @@ const faq = [
   {
     question: "Is SyncUp free?",
     answer:
-      "SyncUp says its basics are free, with free rooms of up to 5 people and 1 hour of voice chat per day. Its optional Plus plan raises the room cap to 50 and removes the voice limit. On AniDachi, friends join free and hosting a room needs the host's Plus (up to 6 people) or Pro (up to 15), including a 3-day trial for eligible accounts.",
+      "SyncUp says its basics are free, with free rooms of up to 5 people and 1 hour of voice chat per day. Its optional Plus plan raises the room cap to 50 and removes the voice limit. On AniDachi, friends join free. Hosting on Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit.",
   },
   {
     question: "Does SyncUp have video calls?",
@@ -224,8 +225,8 @@ export default function AniDachiVsSyncUpPage() {
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
-          You want to host for free. SyncUp&apos;s free rooms hold up to 5 people, while
-          AniDachi hosts need Plus or Pro. Teleparty is another free option; see{" "}
+          You want free hosting for five people. SyncUp&apos;s free rooms hold up to 5 people.
+          {PRICING_FREE20_SUMMARY} Teleparty is another free option; see{" "}
           <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
             Teleparty&apos;s free and paid tiers
           </Link>
@@ -264,7 +265,7 @@ export default function AniDachiVsSyncUpPage() {
         <li>You want chat and reactions on the player you are watching.</li>
         <li>You want a personal watch history of what you watched together.</li>
         <li>
-          One host pays and friends join free, in rooms of up to 6 (Plus) or 15 (Pro).
+          Free hosts get 20 host minutes per UTC day for up to 4 people. Plus supports 6 people and Pro 15, with no daily hosting time limit. Friends join free.
         </li>
       </ul>
 

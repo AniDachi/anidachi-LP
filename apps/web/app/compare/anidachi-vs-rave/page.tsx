@@ -60,7 +60,7 @@ const faq = [
   {
     question: "Can I switch from Rave to AniDachi?",
     answer:
-      "Yes. Install AniDachi, have everyone open the same Crunchyroll episode locally, and let a Plus, Pro, or trial host create a room. Free friends can join. Use AniDachi's voice/video or keep your existing voice chat.",
+      "Yes. Install AniDachi, have everyone open the same Crunchyroll episode locally, and let a Free, Plus, or Pro host create a room. Free friends can join. Use AniDachi's voice/video or keep your existing voice chat.",
   },
   {
     question: "Is AniDachi better than Rave for long-distance couples watching anime?",

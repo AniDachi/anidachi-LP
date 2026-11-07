@@ -1,5 +1,9 @@
+import type { Free20Request } from "./free20-abuse-client";
 import {
   ActiveRoomConflictResponseSchema,
+  ACCOUNT_HOSTING_OWNER_HEADER,
+  FREE20_CLIENT_HEADER,
+  FREE20_CLIENT_VERSION,
   ClientEventSchema,
   HOST_SUBSCRIPTION_REQUIRED,
   ROOM_CONNECT_REQUEST_TIMEOUT_MS,
@@ -369,7 +373,7 @@ export type RoomAdmissionHandoff = RoomDepartureRetryOperation & {
   tabId: number;
 };
 
-export type RoomAdmissionHandoffMessage = {
+export type RoomAdmissionHandoffRequest = {
   type: typeof ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE;
   command: "acknowledge";
   handoff: RoomAdmissionHandoff;
@@ -534,7 +538,7 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
 
 export function roomAdmissionHandoffMessage(
   handoff: RoomAdmissionHandoff,
-): RoomAdmissionHandoffMessage {
+): RoomAdmissionHandoffRequest {
   if (!isRoomDepartureRetryOperation(handoff)) {
     throw new Error("Invalid room admission handoff");
   }
@@ -550,9 +554,9 @@ export function roomAdmissionHandoffMessage(
 
 export function isRoomAdmissionHandoffMessage(
   value: unknown,
-): value is RoomAdmissionHandoffMessage {
+): value is RoomAdmissionHandoffRequest {
   if (typeof value !== "object" || value === null) return false;
-  const message = value as Partial<RoomAdmissionHandoffMessage>;
+  const message = value as Partial<RoomAdmissionHandoffRequest>;
   return message.type === ROOM_ADMISSION_HANDOFF_MESSAGE_TYPE &&
     message.command === "acknowledge" &&
     isRoomDepartureRetryOperation(message.handoff) &&
@@ -562,10 +566,13 @@ export function isRoomAdmissionHandoffMessage(
     ((message.handoff as Partial<RoomAdmissionHandoff>).tabId ?? -1) >= 0;
 }
 
+type RoomContextRequest = { ownerUserId: string; request: Free20Request };
+
 export async function createWebsiteRoomFromApi(
   accessToken: string,
   participantSessionId: string,
   input?: CreateRoomInput,
+  contextRequest?: RoomContextRequest,
 ): Promise<CreatedRoom> {
   const admission = RoomSessionAdmissionInputSchema.parse({ participantSessionId });
   const normalizedInput = normalizeCreateRoomInput(input);
@@ -574,9 +581,9 @@ export async function createWebsiteRoomFromApi(
     hasSourceUrl: Boolean(normalizedInput?.sourceUrl),
     videoFingerprint: normalizedInput?.videoFingerprint,
   });
-  const response = await fetch(new URL("/api/rooms", WEB_HTTP_BASE), {
+  const response = await (contextRequest?.request ?? fetch)(new URL("/api/rooms", WEB_HTTP_BASE), {
     method: "POST",
-    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3" },
+    headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION), ...(contextRequest ? { [ACCOUNT_HOSTING_OWNER_HEADER]: contextRequest.ownerUserId } : {}) },
     body: JSON.stringify({
       ...(normalizedInput ?? {}),
       participantSessionId: admission.participantSessionId,
@@ -594,6 +601,7 @@ export async function createWebsiteRoomFromApi(
     shareableLink?: unknown;
     reused?: unknown;
     capabilities?: unknown;
+    mediaCapabilities?: unknown;
     quota?: unknown;
   };
   if (typeof payload.roomToken !== "string" || typeof payload.shareableLink !== "string") {
@@ -609,7 +617,7 @@ export async function createWebsiteRoomFromApi(
     roomToken: payload.roomToken,
     shareableLink: payload.shareableLink,
     reused: payload.reused === true,
-    capabilities: parseRoomCapabilities(payload.capabilities),
+    capabilities: parseRoomCapabilities(payload.mediaCapabilities) ?? parseRoomCapabilities(payload.capabilities),
     quota: parseQuotaSummary(payload.quota),
   };
 }
@@ -647,6 +655,7 @@ export async function connectWebsiteRoomFromApi(
   roomId: string,
   accessToken: string,
   participantSessionId: string,
+  contextRequest?: RoomContextRequest,
 ): Promise<{
   roomToken: string;
   capabilities?: RoomCapabilities | RoomMediaCapabilities;
@@ -661,11 +670,11 @@ export async function connectWebsiteRoomFromApi(
   );
   let response: Response;
   try {
-    response = await fetch(
+    response = await (contextRequest?.request ?? fetch)(
       new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
       {
         method: "POST",
-        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3" },
+        headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION), ...(contextRequest ? { [ACCOUNT_HOSTING_OWNER_HEADER]: contextRequest.ownerUserId } : {}) },
         body: JSON.stringify(admission),
         signal: abortController.signal,
       },
@@ -679,6 +688,7 @@ export async function connectWebsiteRoomFromApi(
     const payload = (await response.json()) as {
       roomToken?: unknown;
       capabilities?: unknown;
+      mediaCapabilities?: unknown;
       quota?: unknown;
     };
     if (typeof payload.roomToken !== "string") {
@@ -686,7 +696,7 @@ export async function connectWebsiteRoomFromApi(
     }
     return {
       roomToken: payload.roomToken,
-      capabilities: parseRoomCapabilities(payload.capabilities),
+      capabilities: parseRoomCapabilities(payload.mediaCapabilities) ?? parseRoomCapabilities(payload.capabilities),
       quota: parseQuotaSummary(payload.quota),
     };
   } finally {
@@ -717,6 +727,7 @@ export async function endWebsiteRoomFromApi(
 }
 
 export interface RoomHttpBackgroundDependencies {
+  request?: Free20Request;
   issueAuthority?: (
     input: IssuedRoomAuthorityInput,
     sender: { tab?: { id?: number } },
@@ -863,6 +874,7 @@ export async function handleRoomHttpMessage(
         message.accessToken,
         message.roomSession.participantSessionId,
         message.input,
+        dependencies.request ? { request: dependencies.request, ownerUserId: message.roomSession.ownerUserId } : undefined,
       );
       const roomSession = await confirmPreparedRoomSessionForSender(
         sender,
@@ -892,6 +904,7 @@ export async function handleRoomHttpMessage(
       message.roomId,
       message.accessToken,
       message.roomSession.participantSessionId,
+      dependencies.request ? { request: dependencies.request, ownerUserId: message.roomSession.ownerUserId } : undefined,
     );
     admissionRequestConfirmedSettled = true;
     const roomSession = await confirmPreparedRoomSessionForSender(
@@ -1373,14 +1386,14 @@ export async function acknowledgeRoomAdmissionHandoff(
   handoff: RoomAdmissionHandoff,
 ): Promise<boolean> {
   const response = await chrome.runtime.sendMessage<
-    RoomAdmissionHandoffMessage,
+    RoomAdmissionHandoffRequest,
     RoomAdmissionHandoffResponse
   >(roomAdmissionHandoffMessage(handoff));
   return response?.ok === true && response.acknowledged;
 }
 
 export async function handleRoomAdmissionHandoffMessage(
-  message: RoomAdmissionHandoffMessage,
+  message: RoomAdmissionHandoffRequest,
   sender: { tab?: { id?: number } },
   dependencies: RoomHttpBackgroundDependencies = {},
 ): Promise<RoomAdmissionHandoffResponse> {
@@ -1649,6 +1662,7 @@ export class RoomClient {
       publishStatus("connected");
       const joinEvent: ClientEvent = {
         type: "JOIN",
+        hostingTimeVersion: 1,
         roomId: options.roomId,
         participant: options.participant,
         videoFingerprint: options.videoFingerprint,

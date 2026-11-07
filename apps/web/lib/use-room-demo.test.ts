@@ -43,7 +43,7 @@ afterEach(async () => {
 	document.body.innerHTML = "";
 });
 
-test("demonstrates creation, both invites, cameras, voice, chat and reaction and layout customization in under 28 seconds", async (context) => {
+test("demonstrates creation, both invites, cameras, voice, chat and reaction and layout customization in under 30 seconds", async (context) => {
 	context.mock.timers.enable({ apis: ["setTimeout"] });
 	await render();
 	assert.equal(phase(), "pill");
@@ -55,9 +55,9 @@ test("demonstrates creation, both invites, cameras, voice, chat and reaction and
 		[750, "link-copied"],
 		[900, "open-invites"],
 		[650, "friends"],
-		[1050, "inviting"],
+		[1500, "inviting"],
 		[300, "invited"],
-		[500, "accepted"],
+		[1000, "accepted"],
 		[1200, "together"],
 		[500, "camera"],
 		[700, "camera-on"],
@@ -79,7 +79,7 @@ test("demonstrates creation, both invites, cameras, voice, chat and reaction and
 		[700, "layout-done"],
 		[1800, "pill"],
 	] as const;
-	assert.ok(steps.reduce((duration, [delay]) => duration + delay, 0) <= 28000);
+	assert.ok(steps.reduce((duration, [delay]) => duration + delay, 0) <= 30000);
 	for (const [delay, expected] of steps) {
 		const before = phase();
 		await act(async () => context.mock.timers.tick(delay - 1));
@@ -164,7 +164,7 @@ test("switching away during creation cancels the old scene on unmount", async (c
 test("switching modes during a pending invitation cannot join a friend in a fresh demo", async (context) => {
 	context.mock.timers.enable({ apis: ["setTimeout"] });
 	await render();
-	for (const delay of [1200, 1700, 450, 650, 750, 900, 650, 1050, 300]) {
+	for (const delay of [1200, 1700, 450, 650, 750, 900, 650, 1500, 300]) {
 		await act(async () => context.mock.timers.tick(delay));
 	}
 	assert.equal(phase(), "invited");

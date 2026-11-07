@@ -163,6 +163,18 @@ describe("PlaybackSyncController", () => {
 		expect(harness.sent).toEqual([]);
 	});
 
+	it.each(["sent", "queued", "dropped"] as const)("manual sync reports actual %s transport outcome", (disposition) => {
+		const harness = createHarness({ isHost: true, disposition });
+		expect(harness.controller.broadcastHostState()).toBe(disposition === "sent");
+	});
+	it("does not confirm manual sync for guests or a detached video", () => {
+		const guest = createHarness({ isHost: false });
+		expect(guest.controller.broadcastHostState()).toBe(false);
+		const host = createHarness({ isHost: true });
+		host.controller.bindAdapter(null);
+		expect(host.controller.broadcastHostState()).toBe(false);
+	});
+
 	it("broadcasts an explicit host state even during remote-event suppression", () => {
 		const harness = createHarness({ isHost: true });
 
@@ -195,6 +207,32 @@ describe("PlaybackSyncController", () => {
 		expect(harness.statuses.at(-1)).toEqual({
 			kind: "waiting-for-host-ad",
 		});
+	});
+
+	it.each(["adapter", "session", "transition"] as const)("clears the host ad notice when content returns through a %s change", change => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setPhase("interstitial");
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({ kind: "waiting-for-host-ad" });
+		harness.sent.length = 0;
+		if (change === "adapter") {
+			harness.controller.bindAdapter(createFakeAdapter({ provider: "youtube" }));
+		} else if (change === "session") {
+			harness.adapter.setPhase("content");
+			harness.controller.setSession(session({ isHost: true, connectionGeneration: 2 }));
+		} else {
+			harness.adapter.setPhase("transition");
+			harness.adapter.emitPhase();
+			expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+			harness.controller.heartbeat();
+			expect(harness.sent).toEqual([]);
+			harness.adapter.setPhase("content");
+			harness.adapter.emitPhase();
+		}
+		expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
+		harness.controller.heartbeat();
+		expect(harness.sent.at(-1)?.type).toBe("HOST_STATE");
+		harness.controller.dispose();
 	});
 
 	it("uses a zero content hold for a host pre-roll", () => {
@@ -963,6 +1001,7 @@ describe("PlaybackSyncController", () => {
 });
 
 interface HarnessOptions {
+	disposition?: "sent" | "queued" | "dropped";
 	ensureRemoteSource?: (
 		source: WatchSourceDescriptor,
 		context: SourceNavigationContext,
@@ -987,7 +1026,7 @@ function createHarness(options: HarnessOptions) {
 			})),
 		onStatus: (status) => statuses.push(status),
 		transport: {
-			send: (event) => sent.push(event),
+			send: (event) => { sent.push(event); return options.disposition ?? "sent"; },
 		},
 	});
 	controller.bindAdapter(adapter);

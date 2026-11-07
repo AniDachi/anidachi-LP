@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
@@ -19,7 +20,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "How to Host a YouTube Watch Party",
   description:
-    "Host a YouTube watch party with Plus or Pro access, including an active trial. Share invites so friends can join on Free accounts.",
+    "Host a YouTube watch party on Free with 20 host minutes per UTC day for up to 4 people, or on Plus or Pro without a daily hosting time limit. Share invites so friends can join on Free accounts.",
   alternates: { canonical: "/guides/how-to-host-a-youtube-watch-party" },
   openGraph: {
     title: "How to Host a YouTube Watch Party",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "How to Host a YouTube Watch Party",
-    description: "Plus, Pro, or active trial access for hosts; Free accounts for guests. Step-by-step.",
+    description: "Free daily hosting for up to 4 people, or Plus and Pro without a daily hosting time limit. Guests join free. Step-by-step.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -43,7 +44,7 @@ const howToSteps = [
   },
   {
     name: "Choose your AniDachi host plan",
-    text: "Hosting requires your own Plus or Pro access, including an active trial. Friends can join your active room on Free accounts.",
+    text: `${PRICING_FREE20_SUMMARY} Friends can join your active room on Free accounts.`,
   },
   {
     name: "Open the exact YouTube URL",

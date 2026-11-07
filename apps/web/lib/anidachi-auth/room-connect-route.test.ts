@@ -64,7 +64,7 @@ async function fixture(options: { closeAfterClaim?: boolean; active?: boolean; a
       state.quotaReads++;
       return Response.json({ host_seconds: options.active ? 1800 : 0 });
     }
-    if (url.pathname.endsWith("/claim_active_room_session_v3")) {
+    if (url.pathname.endsWith("/claim_active_room_session_v4")) {
       state.claims++;
       // The real admission transaction finishes; closure wins before the delayed PATCH.
       if (options.closeAfterClaim) state.status = "ended";

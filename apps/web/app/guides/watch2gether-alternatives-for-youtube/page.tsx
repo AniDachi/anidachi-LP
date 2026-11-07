@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
@@ -49,7 +50,7 @@ const faq = [
   {
     question: "Does AniDachi replace Watch2Gether for free users?",
     answer:
-      "AniDachi Free accounts can join active Plus or Pro hosts, including trial hosts. Creating a room requires your own Plus or Pro access. Watch2Gether offers a free browser room without an extension; see /pricing for AniDachi plans.",
+      `${PRICING_FREE20_SUMMARY} Watch2Gether offers a free browser room without an extension; see /pricing for AniDachi plans.`,
   },
 ];
 

@@ -26,12 +26,13 @@ export function MainAppFeatures() {
 				<div className={styles.main}>
 					<div className={styles.copy}>
 						<h2 id="hosting-title">
-							One subscription.
+							20 free minutes a day.
 							<br />
 							<span>Friends join free.</span>
 						</h2>
 						<p className={styles.description}>
-							You choose Plus or Pro. Your friends only need a free account.
+							Start a room for up to 4 people, including you. Choose Plus or Pro
+							for a larger group and no daily time limit.
 						</p>
 						<a className={styles.planLink} href="#pricing">
 							Find your plan <ArrowDown size={17} aria-hidden="true" />
@@ -44,12 +45,12 @@ export function MainAppFeatures() {
 
 					<figure
 						className={styles.room}
-						aria-label="Explore a room with one host subscription and free guests"
+						aria-label="Explore larger paid rooms with free guests"
 					>
 						<div
 							className={styles.selector}
 							role="group"
-							aria-label="Explore room sizes"
+							aria-label="Explore paid room sizes"
 						>
 							{roomPlans.map((option) => (
 								<button

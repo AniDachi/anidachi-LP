@@ -31,6 +31,37 @@
 
 ## Progress Log
 
+- **2026-11-03, `codex/free20-abuse-adaptation`, through `b219bf49`:**
+  [default-off scoped Free20 candidate](2026-11-03-free20-abuse-adaptation.md)
+  adds stopped-host context transfer: durable intent/frozen meter, cumulative
+  settlement, trusted SQL attachment, durable effective checkpoint, then host
+  admission. Original bindings and terminal/60-second disconnect fences survive
+  retries and hibernation; guest/media controls remain unchanged. Independently
+  reviewed Tasks 1–4 include 24 final focused workerd transfer cases, room
+  harness 39/39 and extension 2759 tests. Local real-WebRTC passed legacy 26/26
+  and all four-participant v3 scenarios (12/12 decoded first frames, p95
+  1931.8 ms), with isolated Chromium/fake media/local Worker and no external
+  TURN. Hosted context transfer, loaded Chrome cookie policy, real two-user/
+  network acceptance and activation are not established by these fixtures.
+
+- **2026-11-01, `codex/free20-staging-readiness`, `14997bf6`:** the
+  [readiness candidate](2026-11-01-free20-staging-readiness.md) adds explicit
+  current-client negotiation at HTTP/SQL host admission for marked Free20 rooms.
+  Final canonical create checks and sorted claim locks close legacy RPC bypasses
+  without modifying existing sockets, renewals, media caps or P2P behavior.
+  Independent task review approved; protocol283, API325, Web1486, extension2588,
+  SQL539, eight new race groups and room harness39 pass. New warning server/client
+  blocks are also reviewed locally. Hosted enablement, exact loaded artifact and
+  two-participant acceptance remain pending; the owner has no second tester now.
+
+- **2026-11-01, `codex/free20-purchase-delivery`:** the approved
+  [purchase delivery candidate](2026-11-01-free20-purchase-delivery.md) requests
+  serialized revalidation after an atomic billing/outbox commit. It preserves
+  pinned room caps, cumulative accounting, terminal deadlines and existing P2P.
+  Local API/protocol/runtime/room checks and SQL concurrency evidence belong in
+  its PR, together with staging deployment and rollback. Free20 activation,
+  real Sandbox checkout, loaded-client acceptance and production remain separate.
+
 - **2026-10-17, `codex/netflix-input-media-fixes`:** the [player input/media repair](2026-10-17-netflix-input-media-fixes.md) preserves reported v2/v3 camera publication across hibernation without treating a grant as capture, and routes held-key releases before composer/provider handlers. Regression evidence includes real forced-wake Worker snapshots and all-provider overlay keyboard fixtures. Exact full-suite/CI/staging results are recorded in the PR; loaded-artifact and cross-network media acceptance are still separate release gates.
 
 - 2026-10-14 — `codex/vercel-request-followup`: approved candidate work adds a

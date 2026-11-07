@@ -1,3 +1,4 @@
+import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
@@ -136,7 +137,7 @@ const faq = [
 	{
 		question: "How do you watch Crunchyroll together (step by step)?",
 		answer:
-			"Add AniDachi from the Chrome Web Store via /extension and open a Crunchyroll episode; the extension detects the player automatically. With active Plus, Pro, or trial access, choose Create room and invite Free friends. Full walkthrough: /guides/how-to-watch-crunchyroll-with-friends.",
+			"Add AniDachi from the Chrome Web Store via /extension and open a Crunchyroll episode; the extension detects the player automatically. With active Free, Plus, or Pro access, choose Create room and invite Free friends. Full walkthrough: /guides/how-to-watch-crunchyroll-with-friends.",
 	},
 ];
 
@@ -180,7 +181,7 @@ const howToSteps = [
 	},
 	{
 		name: "Create a room",
-		text: "With active Plus, Pro, or trial access, choose 'Create room' in AniDachi. Free friends can join through your invite.",
+		text: "With active Free, Plus, or Pro access, choose 'Create room' in AniDachi. Free friends can join through your invite.",
 	},
 	{
 		name: "Share the invite link",
@@ -241,7 +242,7 @@ export default function WatchCrunchyrollTogetherPage() {
 						how to watch Crunchyroll with friends
 					</Link>
 					. Start from the <Link href="/extension">AniDachi install page</Link>.
-					Friends join free; the host needs Plus or Pro, including a trial.{" "}
+					Friends join free; {PRICING_FREE20_SUMMARY}{" "}
 					<Link href="/pricing">Compare plans</Link>.
 				</SeoGuideAnswer>
 
@@ -328,7 +329,7 @@ export default function WatchCrunchyrollTogetherPage() {
 						},
 						{
 							name: "Create a watchroom",
-							text: "With active Plus, Pro, or trial access (see /pricing), create a room and share its invite link. Free friends can join.",
+							text: "With active Free, Plus, or Pro access (see /pricing), create a room and share its invite link. Free friends can join.",
 						},
 						{
 							name: "Watch together",

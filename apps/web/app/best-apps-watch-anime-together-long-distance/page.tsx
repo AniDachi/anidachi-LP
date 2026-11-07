@@ -189,7 +189,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         <li>Live chat and reactions alongside the player</li>
         <li>Personal progress with your own Plus/Pro access and recording permission</li>
         <li>Built-in voice and video during the room session</li>
-        <li>Free to join active Plus/Pro/trial hosts; Plus from $7.99/mo to host — {PRICING_CANCELLATION_NOTE}</li>
+        <li>Free daily hosting for up to 4 people; Plus from $7.99/mo — {PRICING_CANCELLATION_NOTE}</li>
       </ul>
       <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Long-distance couples on Crunchyroll with

@@ -74,7 +74,7 @@ const howToSteps = [
   },
   {
     name: "Create the watchroom",
-    text: "With your own Plus or Pro access, including an active trial, choose Create room. Friends can join on Free accounts.",
+    text: "On Free, Plus, or Pro, choose Create room. Friends can join on Free accounts.",
   },
   {
     name: "Copy the invite link",

@@ -102,7 +102,7 @@ const howToSteps = [
   },
   {
     name: "The host creates a room",
-    text: "With Plus, Pro or a trial, the host opens the episode, clicks the AniDachi capsule on the player and chooses Create room.",
+    text: "On Free, Plus, or Pro, the host opens the episode, clicks the AniDachi capsule on the player and chooses Create room.",
   },
   {
     name: "Share the invite, not the password",
@@ -318,8 +318,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
           <InstallLink href="/extension" className="text-brand-orange hover:underline">
             Add AniDachi to Chrome
           </InstallLink>{" "}
-          to try it. Only the host needs AniDachi Plus or Pro, including a
-          trial; friends join on free accounts. Rooms hold up to 6 people on
+          to try it. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. Friends join on free accounts. Rooms hold up to 6 people on
           Plus and 15 on Pro, host included. The full walkthrough is on the{" "}
           <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
             Crunchyroll watch party guide

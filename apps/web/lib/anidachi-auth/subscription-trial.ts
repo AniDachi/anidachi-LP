@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import type { BillingPeriod, MonthlyPrice } from "../billing-view";
 import type { PaidPlanCode } from "./plan-entitlements";
 import { CHECKOUT_PROMOTION_POLICY } from "./product-hunt-promo";
+import { stripeObjectId, UNINSTALL_CHECKOUT_POLICY } from "./uninstall-stripe";
 
 export type CheckoutReservation = {
 	user_id: string;
@@ -38,6 +39,11 @@ export type CheckoutResult = {
 	trialOffered: boolean;
 };
 export type CheckoutDeps = {
+	checkoutPolicy?: string;
+	frozenPromotion?: (
+		reservation: CheckoutReservation,
+		customerId: string,
+	) => Promise<string>;
 	ensurePromotion?: (userId: string, customerId: string) => Promise<void>;
 	readReservation?: (userId: string) => Promise<CheckoutReservation | null>;
 	stripe: Stripe;
@@ -164,7 +170,7 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				active.trial_end * 1000 > (deps.now ?? Date.now)())
 		)
 			throw new SubscriptionCheckoutError(
-				"Use the trial renewal controls to confirm or cancel payment after your trial.",
+				"Use the renewal controls to confirm or cancel your next payment.",
 				409,
 			);
 		if (deps.ensurePromotion) {
@@ -208,6 +214,22 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 			throw new SubscriptionCheckoutError(
 				"Checkout owner or reservation identity mismatch.",
 			);
+		if (
+			r.attribution.checkoutPromotionPolicy === UNINSTALL_CHECKOUT_POLICY &&
+			(session.metadata?.checkoutPromotionPolicy !==
+				UNINSTALL_CHECKOUT_POLICY ||
+				session.metadata?.uninstallCouponId !==
+					r.attribution.uninstallCouponId ||
+				session.allow_promotion_codes ||
+				session.discounts?.length !== 1 ||
+				!session.metadata?.uninstallPromotionId ||
+				stripeObjectId(session.discounts[0].promotion_code) !==
+					session.metadata.uninstallPromotionId ||
+				(session.discounts[0].coupon &&
+					stripeObjectId(session.discounts[0].coupon) !==
+						r.attribution.uninstallCouponId))
+		)
+			throw new SubscriptionCheckoutError("Frozen checkout discount mismatch.");
 	}
 	async function existingSubscription(customerId: string, userId: string) {
 		const list = await stripe.subscriptions.list(
@@ -276,8 +298,9 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				previous.mode !== "subscription" ||
 				(previous.metadata?.checkoutReservationId &&
 					(!deps.ensurePromotion ||
-						previous.metadata.checkoutPromotionPolicy ===
-							CHECKOUT_PROMOTION_POLICY))
+						[CHECKOUT_PROMOTION_POLICY, UNINSTALL_CHECKOUT_POLICY].includes(
+							previous.metadata.checkoutPromotionPolicy,
+						)))
 			)
 				continue;
 			const outcome = await expireAndRead(previous, customerId, input.userId);
@@ -362,8 +385,23 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 					throw new SubscriptionCheckoutError(
 						"Checkout reconciliation required before retry.",
 					);
+				const uninstall =
+					r.attribution.checkoutPromotionPolicy === UNINSTALL_CHECKOUT_POLICY;
+				if (
+					uninstall &&
+					(r.trial_offered ||
+						r.attribution.billingPeriod !== "monthly" ||
+						!deps.frozenPromotion)
+				)
+					throw new SubscriptionCheckoutError(
+						"Frozen offer recovery unavailable.",
+					);
+				const promotionId = uninstall
+					? await deps.frozenPromotion!(r, customerId)
+					: null;
 				const metadata = {
 					...r.attribution,
+					...(promotionId ? { uninstallPromotionId: promotionId } : {}),
 					userId: r.user_id,
 					planCode: r.plan_code,
 					checkoutReservationId: r.id,
@@ -379,17 +417,23 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 						payment_method_collection: "always",
 						line_items: [{ price: r.price_id, quantity: 1 }],
 						success_url: r.origin + "/success?session_id={CHECKOUT_SESSION_ID}",
-						cancel_url:
-							r.origin +
-							"/pricing" +
-							(["monthly", "yearly"].includes(r.attribution.billingPeriod)
-								? `?billing=${r.attribution.billingPeriod}`
-								: ""),
-						allow_promotion_codes:
-							r.attribution.checkoutPromotionPolicy ===
-							CHECKOUT_PROMOTION_POLICY
-								? !r.trial_offered && r.attribution.billingPeriod === "monthly"
-								: true,
+						cancel_url: uninstall
+							? r.origin + "/uninstall?plan=" + r.plan_code
+							: r.origin +
+								"/pricing" +
+								(["monthly", "yearly"].includes(r.attribution.billingPeriod)
+									? `?billing=${r.attribution.billingPeriod}`
+									: ""),
+						...(promotionId
+							? { discounts: [{ promotion_code: promotionId }] }
+							: {
+									allow_promotion_codes:
+										r.attribution.checkoutPromotionPolicy ===
+										CHECKOUT_PROMOTION_POLICY
+											? !r.trial_offered &&
+												r.attribution.billingPeriod === "monthly"
+											: true,
+								}),
 						billing_address_collection: "required",
 						metadata,
 						subscription_data: {
@@ -487,7 +531,8 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 					...input,
 					attribution: {
 						...input.attribution,
-						checkoutPromotionPolicy: CHECKOUT_PROMOTION_POLICY,
+						checkoutPromotionPolicy:
+							deps.checkoutPolicy ?? CHECKOUT_PROMOTION_POLICY,
 						billingPeriod: input.billingPeriod ?? "monthly",
 					},
 				};
@@ -570,7 +615,7 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				const matches =
 					(!deps.ensurePromotion ||
 						r.attribution.checkoutPromotionPolicy ===
-							CHECKOUT_PROMOTION_POLICY) &&
+							(deps.checkoutPolicy ?? CHECKOUT_PROMOTION_POLICY)) &&
 					r.plan_code === input.planCode &&
 					r.price_id === input.priceId &&
 					r.origin === input.origin &&
@@ -636,10 +681,23 @@ export function createSubscriptionCheckoutService(deps: CheckoutDeps) {
 				}
 				if (
 					deps.ensurePromotion &&
+					r.attribution.checkoutPromotionPolicy !== UNINSTALL_CHECKOUT_POLICY &&
 					!r.trial_offered &&
 					r.attribution.billingPeriod === "monthly"
 				)
 					await deps.ensurePromotion(input.userId, customerId);
+				if (
+					r.attribution.checkoutPromotionPolicy === UNINSTALL_CHECKOUT_POLICY
+				) {
+					const promotionId = await deps.frozenPromotion?.(r, customerId);
+					if (
+						!promotionId ||
+						session.metadata?.uninstallPromotionId !== promotionId
+					)
+						throw new SubscriptionCheckoutError(
+							"Checkout discount is no longer available.",
+						);
+				}
 				return {
 					kind: "checkout",
 					sessionId: session.id,

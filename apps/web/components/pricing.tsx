@@ -1,4 +1,5 @@
 "use client";
+import { pricingFreeTier, pricingMatrixRows } from "@/lib/pricing-tiers";
 
 import { InstallLink } from "@/components/install-link";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +16,6 @@ import {
 } from "@/lib/conversion-events";
 import {
 	PRICING_PLAN_MATRIX_COLUMNS,
-	PRICING_PLAN_MATRIX_ROWS,
 	PRICING_TIERS,
 	PUBLISHED_PRICING,
 	type CheckoutTier,
@@ -37,7 +37,10 @@ import {
 	checkoutReturnPath,
 } from "@/lib/checkout-selection";
 import { resolveBrowserTrialOffer } from "@/lib/trial-offer-client";
-import { readOnboardingCheckout, rememberOnboardingCheckout } from "@/lib/onboarding-return-client";
+import {
+	readOnboardingCheckout,
+	rememberOnboardingCheckout,
+} from "@/lib/onboarding-return-client";
 import "./pricing.css";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -56,7 +59,7 @@ function FeatureList({ features }: { features: string[] }) {
 export function Pricing({
 	headingLevel = 2,
 	showPlanMatrix = false,
-	initialPeriod = "yearly",
+	initialPeriod = "monthly",
 	onboarding,
 }: {
 	/** Use 1 on the dedicated /pricing page so the page has a single H1. */
@@ -75,6 +78,9 @@ export function Pricing({
 	const sectionRef = useRef<HTMLElement | null>(null);
 	const pricingViewFired = useRef(false);
 	const [offer, setOffer] = useState<PricingOffer | null>(null);
+	// The public hosting model is not an account entitlement or a checkout lease.
+	// Keep its last confirmed value while personal offers refresh or expire.
+	const [catalogModel, setCatalogModel] = useState<PricingOffer["hostingModel"]>();
 	const [offerFresh, setOfferFresh] = useState(false);
 	const [offerLoading, setOfferLoading] = useState(true);
 	const checkingOfferRef = useRef(true);
@@ -90,6 +96,10 @@ export function Pricing({
 	const lastAttemptedTier = useRef<CheckoutTier | null>(null);
 	const displayPrices = PUBLISHED_PRICING[period];
 	const showTrialTerms = hasConfirmedTrialOffer(offer);
+	// The legacy allowance can end at the activation boundary carried by the
+	// offer deadline. Never keep that old promise past its confirmed lifetime.
+	const hostingModel =
+		catalogModel === "legacy" && !offerFresh ? undefined : catalogModel;
 
 	useEffect(() => {
 		const life = new AbortController();
@@ -164,6 +174,7 @@ export function Pricing({
 					Math.min(60_000, next.validForMs) - (Date.now() - started);
 				if (!(remaining > 0)) throw new Error("Offer expired");
 				setOffer(next);
+				setCatalogModel(next.hostingModel);
 				setOfferFresh(true);
 				offerDeadline.current = Date.now() + remaining;
 				clearTimeout(expiryTimer);
@@ -353,7 +364,7 @@ export function Pricing({
 				// An unconfirmed public choice is not consent to an immediate charge.
 				// Show the verified paid terms and require a new, explicit choice.
 				setCheckoutError(
-					"A free trial is not available for this account. Review the subscription terms below before continuing.",
+					"Review the subscription terms below before continuing.",
 				);
 				return;
 			}
@@ -469,7 +480,11 @@ export function Pricing({
 			});
 
 			if (data.kind !== "manage_subscription" && currentOffer.ownerUserId)
-				rememberOnboardingCheckout(returnToken, currentOffer.ownerUserId, data.sessionId);
+				rememberOnboardingCheckout(
+					returnToken,
+					currentOffer.ownerUserId,
+					data.sessionId,
+				);
 			window.location.href =
 				data.kind === "manage_subscription" ? "/account/billing" : data.url;
 		} catch (error) {
@@ -513,9 +528,9 @@ export function Pricing({
 					titleAs={headingLevel === 1 ? "h1" : "h2"}
 					title="Watch together. Choose your plan."
 					description={
-						offerFresh && offer?.paidHostingActive === false
-							? "Join friends for free. Choose Plus or Pro for more hosting and personal watch history."
-							: "Join friends for free, or host your own room with Plus or Pro."
+						hostingModel === "daily_free20"
+							? "20 free minutes every day. No daily time limit with Plus or Pro."
+							: "Watch together. Find the plan that fits your group."
 					}
 				/>
 				<div
@@ -565,19 +580,8 @@ export function Pricing({
 				<div className="pricing-plans__grid">
 					{PRICING_TIERS.map((baseTier) => {
 						const tier =
-							baseTier.id === "free" &&
-							(!offerFresh || offer?.paidHostingActive !== false)
-								? {
-										...baseTier,
-										audience: "Join a friend’s room for free.",
-										summary: "Join a Plus, Pro or trial host for free.",
-										features: [
-											"Join rooms on Crunchyroll, YouTube, Netflix",
-											"Synced video, chat & reactions",
-											"Voice & video within your host’s limits",
-											"Read saved history & resume",
-										],
-									}
+							baseTier.id === "free"
+								? pricingFreeTier(hostingModel)
 								: baseTier;
 						const highlighted = isHighlighted(tier.id);
 						const paidTier = tier.id !== "free" ? tier.id : null;
@@ -596,7 +600,7 @@ export function Pricing({
 									paidTier={paidTier}
 									onSubscribe={handleSubscribe}
 									offer={offer}
-									offerFresh={offerFresh}
+									hostingModel={hostingModel}
 									offerLoading={!offer && offerLoading}
 									prices={displayPrices}
 									period={period}
@@ -610,8 +614,8 @@ export function Pricing({
 					{showTrialTerms ? (
 						<p id="pricing-trial-terms" className="pricing-plans__trial-terms">
 							{offer?.trialMode === "cardless"
-								? "One 3-day trial per eligible account. Changing plans does not restart it."
-								: "Card required. One trial per account. Cancel before your trial ends to avoid a charge."}
+								? "One offer per eligible account. Changing plans does not extend its duration."
+								: "Card required. One offer per account. Cancel before your first payment to avoid a charge."}
 						</p>
 					) : null}
 					<p className="pricing-plans__terms">
@@ -630,7 +634,7 @@ export function Pricing({
 						</h3>
 						<ResponsiveCompareTable
 							columns={[...PRICING_PLAN_MATRIX_COLUMNS]}
-							rows={PRICING_PLAN_MATRIX_ROWS.map((row) =>
+							rows={pricingMatrixRows(hostingModel).map((row) =>
 								row.feature === "Price"
 									? {
 											...row,
@@ -648,26 +652,7 @@ export function Pricing({
 													: "—",
 											},
 										}
-									: !offerFresh || offer?.paidHostingActive !== false
-										? {
-												...row,
-												values: {
-													...row.values,
-													free:
-														row.feature === "Host your own room"
-															? offer
-																? "Join only"
-																: "Included with Plus / Pro"
-															: [
-																		"People in room (incl. host)",
-																		"Cameras at once",
-																		"Mics at once",
-																	].includes(row.feature)
-																? "Host’s plan"
-																: row.values.free,
-												},
-											}
-										: row,
+									: row,
 							)}
 						/>
 					</div>
@@ -685,7 +670,7 @@ function TierCardBody({
 	paidTier,
 	onSubscribe,
 	offer,
-	offerFresh,
+	hostingModel,
 	offerLoading,
 	prices,
 	period,
@@ -701,7 +686,7 @@ function TierCardBody({
 	prices: PricingPrices | null;
 	period: BillingPeriod;
 	headingLevel: 2 | 3;
-	offerFresh: boolean;
+	hostingModel: PricingOffer["hostingModel"];
 	offerLoading: boolean;
 }) {
 	const Heading = headingLevel === 2 ? "h2" : "h3";
@@ -737,14 +722,12 @@ function TierCardBody({
 	const trialOffered = hasConfirmedTrialOffer(offer);
 	const ctaLabel =
 		offer?.action === "trial"
-			? "Start 3-day free trial"
+			? `Continue with ${tier.label}`
 			: offer?.action === "manage"
 				? "Manage subscription"
 				: offer?.action === "subscribe"
 					? `Subscribe to ${tier.label}`
-					: trialOffered
-						? "Try 3 days free"
-						: `Choose ${tier.label}`;
+					: `Choose ${tier.label}`;
 	const description = tier.audience;
 	const recurringAmount = selectedPrice
 		? formatMonthlyPrice(selectedPrice)
@@ -760,7 +743,12 @@ function TierCardBody({
 					? `3 days free, then ${recurringAmount}/${unit} automatically.`
 					: offer?.action === "manage"
 						? null
-						: `Renews at ${recurringAmount}/${unit}.`;
+						: yearly ||
+							(offer.action === "sign_in" &&
+								offer.trialAvailable &&
+								offer.trialMode === "cardless")
+							? `Renews at ${recurringAmount}/${unit}.`
+							: "Renews automatically. Cancel anytime.";
 	const termsDetail =
 		trialOffered && offer?.trialMode === "cardless"
 			? `Continue for ${recurringAmount}/${unit} only if you enable renewal.`
@@ -768,7 +756,9 @@ function TierCardBody({
 				? null
 				: offer.action === "manage"
 					? "Manage your current plan and renewal in Account → Subscription."
-					: "Cancel renewal in Account → Subscription. No new free trial is included.";
+					: yearly
+						? "Cancel renewal anytime in Account → Subscription."
+						: null;
 
 	return (
 		<>
@@ -787,25 +777,23 @@ function TierCardBody({
 				>
 					<div className="pricing-plans__price-line">
 						<span className="pricing-plans__amount">{price}</span>
-						<span className="pricing-plans__suffix">
-							{!paidTier
-								? "Free to join"
-								: yearly
-									? "per month, approx."
-									: "per month"}
-						</span>
+						{paidTier ? (
+							<span className="pricing-plans__suffix">
+								{yearly ? "per month, approx." : "per month"}
+							</span>
+						) : null}
 					</div>
-					<p className="pricing-plans__billing">
-						{yearly ? (
-							<>
-								Billed <strong>{recurringAmount} / year</strong>
-							</>
-						) : paidTier ? (
-							"Billed monthly."
-						) : (
-							"No card needed."
-						)}
-					</p>
+					{yearly || !paidTier ? (
+						<p className="pricing-plans__billing">
+							{yearly ? (
+								<>
+									Billed <strong>{recurringAmount} / year</strong>
+								</>
+							) : (
+								"No card needed."
+							)}
+						</p>
+					) : null}
 					{yearlySavings ? (
 						<p className="pricing-plans__savings">
 							Save <strong>{yearlySavings} / year</strong> vs monthly
@@ -872,7 +860,11 @@ function TierCardBody({
 			<div className="pricing-plans__details">
 				<p className="pricing-plans__feature-heading">
 					{tier.id === "free" ? (
-						"Everything you need to join"
+						hostingModel === "daily_free20" ? (
+							"Included with Free"
+						) : (
+							"Everything you need to join"
+						)
 					) : (
 						<>
 							Up to <strong>{policy.maxParticipants - 1} friends</strong> join
@@ -883,7 +875,7 @@ function TierCardBody({
 				<div>
 					<FeatureList features={features} />
 					{tier.id === "free" &&
-					(!offerFresh || offer?.paidHostingActive !== false) ? (
+					hostingModel === "paid_hosting" ? (
 						<p className="pricing-plans__free-note">
 							{offer
 								? "Creating rooms and saving new watch progress require Plus or Pro."

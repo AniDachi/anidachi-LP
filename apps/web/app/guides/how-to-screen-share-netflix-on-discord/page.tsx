@@ -57,7 +57,7 @@ const howToSteps = [
   },
   {
     name: "Create the room and paste the invite in Discord",
-    text: "The host (Plus, Pro or an active trial) clicks the capsule at the top-right of the player, chooses Create room and pastes the invite in the Discord chat. Friends join free, and play, pause and seek stay in sync.",
+    text: "The host on Free, Plus, or Pro clicks the capsule at the top-right of the player, chooses Create room and pastes the invite in the Discord chat. Friends join free, and play, pause and seek stay in sync.",
   },
 ];
 
@@ -111,7 +111,7 @@ const faq = [
   {
     question: "Does everyone need Netflix to watch together on Discord?",
     answer:
-      "Yes, for a synced watch party. Each person needs their own Netflix access to the same title in their region. With AniDachi, only the host needs Plus, Pro or a trial; friends join the room free.",
+      "Yes, for a synced watch party. Each person needs their own Netflix access to the same title in their region. With AniDachi, Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join the room free.",
   },
   {
     question: "How do you watch movies on Discord with friends?",
@@ -322,7 +322,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
               feature: "Cost",
               values: {
                 share: "Free; Nitro for higher quality",
-                anidachi: `Friends join free; host needs Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT} or a trial`,
+                anidachi: `Friends join free; Free host: 20 minutes per UTC day, up to 4 people; Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT}`,
               },
             },
             {
@@ -338,7 +338,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
           The trade-off is clear. Screen share costs nothing and works for a
           quick look at a menu or a trailer, but on Netflix it rarely shows a
           picture. AniDachi needs everyone in desktop Chrome with their own
-          Netflix access and a host with a paid plan or trial, and in return
+          Netflix access and a host on Free, Plus, or Pro, and in return
           the film looks the way Netflix sends it. For the general Discord
           side of a movie night, see{" "}
           <Link href="/discord-watch-party">Discord watch party</Link>.
