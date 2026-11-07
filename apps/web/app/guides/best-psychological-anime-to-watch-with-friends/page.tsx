@@ -129,10 +129,10 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Ready to host one of these? The{" "}
-        <Link href="/watch-psychological-anime-with-friends" className="text-brand-orange hover:underline">
-          psychological anime watch party guide
+        <Link href="/guides/first-anime-watch-party-checklist" className="text-brand-orange hover:underline">
+          first anime watch party checklist
         </Link>{" "}
-        covers setup, pacing, and discussion prompts.
+        covers setup and pacing before you press play.
       </p>
 
       {/* ── SECTION 1: GATEWAY ───────────────────────────── */}

@@ -203,9 +203,9 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         Browse more watching guides:{" "}
         <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-romance-anime-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
+        <Link href="/guides/best-romance-anime-to-watch-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
         {" · "}
-        <Link href="/watch-slice-of-life-anime-with-friends" className="text-brand-orange hover:underline">Slice of life anime</Link>
+        <Link href="/guides/best-slice-of-life-anime-to-watch-with-friends" className="text-brand-orange hover:underline">Slice of life anime</Link>
         {" · "}
         <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>

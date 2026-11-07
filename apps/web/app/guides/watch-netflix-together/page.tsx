@@ -290,10 +290,10 @@ export default function WatchNetflixTogetherPage() {
             body: (
               <>
                 Keep Discord for voice and sync video with AniDachi or Teleparty. See{" "}
-                <Link href="/compare/anidachi-vs-netflix-watch-party">
-                  AniDachi vs screen share and countdown
+                <Link href="/netflix-watch-party">
+                  the Netflix watch party guide
                 </Link>{" "}
-                for the head-to-head.
+                for screen share and countdown compared.
               </>
             ),
           },

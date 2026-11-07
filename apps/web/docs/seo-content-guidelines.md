@@ -167,6 +167,12 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-11-07, pruning and force-index removal (owner in chat, ANI-25, ANI-14, ANI-16):** evidence in the [indexing diagnosis](../../../docs/releases/seo/2026-11-03-indexing-diagnosis.md) (URL Inspection of all 392 sitemap URLs, Nov 3).
+  - **Force-index sitemap removed (ANI-25).** `/force-index-sitemap.xml`, `lib/force-index-urls.ts` and its `robots.txt` entry are gone; the route now 404s. It repeated 247 URLs already in `sitemap.xml` (164 of them `/watch/*`), was never submitted in Search Console, and its purpose (the www host move) is complete: 70% of sitemap URLs were indexed on Nov 3.
+  - **11 genre hubs → their "best X anime" guides, permanent redirects (308) (ANI-14):** action, comedy, fantasy, horror, isekai, psychological, romance, sci-fi, shonen, slice-of-life, sports. `/watch-{genre}-anime-with-friends` → `/guides/best-{genre}-anime-to-watch-with-friends`. The 15 hubs had 7 impressions and 0 clicks in four weeks; the matching guides had 633 impressions and 7 clicks. ANI-14 said 9; the real count of hubs with a matching guide is 11, and the owner approved all 11. Mecha, mystery, shoujo and supernatural keep their hubs. `GENRE_HUB_LINKS` now points those genres at the guides, inbound links were repointed, and guides' links to their own hub were removed.
+  - **Last two merges, 308 (ANI-16):** `/guides/discord-watch-together-activity` → `/guides/discord-watch-together`; `/compare/anidachi-vs-netflix-watch-party` → `/netflix-watch-party`. All four pages were "Discovered – not indexed". Inbound links repointed; both removed from `lib/guide-links.ts` and the `/compare` index.
+  - **Sitemap `lastmod` (Nov 7, commit 49c37133):** the sitemap now carries `lastmod` read from each page's declared content date (`lib/sitemap-lastmod.ts`), never file mtimes or build time. This replaces the "no `lastmod`" rule in the 2026-10-12 entry.
+
 - **2026-10-29, Crunchyroll-on-Discord merge (owner in chat, ANI-10):** `/guides/can-you-stream-crunchyroll-on-discord` → 308 → `/guides/can-you-screen-share-crunchyroll-on-discord`. Same question, 740 words, "URL is unknown to Google" on Oct 29. Route folder removed and its one inbound link repointed. The target was refreshed the same day with Go Live steps and the hardware acceleration fix. Of the five merge proposals, two remain: `discord-watch-together-activity` and `/compare/anidachi-vs-netflix-watch-party`.
 
 - **2026-10-28, Netflix merges (owner in chat, ANI-6):** two of the five merge proposals in section 6 of the [indexing plan](../../../docs/superpowers/plans/2026-10-20-indexing-enrichment-linking-plan.md) are approved. Permanent redirects (308), route folders removed, inbound links repointed:
@@ -193,10 +199,10 @@ Owner-approved exceptions to the safety rules above, newest first.
     - `/guides/how-to-remove-anime-from-continue-watching-on-crunchyroll` → `/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll`
     - `/guides/how-to-stream-anime-on-discord` → `/guides/how-to-watch-anime-with-friends-on-discord`
   - **Bare watch slugs** (`/watch/naruto`) 308 to `/watch/naruto-with-friends`.
-  - **Sitemap:** no `lastmod` (file mtimes reset on every Vercel build), no private or `/dev` routes, and `/extension` is included.
+  - **Sitemap:** no `lastmod` from file mtimes (they reset on every Vercel build); real content dates were added 2026-11-07, no private or `/dev` routes, and `/extension` is included.
   - **Watch pages** don't publish MyAnimeList ratings as `AggregateRating`.
   - **Until about 2026-11-02**, don't change titles, H1s or URLs on `/`, `/watch-anime-together` or `/guides/best-anime-to-watch-with-friends` while Google moves them from the apex to www.
-  - Keep `/force-index-sitemap.xml` until the host move settles. It repeats URLs already in `sitemap.xml`; remove it after reviewing GSC Coverage.
+  - ~~Keep `/force-index-sitemap.xml` until the host move settles.~~ Removed 2026-11-07 (ANI-25).
 - **2026-10-09:** the free tool pages plan (`/tools/*`: filler lists, One Piece episode count, random anime generator, watch orders, Crunchyroll schedule) is approved. It overrides the 2026-09-28 rejection in `.cursor/scratchpad.md`.
 - **2026-08-11:** `/feature-requests`, a public product feedback form, is approved as an additive page.
 

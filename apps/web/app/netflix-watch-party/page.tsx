@@ -176,11 +176,6 @@ export default function NetflixWatchPartyPage() {
             position: 7,
           },
           { name: "Teleparty Netflix", url: "/guides/teleparty-netflix", position: 8 },
-          {
-            name: "AniDachi vs screen share and countdown for Netflix",
-            url: "/compare/anidachi-vs-netflix-watch-party",
-            position: 9,
-          },
         ]}
       >
         <SeoGuideTitle>Netflix Watch Party</SeoGuideTitle>
@@ -523,10 +518,6 @@ export default function NetflixWatchPartyPage() {
             { href: "/guides/netflix-movie-night", label: "Plan a Netflix movie night" },
             { href: "/netflix-party", label: "Netflix Party is now Teleparty" },
             { href: "/guides/teleparty-netflix", label: "Teleparty on Netflix" },
-            {
-              href: "/compare/anidachi-vs-netflix-watch-party",
-              label: "AniDachi vs screen share and countdown for Netflix",
-            },
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
             { href: "/watch-youtube-together", label: "YouTube watch party" },
           ]}

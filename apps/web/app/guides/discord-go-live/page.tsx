@@ -132,10 +132,10 @@ export default function DiscordGoLivePage() {
 				. Discord&apos;s built-in YouTube activity is a
 				different feature:{" "}
 				<Link
-					href="/guides/discord-watch-together-activity"
+					href="/guides/discord-watch-together"
 					className="text-brand-orange hover:underline"
 				>
-					Discord Watch Together Activity
+					Discord Watch Together
 				</Link>
 				.
 			</p>

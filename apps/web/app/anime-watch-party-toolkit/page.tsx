@@ -165,28 +165,28 @@ export default function AnimeWatchPartyToolkitPage() {
       </p>
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
-          <Link href="/watch-shonen-anime-with-friends" className="hover:underline">
-            Watch shonen anime with friends
+          <Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">
+            Best shonen anime to watch with friends
           </Link>
         </li>
         <li>
-          <Link href="/watch-action-anime-with-friends" className="hover:underline">
-            Watch action anime with friends
+          <Link href="/guides/best-action-anime-to-watch-with-friends" className="hover:underline">
+            Best action anime to watch with friends
           </Link>
         </li>
         <li>
-          <Link href="/watch-romance-anime-with-friends" className="hover:underline">
-            Watch romance anime with friends
+          <Link href="/guides/best-romance-anime-to-watch-with-friends" className="hover:underline">
+            Best romance anime to watch with friends
           </Link>
         </li>
         <li>
-          <Link href="/watch-comedy-anime-with-friends" className="hover:underline">
-            Watch comedy anime with friends
+          <Link href="/guides/best-comedy-anime-to-watch-with-friends" className="hover:underline">
+            Best comedy anime to watch with friends
           </Link>
         </li>
         <li>
-          <Link href="/watch-sports-anime-with-friends" className="hover:underline">
-            Watch sports anime with friends
+          <Link href="/guides/best-sports-anime-to-watch-with-friends" className="hover:underline">
+            Best sports anime to watch with friends
           </Link>
         </li>
         <li>
@@ -355,8 +355,8 @@ export default function AnimeWatchPartyToolkitPage() {
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-netflix-watch-party" className="hover:underline">
-            AniDachi vs Netflix Watch Party
+          <Link href="/netflix-watch-party" className="hover:underline">
+            Netflix watch party
           </Link>
         </li>
         <li>

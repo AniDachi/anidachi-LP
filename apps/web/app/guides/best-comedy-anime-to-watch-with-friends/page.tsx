@@ -283,11 +283,6 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
-          <Link href="/watch-comedy-anime-with-friends" className="hover:underline">
-            Watch comedy anime with friends — genre hub
-          </Link>
-        </li>
-        <li>
           <Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">
             Best anime to watch with friends — full list
           </Link>

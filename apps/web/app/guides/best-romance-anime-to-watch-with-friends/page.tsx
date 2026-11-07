@@ -257,7 +257,6 @@ export default function BestRomanceAnimeWithFriendsPage() {
       <ul className="space-y-2 text-brand-orange mb-8">
         <li><Link href="/guides/best-anime-to-watch-as-a-couple" className="hover:underline">Best anime to watch as a couple</Link></li>
         <li><Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">Best anime to watch with friends — full list</Link></li>
-        <li><Link href="/watch-romance-anime-with-friends" className="hover:underline">Watch romance anime with friends — genre hub</Link></li>
         <li><Link href="/watch-shoujo-anime-with-friends" className="hover:underline">Watch shoujo anime with friends — genre hub</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online — complete guide</Link></li>
         <li><Link href="/best-anime-for-long-distance-relationships" className="hover:underline">Best anime for long-distance relationships</Link></li>

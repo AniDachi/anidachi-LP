@@ -129,10 +129,10 @@ export default function NetflixPartyForYoutubePage() {
         “netflix party youtube” when they want co-watching on YouTube. That is a
         different problem from watching Netflix itself — see{" "}
         <Link
-          href="/compare/anidachi-vs-netflix-watch-party"
+          href="/netflix-watch-party"
           className="text-brand-orange hover:underline"
         >
-          AniDachi vs Netflix Watch Party
+          the Netflix watch party guide
         </Link>{" "}
         if your group is Netflix-first.
       </p>

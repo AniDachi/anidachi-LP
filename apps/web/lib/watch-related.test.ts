@@ -24,6 +24,6 @@ describe("watch page related titles", () => {
   });
 
   it("point to matching genre hubs", () => {
-    assert.deepEqual(getWatchGenreHubs(bySlug("attack-on-titan")).map((h) => h.href), ["/watch-action-anime-with-friends"]);
+    assert.deepEqual(getWatchGenreHubs(bySlug("attack-on-titan")).map((h) => h.href), ["/guides/best-action-anime-to-watch-with-friends"]);
   });
 });

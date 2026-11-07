@@ -104,19 +104,8 @@ function inferSitemapMeta(urlPath: string): {
     return { changeFrequency: "weekly", priority: 0.9 };
   }
   if (
-    urlPath === "/watch-action-anime-with-friends" ||
-    urlPath === "/watch-shonen-anime-with-friends" ||
-    urlPath === "/watch-romance-anime-with-friends" ||
-    urlPath === "/watch-comedy-anime-with-friends" ||
-    urlPath === "/watch-sports-anime-with-friends" ||
     urlPath === "/watch-mystery-anime-with-friends" ||
-    urlPath === "/watch-isekai-anime-with-friends" ||
-    urlPath === "/watch-psychological-anime-with-friends" ||
-    urlPath === "/watch-horror-anime-with-friends" ||
-    urlPath === "/watch-slice-of-life-anime-with-friends" ||
     urlPath === "/watch-mecha-anime-with-friends" ||
-    urlPath === "/watch-fantasy-anime-with-friends" ||
-    urlPath === "/watch-sci-fi-anime-with-friends" ||
     urlPath === "/watch-shoujo-anime-with-friends" ||
     urlPath === "/watch-supernatural-anime-with-friends" ||
     urlPath === "/watch-crunchyroll-together-long-distance" ||

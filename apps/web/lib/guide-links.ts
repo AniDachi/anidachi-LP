@@ -144,11 +144,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/compare/anidachi-vs-netflix-watch-party",
-		label: "AniDachi vs Screen Share and Countdown for Netflix",
-		tags: ["compare", "pillar-netflix"],
-	},
-	{
 		href: "/compare/anidachi-vs-metastream",
 		label: "AniDachi vs Metastream",
 		tags: ["compare", "crunchyroll", "watch-party", "pillar-watch-crunchyroll"],
@@ -930,11 +925,6 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/discord-go-live",
 		label: "Discord Go Live",
-		tags: ["template-c", "discord", "pillar-discord-watch-party"],
-	},
-	{
-		href: "/guides/discord-watch-together-activity",
-		label: "Discord Watch Together Activity",
 		tags: ["template-c", "discord", "pillar-discord-watch-party"],
 	},
 	{

@@ -101,10 +101,10 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Ready to host one of these? The{" "}
-        <Link href="/watch-isekai-anime-with-friends" className="text-brand-orange hover:underline">
-          isekai anime watch party guide
+        <Link href="/guides/first-anime-watch-party-checklist" className="text-brand-orange hover:underline">
+          first anime watch party checklist
         </Link>{" "}
-        covers setup, pacing, and discussion prompts.
+        covers setup and pacing before you press play.
       </p>
 
       {/* ── SECTION 1 ───────────────────────────────────── */}
@@ -331,13 +331,13 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
           </Link>
         </li>
         <li>
-          <Link href="/watch-action-anime-with-friends" className="hover:underline">
-            Watch action anime with friends — genre hub
+          <Link href="/guides/best-action-anime-to-watch-with-friends" className="hover:underline">
+            Best action anime to watch with friends
           </Link>
         </li>
         <li>
-          <Link href="/watch-comedy-anime-with-friends" className="hover:underline">
-            Watch comedy anime with friends — genre hub
+          <Link href="/guides/best-comedy-anime-to-watch-with-friends" className="hover:underline">
+            Best comedy anime to watch with friends
           </Link>
         </li>
       </ul>

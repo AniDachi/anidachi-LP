@@ -130,10 +130,10 @@ export default function BestShonenAnimeWithFriendsPage() {
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Ready to host one of these? The{" "}
-        <Link href="/watch-shonen-anime-with-friends" className="text-brand-orange hover:underline">
-          shonen anime watch party guide
+        <Link href="/guides/first-anime-watch-party-checklist" className="text-brand-orange hover:underline">
+          first anime watch party checklist
         </Link>{" "}
-        covers setup, pacing, and discussion prompts.
+        covers setup and pacing before you press play.
       </p>
 
       {/* ── SECTION 1: ACTION SHONEN ─────────────────────── */}
@@ -539,18 +539,18 @@ export default function BestShonenAnimeWithFriendsPage() {
         </li>
         <li>
           <Link
-            href="/watch-action-anime-with-friends"
+            href="/guides/best-action-anime-to-watch-with-friends"
             className="hover:underline"
           >
-            Watch action anime with friends — genre hub
+            Best action anime to watch with friends
           </Link>
         </li>
         <li>
           <Link
-            href="/watch-sports-anime-with-friends"
+            href="/guides/best-sports-anime-to-watch-with-friends"
             className="hover:underline"
           >
-            Watch sports anime with friends — genre hub
+            Best sports anime to watch with friends
           </Link>
         </li>
         <li>

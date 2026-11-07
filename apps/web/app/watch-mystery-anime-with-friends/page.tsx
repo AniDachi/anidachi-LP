@@ -205,9 +205,9 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         Browse more watching guides:{" "}
         <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-action-anime-with-friends" className="text-brand-orange hover:underline">Action anime</Link>
+        <Link href="/guides/best-action-anime-to-watch-with-friends" className="text-brand-orange hover:underline">Action anime</Link>
         {" · "}
-        <Link href="/watch-romance-anime-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
+        <Link href="/guides/best-romance-anime-to-watch-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
         {" · "}
         <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>

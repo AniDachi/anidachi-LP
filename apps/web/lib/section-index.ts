@@ -26,7 +26,6 @@ export const COMPARE_ENTRIES: SectionEntry[] = [
   { href: "/compare/anidachi-vs-roll-together", label: "AniDachi vs Roll Together", description: "Crunchyroll watch party extensions compared." },
   { href: "/compare/anidachi-vs-anime-watch-parties-extension", label: "AniDachi vs an anime watch parties extension", description: "Crunchyroll-first rooms, chat and personal history." },
   { href: "/compare/anidachi-vs-twoseven", label: "AniDachi vs TwoSeven", description: "For long-distance couples on Crunchyroll and YouTube." },
-  { href: "/compare/anidachi-vs-netflix-watch-party", label: "AniDachi vs screen share and countdown for Netflix", description: "Three ways to watch Netflix together, compared." },
   { href: "/compare/anidachi-vs-amazon-watch-party", label: "AniDachi vs Amazon Watch Party", description: "Prime Video's watch-together option vs Crunchyroll anime rooms." },
   { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share", description: "Why Crunchyroll black-screens on Discord, and the synced alternative." },
 ];

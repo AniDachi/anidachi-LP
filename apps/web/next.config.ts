@@ -50,6 +50,71 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/watch-action-anime-with-friends",
+        destination: "/guides/best-action-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-comedy-anime-with-friends",
+        destination: "/guides/best-comedy-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-fantasy-anime-with-friends",
+        destination: "/guides/best-fantasy-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-horror-anime-with-friends",
+        destination: "/guides/best-horror-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-isekai-anime-with-friends",
+        destination: "/guides/best-isekai-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-psychological-anime-with-friends",
+        destination: "/guides/best-psychological-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-romance-anime-with-friends",
+        destination: "/guides/best-romance-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-sci-fi-anime-with-friends",
+        destination: "/guides/best-sci-fi-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-shonen-anime-with-friends",
+        destination: "/guides/best-shonen-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-slice-of-life-anime-with-friends",
+        destination: "/guides/best-slice-of-life-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/watch-sports-anime-with-friends",
+        destination: "/guides/best-sports-anime-to-watch-with-friends",
+        permanent: true,
+      },
+      {
+        source: "/guides/discord-watch-together-activity",
+        destination: "/guides/discord-watch-together",
+        permanent: true,
+      },
+      {
+        source: "/compare/anidachi-vs-netflix-watch-party",
+        destination: "/netflix-watch-party",
+        permanent: true,
+      },
+      {
         source: "/guides/can-you-stream-crunchyroll-on-discord",
         destination: "/guides/can-you-screen-share-crunchyroll-on-discord",
         permanent: true,
