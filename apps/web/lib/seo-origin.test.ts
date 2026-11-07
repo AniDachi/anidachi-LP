@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as site from "./site-url";
 import robots from "../app/robots";
-import { GET as cohortSitemap } from "../app/force-index-sitemap.xml/route";
 
 // Keep callback/runtime origin separate from public search-engine identity.
 const seoOrigin = () => site.getSeoSiteOrigin();
@@ -27,16 +26,10 @@ for (const scenario of [
       assert.equal(site.getResolvedSiteOrigin(), scenario.runtime);
       assert.equal(site.isRobotsIndexingDisabled(), scenario.noindex);
       const robotsOutput = robots();
-      const cohort = cohortSitemap();
       if (scenario.noindex) {
         assert.equal(robotsOutput.sitemap, undefined);
-        assert.equal(cohort.status, 404);
       } else {
-        assert.deepEqual(robotsOutput.sitemap, [`${scenario.seo}/sitemap.xml`, `${scenario.seo}/force-index-sitemap.xml`]);
-        assert.equal(cohort.status, 200);
-        const xml = await cohort.text();
-        assert.ok(xml.includes(`<loc>${scenario.seo}/`));
-        if (scenario.seo === "https://www.anidachi.app") assert.ok(!xml.includes("<loc>https://anidachi.app/"));
+        assert.deepEqual(robotsOutput.sitemap, [`${scenario.seo}/sitemap.xml`]);
       }
     } finally {
       for (const key of names) {

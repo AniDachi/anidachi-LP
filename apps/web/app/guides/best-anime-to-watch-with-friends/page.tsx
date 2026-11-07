@@ -405,9 +405,9 @@ export default function BestAnimeWithFriendsPage() {
       <ul className="space-y-2 text-brand-orange">
         <li><Link href="/watch-anime-together" className="hover:underline">Watch Anime Together (Complete Guide)</Link></li>
         <li><Link href="/guides/best-isekai-anime-to-watch-with-friends" className="hover:underline">Best Isekai Anime to Watch With Friends</Link></li>
-        <li><Link href="/watch-action-anime-with-friends" className="hover:underline">Watch action anime with friends</Link></li>
-        <li><Link href="/watch-comedy-anime-with-friends" className="hover:underline">Watch comedy anime with friends</Link></li>
-        <li><Link href="/watch-romance-anime-with-friends" className="hover:underline">Watch romance anime with friends</Link></li>
+        <li><Link href="/guides/best-action-anime-to-watch-with-friends" className="hover:underline">Best action anime to watch with friends</Link></li>
+        <li><Link href="/guides/best-comedy-anime-to-watch-with-friends" className="hover:underline">Best comedy anime to watch with friends</Link></li>
+        <li><Link href="/guides/best-romance-anime-to-watch-with-friends" className="hover:underline">Best romance anime to watch with friends</Link></li>
         <li>
           <Link
             href="/guides/best-anime-to-watch-for-beginners"

@@ -241,11 +241,6 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
-          <Link href="/watch-sports-anime-with-friends" className="hover:underline">
-            Watch sports anime with friends — genre hub
-          </Link>
-        </li>
-        <li>
           <Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">
             Best shonen anime to watch with friends
           </Link>

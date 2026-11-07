@@ -246,21 +246,21 @@ export default function WatchMechaAnimeWithFriendsPage() {
         </Link>
         {" · "}
         <Link
-          href="/watch-action-anime-with-friends"
+          href="/guides/best-action-anime-to-watch-with-friends"
           className="text-brand-orange hover:underline"
         >
           Action anime
         </Link>
         {" · "}
         <Link
-          href="/watch-psychological-anime-with-friends"
+          href="/guides/best-psychological-anime-to-watch-with-friends"
           className="text-brand-orange hover:underline"
         >
           Psychological anime
         </Link>
         {" · "}
         <Link
-          href="/watch-isekai-anime-with-friends"
+          href="/guides/best-isekai-anime-to-watch-with-friends"
           className="text-brand-orange hover:underline"
         >
           Isekai anime

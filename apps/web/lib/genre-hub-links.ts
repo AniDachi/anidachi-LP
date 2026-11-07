@@ -1,62 +1,81 @@
-/** Mid-funnel genre hub routes — keep in sync with `lib/sitemap-discovery.ts` priority list. */
+/**
+ * One genre destination per genre. Genres with a "best X anime" guide link to the guide; their old
+ * `/watch-{genre}-anime-with-friends` hubs 308 there (ANI-14). The rest keep their hub page.
+ * Keep the hub entries in sync with the `lib/sitemap-discovery.ts` priority list.
+ */
 export const GENRE_HUB_LINKS = [
   {
-    href: "/watch-action-anime-with-friends",
-    label: "Watch action anime with friends",
+    genre: "action",
+    href: "/guides/best-action-anime-to-watch-with-friends",
+    label: "Best action anime to watch with friends",
   },
   {
-    href: "/watch-shonen-anime-with-friends",
-    label: "Watch shonen anime with friends",
+    genre: "shonen",
+    href: "/guides/best-shonen-anime-to-watch-with-friends",
+    label: "Best shonen anime to watch with friends",
   },
   {
-    href: "/watch-romance-anime-with-friends",
-    label: "Watch romance anime with friends",
+    genre: "romance",
+    href: "/guides/best-romance-anime-to-watch-with-friends",
+    label: "Best romance anime to watch with friends",
   },
   {
-    href: "/watch-comedy-anime-with-friends",
-    label: "Watch comedy anime with friends",
+    genre: "comedy",
+    href: "/guides/best-comedy-anime-to-watch-with-friends",
+    label: "Best comedy anime to watch with friends",
   },
   {
-    href: "/watch-sports-anime-with-friends",
-    label: "Watch sports anime with friends",
+    genre: "sports",
+    href: "/guides/best-sports-anime-to-watch-with-friends",
+    label: "Best sports anime to watch with friends",
   },
   {
+    genre: "mystery",
     href: "/watch-mystery-anime-with-friends",
     label: "Watch mystery anime with friends",
   },
   {
-    href: "/watch-isekai-anime-with-friends",
-    label: "Watch isekai anime with friends",
+    genre: "isekai",
+    href: "/guides/best-isekai-anime-to-watch-with-friends",
+    label: "Best isekai anime to watch with friends",
   },
   {
-    href: "/watch-psychological-anime-with-friends",
-    label: "Watch psychological anime with friends",
+    genre: "psychological",
+    href: "/guides/best-psychological-anime-to-watch-with-friends",
+    label: "Best psychological anime to watch with friends",
   },
   {
-    href: "/watch-horror-anime-with-friends",
-    label: "Watch horror anime with friends",
+    genre: "horror",
+    href: "/guides/best-horror-anime-to-watch-with-friends",
+    label: "Best horror anime to watch with friends",
   },
   {
-    href: "/watch-slice-of-life-anime-with-friends",
-    label: "Watch slice of life anime with friends",
+    genre: "slice-of-life",
+    href: "/guides/best-slice-of-life-anime-to-watch-with-friends",
+    label: "Best slice of life anime to watch with friends",
   },
   {
+    genre: "mecha",
     href: "/watch-mecha-anime-with-friends",
     label: "Watch mecha anime with friends",
   },
   {
-    href: "/watch-fantasy-anime-with-friends",
-    label: "Watch fantasy anime with friends",
+    genre: "fantasy",
+    href: "/guides/best-fantasy-anime-to-watch-with-friends",
+    label: "Best fantasy anime to watch with friends",
   },
   {
-    href: "/watch-sci-fi-anime-with-friends",
-    label: "Watch sci-fi anime with friends",
+    genre: "sci-fi",
+    href: "/guides/best-sci-fi-anime-to-watch-with-friends",
+    label: "Best sci fi anime to watch with friends",
   },
   {
+    genre: "shoujo",
     href: "/watch-shoujo-anime-with-friends",
     label: "Watch shoujo anime with friends",
   },
   {
+    genre: "supernatural",
     href: "/watch-supernatural-anime-with-friends",
     label: "Watch supernatural anime with friends",
   },

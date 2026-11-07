@@ -51,11 +51,8 @@ export function getWatchRelated(
   return chosen;
 }
 
-/** Genre hubs whose genre this title has, in hub order. */
+/** Genre destinations (hub or best-of guide) whose genre this title has, in list order. */
 export function getWatchGenreHubs(anime: AnimeEntry, limit = 2) {
   const genres = new Set(anime.genres.map(slugify).map((g) => (g === "shounen" ? "shonen" : g)));
-  return GENRE_HUB_LINKS.filter((hub) => {
-    const match = /^\/watch-(.+)-anime-with-friends$/.exec(hub.href);
-    return match ? genres.has(match[1]) : false;
-  }).slice(0, limit);
+  return GENRE_HUB_LINKS.filter((hub) => genres.has(hub.genre)).slice(0, limit);
 }

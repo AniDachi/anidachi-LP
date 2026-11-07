@@ -126,10 +126,10 @@ export default function NetflixPartyForCrunchyrollPage() {
         “netflix party crunchyroll” when they want co-watching on Crunchyroll.
         That is different from watching Netflix itself — see{" "}
         <Link
-          href="/compare/anidachi-vs-netflix-watch-party"
+          href="/netflix-watch-party"
           className="text-brand-orange hover:underline"
         >
-          AniDachi vs Netflix Watch Party
+          the Netflix watch party guide
         </Link>{" "}
         if your group is Netflix-first, or the YouTube twin{" "}
         <Link

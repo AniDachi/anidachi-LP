@@ -39,9 +39,6 @@ export default function robots(): MetadataRoute.Robots {
 
   return {
     rules,
-    sitemap: [
-      `${origin}/sitemap.xml`,
-      `${origin}/force-index-sitemap.xml`,
-    ],
+    sitemap: [`${origin}/sitemap.xml`],
   };
 }

@@ -128,7 +128,6 @@ export default function BestFantasyAnimeToWatchWithFriendsPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
-        <li><Link href="/watch-fantasy-anime-with-friends" className="hover:underline">Watch fantasy anime with friends — genre hub</Link></li>
         <li><Link href="/guides/best-isekai-anime-to-watch-with-friends" className="hover:underline">Best isekai anime with friends</Link></li>
         <li><Link href="/guides/best-anime-movies-to-watch-with-friends" className="hover:underline">Best anime movies with friends</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online</Link></li>

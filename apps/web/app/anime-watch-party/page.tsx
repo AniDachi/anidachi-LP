@@ -199,12 +199,12 @@ export default function AnimeWatchPartyPage() {
           </Link>
         </li>
         <li>
-          <Link href="/watch-shonen-anime-with-friends" className="hover:underline">
+          <Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">
             Shonen anime watch party hub
           </Link>
         </li>
         <li>
-          <Link href="/watch-action-anime-with-friends" className="hover:underline">
+          <Link href="/guides/best-action-anime-to-watch-with-friends" className="hover:underline">
             Action anime watch party hub
           </Link>
         </li>

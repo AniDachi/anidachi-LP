@@ -129,7 +129,6 @@ export default function BestActionAnimeToWatchWithFriendsPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
-        <li><Link href="/watch-action-anime-with-friends" className="hover:underline">Watch action anime with friends — genre hub</Link></li>
         <li><Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">Best shonen anime with friends</Link></li>
         <li><Link href="/guides/how-to-watch-anime-without-spoilers" className="hover:underline">How to watch anime without spoilers</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online</Link></li>

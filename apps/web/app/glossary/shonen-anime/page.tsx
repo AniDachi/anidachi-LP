@@ -267,13 +267,13 @@ export default function ShonenAnimeGlossaryPage() {
           </Link>
         </li>
         <li>
-          <Link href="/watch-action-anime-with-friends" className="hover:underline">
-            Watch action anime with friends — genre hub
+          <Link href="/guides/best-action-anime-to-watch-with-friends" className="hover:underline">
+            Best action anime to watch with friends
           </Link>
         </li>
         <li>
-          <Link href="/watch-sports-anime-with-friends" className="hover:underline">
-            Watch sports anime with friends — genre hub
+          <Link href="/guides/best-sports-anime-to-watch-with-friends" className="hover:underline">
+            Best sports anime to watch with friends
           </Link>
         </li>
         <li>

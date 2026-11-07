@@ -126,7 +126,6 @@ export default function BestSciFiAnimeToWatchWithFriendsPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
-        <li><Link href="/watch-sci-fi-anime-with-friends" className="hover:underline">Watch sci-fi anime with friends — genre hub</Link></li>
         <li><Link href="/watch-mecha-anime-with-friends" className="hover:underline">Watch mecha anime with friends — genre hub</Link></li>
         <li><Link href="/guides/best-psychological-anime-to-watch-with-friends" className="hover:underline">Best psychological anime with friends</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online</Link></li>

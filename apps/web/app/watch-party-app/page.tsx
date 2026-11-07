@@ -185,10 +185,6 @@ export default function WatchPartyAppPage() {
 					},
 					{ href: "/watch-youtube-together", label: "YouTube watch party" },
 					{ href: "/netflix-watch-party", label: "Netflix watch party" },
-					{
-						href: "/compare/anidachi-vs-netflix-watch-party",
-						label: "AniDachi vs Netflix watch party tools",
-					},
 					{ href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi" },
 					{ href: "/compare/anidachi-vs-syncup", label: "AniDachi vs SyncUp" },
 					{

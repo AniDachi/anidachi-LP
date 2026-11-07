@@ -26,7 +26,6 @@ Without **owner approval + GSC evidence**, do **not**:
 - 301 / Merge / Retire / delete public marketing URLs
 - Change URL **structure** on ranked pages (slug renames, path moves, canonical retarget to a different path)
 - Add `noindex` to previously indexable marketing URLs
-- Delete the cohort / force-index discovery sitemap while Coverage recovers
 - Shrink footer/nav crawl paths to existing spokes
 - Rewrite high-traffic pillar H1s or primary intent
 
@@ -92,7 +91,7 @@ Before shipping SEO content or infra edits, confirm:
 - Unique title + single H1 per page; self-canonical on the **same** path
 - Meta description present and aligned with on-page intent
 - Structured data in initial HTML; FAQ/HowTo match visible copy; no fake `SearchAction`
-- Sitemap lists only canonical, indexable URLs; force-index cohort stays until Coverage recovers
+- Sitemap lists only canonical, indexable URLs (the force-index cohort sitemap was removed 2026-11-07, ANI-25)
 - Descriptive internal links; do not fix cannibalization with redirects
 
 ## Search intent → page template
