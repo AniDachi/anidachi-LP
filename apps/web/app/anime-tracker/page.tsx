@@ -173,6 +173,17 @@ export default function AnimeTrackerPage() {
         >
           anime checklist
         </Link>
+        . Before you commit to a long series, check{" "}
+        <Link
+          href="/tools/one-piece-how-many-episodes"
+          className="text-brand-orange hover:underline"
+        >
+          how many episodes One Piece has
+        </Link>{" "}
+        and how long it takes at your pace. For a group pick, browse{" "}
+        <Link href="/watch" className="text-brand-orange hover:underline">
+          every anime to watch with friends, A to Z
+        </Link>
         . The longer plan-to-watch list is the{" "}
         <Link
           href="/guides/anime-watchlist"

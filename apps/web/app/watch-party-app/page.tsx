@@ -136,7 +136,11 @@ export default function WatchPartyAppPage() {
 				>
 					watch movies together online
 				</Link>
-				. For Netflix, start with the{" "}
+				, or plan a{" "}
+				<Link href="/virtual-movie-night" className="text-brand-orange hover:underline">
+					virtual movie night
+				</Link>{" "}
+				around one film the group can finish in one sitting. For Netflix, start with the{" "}
 				<Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
 					Netflix watch party
 				</Link>{" "}

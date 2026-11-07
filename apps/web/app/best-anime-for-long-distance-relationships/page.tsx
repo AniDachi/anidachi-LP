@@ -348,6 +348,21 @@ export default function BestAnimeForLongDistanceRelationshipsPage() {
         <li>Keep notes in a separate, episode-labeled chat thread; open it after you both finish.</li>
         <li>Schedule one video call per week to discuss the episodes you both finished.</li>
       </ul>
+      <p className="text-foreground/80 leading-relaxed mb-4">
+        The films on this list, such as Your Name, suit a{" "}
+        <Link href="/virtual-movie-night" className="text-brand-orange hover:underline">
+          virtual movie night
+        </Link>{" "}
+        with one film you can finish in one sitting. For movies and shows outside anime,
+        see how to{" "}
+        <Link
+          href="/watch-movies-together-long-distance"
+          className="text-brand-orange hover:underline"
+        >
+          watch movies together long distance
+        </Link>
+        .
+      </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         <Link href="/watch-anime-long-distance-boyfriend-girlfriend" className="text-brand-orange hover:underline">
           Full guide: how to watch anime with your long-distance partner.

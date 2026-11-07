@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { MetadataRoute } from "next";
 import { INTERNAL_TOOL_APP_SEGMENTS } from "@/lib/internal-tool-routes";
+import { getStaticPageContentDate } from "@/lib/sitemap-lastmod";
 
 const APP_DIR = path.join(process.cwd(), "app");
 
@@ -205,14 +206,18 @@ export function discoverStaticSitemapUrlPaths(): string[] {
 
 export function staticPathsToSitemapEntries(
   siteUrl: string,
-  urlPaths: string[]
+  urlPaths: string[],
+  getContentDate: (urlPath: string) => string | null = getStaticPageContentDate
 ): MetadataRoute.Sitemap {
-  // No lastModified: file mtimes reset on every Vercel clone, so they would claim every page changed
-  // at each deploy and teach Google to ignore lastmod. Add it back only from real content dates.
+  // lastModified comes only from the content date the page declares (see lib/sitemap-lastmod.ts).
+  // Never file mtimes or build time: those reset on every Vercel clone, claim every page changed at
+  // each deploy and teach Google to ignore lastmod. Pages without a declared date get none.
   return urlPaths.map((urlPath) => {
     const meta = inferSitemapMeta(urlPath);
+    const lastModified = getContentDate(urlPath);
     return {
       url: `${siteUrl}${urlPath}`,
+      ...(lastModified ? { lastModified } : {}),
       changeFrequency: meta.changeFrequency,
       priority: meta.priority,
     };

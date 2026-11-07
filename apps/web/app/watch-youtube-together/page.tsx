@@ -414,7 +414,14 @@ export default function WatchYoutubeTogetherPage() {
           >
             Watch2Gether alternatives for YouTube
           </Link>
-          .
+          . If your group already meets in Discord, the{" "}
+          <Link
+            href="/discord-watch-party"
+            className="text-brand-orange hover:underline"
+          >
+            Discord watch party guide
+          </Link>{" "}
+          compares Watch Together, Go Live and a synced extension.
         </p>
 
         <h2
@@ -424,7 +431,14 @@ export default function WatchYoutubeTogetherPage() {
           What Makes AniDachi Different for YouTube
         </h2>
         <p className="text-foreground/80 leading-relaxed mb-4">
-          AniDachi supports live YouTube rooms. Personal history needs your own Plus/Pro access, recording permission, and the separate YouTube recording toggle. <strong>Async catch-up is planned</strong>, not available today. The same extension also covers Crunchyroll, so your group can use one product for both.
+          AniDachi supports live YouTube rooms. Personal history needs your own Plus/Pro access, recording permission, and the separate YouTube recording toggle. <strong>Async catch-up is planned</strong>, not available today. The same extension also covers Crunchyroll and Netflix, so your group can use one product for all three. For a Netflix night, see every way to{" "}
+          <Link
+            href="/guides/watch-netflix-together"
+            className="text-brand-orange hover:underline"
+          >
+            watch Netflix together
+          </Link>
+          .
         </p>
         <p className="text-foreground/80 leading-relaxed mb-8">
           {PRICING_ASYNC_HOST_SNIPPET} Details on{" "}

@@ -304,7 +304,10 @@ export default function WatchCrunchyrollTogetherPage() {
 					and Crunchyroll Party, or screen sharing via Discord. AniDachi also
 					works on YouTube, and you can host a{" "}
 					<Link href="/netflix-watch-party">Netflix watch party</Link> the same
-					way.
+					way. The yes-or-no answer, with what Crunchyroll&apos;s plans do include, is in{" "}
+					<Link href="/guides/does-crunchyroll-have-watch-party">
+						does Crunchyroll have a watch party?
+					</Link>
 				</p>
 
 				<h2 id="step-by-step" className="scroll-mt-24">
@@ -447,7 +450,11 @@ export default function WatchCrunchyrollTogetherPage() {
 					<Link href="/tools/crunchyroll-schedule">
 						Crunchyroll release schedule
 					</Link>{" "}
-					for when new episodes drop:
+					for when new episodes drop. Groups that watch in English can use the{" "}
+					<Link href="/tools/crunchyroll-dub-schedule">
+						Crunchyroll dub schedule
+					</Link>{" "}
+					to see which English dubs arrive this week:
 				</p>
 				<SeoGuideBulletList
 					items={[
