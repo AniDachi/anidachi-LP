@@ -167,6 +167,11 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-11-07, platform hub layout and pillar headings (owner in chat, ANI-28, ANI-8):** `/watch-crunchyroll-together`, `/watch-anime-together`, `/watch-youtube-together`, `/netflix-watch-party` and `/discord-watch-party` moved to `HubLandingLayout` (homepage-style hero, demo, reviews and steps, then a centered reading section). Same URLs, canonicals and JSON-LD types; HowTo data now comes from the same step list as the visible steps. Approved heading changes:
+  - `/watch-anime-together` title: "Watch Anime Together Online: Sync with Friends" (ANI-8; was "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)", too long).
+  - `/watch-youtube-together` H1: "YouTube Watch Party: Watch YouTube Together" (was "… With Friends").
+  - `/discord-watch-party` H1: "Discord Watch Party" (was "Discord Watch Party: Three Ways to Watch Together"; the three ways stay in the short answer and the page title).
+
 - **2026-11-07, pruning and force-index removal (owner in chat, ANI-25, ANI-14, ANI-16):** evidence in the [indexing diagnosis](../../../docs/releases/seo/2026-11-03-indexing-diagnosis.md) (URL Inspection of all 392 sitemap URLs, Nov 3).
   - **Force-index sitemap removed (ANI-25).** `/force-index-sitemap.xml`, `lib/force-index-urls.ts` and its `robots.txt` entry are gone; the route now 404s. It repeated 247 URLs already in `sitemap.xml` (164 of them `/watch/*`), was never submitted in Search Console, and its purpose (the www host move) is complete: 70% of sitemap URLs were indexed on Nov 3.
   - **11 genre hubs → their "best X anime" guides, permanent redirects (308) (ANI-14):** action, comedy, fantasy, horror, isekai, psychological, romance, sci-fi, shonen, slice-of-life, sports. `/watch-{genre}-anime-with-friends` → `/guides/best-{genre}-anime-to-watch-with-friends`. The 15 hubs had 7 impressions and 0 clicks in four weeks; the matching guides had 633 impressions and 7 clicks. ANI-14 said 9; the real count of hubs with a matching guide is 11, and the owner approved all 11. Mecha, mystery, shoujo and supernatural keep their hubs. `GENRE_HUB_LINKS` now points those genres at the guides, inbound links were repointed, and guides' links to their own hub were removed.

@@ -1,23 +1,47 @@
 import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getPlanPolicy } from "@anidachi/protocol";
+import { HubCtaBand } from "@/components/hub-cta-band";
 import {
-	SeoGuideAnswer,
-	SeoGuideBulletList,
-	SeoGuideNote,
+	HUB_INSTALL_STEP,
+	HubFeatureGrid,
+	HubLandingLayout,
+} from "@/components/hub-landing-layout";
+import { HowToJsonLd } from "@/components/json-ld";
+import { JoinDiscordButton } from "@/components/join-discord-button";
+import {
 	SeoGuideOptions,
 	SeoGuideRelated,
-	SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
-import { InstallLink } from "@/components/install-link";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
-import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import type { TocHeading } from "@/components/table-of-contents";
 import { getGuideLinks } from "@/lib/guide-links";
 import { PRICING_PLUS_SHORT, PRICING_PRO_SHORT } from "@/lib/pricing-copy";
 import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/discord-watch-party";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
+const FREE_ROOM = getPlanPolicy("free").maxParticipants;
+const PLUS_ROOM = getPlanPolicy("plus").maxParticipants;
+const PRO_ROOM = getPlanPolicy("pro").maxParticipants;
+
+/** One step list for the visible "How it works" section and the HowTo JSON-LD, so they always match. */
+const howToSteps = [
+	HUB_INSTALL_STEP,
+	{
+		name: "Join the Discord call",
+		text: "Join a voice channel, or start a call in a DM or group DM. Keep AniDachi's microphone off so voices don't come through twice.",
+	},
+	{
+		name: "Open the same title",
+		text: "Everyone opens the same episode or video on their own Crunchyroll, YouTube or Netflix account in desktop Chrome.",
+	},
+	{
+		name: "Create the room and paste the invite",
+		text: "The host creates an AniDachi room from the capsule on the player and pastes the invite in the Discord chat. Friends join free.",
+	},
+];
 
 const SOURCES = [
 	{
@@ -87,7 +111,7 @@ const faq = [
 	{
 		question: "How many people can join a Discord watch party?",
 		answer:
-			"A Go Live stream allows 50 viewers plus the streamer, and a scheduled event in a voice channel is limited to 99 participants. An AniDachi room holds up to 6 people with a Plus host or 15 with a Pro host, including the host.",
+			`A Go Live stream allows 50 viewers plus the streamer, and a scheduled event in a voice channel is limited to 99 participants. An AniDachi room holds up to ${FREE_ROOM} people on Free, ${PLUS_ROOM} with a Plus host or ${PRO_ROOM} with a Pro host, including the host.`,
 	},
 	{
 		question: "Should we leave the Discord call when using AniDachi?",
@@ -102,16 +126,12 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
-	{ id: "answer", label: "Short answer", level: 2 },
+	{ id: "how-it-works", label: "How it works", level: 2 },
 	{ id: "three-ways", label: "Three ways compared", level: 2 },
 	{ id: "which", label: "Which one to use", level: 2 },
 	{ id: "checklist", label: "What everyone needs", level: 2 },
 	{ id: "setup", label: "Setup by platform", level: 2 },
-	{ id: "crunchyroll", label: "Crunchyroll", level: 3 },
-	{ id: "youtube", label: "YouTube", level: 3 },
-	{ id: "netflix", label: "Netflix", level: 3 },
 	{ id: "server-events", label: "Server event tips", level: 2 },
-	{ id: "sources", label: "Sources", level: 2 },
 	{ id: "faq", label: "FAQ", level: 2 },
 ];
 
@@ -123,20 +143,25 @@ export default function DiscordWatchPartyPage() {
 	});
 
 	return (
-		<SeoPageLayout
+		<>
+		<HowToJsonLd
+			name="How to run a Discord watch party with synced video"
+			description="Keep Discord for voice and sync Crunchyroll, YouTube or Netflix in desktop Chrome with AniDachi."
+			steps={howToSteps}
+		/>
+		<HubLandingLayout
 			breadcrumbs={[
 				{ name: "Home", url: "/" },
-				{ name: "Discord watch party", url: PAGE_PATH },
+				{ name: "Discord Watch Party", url: PAGE_PATH },
 			]}
 			title="Discord watch party"
 			description="Discord's Watch Together activity, Go Live screen share, and Discord voice with synced Crunchyroll, YouTube or Netflix."
 			url={PAGE_PATH}
 			datePublished="2026-09-26"
-			dateModified="2026-10-20"
+			dateModified="2026-11-07"
 			faq={faq}
 			headings={tocHeadings}
 			articleImage={articleImage}
-			aboveFoldCta
 			itemList={[
 				{
 					name: "Discord Watch Together",
@@ -169,32 +194,37 @@ export default function DiscordWatchPartyPage() {
 					position: 6,
 				},
 			]}
-		>
-			<SeoGuideTitle>Discord Watch Party: Three Ways to Watch Together</SeoGuideTitle>
-			<h2 id="answer" className="scroll-mt-24">
-				Short answer
-			</h2>
-			<SeoGuideAnswer>
-				<p>
+			h1="Discord Watch Party"
+			heroLead="Keep Discord for voice. AniDachi syncs the video."
+			heroCtaLabel="Sync Your Discord Watch Party"
+			heroWorksOnLabel="Works with"
+			heroWorksOn={["your Discord call", "Crunchyroll", "YouTube", "Netflix"]}
+			heroFinePrint="20 free minutes a day. Friends join free."
+			answer={
+				<>
 					<strong>
-						There are three ways to run a Discord watch party. Discord&apos;s
-						Watch Together activity plays YouTube inside the call. Go Live
-						shares one person&apos;s screen, but Netflix and Crunchyroll
-						usually show black. For those, stay in Discord for voice and
-						sync everyone&apos;s own player with a watch-party extension.
-					</strong>{" "}
-					AniDachi does that for Crunchyroll, YouTube and Netflix in desktop
-					Chrome.
-				</p>
-			</SeoGuideAnswer>
-
+						There are three ways to run a Discord watch party: the Watch
+						Together activity for YouTube, Go Live screen share, or Discord
+						voice plus a sync extension. Netflix and Crunchyroll usually show
+						black on Go Live, so AniDachi syncs everyone&apos;s own player in
+						desktop Chrome instead.
+					</strong>
+				</>
+			}
+			steps={{
+				id: "how-it-works",
+				heading: "How to Run a Discord Watch Party with Synced Video",
+				intro: "Discord carries the voice. Each person's own account carries the picture.",
+				items: howToSteps,
+			}}
+		>
 			<h2
 				id="three-ways"
-				className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text"
+				className="scroll-mt-24"
 			>
 				Watch Together vs screen share vs AniDachi
 			</h2>
-			<p className="mb-4 leading-relaxed text-ani-muted">
+			<p>
 				Most groups already live in Discord, so the real question is not
 				whether to use Discord but what carries the video. Discord offers two
 				built-in answers, and both have hard limits that matter for a full
@@ -244,9 +274,9 @@ export default function DiscordWatchPartyPage() {
 					{
 						feature: "Time limits",
 						values: {
-							activity: "180 min per person in a group, then a 10-min cool-down",
+							activity: "180 min per person in a group (30 alone), then a 10-min cool-down",
 							golive: "None stated",
-							anidachi: "No daily limit on Plus or Pro",
+							anidachi: "20 host minutes a day on Free; none on Plus or Pro",
 						},
 					},
 					{
@@ -254,23 +284,7 @@ export default function DiscordWatchPartyPage() {
 						values: {
 							activity: "Not stated",
 							golive: "50 viewers plus the streamer",
-							anidachi: "6 (Plus) or 15 (Pro), host included",
-						},
-					},
-					{
-						feature: "Sign in to the service",
-						values: {
-							activity: "No YouTube login; Premium users see ads",
-							golive: "Only the streamer",
-							anidachi: "Everyone uses their own login",
-						},
-					},
-					{
-						feature: "Devices",
-						values: {
-							activity: "Discord desktop, browser and mobile",
-							golive: "Desktop, browser and mobile",
-							anidachi: "Desktop Chrome only",
+							anidachi: `${FREE_ROOM} (Free), ${PLUS_ROOM} (Plus) or ${PRO_ROOM} (Pro), host included`,
 						},
 					},
 					{
@@ -284,7 +298,15 @@ export default function DiscordWatchPartyPage() {
 				]}
 			/>
 
-			<h2 id="which" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+			<p className="text-sm">
+				Also worth knowing: Watch Together can&apos;t sign in to YouTube, so
+				Premium members still see ads, and it runs on Discord desktop, browser
+				and mobile. Go Live works on desktop, browser and mobile, and only the
+				streamer signs in. With AniDachi, everyone uses their own login, in
+				desktop Chrome only.
+			</p>
+
+			<h2 id="which" className="scroll-mt-24">
 				Which one to use
 			</h2>
 			<SeoGuideOptions
@@ -329,10 +351,10 @@ export default function DiscordWatchPartyPage() {
 					},
 				]}
 			/>
-			<p className="mb-8 leading-relaxed text-ani-muted">
+			<p>
 				The honest limits of the third option: everyone needs desktop Chrome,
 				everyone needs their own access to the title, and Free hosts get 20 host minutes per UTC day for up to 4 people. If your group mixes phones and computers, or watches
-				on Disney+, Hulu or Max, AniDachi won&apos;t cover it. For the
+				on Disney+, Hulu or HBO Max, AniDachi won&apos;t cover it. For the
 				feature-by-feature version, see{" "}
 				<Link href="/compare/anidachi-vs-discord-screen-share">
 					AniDachi vs Discord screen share
@@ -340,17 +362,24 @@ export default function DiscordWatchPartyPage() {
 				.
 			</p>
 
-			<h2 id="checklist" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+			<HubCtaBand
+				pagePath={PAGE_PATH}
+				ctaLabel="Sync Your Discord Watch Party"
+				heading="Sync your next Discord watch party"
+				body="Stay in your Discord call. Install AniDachi, open the episode and paste the invite. 20 free minutes a day, and friends join free."
+			/>
+
+			<h2 id="checklist" className="scroll-mt-24">
 				What everyone needs, and who pays
 			</h2>
-			<p className="mb-4 leading-relaxed text-ani-muted">
+			<p>
 				A Discord watch party has two separate costs that people tend to mix
 				up: access to the video, and the tool that keeps it in sync. Discord
 				voice and Go Live are free, Nitro only raises screen share quality,
 				and Discord&apos;s Watch Together FAQ mentions no fee. The video side
 				depends on the service.
 			</p>
-			<SeoGuideBulletList
+			<HubFeatureGrid
 				items={[
 					{
 						title: "A Discord account for everyone who talks",
@@ -370,7 +399,7 @@ export default function DiscordWatchPartyPage() {
 					},
 				]}
 			/>
-			<p className="mb-8 leading-relaxed text-ani-muted">
+			<p>
 				So for a group of five watching Crunchyroll, the usual bill is five
 				Crunchyroll accounts and one AniDachi host who needs Plus or Pro. Free&apos;s
 				four-person cap includes the host, so it is too small for this group.
@@ -379,98 +408,95 @@ export default function DiscordWatchPartyPage() {
 				are on <Link href="/pricing">AniDachi pricing</Link>.
 			</p>
 
-			<h2 id="setup" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+			<h2 id="setup" className="scroll-mt-24">
 				Setup by platform
 			</h2>
-			<p className="mb-6 leading-relaxed text-ani-muted">
+			<p>
 				The Discord side is the same every time: join a voice channel, or start
 				a call in a DM or group DM. What changes is where the video lives. Before
 				the first night, have everyone{" "}
-				<InstallLink href="/extension">add AniDachi to Chrome</InstallLink> so
+				<Link href="/extension">add AniDachi to Chrome</Link> so
 				nobody is installing things while the opening song plays.
 			</p>
 
-			<h3 id="crunchyroll" className="mt-8 scroll-mt-24 text-xl font-semibold text-ani-text">
-				Crunchyroll on Discord
-			</h3>
-			<p className="mb-4 leading-relaxed text-ani-muted">
-				Crunchyroll protects its video, so a Go Live share of the player
-				usually shows a black screen and the Watch Together activity can&apos;t
-				open it at all. The working setup: everyone opens the same episode on
-				their own Crunchyroll account in Chrome, the host creates an AniDachi
-				room from the capsule on the player, and pastes the invite in the
-				Discord chat. Subtitle language and video quality stay each person&apos;s own
-				choice.
-			</p>
-			<p className="mb-6 leading-relaxed text-ani-muted">
-				Why the share fails is covered in{" "}
-				<Link href="/guides/can-you-screen-share-crunchyroll-on-discord">
-					can you screen share Crunchyroll on Discord
-				</Link>
-				. A step-by-step night with a server is{" "}
-				<Link href="/guides/crunchyroll-watch-party-with-discord">
-					Crunchyroll watch party with Discord
-				</Link>
-				, and the wider anime version is{" "}
-				<Link href="/guides/how-to-watch-anime-with-friends-on-discord">
-					how to watch anime with friends on Discord
-				</Link>
-				.
-			</p>
-
-			<h3 id="youtube" className="mt-8 scroll-mt-24 text-xl font-semibold text-ani-text">
-				YouTube on Discord
-			</h3>
-			<p className="mb-4 leading-relaxed text-ani-muted">
-				YouTube is the one service where Discord&apos;s own activity is a real
-				option. Use it for a playlist of short videos where anyone can queue
-				the next one. Switch to AniDachi when you want the full youtube.com
-				watch page: your own signed-in account (so YouTube Premium works the way
-				you pay for it), your own quality settings, and no 180-minute cap.
-				AniDachi works on full watch pages only, not Shorts, embeds or the
-				mobile app.
-			</p>
-			<p className="mb-6 leading-relaxed text-ani-muted">
-				More in{" "}
-				<Link href="/guides/youtube-watch-party-with-discord">
-					YouTube watch party with Discord
-				</Link>{" "}
-				and{" "}
-				<Link href="/guides/can-you-screen-share-youtube-on-discord">
-					can you screen share YouTube on Discord
-				</Link>
-				.
-			</p>
-
-			<h3 id="netflix" className="mt-8 scroll-mt-24 text-xl font-semibold text-ani-text">
-				Netflix on Discord
-			</h3>
-			<p className="mb-6 leading-relaxed text-ani-muted">
-				Netflix behaves like Crunchyroll on desktop: the shared window goes
-				black because the video is DRM-protected. On phones Discord says
-				Netflix can&apos;t be screenshared at all. So the Netflix setup is the
-				same split: Discord for voice, each person on their own Netflix
-				account in Chrome, one AniDachi room for the movie or episode. The
-				full walkthrough, including what people try for the black screen, is
-				in{" "}
-				<Link href="/guides/how-to-screen-share-netflix-on-discord">
-					how to stream Netflix on Discord
-				</Link>
-				, and the Netflix side is on{" "}
-				<Link href="/netflix-watch-party">Netflix watch party</Link>.
-			</p>
+			<HubFeatureGrid
+				columns={3}
+				items={[
+					{
+						id: "crunchyroll",
+						title: "Crunchyroll on Discord",
+						body: (
+							<>
+								Go Live of the player usually shows black, and Watch Together
+								can&apos;t open Crunchyroll. Everyone opens the same episode on
+								their own account in Chrome; the host creates the AniDachi room
+								and pastes the invite in Discord. Why the share fails:{" "}
+								<Link href="/guides/can-you-screen-share-crunchyroll-on-discord">
+									can you screen share Crunchyroll on Discord
+								</Link>
+								. Full nights:{" "}
+								<Link href="/guides/crunchyroll-watch-party-with-discord">
+									Crunchyroll watch party with Discord
+								</Link>{" "}
+								and{" "}
+								<Link href="/guides/how-to-watch-anime-with-friends-on-discord">
+									anime with friends on Discord
+								</Link>
+								.
+							</>
+						),
+					},
+					{
+						id: "youtube",
+						title: "YouTube on Discord",
+						body: (
+							<>
+								Use Watch Together for a shared playlist of short videos. Switch
+								to AniDachi for full youtube.com watch pages: your own signed-in
+								account, your own quality and no 180-minute cap (not Shorts,
+								embeds or the mobile app). More:{" "}
+								<Link href="/guides/youtube-watch-party-with-discord">
+									YouTube watch party with Discord
+								</Link>{" "}
+								and{" "}
+								<Link href="/guides/can-you-screen-share-youtube-on-discord">
+									screen sharing YouTube on Discord
+								</Link>
+								.
+							</>
+						),
+					},
+					{
+						id: "netflix",
+						title: "Netflix on Discord",
+						body: (
+							<>
+								Netflix goes black in a desktop share, and Discord says it
+								can&apos;t be screenshared from the mobile app at all. Same split:
+								Discord for voice, each person on their own Netflix in Chrome, one
+								AniDachi room. Walkthrough:{" "}
+								<Link href="/guides/how-to-screen-share-netflix-on-discord">
+									how to stream Netflix on Discord
+								</Link>
+								; Netflix side:{" "}
+								<Link href="/netflix-watch-party">Netflix watch party</Link>.
+							</>
+						),
+					},
+				]}
+			/>
 
 			<h2
 				id="server-events"
-				className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text"
+				className="scroll-mt-24"
 			>
 				Tips for a Discord server watch party
 			</h2>
-			<p className="mb-4 leading-relaxed text-ani-muted">
+			<p>
 				A weekly anime night in a server runs better with a little structure.
 				These are the things that go wrong most often, and how to head them off.
 			</p>
-			<SeoGuideBulletList
+			<HubFeatureGrid
 				items={[
 					{
 						title: "Schedule it as a Discord event",
@@ -478,7 +504,7 @@ export default function DiscordWatchPartyPage() {
 					},
 					{
 						title: "Size the room to the group",
-						body: "An AniDachi room holds 6 people with a Plus host or 15 with Pro. For a bigger server night, run two rooms with two hosts on the same episode, or keep the room for the core group.",
+						body: `An AniDachi room holds ${FREE_ROOM} people on Free, ${PLUS_ROOM} with a Plus host or ${PRO_ROOM} with Pro. For a bigger server night, run two rooms with two hosts on the same episode, or keep the room for the core group.`,
 					},
 					{
 						title: "Check access a day early",
@@ -497,23 +523,31 @@ export default function DiscordWatchPartyPage() {
 						body: "Share the room link in the event's text channel or a private thread rather than a public announcement channel.",
 					},
 					{
+						title: "Check role permissions first",
+						body: "Go Live needs the Video permission in the voice channel, and Watch Together needs Use Activities. If someone can't see the button, check their role before troubleshooting anything else.",
+					},
+					{
 						title: "Start on the host's signal",
 						body: "Let the host press play once the room shows everyone joined. Late arrivals open the same title, join from the invite and land on the room's current moment.",
 					},
 				]}
 			/>
-			<SeoGuideNote>
-				Go Live needs the Video permission in the voice channel, and Watch
-				Together needs the Use Activities permission. If someone can&apos;t
-				see the button, check the role permissions before troubleshooting
-				anything else.
-			</SeoGuideNote>
 
-			<h2 id="sources" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+			<p className="mt-8 text-center">
+				Want people to watch with? Find anime nights and other AniDachi fans
+				in our community server:{" "}
+				<JoinDiscordButton
+					variant="hero"
+					placement="discord_hub_community"
+					className="inline-flex w-auto h-auto min-h-0 border-0 bg-transparent px-0 py-0 align-baseline text-base font-medium text-ani-text underline decoration-ani-line underline-offset-4 shadow-none hover:bg-transparent hover:text-ani-progress"
+				/>
+			</p>
+
+			<h2 id="sources" className="scroll-mt-24">
 				Sources
 			</h2>
-			<p className="mb-8 leading-relaxed text-ani-muted">
-				Discord details checked 20 Oct 2026:{" "}
+			<p>
+				Discord details checked 7 Nov 2026:{" "}
 				{SOURCES.map((source, index) => (
 					<span key={source.href}>
 						{index > 0 ? ", " : null}
@@ -526,7 +560,11 @@ export default function DiscordWatchPartyPage() {
 				Netflix.
 			</p>
 
+			<h2 id="related" className="scroll-mt-24">
+				Related Guides
+			</h2>
 			<SeoGuideRelated
+				className="divide-y-0 sm:grid sm:grid-cols-2 sm:gap-x-10 [&>li]:border-b [&>li]:border-ani-line"
 				links={[
 					...discordGuides.map((g) => ({ href: g.href, label: g.label })),
 					{ href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
@@ -534,6 +572,7 @@ export default function DiscordWatchPartyPage() {
 					{ href: "/netflix-watch-party", label: "Netflix watch party" },
 				]}
 			/>
-		</SeoPageLayout>
+		</HubLandingLayout>
+		</>
 	);
 }

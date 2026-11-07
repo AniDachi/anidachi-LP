@@ -8,6 +8,14 @@ import { WatchingTogetherCount } from "@/components/watching-together-count";
 import { inferPageTemplateFromPath, trackConversion } from "@/lib/conversion-events";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+/** Platform hubs the "Works on" line links to (the current page is left as plain text). */
+const PLATFORM_HUBS: Record<string, string> = {
+  Crunchyroll: "/watch-crunchyroll-together",
+  YouTube: "/watch-youtube-together",
+  Netflix: "/netflix-watch-party",
+};
 
 /**
  * The homepage hero's install pattern for platform hubs (ANI-28): one primary button right under
@@ -22,6 +30,7 @@ export function HubHero({
   align = "left",
   ctaLabel = INSTALL_CTA_LABEL,
   worksOn,
+  worksOnLabel = "Works on",
 }: {
   pagePath: string;
   lead: string;
@@ -32,6 +41,8 @@ export function HubHero({
   ctaLabel?: string;
   /** Supported platforms, this page's first, shown under the buttons. */
   worksOn?: string[];
+  /** Lead-in for the platforms line, e.g. "Works with". */
+  worksOnLabel?: string;
 }) {
   const centered = align === "center";
   const pageTemplate = inferPageTemplateFromPath(pagePath);
@@ -85,7 +96,24 @@ export function HubHero({
         </Button>
       </div>
       {worksOn && worksOn.length > 0 ? (
-        <p className="mb-2 text-sm text-ani-text">Works on {worksOn.join(" · ")}</p>
+        <p className="mb-2 text-sm text-ani-text">
+          {worksOnLabel}{" "}
+          {worksOn.map((platform, i) => {
+            const href = PLATFORM_HUBS[platform];
+            return (
+              <span key={platform}>
+                {i > 0 ? " · " : null}
+                {href && href !== pagePath ? (
+                  <Link href={href} className="underline decoration-ani-line underline-offset-4 hover:decoration-ani-text">
+                    {platform}
+                  </Link>
+                ) : (
+                  platform
+                )}
+              </span>
+            );
+          })}
+        </p>
       ) : null}
       {centered ? (
         <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-ani-muted">

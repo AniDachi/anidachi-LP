@@ -7,12 +7,34 @@ import {
   ItemListJsonLd,
 } from "@/components/json-ld";
 import { HomeSectionHeader } from "@/components/home-section-header";
+import { InstallLink } from "@/components/install-link";
 import { HubHero } from "@/components/hub-hero";
 import { LazyExtensionDemo } from "@/components/lazy-extension-demo";
 import { type SeoGuideStep } from "@/components/seo-guide-blocks";
 import { EditorialByline, SeoBreadcrumbNav } from "@/components/seo-page-layout";
 import { StoreReviews } from "@/components/store-reviews";
 import type { TocHeading } from "@/components/table-of-contents";
+import { CHROME_WEB_STORE_URL, INSTALL_HOWTO_STEP_TEXT } from "@/lib/install-cta";
+
+/** Shared first step for hub HowTo lists; rendered with a link to the Store listing. */
+export const HUB_INSTALL_STEP = { name: "Install AniDachi", text: INSTALL_HOWTO_STEP_TEXT };
+
+function InstallStepText() {
+  return (
+    <>
+      Open the{" "}
+      <InstallLink
+        href={CHROME_WEB_STORE_URL}
+        storePlacement="hub_how_it_works"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        official AniDachi Chrome Web Store listing
+      </InstallLink>{" "}
+      and choose Add to Chrome.
+    </>
+  );
+}
 
 export interface HubLandingLayoutProps {
   breadcrumbs: { name: string; url: string }[];
@@ -35,20 +57,33 @@ export interface HubLandingLayoutProps {
   heroCtaLabel?: string;
   /** Supported platforms, this page's first. */
   heroWorksOn?: string[];
+  /** Lead-in for the platforms line; defaults to "Works on". */
+  heroWorksOnLabel?: string;
   /** Short answer for featured snippets, shown right under the hero. */
   answer: ReactNode;
-  steps: { id: string; heading: string; items: SeoGuideStep[] };
+  steps: { id: string; heading: string; intro?: ReactNode; items: SeoGuideStep[] };
   /** The reading section: H2 sections, tables, tips, related links. */
   children: ReactNode;
 }
 
 /** Homepage-style feature cards for the hub reading section (two columns from small screens up). */
-export function HubFeatureGrid({ items }: { items: { title: string; body: ReactNode }[] }) {
+export function HubFeatureGrid({
+  items,
+  columns = 2,
+}: {
+  items: { title: string; body: ReactNode; id?: string }[];
+  columns?: 2 | 3;
+}) {
   return (
-    <ul className="not-prose mb-6 grid gap-4 sm:grid-cols-2">
+    <ul className={`not-prose mb-6 grid gap-4 sm:grid-cols-2 ${columns === 3 ? "lg:grid-cols-3" : ""}`.trim()}>
       {items.map((item) => (
         <li key={item.title} className="rounded-[20px] border border-ani-line bg-ani-panel px-5 py-5">
-          <h3 className="mb-2 text-base font-semibold tracking-[-0.02em] text-ani-text">{item.title}</h3>
+          <h3
+            id={item.id}
+            className={`mb-2 text-base font-semibold tracking-[-0.02em] text-ani-text ${item.id ? "scroll-mt-24" : ""}`.trim()}
+          >
+            {item.title}
+          </h3>
           <p className="text-[0.95rem] leading-relaxed text-ani-muted [&_a]:font-medium [&_a]:text-ani-text [&_a]:underline [&_a]:decoration-ani-line [&_a]:underline-offset-2">
             {item.body}
           </p>
@@ -79,6 +114,7 @@ export function HubLandingLayout({
   heroFinePrint,
   heroCtaLabel,
   heroWorksOn,
+  heroWorksOnLabel,
   answer,
   steps,
   children,
@@ -101,6 +137,7 @@ export function HubLandingLayout({
               align="center"
               ctaLabel={heroCtaLabel}
               worksOn={heroWorksOn}
+              worksOnLabel={heroWorksOnLabel}
             />
           </div>
           <div
@@ -120,7 +157,7 @@ export function HubLandingLayout({
 
         <section id={steps.id} className="scroll-mt-20 bg-ani-canvas py-16 lg:py-24">
           <div className="container mx-auto px-4">
-            <HomeSectionHeader title={steps.heading} />
+            <HomeSectionHeader title={steps.heading} description={steps.intro} />
             <ol className="mx-auto max-w-2xl">
               {steps.items.map((step, i) => (
                 <li key={step.name} className="flex gap-4 sm:gap-5">
@@ -137,7 +174,7 @@ export function HubLandingLayout({
                       {step.name}
                     </h3>
                     <div className="text-[0.95rem] leading-relaxed text-ani-muted [&_a]:font-medium [&_a]:text-ani-progress [&_a]:underline-offset-4 hover:[&_a]:underline">
-                      {step.text}
+                      {step.text === INSTALL_HOWTO_STEP_TEXT ? <InstallStepText /> : step.text}
                     </div>
                   </div>
                 </li>
