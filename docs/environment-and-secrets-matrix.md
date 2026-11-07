@@ -132,7 +132,7 @@ Engine is enabled and the GitHub token has the current scopes.
 | Analytics Engine binding | `ROOM_ANALYTICS` | `ROOM_ANALYTICS` | Dataset names differ by environment |
 | Analytics dataset | `anidachi_room_events_staging` | `anidachi_room_events_production` | Appears after binding and first writes |
 | Worker env var | `ANIDACHI_ENV=staging` | `ANIDACHI_ENV=production` | Used in telemetry/debugging |
-| Worker env var (staging source opt-in; actual deployment in PR490 receipts) | `ANIDACHI_FREE20_ACCOUNTING_ENABLED="true"` in `[env.staging.vars]` | Not configured | Exact `true` enables accounting only for authenticated SQL-marked daily rooms, plus internal refresh/retry paths. Existing unmarked rooms are not adopted. The staging value is persisted in Wrangler source so CI deploys retain it; selected room mode remains durable. Runtime preparation precedes SQL activation and is not enabled acceptance |
+| Worker env var (staging deployed; production source preparation November 7) | `ANIDACHI_FREE20_ACCOUNTING_ENABLED="true"` in `[env.staging.vars]` | `"true"` prepared in `[env.production.vars]`; not deployed | Exact `true` enables accounting only for authenticated SQL-marked daily rooms, plus internal refresh/retry paths. Existing unmarked rooms are not adopted. Source values survive CI deployment; selected room mode remains durable. Production deployment is manual and gated on the exact main SHA after schema/compatible Web readiness. Follow the [launch runbook](releases/free20/production-preparation-2026-11-06.md); runtime preparation precedes SQL activation and is not enabled acceptance |
 | Worker env var | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://staging.anidachi.app` | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://www.anidachi.app` | Environment-specific target for room callbacks and invitation-outbox recovery; scheduler rejects a mismatched origin |
 | Worker secret | `ANIDACHI_INTERNAL_API_SECRET` | `ANIDACHI_INTERNAL_API_SECRET` | Must match the Web value for the same environment and differ between staging/production |
 
@@ -143,8 +143,9 @@ staging invitation cron was disabled after automatic Supabase recovery was
 verified on 2026-09-04. The November1 Free20 purchase-delivery block adds a
 distinct `*/2 * * * *` staging Worker schedule; it only retries the Free20
 outbox when the existing Free20 flag is enabled. Invitations remain on
-Supabase Cron. Production configuration remains unchanged until its separate
-promotion. The invitation rollout and acceptance boundary are recorded in
+Supabase Cron. Deployed production remains unchanged until its separate
+promotion; the production accounting source flag is prepared for that manual
+deployment. The invitation rollout and acceptance boundary are recorded in
 `docs/superpowers/plans/2026-09-04-invitation-delivery-reliability.md`.
 
 Worker secrets are managed with Wrangler/GitHub Actions. Do not store them in

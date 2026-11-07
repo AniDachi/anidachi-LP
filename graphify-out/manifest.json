@@ -3468,10 +3468,10 @@
     "semantic_hash": "6704b202aaa8bfaad7c5f55f20b80d80"
   },
   "apps/web/docs/seo-content-guidelines.md": {
-    "mtime": 1791833935.103234,
-    "seen": 1791834247.442561,
+    "mtime": 1794046642.52672,
+    "seen": 1794047382.694499,
     "ast_hash": "684afaca914216664d6d4b161fdad892",
-    "semantic_hash": "56d4d608250f1de7aa8eec474a5fe5c8"
+    "semantic_hash": "4a447acc4e3dcf8a04e0f74a213a7dbc"
   },
   "docs/ai-site-development-handoff.md": {
     "mtime": 1789490459.0038908,
@@ -3492,10 +3492,10 @@
     "semantic_hash": "0d3c69842eaf252148dbd0b56e3a67b1"
   },
   "docs/current-development-state.md": {
-    "mtime": 1793987825.823969,
-    "seen": 1793988337.514027,
+    "mtime": 1794046642.492368,
+    "seen": 1794047382.6945019,
     "ast_hash": "bd18f6e9e42a1dfbd1bd595407ee6e2c",
-    "semantic_hash": "c8a2c63acc87f6c17cee28d5d423cc08"
+    "semantic_hash": "1d52c87c5241dbe0da176dda0194183a"
   },
   "docs/development-environments.md": {
     "mtime": 1789490459.0048413,
@@ -3510,10 +3510,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1793980908.9437876,
-    "seen": 1793981500.645497,
+    "mtime": 1794046642.5104427,
+    "seen": 1794047382.694504,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "4e5e3666e241481aa7688605d196cbbe"
+    "semantic_hash": "859faa1722591a58ca56816ccdbf1840"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -12258,16 +12258,16 @@
     "semantic_hash": ""
   },
   "docs/releases/free20/production-preparation-2026-11-06.md": {
-    "mtime": 1793987825.7749903,
-    "seen": 1793988337.514029,
+    "mtime": 1794046779.1480272,
+    "seen": 1794047382.694505,
     "ast_hash": "",
-    "semantic_hash": "1a110ec68ab2aabd5ab833aadea5c839"
+    "semantic_hash": "9a2a05928e88ed7391546e5917bee011"
   },
   "docs/superpowers/plans/2026-11-06-free20-store-release-preparation.md": {
-    "mtime": 1793987825.7972739,
-    "seen": 1793988337.514029,
+    "mtime": 1794046687.9505053,
+    "seen": 1794047382.694506,
     "ast_hash": "",
-    "semantic_hash": "7f246d840b03368bff84e58dae89e106"
+    "semantic_hash": "590bb70e28993f885db5fd2ab051c001"
   },
   "apps/web/app/api/extension/uninstall-capability/route.ts": {
     "mtime": 1793987655.1778746,

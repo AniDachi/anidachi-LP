@@ -1,5 +1,46 @@
 # Current Development State
 
+## Free20 Store approval and launch preflight: November 7, 2026
+
+The owner reports Chrome Web Store approval of **0.1.5**. This is an owner report,
+not an independent Store dashboard/publication check. The final frozen candidate
+is staging PR #523 at `d702613bc39ea99613166a5edc9cb13270117f93`, ZIP SHA256
+`358757aa77168fb515fd3df7be28f60d677b2536dffc45536f88b84c2aef33a3`; it replaced
+the November 6 candidate. Preserve this exact approved artifact. The owner has
+authorized the next preparation block and its staging delivery; production
+promotion, LIVE mutations and Store publication remain separate.
+
+Fresh readback: production web is still READY at main `9da93cd9891b6155051fc550957635c089fc8f3a`;
+production Worker remains `3ea773eb-f258-4713-a314-9abeb4012f49`, with accounting
+off/absent. Production has 83 migrations versus staging's 93; the ten pending
+files match the frozen receipt. SQL production revision 3 still has trials enabled
+and no Free20 policy columns. Staging revision 5 has Free20/abuse enabled and
+trials disabled; its web serves `d702613b`, Worker `8a293e3a-5986-4380-8fad-e972878bfcc2`.
+
+After owner reauthorization, AniDachi LIVE `acct_1RlmiCAGc1Bd58Cj` is accessible.
+Read-only inventory confirms Plus/Pro prices, but annual/monthly prices still share
+products; new once-only 40% coupons and native retention configuration are absent,
+and the existing webhook lacks `invoice.created`. The concrete preparation work
+and exact provider IDs are in the launch runbook; no LIVE object was changed.
+
+The main/staging YouTube conflict is resolved locally using approved Free20 copy.
+The resulting web/extension/protocol/workflow trees exactly match staging `d702613b`:
+main's SEO content was already retained, and the merge reconciles its ancestry.
+The production accounting flag is now prepared in Wrangler source, with the
+existing exact-main-SHA manual deployment gate intact. Staging delivery of this
+preparation is pending. Promotion PR #471 remains open with auto-merge off.
+The pre-reconciliation final-tree comparison was 514 files, not the earlier
+preparation-base 504 count. The approved ZIP and all 493 recorded build inputs
+remain unchanged.
+The production build variable is still 0.1.4 and must become 0.1.5 at authorized
+launch; do not substitute a rebuilt artifact for the approved ZIP.
+
+Use the refreshed [launch checklist](releases/free20/production-preparation-2026-11-06.md#remaining-launch-checklist)
+and [preparation completion record](superpowers/plans/2026-11-06-free20-store-release-preparation.md).
+Schema-first deployment, compatible web, manually gated Worker, final SQL switch,
+production acceptance and owner publication remain pending. No production/LIVE
+write or Store publication is authorized or performed by this preparation.
+
 ## Store uninstall rollout compatibility: November 7, 2026
 
 The owner chose compatibility before launch: no early production website/backfill.
