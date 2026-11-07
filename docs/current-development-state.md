@@ -1,6 +1,51 @@
 # Current Development State
 
-## Free20 Store approval and launch preflight: November 7, 2026
+## Free20 production launch: November 7, 2026
+
+The owner authorized the production cutover after reporting Store approval of
+**0.1.5**. Technical rollout is complete: PR #524 delivered accepted staging
+`b0f2befc608d4fee00051ca00524efb707800219`; promotion PR #471 merged as main
+`940bc8b01a03982326c643a4b4ab92ec73fa9dc6`. Production Web is READY at
+`dpl_9sBQJ2NMeWzfnPRz2CBVdUoCSMem`; the manually gated Worker serves version
+`ad430c1c-a43b-47c7-82c2-e8e56bcf22f4` at 100% from that exact main SHA.
+
+The ten reviewed original-version migrations were applied before main promotion.
+Production now has 93 migrations; 91 relevant function definitions and privileges
+match staging. After compatible runtime and LIVE configuration verification, the
+guarded SQL switch advanced policy revision 3 to **4**: Free20 and abuse enabled,
+new trials disabled. The public offer confirmed `daily_free20` / `trialAvailable:
+false` at `2026-11-07T11:29:22.815922Z`. Original activation, existing manual/trial
+rights and subscription records were preserved; their before/after digests match.
+
+LIVE annual sale prices now use separate products at unchanged amounts; old annual
+IDs remain recognition aliases for existing subscriptions. The two technical
+uninstall coupon templates and private cancellation flow share the **same single
+lifetime 40% allowance per account**, monthly only. The owner explicitly approved
+the renewal template; it does not grant a second discount. All three LIVE issuance
+gates are enabled. The existing webhook gained `invoice.created` without changing
+its URL, secret or pinned version. No customer purchase, cancellation or discount
+claim was executed during deployment.
+
+Canonical-origin verification found and fixed a production configuration mismatch:
+`NEXT_PUBLIC_SITE_URL=https://www.anidachi.app` is now Production-only, while
+Preview and the exact staging override retain their original scopes. Canonical
+web and approved-extension requests now reach authentication (401 without login),
+and foreign origins remain rejected (403). Pricing displays the monthly default,
+20 daily minutes and correct room limits; the authenticated uninstall page loads
+the eligible offer and survey. Final deployment error/fatal log counts were empty
+in the inspected 30-minute window. These are scoped deployment/UI observations,
+not proof of a real production payment or two-user room.
+
+The approved ZIP is unchanged: source `d702613bc39ea99613166a5edc9cb13270117f93`,
+SHA256 `358757aa77168fb515fd3df7be28f60d677b2536dffc45536f88b84c2aef33a3`.
+All 493 recorded build inputs, 15 ZIP entries and ten migration hashes still match.
+Production build metadata is 0.1.5, but CI output must not replace that approved ZIP.
+**Store publication remains the owner's action and is not verified complete.**
+Loaded 0.1.5/old-client, real Free/paid/guest room, quota/UTC-reset and LIVE purchase
+acceptance remain separate open checkpoints. See the [launch receipt and remaining
+checklist](releases/free20/production-preparation-2026-11-06.md#production-launch-receipt-november-7-2026).
+
+## Historical preflight before production authorization: November 7, 2026
 
 The owner reports Chrome Web Store approval of **0.1.5**. This is an owner report,
 not an independent Store dashboard/publication check. The final frozen candidate
