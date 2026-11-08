@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SeoGuideRelated } from "@/components/seo-guide-blocks";
 import { CopyRanges } from "@/components/tools/copy-ranges";
 import { StatStrip } from "@/components/tools/stat-strip";
@@ -88,7 +89,7 @@ export function FillerSeriesBody({
       <div className="not-prose mb-4">
         <CopyRanges text={watchText} label="Copy watch list" />
       </div>
-      <ol className="not-prose mb-10 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <ol className="not-prose mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {watch.map((range) => (
           <li
             key={range.start}
@@ -103,6 +104,17 @@ export function FillerSeriesBody({
           </li>
         ))}
       </ol>
+      <p className="mb-10 leading-relaxed text-ani-muted">
+        Watching {series.title} with friends? Skip the filler together and keep everyone on the same
+        episode with a{" "}
+        <Link
+          href="/watch-crunchyroll-together"
+          className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:decoration-ani-text"
+        >
+          Crunchyroll watch party
+        </Link>
+        .
+      </p>
 
       <h2 id="related" className={headingClass}>
         Related

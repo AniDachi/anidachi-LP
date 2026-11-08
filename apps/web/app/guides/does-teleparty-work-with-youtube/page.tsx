@@ -141,7 +141,9 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         Each person opens the same YouTube video in Chrome, one host starts a
         Teleparty session, and others join via link. Play/pause and seek stay
         roughly aligned. Voice is separate (Discord, FaceTime) unless you use
-        Teleparty’s premium chat features.
+        Teleparty’s premium chat features. What the free version covers, and
+        what Premium costs, is in{" "}
+        <Link href="/guides/is-teleparty-free">is Teleparty free</Link>.
       </p>
 
       <h2
