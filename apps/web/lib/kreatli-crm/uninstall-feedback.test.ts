@@ -8,6 +8,7 @@ const rows = Array.from({ length: 51 }, (_, n) => ({
   submission_id: `11111111-1111-4111-8111-${String(51 - n).padStart(12, "0")}`,
   reason: "other", note: "A comment", created_at: stamp, email: n % 2 ? null : "feedback@example.com",
   actor_hash: "private", user_id: "private", discord_id: n % 2 ? null : "123456789012345678",
+  display_name: n % 2 ? null : "Alex Johnson",
 }));
 
 test("private feedback rejects unauthenticated requests before any read or cursor parsing", async () => {
@@ -30,6 +31,13 @@ test("feedback pages are bounded and preserve timestamp precision for tied rows"
   assert.equal(page.items[1].email, null);
   assert.equal(page.items[0].discordId, "123456789012345678");
   assert.equal(page.items[1].discordId, null);
+  assert.equal(page.items[0].displayName, "Alex Johnson");
+  assert.equal(page.items[1].displayName, null);
+  assert.equal(feedbackPage([{ ...rows[0], display_name: undefined }]).items[0].displayName, null);
+  assert.equal(feedbackPage([{ ...rows[0], display_name: "名".repeat(200) }]).items[0].displayName, "名".repeat(200));
+  for (const display_name of [42, {}, "", " ", "a".repeat(201)]) {
+    assert.throws(() => feedbackPage([{ ...rows[0], display_name }]));
+  }
   assert.equal(feedbackPage(rows.slice(50)).nextCursor, null);
   assert.deepEqual(feedbackPage([]), { items: [], nextCursor: null });
   assert.throws(() => feedbackPage([{ ...rows[0], reason: "unknown" }]));
@@ -52,6 +60,7 @@ test("authorized reads validate cursors and return uncached projected data", asy
   assert.equal(body.items.length, 1);
   assert.equal(body.items[0].email, "feedback@example.com");
   assert.equal(body.items[0].discordId, "123456789012345678");
+  assert.equal(body.items[0].displayName, "Alex Johnson");
   assert.doesNotMatch(JSON.stringify(body), /actor_hash|user_id/);
   assert.match(response.headers.get("x-robots-tag")!, /noindex/);
   for (const cursor of ["bad", "x".repeat(513), Buffer.from(JSON.stringify({ id: rows[0].submission_id, createdAt: "infinity" })).toString("base64url")]) {
