@@ -1,4 +1,5 @@
 import { resolveFree20RequestContext } from "@/lib/anidachi-auth/free20-abuse-context";
+import { emitServerEvent } from "@/lib/analytics-server-events";
 import { Free20ContextError, type Free20AbuseContext } from "@/lib/anidachi-auth/free20-abuse";
 import { type NextRequest, NextResponse } from "next/server";
 import { FREE20_CLIENT_HEADER, parseFree20ClientVersion, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
@@ -202,6 +203,12 @@ export async function POST(
 			status: 409,
 		});
   }
+  emitServerEvent({
+    eventType: "room_connected",
+    userId: session.userId,
+    insertSeed: `room_connected:${roomId}:${session.userId}:${role}`,
+    properties: { role, host_plan: room.host_plan_code ?? null },
+  });
   // A serialized context transfer may raise the room's effective usage floor.
   // Issue host quota/TTL only from the post-claim bound room, never preflight.
   if (isHost && room.free20_abuse_protected === true) {

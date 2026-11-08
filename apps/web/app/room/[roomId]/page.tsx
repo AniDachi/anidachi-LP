@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackOnView } from "@/components/track-on-view";
 import { headers } from "next/headers";
 import { getSession, requireAuth } from "@/lib/anidachi-auth/session";
 import {
@@ -46,6 +47,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
   if (!room || room.status === "ended") {
     return (
       <Shell>
+        <TrackOnView event="invite_viewed" params={{ state: "ended", mobile: initialMobile }} />
         <div className="mb-1 flex items-center gap-2">
           <span className="inline-block h-2 w-2 rounded-full bg-ani-muted" />
           <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
@@ -83,6 +85,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
   if (isParticipant && !launchUrl) {
     return (
       <Shell>
+        <TrackOnView event="invite_viewed" params={{ state: "waiting_for_host", mobile: initialMobile }} />
         <div className="mb-1 flex items-center gap-2">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
           <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
@@ -114,16 +117,25 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const roomSubtitle = room.episode_id ?? null;
 
   return (
-    <RoomInviteView
-      status={room.status}
-      roomTitle={roomTitle}
-      roomSubtitle={roomSubtitle}
-      hostName={host?.display_name ?? "Unknown"}
-      sourceProvider={source?.source.provider}
-      joinAction={`/api/rooms/${roomId}/join`}
-      isParticipant={isParticipant}
-      hasLaunchUrl={Boolean(launchUrl)}
-      initialMobile={initialMobile}
-    />
+    <>
+      <TrackOnView
+        event="invite_viewed"
+        params={{
+          state: isParticipant ? "ready_to_open" : "ready_to_join",
+          mobile: initialMobile,
+        }}
+      />
+      <RoomInviteView
+        status={room.status}
+        roomTitle={roomTitle}
+        roomSubtitle={roomSubtitle}
+        hostName={host?.display_name ?? "Unknown"}
+        sourceProvider={source?.source.provider}
+        joinAction={`/api/rooms/${roomId}/join`}
+        isParticipant={isParticipant}
+        hasLaunchUrl={Boolean(launchUrl)}
+        initialMobile={initialMobile}
+      />
+    </>
   );
 }

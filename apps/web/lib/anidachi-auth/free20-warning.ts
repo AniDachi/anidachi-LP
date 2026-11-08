@@ -18,6 +18,10 @@ import {
 	validateFree20StatusAuthority,
 } from "./account-hosting-status";
 import { db } from "./db";
+import {
+	deterministicInsertId,
+	emitServerEvent,
+} from "../analytics-server-events";
 import { getAccountAccessSession } from "./watch-history-access";
 import { readBoundedJson } from "./watch-history-v3-routes";
 
@@ -198,6 +202,18 @@ export function createFree20WarningHandler(
 				...result,
 				validUntil: Math.floor(result.validUntil - elapsed),
 			});
+			if (result.decision === "show") {
+				emitServerEvent({
+					eventType: "free20_warning_shown",
+					userId: owner,
+					insertSeed: `free20_warning:${result.claimId}`,
+					properties: {
+						room_id_hash: deterministicInsertId(`room:${input.roomId}`),
+						warning_threshold_seconds: FREE20_WARNING_THRESHOLD_SECONDS,
+						utc_day: result.utcDay,
+					},
+				});
+			}
 			return NextResponse.json(result, { headers });
 		} catch (error) {
 			return error instanceof WarningFailure

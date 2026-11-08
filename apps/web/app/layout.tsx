@@ -13,6 +13,7 @@ import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
 import { MobileInstallProvider } from "@/components/mobile-install-panel";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
+import { buildGaBootstrapScript } from "@/lib/analytics-env";
 import {
   ANIDACHI_OG_IMAGE_ALT,
   ANIDACHI_OG_IMAGE_PATH,
@@ -94,17 +95,8 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-          strategy="afterInteractive"
-        />
         <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}');
-          `}
+          {buildGaBootstrapScript(GA_MEASUREMENT_ID)}
         </Script>
         <MobileInstallProvider>
           <ConditionalNav marketingNav={<NavBar />} />

@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { emitServerEvent } from "@/lib/analytics-server-events";
 import { getSession } from "@/lib/anidachi-auth/session";
 import {
   addRoomMember,
+  isRoomMember,
   getRoomById,
   roomCapabilitiesFromRoom,
   updateRoom,
@@ -44,7 +46,19 @@ export async function POST(
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
+  const firstJoin =
+    room.host_user_id !== session.userId &&
+    !(await isRoomMember(roomId, session.userId));
   await addRoomMember(roomId, session.userId);
+  if (firstJoin) {
+    emitServerEvent({
+      eventType: "room_joined",
+      userId: session.userId,
+      request,
+      insertSeed: `room_joined:${roomId}:${session.userId}`,
+      properties: { via: wantsJson(request) ? "api" : "invite_page" },
+    });
+  }
   await updateRoom(roomId, { last_active_at: new Date().toISOString() });
 
   const capabilities = roomCapabilitiesFromRoom(room);

@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/gtag";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,7 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
           (response.status === 409 && body?.error === "This invite has already been used. Ask for a new link.")
         ) {
           setUnavailable(true);
+          trackEvent("friend_invite_accepted", { outcome: "unavailable" });
         }
         throw new Error(
           response.status < 500 && !response.ok && typeof body?.error === "string"
@@ -78,6 +80,7 @@ export function FriendInviteClient({ sender, token, ownerUserId, alreadyFriends 
         );
       }
       setAccepted(true);
+      trackEvent("friend_invite_accepted", { outcome: "accepted" });
     } catch (err) {
       setError(
         err instanceof Error && err.name !== "TypeError"

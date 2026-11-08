@@ -1,4 +1,5 @@
 import { resolveFree20RequestContext } from "@/lib/anidachi-auth/free20-abuse-context";
+import { emitServerEvent } from "@/lib/analytics-server-events";
 import { Free20ContextError, type Free20AbuseContext } from "@/lib/anidachi-auth/free20-abuse";
 import { FREE20_CLIENT_HEADER, parseFree20ClientVersion } from "@anidachi/protocol";
 import { roomUpdateRequiredBody } from "@/lib/anidachi-auth/room-update-required";
@@ -132,6 +133,18 @@ export async function POST(request: NextRequest) {
   }
   const { room } = admission;
   const reused = admission.outcome === "reused";
+  if (!reused) {
+    emitServerEvent({
+      eventType: "room_created",
+      userId: session.userId,
+      insertSeed: `room_created:${room.room_id}`,
+      properties: {
+        host_plan: room.host_plan_code,
+        hosting_time_mode: room.hosting_time_mode,
+        source_provider: room.source_provider ?? null,
+      },
+    });
+  }
 	let roomTime: Free20HostingAdmission | null = null;
 	if (room.hosting_time_mode === "daily_free20") {
 		try {

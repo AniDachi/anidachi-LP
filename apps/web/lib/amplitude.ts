@@ -2,12 +2,32 @@
 
 import { createInstance, Identify } from "@amplitude/unified";
 import { AMPLITUDE_DEVICE_COOKIE } from "@/lib/amplitude-ids";
+import { isLikelyBot, isProductionAnalyticsHost } from "@/lib/analytics-env";
 
 const amplitude = createInstance();
 const ANALYTICS_OPTIONS = {
   fetchRemoteConfig: false,
-  autocapture: false,
+  // Only page views, sessions and marketing attribution (UTM / referrer).
+  // Clicks, forms, downloads and network capture stay off.
+  autocapture: {
+    pageViews: true,
+    sessions: true,
+    attribution: true,
+    fileDownloads: false,
+    formInteractions: false,
+    elementInteractions: false,
+    frustrationInteractions: false,
+    networkTracking: false,
+  },
 } as const;
+
+/** Share of sessions that get a Session Replay recording. */
+const SESSION_REPLAY_SAMPLE_RATE = 0.25;
+
+/** Amplitude runs on the production host only, and never for automated visits. */
+function analyticsAllowed(): boolean {
+  return isProductionAnalyticsHost() && !isLikelyBot();
+}
 
 let initPromise: Promise<void> | null = null;
 
@@ -27,11 +47,12 @@ function startInit(): void {
   if (typeof window === "undefined") return;
   const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
   if (!apiKey) return;
+  if (!analyticsAllowed()) return;
   if (initPromise === null) {
     initPromise = amplitude
       .initAll(apiKey, {
         analytics: ANALYTICS_OPTIONS,
-        sessionReplay: { sampleRate: 1 },
+        sessionReplay: { sampleRate: SESSION_REPLAY_SAMPLE_RATE },
       })
       .then(() => {
         persistDeviceId();

@@ -19,6 +19,7 @@ const NON_MARKETING_PREFIXES = [
   "/kreatli-email-crm",
   "/success",
   "/extension/connect",
+  "/uninstall",
 ] as const;
 
 /** Routes whose last segment is a secret or private id (invite tokens, room ids). */
@@ -75,6 +76,32 @@ function readUtmFromSearch(search: string): string {
   }
 }
 
+const FIRST_TOUCH_COOKIE = "anidachi_first_touch";
+
+/**
+ * Mirrors the first marketing touch into a first-party cookie so the server can
+ * attach it to sign-up and purchase events. Written once, kept for 90 days.
+ */
+function writeFirstTouchCookie(path: string, referrer: string, utm: string): void {
+  try {
+    if (document.cookie.split("; ").some((c) => c.startsWith(`${FIRST_TOUCH_COOKIE}=`)))
+      return;
+    let referrerHost = "";
+    try {
+      referrerHost = referrer ? new URL(referrer).hostname : "";
+    } catch {
+      referrerHost = "";
+    }
+    const value = encodeURIComponent(
+      JSON.stringify({ p: redactAttributionPath(path), r: referrerHost, u: utm }),
+    );
+    if (value.length > 900) return;
+    document.cookie = `${FIRST_TOUCH_COOKIE}=${value}; Path=/; Max-Age=7776000; SameSite=Lax`;
+  } catch {
+    // Cookies blocked: attribution stays best-effort.
+  }
+}
+
 /** Call once on marketing page mount. Idempotent within the session. */
 export function captureFirstLandingPath(): void {
   if (typeof window === "undefined") return;
@@ -90,6 +117,7 @@ export function captureFirstLandingPath(): void {
 
   const utm = readUtmFromSearch(window.location.search);
   if (utm) safeSessionSet(UTM_KEY, utm);
+  writeFirstTouchCookie(path, ref, utm);
 }
 
 export function getFirstLandingPath(): string | null {

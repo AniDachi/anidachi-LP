@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { emitServerEvent } from "@/lib/analytics-server-events";
 import { RoomUsageSummarySchema } from "@anidachi/protocol";
 import { issueRoomPolicy } from "@/lib/anidachi-auth/room-capability";
 import {
@@ -75,5 +76,21 @@ export async function POST(
       },
     },
   });
+	if (
+		!result.alreadyEnded &&
+		command.reason === "quota_exhausted" &&
+		room.hosting_time_mode === "daily_free20"
+	) {
+		emitServerEvent({
+			eventType: "free20_limit_reached",
+			userId: room.host_user_id,
+			insertSeed: `free20_limit:${roomId}`,
+			occurredAt: endedAt.getTime(),
+			properties: {
+				host_plan: room.host_plan_code,
+				used_seconds: command.usage?.seconds ?? null,
+			},
+		});
+	}
 	return NextResponse.json({ ok: true, usageFinalized: true, ...result });
 }
