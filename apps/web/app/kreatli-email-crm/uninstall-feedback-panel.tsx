@@ -54,9 +54,11 @@ export function UninstallFeedbackPanel() {
       {items?.length === 0 ? <p className="text-sm text-foreground/60">No responses yet.</p> : items && <div className="overflow-x-auto">
         <table className="block w-full text-left text-sm sm:table">
           <caption className="sr-only">Reasons for uninstalling, newest first</caption>
-          <thead className="hidden border-b border-brand-border text-foreground/60 sm:table-header-group"><tr><th className="px-3 py-3 font-medium">Date</th><th className="px-3 py-3 font-medium">Reason</th><th className="px-3 py-3 font-medium">Comment</th></tr></thead>
+          <thead className="hidden border-b border-brand-border text-foreground/60 sm:table-header-group"><tr><th className="px-3 py-3 font-medium">Date</th><th className="px-3 py-3 font-medium">Email</th><th className="px-3 py-3 font-medium">Discord ID</th><th className="px-3 py-3 font-medium">Reason</th><th className="px-3 py-3 font-medium">Comment</th></tr></thead>
           <tbody className="block sm:table-row-group">{items.map(item => <tr key={item.id} className="block border-b border-brand-border py-4 last:border-0 sm:table-row sm:py-0">
             <td className="block pb-2 align-top text-foreground/60 sm:table-cell sm:px-3 sm:py-4 sm:text-foreground"><time dateTime={item.createdAt} className="whitespace-nowrap">{new Date(item.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time></td>
+            <td className="block pb-2 align-top [overflow-wrap:anywhere] sm:table-cell sm:min-w-56 sm:max-w-64 sm:px-3 sm:py-4"><span className="sr-only sm:hidden">Email: </span>{item.email ? <span className="select-all">{item.email}</span> : <span className="text-foreground/40">Not available</span>}</td>
+            <td className="block pb-2 align-top [overflow-wrap:anywhere] sm:table-cell sm:px-3 sm:py-4"><span className="text-foreground/60 sm:hidden">Discord ID: </span>{item.discordId ? <span className="select-all whitespace-nowrap">{item.discordId}</span> : <span className="text-foreground/40">—</span>}</td>
             <td className="block pb-2 align-top font-medium sm:table-cell sm:min-w-40 sm:px-3 sm:py-4 sm:font-normal">{feedbackReasonLabels[item.reason]}</td>
             <td className="block whitespace-pre-wrap align-top [overflow-wrap:anywhere] sm:table-cell sm:min-w-48 sm:max-w-md sm:px-3 sm:py-4">{item.note || <span className="text-foreground/40">—</span>}</td>
           </tr>)}</tbody>

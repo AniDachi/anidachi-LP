@@ -305,8 +305,13 @@ needed. See the plan and delivery PR for staging validation boundaries.
 The existing `/kreatli-email-crm` admin displays saved uninstall feedback through
 `/api/kreatli-crm/uninstall-feedback`. Every read requires its existing CRM
 session, independently of ordinary website login. The private
-`list_uninstall_feedback_v1` RPC returns only date, reason, comment and an opaque
-submission ID for stable cursor pagination (50 rows plus one lookahead).
+`list_uninstall_feedback_v2` RPC adds the linked account's current email and
+Discord ID to date, reason, comment and an opaque submission ID for stable
+cursor pagination (50 rows plus one lookahead). Contact fields are nullable;
+anonymous or deleted accounts remain in the inbox without contact details.
+Discord display names are not treated as usernames. The v1 reader remains for
+rollback. The [contact display change](kreatli-uninstall-feedback.md) requires
+its additive migration before the updated web reader is deployed.
 The table remains inaccessible to client roles; only the server can execute the
 reader. Feedback is not exported or modified by this inbox. API responses are
 private/no-store and retain the internal route's noindex policy.
