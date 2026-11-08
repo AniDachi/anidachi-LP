@@ -15,7 +15,11 @@ export function feedbackPage(rows: unknown[]): FeedbackPage {
   const items = rows.slice(0, FEEDBACK_PAGE_SIZE).map((raw) => {
     const row = raw as Record<string, unknown>;
     // Contacts are CRM-only; internal user IDs and anti-abuse hashes stay server-side.
-    return parseFeedbackItem({ id: row.submission_id, createdAt: row.created_at, email: row.email, discordId: row.discord_id, reason: row.reason, note: row.note });
+    return parseFeedbackItem({
+      id: row.submission_id, createdAt: row.created_at, email: row.email, discordId: row.discord_id,
+      displayName: row.display_name,
+      reason: row.reason, note: row.note,
+    });
   });
   const last = items.at(-1);
   const nextCursor = rows.length > FEEDBACK_PAGE_SIZE && last

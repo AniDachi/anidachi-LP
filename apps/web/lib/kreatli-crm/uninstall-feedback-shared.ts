@@ -8,7 +8,11 @@ export const feedbackReasonLabels: Record<UninstallReason, string> = {
   missing_features: "Missing a feature",
   other: "Other",
 };
-export type FeedbackItem = { id: string; createdAt: string; email: string | null; discordId: string | null; reason: UninstallReason; note: string };
+export type FeedbackItem = {
+  id: string; createdAt: string; email: string | null; discordId: string | null;
+  displayName: string | null;
+  reason: UninstallReason; note: string;
+};
 export type FeedbackPage = { items: FeedbackItem[]; nextCursor: string | null };
 export const isFeedbackId = (value: unknown): value is string =>
   typeof value === "string" && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(value);
@@ -21,7 +25,17 @@ export function parseFeedbackItem(raw: unknown): FeedbackItem {
     !UNINSTALL_REASONS.includes(item.reason as UninstallReason) || typeof item.note !== "string" || item.note.length > 500 ||
     !(item.email === null || (typeof item.email === "string" && item.email.trim().length > 0 && item.email.length <= 320)) ||
     !(item.discordId === null || (typeof item.discordId === "string" && /^[0-9]{1,20}$/.test(item.discordId)))) throw new Error("Invalid feedback");
-  return { id: item.id, createdAt: item.createdAt, email: item.email, discordId: item.discordId, reason: item.reason as UninstallReason, note: item.note };
+  return {
+    id: item.id, createdAt: item.createdAt, email: item.email, discordId: item.discordId,
+    displayName: optionalContactText(item.displayName, 200),
+    reason: item.reason as UninstallReason, note: item.note,
+  };
+}
+// Older deployed readers may omit the additive name during a rollout/rollback.
+function optionalContactText(value: unknown, maxLength: number): string | null {
+  if (value == null) return null;
+  if (typeof value !== "string" || !value.trim() || Array.from(value).length > maxLength) throw new Error("Invalid feedback contact");
+  return value;
 }
 export function parseFeedbackPage(raw: unknown): FeedbackPage {
   const page = raw as Partial<FeedbackPage> | null;
