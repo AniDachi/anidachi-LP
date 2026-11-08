@@ -21,4 +21,12 @@ export const PUBLIC_SOCIAL_LINKS = [
     label: "YouTube",
     href: "https://www.youtube.com/channel/UCwlL4hAuo3eJkV_rnQhEEZw",
   },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/anidachiapp/",
+  },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/anidachiapp/",
+  },
 ] as const;
