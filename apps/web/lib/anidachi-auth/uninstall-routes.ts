@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { emitServerEvent } from "../analytics-server-events";
 import { type NextRequest, NextResponse } from "next/server";
 import { REFRESH_TOKEN_COOKIE } from "./cookies";
 import { getJwtSecret } from "./jwt";
@@ -128,14 +129,20 @@ export function createUninstallHandlers(
 											"unknown")),
 						)
 						.digest("hex");
-				return NextResponse.json(
-					await (deps.feedback ?? storeUninstallFeedback)(
-						body as UninstallFeedbackInput,
-						ownerUserId,
-						actorHash,
-					),
-					{ headers: PRIVATE_HEADERS },
+				const stored = await (deps.feedback ?? storeUninstallFeedback)(
+					body as UninstallFeedbackInput,
+					ownerUserId,
+					actorHash,
 				);
+				if ((stored as { saved?: unknown } | null)?.saved === true)
+					emitServerEvent({
+						eventType: "uninstall_reason_submitted",
+						userId: ownerUserId,
+						request,
+						insertSeed: `uninstall_feedback:${body.submissionId}`,
+						properties: { reason: body.reason, has_note: Boolean(body.note) },
+					});
+				return NextResponse.json(stored, { headers: PRIVATE_HEADERS });
 			}
 			if (!user) throw new UninstallError(401, "Sign in to review this offer.");
 			if (body.expectedOwnerUserId !== user.id)
@@ -157,13 +164,18 @@ export function createUninstallHandlers(
 					)
 				)
 					throw new UninstallError(400, "Invalid claim request.");
-				return NextResponse.json(
-					await service.claim(user.id, {
-						expectedOwnerUserId: user.id,
-						revision: body.revision,
-					}),
-					{ headers: PRIVATE_HEADERS },
-				);
+				const claimResult = await service.claim(user.id, {
+					expectedOwnerUserId: user.id,
+					revision: body.revision,
+				});
+				if ((claimResult as { kind?: unknown } | null)?.kind === "claimed")
+					emitServerEvent({
+						eventType: "uninstall_offer_claimed",
+						userId: user.id,
+						request,
+						properties: { offer: "renewal" },
+					});
+				return NextResponse.json(claimResult, { headers: PRIVATE_HEADERS });
 			}
 			if (
 				!["plus", "pro"].includes(body.planCode as string) ||
@@ -184,14 +196,18 @@ export function createUninstallHandlers(
 				)
 			)
 				throw new UninstallError(400, "Review a monthly plan before checkout.");
-			return NextResponse.json(
-				await service.checkout(
-					user.id,
-					body as UninstallCheckoutInput,
-					request.nextUrl.origin,
-				),
-				{ headers: PRIVATE_HEADERS },
+			const checkoutResult = await service.checkout(
+				user.id,
+				body as UninstallCheckoutInput,
+				request.nextUrl.origin,
 			);
+			emitServerEvent({
+				eventType: "uninstall_checkout_started",
+				userId: user.id,
+				request,
+				properties: { plan: body.planCode, offer: "first_month" },
+			});
+			return NextResponse.json(checkoutResult, { headers: PRIVATE_HEADERS });
 		} catch (e) {
 			const status =
 				e instanceof UninstallError || e instanceof SubscriptionCheckoutError

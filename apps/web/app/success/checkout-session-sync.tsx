@@ -38,6 +38,23 @@ const PLAN_LABELS: Record<string, string> = {
 	pro: "Pro",
 };
 
+/** GA4 purchase for a completed paid checkout. Once per Stripe session; revenue lives in Amplitude. */
+function reportGaPurchaseOnce(sessionId: string, plan: string): void {
+	try {
+		const key = `anidachi_ga_purchase_${sessionId}`;
+		if (window.sessionStorage.getItem(key)) return;
+		window.sessionStorage.setItem(key, "1");
+		if (typeof window.gtag === "function")
+			window.gtag("event", "purchase", {
+				transaction_id: sessionId,
+				currency: "USD",
+				plan,
+			});
+	} catch {
+		// Analytics only.
+	}
+}
+
 export function CheckoutSessionSync({
 	sessionId,
 	initialPlanCode,
@@ -166,6 +183,7 @@ export function CheckoutSessionSync({
 				}
 				const hasPaidAccess =
 					payload.planCode === "plus" || payload.planCode === "pro";
+				if (hasPaidAccess && sessionId) reportGaPurchaseOnce(sessionId, payload.planCode ?? "");
 				setState({
 					status: hasPaidAccess ? "synced" : "inactive",
 					onboardingReady: onboardingReady && hasPaidAccess,

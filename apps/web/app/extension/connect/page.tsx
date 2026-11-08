@@ -2,6 +2,7 @@ import { ExtensionAuthInitiationQuerySchema } from "@anidachi/protocol";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { emitServerEvent } from "@/lib/analytics-server-events";
 import {
   createExtensionAuthCode,
   isSafeExtensionRedirectUri,
@@ -77,11 +78,19 @@ export default async function ExtensionConnectPage({ searchParams }: Props) {
     codeChallengeMethod: request.code_challenge_method,
   });
 
+  const requestHeaders = await headers();
+  emitServerEvent({
+    eventType: "extension_connected",
+    userId: session.userId,
+    request: { headers: requestHeaders },
+    properties: { mobile_browser: isMobileUserAgent(requestHeaders.get("user-agent")) },
+  });
+
   const callback = new URL(redirectUri);
   callback.searchParams.set("code", code);
   callback.searchParams.set("state", state);
 
-  const userAgent = (await headers()).get("user-agent");
+  const userAgent = requestHeaders.get("user-agent");
   if (isMobileUserAgent(userAgent)) {
     return <ExtensionConnectMobileConfirm callbackUrl={callback.toString()} />;
   }

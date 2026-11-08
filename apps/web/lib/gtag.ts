@@ -15,6 +15,8 @@ export function trackEvent(
   if (typeof window.gtag === "function") {
     window.gtag("event", action, params);
   }
+  // Core Web Vitals stay in GA4 only: high volume, no funnel value in Amplitude.
+  if (action === "web_vital") return;
   void import("@/lib/amplitude").then((m) =>
     m.trackAmplitudeEvent(action, params).catch(() => {})
   );

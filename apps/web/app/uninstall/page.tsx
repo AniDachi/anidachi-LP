@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackOnView } from "@/components/track-on-view";
 import { UninstallClient } from "./uninstall-client";
 import "./uninstall.css";
 
@@ -16,6 +17,9 @@ export default async function UninstallPage({ searchParams }: {
   // must explain how to reload the reviewed staging artifact instead.
   const stagingInstallation = process.env.VERCEL_ENV !== "production" ||
     process.env.ANIDACHI_STAGING_GATE_ENABLED === "true";
-  return <UninstallClient initialPlan={plan === "pro" ? "pro" : "plus"}
-    stagingInstallation={stagingInstallation} />;
+  return <>
+    <TrackOnView event="uninstall_viewed" />
+    <UninstallClient initialPlan={plan === "pro" ? "pro" : "plus"}
+      stagingInstallation={stagingInstallation} />
+  </>;
 }

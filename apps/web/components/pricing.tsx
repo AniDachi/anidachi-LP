@@ -398,6 +398,7 @@ export function Pricing({
 				page_template: pageTemplate,
 				placement: "pricing_subscribe",
 				plan_tier: tier,
+				billing_period: period,
 			});
 			const attribution = getSeoAttributionFields();
 			const response = await fetch("/api/create-checkout-session", {
@@ -449,6 +450,7 @@ export function Pricing({
 					page_template: pageTemplate,
 					placement: "pricing_subscribe",
 					plan_tier: tier,
+					billing_period: period,
 					error_step: "api_response",
 					status: response.status,
 					message,
@@ -464,6 +466,7 @@ export function Pricing({
 					page_template: pageTemplate,
 					placement: "pricing_subscribe",
 					plan_tier: tier,
+					billing_period: period,
 					error_step: "missing_checkout_url",
 				});
 				setCheckoutError(
@@ -477,6 +480,7 @@ export function Pricing({
 				page_template: pageTemplate,
 				placement: "pricing_subscribe",
 				plan_tier: tier,
+				billing_period: period,
 			});
 
 			if (data.kind !== "manage_subscription" && currentOffer.ownerUserId)
@@ -502,6 +506,7 @@ export function Pricing({
 				),
 				placement: "pricing_subscribe",
 				plan_tier: tier,
+				billing_period: period,
 				error_step: "client_exception",
 				message,
 			});

@@ -396,6 +396,7 @@ export function CheckoutContinuation({
 					page_template: "default",
 					placement: "checkout_after_sign_in",
 					plan_tier: plan,
+					billing_period: billing,
 				});
 				const checkout = await fetch("/api/create-checkout-session", {
 					method: "POST",
@@ -451,6 +452,7 @@ export function CheckoutContinuation({
 					page_template: "default",
 					placement: "checkout_after_sign_in",
 					plan_tier: plan,
+					billing_period: billing,
 				});
 				rememberOnboardingCheckout(onboarding, offer.ownerUserId, data.sessionId);
 				window.location.replace(url.href);

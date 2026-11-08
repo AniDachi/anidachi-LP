@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { emitServerEvent } from "../analytics-server-events";
 import type { SubscriptionAlertPayload } from "../send-subscription-alert-email";
 import {
 	invoiceSubscriptionId,
@@ -62,6 +63,27 @@ export async function processSubscriptionWebhookEvent(
 			session.amount_total <= 0
 		)
 			return;
+		try {
+			const meta = session.metadata ?? {};
+			emitServerEvent({
+				eventType: "purchase_completed",
+				userId: meta.userId || session.client_reference_id || null,
+				insertSeed: `purchase:${session.id}`,
+				properties: {
+					plan: meta.planCode ?? null,
+					billing_period: meta.billingPeriod ?? null,
+					value: session.amount_total / 100,
+					currency: session.currency,
+					landing_path: meta.seoLandingPath ?? null,
+					referrer: meta.seoReferrer ?? null,
+					utm: meta.seoUtm ?? null,
+					checkout_page: meta.checkoutPagePath ?? null,
+					uninstall_offer: Boolean(meta.checkoutPromotionPolicy),
+				},
+			});
+		} catch {
+			// Analytics only.
+		}
 		try {
 			await deps.alert({
 				sessionId: session.id,

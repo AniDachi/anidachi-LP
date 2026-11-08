@@ -11,6 +11,11 @@ import {
 import { sanitizeAuthReturnTo } from "./return-to";
 import { setAuthCookies as defaultSetAuthCookies } from "./session";
 import { issueTokenPair as defaultIssueTokenPair } from "./tokens";
+import {
+  emitServerEvent,
+  readFirstTouch,
+  SIGNUP_FLAG_COOKIE,
+} from "../analytics-server-events";
 
 type OAuthProfile = {
   emailVerified?: boolean;
@@ -39,7 +44,48 @@ type HandleOAuthCallbackOptions = {
   dependencies?: HandleOAuthCallbackDependencies;
 };
 
-export async function handleOAuthCallback({
+/** Where the person was heading when they signed in. Prefix only, never ids. */
+function signInFlow(returnTo: string | null | undefined): string {
+  const path = returnTo ?? "";
+  if (path.startsWith("/extension/connect")) return "extension";
+  if (path.startsWith("/room/")) return "room_invite";
+  if (path.startsWith("/friend/invite/")) return "friend_invite";
+  if (path.startsWith("/checkout")) return "checkout";
+  if (path.startsWith("/uninstall")) return "uninstall";
+  if (path.startsWith("/account")) return "account";
+  return "website";
+}
+
+/** A row created seconds ago means this sign-in made the account. */
+function createdJustNow(createdAt: unknown): boolean {
+  if (typeof createdAt !== "string") return false;
+  const ms = Date.parse(createdAt);
+  return Number.isFinite(ms) && Date.now() - ms >= 0 && Date.now() - ms < 60_000;
+}
+
+export async function handleOAuthCallback(
+  options: HandleOAuthCallbackOptions,
+): Promise<NextResponse> {
+  const response = await handleOAuthCallbackInner(options);
+  try {
+    const location = response.headers.get("location");
+    const failure = location
+      ? new URL(location, options.request.nextUrl.origin).searchParams.get("error")
+      : null;
+    if (failure) {
+      emitServerEvent({
+        eventType: "login_failed",
+        request: options.request,
+        properties: { provider: options.provider, error: failure.slice(0, 40) },
+      });
+    }
+  } catch {
+    // Never let analytics change the sign-in response.
+  }
+  return response;
+}
+
+async function handleOAuthCallbackInner({
   provider,
   request,
   exchangeFn,
@@ -165,6 +211,32 @@ export async function handleOAuthCallback({
   );
   const setAuthCookies = dependencies.setAuthCookies ?? defaultSetAuthCookies;
   setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
+
+  try {
+    const isNew = createdJustNow((user as { created_at?: unknown }).created_at);
+    const flow = signInFlow(transaction.returnTo);
+    emitServerEvent({
+      eventType: isNew ? "sign_up" : "login",
+      userId: user.id,
+      request,
+      properties: {
+        provider,
+        flow,
+        ...(isNew ? readFirstTouch(request.headers.get("cookie")) : {}),
+      },
+    });
+    if (isNew) {
+      // Lets the browser send GA4 sign_up once; the cookie is cleared right after.
+      response.cookies.set(SIGNUP_FLAG_COOKIE, `${provider}.${flow}`, {
+        path: "/",
+        maxAge: 600,
+        sameSite: "lax",
+        secure: true,
+      });
+    }
+  } catch {
+    // Analytics only.
+  }
   return response;
 }
 

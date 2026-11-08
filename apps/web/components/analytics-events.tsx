@@ -54,6 +54,23 @@ async function syncAmplitudeUserFromSession(signal: AbortSignal): Promise<void> 
   }
 }
 
+/** GA4-only sign_up: Amplitude already got it from the server. Fires once, then clears the flag. */
+function reportSignupFromCookie(): void {
+  try {
+    const match = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("anidachi_signup="));
+    if (!match) return;
+    const [method, flow] = decodeURIComponent(match.split("=")[1] ?? "").split(".");
+    document.cookie = "anidachi_signup=; Path=/; Max-Age=0; SameSite=Lax";
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "sign_up", { method: method || "unknown", flow: flow || "website" });
+    }
+  } catch {
+    // Analytics only.
+  }
+}
+
 export function AnalyticsEvents() {
   const pathname = usePathname();
 
@@ -61,6 +78,7 @@ export function AnalyticsEvents() {
   // Idempotent once a marketing path is stored for the session.
   useEffect(() => {
     captureFirstLandingPath();
+    reportSignupFromCookie();
     const controller = new AbortController();
     void syncAmplitudeUserFromSession(controller.signal);
     // A bare abort() becomes "signal is aborted without reason", which the
