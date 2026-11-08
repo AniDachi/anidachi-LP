@@ -4,14 +4,17 @@ import { CRUNCHYROLL_WEEK } from "./crunchyroll-schedule";
 import { groupByLocalDay, slotAnchor, slotInstant } from "./schedule-time";
 import { totalHours, WATCH_ORDERS } from "./watch-orders";
 
+/** Time maths is checked against a fixed week, so the Monday data update never needs a test edit. */
+const FIXED_WEEK = { ...CRUNCHYROLL_WEEK, weekStart: "2026-10-19" };
+
 describe("release schedule", () => {
   it("places a slot at its UTC day and time", () => {
-    const at = slotInstant(CRUNCHYROLL_WEEK, { title: "x", utcDay: 4, utcTime: "15:00" });
+    const at = slotInstant(FIXED_WEEK, { title: "x", utcDay: 4, utcTime: "15:00" });
     assert.equal(at.toISOString(), "2026-10-23T15:00:00.000Z");
   });
 
   it("moves an early UTC slot to the previous local day in the Americas", () => {
-    const week = { ...CRUNCHYROLL_WEEK, slots: [{ title: "x", utcDay: 6, utcTime: "00:30" }] };
+    const week = { ...FIXED_WEEK, slots: [{ title: "x", utcDay: 6, utcTime: "00:30" }] };
     const [utc] = groupByLocalDay(week, "UTC");
     const [ny] = groupByLocalDay(week, "America/New_York");
     assert.equal(utc.key, "2026-10-25");

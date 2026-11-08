@@ -126,7 +126,8 @@ export default function BestTelepartyAlternativesForYoutubePage() {
         >
           Does Teleparty work with YouTube?
         </Link>
-        .
+        . Wondering what Teleparty costs or whether it is safe? See{" "}
+        <Link href="/guides/is-teleparty-free">is Teleparty free</Link>.
       
       </SeoGuideAnswer>
 

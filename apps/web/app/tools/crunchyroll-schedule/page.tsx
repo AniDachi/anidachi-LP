@@ -110,7 +110,7 @@ export default function CrunchyrollSchedulePage() {
         description={`Crunchyroll simulcasts for ${weekLabel}, converted to your time zone.`}
         url={url}
         datePublished="2026-10-12"
-        dateModified="2026-10-20"
+        dateModified="2026-11-08"
         faq={faq}
         headings={headings}
         itemList={itemList}
@@ -177,7 +177,12 @@ export default function CrunchyrollSchedulePage() {
               add AniDachi to desktop Chrome
             </InstallLink>{" "}
             and open the episode on Crunchyroll when it unlocks. One person hosts on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro; friends join free on their own Crunchyroll accounts, and play, pause
-            and seek stay in sync with voice and chat in the room.
+            and seek stay in sync with voice and chat in the room. Watching something on Netflix
+            instead? The same extension runs a{" "}
+            <Link href="/netflix-watch-party" className={linkClass}>
+              Netflix watch party
+            </Link>
+            .
           </p>
         </div>
 

@@ -109,7 +109,9 @@ const headings: TocHeading[] = [
   { id: "schedule", label: `Dub times: ${shortWeekLabel}`, level: 2 },
   { id: "one-piece", label: "Next One Piece dub", level: 2 },
   { id: "lag", label: "How far dubs lag the sub", level: 2 },
-  { id: "announced", label: "Announced, no date yet", level: 2 },
+  ...(DUBS_WITHOUT_DATE.length > 0
+    ? [{ id: "announced", label: "Announced, no date yet", level: 2 as const }]
+    : []),
   { id: "sub-or-dub", label: "Sub or dub for a group", level: 2 },
   { id: "sources", label: "Sources and upkeep", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -141,7 +143,7 @@ export default function CrunchyrollDubSchedulePage() {
         description={`English dub episodes on Crunchyroll for ${weekLabel}, converted to your time zone.`}
         url={url}
         datePublished="2026-10-20"
-        dateModified="2026-10-20"
+        dateModified="2026-11-08"
         faq={faq}
         headings={headings}
         itemList={itemList}
@@ -273,22 +275,26 @@ export default function CrunchyrollDubSchedulePage() {
           are left out of the table.
         </p>
 
-        <h2 id="announced" className={headingClass}>
-          Fall 2026 dubs announced without a date yet
-        </h2>
-        <p className="mb-4 leading-relaxed text-ani-muted">
-          Crunchyroll&apos;s{" "}
-          <a href={FALL_DUB_LIST_SOURCE.url} className={linkClass} rel="noopener">
-            Fall 2026 dub list
-          </a>{" "}
-          includes these shows, but none had a weekly dub slot when we checked on {week.checked}.
-          They will move into the schedule once Crunchyroll names a date.
-        </p>
-        <ul className="mb-10 list-disc space-y-1.5 pl-6 text-ani-muted">
-          {DUBS_WITHOUT_DATE.map((title) => (
-            <li key={title}>{title}</li>
-          ))}
-        </ul>
+        {DUBS_WITHOUT_DATE.length > 0 ? (
+          <>
+          <h2 id="announced" className={headingClass}>
+            Fall 2026 dubs announced without a date yet
+          </h2>
+          <p className="mb-4 leading-relaxed text-ani-muted">
+            Crunchyroll&apos;s{" "}
+            <a href={FALL_DUB_LIST_SOURCE.url} className={linkClass} rel="noopener">
+              Fall 2026 dub list
+            </a>{" "}
+            includes these shows, but none had a weekly dub slot when we checked on {week.checked}.
+            They will move into the schedule once Crunchyroll names a date.
+          </p>
+          <ul className="mb-10 list-disc space-y-1.5 pl-6 text-ani-muted">
+            {DUBS_WITHOUT_DATE.map((title) => (
+              <li key={title}>{title}</li>
+            ))}
+          </ul>
+          </>
+        ) : null}
 
         <h2 id="sub-or-dub" className={headingClass}>
           Sub or dub for a group?

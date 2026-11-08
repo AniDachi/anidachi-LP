@@ -118,8 +118,9 @@ describe("time-zone switch", () => {
   it("formats week labels and local slot times", () => {
     assert.equal(weekRangeLabel({ weekStart: "2026-10-19" }, false).replace(/\s/g, " "), "Oct 19 – 25");
     const slot = { title: "x", utcDay: 4, utcTime: "15:00" };
-    assert.equal(slotInstant(CRUNCHYROLL_WEEK, slot).toISOString(), "2026-10-23T15:00:00.000Z");
-    assert.equal(slotLocalLabel(CRUNCHYROLL_WEEK, slot, "America/New_York"), "Fri 11:00 AM");
-    assert.equal(slotLocalLabel(CRUNCHYROLL_WEEK, slot, "Asia/Tokyo"), "Sat 12:00 AM");
+    const fixedWeek = { ...CRUNCHYROLL_WEEK, weekStart: "2026-10-19" };
+    assert.equal(slotInstant(fixedWeek, slot).toISOString(), "2026-10-23T15:00:00.000Z");
+    assert.equal(slotLocalLabel(fixedWeek, slot, "America/New_York"), "Fri 11:00 AM");
+    assert.equal(slotLocalLabel(fixedWeek, slot, "Asia/Tokyo"), "Sat 12:00 AM");
   });
 });

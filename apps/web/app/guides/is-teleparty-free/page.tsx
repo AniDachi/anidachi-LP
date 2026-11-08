@@ -21,7 +21,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const PAGE_PATH = "/guides/is-teleparty-free";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
-/** Competitor facts below were checked on these pages on 20 Oct 2026. Re-check on each review date. */
+/** Competitor facts below were checked on 20 Oct 2026; the support FAQ and privacy policy were re-checked on 8 Nov 2026. Re-check on each review date. */
 const SOURCES = [
   { href: "https://www.teleparty.com/support", label: "Teleparty support FAQ" },
   { href: "https://www.teleparty.com/premium", label: "Teleparty Premium page" },
@@ -80,14 +80,14 @@ const faq = [
       "Yes, for the free services. Teleparty's support FAQ says the free version lets you start parties on services such as Netflix, Disney+, Hulu, Amazon, YouTube and HBO Max, with video sync and text chat. Crunchyroll, Paramount+, ESPN+ and voice or video chat need Teleparty Premium.",
   },
   {
+    question: "Is Teleparty safe?",
+    answer:
+      "Teleparty says it is safe and used by over 10 million people, and that it does not store your streaming service password. Its privacy policy (effective June 30, 2026) says it does not sell personal information. It does assign you a unique ID, collect usage data and your IP address, and use Google Analytics. The publisher is WP Interactive Media.",
+  },
+  {
     question: "How much is Teleparty Premium?",
     answer:
       "On 20 Oct 2026 Teleparty's support FAQ listed $6.59 a month, or $47.88 a year ($3.99 a month billed annually), with a 7-day free trial on the annual plan only. Its iPhone App Store listing showed $6.95 a month or $49.95 a year, so check the price where you subscribe.",
-  },
-  {
-    question: "Is Teleparty safe?",
-    answer:
-      "It is a long-running extension from WP Interactive Media with about 10 million Chrome users. Teleparty says it does not store your streaming password, and its privacy policy says it does not sell personal information. It does collect a unique ID, usage data and IP address, and uses Google Analytics.",
   },
   {
     question: "Does Teleparty work with Crunchyroll for free?",
@@ -141,7 +141,7 @@ export default function IsTelepartyFreePage() {
       description="Teleparty's free tier, Premium prices, safety and setup, checked against Teleparty's own pages."
       url={PAGE_PATH}
       datePublished="2026-10-20"
-      dateModified="2026-10-20"
+      dateModified="2026-11-08"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -162,6 +162,14 @@ export default function IsTelepartyFreePage() {
             20 Oct 2026.
           </strong>{" "}
           Guests can join a Premium host&apos;s party for free.
+        </p>
+        <p>
+          <strong>Is Teleparty safe?</strong> It is a long-running extension
+          from WP Interactive Media that says it has over 10 million users and
+          does not store your streaming password or sell personal information.
+          It does assign you a unique ID and collect usage data and your IP
+          address, according to its privacy policy (effective June 30, 2026).{" "}
+          <a href="#safe">Safety details below</a>.
         </p>
       </SeoGuideAnswer>
 
@@ -386,8 +394,11 @@ export default function IsTelepartyFreePage() {
         Sources and review dates
       </h2>
       <p className="mb-4 leading-relaxed text-ani-muted">
-        Every Teleparty detail on this page was checked on 20 Oct 2026 against
-        Teleparty&apos;s own pages and store listings:{" "}
+        Every Teleparty detail on this page comes from Teleparty&apos;s own pages
+        and store listings. The support FAQ (prices, free trial, free and
+        premium services, password) and the privacy policy were re-checked on 8
+        Nov 2026 and still match. The Premium page, the Chrome Web Store
+        listing and the App Store listings were last checked on 20 Oct 2026:{" "}
         {SOURCES.map((source, index) => (
           <span key={source.href}>
             {index > 0 ? ", " : null}
@@ -401,9 +412,8 @@ export default function IsTelepartyFreePage() {
         say which page a number came from.
       </p>
       <p className="mb-8 leading-relaxed text-ani-muted">
-        We re-check prices, services and the privacy policy on 19 Nov 2026, 19
-        Dec 2026 and 18 Jan 2027, and update the date at the bottom of this page
-        when something changes. AniDachi is not affiliated with Teleparty.
+        We re-check the rest on 19 Nov 2026, 19 Dec 2026 and 18 Jan 2027, and
+        update the date at the bottom of this page when something changes. AniDachi is not affiliated with Teleparty.
       </p>
 
       <SeoGuideRelated
