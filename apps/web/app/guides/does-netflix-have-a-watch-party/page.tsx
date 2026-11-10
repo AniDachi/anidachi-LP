@@ -179,7 +179,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
       />
       <p className="mb-6 leading-relaxed text-ani-muted">
         For pros and cons of each in more depth, read{" "}
-        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
           watch Netflix together
         </Link>
         . To set one up now, the{" "}

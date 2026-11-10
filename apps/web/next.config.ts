@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/guides/netflix-teleparty",
-        destination: "/guides/teleparty-netflix",
+        destination: "/netflix-party",
         permanent: true,
       },
       {
@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/guides/how-to-watch-netflix-together",
-        destination: "/guides/watch-netflix-together",
+        destination: "/netflix-watch-party",
         permanent: true,
       },
       {
@@ -142,6 +142,22 @@ const nextConfig: NextConfig = {
         destination: "/watch-crunchyroll-together",
         permanent: true,
       })),
+      // ANI-38 account pair (owner-approved 2026-11-10, direction reversed):
+      // the Premium page folds into the account-sharing guide.
+      {
+        source: "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
+        destination: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
+        permanent: true,
+      },
+      // ANI-37 (owner-approved 2026-11-10): Netflix cluster down to the hub,
+      // /netflix-party, the Discord guide and the "does Netflix have" guide.
+      ...[
+        ["/guides/watch-netflix-together", "/netflix-watch-party"],
+        ["/guides/how-to-watch-netflix-with-friends", "/netflix-watch-party"],
+        ["/guides/netflix-group-watch", "/netflix-watch-party"],
+        ["/guides/netflix-movie-night", "/virtual-movie-night"],
+        ["/guides/teleparty-netflix", "/netflix-party"],
+      ].map(([source, destination]) => ({ source, destination, permanent: true })),
     ];
   },
   images: {

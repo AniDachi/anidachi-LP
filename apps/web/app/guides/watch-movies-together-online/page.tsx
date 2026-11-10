@@ -268,7 +268,7 @@ export default function WatchMoviesTogetherOnlinePage() {
 									plan with ads, so test that first. Details:{" "}
 									<Link href="/netflix-watch-party">Netflix watch party</Link>
 									{" "}and{" "}
-									<Link href="/guides/netflix-movie-night">Netflix movie night</Link>
+									<Link href="/virtual-movie-night">Netflix movie night</Link>
 									.
 								</>
 							),

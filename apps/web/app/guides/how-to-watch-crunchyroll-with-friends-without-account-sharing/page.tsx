@@ -77,6 +77,26 @@ const faq = [
     question: "Do friends need to pay for AniDachi too?",
     answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
   },
+  {
+    question: "Does everyone need Crunchyroll Premium for a watch party?",
+    answer:
+      "Yes, in practice. Every viewer streams from their own Crunchyroll account, and the plans page checked 20 Oct 2026 lists only paid plans, with a free trial for new and eligible subscribers. The cheapest plan, Fan, is enough; nobody needs Mega Fan just to join.",
+  },
+  {
+    question: "Can I watch Crunchyroll with friends if they don't have Premium?",
+    answer:
+      "Only if Crunchyroll will play the episode on their account. A watch party extension syncs players; it does not give anyone access. If a friend has no plan, they can start Crunchyroll's free trial if eligible, or the group can pick a free official upload on YouTube instead.",
+  },
+  {
+    question: "What is the difference between Fan and Mega Fan for a watch party?",
+    answer:
+      "For watching together, very little. Both are listed as ad-free with the complete library and new episodes shortly after Japan. Mega Fan allows 4 devices at a time instead of 1 and adds Game Vault and Store perks. That helps a household, not a group of friends in different homes.",
+  },
+  {
+    question: "Can one Premium account host the whole watch party?",
+    answer:
+      "No. Crunchyroll's terms limit an account to one household and prohibit sharing logins outside it, and Fan streams on 1 device at a time. Each friend in another home needs their own account.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -168,7 +188,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
         description="What Crunchyroll's terms allow, how many streams each plan has, and how friends watch together on their own accounts."
         url={PAGE_PATH}
         datePublished="2026-07-22"
-        dateModified="2026-10-20"
+        dateModified="2026-11-10"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -260,15 +280,11 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
           People searching for a Crunchyroll family plan usually mean this:
           there is no plan with that name, and Mega Fan&apos;s 4 streams is
           the household option. Even 4 streams do not stretch the household
-          rule to friends in other cities. For which plan each friend needs,
-          read{" "}
-          <Link
-            href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
-            className="text-brand-orange hover:underline"
-          >
-            does everyone need Crunchyroll Premium for a watch party
-          </Link>
-          .
+          rule to friends in other cities. Which plan each friend needs is answered in the{" "}
+          <a href="#faq" className="text-brand-orange hover:underline">
+            FAQ
+          </a>{" "}
+          below.
         </p>
 
         <h2
@@ -389,10 +405,6 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
         <SeoGuideRelated
           links={[
             {
-              href: "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
-              label: "Does everyone need Crunchyroll Premium?",
-            },
-            {
               href: "/guides/how-to-watch-crunchyroll-with-friends",
               label: "How to watch Crunchyroll with friends",
             },
@@ -401,7 +413,6 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
               .filter(
                 (g) =>
                   ![
-                    "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
                     "/guides/how-to-watch-crunchyroll-with-friends",
                     "/watch-crunchyroll-together",
                     "/watch-crunchyroll-together",

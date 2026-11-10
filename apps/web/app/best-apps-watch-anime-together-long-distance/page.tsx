@@ -178,7 +178,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           host a Netflix watch party
         </Link>{" "}
         with the same invite flow. For a wider look, see these{" "}
-        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
           ways to watch Netflix together
         </Link>
         .
