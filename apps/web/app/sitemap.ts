@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { animeList } from "@/lib/anime-data";
 import { getWatchPageDateModified } from "@/lib/watch-page-enrichment";
+import { SITEMAP_EXCLUDED_WATCH_SLUGS } from "@/lib/sitemap-watch-exclusions";
 import {
   discoverStaticSitemapUrlPaths,
   staticPathsToSitemapEntries,
@@ -35,12 +36,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "hunter-x-hunter",
   ]);
 
-  const animeRoutes: MetadataRoute.Sitemap = animeList.map((anime) => ({
-    url: `${siteUrl}/watch/${anime.slug}-with-friends`,
-    lastModified: getWatchPageDateModified(anime.slug),
-    changeFrequency: "monthly",
-    priority: TOP_ANIME_SLUGS.has(anime.slug) ? 0.8 : 0.6,
-  }));
+  const animeRoutes: MetadataRoute.Sitemap = animeList
+    .filter((anime) => !SITEMAP_EXCLUDED_WATCH_SLUGS.has(anime.slug))
+    .map((anime) => ({
+      url: `${siteUrl}/watch/${anime.slug}-with-friends`,
+      lastModified: getWatchPageDateModified(anime.slug),
+      changeFrequency: "monthly",
+      priority: TOP_ANIME_SLUGS.has(anime.slug) ? 0.8 : 0.6,
+    }));
 
   const combined = [...staticRoutes, ...animeRoutes].sort((a, b) =>
     a.url.localeCompare(b.url)
