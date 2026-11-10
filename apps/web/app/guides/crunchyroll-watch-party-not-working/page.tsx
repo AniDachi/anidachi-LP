@@ -225,7 +225,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
           </a>{" "}
           still apply, and{" "}
           <Link
-            href="/guides/teleparty-not-working-crunchyroll"
+            href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
           >
             Teleparty not working on Crunchyroll
@@ -484,26 +484,14 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
         <SeoGuideRelated
           links={[
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party guide" },
-            {
-              href: "/guides/how-to-sync-crunchyroll-with-friends",
-              label: "How to sync Crunchyroll with friends",
-            },
-            {
-              href: "/guides/crunchyroll-watch-party-chrome-extension",
-              label: "Crunchyroll watch party extension: install and use",
-            },
-            {
-              href: "/guides/teleparty-not-working-crunchyroll",
-              label: "Teleparty not working on Crunchyroll",
-            },
             ...relatedGuideLinks
               .filter(
                 (g) =>
                   ![
                     "/watch-crunchyroll-together",
-                    "/guides/how-to-sync-crunchyroll-with-friends",
-                    "/guides/crunchyroll-watch-party-chrome-extension",
-                    "/guides/teleparty-not-working-crunchyroll",
+                    "/watch-crunchyroll-together",
+                    "/watch-crunchyroll-together",
+                    "/watch-crunchyroll-together",
                   ].includes(g.href),
               )
               .map((g) => ({ href: g.href, label: g.label })),

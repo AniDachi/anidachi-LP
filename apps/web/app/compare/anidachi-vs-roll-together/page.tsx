@@ -124,12 +124,12 @@ export default function AniDachiVsRollTogetherPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
-          <Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">
+          <Link href="/watch-crunchyroll-together" className="hover:underline">
             Best Crunchyroll watch party Chrome extensions
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-crunchyroll-party" className="hover:underline">
+          <Link href="/watch-crunchyroll-together" className="hover:underline">
             AniDachi vs Crunchyroll Party
           </Link>
         </li>

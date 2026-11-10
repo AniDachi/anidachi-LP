@@ -38,36 +38,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-d", "listicle", "long-distance", "pillar-watch-anime"],
 	},
 	{
-		href: "/guides/watch-party-app-for-crunchyroll",
-		label: "Watch Party App for Crunchyroll",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
-		href: "/guides/crunchyroll-group-watch",
-		label: "Crunchyroll Group Watch",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
-		href: "/guides/crunchyroll-watch-party-free",
-		label: "Crunchyroll Watch Party Free",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/how-to-watch-anime-together-without-screen-share",
 		label: "How to Watch Anime Together Without Screen Share",
 		tags: ["template-c", "how-to-core", "online", "crunchyroll", "watch-party"],
@@ -122,16 +92,6 @@ export const guideLinks: GuideLinkItem[] = [
 		href: "/guides/best-sci-fi-anime-to-watch-with-friends",
 		label: "Best Sci-Fi Anime to Watch With Friends",
 		tags: ["template-d", "listicle", "pillar-watch-anime"],
-	},
-	{
-		href: "/guides/how-to-sync-crunchyroll-with-friends",
-		label: "How to Sync Crunchyroll With Friends",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"crunchyroll",
-			"pillar-watch-crunchyroll",
-		],
 	},
 	{
 		href: "/guides/how-to-watch-crunchyroll-on-two-screens",
@@ -245,11 +205,6 @@ export const guideLinks: GuideLinkItem[] = [
 			"crunchyroll",
 			"pillar-watch-crunchyroll",
 		],
-	},
-	{
-		href: "/guides/crunchyroll-watch-party-chrome-extension",
-		label: "Best Crunchyroll Watch Party Chrome Extensions",
-		tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
 	},
 	{
 		href: "/guides/anime-watch-party-ideas",
@@ -383,21 +338,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-d", "listicle", "pillar-watch-anime"],
 	},
 	{
-		href: "/guides/does-crunchyroll-have-watch-party",
-		label: "Does Crunchyroll Have a Watch Party Feature?",
-		tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
-	},
-	{
-		href: "/guides/does-teleparty-work-with-crunchyroll",
-		label: "Does Teleparty Work With Crunchyroll?",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/is-teleparty-free",
 		label: "Is Teleparty Free?",
 		tags: ["template-c", "watch-party", "compare", "online"],
@@ -410,17 +350,6 @@ export const guideLinks: GuideLinkItem[] = [
 			"crunchyroll",
 			"watch-party",
 			"listicle",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
-		href: "/guides/teleparty-not-working-crunchyroll",
-		label: "Teleparty Not Working on Crunchyroll",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"how-to-core",
 			"pillar-watch-crunchyroll",
 		],
 	},
@@ -455,17 +384,6 @@ export const guideLinks: GuideLinkItem[] = [
 			"crunchyroll",
 			"how-to-core",
 			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
-		href: "/guides/is-crunchyroll-party-worth-it",
-		label: "Is Crunchyroll Party Worth It?",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"compare",
 			"pillar-watch-crunchyroll",
 		],
 	},
@@ -520,27 +438,6 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "Best Way to Watch Crunchyroll With Friends",
 		tags: [
 			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
-		href: "/guides/crunchyroll-party-alternative",
-		label: "Crunchyroll Party Alternative",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
-		href: "/guides/how-to-host-a-crunchyroll-watch-party",
-		label: "How to Host a Crunchyroll Watch Party",
-		tags: [
-			"template-c",
-			"how-to-core",
 			"crunchyroll",
 			"watch-party",
 			"pillar-watch-crunchyroll",
@@ -785,16 +682,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["how-to-core", "long-distance", "online"],
 	},
 	{
-		href: "/guides/netflix-party-for-crunchyroll",
-		label: "Netflix Party for Crunchyroll",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/best-way-to-watch-youtube-with-friends",
 		label: "Best Way to Watch YouTube With Friends",
 		tags: [
@@ -809,17 +696,6 @@ export const guideLinks: GuideLinkItem[] = [
 		href: "/guides/teleparty-not-working-youtube",
 		label: "Teleparty Not Working on YouTube",
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
-		href: "/guides/how-to-watch-crunchyroll-together-without-screen-share",
-		label: "Watch Crunchyroll Without Screen Share",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"crunchyroll",
-			"discord",
-			"pillar-watch-crunchyroll",
-		],
 	},
 	{
 		href: "/guides/does-rave-work-with-youtube",

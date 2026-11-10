@@ -71,7 +71,7 @@ const toolkitItemList = [
   { name: "Watch Anime Together (pillar)", url: "/watch-anime-together", position: 1 },
   { name: "Watch Crunchyroll Together (pillar)", url: "/watch-crunchyroll-together", position: 2 },
   { name: "YouTube Watch Party (pillar)", url: "/watch-youtube-together", position: 3 },
-  { name: "Chrome extension guide", url: "/guides/crunchyroll-watch-party-chrome-extension", position: 4 },
+  { name: "Chrome watch party guide", url: "/guides/chrome-watch-party", position: 4 },
   {
     name: "First watch party checklist",
     url: "/guides/first-anime-watch-party-checklist",
@@ -288,7 +288,7 @@ export default function AnimeWatchPartyToolkitPage() {
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
-            href="/compare/anidachi-vs-crunchyroll-party"
+            href="/watch-crunchyroll-together"
             className="hover:underline"
           >
             AniDachi vs Crunchyroll Party
@@ -309,7 +309,7 @@ export default function AnimeWatchPartyToolkitPage() {
         </li>
         <li>
           <Link
-            href="/guides/is-crunchyroll-party-worth-it"
+            href="/watch-crunchyroll-together"
             className="hover:underline"
           >
             Is Crunchyroll Party worth it?

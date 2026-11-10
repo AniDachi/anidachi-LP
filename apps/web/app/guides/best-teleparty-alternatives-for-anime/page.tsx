@@ -145,7 +145,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
           <strong>Crunchyroll Party</strong> — Free live sync on Crunchyroll.
           Enough for same-time groups; weaker when schedules drift. Upgrade path:{" "}
           <Link
-            href="/guides/crunchyroll-party-alternative"
+            href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
           >
             Crunchyroll Party alternative
@@ -252,7 +252,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
       <p className="text-foreground/80 leading-relaxed mb-8">
         Still unsure if Teleparty even works on your setup? Read{" "}
         <Link
-          href="/guides/does-teleparty-work-with-crunchyroll"
+          href="/watch-crunchyroll-together"
           className="text-brand-orange hover:underline"
         >
           Does Teleparty work with Crunchyroll?
@@ -264,7 +264,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
       </h2>
       <SeoGuideRelated
         links={[
-          { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
+          { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
                     { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
                     { href: "/guides/best-watch-party-apps-for-anime", label: "Best watch party apps for anime" },
                     { href: "/pricing", label: "AniDachi pricing" },

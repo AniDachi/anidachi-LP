@@ -269,7 +269,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
           free anime with friends guide
         </Link>{" "}
         lists official channels and their region limits, and{" "}
-        <Link href="/guides/crunchyroll-watch-party-free" className="text-brand-orange hover:underline">
+        <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
           Crunchyroll watch party free
         </Link>{" "}
         covers what costs nothing on the sync side.
@@ -368,7 +368,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
             href: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
             label: "Crunchyroll account sharing rules",
           },
-          { href: "/guides/crunchyroll-watch-party-free", label: "Crunchyroll watch party free" },
+          { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
           { href: "/glossary/crunchyroll-mega-fan", label: "Crunchyroll Mega Fan glossary" },
           { href: "/pricing", label: "AniDachi pricing" },
           ...relatedGuideLinks
@@ -376,7 +376,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
               (g) =>
                 ![
                   "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
-                  "/guides/crunchyroll-watch-party-free",
+                  "/watch-crunchyroll-together",
                   "/glossary/crunchyroll-mega-fan",
                   "/pricing",
                 ].includes(g.href),

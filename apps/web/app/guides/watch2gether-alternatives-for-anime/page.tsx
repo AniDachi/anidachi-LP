@@ -138,7 +138,7 @@ export default function Watch2GetherAlternativesForAnimePage() {
           <strong>Crunchyroll Party</strong> — Free live sync on Crunchyroll only.
           Good same-time test nights; no async. Evaluate{" "}
           <Link
-            href="/guides/is-crunchyroll-party-worth-it"
+            href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
           >
             is Crunchyroll Party worth it?

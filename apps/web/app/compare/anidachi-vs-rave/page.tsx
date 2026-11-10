@@ -233,7 +233,7 @@ export default function AniDachiVsRavePage() {
                     { href: "/best-apps-watch-anime-together-long-distance", label: "Best Apps for Watching Anime Together Long Distance" },
                     { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
                     { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether" },
-                    { href: "/guides/crunchyroll-watch-party-chrome-extension", label: "Best Crunchyroll watch party Chrome extensions" },
+                    { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
                     ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
         ]}
       />

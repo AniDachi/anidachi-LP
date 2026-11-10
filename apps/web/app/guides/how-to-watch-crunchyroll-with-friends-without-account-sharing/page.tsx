@@ -396,7 +396,6 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
               href: "/guides/how-to-watch-crunchyroll-with-friends",
               label: "How to watch Crunchyroll with friends",
             },
-            { href: "/guides/crunchyroll-watch-party-free", label: "Crunchyroll watch party free" },
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party guide" },
             ...relatedGuideLinks
               .filter(
@@ -404,7 +403,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
                   ![
                     "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
                     "/guides/how-to-watch-crunchyroll-with-friends",
-                    "/guides/crunchyroll-watch-party-free",
+                    "/watch-crunchyroll-together",
                     "/watch-crunchyroll-together",
                   ].includes(g.href),
               )

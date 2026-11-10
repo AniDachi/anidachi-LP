@@ -225,7 +225,7 @@ export default function HowToCreateAnimeWatchPartyPage() {
           </li>
           <li>
             <Link
-              href="/guides/crunchyroll-watch-party-chrome-extension"
+              href="/watch-crunchyroll-together"
               className="hover:underline"
             >
               Crunchyroll Watch Party Chrome Extension

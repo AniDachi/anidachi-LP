@@ -136,7 +136,7 @@ export default function BestWatchPartyAppsForAnimePage() {
         <li>
           <strong>Teleparty</strong> — Multi-service live sync; no async. Details:{" "}
           <Link
-            href="/guides/does-teleparty-work-with-crunchyroll"
+            href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
           >
             Does Teleparty work with Crunchyroll?
@@ -145,7 +145,7 @@ export default function BestWatchPartyAppsForAnimePage() {
         <li>
           <strong>Crunchyroll Party</strong> — Free CR live sync; upgrade path in{" "}
           <Link
-            href="/guides/crunchyroll-party-alternative"
+            href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
           >
             Crunchyroll Party alternative

@@ -119,6 +119,29 @@ const nextConfig: NextConfig = {
         destination: "/guides/can-you-screen-share-crunchyroll-on-discord",
         permanent: true,
       },
+      // ANI-38 batch 1 (owner-approved 2026-11-10): Crunchyroll hub-intent,
+      // Teleparty and Crunchyroll Party pages fold into the Crunchyroll hub.
+      ...[
+        "/guides/how-to-sync-crunchyroll-with-friends",
+        "/guides/crunchyroll-group-watch",
+        "/guides/how-to-host-a-crunchyroll-watch-party",
+        "/guides/watch-party-app-for-crunchyroll",
+        "/guides/crunchyroll-watch-party-chrome-extension",
+        "/guides/crunchyroll-watch-party-free",
+        "/guides/how-to-watch-crunchyroll-together-without-screen-share",
+        "/guides/does-crunchyroll-have-watch-party",
+        "/guides/does-teleparty-work-with-crunchyroll",
+        "/guides/teleparty-not-working-crunchyroll",
+        "/guides/netflix-party-for-crunchyroll",
+        "/guides/crunchyroll-party-alternative",
+        "/guides/is-crunchyroll-party-worth-it",
+        "/compare/anidachi-vs-crunchyroll-party",
+        "/compare/crunchyroll-party-vs-teleparty-for-anime",
+      ].map((source) => ({
+        source,
+        destination: "/watch-crunchyroll-together",
+        permanent: true,
+      })),
     ];
   },
   images: {

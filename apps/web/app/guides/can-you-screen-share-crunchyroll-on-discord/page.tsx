@@ -314,7 +314,6 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       <SeoGuideRelated
         links={[
           { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
-          { href: "/guides/how-to-watch-crunchyroll-together-without-screen-share", label: "Watch Crunchyroll without screen share" },
                     { href: "/guides/how-to-watch-anime-together-without-screen-share", label: "How to watch anime together without screen share" },
                     { href: "/guides/switch-from-discord-screen-share", label: "Switch from Discord screen share" },
                     { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share" },

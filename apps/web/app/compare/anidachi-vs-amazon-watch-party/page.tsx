@@ -261,12 +261,12 @@ export default function AniDachiVsAmazonWatchPartyPage() {
           </Link>
         </li>
         <li>
-          <Link href="/compare/crunchyroll-party-vs-teleparty-for-anime" className="hover:underline">
+          <Link href="/watch-crunchyroll-together" className="hover:underline">
             Crunchyroll Party vs Teleparty for anime
           </Link>
         </li>
         <li>
-          <Link href="/guides/does-crunchyroll-have-watch-party" className="hover:underline">
+          <Link href="/watch-crunchyroll-together" className="hover:underline">
             Does Crunchyroll have a watch party feature?
           </Link>
         </li>
