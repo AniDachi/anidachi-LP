@@ -90,6 +90,16 @@ const faq = [
 		answer:
 			"A group watch is when several people watch the same anime on Crunchyroll at the same time, with synced playback and shared chat. Crunchyroll has no built-in group watch, so you set one up with an extension such as AniDachi or Crunchyroll Party.",
 	},
+	{
+		question: "Why is Teleparty not syncing on Crunchyroll?",
+		answer:
+			"The usual causes are drift after a Crunchyroll player update, one person on a different episode, another streaming extension interfering, or an outdated Teleparty build. Check that everyone has the same series and episode open, pause on a title card and resync. If drift keeps coming back, turn off other streaming extensions and reload the Crunchyroll tab, or try a different extension such as AniDachi.",
+	},
+	{
+		question: "What is a good Crunchyroll Party alternative?",
+		answer:
+			"Crunchyroll Party is an extension for live sync on Crunchyroll. If your group also wants voice and video calls, YouTube and Netflix rooms, or a personal watch history, AniDachi covers those. Either way, each friend still needs their own Crunchyroll plan.",
+	},
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -142,7 +152,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				description="Host a Crunchyroll watch party with AniDachi — synced playback and live chat on each person's account."
 				url="/watch-crunchyroll-together"
 				datePublished="2026-04-23"
-				dateModified="2026-11-07"
+				dateModified="2026-11-10"
 				faq={faq}
 				headings={tocHeadings}
 				h1="Crunchyroll Watch Party"
@@ -182,11 +192,8 @@ export default function WatchCrunchyrollTogetherPage() {
 								<>
 									No. As of 2026, Crunchyroll has no built-in watch party, watch
 									together or group-watch button, so each person needs a Chrome
-									extension on their own Crunchyroll tab. The full answer, with
-									what Crunchyroll&apos;s plans do include:{" "}
-									<Link href="/guides/does-crunchyroll-have-watch-party">
-										does Crunchyroll have a watch party?
-									</Link>
+									extension on their own Crunchyroll tab. More answers are in the{" "}
+									<a href="#faq">FAQ</a> below.
 								</>
 							),
 						},
@@ -195,11 +202,7 @@ export default function WatchCrunchyrollTogetherPage() {
 							body: (
 								<>
 									Yes for live sync, with compatibility that can slip after
-									player updates. Details:{" "}
-									<Link href="/guides/does-teleparty-work-with-crunchyroll">
-										does Teleparty work with Crunchyroll
-									</Link>
-									. AniDachi is the Crunchyroll-first Teleparty alternative
+									player updates. AniDachi is the Crunchyroll-first Teleparty alternative
 									(and also covers YouTube and Netflix). Full compare:{" "}
 									<Link href="/compare/anidachi-vs-teleparty">
 										AniDachi vs Teleparty
@@ -412,14 +415,6 @@ export default function WatchCrunchyrollTogetherPage() {
 					className="divide-y-0 sm:grid sm:grid-cols-2 sm:gap-x-10 [&>li]:border-b [&>li]:border-ani-line"
 					links={[
 						{
-							href: "/guides/how-to-host-a-crunchyroll-watch-party",
-							label: "How to host a Crunchyroll watch party",
-						},
-						{
-							href: "/guides/crunchyroll-group-watch",
-							label: "Crunchyroll group watch for three or more",
-						},
-						{
 							href: "/guides/best-way-to-watch-crunchyroll-with-friends",
 							label: "Best way to watch Crunchyroll with friends",
 						},
@@ -428,16 +423,16 @@ export default function WatchCrunchyrollTogetherPage() {
 							label: "Crunchyroll watch party with Discord",
 						},
 						{
-							href: "/guides/teleparty-not-working-crunchyroll",
-							label: "Teleparty not working on Crunchyroll",
+							href: "/guides/how-to-watch-crunchyroll-on-two-screens",
+							label: "Watch Crunchyroll on two screens at once",
+						},
+						{
+							href: "/guides/crunchyroll-watch-party-not-working",
+							label: "Crunchyroll watch party not working? Fixes",
 						},
 						{
 							href: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
 							label: "Watch without account sharing",
-						},
-						{
-							href: "/compare/anidachi-vs-crunchyroll-party",
-							label: "AniDachi vs Crunchyroll Party",
 						},
 						{
 							href: "/guides/best-teleparty-alternatives-for-anime",

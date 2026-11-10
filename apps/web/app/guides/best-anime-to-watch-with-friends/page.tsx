@@ -162,7 +162,7 @@ export default function BestAnimeWithFriendsPage() {
         </Link>{" "}
         watch page. Share one invite. Everyone keeps their own tab.{" "}
         <Link
-          href="/guides/does-crunchyroll-have-watch-party"
+          href="/watch-crunchyroll-together"
           className="text-brand-orange hover:underline"
         >
           Crunchyroll has no built-in watch party

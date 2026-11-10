@@ -241,7 +241,7 @@ export default function AniDachiVsTelepartyPage() {
       <p className="text-foreground/80 leading-relaxed mb-8">
         Still asking whether Teleparty even supports Crunchyroll? Start with{" "}
         <Link
-          href="/guides/does-teleparty-work-with-crunchyroll"
+          href="/watch-crunchyroll-together"
           className="text-brand-orange hover:underline"
         >
           Does Teleparty work with Crunchyroll?
@@ -262,12 +262,9 @@ export default function AniDachiVsTelepartyPage() {
       <SeoGuideRelated
         links={[
           { href: "/pricing", label: "See pricing — Free daily hosting; Plus from $7.99/mo" },
-                    { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
                     { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives for anime" },
-                    { href: "/guides/teleparty-not-working-crunchyroll", label: "Teleparty not working on Crunchyroll" },
                     { href: "/best-apps-watch-anime-together-long-distance", label: "Best Apps for Watching Anime Together Long Distance" },
                     { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together (Complete Guide)" },
-                    { href: "/guides/crunchyroll-watch-party-chrome-extension", label: "Best Crunchyroll Watch Party Chrome Extensions" },
                     { href: "/guides/asynchronous-vs-live-watch-party", label: "Async vs Live Watch Parties" },
                     ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
         ]}

@@ -191,7 +191,7 @@ export default function AniDachiVsMetastreamPage() {
         </Link>{" "}
         when you are ready to host. For extension options, see{" "}
         <Link
-          href="/guides/crunchyroll-watch-party-chrome-extension"
+          href="/watch-crunchyroll-together"
           className="text-brand-orange hover:underline"
         >
           best Crunchyroll watch party Chrome extensions
@@ -212,7 +212,7 @@ export default function AniDachiVsMetastreamPage() {
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
-            href="/guides/crunchyroll-watch-party-chrome-extension"
+            href="/watch-crunchyroll-together"
             className="hover:underline"
           >
             Best Crunchyroll watch party Chrome extensions

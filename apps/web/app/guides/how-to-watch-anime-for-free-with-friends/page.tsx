@@ -392,10 +392,8 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
               href: "/guides/how-to-watch-anime-with-friends-online",
               label: "How to watch anime with friends online",
             },
-            {
-              href: "/guides/does-crunchyroll-have-watch-party",
-              label: "Does Crunchyroll have a watch party?",
-            },
+            { href: "/watch-crunchyroll-together",
+              label: "Crunchyroll watch party" },
             {
               href: "/guides/how-to-watch-anime-long-distance",
               label: "How to watch anime long distance",

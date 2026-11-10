@@ -184,7 +184,7 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
         <li>
           <strong>You need a host playbook?</strong> Jump to{" "}
           <Link
-            href="/guides/how-to-host-a-crunchyroll-watch-party"
+            href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
           >
             how to host a Crunchyroll watch party
@@ -238,7 +238,7 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
         </li>
         <li>
           <Link
-            href="/guides/how-to-host-a-crunchyroll-watch-party"
+            href="/watch-crunchyroll-together"
             className="hover:underline"
           >
             How to host a Crunchyroll watch party

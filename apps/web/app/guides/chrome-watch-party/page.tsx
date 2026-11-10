@@ -109,7 +109,7 @@ export default function ChromeWatchPartyPage() {
 				</Link>
 				. Platform comparisons live on{" "}
 				<Link
-					href="/guides/crunchyroll-watch-party-chrome-extension"
+					href="/watch-crunchyroll-together"
 					className="text-brand-orange hover:underline"
 				>
 					Crunchyroll watch party Chrome extensions
@@ -145,10 +145,8 @@ export default function ChromeWatchPartyPage() {
 				links={[
 					{ href: "/watch-party-app", label: "Watch party app" },
 					{ href: "/extension", label: "Install AniDachi" },
-					{
-						href: "/guides/crunchyroll-watch-party-chrome-extension",
-						label: "Crunchyroll Chrome extensions",
-					},
+					{ href: "/watch-crunchyroll-together",
+						label: "Crunchyroll watch party" },
 				]}
 			/>
 		</SeoPageLayout>

@@ -306,10 +306,6 @@ export default function HowToWatchWithFriendsPage() {
 							href: "/guides/can-you-screen-share-crunchyroll-on-discord",
 							label: "Can you screen share Crunchyroll on Discord?",
 						},
-						{
-							href: "/guides/crunchyroll-watch-party-free",
-							label: "Free Crunchyroll watch party options",
-						},
 						{ href: "/pricing", label: "AniDachi pricing" },
 						...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label })),
 					]}

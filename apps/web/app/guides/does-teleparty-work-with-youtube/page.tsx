@@ -197,7 +197,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       <SeoGuideRelated
         links={[
           { href: "/guides/teleparty-not-working-youtube", label: "Teleparty not working on YouTube" },
-                    { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
+                    { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
                     { href: "/guides/netflix-party-for-youtube", label: "Netflix Party for YouTube" },
                     { href: "/guides/watch2gether-alternatives-for-youtube", label: "Watch2Gether alternatives for YouTube" },
                     ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))

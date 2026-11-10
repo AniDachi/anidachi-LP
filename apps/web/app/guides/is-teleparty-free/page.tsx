@@ -226,7 +226,7 @@ export default function IsTelepartyFreePage() {
         to host. Teleparty&apos;s FAQ says guests can then join that party on
         the free version. This is also why &quot;Teleparty Crunchyroll&quot;
         searches so often end in confusion; we cover the details in{" "}
-        <Link href="/guides/does-teleparty-work-with-crunchyroll">
+        <Link href="/watch-crunchyroll-together">
           does Teleparty work with Crunchyroll
         </Link>
         .
@@ -349,7 +349,7 @@ export default function IsTelepartyFreePage() {
         you are signed in, on your main profile, with a video actually playing,
         and reinstalling the extension if it still won&apos;t start. Crunchyroll
         problems have their own fixes in{" "}
-        <Link href="/guides/teleparty-not-working-crunchyroll">
+        <Link href="/watch-crunchyroll-together">
           Teleparty not working on Crunchyroll
         </Link>
         .
@@ -420,10 +420,8 @@ export default function IsTelepartyFreePage() {
         links={[
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
           { href: "/guides/teleparty-netflix", label: "Teleparty on Netflix" },
-          {
-            href: "/guides/does-teleparty-work-with-crunchyroll",
-            label: "Does Teleparty work with Crunchyroll?",
-          },
+          { href: "/watch-crunchyroll-together",
+            label: "Crunchyroll watch party" },
           {
             href: "/guides/does-teleparty-work-with-youtube",
             label: "Does Teleparty work with YouTube?",

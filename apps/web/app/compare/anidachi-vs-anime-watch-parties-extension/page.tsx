@@ -142,7 +142,7 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
           </Link>
         </li>
         <li>
-          <Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">
+          <Link href="/watch-crunchyroll-together" className="hover:underline">
             Best Crunchyroll watch party Chrome extensions
           </Link>
         </li>

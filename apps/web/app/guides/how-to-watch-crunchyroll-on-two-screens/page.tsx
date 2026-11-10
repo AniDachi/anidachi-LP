@@ -168,7 +168,7 @@ export default function HowToWatchCrunchyrollOnTwoScreensPage() {
           Related Guides
         </h2>
         <ul className="space-y-2 text-brand-orange mb-8">
-          <li><Link href="/guides/how-to-sync-crunchyroll-with-friends" className="hover:underline">How to sync Crunchyroll with friends</Link></li>
+          <li><Link href="/watch-crunchyroll-together" className="hover:underline">How to sync Crunchyroll with friends</Link></li>
           <li><Link href="/guides/how-to-watch-crunchyroll-with-friends" className="hover:underline">How to watch Crunchyroll with friends</Link></li>
           <li><Link href="/guides/how-to-fix-watch-party-audio-delay" className="hover:underline">Fix watch party audio delay</Link></li>
           <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll together hub</Link></li>

@@ -264,7 +264,7 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
         <li><Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">Best anime to watch with friends — full list (115+)</Link></li>
         <li><Link href="/guides/best-anime-to-watch-for-beginners" className="hover:underline">Best anime to watch for beginners</Link></li>
         <li><Link href="/guides/how-to-watch-crunchyroll-with-friends" className="hover:underline">How to watch Crunchyroll with friends</Link></li>
-        <li><Link href="/guides/does-crunchyroll-have-watch-party" className="hover:underline">Does Crunchyroll have a watch party feature?</Link></li>
+        <li><Link href="/watch-crunchyroll-together" className="hover:underline">Does Crunchyroll have a watch party feature?</Link></li>
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll together — complete guide</Link></li>
       </ul></SeoPageLayout>
   );
