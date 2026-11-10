@@ -145,12 +145,12 @@ export default function WatchPartyAppPage() {
 					Netflix watch party
 				</Link>{" "}
 				guide; groups of three or more can use{" "}
-				<Link href="/guides/netflix-group-watch" className="text-brand-orange hover:underline">
+				<Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
 					Netflix group watch
 				</Link>
 				, and every way to{" "}
 				<Link
-					href="/guides/watch-netflix-together"
+					href="/netflix-watch-party"
 					className="text-brand-orange hover:underline"
 				>
 					watch Netflix together

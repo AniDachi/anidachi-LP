@@ -406,7 +406,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
           </Link>{" "}
           and{" "}
           <Link
-            href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
+            href="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
             className="text-brand-orange hover:underline"
           >
             whether everyone needs Crunchyroll Premium

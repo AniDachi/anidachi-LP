@@ -329,7 +329,7 @@ export default function WatchCrunchyrollTogetherPage() {
 									the plans page (checked 20 Oct 2026) lists only paid plans, with
 									a free trial for new and eligible subscribers. Fan, the cheapest
 									plan, is enough to join. Details:{" "}
-									<Link href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party">
+									<Link href="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing">
 										does everyone need Crunchyroll Premium?
 									</Link>
 								</>

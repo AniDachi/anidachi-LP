@@ -387,7 +387,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
           start from{" "}
           <Link href="/watch-crunchyroll-together">watching Crunchyroll together</Link>.
           For picking the film itself, see{" "}
-          <Link href="/guides/netflix-movie-night">Netflix movie night</Link>.
+          <Link href="/virtual-movie-night">Netflix movie night</Link>.
         </p>
 
         <h2 id="sources" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -422,7 +422,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
               href: "/compare/anidachi-vs-discord-screen-share",
               label: "AniDachi vs Discord screen share",
             },
-            { href: "/guides/teleparty-netflix", label: "Teleparty on Netflix" },
+            { href: "/netflix-party", label: "Netflix Party (now Teleparty)" },
           ]}
         />
       </SeoPageLayout>

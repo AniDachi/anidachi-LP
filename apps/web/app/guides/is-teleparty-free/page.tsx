@@ -419,7 +419,6 @@ export default function IsTelepartyFreePage() {
       <SeoGuideRelated
         links={[
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
-          { href: "/guides/teleparty-netflix", label: "Teleparty on Netflix" },
           { href: "/watch-crunchyroll-together",
             label: "Crunchyroll watch party" },
           {

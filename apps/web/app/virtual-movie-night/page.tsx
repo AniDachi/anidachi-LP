@@ -54,6 +54,16 @@ const faq = [
 		answer:
 			"Yes. Each person uses their own access to the film. The room syncs the players. It does not share one login.",
 	},
+	{
+		question: "How do we start a movie at the same time in different time zones?",
+		answer:
+			"Pick one anchor zone, write the start time in every friend's zone in the invite, and let the host press play. With a sync tool, nobody has to count down; the room starts together.",
+	},
+	{
+		question: "What if a friend cannot find the movie?",
+		answer:
+			"Netflix catalogs differ by country, and some profiles hide titles. Have everyone search the title a day before. If one person cannot see it, pick another film.",
+	},
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -78,7 +88,7 @@ export default function VirtualMovieNightPage() {
 			description="A Crunchyroll, YouTube, or Netflix film, synced for one sitting."
 			url={PAGE_PATH}
 			datePublished="2026-10-08"
-			dateModified="2026-10-17"
+			dateModified="2026-11-10"
 			faq={faq}
 			headings={tocHeadings}
 			articleImage={articleImage}
@@ -92,8 +102,7 @@ export default function VirtualMovieNightPage() {
 				<p>
 					A virtual movie night on AniDachi is one film on Netflix or Crunchyroll, or a full YouTube watch page. Each person opens it in desktop Chrome. The room
 					keeps play aligned.
-					Disney+, Hulu, and Prime Video are not synced. For a Netflix film, see{" "}
-					<Link href="/guides/netflix-movie-night">Netflix movie night</Link>.
+					Disney+, Hulu, and Prime Video are not synced.
 				</p>
 			</SeoGuideAnswer>
 			<h2

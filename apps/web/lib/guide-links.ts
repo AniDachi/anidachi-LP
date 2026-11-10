@@ -354,16 +354,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",
-		label: "Does Everyone Need Crunchyroll Premium for Watch Party?",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/watch2gether-alternatives-for-anime",
 		label: "Watch2Gether Alternatives for Anime",
 		tags: [
@@ -849,39 +839,14 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "long-distance", "pillar-long-distance"],
 	},
 	{
-		href: "/guides/watch-netflix-together",
-		label: "Watch Netflix Together",
-		tags: ["template-c", "pillar-netflix"],
-	},
-	{
-		href: "/guides/how-to-watch-netflix-with-friends",
-		label: "How to Watch Netflix with Friends",
-		tags: ["template-c", "how-to-core", "pillar-netflix"],
-	},
-	{
 		href: "/guides/does-netflix-have-a-watch-party",
 		label: "Does Netflix Have a Watch Party?",
-		tags: ["template-c", "pillar-netflix"],
-	},
-	{
-		href: "/guides/netflix-group-watch",
-		label: "Netflix Group Watch",
-		tags: ["template-c", "pillar-netflix"],
-	},
-	{
-		href: "/guides/teleparty-netflix",
-		label: "Teleparty Netflix",
 		tags: ["template-c", "pillar-netflix"],
 	},
 	{
 		href: "/guides/how-to-screen-share-netflix-on-discord",
 		label: "How to Screen Share Netflix on Discord",
 		tags: ["template-c", "how-to-core", "discord", "pillar-netflix"],
-	},
-	{
-		href: "/guides/netflix-movie-night",
-		label: "Netflix Movie Night",
-		tags: ["template-c", "pillar-netflix"],
 	},
 ];
 

@@ -169,7 +169,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
         Personal history needs your own Plus/Pro access and recording permission.
         Choose a shared live time; async catch-up is coming soon. The full setup is
         in{" "}
-        <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">
+        <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
           how to watch Netflix together
         </Link>
         , and the options side by side are on{" "}

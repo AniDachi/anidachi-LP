@@ -91,6 +91,11 @@ const faq = [
     answer:
       `Teleparty limits voice and video chat to Premium. In AniDachi, voice and video are part of every room and friends join free. ${PRICING_FREE20_SUMMARY}`,
   },
+  {
+    question: "Does Teleparty work on Netflix?",
+    answer:
+      "Yes. Teleparty is a Chrome extension that starts a session from a Netflix title. Everyone still needs their own Netflix account.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -115,7 +120,7 @@ export default function NetflixPartyPage() {
       description={PAGE_DESCRIPTION}
       url="/netflix-party"
       datePublished="2026-10-08"
-      dateModified="2026-10-20"
+      dateModified="2026-11-10"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -203,10 +208,6 @@ export default function NetflixPartyPage() {
         For a full look at the price tiers, read{" "}
         <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
           is Teleparty free
-        </Link>
-        . For the Netflix-specific setup, see{" "}
-        <Link href="/guides/teleparty-netflix" className="text-brand-orange hover:underline">
-          Teleparty on Netflix
         </Link>
         .
       </p>
@@ -335,8 +336,6 @@ export default function NetflixPartyPage() {
       <SeoGuideRelated
         links={[
           { href: "/netflix-watch-party", label: "Netflix watch party hub" },
-          { href: "/guides/watch-netflix-together", label: "Watch Netflix together: 4 ways compared" },
-          { href: "/guides/how-to-watch-netflix-with-friends", label: "How to watch Netflix with friends" },
           { href: "/guides/does-netflix-have-a-watch-party", label: "Does Netflix have a watch party?" },
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
         ]}

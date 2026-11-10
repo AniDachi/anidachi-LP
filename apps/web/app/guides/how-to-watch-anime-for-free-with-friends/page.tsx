@@ -271,7 +271,7 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
           so a free trial for one friend does not cover the group. Which plan
           each person needs is covered in{" "}
           <Link
-            href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
+            href="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
             className="text-brand-orange hover:underline"
           >
             does everyone need Crunchyroll Premium

@@ -118,10 +118,30 @@ const faq = [
     answer:
       `Joining an AniDachi room is free. ${PRICING_FREE20_SUMMARY} Teleparty hosts Netflix parties on its free tier with sync and text chat; its voice and video chat need Premium. Everyone still needs Netflix.`,
   },
+  {
+    question: "Why is Netflix black when I share my screen?",
+    answer:
+      "Netflix protects its video from capture, so screen sharing in Discord, Zoom or similar apps often shows a black box to viewers. Syncing each person's own Netflix player avoids the problem.",
+  },
+  {
+    question: "Is there a way to watch Netflix together with video chat?",
+    answer:
+      "Yes. AniDachi rooms include voice and video calls on top of synced Netflix playback, so everyone can see and hear each other while the film plays.",
+  },
+  {
+    question: "Can my friends pause the movie?",
+    answer:
+      "In AniDachi, the host controls play, pause and seeking for the whole room. Friends can ask in chat or by voice, and the host pauses for everyone.",
+  },
+  {
+    question: "Can a group share one Netflix account for a watch party?",
+    answer:
+      "Only within one household. Netflix's Help Center says an account may not be shared outside the household, and each plan limits how many screens play at once. In a group watch, friends in different homes each use their own Netflix.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
-  { id: "how-it-works", label: "How it works", level: 2 },
+  { id: "how-it-works", label: "How to watch Netflix together", level: 2 },
   { id: "what-works", label: "What works and the limits", level: 2 },
   { id: "everyone-needs-netflix", label: "Does everyone need Netflix?", level: 2 },
   { id: "not-working", label: "Watch party not working", level: 2 },
@@ -147,35 +167,23 @@ export default function NetflixWatchPartyPage() {
         description={PAGE_DESCRIPTION}
         url={PAGE_PATH}
         datePublished="2026-10-08"
-        dateModified="2026-11-07"
+        dateModified="2026-11-10"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
         itemList={[
           { name: "Netflix Party", url: "/netflix-party", position: 1 },
           {
-            name: "Watch Netflix together: the ways compared",
-            url: "/guides/watch-netflix-together",
-            position: 2,
-          },
-          {
-            name: "How to watch Netflix with friends",
-            url: "/guides/how-to-watch-netflix-with-friends",
-            position: 3,
-          },
-          {
             name: "Does Netflix have a watch party?",
             url: "/guides/does-netflix-have-a-watch-party",
-            position: 4,
+            position: 2,
           },
-          { name: "Netflix group watch", url: "/guides/netflix-group-watch", position: 5 },
-          { name: "Netflix movie night", url: "/guides/netflix-movie-night", position: 6 },
+          { name: "Virtual movie night", url: "/virtual-movie-night", position: 3 },
           {
             name: "Stream Netflix on Discord",
             url: "/guides/how-to-screen-share-netflix-on-discord",
-            position: 7,
+            position: 4,
           },
-          { name: "Teleparty Netflix", url: "/guides/teleparty-netflix", position: 8 },
         ]}
         h1="Netflix Watch Party"
         heroLead="Netflix has no watch party button. AniDachi adds one."
@@ -195,9 +203,9 @@ export default function NetflixWatchPartyPage() {
         }
         steps={{
           id: "how-it-works",
-          heading: "How a Netflix Watch Party Works",
+          heading: "How to Watch Netflix Together",
           intro:
-            "Each person runs Netflix in their own Chrome tab, on their own account, and AniDachi keeps the players at the same moment. Nobody watches a compressed copy of someone else's screen.",
+            "To watch Netflix with friends online, each person runs Netflix in their own Chrome tab, on their own account, and AniDachi keeps the players at the same moment. Nobody watches a compressed copy of someone else's screen.",
           items: howToSteps,
         }}
       >
@@ -418,7 +426,7 @@ export default function NetflixWatchPartyPage() {
                 <>
                   Pick by mood and runtime, set one start time across time zones, and
                   run the checklist in{" "}
-                  <Link href="/guides/netflix-movie-night">Netflix movie night</Link>.
+                  <Link href="/virtual-movie-night">Netflix movie night</Link>.
                 </>
               ),
               highlight: true,
@@ -427,8 +435,9 @@ export default function NetflixWatchPartyPage() {
               title: "A bigger group, three to fifteen people",
               body: (
                 <>
-                  Room size, who controls playback, microphone etiquette and series
-                  pacing are in <Link href="/guides/netflix-group-watch">Netflix group watch</Link>.
+                  Free rooms hold up to 4 people including the host, Plus 6 and
+                  Pro 15. The host controls play, pause and seeking for everyone,
+                  and friends ask in chat or by voice when they need a break.
                 </>
               ),
             },
@@ -451,9 +460,9 @@ export default function NetflixWatchPartyPage() {
           More Netflix guides
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
-          Still choosing a method? <Link href="/guides/watch-netflix-together" className="text-brand-orange hover:underline">Watch Netflix together</Link>{" "}
-          compares a countdown on a call, Discord, Teleparty and AniDachi in one
-          decision table. If you searched the old extension name,{" "}
+          Still choosing a method? The <a href="#vs-teleparty" className="text-brand-orange hover:underline">AniDachi vs Teleparty</a>{" "}
+          table above and the <a href="#discord" className="text-brand-orange hover:underline">Discord section</a>{" "}
+          cover the other ways to watch Netflix together. If you searched the old extension name,{" "}
           <Link href="/netflix-party" className="text-brand-orange hover:underline">
             Netflix Party
           </Link>{" "}
@@ -469,15 +478,8 @@ export default function NetflixWatchPartyPage() {
         </p>
         <SeoGuideRelated
           links={[
-            { href: "/guides/watch-netflix-together", label: "Watch Netflix together: 4 ways compared" },
-            {
-              href: "/guides/how-to-watch-netflix-with-friends",
-              label: "How to watch Netflix with friends, step by step",
-            },
-            { href: "/guides/netflix-group-watch", label: "Netflix group watch for 3 to 15 people" },
-            { href: "/guides/netflix-movie-night", label: "Plan a Netflix movie night" },
+            { href: "/virtual-movie-night", label: "Virtual movie night" },
             { href: "/netflix-party", label: "Netflix Party is now Teleparty" },
-            { href: "/guides/teleparty-netflix", label: "Teleparty on Netflix" },
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
             { href: "/watch-youtube-together", label: "YouTube watch party" },
           ]}
