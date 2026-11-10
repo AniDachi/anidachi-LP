@@ -1,4 +1,6 @@
 import { getSeoSiteOrigin } from "@/lib/site-url";
+import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
+import { PRODUCT_FEATURE_LIST } from "@/lib/product-facts";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 interface JsonLdProps {
@@ -60,6 +62,8 @@ export function SoftwareApplicationJsonLd() {
     name: "AniDachi",
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Chrome, Web",
+    featureList: [...PRODUCT_FEATURE_LIST],
+    installUrl: CHROME_WEB_STORE_URL,
     description:
       "Join friends for free on Crunchyroll, YouTube, and Netflix. Host rooms on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro, with live sync, chat, reactions, and calls. Recording personal history requires your own Plus or Pro access and permission in the extension. Async catch-up is coming soon.",
     url: siteUrl,

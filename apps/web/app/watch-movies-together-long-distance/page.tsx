@@ -30,7 +30,7 @@ const faq = [
   {
     question: "How do I watch movies together long distance?",
     answer:
-      "The best method depends on your streaming platform. For Netflix: Teleparty or Rave. For Disney+: Teleparty or Disney GroupWatch. For Amazon Prime: Prime Party or Teleparty. For Crunchyroll anime: AniDachi live rooms. For any platform: Discord screen share works as a free fallback.",
+      "Use a sync extension so each person plays the film on their own account. AniDachi syncs Netflix, Crunchyroll and YouTube in desktop Chrome, with chat and voice. Disney+ removed its GroupWatch feature in 2023 and Prime Video removed Watch Party in 2024, so for those services groups use a third-party extension instead. Discord screen sharing often shows a black screen on paid streaming services.",
   },
   {
     question: "What is the best app to watch movies together long distance?",
@@ -77,7 +77,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
       description="All methods compared — Teleparty, Rave, Discord, and AniDachi for anime."
       url="/watch-movies-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-10-17"
+      dateModified="2026-11-10"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta

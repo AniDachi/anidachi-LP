@@ -167,6 +167,16 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-11-10, platform feature fact-check and llms.txt (owner in chat, ANI-50, ANI-41):**
+  - **Fact-check (sources checked 10 Nov 2026):**
+    - Prime Video removed Watch Party in spring 2024 (reported end date 2 April 2024; How-To Geek, Neowin, Tech Times).
+    - Disney+ removed GroupWatch on 18 September 2023 (How-To Geek, GamesRadar).
+    - HBO Max offers SharePlay on Apple devices only (HBO Max help center).
+    - Netflix and Crunchyroll have no built-in watch party. YouTube has creator-run Premieres.
+    - Hulu is unverified: sources conflict.
+  - **Corrections:** `/compare/anidachi-vs-amazon-watch-party` was rewritten in place (same URL, title and H1). It no longer presents Amazon Watch Party as current, cites its sources with a check date, and lists Netflix as supported. The `/watch-movies-together-long-distance` FAQ no longer recommends Disney GroupWatch. Never describe Prime Video Watch Party or Disney+ GroupWatch as available.
+  - **New route `/llms.txt`** (not a marketing page; 404 on non-production hosts) and `lib/product-facts.ts`: one facts paragraph and the supported and planned platform lists, also feeding the SoftwareApplication JSON-LD (`featureList`, `installUrl`). Tested in `lib/llms-txt.test.ts`. Add a platform there only once the store build supports it.
+
 - **2026-11-10, 32 watch pages out of sitemap.xml (owner in chat):** `/watch/<slug>-with-friends` pages with zero Search Console impressions in the 90 days to 2026-11-09 (www and apex combined) and no store clicks are no longer listed in `sitemap.xml` (`lib/sitemap-watch-exclusions.ts`, tested in `lib/sitemap-watch-exclusions.test.ts`). They stay live, indexable (no `noindex`), self-canonical and linked from `/watch`. URLs and content are unchanged. The goal is to point Google's crawl at pages that earn impressions, starting with `/netflix-watch-party`, which is still "Discovered – not indexed". The sitemap drops from 358 to 326 URLs. One Piece, Demon Slayer, Jujutsu Kaisen and Fullmetal Alchemist: Brotherhood also had zero impressions but stay in, as top-priority franchises for the planned "where to watch" test. The 28-day view showed 71 zero-impression pages; the 90-day window is the more conservative cut. Re-measure on Dec 8: put a page back once it earns impressions or gets enriched. Noindex or merging remains a separate decision.
 
 - **2026-11-10, Netflix merge and the Crunchyroll account pair (owner in chat, ANI-37, ANI-38):** 6 URLs → permanent redirects (308). Route folders removed, inbound links repointed or dropped, entries removed from `lib/guide-links.ts`. None of the six had more than 12 impressions in 90 days (GSC); `/netflix-watch-party` itself is not indexed yet.
