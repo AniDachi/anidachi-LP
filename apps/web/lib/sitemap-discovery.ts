@@ -99,6 +99,7 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-party-app" ||
     urlPath === "/netflix-watch-party" ||
     urlPath === "/netflix-party" ||
+    urlPath === "/prime-video-watch-party" ||
     urlPath === "/pricing"
   ) {
     return { changeFrequency: "weekly", priority: 0.9 };

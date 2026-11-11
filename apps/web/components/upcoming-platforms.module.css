@@ -103,10 +103,10 @@
 
 .logos {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   gap: 24px;
-  max-width: 760px;
+  max-width: 900px;
   margin: 20px auto 0;
   padding: 0;
   list-style: none;
@@ -118,6 +118,25 @@
   justify-content: center;
   min-width: 0;
   min-height: 84px;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 12px;
+  transition: opacity 0.15s ease;
+}
+
+.logoLink:hover {
+  opacity: 0.75;
+}
+
+.logoLink:focus-visible {
+  outline: 2px solid var(--ani-progress);
+  outline-offset: 3px;
 }
 
 .logo {
@@ -139,5 +158,4 @@
   .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin-top: 24px; }
   .logos li { min-height: 82px; }
   .logo { max-width: 80%; }
-  .logos li:last-child { grid-column: 1 / -1; justify-self: center; width: calc((100% - 16px) / 2); }
 }

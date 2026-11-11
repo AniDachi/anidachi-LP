@@ -848,6 +848,11 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "How to Screen Share Netflix on Discord",
 		tags: ["template-c", "how-to-core", "discord", "pillar-netflix"],
 	},
+	{
+		href: "/guides/how-to-stream-prime-video-on-discord",
+		label: "How to Stream Prime Video on Discord",
+		tags: ["template-c", "discord", "pillar-prime-video"],
+	},
 ];
 
 export function getGuideLinks({

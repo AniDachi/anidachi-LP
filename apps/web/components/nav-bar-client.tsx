@@ -61,6 +61,7 @@ const watchHubLinks: readonly NavMenuLink[] = [
   { href: "/watch-crunchyroll-together", label: "Crunchyroll Watch Party", description: "Crunchyroll platform" },
   { href: "/watch-youtube-together", label: "YouTube Watch Party", description: "YouTube platform" },
   { href: "/netflix-watch-party", label: "Netflix Watch Party", description: "Netflix platform" },
+  { href: "/prime-video-watch-party", label: "Prime Video Watch Party", description: "Coming soon" },
   { href: "/discord-watch-party", label: "Discord Watch Party", description: "Voice on Discord, video in sync" },
 ];
 
@@ -85,6 +86,7 @@ function isWatchClusterPath(pathname: string | null): boolean {
     pathname === "/watch-crunchyroll-together" ||
     pathname === "/watch-youtube-together" ||
     pathname === "/netflix-watch-party" ||
+    pathname === "/prime-video-watch-party" ||
     pathname === "/discord-watch-party" ||
     pathname === "/anime-watch-party-toolkit" ||
     pathname === "/anime-watch-party" ||
