@@ -150,7 +150,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
         description="Why Netflix shows a black screen on Discord, what people try, and how to watch in sync with Discord for voice."
         url={PAGE_PATH}
         datePublished="2026-10-08"
-        dateModified="2026-10-20"
+        dateModified="2026-11-11"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -423,6 +423,10 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
               label: "AniDachi vs Discord screen share",
             },
             { href: "/netflix-party", label: "Netflix Party (now Teleparty)" },
+            {
+              href: "/guides/how-to-stream-prime-video-on-discord",
+              label: "How to stream Prime Video on Discord",
+            },
           ]}
         />
       </SeoPageLayout>

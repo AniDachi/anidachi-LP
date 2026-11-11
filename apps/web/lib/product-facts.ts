@@ -20,8 +20,8 @@ export const SUPPORTED_PLATFORMS: readonly SupportedPlatform[] = [
   { name: "YouTube", hubPath: "/watch-youtube-together", hubLabel: "Watch YouTube together" },
 ];
 
-/** Shown on the homepage as "coming soon". Not supported: never describe them as working. */
-export const PLANNED_PLATFORMS: readonly string[] = ["Hulu", "Disney+", "Paramount+"];
+/** Planned, not supported: listed in llms.txt as not available. Never describe them as working. Move a platform to SUPPORTED_PLATFORMS only once the store build supports it. */
+export const PLANNED_PLATFORMS: readonly string[] = ["Prime Video", "Hulu", "Disney+", "Paramount+"];
 
 const supportedList = "Crunchyroll, Netflix and YouTube";
 

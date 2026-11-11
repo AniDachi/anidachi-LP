@@ -163,7 +163,7 @@ export default function WatchMoviesTogetherOnlinePage() {
 				description="A movie-night flow and the apps that sync a film for friends in different homes."
 				url={PAGE_PATH}
 				datePublished="2026-09-26"
-				dateModified="2026-10-20"
+				dateModified="2026-11-11"
 				faq={faq}
 				headings={tocHeadings}
 				articleImage={articleImage}
@@ -347,8 +347,12 @@ export default function WatchMoviesTogetherOnlinePage() {
 				<p className="mb-4 leading-relaxed text-ani-muted">
 					AniDachi syncs players; it does not stream the film to anyone. Every
 					viewer needs their own access on Netflix, YouTube or Crunchyroll.
-					Disney+, Hulu and Prime Video are not supported, and there is no
-					mobile app. Everyone needs desktop Chrome 121 or newer, or Chromium
+					Disney+, Hulu and Prime Video are not supported yet (for Prime Video
+					nights, see{" "}
+					<Link href="/prime-video-watch-party" className="text-brand-orange hover:underline">
+						Prime Video watch party
+					</Link>
+					), and there is no mobile app. Everyone needs desktop Chrome 121 or newer, or Chromium
 					Edge.
 				</p>
 				<p className="mb-8 leading-relaxed text-ani-muted">

@@ -167,6 +167,14 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-11-11, Prime Video pre-launch pages (owner in chat, ANI-52 step 1):** two new URLs, published before the Prime Video adapter ships (expected about 25 Nov) so they can be indexed in time. Prime Video stays **not supported** everywhere until the store build has it: no HowTo for AniDachi on Prime Video, not in `SUPPORTED_PLATFORMS`, schema, the homepage or the facts paragraph. It is now in `PLANNED_PLATFORMS` (llms.txt "not available").
+  - `/prime-video-watch-party`, titled "Prime Video Watch Party (Amazon Watch Party)" so it covers both names ("amazon prime video watch party" 3,600/mo, "amazon watch party" 2,900, "prime video watch party" 2,400, KP worldwide 12-month average). Answer first: Amazon removed Watch Party in spring 2024; what works today; AniDachi's Prime Video support "coming in an update", with no date. Built on `HubLandingLayout` (the platform hub template) with honest pre-launch content: the generic install button, "Works today on Netflix · Crunchyroll · YouTube", and steps for watching Prime Video together today without AniDachi (no HowTo JSON-LD). On launch day only the button text, the steps (AniDachi install steps plus HowTo) and the platforms line change (ANI-43 checklist). Conversion template: pillar. Listed in the navbar Watch menu as "Prime Video Watch Party · Coming soon", in the footer, and in the sitemap's weekly 0.9 hub tier, so it gets the same crawl paths as the other hubs.
+  - `/guides/how-to-stream-prime-video-on-discord` (about 2,900/mo): DRM black screen, what people try, mobile, and the own-account setup, which works without AniDachi.
+  - **Not built:** `/guides/amazon-watch-party`. `/compare/anidachi-vs-amazon-watch-party` already answers "does Amazon Watch Party still work" and now links the hub.
+  - **Inbound links:** navbar and footer (hub), the compare page (hub and guide), `/guides/watch-movies-together-online` (hub), `/guides/how-to-screen-share-netflix-on-discord` (guide); the two new pages link each other.
+  - **Facts (checked 11 Nov 2026):** Prime Video Usage Rules allow up to three streams per Amazon account and the same video on no more than two devices; the Terms of Use forbid broadcasting and circumventing DRM; Teleparty's FAQ lists Prime Video ("Amazon") on its free tier with sync and text chat.
+  - **Review:** 30 days (11 Dec): indexed? impressions for the Prime queries? 60 and 90 days after launch day: desktop store clicks and sign-in reach (ANI-42).
+
 - **2026-11-10, platform feature fact-check and llms.txt (owner in chat, ANI-50, ANI-41):**
   - **Fact-check (sources checked 10 Nov 2026):**
     - Prime Video removed Watch Party in spring 2024 (reported end date 2 April 2024; How-To Geek, Neowin, Tech Times).

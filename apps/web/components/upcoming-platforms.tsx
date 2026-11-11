@@ -38,10 +38,12 @@ const supportedPlatforms = [
   },
 ];
 
-// Brand artwork: Hulu and Disney+ from https://github.com/pheralb/svgl
+// Brand artwork: Prime Video, Hulu and Disney+ from https://github.com/pheralb/svgl
 // (static/library); Paramount+ from https://commons.wikimedia.org/wiki/File:Paramount%2B_logo.svg.
-// These marks identify planned integrations, not currently supported providers.
-const platforms = [
+// These marks identify planned integrations, not currently supported providers. A planned platform
+// with a published hub (pre-launch page that says support is coming) links to it.
+const platforms: { name: string; file: string; width: number; height: number; href?: string }[] = [
+  { name: "Prime Video", file: "primevideo", width: 162, height: 50, href: "/prime-video-watch-party" },
   { name: "Hulu", file: "hulu", width: 110, height: 36 },
   { name: "Disney+", file: "disneyplus", width: 162, height: 92 },
   { name: "Paramount+", file: "paramountplus", width: 190, height: 44 },
@@ -88,13 +90,29 @@ export function UpcomingPlatforms() {
         <ul className={styles.logos} aria-label="Platforms coming soon">
           {platforms.map((platform) => (
             <li key={platform.file}>
-              <Image
-                src={`/platforms/${platform.file}.svg`}
-                alt={platform.name}
-                width={platform.width}
-                height={platform.height}
-                className={styles.logo}
-              />
+              {platform.href ? (
+                <Link
+                  href={platform.href}
+                  className={styles.logoLink}
+                  aria-label={`${platform.name} watch party (coming soon)`}
+                >
+                  <Image
+                    src={`/platforms/${platform.file}.svg`}
+                    alt=""
+                    width={platform.width}
+                    height={platform.height}
+                    className={styles.logo}
+                  />
+                </Link>
+              ) : (
+                <Image
+                  src={`/platforms/${platform.file}.svg`}
+                  alt={platform.name}
+                  width={platform.width}
+                  height={platform.height}
+                  className={styles.logo}
+                />
+              )}
             </li>
           ))}
         </ul>

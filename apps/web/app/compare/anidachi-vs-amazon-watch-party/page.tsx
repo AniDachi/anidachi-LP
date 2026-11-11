@@ -96,7 +96,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       description="Amazon removed Watch Party from Prime Video in 2024. What still works for anime groups."
       url="/compare/anidachi-vs-amazon-watch-party"
       datePublished="2026-06-21"
-      dateModified="2026-11-10"
+      dateModified="2026-11-11"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -235,6 +235,11 @@ export default function AniDachiVsAmazonWatchPartyPage() {
         <li>
           <strong>Titles only on Prime Video:</strong> use a third-party
           extension that lists Prime Video support, until AniDachi adds it.
+          The options are in{" "}
+          <Link href="/prime-video-watch-party" className="text-brand-orange hover:underline">
+            Prime Video watch party
+          </Link>
+          .
         </li>
       </ul>
 
@@ -245,6 +250,16 @@ export default function AniDachiVsAmazonWatchPartyPage() {
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange">
+        <li>
+          <Link href="/prime-video-watch-party" className="hover:underline">
+            Prime Video watch party
+          </Link>
+        </li>
+        <li>
+          <Link href="/guides/how-to-stream-prime-video-on-discord" className="hover:underline">
+            How to stream Prime Video on Discord
+          </Link>
+        </li>
         <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty
