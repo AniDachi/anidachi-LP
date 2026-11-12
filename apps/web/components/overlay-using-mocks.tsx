@@ -8,7 +8,8 @@ import {
 	SmilePlus,
 	UserPlus,
 } from "lucide-react";
-import type { Participant, RoomMediaV3Snapshot } from "@anidachi/protocol";
+import type { InviteTargets, Participant, RoomMediaV3Snapshot } from "@anidachi/protocol";
+import { CapsuleFriendsPanel } from "../../extension/src/capsule-friends-panel";
 import { PanelMediaControls } from "../../extension/src/panel-media-controls";
 import { RoomDefaultsSettingsPanel } from "../../extension/src/overlay-room-defaults";
 import { RoomPeopleSection } from "../../extension/src/overlay-room-media-controls";
@@ -30,7 +31,14 @@ const noop = () => {};
 
 // Controls embedded in OverlayApp have no standalone component. These static
 // fragments use its markup and the imported production stylesheet, not a redraw.
-function RoomActions({ highlight }: { highlight: "copy" | "friends" }) {
+function RoomActions({
+	highlight,
+	friendsOpen = false,
+}: {
+	highlight: "copy" | "friends";
+	/** Matches the open state, so the friends panel can anchor its pointer to this button. */
+	friendsOpen?: boolean;
+}) {
 	return (
 		<div className="panel-actions room-active">
 			<button
@@ -50,7 +58,7 @@ function RoomActions({ highlight }: { highlight: "copy" | "friends" }) {
 				<button
 					type="button"
 					className={`panel-icon-action${highlight === "friends" ? " example-highlight" : ""}`}
-					aria-label="Invite friends"
+					aria-label={friendsOpen ? "Close friends and groups" : "Invite friends and groups"}
 				>
 					<UserPlus size={14} />
 				</button>
@@ -122,63 +130,66 @@ export function OverlayCreateRoomMock() {
 	);
 }
 
+/** Sample invite targets for the example; the panel is the extension's own component. */
+const exampleTime = "2026-11-01T12:00:00.000Z";
+const exampleInviteTargets: InviteTargets = {
+	friends: [
+		{
+			friendshipId: "6f1c2a4e-0b7d-4c1e-9a52-3d8e1f0a7b21",
+			user: {
+				userId: "2b7e9c41-5d3a-4f8e-b1c6-7a0d9e2f4c13",
+				handle: null,
+				displayName: "Alex",
+				avatarUrl: null,
+			},
+			status: "accepted",
+			direction: "mutual",
+			requestedAt: exampleTime,
+			respondedAt: exampleTime,
+			updatedAt: exampleTime,
+		},
+	],
+	groups: [
+		{
+			id: "9d4a7b12-3e6c-4f0a-8b5d-1c2e3f4a5b6c",
+			name: "Weekend watch",
+			archivedAt: null,
+			createdAt: exampleTime,
+			updatedAt: exampleTime,
+			members: ["a1", "a2", "a3", "a4"].map((suffix, index) => ({
+				user: {
+					userId: `0e8f7a6b-5c4d-4e3f-9a1b-2c3d4e5f60${index}${suffix.slice(1)}`,
+					handle: null,
+					displayName: `Member ${index + 1}`,
+					avatarUrl: null,
+				},
+				addedAt: exampleTime,
+			})),
+		},
+	],
+};
+
 export function OverlayInviteMock() {
 	return (
 		<ExtensionExampleFrame label="Friends and groups invitation example">
 			<div className="mini-panel example-static" inert aria-hidden="true">
-				<RoomActions highlight="friends" />
-				<div className="invite-panel">
-					<div className="invite-panel-header">
-						<div className="invite-panel-heading">
-							<strong>Friends & groups</strong>
-							<span>2 available</span>
-						</div>
-						<button
-							className="invite-panel-refresh"
-							type="button"
-							aria-label="Refresh friends and groups"
-						>
-							<RefreshCw size={14} />
-						</button>
-					</div>
-					{[
-						{
-							section: "Groups",
-							name: "Weekend watch",
-							detail: "4 members",
-							initials: "WW",
-						},
-						{
-							section: "Friends",
-							name: "Alex",
-							detail: "Friend",
-							initials: "AL",
-						},
-					].map((item) => (
-						<section className="invite-target-section" key={item.section}>
-							<div className="invite-target-section-title">
-								<span>{item.section}</span>
-								<b>1</b>
-							</div>
-							<div className="invite-target-row">
-								<div className="participant-main">
-									<span className="mini-avatar">{item.initials}</span>
-									<span className="invite-target-copy">
-										<strong>{item.name}</strong>
-										<small>{item.detail}</small>
-									</span>
-								</div>
-								<button
-									type="button"
-									className="button compact invite-target-action"
-									data-state="idle"
-								>
-									Invite
-								</button>
-							</div>
-						</section>
-					))}
-				</div>
+				<RoomActions highlight="friends" friendsOpen />
+				<CapsuleFriendsPanel
+					open
+					targets={exampleInviteTargets}
+					loading={false}
+					statuses={new Map()}
+					participants={[]}
+					membershipReady
+					sending={new Map()}
+					failedTargets={new Set()}
+					notice={null}
+					onRefresh={noop}
+					onClose={noop}
+					onSendFriend={noop}
+					onSendGroup={noop}
+					onCreateLink={() => Promise.reject(new Error("Example only"))}
+				/>
 			</div>
 		</ExtensionExampleFrame>
 	);

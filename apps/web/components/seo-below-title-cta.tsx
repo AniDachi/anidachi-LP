@@ -2,6 +2,7 @@ import { Children, isValidElement, type ReactNode } from "react";
 import { PrimaryCheckoutCta, type CtaCopyKey } from "@/components/primary-checkout-cta";
 import { SeoGuideAnswer, SeoGuideTitle } from "@/components/seo-guide-blocks";
 import type { PageTemplateId } from "@/lib/conversion-events";
+import type { PageLocale } from "@/lib/locale/ui-strings";
 
 function isParagraphElement(child: ReactNode): boolean {
   return isValidElement(child) && child.type === "p";
@@ -25,11 +26,13 @@ export function SeoBelowTitleCta({
   pagePath,
   pageTemplate,
   ctaCopy,
+  locale = "en",
 }: {
   children: ReactNode;
   pagePath: string;
   pageTemplate: PageTemplateId;
   ctaCopy?: CtaCopyKey;
+  locale?: PageLocale;
 }) {
   const arr = Children.toArray(children);
   let insertAt = Math.min(2, arr.length);
@@ -59,6 +62,7 @@ export function SeoBelowTitleCta({
         pageTemplate={pageTemplate}
         placement="content_above_fold"
         variant={ctaCopy}
+        locale={locale}
         className="!mt-0 mb-6"
       />
       {arr.slice(insertAt)}

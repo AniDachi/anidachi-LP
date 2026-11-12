@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { FooterPricingCta } from "@/components/footer-pricing-cta";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 /** Section index pages: the paths to every guide, comparison, watch page, tool and term. */
@@ -365,6 +366,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-ani-line mt-12 pt-8 text-center text-ani-muted text-sm">
+          <LanguageSwitcher />
           <p>&copy; {new Date().getFullYear()} AniDachi. All rights reserved.</p>
         </div>
       </div>

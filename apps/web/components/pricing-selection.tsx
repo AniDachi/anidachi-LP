@@ -37,7 +37,8 @@ export function PricingSelection(props: Props) {
 						<HomeSectionHeader
 							title="Watch together. Choose your plan."
 							description="Watch together. Find the plan that fits your group."
-							titleAs={props.headingLevel === 1 ? "h1" : "h2"}
+							// The streamed section brings the real heading; the placeholder only shows the text.
+							titleAs="p"
 							align="center"
 						/>
 						<div className="pricing-plans__grid mt-24" aria-hidden="true">

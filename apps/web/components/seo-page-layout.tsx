@@ -12,6 +12,7 @@ import { PrimaryCheckoutCta, type CtaCopyKey } from "@/components/primary-checko
 import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
+import { UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
 
 export type { TocHeading };
 
@@ -43,13 +44,15 @@ export interface SeoPageLayoutProps {
    * Defaults to true. Set false only for pages that already render equivalent meta.
    */
   showEditorialByline?: boolean;
+  /** Page language for the fixed labels, CTAs and Article language. */
+  locale?: PageLocale;
   children: React.ReactNode;
 }
 
-function formatIsoDate(iso: string): string {
+function formatIsoDate(iso: string, intl = "en-US"): string {
   const d = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(intl, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -61,18 +64,21 @@ function formatIsoDate(iso: string): string {
 export function EditorialByline({
   datePublished,
   dateModified,
+  locale = "en",
 }: {
   datePublished: string;
   dateModified: string;
+  locale?: PageLocale;
 }) {
+  const t = UI_STRINGS[locale];
   return (
     <p className="not-prose mt-8 border-t border-ani-line pt-4 text-xs leading-relaxed text-ani-muted">
-      Published {formatIsoDate(datePublished)}
+      {t.bylinePublished} {formatIsoDate(datePublished, t.intl)}
       {dateModified !== datePublished
-        ? ` · Updated ${formatIsoDate(dateModified)}`
+        ? ` · ${t.bylineUpdated} ${formatIsoDate(dateModified, t.intl)}`
         : null}
       {" · "}
-      By{" "}
+      {t.bylineBy}{" "}
       <Link href="/about" className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary">
         AniDachi
       </Link>
@@ -81,17 +87,23 @@ export function EditorialByline({
         href="/editorial-policy"
         className="text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
       >
-        Editorial policy
+        {t.bylineEditorialPolicy}
       </Link>
     </p>
   );
 }
 
 /** Visible breadcrumb trail shared by SEO layouts (BreadcrumbList JSON-LD is emitted separately). */
-export function SeoBreadcrumbNav({ breadcrumbs }: { breadcrumbs: { name: string; url: string }[] }) {
+export function SeoBreadcrumbNav({
+  breadcrumbs,
+  label = "Breadcrumb",
+}: {
+  breadcrumbs: { name: string; url: string }[];
+  label?: string;
+}) {
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={label}
       className="border-b border-ani-line bg-ani-canvas"
     >
       <div className="container mx-auto px-4 py-3.5">
@@ -141,19 +153,21 @@ export function SeoPageLayout({
   midContentSlot,
   faqDefaultOpenIndexes,
   showEditorialByline = true,
+  locale = "en",
   children,
 }: SeoPageLayoutProps) {
+  const t = UI_STRINGS[locale];
   const hasToc = headings && headings.length > 0;
   const pageTemplate = conversionTemplate ?? inferPageTemplateFromPath(url);
 
   const editorialByline = showEditorialByline ? (
-    <EditorialByline datePublished={datePublished} dateModified={dateModified} />
+    <EditorialByline datePublished={datePublished} dateModified={dateModified} locale={locale} />
   ) : null;
 
   const articleBody = (
     <div className="seo-prose">
       {aboveFoldCta ? (
-        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate} ctaCopy={ctaCopy}>
+        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate} ctaCopy={ctaCopy} locale={locale}>
           {children}
         </SeoBelowTitleCta>
       ) : (
@@ -167,6 +181,7 @@ export function SeoPageLayout({
           pageTemplate={pageTemplate}
           placement="content_bottom"
           variant={ctaCopy}
+          locale={locale}
         />
       </div>}
     </div>
@@ -178,16 +193,16 @@ export function SeoPageLayout({
         id="main-content"
         className="min-h-screen bg-ani-canvas"
       >
-        <SeoBreadcrumbNav breadcrumbs={breadcrumbs} />
+        <SeoBreadcrumbNav breadcrumbs={breadcrumbs} label={t.breadcrumb} />
 
         {hasToc ? (
           <div className="container mx-auto max-w-6xl px-4 py-10 lg:py-16">
             <div className="flex flex-col gap-10 lg:flex-row lg:gap-14">
               <aside
                 className="order-1 w-full flex-shrink-0 lg:order-2 lg:w-64"
-                aria-label="Table of contents"
+                aria-label={t.tocAside}
               >
-                <TableOfContents headings={headings!} />
+                <TableOfContents headings={headings!} onThisPageLabel={t.onThisPage} contentsLabel={t.tocContents} />
               </aside>
               <article className="order-2 min-w-0 flex-1 max-w-3xl lg:order-1 lg:max-w-none">
                 {articleBody}
@@ -204,6 +219,9 @@ export function SeoPageLayout({
           <FAQSection
             questions={faq}
             defaultOpenIndexes={faqDefaultOpenIndexes}
+            title={t.faqTitle}
+            moreLabel={t.faqMore}
+            fewerLabel={t.faqFewer}
           />
         ) : null}
       </main>
@@ -215,6 +233,7 @@ export function SeoPageLayout({
         datePublished={datePublished}
         dateModified={dateModified}
         image={articleImage}
+        inLanguage={locale === "de" ? "de" : undefined}
       />
       {faq && faq.length > 0 && <FAQPageJsonLd questions={faq} />}
       {itemList && itemList.length > 0 && (

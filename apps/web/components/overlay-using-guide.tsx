@@ -19,6 +19,8 @@ import {
   extensionUsingStepAnchor,
   extensionUsingSteps,
 } from "@/lib/extension-using-guide";
+import { deExtensionUsingSteps } from "@/lib/locale/de-extension";
+import type { PageLocale } from "@/lib/locale/ui-strings";
 
 import styles from "./extension-install.module.css";
 
@@ -29,9 +31,12 @@ export function InstallStep({
   heading = "h2",
   wide = false,
   example,
+  anchor,
 }: {
   n: number;
   title: string;
+  /** Step name for the anchor id; defaults to the title (German steps keep the English anchors). */
+  anchor?: string;
   children?: ReactNode;
   heading?: "h2" | "h3";
   wide?: boolean;
@@ -40,7 +45,7 @@ export function InstallStep({
   const Heading = heading;
   if (wide) {
     return (
-      <li id={extensionUsingStepAnchor(title)} className={styles.guideStep}>
+      <li id={extensionUsingStepAnchor(anchor ?? title)} className={styles.guideStep}>
         <div className={styles.guideCopy}>
           <div className={styles.guideStepHeading}>
             <span className={styles.guideNumber}>{n}</span>
@@ -54,7 +59,7 @@ export function InstallStep({
   }
   return (
     <li
-      id={extensionUsingStepAnchor(title)}
+      id={extensionUsingStepAnchor(anchor ?? title)}
       className="scroll-mt-24 grid grid-cols-[auto_1fr] items-start gap-4"
     >
       <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-ani-line bg-ani-hover font-mono text-sm font-semibold text-ani-text">
@@ -87,15 +92,25 @@ const examples: Record<(typeof extensionUsingSteps)[number]["name"], ComponentTy
 export function OverlayUsingGuide({
   compact = false,
   setup,
+  locale = "en",
 }: {
   compact?: boolean;
   setup?: ReactNode;
+  /** German text for /de/erweiterung; the animated examples stay as they are. */
+  locale?: PageLocale;
 }) {
+  const de = locale === "de";
   return (
     <section id={EXTENSION_USING_HASH} className={compact ? "help-using" : styles.guide} aria-labelledby="using-title">
       <header className={compact ? "" : styles.guideHeader}>
         <h2 id="using-title" className={compact ? "text-balance text-2xl font-semibold tracking-[-0.03em] text-ani-text" : styles.sectionTitle}>
-          {setup ? "Get started with AniDachi" : "How to watch together"}
+          {de
+            ? setup
+              ? "Loslegen mit AniDachi"
+              : "So schaut ihr zusammen"
+            : setup
+              ? "Get started with AniDachi"
+              : "How to watch together"}
         </h2>
         {compact ? (
           <>
@@ -107,16 +122,16 @@ export function OverlayUsingGuide({
         ) : null}
       </header>
       {setup}
-      <ol className={compact ? "mt-6 space-y-8" : styles.guideSteps} aria-label="Player controls">
+      <ol className={compact ? "mt-6 space-y-8" : styles.guideSteps} aria-label={de ? "Steuerung im Player" : "Player controls"}>
         {extensionUsingSteps.map((step, index) => {
           const Example = examples[step.name];
           return (
-            <InstallStep key={step.name} n={index + 1} title={step.name}
-              heading="h3" wide={!compact} example={<Example />}>
+            <InstallStep key={step.name} n={index + 1} title={de ? deExtensionUsingSteps[index].name : step.name}
+              anchor={step.name} heading="h3" wide={!compact} example={<Example />}>
               {step.name === "Open the capsule" ? <span id="using-open-the-bubble" className="scroll-mt-24" aria-hidden="true" /> : null}
               {step.name === "Microphone & camera" ? <span id="using-voice" className="scroll-mt-24" aria-hidden="true" /> : null}
               <p className={compact ? "mt-1 text-sm leading-relaxed text-ani-muted" : styles.guideDescription}>
-                {step.text}
+                {de ? deExtensionUsingSteps[index].text : step.text}
               </p>
             </InstallStep>
           );

@@ -16,6 +16,7 @@ export function HubCtaBand({
   body,
   placement = "content_after_compare",
   ctaLabel = INSTALL_CTA_LABEL,
+  href = INSTALL_HUB_PATH,
 }: {
   pagePath: string;
   heading: string;
@@ -23,6 +24,8 @@ export function HubCtaBand({
   placement?: string;
   /** Same platform-specific text as the hero button. */
   ctaLabel?: string;
+  /** Button destination; German pages go straight to the store listing. */
+  href?: string;
 }) {
   const pageTemplate = inferPageTemplateFromPath(pagePath);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -65,7 +68,8 @@ export function HubCtaBand({
       <p className="mx-auto mt-4 max-w-md text-pretty text-ani-muted">{body}</p>
       <Button variant="cream" size="control" className="mt-8 px-8 text-sm" asChild>
         <InstallLink
-          href={INSTALL_HUB_PATH}
+          href={href}
+          storePlacement={placement}
           onClick={() => {
             trackConversion("cta_click", {
               page_path: pagePath,

@@ -54,8 +54,12 @@ export function FAQSection({
   questions,
   defaultOpenIndexes = [],
   compact = false,
+  moreLabel = "More questions",
+  fewerLabel = "Fewer questions",
 }: {
   title?: string;
+  moreLabel?: string;
+  fewerLabel?: string;
   questions: FAQItem[];
   defaultOpenIndexes?: number[];
   compact?: boolean;
@@ -79,8 +83,8 @@ export function FAQSection({
         {hidden.length > 0 ? (
           <details className={styles.more} open={hiddenOpen.length > 0 ? true : undefined}>
             <summary>
-              <span className={styles.closedLabel}>More questions</span>
-              <span className={styles.openLabel}>Fewer questions</span>
+              <span className={styles.closedLabel}>{moreLabel}</span>
+              <span className={styles.openLabel}>{fewerLabel}</span>
               <Plus className={styles.plus} size={18} aria-hidden="true" />
               <Minus className={styles.minus} size={18} aria-hidden="true" />
             </summary>

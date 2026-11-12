@@ -1,6 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { PageLocale } from "@/lib/locale/ui-strings";
 import styles from "./upcoming-platforms.module.css";
+
+/** German hub links and labels for /de; keyed by platform name. */
+const DE_SUPPORTED: Record<string, { href: string; label: string }> = {
+  Crunchyroll: { href: "/de/crunchyroll-watchparty", label: "Crunchyroll Watchparty" },
+  Netflix: { href: "/de/netflix-watchparty", label: "Netflix Watchparty" },
+  YouTube: { href: "/de/youtube-watchparty", label: "YouTube Watchparty" },
+};
+
+const COPY = {
+  en: { title: "Works on Crunchyroll, Netflix and YouTube.", supported: "Supported platforms", more: "More platforms.", soon: "Coming soon.", soonList: "Platforms coming soon", soonSuffix: "watch party (coming soon)" },
+  de: { title: "Funktioniert mit Crunchyroll, Netflix und YouTube.", supported: "Unterstützte Dienste", more: "Weitere Dienste.", soon: "Bald verfügbar.", soonList: "Dienste, die bald kommen", soonSuffix: "Watchparty (bald verfügbar)" },
+} as const;
 
 // Supported platforms link to their hubs. Glyphs match the watch-history
 // platform switch (app/account/watch-library/history-browser.tsx).
@@ -49,17 +62,19 @@ const platforms: { name: string; file: string; width: number; height: number; hr
   { name: "Paramount+", file: "paramountplus", width: 190, height: 44 },
 ];
 
-export function UpcomingPlatforms() {
+export function UpcomingPlatforms({ locale = "en" }: { locale?: PageLocale } = {}) {
+  const copy = COPY[locale];
+  const de = locale === "de";
   return (
     <aside className={styles.section} aria-labelledby="supported-platforms-title">
       <div className={styles.container}>
         <h2 id="supported-platforms-title" className={styles.title}>
-          Works on Crunchyroll, Netflix and YouTube.
+          {copy.title}
         </h2>
-        <ul className={styles.supported} aria-label="Supported platforms">
+        <ul className={styles.supported} aria-label={copy.supported}>
           {supportedPlatforms.map((platform) => (
             <li key={platform.name}>
-              <Link href={platform.href} className={styles.supportedLink}>
+              <Link href={de ? DE_SUPPORTED[platform.name].href : platform.href} className={styles.supportedLink}>
                 <svg
                   viewBox={platform.viewBox}
                   className={styles.glyph}
@@ -74,7 +89,7 @@ export function UpcomingPlatforms() {
                   ) : null}
                 </svg>
                 <span className={styles.supportedLabel}>
-                  {platform.label}
+                  {de ? DE_SUPPORTED[platform.name].label : platform.label}
                   <span className={styles.arrow} aria-hidden="true">
                     →
                   </span>
@@ -85,16 +100,16 @@ export function UpcomingPlatforms() {
         </ul>
 
         <h3 id="upcoming-platforms-title" className={styles.subtitle}>
-          More platforms. <span>Coming soon.</span>
+          {copy.more} <span>{copy.soon}</span>
         </h3>
-        <ul className={styles.logos} aria-label="Platforms coming soon">
+        <ul className={styles.logos} aria-label={copy.soonList}>
           {platforms.map((platform) => (
             <li key={platform.file}>
-              {platform.href ? (
+              {platform.href && !de ? (
                 <Link
                   href={platform.href}
                   className={styles.logoLink}
-                  aria-label={`${platform.name} watch party (coming soon)`}
+                  aria-label={`${platform.name} ${copy.soonSuffix}`}
                 >
                   <Image
                     src={`/platforms/${platform.file}.svg`}

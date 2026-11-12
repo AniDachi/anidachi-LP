@@ -3,7 +3,7 @@
 import { createContext, useContext, type ComponentProps } from "react";
 import Link from "next/link";
 import { trackStoreClick } from "@/lib/conversion-events";
-import { CHROME_WEB_STORE_URL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { INSTALL_HUB_PATH, isChromeWebStoreUrl } from "@/lib/install-cta";
 import { isMobileInstallDevice } from "@/lib/mobile-install";
 
 export const MobileInstallContext = createContext<{
@@ -33,6 +33,6 @@ export function InstallLink({
       panel.open(shareHref ?? (typeof props.href === "string" ? props.href : INSTALL_HUB_PATH));
       return;
     }
-    if (props.href === CHROME_WEB_STORE_URL) trackStoreClick(storePlacement);
+    if (isChromeWebStoreUrl(props.href)) trackStoreClick(storePlacement);
   }} />;
 }

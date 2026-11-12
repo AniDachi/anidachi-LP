@@ -14,10 +14,39 @@ import { type SeoGuideStep } from "@/components/seo-guide-blocks";
 import { EditorialByline, SeoBreadcrumbNav } from "@/components/seo-page-layout";
 import { StoreReviews } from "@/components/store-reviews";
 import type { TocHeading } from "@/components/table-of-contents";
-import { CHROME_WEB_STORE_URL, INSTALL_HOWTO_STEP_TEXT } from "@/lib/install-cta";
+import {
+  CHROME_WEB_STORE_URL,
+  CHROME_WEB_STORE_URL_DE,
+  DE_INSTALL_CTA_LABEL,
+  DE_INSTALL_HUB_PATH,
+  DE_INSTALL_HOWTO_STEP_NAME,
+  DE_INSTALL_HOWTO_STEP_TEXT,
+  INSTALL_HOWTO_STEP_TEXT,
+} from "@/lib/install-cta";
+import { UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
 
 /** Shared first step for hub HowTo lists; rendered with a link to the Store listing. */
 export const HUB_INSTALL_STEP = { name: "Install AniDachi", text: INSTALL_HOWTO_STEP_TEXT };
+
+/** German first step for HowTo lists on /de pages; rendered with a link to the Store listing. */
+export const DE_HUB_INSTALL_STEP = { name: DE_INSTALL_HOWTO_STEP_NAME, text: DE_INSTALL_HOWTO_STEP_TEXT };
+
+function InstallStepTextDe() {
+  return (
+    <>
+      Öffne den{" "}
+      <InstallLink
+        href={CHROME_WEB_STORE_URL_DE}
+        storePlacement="hub_how_it_works"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        offiziellen AniDachi-Eintrag im Chrome Web Store
+      </InstallLink>{" "}
+      und klicke auf „Hinzufügen“.
+    </>
+  );
+}
 
 function InstallStepText() {
   return (
@@ -59,6 +88,11 @@ export interface HubLandingLayoutProps {
   heroWorksOn?: string[];
   /** Lead-in for the platforms line; defaults to "Works on". */
   heroWorksOnLabel?: string;
+  /**
+   * Page language. German pages get German interface labels, and their install buttons link
+   * straight to the store listing because the /extension install page is English.
+   */
+  locale?: PageLocale;
   /** Short answer for featured snippets, shown right under the hero. */
   answer: ReactNode;
   steps: { id: string; heading: string; intro?: ReactNode; items: SeoGuideStep[] };
@@ -115,14 +149,17 @@ export function HubLandingLayout({
   heroCtaLabel,
   heroWorksOn,
   heroWorksOnLabel,
+  locale = "en",
   answer,
   steps,
   children,
 }: HubLandingLayoutProps) {
+  const t = UI_STRINGS[locale];
+  const de = locale === "de";
   return (
     <>
       <main id="main-content" className="min-h-screen bg-ani-canvas text-ani-text">
-        <SeoBreadcrumbNav breadcrumbs={breadcrumbs} />
+        <SeoBreadcrumbNav breadcrumbs={breadcrumbs} label={t.breadcrumb} />
 
         <section className="container mx-auto px-4 pb-16 pt-16 md:pb-24 md:pt-24">
           <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
@@ -135,9 +172,11 @@ export function HubLandingLayout({
               finePrint={heroFinePrint}
               demoHref="#product-demo"
               align="center"
-              ctaLabel={heroCtaLabel}
+              ctaLabel={heroCtaLabel ?? (de ? DE_INSTALL_CTA_LABEL : undefined)}
+              ctaHref={de ? DE_INSTALL_HUB_PATH : undefined}
               worksOn={heroWorksOn}
               worksOnLabel={heroWorksOnLabel}
+              locale={locale}
             />
           </div>
           <div
@@ -145,7 +184,7 @@ export function HubLandingLayout({
             className="mx-auto mt-14 max-w-2xl scroll-mt-24 border-t border-ani-line pt-8 text-center text-[0.95rem] leading-relaxed text-ani-muted md:mt-20 [&_a]:text-ani-text [&_a]:underline [&_a]:decoration-ani-line [&_a]:underline-offset-4 [&_strong]:font-normal [&_strong]:text-ani-text"
           >
             <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.12em] text-ani-muted">
-              Short answer
+              {t.shortAnswer}
             </h2>
             <p className="text-pretty">{answer}</p>
           </div>
@@ -153,7 +192,7 @@ export function HubLandingLayout({
 
         <LazyExtensionDemo />
 
-        <StoreReviews />
+        <StoreReviews title={t.reviewsTitle} />
 
         <section id={steps.id} className="scroll-mt-20 bg-ani-canvas py-16 lg:py-24">
           <div className="container mx-auto px-4">
@@ -174,7 +213,13 @@ export function HubLandingLayout({
                       {step.name}
                     </h3>
                     <div className="text-[0.95rem] leading-relaxed text-ani-muted [&_a]:font-medium [&_a]:text-ani-progress [&_a]:underline-offset-4 hover:[&_a]:underline">
-                      {step.text === INSTALL_HOWTO_STEP_TEXT ? <InstallStepText /> : step.text}
+                      {step.text === INSTALL_HOWTO_STEP_TEXT ? (
+                        <InstallStepText />
+                      ) : step.text === DE_INSTALL_HOWTO_STEP_TEXT ? (
+                        <InstallStepTextDe />
+                      ) : (
+                        step.text
+                      )}
                     </div>
                   </div>
                 </li>
@@ -184,9 +229,9 @@ export function HubLandingLayout({
         </section>
 
         <div className="container mx-auto max-w-3xl px-4 pb-16 pt-8 lg:pb-24">
-          <nav aria-label="On this page" className="not-prose mb-20 border-y border-ani-line py-6 text-center">
+          <nav aria-label={t.onThisPage} className="not-prose mb-20 border-y border-ani-line py-6 text-center">
             <p className="mb-4 text-xs font-medium uppercase tracking-[0.12em] text-ani-muted">
-              On this page
+              {t.onThisPage}
             </p>
             <ol className="flex flex-wrap justify-center gap-2">
               {headings.map((heading) => (
@@ -204,11 +249,18 @@ export function HubLandingLayout({
 
           <article className="seo-prose [&>h2]:mb-6 [&>h2]:mt-24 [&>h2]:text-balance [&>h2]:text-3xl [&>h2]:leading-[1.1] [&>h2]:tracking-[-0.03em] md:[&>h2]:text-4xl [&>h2:first-child]:mt-0">
             {children}
-            <EditorialByline datePublished={datePublished} dateModified={dateModified} />
+            <EditorialByline datePublished={datePublished} dateModified={dateModified} locale={locale} />
           </article>
         </div>
 
-        {faq && faq.length > 0 ? <FAQSection questions={faq} /> : null}
+        {faq && faq.length > 0 ? (
+          <FAQSection
+            questions={faq}
+            title={t.faqTitle}
+            moreLabel={t.faqMore}
+            fewerLabel={t.faqFewer}
+          />
+        ) : null}
       </main>
       <BreadcrumbJsonLd items={breadcrumbs} />
       <ArticleJsonLd
@@ -218,6 +270,7 @@ export function HubLandingLayout({
         datePublished={datePublished}
         dateModified={dateModified}
         image={articleImage}
+        inLanguage={de ? "de" : undefined}
       />
       {faq && faq.length > 0 && <FAQPageJsonLd questions={faq} />}
       {itemList && itemList.length > 0 && <ItemListJsonLd name={title} items={itemList} />}

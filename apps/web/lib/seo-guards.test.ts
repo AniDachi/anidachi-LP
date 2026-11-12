@@ -37,7 +37,8 @@ describe("sitemap", () => {
       if (urlPath === "/") continue;
       const source = fs.readFileSync(pageFile(urlPath), "utf8");
       assert.ok(
-        source.includes("canonical") || /get(Guide|Listicle)Metadata\(/.test(source),
+        // languageAlternates() (lib/hreflang.ts) sets the self canonical plus the hreflang pair.
+        source.includes("canonical") || /get(Guide|Listicle)Metadata\(|languageAlternates\(/.test(source),
         `${urlPath} has no canonical`,
       );
     }

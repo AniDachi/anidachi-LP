@@ -30,12 +30,12 @@ const reviews = [
   },
 ];
 
-export function StoreReviews() {
+export function StoreReviews({ title = "What our users say" }: { title?: string }) {
   return (
     <aside id="reviews" className={styles.section} aria-labelledby="store-reviews-title">
       <div className={styles.container}>
         <header className={styles.header}>
-          <h2 id="store-reviews-title">What our users say</h2>
+          <h2 id="store-reviews-title">{title}</h2>
           <TrackedStoreLink placement="store_reviews" target="_blank" rel="noopener noreferrer">
             Chrome Web Store reviews
             <ArrowUpRight size={18} aria-hidden="true" />

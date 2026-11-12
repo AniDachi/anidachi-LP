@@ -10,7 +10,14 @@ import {
   type PageTemplateId,
   ctaCopyVariantForTemplate,
 } from "@/lib/conversion-events";
-import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import {
+  DE_INSTALL_CTA_LABEL,
+  DE_INSTALL_HUB_PATH,
+  INSTALL_CTA_LABEL,
+  INSTALL_HUB_PATH,
+} from "@/lib/install-cta";
+import { DE_PRICING_FREE20_SUMMARY } from "@/lib/locale/de-copy";
+import type { PageLocale } from "@/lib/locale/ui-strings";
 
 const COPY = {
   default: {
@@ -41,6 +48,18 @@ const COPY = {
 
 export type CtaCopyKey = keyof typeof COPY;
 
+/** German card text for /de guide-layout pages. Install goes straight to the store listing. */
+const COPY_DE: Record<CtaCopyKey, { body: string }> = {
+  default: { body: "Installiere die Chrome-Erweiterung in etwa 2 Minuten: Räume für Crunchyroll, YouTube und Netflix." },
+  guide: { body: `Installiere AniDachi in Chrome für Crunchyroll, YouTube und Netflix. ${DE_PRICING_FREE20_SUMMARY}` },
+  compare: { body: "Hol dir AniDachi im Chrome Web Store und schau Crunchyroll, YouTube und Netflix zusammen." },
+  anime: { body: `Installiere AniDachi und öffne das Video. ${DE_PRICING_FREE20_SUMMARY} Freunde treten kostenlos bei.` },
+  listicle: { body: `Hol dir die Chrome-Erweiterung. ${DE_PRICING_FREE20_SUMMARY} Freunde treten kostenlos bei.` },
+  glossary: { body: `Installiere AniDachi in Chrome auf dem Computer. ${DE_PRICING_FREE20_SUMMARY}` },
+  pillar: { body: `Hol dir AniDachi im Chrome Web Store. ${DE_PRICING_FREE20_SUMMARY} Freunde treten kostenlos bei.` },
+  animePillar: { body: `Füge AniDachi zu Chrome hinzu und öffne die Folge auf Crunchyroll, YouTube oder Netflix. ${DE_PRICING_FREE20_SUMMARY}` },
+};
+
 export interface PrimaryCheckoutCtaProps {
   pagePath: string;
   pageTemplate: PageTemplateId;
@@ -56,6 +75,8 @@ export interface PrimaryCheckoutCtaProps {
     | string;
   className?: string;
   ctaVariant?: string;
+  /** Page language; German cards link straight to the store listing. */
+  locale?: PageLocale;
 }
 
 export function PrimaryCheckoutCta({
@@ -65,7 +86,10 @@ export function PrimaryCheckoutCta({
   placement,
   className = "",
   ctaVariant = "primary_install",
+  locale = "en",
 }: PrimaryCheckoutCtaProps) {
+  const de = locale === "de";
+  const label = de ? DE_INSTALL_CTA_LABEL : INSTALL_CTA_LABEL;
   const rootRef = useRef<HTMLDivElement>(null);
   const impressionFired = useRef(false);
   const key =
@@ -73,7 +97,7 @@ export function PrimaryCheckoutCta({
     (pageTemplate === "install"
       ? "default"
       : ctaCopyVariantForTemplate(pageTemplate));
-  const copy = COPY[key] ?? COPY.default;
+  const copy = (de ? COPY_DE[key] : COPY[key]) ?? COPY.default;
 
   const fireImpression = useCallback(() => {
     if (impressionFired.current) return;
@@ -119,7 +143,7 @@ export function PrimaryCheckoutCta({
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="min-w-0 flex-1 text-left">
           <p className="text-base font-semibold tracking-[-0.02em] text-ani-text">
-            {INSTALL_CTA_LABEL}
+            {label}
           </p>
           <p className="mt-0.5 text-sm leading-snug text-ani-muted">
             {copy.body}
@@ -133,7 +157,8 @@ export function PrimaryCheckoutCta({
           asChild
         >
           <InstallLink
-            href={INSTALL_HUB_PATH}
+            href={de ? DE_INSTALL_HUB_PATH : INSTALL_HUB_PATH}
+            storePlacement={placement}
             onClick={() => {
               trackConversion("cta_click", {
                 page_path: pagePath,
@@ -143,7 +168,7 @@ export function PrimaryCheckoutCta({
               });
             }}
           >
-            {INSTALL_CTA_LABEL}
+            {label}
             <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
           </InstallLink>
         </Button>

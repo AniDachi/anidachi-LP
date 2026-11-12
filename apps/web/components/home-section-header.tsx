@@ -13,7 +13,8 @@ export function HomeSectionHeader({
   description?: ReactNode;
   className?: string;
   align?: "center" | "left";
-  titleAs?: "h1" | "h2";
+  /** "p" for loading placeholders, which must not add a second heading to the page. */
+  titleAs?: "h1" | "h2" | "p";
 }) {
   return (
     <div

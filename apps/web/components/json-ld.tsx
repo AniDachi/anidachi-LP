@@ -179,6 +179,7 @@ export function ArticleJsonLd({
   datePublished,
   dateModified,
   image,
+  inLanguage,
 }: {
   title: string;
   description: string;
@@ -187,6 +188,8 @@ export function ArticleJsonLd({
   dateModified: string;
   /** Absolute URLs preferred (e.g. MAL CDN poster). Helps Article/carousel eligibility in Search. */
   image?: string | string[];
+  /** BCP 47 language of the article, set on localized pages (e.g. "de"). */
+  inLanguage?: string;
 }) {
   const siteUrl = getSeoSiteOrigin();
   const images =
@@ -205,6 +208,7 @@ export function ArticleJsonLd({
     datePublished,
     dateModified,
     ...(images?.length ? { image: images } : {}),
+    ...(inLanguage ? { inLanguage } : {}),
     author: {
       "@type": "Organization",
       "@id": `${siteUrl}/#organization`,

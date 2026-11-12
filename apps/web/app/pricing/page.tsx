@@ -6,6 +6,7 @@ import {
 	PRICING_HISTORY_NOTE,
 } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 
 import Link from "next/link";
 import { PricingSelection } from "@/components/pricing-selection";
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 	title: { absolute: "AniDachi Pricing — Free Daily Hosting, Plus and Pro" },
 	description:
 		PRICING_FREE20_SUMMARY,
-	alternates: { canonical: "/pricing" },
+	alternates: languageAlternates({ en: "/pricing", de: "/de/preise" }, "en"),
 	openGraph: {
 		images: [
 			{

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import Link from "next/link";
 import { InstallLink } from "@/components/install-link";
 import { SeoGuideAnswer, SeoGuideNote, SeoGuideRelated, SeoGuideTitle } from "@/components/seo-guide-blocks";
@@ -28,7 +29,7 @@ const pageDescription = `Crunchyroll release schedule for ${shortWeekLabel}: ${s
 export const metadata: Metadata = {
   title: "Crunchyroll Release Schedule & Simulcast Calendar",
   description: pageDescription,
-  alternates: { canonical: url },
+  alternates: languageAlternates({ en: url, de: "/de/tools/crunchyroll-kalender" }, "en"),
   openGraph: {
     title: pageTitle,
     description: `${showCount} Crunchyroll simulcasts for ${weekLabel}, in your time zone.`,

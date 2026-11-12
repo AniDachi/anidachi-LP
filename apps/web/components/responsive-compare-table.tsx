@@ -13,13 +13,20 @@ export type CompareTableRow = {
   values: Record<string, CompareCellValue>;
 };
 
-function CellIcon({ value }: { value: CompareCellValue }) {
+/** Fixed labels per page language (German pilot pages pass locale="de"). */
+const LABELS = {
+  en: { feature: "Feature", yes: "Yes", no: "No", partial: "Partial" },
+  de: { feature: "Funktion", yes: "Ja", no: "Nein", partial: "Teilweise" },
+} as const;
+
+function CellIcon({ value, locale = "en" }: { value: CompareCellValue; locale?: "en" | "de" }) {
+  const t = LABELS[locale];
   if (value === "yes")
-    return <Check className="h-5 w-5 shrink-0 text-ani-progress" aria-label="Yes" />;
+    return <Check className="h-5 w-5 shrink-0 text-ani-progress" aria-label={t.yes} />;
   if (value === "no")
-    return <X className="h-5 w-5 shrink-0 text-ani-muted" aria-label="No" />;
+    return <X className="h-5 w-5 shrink-0 text-ani-muted" aria-label={t.no} />;
   if (value === "partial")
-    return <Minus className="h-5 w-5 shrink-0 text-ani-muted" aria-label="Partial" />;
+    return <Minus className="h-5 w-5 shrink-0 text-ani-muted" aria-label={t.partial} />;
   return <span className="text-right text-sm text-ani-muted">{value}</span>;
 }
 
@@ -32,10 +39,13 @@ export function ResponsiveCompareTable({
   columns,
   rows,
   className = "mb-8",
+  locale = "en",
 }: {
   columns: CompareColumn[];
   rows: CompareTableRow[];
   className?: string;
+  /** Page language for the header cell and icon labels. */
+  locale?: "en" | "de";
 }) {
   return (
     <div className={className}>
@@ -63,7 +73,7 @@ export function ResponsiveCompareTable({
                   >
                     {col.label}
                   </span>
-                  <CellIcon value={displayValue(row.values[col.id] ?? "")} />
+                  <CellIcon locale={locale} value={displayValue(row.values[col.id] ?? "")} />
                 </div>
               ))}
             </div>
@@ -76,7 +86,7 @@ export function ResponsiveCompareTable({
           <thead>
             <tr className="border-b border-ani-line">
               <th className="px-4 py-3 text-left font-medium text-ani-muted">
-                Feature
+                {LABELS[locale].feature}
               </th>
               {columns.map((col) => (
                 <th
@@ -109,7 +119,7 @@ export function ResponsiveCompareTable({
                         col.highlight ? "bg-ani-selected-quiet" : ""
                       }`}
                     >
-                      {isIcon ? <CellIcon value={v} /> : v}
+                      {isIcon ? <CellIcon locale={locale} value={v} /> : v}
                     </td>
                   );
                 })}

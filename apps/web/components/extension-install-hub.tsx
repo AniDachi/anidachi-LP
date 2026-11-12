@@ -20,9 +20,13 @@ import {
   type PublicExtensionArtifact,
 } from "@/lib/extension-artifact";
 import { extensionInstallFaq } from "@/lib/extension-install-faq";
+import { deExtensionInstallFaq } from "@/lib/locale/de-extension";
+import type { PageLocale } from "@/lib/locale/ui-strings";
 import {
   CHROME_EXTENSIONS_PAGE,
   CHROME_WEB_STORE_URL,
+  CHROME_WEB_STORE_URL_DE,
+  DE_INSTALL_HUB_PATH,
   EXTENSION_DOWNLOAD_PATH,
   EXTENSION_INSTALL_MODE,
   INSTALL_HUB_PATH,
@@ -124,15 +128,68 @@ function ChromePinMock() {
   );
 }
 
+/** German text for /de/erweiterung (Chrome Web Store mode). The sideload path stays English. */
+const COPY = {
+  en: {
+    titleMobile: "Watch together on desktop",
+    title: "Add AniDachi to Chrome",
+    mobileNote: "Open this page in Chrome on your computer to install AniDachi.",
+    buttonMobile: "Install AniDachi",
+    button: "Add to Chrome",
+    browserNote: "Use desktop Chrome or Edge to install the extension.",
+    platformsLabel: "Watch together on these platforms",
+    linkShared: "Install link shared",
+    linkCopied: "Install link copied",
+    returnLabel: "Return to your invitation",
+    returnText: "Already installed? Your invitation is ready.",
+    returnLink: "Open the watchroom",
+    setupLabel: "Install AniDachi",
+    setup: [
+      ["Install", "Add AniDachi to Chrome."],
+      ["Pin", "Pin it from the Extensions menu."],
+      ["Open a video", "Open AniDachi and sign in."],
+    ],
+    faqTitle: "Questions",
+  },
+  de: {
+    titleMobile: "Zusammen schauen am Computer",
+    title: "AniDachi zu Chrome hinzufügen",
+    mobileNote: "Öffne diese Seite in Chrome auf deinem Computer, um AniDachi zu installieren.",
+    buttonMobile: "AniDachi installieren",
+    button: "Zu Chrome hinzufügen",
+    browserNote: "Nutze Chrome oder Edge auf dem Computer, um die Erweiterung zu installieren.",
+    platformsLabel: "Auf diesen Diensten zusammen schauen",
+    linkShared: "Installationslink geteilt",
+    linkCopied: "Installationslink kopiert",
+    returnLabel: "Zurück zu deiner Einladung",
+    returnText: "Schon installiert? Deine Einladung wartet.",
+    returnLink: "Raum öffnen",
+    setupLabel: "AniDachi installieren",
+    setup: [
+      ["Installieren", "Füge AniDachi zu Chrome hinzu."],
+      ["Anheften", "Hefte es über das Erweiterungsmenü an."],
+      ["Video öffnen", "Öffne AniDachi und melde dich an."],
+    ],
+    faqTitle: "Fragen",
+  },
+} as const;
+
 export function ExtensionInstallHub({
   artifact,
   welcome,
   extensionId,
+  locale = "en",
 }: {
   artifact: PublicExtensionArtifact;
   welcome?: ExtensionWelcome;
   extensionId?: string | null;
+  /** German text on /de/erweiterung; the post-install welcome flow stays on /extension. */
+  locale?: PageLocale;
 }) {
+  const de = locale === "de";
+  const copy = COPY[locale];
+  const hubPath = de ? DE_INSTALL_HUB_PATH : INSTALL_HUB_PATH;
+  const hubTemplate = de ? "de_pilot" : "install";
   const searchParams = useSearchParams();
   const nextPath = isSafeInstallNextPath(searchParams.get("next"));
   const [isMobile, setIsMobile] = useState(false);
@@ -143,9 +200,9 @@ export function ExtensionInstallHub({
   const sizeLabel = formatZipBytes(artifact.bytes);
 
   const desktopInstallUrl = useMemo(() => {
-    if (typeof window === "undefined") return INSTALL_HUB_PATH;
+    if (typeof window === "undefined") return hubPath;
     return window.location.href;
-  }, []);
+  }, [hubPath]);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -155,13 +212,13 @@ export function ExtensionInstallHub({
 
   useEffect(() => {
     trackConversion("install_hub_view", {
-      page_path: INSTALL_HUB_PATH,
-      page_template: "install",
+      page_path: hubPath,
+      page_template: hubTemplate,
       placement: "install_hub",
       cta_variant: "install_hub",
       zip_available: artifact.available,
     });
-  }, [artifact.available]);
+  }, [artifact.available, hubPath, hubTemplate]);
 
   async function copyChromeExtensions() {
     try {
@@ -181,8 +238,8 @@ export function ExtensionInstallHub({
       });
       setLinkStatus(result === "shared" ? "shared" : "copied");
       trackConversion("desktop_install_link_copied", {
-        page_path: INSTALL_HUB_PATH,
-        page_template: "install",
+        page_path: hubPath,
+        page_template: hubTemplate,
         placement: "install_hub_mobile",
         cta_variant: result,
       });
@@ -243,8 +300,8 @@ export function ExtensionInstallHub({
 
   function onStoreClick() {
     trackConversion("cta_click", {
-      page_path: INSTALL_HUB_PATH,
-      page_template: "install",
+      page_path: hubPath,
+      page_template: hubTemplate,
       placement: "install_hub",
       cta_variant: "chrome_web_store",
     });
@@ -258,19 +315,19 @@ export function ExtensionInstallHub({
           <span>AniDachi</span>
         </div>
         <h1 id="install-title" className={styles.title}>
-          {isMobile ? "Watch together on desktop" : "Add AniDachi to Chrome"}
+          {isMobile ? copy.titleMobile : copy.title}
         </h1>
         {isMobile ? (
           <p className={styles.mobileNote}>
-            Open this page in Chrome on your computer to install AniDachi.
+            {copy.mobileNote}
           </p>
         ) : null}
         <div className={styles.action}>
           {EXTENSION_INSTALL_MODE === "cws" ? (
             <Button asChild size="control" variant="cream" className={styles.installButton}>
-              <InstallLink href={CHROME_WEB_STORE_URL} shareHref={desktopInstallUrl} storePlacement="install_hub" target="_blank" rel="noopener noreferrer" onClick={onStoreClick}>
+              <InstallLink href={de ? CHROME_WEB_STORE_URL_DE : CHROME_WEB_STORE_URL} shareHref={desktopInstallUrl} storePlacement="install_hub" target="_blank" rel="noopener noreferrer" onClick={onStoreClick}>
                 <Chrome className="size-6" aria-hidden="true" />
-                {isMobile ? "Install AniDachi" : "Add to Chrome"}
+                {isMobile ? copy.buttonMobile : copy.button}
                 <span className="sr-only"> — Chrome Web Store</span>
               </InstallLink>
             </Button>
@@ -295,46 +352,35 @@ export function ExtensionInstallHub({
           ) : null}
         </div>
         {!isMobile && browser === "other" ? (
-          <p className={styles.browserNote}>Use desktop Chrome or Edge to install the extension.</p>
+          <p className={styles.browserNote}>{copy.browserNote}</p>
         ) : null}
-        <InstallPlatformMarks />
+        <InstallPlatformMarks label={copy.platformsLabel} />
         <span className="sr-only" role="status" aria-live="polite">
-          {linkStatus === "shared" ? "Install link shared" : linkStatus === "copied" ? "Install link copied" : ""}
+          {linkStatus === "shared" ? copy.linkShared : linkStatus === "copied" ? copy.linkCopied : ""}
         </span>
       </section>}
 
       {nextPath && !isMobile ? (
-        <aside className={styles.returnNotice} aria-label="Return to your invitation">
-          <p>Already installed? Your invitation is ready.</p>
-          <Link href={nextPath}>Open the watchroom <span aria-hidden="true">→</span></Link>
+        <aside className={styles.returnNotice} aria-label={copy.returnLabel}>
+          <p>{copy.returnText}</p>
+          <Link href={nextPath}>{copy.returnLink} <span aria-hidden="true">→</span></Link>
         </aside>
       ) : null}
 
       {EXTENSION_INSTALL_MODE === "cws" ? (
         <OverlayUsingGuide
+          locale={locale}
           setup={welcome ? undefined : <>
-            <ol className={styles.setupSteps} aria-label="Install AniDachi">
-              <li>
-                <Puzzle className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <h3>Install</h3>
-                  <p>Add AniDachi to Chrome.</p>
-                </div>
-              </li>
-              <li>
-                <Pin className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <h3>Pin</h3>
-                  <p>Pin it from the Extensions menu.</p>
-                </div>
-              </li>
-              <li>
-                <SquarePlay className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
-                <div>
-                  <h3>Open a video</h3>
-                  <p>Open AniDachi and sign in.</p>
-                </div>
-              </li>
+            <ol className={styles.setupSteps} aria-label={copy.setupLabel}>
+              {[Puzzle, Pin, SquarePlay].map((Icon, i) => (
+                <li key={copy.setup[i][0]}>
+                  <Icon className={styles.setupIcon} strokeWidth={1.5} aria-hidden="true" />
+                  <div>
+                    <h3>{copy.setup[i][0]}</h3>
+                    <p>{copy.setup[i][1]}</p>
+                  </div>
+                </li>
+              ))}
             </ol>
           </>}
         />
@@ -420,11 +466,13 @@ export function ExtensionInstallHub({
       </ol>
       )}
 
-      {EXTENSION_INSTALL_MODE !== "cws" ? <OverlayUsingGuide /> : null}
+      {EXTENSION_INSTALL_MODE !== "cws" ? <OverlayUsingGuide locale={locale} /> : null}
 
       <FAQSection
-        title="Questions"
-        questions={extensionInstallFaq}
+        title={copy.faqTitle}
+        questions={de ? deExtensionInstallFaq : extensionInstallFaq}
+        moreLabel={de ? "Mehr Fragen" : undefined}
+        fewerLabel={de ? "Weniger Fragen" : undefined}
         compact
       />
     </div>
