@@ -42,14 +42,14 @@ export type DayGroup = {
 };
 
 /** Slots grouped by local day and sorted by time, as the visitor sees them. */
-export function groupByLocalDay(week: ScheduleWeek, timeZone: string): DayGroup[] {
-  const dayLabel = new Intl.DateTimeFormat("en-US", {
+export function groupByLocalDay(week: ScheduleWeek, timeZone: string, intl = "en-US"): DayGroup[] {
+  const dayLabel = new Intl.DateTimeFormat(intl, {
     timeZone,
     weekday: "long",
     month: "short",
     day: "numeric",
   });
-  const timeLabel = new Intl.DateTimeFormat("en-US", {
+  const timeLabel = new Intl.DateTimeFormat(intl, {
     timeZone,
     hour: "numeric",
     minute: "2-digit",
@@ -121,10 +121,14 @@ export function presetForZone(timeZone: string, week: ScheduleWeek): ZonePreset 
 }
 
 /** Week range label, e.g. "Oct 19 – 25, 2026" (or without the year when `year` is false). */
-export function weekRangeLabel(week: Pick<ScheduleWeek, "weekStart">, year = true): string {
+export function weekRangeLabel(
+  week: Pick<ScheduleWeek, "weekStart">,
+  year = true,
+  intl = "en-US",
+): string {
   const start = new Date(`${week.weekStart}T00:00:00Z`);
   const end = new Date(start.getTime() + 6 * 86_400_000);
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(intl, {
     timeZone: "UTC",
     month: "short",
     day: "numeric",

@@ -7,19 +7,44 @@ import { AnidachiLogo } from "@/components/anidachi-logo";
 import { JoinDiscordButton } from "@/components/join-discord-button";
 import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
-import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
+import {
+  DE_INSTALL_CTA_LABEL,
+  DE_INSTALL_HUB_PATH,
+  INSTALL_CTA_LABEL,
+  INSTALL_HUB_PATH,
+} from "@/lib/install-cta";
+import { UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
 import { WatchingTogetherCount } from "@/components/watching-together-count";
 import { InstallLink } from "@/components/install-link";
 
-export function Hero() {
+const COPY = {
+  en: {
+    h1: "Your friends are watching without you.",
+    h1Accent: "Fix that.",
+    lead: "Watch together on Crunchyroll, YouTube, and Netflix — synced, in chat, across time zones.",
+    howItWorks: "See How It Works",
+  },
+  de: {
+    h1: "Deine Freunde schauen ohne dich.",
+    h1Accent: "Starte eine Watchparty.",
+    lead: "Watch Together für Netflix, YouTube und Crunchyroll: synchron, mit Chat, über Zeitzonen hinweg.",
+    howItWorks: "So funktioniert es",
+  },
+} as const;
+
+export function Hero({ locale = "en" }: { locale?: PageLocale } = {}) {
+  const copy = COPY[locale];
+  const de = locale === "de";
+  const pagePath = de ? "/de" : "/";
+  const pageTemplate = de ? "de_pilot" : "home";
   useEffect(() => {
     trackConversion("cta_impression", {
-      page_path: "/",
-      page_template: "home",
+      page_path: pagePath,
+      page_template: pageTemplate,
       placement: "hero",
       cta_variant: "hero_install",
     });
-  }, []);
+  }, [pagePath, pageTemplate]);
   return (
     <section className="relative overflow-hidden bg-ani-canvas text-ani-text">
       <div className="relative container mx-auto px-4 pb-10 pt-14 md:pb-12 md:pt-20 lg:pt-24">
@@ -32,13 +57,12 @@ export function Hero() {
           </div>
 
           <h1 className="mb-5 max-w-[18ch] text-balance text-4xl font-semibold tracking-[-0.035em] text-ani-text md:mb-6 md:max-w-none md:text-6xl md:leading-[1.05] lg:text-7xl">
-            Your friends are watching without you.{" "}
-            <span className="text-ani-progress">Fix that.</span>
+            {copy.h1}{" "}
+            <span className="text-ani-progress">{copy.h1Accent}</span>
           </h1>
 
           <p className="mb-8 max-w-xl text-pretty text-lg leading-relaxed text-ani-muted md:text-xl">
-            Watch together on Crunchyroll, YouTube, and Netflix — synced, in chat, across
-            time zones.
+            {copy.lead}
           </p>
 
           <div className="mb-5 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
@@ -49,17 +73,18 @@ export function Hero() {
               asChild
             >
               <InstallLink
-                href={INSTALL_HUB_PATH}
+                href={de ? DE_INSTALL_HUB_PATH : INSTALL_HUB_PATH}
+                storePlacement="hero"
                 onClick={() => {
                   trackConversion("cta_click", {
-                    page_path: "/",
-                    page_template: "home",
+                    page_path: pagePath,
+                    page_template: pageTemplate,
                     placement: "hero",
                     cta_variant: "hero_install",
                   });
                 }}
               >
-                {INSTALL_CTA_LABEL}
+                {de ? DE_INSTALL_CTA_LABEL : INSTALL_CTA_LABEL}
               </InstallLink>
             </Button>
             <Button
@@ -75,20 +100,22 @@ export function Hero() {
                 }
               >
                 <ArrowDown className="h-4 w-4" aria-hidden="true" />
-                See How It Works
+                {copy.howItWorks}
               </a>
             </Button>
           </div>
 
-          <WatchingTogetherCount className="mb-3" />
+          <WatchingTogetherCount className="mb-3" locale={locale} />
           <p className="mb-4 max-w-md text-sm text-ani-muted md:hidden">
-            Watch parties run in desktop Chrome — open the install page on your
-            computer, or copy the link to open it there.
+            {de
+              ? UI_STRINGS.de.mobileInstallNote
+              : "Watch parties run in desktop Chrome — open the install page on your computer, or copy the link to open it there."}
           </p>
 
           <JoinDiscordButton
             variant="hero"
             placement="hero"
+            label={de ? "Zur Discord-Community" : undefined}
             className="mt-1 h-auto min-h-0 border-0 bg-transparent px-0 py-2 text-sm font-medium text-ani-muted shadow-none hover:bg-transparent hover:text-ani-progress"
           />
         </div>

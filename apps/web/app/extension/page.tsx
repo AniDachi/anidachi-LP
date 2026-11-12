@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ExtensionInstallHub } from "@/components/extension-install-hub";
@@ -29,7 +30,7 @@ const metadata: Metadata = {
   title: { absolute: "Install AniDachi — Chrome Extension for Watch Parties" },
   description:
     "Install the official AniDachi Chrome extension from the Chrome Web Store for Crunchyroll, YouTube, and Netflix watchrooms.",
-  alternates: { canonical: INSTALL_HUB_PATH },
+  alternates: languageAlternates({ en: INSTALL_HUB_PATH, de: "/de/erweiterung" }, "en"),
   openGraph: {
     images: [
       {

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { MetadataRoute } from "next";
 import { INTERNAL_TOOL_APP_SEGMENTS } from "@/lib/internal-tool-routes";
+import { hreflangPairFor } from "@/lib/hreflang";
 import { getStaticPageContentDate } from "@/lib/sitemap-lastmod";
 
 const APP_DIR = path.join(process.cwd(), "app");
@@ -86,6 +87,16 @@ function inferSitemapMeta(urlPath: string): {
   // `priority` / `changeFrequency` are optional hints; Google largely ignores them for ranking.
   if (urlPath === "/") {
     return { changeFrequency: "weekly", priority: 1 };
+  }
+  // German localization pilot (docs/superpowers/plans/2026-11-12-german-localization-pilot.md).
+  if (urlPath === "/de") {
+    return { changeFrequency: "weekly", priority: 0.9 };
+  }
+  if (urlPath === "/de/tools/crunchyroll-kalender") {
+    return { changeFrequency: "weekly", priority: 0.85 };
+  }
+  if (urlPath.startsWith("/de/")) {
+    return { changeFrequency: "monthly", priority: 0.85 };
   }
   if (
     urlPath === "/watch-anime-together" ||
@@ -205,9 +216,22 @@ export function staticPathsToSitemapEntries(
   return urlPaths.map((urlPath) => {
     const meta = inferSitemapMeta(urlPath);
     const lastModified = getContentDate(urlPath);
+    const pair = hreflangPairFor(urlPath);
     return {
       url: `${siteUrl}${urlPath}`,
       ...(lastModified ? { lastModified } : {}),
+      // English and German versions list each other, plus x-default (English).
+      ...(pair
+        ? {
+            alternates: {
+              languages: {
+                en: `${siteUrl}${pair.en}`,
+                de: `${siteUrl}${pair.de}`,
+                "x-default": `${siteUrl}${pair.en}`,
+              },
+            },
+          }
+        : {}),
       changeFrequency: meta.changeFrequency,
       priority: meta.priority,
     };

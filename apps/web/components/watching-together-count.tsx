@@ -2,12 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
 
 /**
  * Historical signup baseline plus new accounts (`/api/community-stats`).
  * Hidden until a valid count loads so outages never display a fake zero.
  */
-export function WatchingTogetherCount({ className }: { className?: string }) {
+export function WatchingTogetherCount({
+  className,
+  locale = "en",
+}: {
+  className?: string;
+  locale?: PageLocale;
+}) {
+  const t = UI_STRINGS[locale];
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -38,9 +46,9 @@ export function WatchingTogetherCount({ className }: { className?: string }) {
   return (
     <p className={cn("text-sm text-ani-muted", className)}>
       <span className="font-semibold tabular-nums text-ani-text">
-        {count.toLocaleString("en-US")}
+        {count.toLocaleString(t.intl)}
       </span>{" "}
-      people have joined AniDachi
+      {t.joinedSuffix}
     </p>
   );
 }

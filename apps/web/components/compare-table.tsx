@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { trackConversion } from "@/lib/conversion-events";
+import type { PageLocale } from "@/lib/locale/ui-strings";
 import styles from "./compare-table.module.css";
 
 const alternatives = [
@@ -111,7 +112,49 @@ const rows: {
 	},
 ];
 
-export function CompareTable() {
+/** German labels and values for /de, same rows and order as `rows` (checked 2026-09-30). */
+const ROWS_DE: { feature: string; values: Record<Product, string> }[] = [
+	{ feature: "Dienste", values: { anidachi: "Crunchyroll, YouTube, Netflix", teleparty: "YouTube, Netflix und mehr", crunchyrollParty: "Crunchyroll", discord: "Geteilte App oder geteilter Bildschirm" } },
+	{ feature: "Zusammen schauen", values: { anidachi: "Synchrone Player", teleparty: "Synchrone Player", crunchyrollParty: "Synchrone Player", discord: "Bildschirm teilen" } },
+	{ feature: "Chat & Reaktionen", values: { anidachi: "Direkt auf dem Video", teleparty: "Chat-Seitenleiste · Eigene Reaktionen (Premium)", crunchyrollParty: "Live-Chat & Reaktionen", discord: "Kanal oder DM · Reaktionen auf Nachrichten" } },
+	{ feature: "Sprache & Video", values: { anidachi: "Eingebaut", teleparty: "Premium", crunchyrollParty: "Nicht angegeben", discord: "Eingebaut" } },
+	{ feature: "Einladungen", values: { anidachi: "Freunde, Gruppen & Links", teleparty: "Party-Link", crunchyrollParty: "Party-Link", discord: "Server oder Anruf" } },
+	{ feature: "Schaufortschritt", values: { anidachi: "Speichern mit Plus / Pro", teleparty: "Nicht angegeben", crunchyrollParty: "Nicht angegeben", discord: "Nicht angegeben" } },
+];
+
+const COPY = {
+	en: {
+		title: "How AniDachi compares",
+		compareWith: "Compare AniDachi with",
+		comparing: (name: string) => `Comparing AniDachi with ${name}.`,
+		caption: "Browser watch party features compared with Discord screen sharing.",
+		feature: "Feature",
+		sources: "Sources & details",
+		note1: "Compared on September 30, 2026. “Not listed” means the linked product information does not document the feature. Discord is compared using screen sharing.",
+		note2: "AniDachi saves progress on Plus and Pro. Your saved history and resume remain available on Free. Everyone needs their own access to the video when using synchronized players.",
+		sourcesList: "Comparison sources",
+		plans: "Explore plans",
+		plansHref: "/pricing",
+	},
+	de: {
+		title: "AniDachi im Vergleich",
+		compareWith: "AniDachi vergleichen mit",
+		comparing: (name: string) => `AniDachi im Vergleich mit ${name}.`,
+		caption: "Watchparty-Funktionen im Browser im Vergleich mit Bildschirmteilen auf Discord.",
+		feature: "Funktion",
+		sources: "Quellen & Details",
+		note1: "Verglichen am 30. September 2026. „Nicht angegeben“ heißt, dass die verlinkten Produktinfos die Funktion nicht beschreiben. Discord wird mit Bildschirmteilen verglichen.",
+		note2: "AniDachi speichert den Fortschritt mit Plus und Pro. Gespeicherter Verlauf und Fortsetzen bleiben mit Free verfügbar. Bei synchronen Playern braucht jeder eigenen Zugriff auf das Video.",
+		sourcesList: "Quellen des Vergleichs",
+		plans: "Pläne ansehen",
+		plansHref: "#pricing",
+	},
+} as const;
+
+export function CompareTable({ locale = "en" }: { locale?: PageLocale } = {}) {
+	const copy = COPY[locale];
+	const de = locale === "de";
+	const shownRows = rows.map((row, i) => (de ? { ...row, ...ROWS_DE[i] } : row));
 	const [selected, setSelected] = useState<Alternative>("teleparty");
 	const selectedLabel = alternatives.find(
 		(item) => item.id === selected,
@@ -124,12 +167,12 @@ export function CompareTable() {
 		>
 			<div className={styles.container}>
 				<header className={styles.header}>
-					<h2 id="compare-title">How AniDachi compares</h2>
+					<h2 id="compare-title">{copy.title}</h2>
 				</header>
 				<div
 					className={styles.selector}
 					role="group"
-					aria-label="Compare AniDachi with"
+					aria-label={copy.compareWith}
 				>
 					{alternatives.map((product) => (
 						<button
@@ -149,16 +192,16 @@ export function CompareTable() {
 					aria-live="polite"
 					aria-atomic="true"
 				>
-					Comparing AniDachi with {selectedLabel}.
+					{copy.comparing(selectedLabel)}
 				</p>
 				<table className={styles.table} id="home-comparison">
 					<caption className="sr-only">
-						Browser watch party features compared with Discord screen sharing.
+						{copy.caption}
 					</caption>
 					<thead>
 						<tr>
 							<th scope="col" className={styles.featureHeading}>
-								<span className="sr-only">Feature</span>
+								<span className="sr-only">{copy.feature}</span>
 							</th>
 							<th scope="col" className={styles.ours}>
 								<span className={styles.brandHeading}>
@@ -183,7 +226,7 @@ export function CompareTable() {
 						</tr>
 					</thead>
 					<tbody>
-						{rows.map((row) => (
+						{shownRows.map((row) => (
 							<tr key={row.feature}>
 								<th scope="row">
 									<span className={styles.featureLabel}>
@@ -208,20 +251,12 @@ export function CompareTable() {
 				<div className={styles.footer}>
 					<details className={styles.notes}>
 						<summary>
-							Sources & details <ChevronDown size={15} aria-hidden="true" />
+							{copy.sources} <ChevronDown size={15} aria-hidden="true" />
 						</summary>
 						<div className={styles.notesContent}>
-							<p>
-								Compared on September 30, 2026. “Not listed” means the linked
-								product information does not document the feature. Discord is
-								compared using screen sharing.
-							</p>
-							<p>
-								AniDachi saves progress on Plus and Pro. Your saved history and
-								resume remain available on Free. Everyone needs their own access
-								to the video when using synchronized players.
-							</p>
-							<ul aria-label="Comparison sources">
+							<p>{copy.note1}</p>
+							<p>{copy.note2}</p>
+							<ul aria-label={copy.sourcesList}>
 								{alternatives.map((product) => (
 									<li key={product.id}>
 										<a
@@ -255,18 +290,18 @@ export function CompareTable() {
 						</div>
 					</details>
 					<Link
-						href="/pricing"
+						href={copy.plansHref}
 						className={styles.planLink}
 						onClick={() => {
 							trackConversion("cta_click", {
-								page_path: "/",
-								page_template: "home",
+								page_path: de ? "/de" : "/",
+								page_template: de ? "de_pilot" : "home",
 								placement: "home_compare",
 								cta_variant: "compare_pricing",
 							});
 						}}
 					>
-						Explore plans <ArrowRight size={17} aria-hidden="true" />
+						{copy.plans} <ArrowRight size={17} aria-hidden="true" />
 					</Link>
 				</div>
 			</div>

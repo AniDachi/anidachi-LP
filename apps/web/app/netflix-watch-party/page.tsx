@@ -1,5 +1,6 @@
 import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import Link from "next/link";
 import { getPlanPolicy } from "@anidachi/protocol";
 import { HubCtaBand } from "@/components/hub-cta-band";
@@ -34,7 +35,7 @@ const PAGE_DESCRIPTION =
 export const metadata: Metadata = {
   title: "Netflix Watch Party: Watch Together in Sync",
   description: PAGE_DESCRIPTION,
-  alternates: { canonical: "/netflix-watch-party" },
+  alternates: languageAlternates({ en: "/netflix-watch-party", de: "/de/netflix-watchparty" }, "en"),
   openGraph: {
     title: PAGE_TITLE,
     description: PAGE_DESCRIPTION,

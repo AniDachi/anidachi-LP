@@ -10,6 +10,29 @@ export const EXTENSION_DOWNLOAD_PATH = "/api/extension/download";
 export const CHROME_WEB_STORE_URL =
   "https://chromewebstore.google.com/detail/gpkolofebdhfpapbbgdkdkmlmjfidgmn?utm_source=item-share-cb";
 
+/**
+ * Store link for the German pilot pages. The UTM tags let the Chrome Web Store dashboard
+ * report installs that started on a German page.
+ */
+export const CHROME_WEB_STORE_URL_DE =
+  "https://chromewebstore.google.com/detail/gpkolofebdhfpapbbgdkdkmlmjfidgmn?utm_source=anidachi&utm_medium=web&utm_campaign=de_pilot";
+
+/** True for any of our Chrome Web Store listing links, so store clicks are tracked whichever variant a page uses. */
+export function isChromeWebStoreUrl(href: unknown): boolean {
+  return href === CHROME_WEB_STORE_URL || href === CHROME_WEB_STORE_URL_DE;
+}
+
+/** German install page, the /de counterpart of INSTALL_HUB_PATH. */
+export const DE_INSTALL_HUB_PATH = "/de/erweiterung";
+
+/** German hero and band button text. */
+export const DE_INSTALL_CTA_LABEL = "Watchparty starten";
+
+export const DE_INSTALL_HOWTO_STEP_NAME = "AniDachi installieren";
+
+export const DE_INSTALL_HOWTO_STEP_TEXT =
+  "Öffne den offiziellen AniDachi-Eintrag im Chrome Web Store und klicke auf „Hinzufügen“.";
+
 export const CHROME_EXTENSIONS_PAGE = "chrome://extensions";
 
 export type ExtensionInstallMode = "sideload" | "cws";

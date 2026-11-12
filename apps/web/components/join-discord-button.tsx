@@ -14,6 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 
 type JoinDiscordButtonProps = {
+  /** Button text; defaults to the shared Discord label. */
+  label?: string;
   variant: "nav" | "hero" | "footer";
   placement: string;
   className?: string;
@@ -39,6 +41,7 @@ export function JoinDiscordButton({
   className,
   onClick,
   touchTarget = false,
+  label = DISCORD_SERVER_CTA_LABEL,
 }: JoinDiscordButtonProps) {
   useEffect(() => {
     if (variant !== "hero" || typeof window === "undefined") {
@@ -70,7 +73,7 @@ export function JoinDiscordButton({
         onClick={handleClick}
       >
         <DiscordIcon className="h-4 w-4 shrink-0 text-[#5865F2]" />
-        {DISCORD_SERVER_CTA_LABEL}
+        {label}
       </a>
     );
   }
@@ -93,7 +96,7 @@ export function JoinDiscordButton({
           onClick={handleClick}
         >
           <DiscordIcon className="h-5 w-5 text-[#5865F2]" aria-hidden="true" />
-          {DISCORD_SERVER_CTA_LABEL}
+          {label}
         </a>
       </Button>
     );
@@ -117,7 +120,7 @@ export function JoinDiscordButton({
         onClick={handleClick}
       >
         <DiscordIcon className="h-4 w-4" aria-hidden="true" />
-        {DISCORD_SERVER_CTA_LABEL}
+        {label}
       </a>
     </Button>
   );

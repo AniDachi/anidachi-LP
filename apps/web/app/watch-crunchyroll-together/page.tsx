@@ -1,5 +1,6 @@
 import { PRICING_FREE20_SUMMARY } from "@/lib/pricing-copy";
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import Link from "next/link";
 import { HowToJsonLd } from "@/components/json-ld";
 import { HubCtaBand } from "@/components/hub-cta-band";
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 	title: "Crunchyroll Watch Party: Sync & Chat with Friends",
 	description:
 		"Crunchyroll has no built-in watch party. Add AniDachi from the Chrome Web Store, open your own tab, and watch Crunchyroll together in sync with friends.",
-	alternates: { canonical: "/watch-crunchyroll-together" },
+	alternates: languageAlternates({ en: "/watch-crunchyroll-together", de: "/de/crunchyroll-watchparty" }, "en"),
 	openGraph: {
 		images: [
 			{

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
   title: { absolute: "AniDachi vs Watch2Gether for YouTube & Crunchyroll (2026)" },
   description:
     "AniDachi vs Watch2Gether for YouTube watch parties and Crunchyroll anime groups: live room features, personal history, and free access compared.",
-  alternates: { canonical: "/compare/anidachi-vs-watch2gether" },
+  alternates: languageAlternates({ en: "/compare/anidachi-vs-watch2gether", de: "/de/watch2gether-alternative" }, "en"),
   openGraph: {
     title: "AniDachi vs Watch2Gether",
     description:

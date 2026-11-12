@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import Link from "next/link";
 import {
   SeoGuideAnswer,
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
   title: { absolute: "How to Stream Netflix on Discord (Black Screen Fix)" },
   description:
     "Netflix goes black on Discord because the video is DRM-protected. Why it happens, what people try, mobile limits, and how to watch in sync with friends.",
-  alternates: { canonical: PAGE_PATH },
+  alternates: languageAlternates({ en: PAGE_PATH, de: "/de/netflix-auf-discord-streamen" }, "en"),
   openGraph: {
     title: "How to Stream Netflix on Discord (Black Screen Fix)",
     description:

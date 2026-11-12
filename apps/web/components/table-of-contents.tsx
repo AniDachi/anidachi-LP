@@ -21,7 +21,17 @@ function scrollToId(id: string) {
   window.scrollTo({ top: y, behavior: "smooth" });
 }
 
-export function TableOfContents({ headings }: { headings: TocHeading[] }) {
+export function TableOfContents({
+  headings,
+  onThisPageLabel = "On this page",
+  contentsLabel = "Contents",
+}: {
+  headings: TocHeading[];
+  /** Heading of the list (German pages pass their own). */
+  onThisPageLabel?: string;
+  /** Mobile toggle text. */
+  contentsLabel?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(headings[0]?.id ?? null);
 
@@ -56,8 +66,8 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
   if (headings.length === 0) return null;
 
   const list = (
-    <nav aria-label="On this page" className="text-sm">
-      <p className="mb-2 font-semibold text-ani-text">On this page</p>
+    <nav aria-label={onThisPageLabel} className="text-sm">
+      <p className="mb-2 font-semibold text-ani-text">{onThisPageLabel}</p>
       <ul className="space-y-1.5 border-l-2 border-ani-line pl-3">
         {headings.map((h) => (
           <li
@@ -103,7 +113,7 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
         >
           <span className="inline-flex items-center gap-2">
             <List className="h-4 w-4 text-ani-muted" aria-hidden="true" />
-            Contents
+            {contentsLabel}
           </span>
           <ChevronDown
             className={cn(

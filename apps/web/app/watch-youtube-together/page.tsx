@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 import Link from "next/link";
 import { getPlanPolicy } from "@anidachi/protocol";
 import { HubCtaBand } from "@/components/hub-cta-band";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   title: "YouTube Watch Party: Watch YouTube Together",
   description:
     "YouTube watch party hub: Add AniDachi from the Chrome Web Store, open a full youtube.com/watch page, and sync with friends. Teleparty and Discord compared.",
-  alternates: { canonical: "/watch-youtube-together" },
+  alternates: languageAlternates({ en: "/watch-youtube-together", de: "/de/youtube-watchparty" }, "en"),
   openGraph: {
     images: [
       {

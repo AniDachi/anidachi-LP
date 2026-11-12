@@ -7,9 +7,10 @@ import {
 } from "@/components/json-ld";
 import { homeFAQ } from "@/lib/home-faq";
 import type { Metadata } from "next";
+import { languageAlternates } from "@/lib/hreflang";
 
 export const metadata: Metadata = {
-	alternates: { canonical: "/" },
+	alternates: languageAlternates({ en: "/", de: "/de" }, "en"),
 };
 
 export const revalidate = 300;

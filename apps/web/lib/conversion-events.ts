@@ -26,7 +26,9 @@ export type PageTemplateId =
   | "listicle"
   | "glossary"
   | "pillar"
-  | "install";
+  | "install"
+  /** German localization pilot pages (/de and /de/*). */
+  | "de_pilot";
 
 export function getExperimentVariant(): string {
   if (typeof process === "undefined") return "control";
@@ -38,6 +40,7 @@ export function getExperimentVariant(): string {
  */
 export function inferPageTemplateFromPath(path: string): PageTemplateId {
   if (path === "/") return "home";
+  if (path === "/de" || path.startsWith("/de/")) return "de_pilot";
   if (path.startsWith("/watch/") && path.includes("-with-friends")) {
     return "anime";
   }
