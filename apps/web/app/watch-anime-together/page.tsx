@@ -234,6 +234,10 @@ export default function WatchAnimeTogetherPage() {
             },
           ]}
         />
+        <p>
+          Prime Video isn&apos;t supported yet. What works today is in{" "}
+          <Link href="/prime-video-watch-party">Prime Video watch party</Link>.
+        </p>
 
         <h2 id="watch-party" className="scroll-mt-24">
           Host an Anime Watch Party Online — Free &amp; Paid Options

@@ -363,7 +363,12 @@ export default function WatchCrunchyrollTogetherPage() {
 									The same watchroom works on Crunchyroll, on{" "}
 									<Link href="/watch-youtube-together">YouTube</Link> and for a{" "}
 									<Link href="/netflix-watch-party">Netflix watch party</Link>.
-									Friends install it once.
+									Friends install it once. Prime Video isn&apos;t supported
+									yet; what works today is in{" "}
+									<Link href="/prime-video-watch-party">
+										Prime Video watch party
+									</Link>
+									.
 								</>
 							),
 						},

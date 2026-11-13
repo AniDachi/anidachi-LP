@@ -395,7 +395,12 @@ export default function NetflixWatchPartyPage() {
         />
         <p className="mb-6 leading-relaxed text-ani-muted">
           Pick Teleparty if your group needs phones, a browser other than Chrome, a
-          very large party, or services like Disney+ and Hulu. Pick AniDachi if you
+          very large party, or services like Disney+ and Hulu. AniDachi doesn&apos;t
+          support Prime Video yet; what works there today is in{" "}
+          <Link href="/prime-video-watch-party" className="text-brand-orange hover:underline">
+            Prime Video watch party
+          </Link>
+          . Pick AniDachi if you
           want to see and hear each other while you watch without everyone paying for
           voice, and if your group also watches anime on Crunchyroll or videos on
           YouTube. Full breakdown:{" "}
@@ -483,6 +488,7 @@ export default function NetflixWatchPartyPage() {
             { href: "/netflix-party", label: "Netflix Party is now Teleparty" },
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
             { href: "/watch-youtube-together", label: "YouTube watch party" },
+            { href: "/prime-video-watch-party", label: "Prime Video watch party" },
           ]}
         />
         <p className="mt-6 text-sm leading-relaxed text-ani-muted">

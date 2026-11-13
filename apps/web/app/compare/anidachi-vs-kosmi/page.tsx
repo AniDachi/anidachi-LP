@@ -308,6 +308,11 @@ export default function AniDachiVsKosmiPage() {
           </Link>
         </li>
         <li>
+          <Link href="/prime-video-watch-party" className="hover:underline">
+            Prime Video watch party
+          </Link>
+        </li>
+        <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty
           </Link>

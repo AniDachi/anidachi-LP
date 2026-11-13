@@ -121,7 +121,9 @@ export default function BestTelepartyAlternativesForAnimePage() {
         </Link>
         . Wondering{" "}
         <Link href="/netflix-party">what happened to Netflix Party</Link>? It
-        was renamed Teleparty. Checking what Teleparty costs first? See{" "}
+        was renamed Teleparty. For Netflix itself, see{" "}
+        <Link href="/netflix-watch-party">Netflix watch party</Link>. Checking
+        what Teleparty costs first? See{" "}
         <Link href="/guides/is-teleparty-free">is Teleparty free</Link>.
       
       </SeoGuideAnswer>

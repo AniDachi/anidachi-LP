@@ -139,6 +139,13 @@ export default function DiscordScreenShareBlackScreenPage() {
           >
             fix the Netflix black screen
           </Link>
+          . Prime Video goes black too; see{" "}
+          <Link
+            href="/guides/how-to-stream-prime-video-on-discord"
+            className="text-brand-orange hover:underline"
+          >
+            how to stream Prime Video on Discord
+          </Link>
           . The Crunchyroll-only writeup is{" "}
           <Link
             href="/guides/can-you-screen-share-crunchyroll-on-discord"
@@ -192,6 +199,8 @@ export default function DiscordScreenShareBlackScreenPage() {
               label: "Screen share Crunchyroll on Discord",
             },
             { href: "/watch-youtube-together", label: "YouTube watch party" },
+            { href: "/netflix-watch-party", label: "Netflix watch party" },
+            { href: "/prime-video-watch-party", label: "Prime Video watch party" },
           ]}
         />
       </SeoPageLayout>

@@ -364,7 +364,19 @@ export default function IsTelepartyFreePage() {
       </p>
       <SeoGuideBulletList
         items={[
-          { body: "Your group watches Disney+, Hulu, HBO Max, Prime Video or Paramount+. AniDachi does not support those." },
+          {
+            body: (
+              <>
+                Your group watches Disney+, Hulu, HBO Max, Prime Video or
+                Paramount+. AniDachi does not support those. For Prime Video,
+                what works today is in{" "}
+                <Link href="/prime-video-watch-party" className="text-brand-orange hover:underline">
+                  Prime Video watch party
+                </Link>
+                .
+              </>
+            ),
+          },
           { body: "Someone joins from a phone or tablet. AniDachi has no mobile app." },
           { body: "Someone uses Edge, Safari or Opera. AniDachi runs in desktop Chrome only." },
           { body: "You want free hosting on Netflix or YouTube with text chat, and don't need calls." },
@@ -426,6 +438,7 @@ export default function IsTelepartyFreePage() {
             label: "Does Teleparty work with YouTube?",
           },
           { href: "/netflix-party", label: "Netflix Party, now Teleparty" },
+          { href: "/netflix-watch-party", label: "Netflix watch party" },
           { href: "/pricing", label: "AniDachi pricing" },
         ]}
       />

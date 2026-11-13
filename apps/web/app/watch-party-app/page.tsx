@@ -144,18 +144,13 @@ export default function WatchPartyAppPage() {
 				<Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
 					Netflix watch party
 				</Link>{" "}
-				guide; groups of three or more can use{" "}
-				<Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
-					Netflix group watch
+				guide, which covers groups of three or more and every way to watch
+				Netflix together. Prime Video isn&apos;t supported yet; what still works
+				is in{" "}
+				<Link href="/prime-video-watch-party" className="text-brand-orange hover:underline">
+					Prime Video watch party
 				</Link>
-				, and every way to{" "}
-				<Link
-					href="/netflix-watch-party"
-					className="text-brand-orange hover:underline"
-				>
-					watch Netflix together
-				</Link>{" "}
-				is in one guide. Comparing browser-based watch-together sites? See{" "}
+				. Comparing browser-based watch-together sites? See{" "}
 				<Link href="/compare/anidachi-vs-kosmi" className="text-brand-orange hover:underline">
 					AniDachi vs Kosmi
 				</Link>{" "}
@@ -185,6 +180,7 @@ export default function WatchPartyAppPage() {
 					},
 					{ href: "/watch-youtube-together", label: "YouTube watch party" },
 					{ href: "/netflix-watch-party", label: "Netflix watch party" },
+					{ href: "/prime-video-watch-party", label: "Prime Video watch party" },
 					{ href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi" },
 					{ href: "/compare/anidachi-vs-syncup", label: "AniDachi vs SyncUp" },
 					{
