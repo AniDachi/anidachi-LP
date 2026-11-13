@@ -216,7 +216,8 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
           <strong>#2 Watch2Gether</strong> — best free live browser room.
         </li>
         <li>
-          <strong>#3 Teleparty</strong> — if you already sync Netflix/Disney+.
+          <strong>#3 Teleparty</strong> — if you already sync Netflix/Disney+ (see{" "}
+          <Link href="/netflix-watch-party">Netflix watch party</Link>).
         </li>
         <li>
           <strong>#4 Discord</strong> — voice companion, not the sync layer (

@@ -175,7 +175,16 @@ export default function TelepartyNotWorkingYoutubePage() {
             },
             {
               title: "Works on Netflix but not YouTube",
-              body: "multi-platform extension updated for one service before the other.",
+              body: (
+                <>
+                  multi-platform extension updated for one service before the
+                  other. Netflix setup and fixes are in{" "}
+                  <Link href="/netflix-watch-party" className="text-brand-orange hover:underline">
+                    Netflix watch party
+                  </Link>
+                  .
+                </>
+              ),
             },
           ]}
         />

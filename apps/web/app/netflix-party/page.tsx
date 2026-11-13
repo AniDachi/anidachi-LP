@@ -338,6 +338,7 @@ export default function NetflixPartyPage() {
           { href: "/netflix-watch-party", label: "Netflix watch party hub" },
           { href: "/guides/does-netflix-have-a-watch-party", label: "Does Netflix have a watch party?" },
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+          { href: "/prime-video-watch-party", label: "Prime Video watch party" },
         ]}
       />
       <p className="mt-6 text-sm leading-relaxed text-ani-muted">

@@ -343,6 +343,7 @@ export default function WatchYoutubeTogetherPage() {
             { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether" },
             { href: "/watch-youtube-together-long-distance", label: "Watch YouTube together long distance" },
             { href: "/netflix-watch-party", label: "Netflix watch party" },
+            { href: "/prime-video-watch-party", label: "Prime Video watch party" },
             { href: "/watch-anime-together", label: "Watch anime together" },
             { href: "/pricing", label: "AniDachi pricing" },
           ]}
