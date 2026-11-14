@@ -423,7 +423,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
               href: "/compare/anidachi-vs-discord-screen-share",
               label: "AniDachi vs Discord screen share",
             },
-            { href: "/netflix-party", label: "Netflix Party (now Teleparty)" },
+            { href: "/netflix-watch-party#netflix-party", label: "Netflix Party (now Teleparty)" },
             {
               href: "/guides/how-to-stream-prime-video-on-discord",
               label: "How to stream Prime Video on Discord",

@@ -437,7 +437,6 @@ export default function IsTelepartyFreePage() {
             href: "/guides/does-teleparty-work-with-youtube",
             label: "Does Teleparty work with YouTube?",
           },
-          { href: "/netflix-party", label: "Netflix Party, now Teleparty" },
           { href: "/netflix-watch-party", label: "Netflix watch party" },
           { href: "/pricing", label: "AniDachi pricing" },
         ]}

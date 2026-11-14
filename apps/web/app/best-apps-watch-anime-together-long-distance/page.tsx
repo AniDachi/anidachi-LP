@@ -204,7 +204,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Teleparty, which started as{" "}
-        <Link href="/netflix-party" className="text-brand-orange hover:underline">
+        <Link href="/netflix-watch-party#netflix-party" className="text-brand-orange hover:underline">
           the old Netflix Party extension
         </Link>
         , supports Crunchyroll alongside

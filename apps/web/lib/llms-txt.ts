@@ -30,7 +30,6 @@ export function buildLlmsTxt(origin: string): string {
     "",
     `- [Discord watch party](${url("/discord-watch-party")}): why screen sharing often shows a black screen, and what works instead.`,
     `- [AniDachi vs Teleparty](${url("/compare/anidachi-vs-teleparty")}): side-by-side comparison.`,
-    `- [Netflix Party is now Teleparty](${url("/netflix-party")}): what happened to Netflix Party, and alternatives.`,
     `- [Is Teleparty free?](${url("/guides/is-teleparty-free")}): Teleparty's free and Premium tiers.`,
     `- [Does Netflix have a watch party?](${url("/guides/does-netflix-have-a-watch-party")}): Netflix's own features.`,
     `- [Prime Video watch party](${url("/prime-video-watch-party")}): Prime Video removed its Watch Party in 2024; what works today. AniDachi does not support Prime Video yet.`,

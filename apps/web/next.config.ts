@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/guides/netflix-teleparty",
-        destination: "/netflix-party",
+        destination: "/netflix-watch-party",
         permanent: true,
       },
       {
@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/guides/netflix-party-extension",
-        destination: "/netflix-party",
+        destination: "/netflix-watch-party",
         permanent: true,
       },
       {
@@ -156,8 +156,16 @@ const nextConfig: NextConfig = {
         ["/guides/how-to-watch-netflix-with-friends", "/netflix-watch-party"],
         ["/guides/netflix-group-watch", "/netflix-watch-party"],
         ["/guides/netflix-movie-night", "/virtual-movie-night"],
-        ["/guides/teleparty-netflix", "/netflix-party"],
+        ["/guides/teleparty-netflix", "/netflix-watch-party"],
       ].map(([source, destination]) => ({ source, destination, permanent: true })),
+      // 2026-11-14 (owner-approved): /netflix-party folds into the Netflix hub.
+      // It is indexed and recrawled every few days, so the redirect gets Google to
+      // fetch the hub, which had sat in "Discovered – not indexed" since 8 Oct.
+      {
+        source: "/netflix-party",
+        destination: "/netflix-watch-party",
+        permanent: true,
+      },
     ];
   },
   images: {

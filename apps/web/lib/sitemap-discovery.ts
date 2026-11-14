@@ -109,7 +109,6 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/sub-vs-dub" ||
     urlPath === "/watch-party-app" ||
     urlPath === "/netflix-watch-party" ||
-    urlPath === "/netflix-party" ||
     urlPath === "/prime-video-watch-party" ||
     urlPath === "/pricing"
   ) {

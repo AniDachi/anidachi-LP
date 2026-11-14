@@ -136,7 +136,7 @@ export default function AniDachiVsTelepartyPage() {
         live watchrooms. Choose Teleparty if you need many streaming apps in one
         place and can always watch live. Async catch-up on AniDachi is planned.
         If you used{" "}
-        <Link href="/netflix-party" className="text-brand-orange hover:underline">
+        <Link href="/netflix-watch-party#netflix-party" className="text-brand-orange hover:underline">
           Netflix Party, now called Teleparty
         </Link>
         , it is the same extension compared here.
