@@ -70,7 +70,6 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
     path === "/sub-vs-dub" ||
     path === "/watch-party-app" ||
     path === "/netflix-watch-party" ||
-    path === "/netflix-party" ||
     path === "/prime-video-watch-party"
   ) {
     return "pillar";

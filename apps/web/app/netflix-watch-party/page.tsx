@@ -57,6 +57,10 @@ const SOURCES = [
     href: "https://chromewebstore.google.com/detail/netflix-party-is-now-tele/oocalimimngaihdkbihfgmpkcpnmlaoa",
     label: "Teleparty Chrome Web Store listing",
   },
+  {
+    href: "https://www.makeuseof.com/netflix-party-not-working-troubleshooting/",
+    label: "MakeUseOf on the October 2020 rename",
+  },
   { href: "https://help.netflix.com/en/node/123277", label: "Netflix Help: sharing your account" },
   { href: "https://help.netflix.com/en/node/24853", label: "Netflix Help: watching in another country" },
 ];
@@ -139,6 +143,26 @@ const faq = [
     answer:
       "Only within one household. Netflix's Help Center says an account may not be shared outside the household, and each plan limits how many screens play at once. In a group watch, friends in different homes each use their own Netflix.",
   },
+  {
+    question: "What happened to Netflix Party?",
+    answer:
+      "It was renamed Teleparty. The extension's Chrome Web Store listing says version 2.0.0 of Netflix Party added three more streaming services and renamed the product Teleparty. MakeUseOf dates the change to October 2020.",
+  },
+  {
+    question: "Is Netflix Party still available?",
+    answer:
+      "Yes, under the name Teleparty. Its Chrome Web Store listing is titled \"Netflix Party is now Teleparty\" and showed version 5.8.5, updated October 8, 2026, when we checked on October 20, 2026.",
+  },
+  {
+    question: "Was Netflix Party made by Netflix?",
+    answer:
+      "No. Netflix Party was a third-party browser extension, and Teleparty is run by its own company. Netflix has no watch party feature of its own.",
+  },
+  {
+    question: "Where do I find the Netflix Party extension?",
+    answer:
+      "Search the Chrome Web Store for Teleparty. Its listing is titled \"Netflix Party is now Teleparty\". Other extensions with similar names, such as \"Netflix Party Pro is now Netflix Party Plus\", come from different developers, so check that the listing links to teleparty.com. AniDachi is a separate extension.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -146,6 +170,7 @@ const tocHeadings: TocHeading[] = [
   { id: "what-works", label: "What works and the limits", level: 2 },
   { id: "everyone-needs-netflix", label: "Does everyone need Netflix?", level: 2 },
   { id: "not-working", label: "Watch party not working", level: 2 },
+  { id: "netflix-party", label: "What happened to Netflix Party?", level: 2 },
   { id: "vs-teleparty", label: "AniDachi vs Teleparty", level: 2 },
   { id: "plan", label: "Plan your night", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
@@ -168,18 +193,17 @@ export default function NetflixWatchPartyPage() {
         description={PAGE_DESCRIPTION}
         url={PAGE_PATH}
         datePublished="2026-10-08"
-        dateModified="2026-11-10"
+        dateModified="2026-11-14"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
         itemList={[
-          { name: "Netflix Party", url: "/netflix-party", position: 1 },
           {
             name: "Does Netflix have a watch party?",
             url: "/guides/does-netflix-have-a-watch-party",
-            position: 2,
+            position: 1,
           },
-          { name: "Virtual movie night", url: "/virtual-movie-night", position: 3 },
+          { name: "Virtual movie night", url: "/virtual-movie-night", position: 2 },
           {
             name: "Stream Netflix on Discord",
             url: "/guides/how-to-screen-share-netflix-on-discord",
@@ -341,6 +365,27 @@ export default function NetflixWatchPartyPage() {
           .
         </p>
 
+        <h2 id="netflix-party" className="scroll-mt-24">
+          What happened to Netflix Party?
+        </h2>
+        <p className="mb-4 leading-relaxed text-ani-muted">
+          <strong>
+            Netflix Party was renamed Teleparty in October 2020, when it added other
+            streaming services. It still works on Netflix today.
+          </strong>{" "}
+          It was never a Netflix product: it was an independent Chrome extension that
+          put a chat sidebar next to the Netflix player and kept everyone&apos;s play
+          and pause in step. Teleparty&apos;s Chrome Web Store listing is still titled
+          &quot;Netflix Party is now Teleparty&quot;, so a search for the old name lands
+          on the current extension. Other extensions with similar names come from
+          different developers; the original links to teleparty.com.
+        </p>
+        <p className="mb-6 leading-relaxed text-ani-muted">
+          On its free tier, Teleparty hosts Netflix parties with synced playback and
+          text chat. Voice and video chat are part of Teleparty Premium. The
+          comparison below shows how it lines up with AniDachi on Netflix.
+        </p>
+
         <h2 id="vs-teleparty" className="scroll-mt-24">
           AniDachi vs Teleparty on Netflix
         </h2>
@@ -469,9 +514,9 @@ export default function NetflixWatchPartyPage() {
           Still choosing a method? The <a href="#vs-teleparty" className="text-brand-orange hover:underline">AniDachi vs Teleparty</a>{" "}
           table above and the <a href="#discord" className="text-brand-orange hover:underline">Discord section</a>{" "}
           cover the other ways to watch Netflix together. If you searched the old extension name,{" "}
-          <Link href="/netflix-party" className="text-brand-orange hover:underline">
-            Netflix Party
-          </Link>{" "}
+          <a href="#netflix-party" className="text-brand-orange hover:underline">
+            what happened to Netflix Party
+          </a>{" "}
           explains what it became. The dated answer to whether Netflix will add its
           own button is on{" "}
           <Link
@@ -485,7 +530,7 @@ export default function NetflixWatchPartyPage() {
         <SeoGuideRelated
           links={[
             { href: "/virtual-movie-night", label: "Virtual movie night" },
-            { href: "/netflix-party", label: "Netflix Party is now Teleparty" },
+            { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
             { href: "/watch-youtube-together", label: "YouTube watch party" },
             { href: "/prime-video-watch-party", label: "Prime Video watch party" },

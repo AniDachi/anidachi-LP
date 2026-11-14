@@ -162,7 +162,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
             body: (
               <>
                 The extension that used to be called{" "}
-                <Link href="/netflix-party">Netflix Party</Link>. Free sync and text
+                <Link href="/netflix-watch-party#netflix-party">Netflix Party</Link>. Free sync and text
                 chat on Netflix; voice and video need Premium.
               </>
             ),
@@ -207,7 +207,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
       <SeoGuideRelated
         links={[
           { href: "/netflix-watch-party", label: "Netflix watch party hub" },
-          { href: "/netflix-party", label: "Netflix Party is now Teleparty" },
+          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
           {
             href: "/guides/how-to-screen-share-netflix-on-discord",
             label: "How to stream Netflix on Discord",

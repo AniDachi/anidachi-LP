@@ -120,7 +120,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
           AniDachi vs Teleparty
         </Link>
         . Wondering{" "}
-        <Link href="/netflix-party">what happened to Netflix Party</Link>? It
+        <Link href="/netflix-watch-party#netflix-party">what happened to Netflix Party</Link>? It
         was renamed Teleparty. For Netflix itself, see{" "}
         <Link href="/netflix-watch-party">Netflix watch party</Link>. Checking
         what Teleparty costs first? See{" "}
