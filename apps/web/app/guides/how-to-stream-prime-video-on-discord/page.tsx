@@ -332,10 +332,6 @@ export default function HowToStreamPrimeVideoOnDiscordPage() {
               href: "/guides/discord-screen-share-black-screen",
               label: "Discord screen share black screen",
             },
-            {
-              href: "/compare/anidachi-vs-amazon-watch-party",
-              label: "AniDachi vs Amazon Watch Party",
-            },
           ]}
         />
       </SeoPageLayout>

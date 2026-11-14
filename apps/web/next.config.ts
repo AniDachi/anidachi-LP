@@ -166,6 +166,13 @@ const nextConfig: NextConfig = {
         destination: "/netflix-watch-party",
         permanent: true,
       },
+      // 2026-11-14 (owner-approved): the Amazon comparison page answered the same
+      // question as the Prime Video hub (0 impressions in 28 days); it folds in.
+      {
+        source: "/compare/anidachi-vs-amazon-watch-party",
+        destination: "/prime-video-watch-party",
+        permanent: true,
+      },
     ];
   },
   images: {

@@ -53,6 +53,10 @@ const SOURCES = [
     href: "https://www.neowin.net/news/amazon-prime-quietly-got-rid-of-a-covid-19-era-feature-watch-party/",
     label: "Neowin: Amazon quietly got rid of Watch Party",
   },
+  {
+    href: "https://www.techtimes.com/articles/306472/20240708/amazon-discontinued-prime-video-watch-party-feature-users-noticed.htm",
+    label: "Tech Times: Amazon discontinued its Prime Video Watch Party feature",
+  },
   { href: "https://www.primevideo.com/help?nodeId=G202095500", label: "Prime Video Usage Rules" },
   { href: "https://www.primevideo.com/help?nodeId=G202095490", label: "Prime Video Terms of Use" },
   { href: "https://www.teleparty.com/support", label: "Teleparty support FAQ" },
@@ -105,14 +109,26 @@ const faq = [
     answer:
       "Usually not with a picture. Prime Video protects its video with DRM, so a Discord Go Live share often shows friends a black screen. Keep Discord for voice and have each person play the title on their own account.",
   },
+  {
+    question: "Does Amazon Prime have a watch party for anime?",
+    answer:
+      "Not anymore. Some anime streams on Prime Video, depending on your region, but the built-in Watch Party feature is gone. Most popular anime and current simulcasts are on Crunchyroll, where AniDachi already syncs watch parties.",
+  },
+  {
+    question: "What anime is on Prime Video vs Crunchyroll?",
+    answer:
+      "Prime Video carries some anime in some regions, such as Vinland Saga Season 2, Made in Abyss and The Rising of the Shield Hero, plus a few originals. Availability changes by country. Crunchyroll has the larger anime catalog, including Demon Slayer, Jujutsu Kaisen, Attack on Titan, One Piece and most current simulcasts.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
   { id: "how-to-watch", label: "How to watch Prime Video together", level: 2 },
   { id: "what-happened", label: "What happened to Amazon Watch Party", level: 2 },
+  { id: "then-vs-now", label: "Amazon Watch Party then vs now", level: 2 },
   { id: "options", label: "Your options today", level: 2 },
   { id: "everyone-needs-prime", label: "Does everyone need Prime Video?", level: 2 },
   { id: "anidachi", label: "AniDachi and Prime Video", level: 2 },
+  { id: "anime", label: "Anime on Prime Video vs Crunchyroll", level: 2 },
   { id: "discord", label: "Prime Video on Discord", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
@@ -128,7 +144,7 @@ export default function PrimeVideoWatchPartyPage() {
       description={PAGE_DESCRIPTION}
       url={PAGE_PATH}
       datePublished="2026-11-11"
-      dateModified="2026-11-11"
+      dateModified="2026-11-14"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
@@ -138,11 +154,7 @@ export default function PrimeVideoWatchPartyPage() {
           url: "/guides/how-to-stream-prime-video-on-discord",
           position: 1,
         },
-        {
-          name: "AniDachi vs Amazon Watch Party",
-          url: "/compare/anidachi-vs-amazon-watch-party",
-          position: 2,
-        },
+        { name: "Netflix watch party", url: "/netflix-watch-party", position: 2 },
         { name: "Virtual movie night", url: "/virtual-movie-night", position: 3 },
       ]}
       h1="Prime Video Watch Party"
@@ -183,12 +195,29 @@ export default function PrimeVideoWatchPartyPage() {
       <p className="mb-6 leading-relaxed text-ani-muted">
         Prime Video wasn&apos;t alone: Disney+ removed GroupWatch the year
         before. So &quot;Amazon watch party&quot; now means a third-party tool.
-        The full then-vs-now comparison is in{" "}
-        <Link href="/compare/anidachi-vs-amazon-watch-party">
-          AniDachi vs Amazon Watch Party
-        </Link>
-        .
       </p>
+
+      <h2 id="then-vs-now" className="scroll-mt-24">
+        Amazon Watch Party then vs now
+      </h2>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "amazon", label: "Amazon Watch Party" },
+          { id: "anidachi", label: "AniDachi", highlight: true },
+        ]}
+        rows={[
+          { feature: "Available today", values: { amazon: "No (removed in 2024)", anidachi: "yes" } },
+          {
+            feature: "Platforms",
+            values: { amazon: "Prime Video only, before removal", anidachi: "Netflix, Crunchyroll, YouTube" },
+          },
+          { feature: "Synced playback", values: { amazon: "Before removal", anidachi: "yes" } },
+          { feature: "Chat", values: { amazon: "Before removal", anidachi: "yes" } },
+          { feature: "Voice and video calls", values: { amazon: "no", anidachi: "yes" } },
+          { feature: "Prime Video", values: { amazon: "Before removal", anidachi: "Coming in an update" } },
+          { feature: "Cost", values: { amazon: "Was included with Prime", anidachi: "20 free minutes a day; Plus and Pro" } },
+        ]}
+      />
 
       <h2 id="options" className="scroll-mt-24">
         Your options today
@@ -264,6 +293,21 @@ export default function PrimeVideoWatchPartyPage() {
         <Link href="/netflix-watch-party">Netflix watch party</Link> instead.
       </SeoGuideNote>
 
+      <h2 id="anime" className="scroll-mt-24">
+        Anime on Prime Video vs Crunchyroll
+      </h2>
+      <p className="mb-6 leading-relaxed text-ani-muted">
+        Prime Video carries some anime, depending on your country: Vinland Saga
+        Season 2, Made in Abyss, The Rising of the Shield Hero and a few
+        originals such as Ninja Kamui. Crunchyroll has the larger catalog,
+        including{" "}
+        <Link href="/watch/demon-slayer-with-friends">Demon Slayer</Link>,{" "}
+        <Link href="/watch/jujutsu-kaisen-with-friends">Jujutsu Kaisen</Link>,{" "}
+        <Link href="/watch/one-piece-with-friends">One Piece</Link> and most
+        current simulcasts, and AniDachi syncs it today in a{" "}
+        <Link href="/watch-crunchyroll-together">Crunchyroll watch party</Link>.
+      </p>
+
       <HubCtaBand
         pagePath={PAGE_PATH}
         heading="Get AniDachi before Prime Video lands"
@@ -293,10 +337,7 @@ export default function PrimeVideoWatchPartyPage() {
             href: "/guides/how-to-stream-prime-video-on-discord",
             label: "How to stream Prime Video on Discord",
           },
-          {
-            href: "/compare/anidachi-vs-amazon-watch-party",
-            label: "AniDachi vs Amazon Watch Party",
-          },
+          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
           { href: "/netflix-watch-party", label: "Netflix watch party" },
           { href: "/virtual-movie-night", label: "Virtual movie night" },
           { href: "/guides/is-teleparty-free", label: "Is Teleparty free?" },
