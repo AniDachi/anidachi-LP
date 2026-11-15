@@ -143,7 +143,7 @@ export default function CrunchyrollDubSchedulePage() {
         description={`English dub episodes on Crunchyroll for ${weekLabel}, converted to your time zone.`}
         url={url}
         datePublished="2026-10-20"
-        dateModified="2026-11-08"
+        dateModified="2026-11-15"
         faq={faq}
         headings={headings}
         itemList={itemList}
@@ -257,7 +257,7 @@ export default function CrunchyrollDubSchedulePage() {
                     {slot.title}
                   </th>
                   <td className="px-4 py-2.5 tabular-nums text-ani-muted">{sub?.episode ?? "–"}</td>
-                  <td className="px-4 py-2.5 tabular-nums text-ani-muted">{slot.episode}</td>
+                  <td className="px-4 py-2.5 tabular-nums text-ani-muted">{slot.episode ?? "–"}</td>
                   <td className="px-4 py-2.5 text-ani-text">{dubNote({ ...slot, note: undefined })}</td>
                 </tr>
               ))}
