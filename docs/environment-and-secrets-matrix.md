@@ -18,6 +18,9 @@ Project: Anidachi web app.
 
 | Variable | Environment | Purpose | Verification |
 | --- | --- | --- | --- |
+| `ANIDACHI_EMAIL_LOGIN_ENABLED` | Preview / exact branch `staging` only; production needs separate approval | Exact `true` exposes email-code sign-in after additive migration `20261115125300`; absent/false leaves Google/Discord available | Code request/verification and unchanged account ID on staging; disable and redeploy to roll back |
+| `RESEND_API_KEY` | Server-only sensitive variable, Preview / exact branch `staging` | Sending-only key restricted to `anidachi.app`; sender is `AniDachi <notifications@anidachi.app>` | Accepted delivery without exposing recipient/code/provider responses in logs; no click/open tracking |
+| `ANIDACHI_EMAIL_OTP_SECRET` | Server-only sensitive variable, Preview / exact branch `staging` | Independent random HMAC secret (at least 32 characters) for code/browser/IP/email hashes | Wrong, expired and reused codes rejected; rotation invalidates pending challenges only |
 | `NEXT_PUBLIC_SITE_URL` | Production-only variable, split from shared Preview scope on November 7 | Canonical public and browser-context origin, exactly `https://www.anidachi.app` | Verify deployed canonical metadata and same-origin `/api/me/free20-context`: 401 without login, not origin-rejection 403. Preserve the exact staging override; redeploy after changes |
 | `NEXT_PUBLIC_SITE_URL` | Preview / `staging` | Staging public site URL, expected `https://staging.anidachi.app` | Load staging after password gate |
 | `ANIDACHI_EXTENSION_CLIENT_ID` | Production | Public approved store/ZIP identity `gpkolofebdhfpapbbgdkdkmlmjfidgmn` | After deployment, only this client's exact Chromium `/auth` and `/logout` callbacks are accepted; mismatched clients/paths remain rejected |
