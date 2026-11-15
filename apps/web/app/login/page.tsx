@@ -8,6 +8,8 @@ import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 import { getLoginContext } from "@/lib/login-context";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 import { LoginOAuthButtons } from "./login-oauth-buttons";
+import { LoginEmailForm } from "./login-email-form";
+import { emailLoginEnabled } from "@/lib/anidachi-auth/email-login";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +76,7 @@ export default async function LoginPage({ searchParams }: Props) {
         ) : null}
 
         <LoginOAuthButtons safeNext={safeNext} />
+        {emailLoginEnabled() ? <LoginEmailForm returnTo={sanitizedNext} /> : null}
 
         <p className="mt-5 text-center text-xs text-foreground/45">
           Crunchyroll · YouTube · Netflix

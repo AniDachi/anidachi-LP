@@ -174,6 +174,7 @@ async function handleOAuthCallbackInner({
       email: profile.email,
       display_name: profile.displayName,
       avatar_url: profile.avatarUrl,
+      emailVerified: profile.emailVerified === true,
       ...userFields,
     });
   } catch {
@@ -187,7 +188,7 @@ async function handleOAuthCallbackInner({
   // This proof gates only the new cardless trial. Storage outages must not
   // break ordinary login or change existing paid rights.
   if (profile.emailVerified === true) {
-    try { await (dependencies.recordVerifiedEmail ?? recordVerifiedAccountEmail)(user.id, profile.email); }
+    try { await (dependencies.recordVerifiedEmail ?? recordVerifiedAccountEmail)(user.id, user.email); }
     catch { /* No proof is recorded; trial start will ask for a fresh verified login. */ }
   }
 
