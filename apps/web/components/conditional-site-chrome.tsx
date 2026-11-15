@@ -11,7 +11,7 @@ type MinimalChromeConfig = {
 };
 
 function minimalChromeForPath(pathname: string): MinimalChromeConfig | null {
-  if (pathname === "/login" || pathname === "/success" || pathname === "/checkout" ||
+  if (pathname === "/login" || pathname === "/login/name" || pathname === "/success" || pathname === "/checkout" ||
       (process.env.NODE_ENV === "development" &&
         (pathname === "/dev/checkout-success" || pathname === "/dev/trial-start"))) {
     return { backHref: "/", backLabel: "Back to home" };

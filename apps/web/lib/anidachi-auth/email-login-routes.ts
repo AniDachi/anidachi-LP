@@ -21,6 +21,8 @@ import {
 import { sendEmailLoginCode } from "./email-login-mail";
 import { issueTokenPair } from "./tokens";
 import { setAuthCookies } from "./session";
+import { getUserIdentityById } from "./db";
+import { needsProfileName } from "../profile-name";
 import {
 	emitServerEvent,
 	readFirstTouch,
@@ -34,6 +36,7 @@ type Dependencies = {
 	send: typeof sendEmailLoginCode;
 	consume: typeof consumeEmailChallenge;
 	issueTokens: typeof issueTokenPair;
+	getUser: typeof getUserIdentityById;
 };
 const defaults: Dependencies = {
 	enabled: emailLoginEnabled,
@@ -42,6 +45,7 @@ const defaults: Dependencies = {
 	send: sendEmailLoginCode,
 	consume: consumeEmailChallenge,
 	issueTokens: issueTokenPair,
+	getUser: getUserIdentityById,
 };
 function json(body: object, status = 200): NextResponse {
 	return NextResponse.json(body, {
@@ -154,15 +158,20 @@ export function createEmailLoginRoutes(overrides: Partial<Dependencies> = {}) {
 					});
 					return response;
 				}
+				const user = await deps.getUser(result.user_id!);
+				if (!user) throw new Error("Email login unavailable");
 				const tokens = await deps.issueTokens(result.user_id!);
-				const redirectTo = emailLoginReturnTo(result.return_to) || "/account";
+				const returnTo = emailLoginReturnTo(result.return_to) || "/account";
+				const redirectTo = needsProfileName(user.display_name)
+					? `/login/name?next=${encodeURIComponent(returnTo)}`
+					: returnTo;
 				const response = json({ redirectTo });
 				setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
 				response.cookies.set(emailCookieName(id), "", {
 					...cookieOptions(),
 					maxAge: 0,
 				});
-				const flow = redirectTo.startsWith("/extension/connect")
+				const flow = returnTo.startsWith("/extension/connect")
 					? "extension"
 					: "website";
 				emitServerEvent({

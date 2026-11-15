@@ -36,6 +36,10 @@ function setup() {
 	let sentCode = "";
 	const deps = {
 		enabled: () => true,
+		getUser: async () => ({
+			id: "existing-paid-user", email: "a@example.com", display_name: "Alex",
+			avatar_url: null, plan: "plus" as const,
+		}),
 		reserve: async () => {
 			calls.push("reserve");
 			return 0;
@@ -248,6 +252,28 @@ test("expired/replayed/wrong codes and unverified legacy identities cannot recei
 			},
 		}).verify(verifyRequest());
 	assert.equal(response.status, 503);
+	assert.equal(response.headers.get("set-cookie"), null);
+});
+test("email accounts without a chosen name complete their profile before the original destination", async () => {
+	for (const isNew of [true, false]) {
+		for (const destination of ["/account", "/friend/invite/one", "/checkout?plan=plus&billing=monthly", "/extension/connect?handoff=opaque%2Fvalue"]) {
+			const f = setup();
+			const response = await createEmailLoginRoutes({
+				...f.deps,
+				getUser: async () => ({ ...(await f.deps.getUser()), display_name: "AniDachi user" }),
+				consume: async () => ({ ...(await f.deps.consume()), is_new: isNew, return_to: destination }),
+			}).verify(verifyRequest());
+			assert.equal(response.status, 200);
+			assert.equal((await response.json()).redirectTo, `/login/name?next=${encodeURIComponent(destination)}`);
+			assert.match(response.headers.get("set-cookie")!, /HttpOnly/);
+		}
+	}
+});
+test("missing account after code verification cannot issue a session", async () => {
+	const f = setup();
+	const response = await createEmailLoginRoutes({ ...f.deps, getUser: async () => null }).verify(verifyRequest());
+	assert.equal(response.status, 503);
+	assert.deepEqual(f.calls, ["consume"]);
 	assert.equal(response.headers.get("set-cookie"), null);
 });
 test("email template is plain English, contains a code but no magic-link login", () => {

@@ -18,6 +18,13 @@ Production promotion is separate.
   Never infer verification from the mere presence of a Google/Discord ID.
 - Create a new Free account only after code verification. Keep existing user IDs,
   names, profiles, subscriptions, friends, room quota and sessions unchanged.
+- Email accounts still using the default `AniDachi user` name continue to
+  `/login/name` after verification. A compact **Choose your name** form saves
+  only `displayName` through the existing owner-checked profile endpoint, then
+  resumes the original invitation, checkout, extension handoff or account path.
+  Named accounts skip this step; existing names are never overwritten. The form
+  remains available after reload, and an interrupted setup appears again on the
+  next email sign-in. No schema change or new account flag is needed.
 - Normalize email case without Gmail dot/plus alias rewriting. A database unique
   index prevents concurrent email/OAuth sign-ins from creating duplicate users.
 - Reuse website token issuance/cookies and the existing sanitized return target,

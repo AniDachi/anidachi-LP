@@ -21,6 +21,7 @@ describe("sitemap", () => {
       assert.ok(!urlPath.startsWith("/account"), urlPath);
     }
     assert.ok(!paths.includes("/checkout"));
+    assert.ok(!paths.includes("/login/name"));
   });
 
   it("includes the install page", () => {

@@ -23,7 +23,7 @@ const EXCLUDED_URL_PATHS = new Set([
 ]);
 
 /** Private trees: everything under these is noindex, gated, or dev-only (404 in production). */
-const EXCLUDED_URL_PREFIXES = ["/account", "/dev"];
+const EXCLUDED_URL_PREFIXES = ["/account", "/dev", "/login"];
 
 export function isExcludedFromSitemap(urlPath: string): boolean {
   return (
