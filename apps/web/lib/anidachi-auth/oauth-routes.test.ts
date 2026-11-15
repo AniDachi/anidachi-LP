@@ -449,7 +449,7 @@ it("verified provider email is recorded for the signed-in account; missing proof
   const seen:string[]=[];
   const response=await handleOAuthCallback({provider:"google",request:callbackRequest("google",secret(21),secret(22),"code"),
    exchangeFn:async()=>({...profile("google-user"),emailVerified:verified}),
-   dependencies:{consumeTransaction:async()=>({returnTo:"/account",codeVerifier:"V".repeat(43)}),upsertUser:async()=>({id:"user-1"}) as never,
+   dependencies:{consumeTransaction:async()=>({returnTo:"/account",codeVerifier:"V".repeat(43)}),upsertUser:async()=>({id:"user-1",email:profile("google-user").email}) as never,
     recordVerifiedEmail:async(userId,email)=>{seen.push(userId+":"+email);},issueTokenPair:async()=>({accessToken:"access",refreshToken:"refresh"}),setAuthCookies:()=>{}}});
   assert.equal(response.headers.get("location"),"https://staging.anidachi.app/account");assert.equal(seen.length,verified?1:0);
   if(verified)assert.equal(seen[0],"user-1:"+profile("google-user").email);

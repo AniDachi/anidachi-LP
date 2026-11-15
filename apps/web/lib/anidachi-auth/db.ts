@@ -157,17 +157,29 @@ export async function upsertUser(params: {
   avatar_url?: string | null;
   discord_id?: string | null;
   google_id?: string | null;
-}): Promise<UserRow> {
+  emailVerified?: boolean;
+}, retryOnConflict = true): Promise<UserRow> {
   const client = db();
+  const email = params.email.trim().toLowerCase();
+  const emailPattern = email.replace(/[\\%_]/g, "\\$&");
 
-  // Try to find existing user by email first
-  const { data: existing } = await client
+  // Email and OAuth share one case-insensitive identity. Never interpret a DB
+  // read failure as a missing user, or create a second case variant.
+  const { data: existing, error: readError } = await client
     .from("users")
     .select("*")
-    .eq("email", params.email)
+    .ilike("email", emailPattern)
     .maybeSingle();
+  if (readError) throw new Error("Unable to resolve sign-in account");
 
   if (existing) {
+    const sameProvider = Boolean(
+      (params.google_id && existing.google_id === params.google_id) ||
+      (params.discord_id && existing.discord_id === params.discord_id)
+    );
+    if (!sameProvider && params.emailVerified !== true) throw new Error("Verified email required to link sign-in");
+    if ((params.google_id && existing.google_id && existing.google_id !== params.google_id) ||
+      (params.discord_id && existing.discord_id && existing.discord_id !== params.discord_id)) throw new Error("Sign-in identity conflict");
     const updates: Partial<UserRow> = {
       display_name: params.display_name,
       avatar_url: params.avatar_url ?? existing.avatar_url,
@@ -189,7 +201,7 @@ export async function upsertUser(params: {
   const { data, error } = await client
     .from("users")
     .insert({
-      email: params.email,
+      email,
       display_name: params.display_name,
       avatar_url: params.avatar_url ?? null,
       discord_id: params.discord_id ?? null,
@@ -197,7 +209,9 @@ export async function upsertUser(params: {
     })
     .select()
     .single();
-  if (error) throw new Error(`Failed to create user: ${error.message}`);
+  // A simultaneous email/OAuth verification may have created the same account.
+  if (error?.code === UNIQUE_VIOLATION && retryOnConflict) return upsertUser(params, false);
+  if (error) throw new Error("Failed to create sign-in account");
   await syncProfileFromUserRow(data as UserRow);
   return data as UserRow;
 }
