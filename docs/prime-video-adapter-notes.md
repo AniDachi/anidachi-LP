@@ -4,8 +4,10 @@ Staging baseline delivered through [PR #557](https://github.com/AniDachi/anidach
 2026-11-16, at `2bbf955d66e6825fe376128356cbb4aeef98bd69`. Provider key:
 `primevideo`; display name: **Prime Video**. The additive schema and compatible
 Web/Worker are delivered; loaded room creation and saved episode history passed.
-The launch follow-up on `codex/prime-video-launch` is pending staging delivery
-and browser acceptance. The
+The autoplay launch follow-up shipped through [PR #559](https://github.com/AniDachi/anidachi-LP/pull/559)
+at `2a93c598ebef08ba78a79d1328b5c7daf43bd275`. A subsequent initial-SDK-snapshot
+Resume readiness fix on `codex/prime-resume-readiness` is pending staging
+delivery and browser acceptance. The
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
@@ -101,6 +103,10 @@ provider pinning and uses the exact canonical movie/episode URL with autoplay
 and room decorations. An already-current result requires a MAIN snapshot;
 address-bar equality is insufficient. Resume uses the existing bounded local
 intent with exact source, expiry, owner/account guards and confirmed SDK seek.
+The pending readiness fix permits waiting without a source descriptor only
+while Prime is in transition and its bound content fingerprint exactly matches
+the canonical intent. Missing/changed identity outside that state cancels;
+claim and seek still require the full exact descriptor and all existing guards.
 
 Player geometry and composer isolation use the existing overlay seams and
 semantic controls, without English button-label or hashed-class assumptions.
@@ -226,8 +232,11 @@ That pre-delivery mismatch is resolved: PR #557 delivered staging merge
 `2bbf955d66e6825fe376128356cbb4aeef98bd69` to Web and Worker, with the sole Prime
 migration applied. Actual overlay room creation and authenticated saved episode
 history passed. Resume reached the exact saved episode but stopped at Prime's
-detail/Resume screen; the pending launch follow-up supplies `autoplay=1` in both
-initial room launch and shared personal Resume navigation. Confirmed Resume seek,
+detail/Resume screen; PR #559 supplied `autoplay=1` in both initial room launch
+and shared personal Resume navigation. Post-delivery website Resume opens the
+primary player automatically, but confirmed application of the saved position
+remains unproved. The pending readiness fix addresses a locally reproduced
+cancellation before Prime's first SDK snapshot. Confirmed Resume seek,
 two-client sync and the remaining loaded-client cases are still acceptance gates.
 Production remains excluded.
 
@@ -247,7 +256,7 @@ navigation limitation; source, tests and artifact receipts remain authoritative.
 The November 16 owner authorization permitted the following bounded staging
 procedure. Schema/runtime delivery steps 1–4 completed for PR #557; step 5 still
 has the acceptance limits above. Deployment and browser receipts are recorded
-in the controller's SDD delivery report. The launch follow-up requires its own
+in the controller's SDD delivery report. The readiness follow-up requires its own
 staging PR, compatible artifact and browser acceptance:
 
 1. Freeze the reviewed feature head, open its PR into `staging`, run the required
