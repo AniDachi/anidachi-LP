@@ -1,7 +1,7 @@
 import { fixture, gtis, ids } from "./fixture";
 
-// Small representative of sanitized Upload HTML: two preparations, four observed
-// seasons, explicit pagination/counts and typed PLAY actions (disabled SSR buttons).
+// Small representative of observed Upload HTML: empty ATF episodeList, explicit
+// BTF pagination/counts, four observed seasons and typed PLAY (disabled SSR DOM).
 export function catalogFixture() {
 	const f = fixture();
 	const seasons = [
@@ -83,7 +83,7 @@ export function catalogFixture() {
 					isSelected: row.full === season.full,
 				})),
 			},
-			episodeList: { actions: { pagination: [], episodePages: [] } },
+			episodeList: {},
 		};
 		Object.assign(atf, { state });
 		Object.assign(btf, {

@@ -232,8 +232,38 @@ function parsePage(
 		return null;
 	let members: string[] | null = null;
 	for (const state of states) {
+		// ATF can omit episodeList or contain only an empty placeholder. It is
+		// not positive membership evidence; the actual BTF collection must still
+		// prove every member, count and selected page below.
+		if (state.episodeList === undefined) continue;
+		if (
+			!state.episodeList ||
+			typeof state.episodeList !== "object" ||
+			Array.isArray(state.episodeList)
+		)
+			return null;
 		const list = object(state.episodeList),
 			actions = object(list.actions);
+		if (
+			list.actions !== undefined &&
+			(!list.actions ||
+				typeof list.actions !== "object" ||
+				Array.isArray(list.actions))
+		)
+			return null;
+		if (list.cardTitleIds === undefined) {
+			if (
+				list.totalCardSize !== undefined ||
+				(actions.pagination !== undefined &&
+					(!Array.isArray(actions.pagination) ||
+						actions.pagination.length !== 0)) ||
+				(actions.episodePages !== undefined &&
+					(!Array.isArray(actions.episodePages) ||
+						actions.episodePages.length !== 0))
+			)
+				return null;
+			continue;
+		}
 		if (
 			!Array.isArray(actions.pagination) ||
 			actions.pagination.length !== 0 ||
@@ -242,11 +272,6 @@ function parsePage(
 			actions.episodePages.some((page) => object(page).isSelected !== true)
 		)
 			return null;
-		if (list.cardTitleIds === undefined) {
-			if (list.totalCardSize !== undefined || actions.episodePages.length !== 0)
-				return null;
-			continue;
-		}
 		if (
 			!Array.isArray(list.cardTitleIds) ||
 			list.cardTitleIds.length < 1 ||

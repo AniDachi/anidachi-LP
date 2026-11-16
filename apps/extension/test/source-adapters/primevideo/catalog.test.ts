@@ -105,6 +105,73 @@ it("returns every unplayed season through the actual MAIN/client bridge using ty
 		}
 });
 
+it.each([
+	"absent",
+	"empty",
+	"empty-actions",
+	"explicit-empty-pages",
+])("accepts %s non-episode ATF collection while requiring full BTF proof", async (mode) => {
+	const f = setup();
+	for (let index = 0; index < f.pages.length; index++) {
+		const atf = state(f, index, "atf");
+		if (mode === "absent") delete atf.episodeList;
+		if (mode === "empty") atf.episodeList = {};
+		if (mode === "empty-actions") atf.episodeList = { actions: {} };
+		if (mode === "explicit-empty-pages")
+			atf.episodeList = { actions: { pagination: [], episodePages: [] } };
+	}
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(f.pages[3]!.data);
+	const result = await f.collect();
+	expect(result?.catalog?.completeness).toBe("complete");
+	expect(
+		result?.catalog?.seasons.map((season) => season.episodes.length),
+	).toEqual([2, 1, 1, 2]);
+	expect(f.fetcher).toHaveBeenCalledTimes(4);
+});
+
+it.each([
+	"invalid-list",
+	"invalid-actions",
+	"invalid-pagination",
+	"invalid-pages",
+	"orphan-count",
+	"orphan-pagination",
+	"orphan-page",
+	"member-without-count",
+	"member-without-pagination",
+	"conflicting-members",
+])("rejects malformed or contradictory ATF list evidence: %s", async (mode) => {
+	const f = setup(),
+		atf = state(f, 1, "atf");
+	const btfList = object(state(f, 1).episodeList);
+	if (mode === "invalid-list") atf.episodeList = [];
+	if (mode === "invalid-actions") atf.episodeList = { actions: null };
+	if (mode === "invalid-pagination")
+		atf.episodeList = { actions: { pagination: {} } };
+	if (mode === "invalid-pages")
+		atf.episodeList = { actions: { episodePages: {} } };
+	if (mode === "orphan-count") atf.episodeList = { totalCardSize: 1 };
+	if (mode === "orphan-pagination")
+		atf.episodeList = { actions: { pagination: [{ next: true }] } };
+	if (mode === "orphan-page")
+		atf.episodeList = { actions: { episodePages: [{ isSelected: true }] } };
+	if (mode === "member-without-count") {
+		atf.episodeList = structuredClone(btfList);
+		delete object(atf.episodeList).totalCardSize;
+	}
+	if (mode === "member-without-pagination") {
+		atf.episodeList = structuredClone(btfList);
+		delete object(object(atf.episodeList).actions).pagination;
+	}
+	if (mode === "conflicting-members")
+		atf.episodeList = {
+			...structuredClone(btfList),
+			cardTitleIds: [f.pages[0]!.members[0]!.full],
+		};
+	expect((await f.collect())?.catalog?.completeness).toBe("partial");
+});
+
 it("keeps translated titles separate from stable series/season/episode identity", async () => {
 	const f = setup();
 	for (let index = 0; index < 3; index++) {
