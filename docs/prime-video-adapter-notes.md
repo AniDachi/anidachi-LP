@@ -107,6 +107,13 @@ The pending readiness fix permits waiting without a source descriptor only
 while Prime is in transition and its bound content fingerprint exactly matches
 the canonical intent. Missing/changed identity outside that state cancels;
 claim and seek still require the full exact descriptor and all existing guards.
+The same pending candidate captures validated initial Prime room/Resume data in
+isolated-world memory at `document_start`, before a detectable player or overlay
+exists. Prime was observed to clear the entire fragment during autoplay startup.
+The one-use handoff requires the original canonical route and bound fingerprint,
+expires within five minutes, gives rooms precedence and drops stale data on
+source/account change, a new explicit intent, consumption or lifecycle disposal.
+It never exposes launch state through MAIN, DOM or persistent storage.
 
 Player geometry and composer isolation use the existing overlay seams and
 semantic controls, without English button-label or hashed-class assumptions.

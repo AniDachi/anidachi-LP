@@ -34,6 +34,8 @@ identity, bounded intent and room exclusion. Actual website Resume now opens the
 primary player automatically; the saved-position seek remains unproved. Pending
 `codex/prime-resume-readiness` fixes a reproduced cancellation before Prime's
 first SDK snapshot, waiting only for an exact bound fingerprint in transition.
+The candidate also captures initial Prime room/Resume data before the provider's
+observed fragment removal, with a bounded one-use document-local handoff.
 Its staging delivery/acceptance and room-launch browser acceptance remain open.
 The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
 records the bounded schema-first exception; final deployment receipts belong in
