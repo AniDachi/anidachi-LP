@@ -115,15 +115,48 @@ export default defineContentScript({
   matches: CONTENT_SCRIPT_MATCHES,
   allFrames: true,
   runAt: "document_start",
-  main() {
-    startContentLifecycle();
+  main(context) {
+    const runtime = startContentLifecycle();
+    context.onInvalidated(runtime.dispose);
   },
 });
 
 export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
+  let disposed = false;
+  let session: ContentLifecycleRuntime | null = startContentLifecycleSession(overrides);
+  const hide = (event: PageTransitionEvent) => {
+    session?.dispose();
+    session = null;
+    if (!event.persisted) dispose();
+  };
+  const show = (event: PageTransitionEvent) => {
+    if (event.persisted && !disposed && !session) {
+      session = startContentLifecycleSession(overrides, true);
+    }
+  };
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    window.removeEventListener("pagehide", hide);
+    window.removeEventListener("pageshow", show);
+    session?.dispose();
+    session = null;
+  };
+  // A cached document does not rerun content scripts on Back/Forward. Release
+  // live room/player resources while away, then discover a fresh player binding.
+  window.addEventListener("pagehide", hide);
+  window.addEventListener("pageshow", show);
+  return { dispose, reconcile: () => session?.reconcile() ?? "idle" };
+}
+
+function startContentLifecycleSession(
+  overrides: Partial<ContentLifecycleDependencies>,
+  restoredFromCache = false,
+): ContentLifecycleRuntime {
   const primeLaunch = createPrimeLaunchCapture(location.href);
+  const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
@@ -142,6 +175,11 @@ export function startContentLifecycle(
   let acceptedLaunch: {fingerprint:string;handoff:PrimeLaunchHandoff;ready:Promise<boolean>} | null = null;
   const mountWithLaunch = (adapter: VideoAdapter) => {
     const href=location.href;
+    // Returning to a cached document is not a new invitation/Resume. A valid
+    // background pending intent may recover, but the old fragment must not replay.
+    const capturedLaunch = () => adapter.provider === "primevideo" && restoredLaunch?.blocksFragment?.(location.href)
+      ? restoredLaunch
+      : primeLaunch.handoff(adapter, location.href);
     const current=()=>!disposed&&manager.current===adapter;
     if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
       void recoverPrimeLaunch(adapter,current).catch(() => undefined).then(async recovered => {
@@ -157,9 +195,9 @@ export function startContentLifecycle(
         }
         if (recovered === false || recovered === undefined || recovered?.rejected) primeLaunch.dispose();
         if (recovered && mounted) { mounted.dispose(); mounted = null; }
-        if (!mounted) mounted = dependencies.mount(adapter, (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? primeLaunch.handoff(adapter, location.href));
+        if (!mounted) mounted = dependencies.mount(adapter, (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch());
       });
-    } else if (!mounted) mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
+    } else if (!mounted) mounted = dependencies.mount(adapter, capturedLaunch());
   };
 
   const manager = new AdapterManager({
@@ -305,7 +343,6 @@ export function startContentLifecycle(
     navigation?.removeEventListener("currententrychange", scheduleMountCheck);
     window.removeEventListener("popstate", scheduleMountCheck);
     window.removeEventListener("hashchange", scheduleMountCheck);
-    window.removeEventListener("pagehide", dispose);
     stopKeyboardGuard();
     stopProviderStudy?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
@@ -313,8 +350,6 @@ export function startContentLifecycle(
     mounted?.suspend();
     manager.dispose();
   };
-
-  window.addEventListener("pagehide", dispose);
 
   return { dispose, reconcile };
 }

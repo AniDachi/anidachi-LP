@@ -13,6 +13,23 @@ Loaded browser acceptance passed for both follow-ups. The
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
+## Capsule detection and cached-page return
+
+The follow-up to staging `1443ae27` verifies all eight supported domain families
+at the apex, `www`, and a synthetic nested subdomain through MAIN, registry and
+the real overlay host. Regional/language paths and a player becoming ready
+after same-document navigation are covered. Domain coverage is checked against
+[Prime's marketplace directory](https://www.primevideo.com/help?nodeId=202064890);
+this does not claim authenticated playback on every regional catalog.
+
+A confirmed lifecycle gap left the capsule disposed after browser Back/Forward
+cache restoration, although the Prime MAIN bridge restarted. The content owner
+now releases the session on pagehide and creates one fresh session on persisted
+pageshow. Explicit disposal/extension invalidation prevents resurrection. The
+old Prime invitation/Resume fragment stays fenced; valid background pending
+intent recovery remains available. Permissions and provider identity checks are
+unchanged. Loaded synthetic-browser evidence and owner acceptance are distinct.
+
 ## Source and permission scope
 
 The persisted room/history source is exactly

@@ -66,6 +66,16 @@ Prime rows, epochs and receipts when rolling clients/server back.
 
 ## Global Constraints
 
+### Task 12: Verify capsule detection on supported Amazon surfaces
+
+Owner requests checking recognition and capsule presence across Amazon. Verify
+the eight existing domain families through actual MAIN/discovery/mount paths,
+including locale/region paths, delayed SPA player readiness and page restore.
+Fix the reproduced Back/Forward-cache disposal gap without widening permissions
+or replaying old launch fragments. Run extension checks/tests, build/validate
+the staging artifact and inspect it in an isolated synthetic browser. Preserve
+owner-led authenticated regional playback acceptance as a separate boundary.
+
 ### November 16 regional-address follow-up (Task 9)
 
 The owner's later instruction is to make the adapter accept all official Prime
