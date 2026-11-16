@@ -42,8 +42,10 @@ The host inventory comes from [Prime's marketplace directory](https://www.primev
 An ASIN or full-GTI route needs matching public page/self metadata and the current
 SDK title before it can become a canonical compactGTI source. Shopping videos,
 trailers, tracking parameters and title text cannot establish that identity.
-The extension uses explicit hosts and Amazon video/share script paths, with one
-top-frame MAIN entry at `document_start`; there is no wildcard Amazon permission.
+The extension separates explicit host/resource origins from Amazon video/share
+script paths, with one top-frame MAIN entry at `document_start`. Chrome requires
+web-accessible resource matches to end in `/*`; the exposed resource remains
+only the logo. There is no wildcard Amazon permission.
 Task 9 review and loaded-artifact acceptance are in progress; this scope
 is not evidence that every marketplace/account has been tested. No public
 announcement, Store publication, secret or environment addition is included.
@@ -277,8 +279,13 @@ same-origin canonical ASIN. Its public self record is keyed by ASIN and supplies
 the full GTI and compactGTI separately. This evidence informs alias resolution;
 the account could not play this title, so its playback test uses an explicitly
 synthetic SDK identity. This is parsing/integration evidence, not live Amazon
-playback acceptance. Regional loaded-artifact acceptance and delivery receipts
-remain pending. No source IDs, seasons or totals are inferred from translated
+playback acceptance. The first regional artifact passed the project validator but
+Chrome rejected its manifest: resource matches incorrectly reused path-scoped
+Amazon script matches. The correction separates origin and injection lists and
+adds negative manifest validation cases. [Chrome's resource manifest contract](https://developer.chrome.com/docs/extensions/reference/manifest/web-accessible-resources)
+requires origin-only matching. Regional loaded-artifact acceptance and delivery
+receipts are tracked in [PR #563](https://github.com/AniDachi/anidachi-LP/pull/563).
+No source IDs, seasons or totals are inferred from translated
 labels, an account's watch position or a missing season list.
 
 ## Local evidence and remaining acceptance
