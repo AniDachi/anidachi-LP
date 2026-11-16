@@ -1,3 +1,4 @@
+import type {PrimeNavigation} from "@anidachi/protocol";
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -18,7 +19,7 @@ type Props = {
   busy: boolean; nextCursor: string | null; loadingMore: boolean; capacity: ReactNode | ((provider: HistoryPlatform) => ReactNode);
   onLoadMore(): void; onEdited(): Promise<void>; onDraftChange(active: boolean): void;
   captureAccessFailure(): (error: unknown) => boolean;
-  onResume(provider: WatchHistoryItem["provider"], url: string, time: number): void;
+  onResume(provider: WatchHistoryItem["provider"], url: string, time: number, navigation?:PrimeNavigation): void;
   onDelete(target: WatchHistoryDeleteScope): void;
 };
 const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", primevideo: "Prime Video", amazon: "Prime Video" })[provider];
@@ -171,7 +172,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     setLoading(true); setError(null);
     try {
       const query = new URLSearchParams({ provider: item.provider, titleKey: item.titleKey, accountGeneration: String(generation) });
-      const next = WatchHistoryEditorResponseSchema.parse(await api<unknown>(`/api/watch-history/v3/editor?${query}`, { headers: { [WATCH_HISTORY_OWNER_HEADER]: owner }, signal: controller.signal }));
+      const next = WatchHistoryEditorResponseSchema.parse(await api<unknown>(`/api/watch-history/v3/editor?${query}`, { headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: owner }, signal: controller.signal }));
       if (next.meta.ownerUserId !== owner || next.meta.accountGeneration !== generation || next.titleKey !== item.titleKey || next.provider !== item.provider)
         throw new Error("The signed-in account or history changed. Reload this page.");
       if (!mounted.current || id !== requestId.current) return;
@@ -249,7 +250,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     retryRequest.current = body;
     try {
       const ack = WatchHistoryEditAckSchema.parse(await api<unknown>("/api/watch-history/v3/editor", {
-        method: "POST", headers: { [WATCH_HISTORY_OWNER_HEADER]: owner }, body: JSON.stringify(body),
+        method: "POST", headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: owner }, body: JSON.stringify(body),
       }));
       if (ack.meta.ownerUserId !== owner || ack.meta.accountGeneration !== generation || ack.clientMutationId !== body.clientMutationId)
         throw new Error("Could not confirm the saved progress. Retry to check the result.");
@@ -371,7 +372,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           <div className="wh-episode-name"><span>{single ? (item.provider === "youtube" ? "Video" : "Film") : episodeLabel(selected, episodes.indexOf(selected))}</span><h4>{single ? (watched(selected) ? "Watched" : progress > 0 ? "In progress" : "Not watched") : selected.episodeTitle}</h4></div>
           <div className="wh-progress" role="progressbar" aria-label="Episode progress" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress * 100}%` }} /></div>
           <div className="wh-playback"><span>{selected.duration > 0 ? `${clock(currentTime)} / ${clock(selected.duration)}` : watched(selected) ? "Marked as watched" : currentTime > 0 ? `${clock(currentTime)} watched` : "Not started"}</span>
-            {!editing && <button className="wh-primary" disabled={busy} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
+            {!editing && <button className="wh-primary" disabled={busy} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime,selected.primeNavigation))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
           </div>
         </div>}
       </>}

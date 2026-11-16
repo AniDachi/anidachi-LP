@@ -1,4 +1,5 @@
-import { hasPrimeVideoHostname, MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "@anidachi/protocol";
+import { hasPrimeBrowserHost, parsePrimePageUrl } from "../primevideo/url";
+import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "@anidachi/protocol";
 import type { SourceProvider } from "./types";
 
 export function normalizeVideoFingerprint(rawFingerprint: string): string {
@@ -41,7 +42,7 @@ export function canonicalWatchSourceUrl(value: string): string | null {
 }
 
 export function sourceProviderFromUrl(value: string): SourceProvider | null {
-  if (hasPrimeVideoHostname(value)) return "primevideo";
+  if (hasPrimeBrowserHost(value)) return parsePrimePageUrl(value) ? "primevideo" : null;
   try {
     const hostname = new URL(value, location.href).hostname.toLowerCase();
     if (

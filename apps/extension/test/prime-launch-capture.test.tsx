@@ -200,3 +200,16 @@ it("invalidates a new explicit Resume instead of reviving an older captured room
 	navigate(sourceUrl);
 	expect(launch.readRoom(location.href, fingerprint, historyOwner)).toBeNull();
 });
+
+it("preserves initial room handoff across equivalent regional detail addresses", () => {
+ const regional = sourceUrl.replace('/detail/', '/region/na/detail/');
+ const page = delayedMount(`${regional}?autoplay=1#anidachiRoom=regional-room`);
+ navigate(`${regional}?ref_=x`);
+ expect(page.mount()?.readRoom(location.href, fingerprint, historyOwner)).toBe('regional-room');
+});
+it("preserves canonical Resume identity on a regional launch", async () => {
+ const href = (await resumeUrl()).replace('/detail/', '/region/na/detail/');
+ const page = delayedMount(href);
+ navigate(sourceUrl.replace('/detail/', '/region/na/detail/'));
+ expect(page.mount()?.takeResume(location.href, fingerprint)?.sourceUrl).toBe(sourceUrl);
+});

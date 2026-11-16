@@ -2074,8 +2074,8 @@ it("Prime movies and partial series keep provider identity in filters, editor an
       }
       assert.ok(server.calls.some(call => call.path.includes("/editor?provider=primevideo") && call.path.includes(encodeURIComponent(history.items[0].titleKey))));
       await click(buttonByText(view.container, "Resume"));
-      await waitFor(() => assert.equal(new URL(testWindow.location.href).hostname, "www.primevideo.com"));
-      const url = new URL(testWindow.location.href);
+      await waitFor(() => assert.ok([...view.container.querySelectorAll("a")].find(a=>a.textContent==="Open on Prime Video")));
+      const url = new URL([...view.container.querySelectorAll("a")].find(a=>a.textContent==="Open on Prime Video")!.href);
       assert.equal(url.pathname, `/detail/${"E".repeat(26)}`);
       assert.equal(url.search, "?autoplay=1");
       assert.equal(parsePersonalHistoryResumeUrl(url.href)?.sourceUrl,
@@ -2106,8 +2106,8 @@ it("complete Prime catalog exposes an unplayed season and opens its exact episod
     await click(episode);
     assert.match(view.container.textContent ?? "", /Not started/);
     await click(buttonByText(view.container, "Watch"));
-    await waitFor(() => assert.equal(new URL(testWindow.location.href).pathname, `/detail/${unseenId}`));
-    const resume = parsePersonalHistoryResumeUrl(testWindow.location.href);
+    await waitFor(() => assert.ok([...view.container.querySelectorAll("a")].find(a=>a.textContent==="Open on Prime Video")));
+    const resume = parsePersonalHistoryResumeUrl([...view.container.querySelectorAll("a")].find(a=>a.textContent==="Open on Prime Video")!.href);
     assert.equal(resume?.sourceUrl, `https://www.primevideo.com/detail/${unseenId}`);
     assert.equal(resume?.currentTime, 0);
     assert.equal(server.calls.filter(call => call.path.includes("/editor") && call.body).length, 0);

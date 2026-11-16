@@ -133,6 +133,19 @@ describe("Prime exact public metadata admission", () => {
 		bridgeTransport();
 		stops.push(startPrimeBridge());
 		const assign = vi.fn();
+		const sendMessage = vi.fn(async (message: { action: string }) =>
+			message.action === "start"
+				? {
+						status: "prepared",
+						intentId: "11111111-1111-4111-8111-111111111111",
+						ownerUserId: "owner",
+					}
+				: {
+						status: "ready",
+						url: `https://www.primevideo.com/detail/${ids.first}?autoplay=1#anidachiRoom=room`,
+					},
+		);
+		vi.stubGlobal("chrome", { runtime: { sendMessage } });
 		Object.defineProperty(window, "location", {
 			configurable: true,
 			value: {
@@ -163,7 +176,15 @@ describe("Prime exact public metadata admission", () => {
 		expect(
 			(await primeVideoDefinition.ensureSource(source, context)).status,
 		).toBe("navigation-started");
-		expect(assign).toHaveBeenCalledWith(`${url}?autoplay=1#anidachiRoom=room`);
+		expect(sendMessage).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "ANIDACHI_PRIME_LAUNCH",
+				action: "start",
+				contentId: ids.first,
+				roomId: "room",
+			}),
+		);
+		expect(assign).not.toHaveBeenCalled();
 		expect(f.video.hasAttribute(PRIME_BINDING)).toBe(false);
 		const abort = new AbortController();
 		abort.abort();
@@ -286,4 +307,101 @@ it("accepts agreeing ATF/BTF season1 evidence and matching known self identity",
 		seriesAnchorSeasonId: ids.anchor,
 	});
 	expect(inspectPrimeSdk()?.page.catalog?.providerSeriesId).toBe(ids.anchor);
+});
+
+it("admits regional metadata through SDK, binding and provider definition across native episode replacement", () => {
+	const f = fixture();
+	const raw = JSON.stringify(f.data).replaceAll(
+		"/detail/",
+		"/region/na/detail/",
+	);
+	document.getElementById("dv-web-page-hydration-data")!.textContent = raw;
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(
+			`https://www.primevideo.com/region/na/detail/${ids.season}?ref_=x`,
+		),
+	});
+	stops.push(startPrimeBridge());
+	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.first);
+	expect(primeVideoDefinition.detect(f.video)?.provider).toBe("primevideo");
+	f.next();
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(f.data).replaceAll("/detail/", "/region/na/detail/");
+	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.second);
+});
+
+it("keeps playback but suspends history when a malformed self alias contradicts the season-1 compact link", () => {
+	const f = fixture();
+	Object.assign(f.data.init.preparations.body.atf.state.self, {
+		B012345678: { link: `/detail/${ids.anchor}` },
+	});
+	f.write();
+	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.first);
+	expect(inspectPrimeSdk()?.page.metadata.identity).toBeNull();
+});
+
+it("recovers a cleared-fragment launch only after a real MAIN bridge snapshot and respects rejected pending state", async () => {
+	const { recoverPrimeLaunch, startPrimeRoom } = await import(
+		"../../../src/prime-launch-client"
+	);
+	const f = fixture();
+	bridgeTransport();
+	stops.push(startPrimeBridge());
+	const adapter = primeVideoDefinition.detect(f.video)!;
+	expect(adapter).not.toBeNull();
+	const pending = {
+		intentId: "11111111-1111-4111-8111-111111111111",
+		contentId: ids.first,
+		owner: { userId: "owner", loginId: "login", generation: 1 },
+		roomId: "room",
+		expiresAt: Date.now() + 60000,
+		attempts: 1,
+	};
+	const sendMessage = vi.fn(async () => ({ status: "ready", pending }));
+	vi.stubGlobal("chrome", { runtime: { sendMessage } });
+	try {
+		const recovered = await recoverPrimeLaunch(adapter);
+		expect(recovered).toBeTruthy();
+		if (!recovered) throw new Error("Expected handoff");
+		expect(
+			recovered.readRoom(location.href, adapter.getFingerprint(), "owner"),
+		).toBe("room");
+		expect(
+			recovered.readRoom(location.href, adapter.getFingerprint(), "other"),
+		).toBeNull();
+		recovered.consumeRoom();
+		expect(
+			recovered.readRoom(location.href, adapter.getFingerprint(), "owner"),
+		).toBeNull();
+		sendMessage.mockResolvedValueOnce({ status: "blocked" } as never);
+		expect(await recoverPrimeLaunch(adapter)).toMatchObject({rejected:true});
+		const abort = new AbortController();
+		sendMessage.mockImplementationOnce(async () => {
+			abort.abort();
+			return {
+				status: "prepared",
+				intentId: pending.intentId,
+				ownerUserId: "owner",
+			} as never;
+		});
+		const count = sendMessage.mock.calls.length;
+		expect(
+			await startPrimeRoom(
+				{
+					provider: "primevideo",
+					title: "Episode",
+					sourceUrl: `https://www.primevideo.com/detail/${ids.first}`,
+					canonicalUrl: `https://www.primevideo.com/detail/${ids.first}`,
+					videoFingerprint: `primevideo|detail/${ids.first}`,
+				},
+				"room",
+				location.origin,
+				abort.signal,
+			),
+		).toBeNull();
+		expect(sendMessage.mock.calls.length).toBe(count + 1);
+	} finally {
+		vi.unstubAllGlobals();
+	}
 });

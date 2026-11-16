@@ -66,6 +66,108 @@ Prime rows, epochs and receipts when rolling clients/server back.
 
 ## Global Constraints
 
+### November 16 regional-address follow-up (Task 9)
+
+The owner's later instruction is to make the adapter accept all official Prime
+regions and address forms, superseding the original exact `/detail/`-only
+browser scope below. The verified failure is `/region/na/detail/` on
+primevideo.com. Work continues from staging `61d814d7` on
+`codex/prime-regional-routes`. Persisted source URLs, compactGTI identities,
+fingerprints, account/history guards and server contracts remain canonical.
+
+Official marketplace hosts are primevideo.com and Amazon US, UK, Germany,
+Japan, Canada, India and Mexico, as listed by
+[Prime's marketplace directory](https://www.primevideo.com/help?nodeId=202064890).
+Accept routing/locale prefixes and documented detail/share address variants
+through one provider-local parser. Map Amazon ASIN/full-GTI aliases only using
+matching page metadata and the current SDK identity; never turn an ASIN into a
+fabricated compactGTI. Keep permissions to explicit official hosts and content
+script paths for Prime video. Store pages, trailers and unrelated shopping
+videos must not become a source merely because the host is Amazon.
+
+### Task 9: Regional routes and marketplace aliases
+
+1. Reproduce the missing overlay on the supplied SOR regional URL. Add failing
+   tests for regional/locale detail links, metadata aliases, native navigation,
+   catalog transport and initial room/Resume handoff. Add adversarial URL cases.
+2. Separate browser page recognition and observed transport links from canonical
+   persisted identity. Support current official marketplace hosts and common
+   detail/share paths. Region/language/slug/tracking parameters do not identify
+   content. SDK full GTI plus verified page mappings remain required.
+3. Normalize accepted regional/locale links throughout metadata parsing; carry
+   observed safe same-origin season URLs through catalog fetches, so regional
+   redirects are not required. Preserve bounded reads, cancellation and no
+   cross-origin credential forwarding. Catalog completeness still requires all
+   identity/count/pagination/availability proofs.
+4. Integrate page recognition with MAIN injection, registry, overlay lifecycle,
+   launch capture, current-tab/provider resolution and keyboard/composer paths.
+   Preserve canonical room/history wire contracts and existing providers. If an
+   alias cannot be proven, suspend rather than select a different episode.
+5. Run extension check/full tests, focused contract/permission regressions and
+   dev:check. Review the whole follow-up, build/validate a narrow staging ZIP,
+   verify the loaded regional page and history, then deliver via PR to staging.
+   Browser acceptance on one marketplace is not a claim that every account and
+   regional catalog was live-tested. Production remains separately authorized.
+
+### Task 10: Official domain families and subdomains
+
+The owner's subsequent request explicitly broadens Task 9's exact-www scope to
+base domains and subdomains. Apply this amendment instead of the historical
+wildcard prohibition for these eight domain families only: `primevideo.com`,
+`amazon.com`, `amazon.co.uk`, `amazon.de`, `amazon.co.jp`, `amazon.ca`, `amazon.in`
+and `amazon.com.mx`. Use HTTPS wildcard host patterns such as
+`https://*.primevideo.com/*`, covering the apex as well as subdomains. Do not add
+HTTP, arbitrary TLDs, unrelated providers or global host permissions.
+
+1. Match a validated DNS hostname at the exact family root or a dot-separated
+   suffix, supporting ordinary digits, hyphens and nested subdomains. Reject
+   suffix lookalikes, malformed labels, credentials, explicit ports and encoded
+   authority tricks. Prime-family hosts use Prime detail routes; Amazon-family
+   hosts use the existing video/detail/share routes.
+2. Expand host/resource origins and content/MAIN injection patterns together.
+   Keep resource paths exactly `/*`, with separate route-scoped Amazon script
+   patterns and independent artifact allowlists. Retain the invalid-resource
+   path regressions learned from the failed Chrome load.
+3. Prove base/subdomain recognition through the real MAIN/binding/lifecycle and
+   catalog transport paths. A known family is not sufficient to admit a source:
+   SDK identity and public metadata still must agree. Cross-subdomain catalog
+   requests remain cross-origin and must be rejected. Persisted source URLs and
+   all server/account/history contracts remain unchanged.
+4. Run the relevant regressions, extension check/full tests, independent review,
+   dev:check and a new narrow staging build/validation. Update the existing
+   PR #563 and provide the new ZIP. The owner chose to do browser acceptance
+   personally; do not resume browser control or repeatedly request reloads.
+
+### Task 11: Amazon navigation and launch continuity
+
+The owner explicitly requests closing the Amazon-specific gaps after learning
+that invitations, personal Resume and source switches still navigate to the
+canonical primevideo.com URL. Canonical content identity and the local playback
+destination must remain separate. Scope is the eight already approved domain
+families and existing room/history flows, not a new provider or global redirect.
+
+1. Trace source creation, invitation/join, popup and website Resume, catalog
+   episode launch and host-driven source switches. Record where Amazon origin
+   or an observed exact episode route is lost, including redirects and early
+   fragment clearing. Choose a coherent cross-plane contract before coding.
+2. Keep the canonical compactGTI and fingerprint authoritative. Prefer verified
+   provider links for the exact episode and a recipient's own marketplace;
+   never infer region from display language, reuse a season/previous-episode
+   address, fabricate an ASIN, or let a navigation hint authorize a mismatch.
+   Unknown regional availability must remain an explicit recoverable state.
+3. Implement the smallest compatible solution across affected launch consumers,
+   including old clients/data, delayed player startup, account/source changes,
+   missing preferences, expired intents, redirect loops and unsafe URLs. Any
+   new wire/storage contract must be additive and checked in all consumers.
+4. Prove the identified failures with behavioral regression tests before fixes;
+   run affected package checks/tests, independent review, dev:check and narrow
+   staging build/validation. Update PR #563 and provide a candidate ZIP.
+   Staging delivery is authorized where required; production is not. Owner
+   browser acceptance remains separate, with no repeated reload prompts.
+
+Original baseline constraints below describe Tasks 1–8; apply Tasks 9–11's
+explicit browser-scope amendments where they conflict.
+
 - Work only in the clean-development worktree on `codex/prime-video-adapter`,
   based on staging `2c24f661d160e6d474cce997466e7e357f21b5ad`.
 - Preserve the pre-existing `.serena/project.yml` change and all other chats.

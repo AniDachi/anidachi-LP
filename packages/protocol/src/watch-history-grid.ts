@@ -1,3 +1,4 @@
+import {PrimeNavigationSchema,primeNavigationMatches,primeNavigationTreeMatches} from "./prime-video-navigation";
 import { z } from "zod";
 import {
 	WatchCatalogStateSchema,
@@ -24,6 +25,7 @@ export const WatchHistoryGridQuerySchema = z.strictObject({
 		.default(WATCH_HISTORY_GRID_PAGE_SIZE),
 	cursor: z.string().min(1).max(2048).optional(),
 }).superRefine((value, context) => {
+ if(!primeNavigationTreeMatches(value))context.addIssue({code:"custom",message:"Invalid navigation binding"});
   if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
     (value.seasonKey !== undefined && !historyReadKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
     context.addIssue({ code: "custom", message: "Grid query must match provider" });
@@ -43,6 +45,7 @@ export const WatchHistoryGridSeasonSchema =
 	});
 
 export const WatchHistoryGridEpisodeSchema = z.strictObject({
+ primeNavigation:PrimeNavigationSchema.optional(),
 	episodeKey: Key,
 	episodeTitle: z.string().min(1).max(300),
 	episodeNumber: z.number().finite().nonnegative().nullable(),
@@ -76,6 +79,7 @@ export const WatchHistoryGridResponseSchema = z
 		nextCursor: z.string().min(1).max(2048).nullable(),
 	})
 	.superRefine((value, context) => {
+ if(!primeNavigationTreeMatches(value))context.addIssue({code:"custom",message:"Invalid navigation binding"});
 		if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series"]) ||
 		  (value.seasonKey !== null && !historyReadKeyMatchesProvider(value.provider, value.seasonKey, ["season"])))
 		  context.addIssue({ code: "custom", message: "Grid identity must match provider" });

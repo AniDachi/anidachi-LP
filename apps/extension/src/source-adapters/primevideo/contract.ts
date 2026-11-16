@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
 	canonicalizeRoomSourceUrl,
+ PrimeNavigationSchema,
 	PrimeVideoProviderIdSchema,
 	PrimeVideoHistoryIdentitySchema,
 	WatchCatalogLocaleContextSchema,
@@ -39,6 +40,7 @@ export function isPrimeArtwork(value: string): boolean {
 export const PrimeMetadataSchema = z.strictObject({
 	// Playback identity remains usable when the season-1 history anchor is absent.
 	identity: PrimeVideoHistoryIdentitySchema.nullable(),
+ primeNavigation: PrimeNavigationSchema.optional(),
 	title,
 	episodeTitle: title,
 	seasonTitle: title.nullable(),
@@ -67,6 +69,7 @@ export const PrimeSnapshotSchema = z
 	.refine(
 		(s) =>
 			s.currentTime <= s.duration &&
+ (!s.metadata.primeNavigation || s.metadata.primeNavigation.contentId === s.contentId) &&
 			(!s.metadata.identity ||
 				(s.metadata.identity.kind === "movie"
 					? s.metadata.identity.providerMovieId

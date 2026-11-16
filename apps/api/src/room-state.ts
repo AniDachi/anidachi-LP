@@ -159,6 +159,7 @@ export class RoomState {
       sourceUrl: this.source.sourceUrl,
       canonicalUrl: this.source.canonicalUrl,
       videoFingerprint: this.source.videoFingerprint,
+      ...(this.source.primeNavigation ? {primeNavigation:this.source.primeNavigation} : {}),
     };
     const parsed = RoomSourceDescriptorSchema.safeParse(durableSource);
     return parsed.success ? parsed.data : undefined;
@@ -327,6 +328,10 @@ export class RoomState {
       return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
     }
     const nextSource = normalized.source;
+    if (nextSource?.provider === "primevideo" && !nextSource.primeNavigation &&
+        previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.primeNavigation) {
+      nextSource.primeNavigation = previousSource.primeNavigation;
+    }
     if (
       nextSource &&
       this.sourceProvider !== undefined &&
@@ -1034,6 +1039,7 @@ function normalizeWatchSourceDescriptor(
     sourceUrl: sourceUrl.source.sourceUrl,
     canonicalUrl: sourceUrl.source.canonicalUrl,
     videoFingerprint: expectedFingerprint,
+    ...(candidate.primeNavigation ? {primeNavigation:candidate.primeNavigation} : {}),
   };
   if (!RoomSourceDescriptorSchema.safeParse(durableSource).success) return null;
 
