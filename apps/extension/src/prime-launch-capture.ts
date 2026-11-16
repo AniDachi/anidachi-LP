@@ -10,6 +10,12 @@ import {
 import type { VideoAdapter } from "./source-adapters/core/types";
 
 export interface PrimeLaunchHandoff {
+ /** Optional session transaction is committed only after lifecycle acceptance. */
+ rejected?: true;
+ intentId?: string;
+ commit?(): Promise<boolean>;
+ blocksFragment?(href: string): boolean;
+
 	readRoom(
 		href: string,
 		fingerprint: string,
@@ -212,4 +218,16 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 			return handoff;
 		},
 	};
+}
+
+/** Fence only the rejected launch, leaving a genuinely new explicit launch usable. */
+export function suppressedPrimeLaunch(href: string, rejection?: {intentId?:string;roomId?:string;resumeIntentId?:string}): PrimeLaunchHandoff {
+ const rejected=signature(href);
+ return {rejected:true,intentId:rejection?.intentId,blocksFragment: current => {
+  if(!rejection)return rejected!==null&&signature(current)===rejected;
+  const params=new URLSearchParams(new URL(current).hash.slice(1));
+  if(params.has("anidachiRoom"))return rejection.roomId!==undefined&&params.get("anidachiRoom")===rejection.roomId;
+  if(params.has("anidachiResume")){try{return JSON.parse(params.get("anidachiResume")!).intentId===rejection.resumeIntentId;}catch{return false;}}
+  return false;
+ },readRoom:()=>null,consumeRoom(){},takeResume:()=>null};
 }

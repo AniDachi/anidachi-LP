@@ -838,7 +838,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const capturedPrimeRoomId = initialPrimeLaunchRef.current?.readRoom(location.href, adapter.getFingerprint(), identityLoaded ? participant?.id ?? null : undefined) ?? null;
-	const initialRoomTarget = getRoomIdFromHash() ?? capturedPrimeRoomId ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
+	const primeLaunchSuppressed = initialPrimeLaunchRef.current?.blocksFragment?.(location.href) ?? false;
+ const initialRoomTarget = (primeLaunchSuppressed ? null : getRoomIdFromHash()) ?? capturedPrimeRoomId ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
@@ -2817,7 +2818,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		const explicit = params.has("anidachiRoom") || params.has("anidachiResume");
 		const captured = initialPrimeLaunchRef.current?.takeResume(location.href, adapter.getFingerprint()) ?? null;
 		const live = takePersonalHistoryResume(location, (url) => history.replaceState(history.state, "", url));
-		personalResumeIntentRef.current = explicit ? live : captured;
+		// A verified capture can match the intact canonical intent on an Amazon alias.
+        // takeResume rejects a newer/different explicit intent before we remove the hash.
+        personalResumeIntentRef.current = primeLaunchSuppressed ? null : (captured ?? (explicit ? live : null));
 	}, []);
 	useEffect(() => {
 		const intent = personalResumeIntentRef.current;
@@ -4991,13 +4994,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			return;
 		}
 
-		const hashRoomId = getRoomIdFromHash() ?? capturedPrimeRoomId;
+		const hashRoomId = (primeLaunchSuppressed ? null : getRoomIdFromHash()) ?? capturedPrimeRoomId;
 		const persistedRoomId =
 			storedRoomSession?.ownerUserId === currentUserId &&
 			capturedPrimeRestoreOwnerRef.current !== currentUserId
 				? storedRoomSession.roomId
 				: null;
-		const initialRoomId = hashRoomId ?? persistedRoomId;
+		const initialRoomId = primeLaunchSuppressed ? null : hashRoomId ?? persistedRoomId;
 		if (initialRoomId) {
 			if (!participant) {
 				setAuthMessage("Sign in to join Anidachi rooms.");

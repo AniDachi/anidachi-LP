@@ -354,3 +354,16 @@ test("Netflix grid binds store reads, snapshot, progress and resume to its provi
   row.provider = "crunchyroll";
   await assert.rejects(read(store, { provider: "netflix", titleKey }), { code: "INVALID_RESPONSE" });
 });
+
+test('new Web restores exact catalog hints from the opt-in column without changing legacy JSON',async()=>{
+ const {restorePrimeCatalogNavigation}=await import('./watch-history-grid');
+ const id='0IUGS56V361WRU60PCC5XH5D8Z',sourceUrl=`https://www.primevideo.com/detail/${id}`;
+ const hint={contentId:id,routes:[{url:'https://www.amazon.com/gp/video/detail/B0FX2ZCPFK',observedAt:'2026-11-16T00:00:00Z'}]};
+ const row={provider:'primevideo',snapshot:{seasons:[{episodes:[{watchVariants:[{sourceUrl}]}]}]},projection:{seasons:[{episodes:[{sourceUrl}]}]},prime_navigation:{[sourceUrl]:hint}};
+ const before=structuredClone(row);
+ const restored=restorePrimeCatalogNavigation(row)! as any;
+ assert.deepEqual(restored.snapshot.seasons[0].episodes[0].watchVariants[0].primeNavigation,hint);
+ assert.deepEqual(restored.projection.seasons[0].episodes[0].primeNavigation,hint);
+ assert.deepEqual(row,before);
+ assert.equal((restorePrimeCatalogNavigation({...row,prime_navigation:{[sourceUrl]:{...hint,contentId:'B'.repeat(26)}}}) as any).projection.seasons[0].episodes[0].primeNavigation,undefined);
+});

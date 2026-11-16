@@ -375,7 +375,7 @@ it("recovers a cleared-fragment launch only after a real MAIN bridge snapshot an
 			recovered.readRoom(location.href, adapter.getFingerprint(), "owner"),
 		).toBeNull();
 		sendMessage.mockResolvedValueOnce({ status: "blocked" } as never);
-		expect(await recoverPrimeLaunch(adapter)).toBe(false);
+		expect(await recoverPrimeLaunch(adapter)).toMatchObject({rejected:true});
 		const abort = new AbortController();
 		sendMessage.mockImplementationOnce(async () => {
 			abort.abort();

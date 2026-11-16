@@ -53,8 +53,14 @@ const CommandSchema = z.discriminatedUnion("action", [
 	}),
 	z.strictObject({
 		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
+		action: z.literal("recover"),
+		contentId: PrimeVideoProviderIdSchema,
+	}),
+	z.strictObject({
+		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
 		action: z.literal("take"),
 		contentId: PrimeVideoProviderIdSchema,
+		intentId: z.uuid(),
 	}),
 	z.strictObject({
 		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
@@ -123,7 +129,14 @@ async function handle(
 	);
 	const provider = !!sender.url && !!parsePrimePageUrl(sender.url);
 	let current = await owner();
-	if (!current) return { status: "blocked" };
+	if (!current)
+		return {
+			status: "blocked",
+			rejection:
+				sender.tab?.id === undefined
+					? undefined
+					: await store().rejection(sender.tab.id),
+		};
 	const start = StartSchema.safeParse(message);
 	if (start.success) {
 		const input = start.data;
@@ -258,13 +271,25 @@ async function handle(
 		tab = sender.tab?.id;
 	if (!command.success || external || tab === undefined)
 		return { status: "cancelled" };
-	if (command.data.action === "take") {
+	if (command.data.action === "take" || command.data.action === "recover") {
 		if (!provider) return { status: "cancelled" };
 		const existed = await store().has(tab);
-		const pending = await store().take(tab, current, command.data.contentId);
+		const pending =
+			command.data.action === "recover"
+				? await store().recover(tab, current, command.data.contentId)
+				: await store().take(
+						tab,
+						current,
+						command.data.contentId,
+						Date.now(),
+						command.data.intentId,
+					);
 		return pending
 			? { status: "ready", pending }
-			: { status: existed ? "blocked" : "empty" };
+			: {
+					status: existed ? "blocked" : "empty",
+					...(existed ? { rejection: await store().rejection(tab) } : {}),
+				};
 	}
 	if (!choiceUi) return { status: "cancelled" };
 	if (command.data.action === "cancel") {

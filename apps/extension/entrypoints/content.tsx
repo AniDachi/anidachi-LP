@@ -1,3 +1,4 @@
+import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
 import { recoverPrimeLaunch } from "../src/prime-launch-client";
 import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
@@ -138,13 +139,25 @@ export function startContentLifecycle(
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
 
+  let acceptedLaunch: {fingerprint:string;handoff:PrimeLaunchHandoff;ready:Promise<boolean>} | null = null;
   const mountWithLaunch = (adapter: VideoAdapter) => {
+    const href=location.href;
+    const current=()=>!disposed&&manager.current===adapter;
     if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
-      void recoverPrimeLaunch(adapter).catch(() => false as const).then(recovered => {
-        if (disposed || manager.current !== adapter) return;
-        if (recovered === false) primeLaunch.dispose();
+      void recoverPrimeLaunch(adapter,current).catch(() => undefined).then(async recovered => {
+        if(!current())return;
+        const fingerprint=adapter.getFingerprint();
+        // Once accepted, the transaction belongs to this lifecycle, not the replaced video.
+        let accepted=recovered!==undefined&&acceptedLaunch?.fingerprint===fingerprint&&(!recovered||recovered.intentId===acceptedLaunch.handoff.intentId)?acceptedLaunch:null;
+        if(!accepted && recovered && !recovered.rejected){accepted={fingerprint,handoff:recovered,ready:recovered.commit?.()??Promise.resolve(true)};acceptedLaunch=accepted;}
+        if(accepted){
+          const ok=await accepted.ready.catch(()=>false);
+          if(!current())return;
+          recovered=ok?accepted.handoff:false;
+        }
+        if (recovered === false || recovered === undefined || recovered?.rejected) primeLaunch.dispose();
         if (recovered && mounted) { mounted.dispose(); mounted = null; }
-        if (!mounted) mounted = dependencies.mount(adapter, recovered === false ? null : recovered ?? primeLaunch.handoff(adapter, location.href));
+        if (!mounted) mounted = dependencies.mount(adapter, (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? primeLaunch.handoff(adapter, location.href));
       });
     } else if (!mounted) mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
   };

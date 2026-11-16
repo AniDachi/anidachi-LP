@@ -8,6 +8,12 @@ begin
  if needle='' or (length(body)-length(replace(body,needle,'')))/length(needle)<>expected then raise exception 'prime navigation anchor mismatch: %',routine; end if;
  execute replace(body,needle,replacement);
 end $$;
+-- Keep legacy RPC definitions byte-for-byte; new Web opts into copied read functions.
+create temporary table prime_legacy_read_defs on commit drop as
+select p.oid, n.nspname, p.proname, pg_get_functiondef(p.oid) definition
+from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+where (n.nspname='public' and p.proname in ('list_watch_history_v3_provider_page','list_watch_history_v3_title_episodes_page','watch_history_browse_progress_row_v3','browse_watch_history_v3','get_watch_history_editor_v1'))
+ or (n.nspname='anidachi_history_private' and p.proname='watch_editor_snapshot');
 -- Navigation hints carry no identity authority. Reject raw authority/path hazards before parsing.
 create function public.prime_navigation_valid_v1(n jsonb, provider text, source text) returns boolean
 language plpgsql immutable set search_path='' as $$
@@ -87,8 +93,6 @@ select pg_temp.navigation_patch('anidachi_history_private.apply_watch_progress_v
     prime_navigation = case when excluded.source_url=public.watch_episode_progress.source_url then coalesce(excluded.prime_navigation,public.watch_episode_progress.prime_navigation) else excluded.prime_navigation end,
     current_time_seconds$new$,1);
 
-select pg_temp.navigation_patch('anidachi_history_private.apply_watch_progress_v3_canonical'::regproc::oid::regprocedure,$old$  acknowledgement_value :=$old$,$new$  episode_payload := episode_payload || coalesce((select jsonb_build_object('primeNavigation',p.prime_navigation) from public.watch_episode_progress p where p.user_id=p_user_id and p.provider=provider_value and p.title_key=title_key_value and p.episode_key=episode_key_value and p.prime_navigation is not null),'{}'::jsonb);
-  acknowledgement_value :=$new$,1);
 
 select pg_temp.navigation_patch('anidachi_history_private.apply_watch_catalog_v3'::regproc::oid::regprocedure,$old$'original','order','sourceUrl']$old$,$new$'original','order','sourceUrl','primeNavigation']$new$,1);
 
@@ -282,16 +286,74 @@ begin
  end if;
  return payload;
 end $$;
+alter table public.watch_catalog_snapshots add column prime_navigation jsonb;
+create function public.strip_prime_navigation_v1(payload jsonb) returns jsonb
+language plpgsql immutable set search_path='' as $$
+declare result jsonb; pair record;
+begin
+ if jsonb_typeof(payload)='array' then
+  select coalesce(jsonb_agg(public.strip_prime_navigation_v1(value)),'[]') into result from jsonb_array_elements(payload);return result;
+ elsif jsonb_typeof(payload)='object' then
+  result:='{}';for pair in select * from jsonb_each(payload) where key not in ('primeNavigation','prime_navigation') loop result:=result||jsonb_build_object(pair.key,public.strip_prime_navigation_v1(pair.value));end loop;return result;
+ end if;return payload;
+end $$;
+revoke all on function public.strip_prime_navigation_v1(jsonb) from public,anon,authenticated;
+grant execute on function public.strip_prime_navigation_v1(jsonb) to service_role;
 create function public.enrich_prime_catalog_projection_v1() returns trigger language plpgsql set search_path='' as $$
 begin
- if new.provider='primevideo' then new.projection:=public.enrich_prime_projection_v1(new.projection,public.prime_navigation_map_v1(new.snapshot)); end if; return new;
+ if new.provider='primevideo' then
+  if tg_op='INSERT' or new.snapshot is distinct from old.snapshot then
+   new.prime_navigation:=coalesce((select jsonb_object_agg(v->>'sourceUrl',coalesce(v->'primeNavigation',old.prime_navigation->(v->>'sourceUrl')))
+    from jsonb_array_elements(coalesce(new.snapshot->'seasons','[]')) season
+    cross join lateral jsonb_array_elements(season->'episodes') episode
+    cross join lateral jsonb_array_elements(episode->'watchVariants') v
+    where coalesce(v->'primeNavigation',old.prime_navigation->(v->>'sourceUrl')) is not null),'{}'::jsonb);
+   new.snapshot:=public.strip_prime_navigation_v1(new.snapshot);
+  end if;
+  new.projection:=public.strip_prime_navigation_v1(new.projection);
+ end if; return new;
 end $$;
 revoke all on function public.prime_navigation_map_v1(jsonb),public.enrich_prime_projection_v1(jsonb,jsonb),public.enrich_prime_catalog_projection_v1() from public,anon,authenticated;
 grant execute on function public.prime_navigation_map_v1(jsonb),public.enrich_prime_projection_v1(jsonb,jsonb) to service_role;
 create trigger prime_catalog_projection before insert or update on public.watch_catalog_snapshots for each row execute function public.enrich_prime_catalog_projection_v1();
 select pg_temp.navigation_patch('public.watch_history_browse_progress_row_v3'::regproc::oid::regprocedure,$old$'source_url',p.source_url,$old$,$new$'source_url',p.source_url,'prime_navigation',p.prime_navigation,$new$);
 select pg_temp.navigation_patch('anidachi_history_private.watch_editor_snapshot'::regproc::oid::regprocedure,$old$  return result;$old$,$new$  if prov='primevideo' then
-    result:=public.enrich_prime_projection_v1(result,public.prime_navigation_map_v1(c.snapshot)||coalesce((select jsonb_object_agg(p.source_url,p.prime_navigation) from public.watch_episode_progress p where p.user_id=uid and p.history_generation=gen and p.provider=prov and p.title_key=titlekey and p.prime_navigation is not null),'{}'::jsonb));
+    result:=public.enrich_prime_projection_v1(result,coalesce(c.prime_navigation,'{}'::jsonb)||coalesce((select jsonb_object_agg(p.source_url,p.prime_navigation) from public.watch_episode_progress p where p.user_id=uid and p.history_generation=gen and p.provider=prov and p.title_key=titlekey and p.prime_navigation is not null),'{}'::jsonb));
   end if;
   return result;$new$);
+-- New runtime acknowledgements enrich after receipt storage; old RPC/receipt JSON is unchanged.
+create function public.prime_navigation_progress_ack_v1(p_user_id uuid,p_ack jsonb) returns jsonb
+language sql stable set search_path='' as $$
+ select case when p.prime_navigation is null then p_ack else jsonb_set(p_ack,'{episode}',(p_ack->'episode')||jsonb_build_object('primeNavigation',p.prime_navigation)) end
+ from (select 1) x left join public.watch_episode_progress p on p.user_id=p_user_id
+ and p.history_generation=(p_ack->>'accountGeneration')::bigint and p.episode_key=p_ack#>>'{episode,episodeKey}'
+ and p.source_url=p_ack#>>'{episode,sourceUrl}'
+$$;
+create function public.apply_personal_watch_progress_prime_navigation_v1(p_user_id uuid,p_input jsonb) returns jsonb
+language sql volatile security definer set search_path='' as $$
+ select public.prime_navigation_progress_ack_v1(p_user_id,public.apply_personal_watch_progress_v1(p_user_id,p_input))
+$$;
+create function public.apply_watch_progress_prime_navigation_v1(p_user_id uuid,p_event jsonb,p_room_authority jsonb) returns jsonb
+language sql volatile security definer set search_path='' as $$
+ select public.prime_navigation_progress_ack_v1(p_user_id,public.apply_watch_progress_v3(p_user_id,p_event,p_room_authority))
+$$;
+revoke all on function public.prime_navigation_progress_ack_v1(uuid,jsonb),public.apply_personal_watch_progress_prime_navigation_v1(uuid,jsonb),public.apply_watch_progress_prime_navigation_v1(uuid,jsonb,jsonb) from public,anon,authenticated;
+grant execute on function public.prime_navigation_progress_ack_v1(uuid,jsonb),public.apply_personal_watch_progress_prime_navigation_v1(uuid,jsonb),public.apply_watch_progress_prime_navigation_v1(uuid,jsonb,jsonb) to service_role;
+
+-- Publish explicit opt-in read RPCs, then restore every legacy entry/helper.
+do $$
+declare r record; body text; new_name text; args text;
+begin
+ for r in select * from prime_legacy_read_defs loop
+  new_name:=r.proname||'_prime_navigation_v1';
+  body:=replace(pg_get_functiondef(r.oid),'FUNCTION '||r.nspname||'.'||r.proname||'(','FUNCTION '||r.nspname||'.'||new_name||'(');
+  if r.proname='browse_watch_history_v3' then body:=replace(body,'public.watch_history_browse_progress_row_v3(','public.watch_history_browse_progress_row_v3_prime_navigation_v1(');end if;
+  if r.proname='get_watch_history_editor_v1' then body:=replace(body,'anidachi_history_private.watch_editor_snapshot(','anidachi_history_private.watch_editor_snapshot_prime_navigation_v1(');end if;
+  execute body;
+  args:=pg_get_function_identity_arguments(r.oid);
+  execute format('revoke all on function %I.%I(%s) from public,anon,authenticated',r.nspname,new_name,args);
+  execute format('grant execute on function %I.%I(%s) to service_role',r.nspname,new_name,args);
+ end loop;
+ for r in select * from prime_legacy_read_defs loop execute r.definition;end loop;
+end $$;
 commit;

@@ -17,7 +17,7 @@ export type WatchHistoryEditorStore = {
 };
 const productionStore: WatchHistoryEditorStore = {
   async read(owner, query) {
-    const result = await db().rpc("get_watch_history_editor_v1", {
+    const result = await db().rpc("get_watch_history_editor_v1_prime_navigation_v1", {
       p_user_id: owner, p_generation: query.accountGeneration,
       p_provider: query.provider, p_title_key: query.titleKey,
     }).abortSignal(AbortSignal.timeout(20_000));

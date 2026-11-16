@@ -51,6 +51,24 @@ export function createPrimePendingStore(storage: PrimePendingStorage) {
 			? parsed.data
 			: null;
 	};
+	const rejection = (entry: unknown) => {
+		const parsed = PrimePendingSchema.safeParse(entry);
+		if (parsed.success)
+			return {
+				intentId: parsed.data.intentId,
+				...(parsed.data.roomId
+					? { roomId: parsed.data.roomId }
+					: { resumeIntentId: parsed.data.resume!.intentId }),
+			};
+		return entry && typeof entry === "object" && "rejection" in entry
+			? (entry as { rejection: unknown }).rejection
+			: undefined;
+	};
+	const retired = (entry: unknown, now: number) => ({
+		retired: true,
+		expiresAt: now + 300000,
+		rejection: rejection(entry),
+	});
 	return {
 		async put(tab: number, pending: PrimePending, now = Date.now()) {
 			if (!Number.isInteger(tab) || tab < 0 || !valid(pending, now))
@@ -80,7 +98,7 @@ export function createPrimePendingStore(storage: PrimePendingStorage) {
 				pending = valid(root[String(tab)], now);
 			if (!pending || JSON.stringify(pending.owner) !== JSON.stringify(owner)) {
 				if (root[String(tab)]) {
-					root[String(tab)] = { retired: true, expiresAt: now + 300000 };
+					root[String(tab)] = retired(root[String(tab)], now);
 					await storage.set(root);
 				}
 				return null;
@@ -90,7 +108,7 @@ export function createPrimePendingStore(storage: PrimePendingStorage) {
 		async retireAll() {
 			const root = await read();
 			for (const key of Object.keys(root))
-				root[key] = { retired: true, expiresAt: Date.now() + 300000 };
+				root[key] = retired(root[key], Date.now());
 			await storage.set(root);
 		},
 		async forget(tab: number) {
@@ -98,36 +116,52 @@ export function createPrimePendingStore(storage: PrimePendingStorage) {
 			delete root[String(tab)];
 			await storage.set(root);
 		},
+		async rejection(tab: number) {
+			return rejection((await read())[String(tab)]);
+		},
 		async has(tab: number) {
 			return Object.hasOwn(await read(), String(tab));
 		},
 		async cancel(tab: number) {
 			const root = await read();
 			if (root[String(tab)]) {
-				root[String(tab)] = { retired: true, expiresAt: Date.now() + 300000 };
+				root[String(tab)] = retired(root[String(tab)], Date.now());
 				await storage.set(root);
 			}
+		},
+		async recover(
+			tab: number,
+			owner: PrimeLaunchOwner,
+			id: string,
+			now = Date.now(),
+		) {
+			const pending = await this.peek(tab, owner, now);
+			return pending?.attempts === 1 && pending.contentId === id
+				? pending
+				: null;
 		},
 		async take(
 			tab: number,
 			owner: PrimeLaunchOwner,
 			id: string,
 			now = Date.now(),
+			intentId?: string,
 		) {
 			const root = await read(),
 				pending = valid(root[String(tab)], now);
 			if (
 				pending &&
 				JSON.stringify(pending.owner) === JSON.stringify(owner) &&
-				pending.contentId !== id
+				(pending.contentId !== id ||
+					(intentId !== undefined && pending.intentId !== intentId))
 			)
 				return null;
 			if (root[String(tab)]) {
-				root[String(tab)] = { retired: true, expiresAt: now + 300000 };
+				root[String(tab)] = retired(root[String(tab)], now);
 				await storage.set(root);
 			}
 			return pending &&
-                pending.attempts === 1 &&
+				pending.attempts === 1 &&
 				pending.contentId === id &&
 				JSON.stringify(pending.owner) === JSON.stringify(owner)
 				? pending

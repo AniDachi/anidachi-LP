@@ -17,7 +17,7 @@ export type PersonalWatchHistoryStore = {
 const productionStore: PersonalWatchHistoryStore = {
 	async apply(userId, input) {
 		const result = await db()
-			.rpc("apply_personal_watch_progress_v1", {
+			.rpc(input.event.provider === "primevideo" ? "apply_personal_watch_progress_prime_navigation_v1" : "apply_personal_watch_progress_v1", {
 				p_user_id: userId,
 				p_input: input,
 			})

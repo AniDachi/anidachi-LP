@@ -110,15 +110,20 @@ it("registers room intent before new-tab navigation and survives missing fragmen
 		type: "ANIDACHI_PRIME_LAUNCH",
 		action: "take",
 		contentId: id,
+        intentId:(session["anidachi.primePending.v1"] as any)[7].intentId,
 	};
 	expect(await send(message, { ...provider, frameId: 1 })).toEqual({
 		status: "cancelled",
 	});
-	expect(await send(message, provider)).toMatchObject({
+	expect(await send({...message,action:"recover",intentId:undefined},provider)).toEqual({status:"cancelled"});
+ const recovering={type:"ANIDACHI_PRIME_LAUNCH",action:"recover",contentId:id};
+ expect(await send(recovering,provider)).toMatchObject({status:"ready"});
+ expect(await send(recovering,provider)).toMatchObject({status:"ready"});
+ expect(await send(message, provider)).toMatchObject({
 		status: "ready",
 		pending: { roomId: "room", contentId: id },
 	});
-	expect(await send(message, provider)).toEqual({ status: "blocked" });
+	expect(await send(message, provider)).toMatchObject({ status: "blocked" });
 });
 it("offers exact host and canonical choices for first guest and never guesses preferred foreign route", async () => {
 	local["anidachi.primeMarketplace.v1"] = { owner: "amazon.de" };
@@ -162,7 +167,7 @@ it("offers exact host and canonical choices for first guest and never guesses pr
 	state.generation++;
 	expect(
 		await send(
-			{ type: "ANIDACHI_PRIME_LAUNCH", action: "take", contentId: id },
+			{ type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id },
 			{
 				id: ext,
 				tab: { id: 7 },
@@ -170,7 +175,7 @@ it("offers exact host and canonical choices for first guest and never guesses pr
 				url: "https://www.amazon.de/gp/video/detail/B0FX2ZCPFK",
 			},
 		),
-	).toEqual({ status: "blocked" });
+	).toMatchObject({ status: "blocked" });
 });
 it("rejects untrusted external and stale-owner requests without navigation", async () => {
 	const request = {

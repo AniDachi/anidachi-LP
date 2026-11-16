@@ -999,11 +999,15 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
     if (!isRecord(result.data) || result.data.kind !== "progress") {
       throw new Error("watch_history_client_id_conflict");
     }
-    return result.data.acknowledgement;
+    const receipt=WatchProgressAckSchema.safeParse(result.data.acknowledgement);
+    if(!receipt.success || !receipt.data.episode.sourceUrl.startsWith("https://www.primevideo.com/detail/"))return result.data.acknowledgement;
+    const enriched=await db().rpc("prime_navigation_progress_ack_v1",{p_user_id:userId,p_ack:result.data.acknowledgement});
+    if(enriched.error)throw enriched.error;
+    return enriched.data;
   },
 
   async applyProgress(userId, event, authority) {
-    const result = await db().rpc("apply_watch_progress_v3", {
+    const result = await db().rpc(event.provider === "primevideo" ? "apply_watch_progress_prime_navigation_v1" : "apply_watch_progress_v3", {
       p_user_id: userId,
       p_event: event,
       p_room_authority: authority,
@@ -1032,7 +1036,7 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
 
   async loadHistory(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc((page.providerVersion === 2 || page.providerVersion === 3) ? "list_watch_history_v3_provider_page" : "list_watch_history_v3_bounded_page", {
+    const result = await db().rpc((page.providerVersion === 2 || page.providerVersion === 3) ? "list_watch_history_v3_provider_page_prime_navigation_v1" : "list_watch_history_v3_bounded_page", {
       ...((page.providerVersion === 2 || page.providerVersion === 3) ? { p_provider_version: page.providerVersion } : {}),
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
@@ -1056,7 +1060,7 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
 
   async loadTitleEpisodes(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc("list_watch_history_v3_title_episodes_page", {
+    const result = await db().rpc("list_watch_history_v3_title_episodes_page_prime_navigation_v1", {
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
       p_provider: page.provider,
