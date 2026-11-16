@@ -1,0 +1,224 @@
+# Prime Video adapter notes
+
+Local candidate, 2026-11-16. Provider key: `primevideo`; display name: **Prime
+Video**. Tasks 1–4 are implemented and reviewed on `codex/prime-video-adapter`.
+This record describes source contracts and local evidence. Prime support has
+not been deployed to staging or production, and the extension has not been
+loaded for Prime acceptance. The [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
+tracks the remaining integration gates.
+
+## Source and permission scope
+
+The admitted source is exactly
+`https://www.primevideo.com/detail/<compactGTI>`, with a 26-character uppercase
+alphanumeric compactGTI. An optional trailing slash, query and hash are removed
+from persisted identity. The fingerprint is `primevideo|detail/<compactGTI>`.
+Autoplay query parameters and the room hash decorate navigation only.
+
+The shared validator rejects HTTP, credentials, explicit ports including `:443`,
+lookalike or alternate hosts, localized/unsupported routes, slugs, encoded IDs,
+dot-segment normalization and malformed IDs. Recognizing a Prime host family
+triggers strict validation; it does not admit extra hosts. Known Prime pages
+never fall through to Generic HTML5. The legacy `amazon` account-provider
+placeholder remains distinct.
+
+The narrow staging/release manifest path adds only
+`https://www.primevideo.com/*`, with one top-frame MAIN script at
+`document_start`. Regional Amazon domains require further observed evidence
+and a separate admission decision. No wildcard Amazon permission, public
+provider announcement, Store publication, secret or environment addition is
+part of this candidate.
+
+## Runtime ownership and safe playback
+
+Implementation lives in `apps/extension/src/source-adapters/primevideo/`;
+`apps/extension/entrypoints/primevideo.content.ts` owns the MAIN-world bridge. Detection requires
+exactly one connected video under `#dv-web-player`, a structurally verified
+provider context, an open player with playback initiated, and matching title
+metadata. The autoplay preview outside this root and closed/preloaded primary
+video are excluded. Constructors are inert; subscriptions own timers/listeners
+and dispose them on final unsubscription. Page lifecycle disposal and BFCache
+restart belong to the entrypoint.
+
+The undocumented SDK context is found through a bounded React child/sibling
+walk, with shape checks for the specific observed modules. A changed or unknown
+shape fails closed. Only whitelisted public title/hydration fields are read;
+whole provider state, account/session data, credentials and provider requests
+are outside this bridge.
+
+Content time comes from `playback.position` and duration from
+`timeline.getTimelineInfo().endPositionMs`, converted from milliseconds. During
+an observed real midroll, that content position froze while native video time
+and `webPlayer.currentTime.contentRelativeTimeMs` advanced. Neither advancing
+clock is used for synchronization or history.
+
+Confirmed main content requires the SDK's Feature material/timeline state and
+safe playback, ad and recap signals. Advertisements, recaps/slates, unknown
+data, closed player and replacement suspend remote commands and progress
+capture. Buffering retains content identity but does not admit a command.
+The adapter does not skip ads or recaps, bypass DRM, or seek the DOM video.
+
+The MAIN bridge executes `playback.play()`, `pause()` and `seek(milliseconds)`
+through Prime's own policy/seek machinery. Both seek directions must be enabled.
+Generation and safe phase are checked immediately before execution; returned
+SDK promises alone do not prove success. Confirmation reads are bounded to two
+seconds. The isolated client has a 3.5-second deadline, AbortSignal cleanup,
+strict bounded messages and request/source/generation binding. MAIN limits
+pending requests and replay IDs and rejects foreign/malformed messages.
+
+Transient rate commands use only the observed SDK facade
+`playback.player.setPlaybackRate(rate)`, gated by capability, generation and
+safe content, limited to 0.5–2, and confirmed through
+`playback.getPlaybackRate()`. Read-only SDK inspection showed that this path
+keeps the desired rate in memory and forces 1x during ads. The UI-facing
+`playback.setPlaybackRate` persists preferences and is never used. Fixture
+tests cover this contract; an actual facade rate command remains a live
+acceptance gate.
+
+## Source generations and navigation
+
+The source is the playing movie/episode, not whichever season happens to remain
+in the address bar. Native Next Episode was observed to keep both the season
+URL and the connected video while changing the title GTI. Context, SDK module,
+player facade, video, content and unsafe-phase replacement fence generations.
+Media signals plus a bounded 250 ms SDK poll announce binding changes to the
+isolated lifecycle, including paused swaps without a DOM mutation.
+
+Obsolete requests cannot update a replacement binding. Binding cancellation is
+separate from subscription lifetime: temporary binding loss can recover when
+the same video/source returns before lifecycle reconciliation. Source navigation
+invalidates the old binding before assigning the new URL. It preserves room
+provider pinning and uses the exact canonical movie/episode URL with autoplay
+and room decorations. An already-current result requires a MAIN snapshot;
+address-bar equality is insufficient. Resume uses the existing bounded local
+intent with exact source, expiry, owner/account guards and confirmed SDK seek.
+
+Player geometry and composer isolation use the existing overlay seams and
+semantic controls, without English button-label or hashed-class assumptions.
+Shared host authority, synchronization, P2P transport and media-seat policy
+remain unchanged. Actual fullscreen, chat/input isolation and overlay geometry
+still need inspection with the loaded candidate.
+
+## Identity, series anchor and partial catalogs
+
+`packages/protocol/src/prime-video-identity.ts` defines the strict identity:
+
+```ts
+type PrimeVideoHistoryIdentity =
+  | { kind: "movie"; providerMovieId: string }
+  | {
+      kind: "episode";
+      seriesAnchorSeasonId: string;
+      providerSeasonIdentifier: string;
+      providerEpisodeIdentifier: string;
+    };
+```
+
+Every ID is a validated compactGTI. `primevideoIdentity` accompanies progress;
+foreign/mixed identity fields and source/key mismatches are rejected. Movie
+title and episode keys are both `primevideo:movie:<id>`, with null season and
+ordinal fields. Episodes use `primevideo:episode:<id>`, seasons use
+`primevideo:season:<id>`, and series grouping uses
+`primevideo:series:<seriesAnchorSeasonId>`.
+
+The inspected provider exposes season and episode GTIs, with no separate series
+GTI. `seriesAnchorSeasonId` is explicitly the confirmed **season-1 compactGTI**;
+the catalog field `providerSeriesId` carries that same anchor. It is not a
+claimed provider series ID. Full GTIs map through matching whitelisted `self`
+records and canonical links; UUID/base36 conversion, names and ordinals never
+manufacture identity.
+
+Each admitted season list must contain one season-1 candidate and agree on its
+full/compact GTI, consistently with any known self mapping. Conflicting,
+malformed or absent anchor evidence suspends detailed series capture/catalog.
+Independently verified playing source identity can remain available. Selecting
+another season or grouping by translated title is not a fallback.
+
+Catalog snapshots remain **partial** and contain only observed entries from the
+selected season. Availability is proved by the actually playing episode, or by
+matching episode membership plus `self.isLaunched === true` and an enabled
+`a[data-testid="episodes-playbutton"][role="button"]` action with exact detail
+ID and `autoplay=1`. Responsive duplicate links deduplicate by identity.
+Membership or a self link alone is insufficient: unproved entries are omitted,
+rather than fabricated as available/unavailable. Other seasons are not fetched,
+and a partial snapshot never supplies an invented complete-series grid.
+
+Artwork is separately validated as HTTPS `/images/` URLs on exactly
+`images-na.ssl-images-amazon.com` or `m.media-amazon.com`, with no credentials,
+ports, fragments, backslashes or dot traversal. Region comes from provider
+territory evidence; locale is normalized independently and does not prove region.
+
+## History, capacity and compatibility
+
+The existing durable outbox, writer, recording choice, eligibility checks,
+owner/account generations, access epochs, leases, catalog revision fencing and
+deletion/receipt ordering remain authoritative. The legacy library reconciliation
+writer rejects Prime because that payload cannot establish the explicit anchor;
+new detailed Prime writes use the existing history v3 interface.
+
+History API v3 and `providerVersion=3` are different version axes. Omitted or
+explicit provider version 1 still selects Crunchyroll/YouTube; version 2 adds
+Netflix; version 3 adds Prime. Explicit provider filtering opts into that named
+provider. Filtering occurs before counts, pagination, facets and session
+enrichment. Capacity versions 1/2 keep their exact shapes; only explicit
+`capacityVersion=3` adds the separate Prime 200-title bucket. Missing Prime
+capacity in an older response is unavailable data, never invented 0/200.
+No pricing, entitlement or unrelated provider capacity changes are included.
+
+Current popup and website SSR/list/browse/session/options clients explicitly
+request provider version 3 and capacity version 3. Prime has independent popup
+query/cursor/cache/depth/search state alongside the three existing streams.
+The existing official SVG, provider filter and movie/anchored-series editing
+and resume flows are reused. Series copy states that the catalog is partial.
+
+## Local evidence and remaining acceptance
+
+The recorded automated runs are local evidence at their task revisions:
+
+| Surface | Recorded result and limit |
+| --- | --- |
+| Protocol | Full suite: 331 tests / 31 files; later account-boundary fix: 63 tests / 2 files. Check passed. |
+| API / rooms | 330 tests / 31 files; 39 room-harness scenarios. Final local Miniflare runtime: 182 passed, 0 failed/pending, outbound requests intercepted. |
+| Web | Full lib run: 1,832 passed, 6 skipped; later scoped route/legacy fixes passed. Task 4 component suite: 56; capacity: 7. Final check passed. Lint exited 0 with warnings, including a static Prime SVG image advisory. |
+| SQL | Clean disposable replay of all 97 migrations; 728 assertions across 12 suites. Existing resource-bounds planner assertion varied after repeated fixtures; all 69 passed on pristine focused replay without weakening SQL/tests. |
+| Extension | Task 4 full run: 2,926 tests / 172 files, excluding the existing production-emitting release fixture. Check passed. Earlier reviewed lifecycle/anchor fixes passed 81 focused tests. |
+| Final local integration | Staging Worker bundle dry-run passed; `pnpm dev:check` reviewed. Chrome rendered actual HistoryBrowser SSR/CSS with a synthetic empty library at widths 1470 and 360: SVG loaded, all five filter labels fit, no horizontal overflow and correct Prime selection. This is limited layout proof without authentication, live API/account data or editor acceptance. |
+| Staging artifact | Build/validation passed at `5928aafa`; that artifact predates review fixes and final UI integration and is stale. Final rebuild/validation is pending. |
+
+Native authenticated Prime research observed pause/seek, content-clock freeze
+through a real ad, same-video/same-season-URL Next Episode, and direct episode
+hydration. Movie metadata was inspected on closed/preloaded detail state.
+These observations did not exercise a loaded AniDachi extension. Read-only rate
+facade source inspection is not a live rate command. The connector's fullscreen
+click changed provider CSS state while `document.fullscreenElement` remained
+absent, so real fullscreen is unproved.
+
+The browser connector cannot load/reload developer extensions through
+`chrome://extensions`; loading and starting the final candidate require a user
+handoff. Remaining gates are final quality/build/manifest and asset validation,
+loaded movie/episode/ads/rate/fullscreen/chat/source-replacement/resume checks,
+authenticated website/editor acceptance, and two-client Prime room/history
+acceptance against compatible staging. The current staging server lacks this
+Prime support, so a new extension alone cannot prove that end-to-end flow.
+No staging write/deployment, two-client test or production publication occurred
+as part of this local implementation. Graphify publication and whole-branch
+review follow the final code/docs integration.
+
+## Ordered delivery and rollback
+
+The additive dependency order is:
+
+1. Apply `apps/web/supabase/migrations/20261116090000_prime_video_history_and_room_sources.sql`.
+2. Deliver compatible Web and Worker code through the approved staging flow.
+3. Load/distribute the matching Prime-capable v3 clients and record acceptance.
+
+The migration extends provider admission and adds server-only capacity v3; it
+preserves existing rows, privileges and policy fences. No migration/deployment
+is authorized by this documentation. Keep staging password-gated/noindex and
+follow feature PR → staging → accepted promotion PR → main.
+
+On recovery, roll back clients/server before considering removal of compatible
+database support. Preserve stored Prime rows, access epochs and receipts;
+removing provider admission after writes is not a safe destructive downgrade.
+Record the exact compatible recovery ref before any later rollout. Production
+promotion and Store publication remain separate decisions.

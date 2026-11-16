@@ -1,5 +1,30 @@
 # Current Development State
 
+## Prime Video local candidate: November 16, 2026
+
+`codex/prime-video-adapter` implements and has task-level review for Prime source
+contracts, additive SQL/server admission, the MAIN-world player adapter and
+popup/website history presentation. Scope is exact HTTPS `www.primevideo.com`
+detail URLs. Series history uses the verified season-1 compactGTI as an explicit
+anchor; catalogs remain partial. Current clients explicitly request provider and
+capacity version 3, with a separate Prime 200-title bucket and exact v1/v2
+compatibility. Legacy `amazon`, pricing and shared media policy are unchanged.
+
+Local protocol/API/web/extension, room harness, disposable SQL and Worker runtime
+evidence is recorded in the [provider notes](prime-video-adapter-notes.md).
+Native Prime research observed content-clock behavior through ads and episode
+replacement; it did not exercise the loaded extension. The artifact built at
+`5928aafa` is stale after reviewed fixes; final build/validation, Graphify and
+whole-branch review remain integration gates. Loaded movie/episode/rate/ads,
+fullscreen/chat/resume and two-client room/history acceptance are still open.
+
+Prime support is not deployed to staging or production. Delivery requires
+additive migration → compatible Web/Worker → matching v3 clients; an extension
+alone cannot validate Prime history against the older deployed server. Preserve
+Prime rows and epochs on rollback. No staging write/deploy, production promotion,
+Store publication or public support announcement is included. See the
+[execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md).
+
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of
