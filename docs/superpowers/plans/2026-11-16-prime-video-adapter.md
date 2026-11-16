@@ -9,10 +9,13 @@ and production promotion remain separate operations.
 Tasks 1–4 are implemented and task-reviewed. Task 5 documentation/readability
 is integrated and reviewed. The final narrow artifact is built and validated;
 whole-branch source review passed at `16aea5dd` with no critical or important
-findings. The owner deferred live browser acceptance to a later session.
+findings. After initially deferring browser acceptance, the owner loaded the
+artifact and authorized careful staging delivery on November 16.
 Graphify refresh is blocked
 by an inherited ownership collision, with existing artifacts preserved.
-No Prime staging delivery or loaded-extension acceptance is claimed. The
+Loaded MAIN bridge identity/playback commands passed for one episode; full
+room/history and two-client acceptance remain open. At this source checkpoint
+Prime server delivery is pending. The
 [provider notes](../../prime-video-adapter-notes.md) record the full contract,
 local evidence, deployment order and recovery limits.
 
@@ -22,7 +25,7 @@ local evidence, deployment order and recovery limits.
 | 2 | Additive migration, Web/Worker room and history admission | `d21f25b8`; reviewed. API 330, room harness 39, web full 1,832 passed / 6 skipped plus scoped fixes; disposable SQL 728 assertions. Downstream UI map check failures were resolved in Task 4. |
 | 3 | MAIN bridge, adapter, source lifecycle, history/catalog and narrow manifest | `5928aafa` plus lifecycle/anchor fix `a26c3504`; reviewed. Initial extension full 2,904; fix regression set 81. Initial staging artifact passed build/validation but is stale. |
 | 4 | Popup/website Prime stream, presentation, v3 clients and guarded resume | `7c521dad`; reviewed. Extension full 2,926 / 172 files, focused 276; website component 56 and capacity 7; web/extension checks passed. |
-| 5 | Contract/evidence documentation and formatting of newly added TS/TSX only | `66ce7f85`; reviewed, 20/20 normalized ASTs equivalent. Final narrow build/validation passed at that commit; whole-branch source review passed at `16aea5dd`. Owner deferred live acceptance; Graphify exception is recorded. |
+| 5 | Contract/evidence documentation and formatting of newly added TS/TSX only | `66ce7f85`; reviewed, 20/20 normalized ASTs equivalent. Final narrow build/validation passed at that commit; whole-branch source review passed at `16aea5dd`. Loaded MAIN bridge commands passed; staging delivery and full acceptance continue. Graphify exception is recorded. |
 
 Full extension runs exclude the existing production-emitting release fixture,
 as no production artifact is authorized. Task 2's repeated-fixture resource
@@ -41,19 +44,19 @@ Remaining Task 5 gates:
 
 - Graphify exception: safe publication stopped at `Foreign node collision:
   ref_clsx` while processing inherited AST backlog. All tracked graph artifacts
-  remain unchanged; defer ownership repair and the four-document semantic update
+  remain unchanged; defer ownership repair and the deferred semantic update
   rather than bypassing the guard or rewriting unrelated historical records.
-- The reviewed artifact was handed to the user for extension load/reload and
-  player start. The owner chose to run browser checks later; the connector
-  cannot load the artifact through `chrome://extensions`.
+- The owner loaded the reviewed artifact. The connector cannot load/reload it
+  through `chrome://extensions`; a rebuilt artifact still needs user handoff.
 - With the loaded candidate, verify movie/episode, safe ad transitions,
   transient rate, real fullscreen, chat/input isolation, source replacement,
   navigation and guarded resume. Native SDK research and fixtures do not close
   these gates. Actual authenticated website/editor acceptance is also open.
-- After separately authorized additive migration → compatible Web/Worker →
-  matching v3 clients, verify two-client Prime room/history against staging.
-  The currently deployed server lacks Prime support; no deployment or staging
-  write occurred in this implementation.
+- Deliver the now-authorized additive migration → compatible Web/Worker →
+  matching v3 clients, then verify Prime room/history and two-client behavior.
+  The baseline server rejects Prime room creation; follow the exact
+  [schema-first procedure](../../prime-video-adapter-notes.md#ordered-delivery-and-rollback).
+  Capture final deployment IDs/SHAs and acceptance in the PR/controller receipt.
 
 Shared P2P transport and media-seat policy are unchanged, so this admission /
 adapter change does not require a new real-WebRTC harness run. Two-client Prime
@@ -96,8 +99,11 @@ Prime rows, epochs and receipts when rolling clients/server back.
   claim the full series was fetched.
 - New host permissions follow the existing narrow release manifest path. No
   unrelated permission onboarding or public launch copy before acceptance.
-- Do not deploy, merge, promote production, publish a Store package, modify
-  subscriptions, or change account/browser settings as part of local work.
+- The November 16 owner instruction authorizes careful staging PR/CI delivery
+  and acceptance, with the bounded DB-before-runtime exception documented in
+  the provider notes. It supersedes the initial local-only scope.
+- No production/main promotion, Store publication, subscription/entitlement
+  changes or unrelated account/browser settings changes are authorized.
 
 ## Observed browser evidence
 

@@ -1,10 +1,11 @@
 # Prime Video adapter notes
 
-Local candidate, 2026-11-16. Provider key: `primevideo`; display name: **Prime
+Staging candidate, 2026-11-16. Provider key: `primevideo`; display name: **Prime
 Video**. Tasks 1–4 are implemented and reviewed on `codex/prime-video-adapter`.
-This record describes source contracts and local evidence. Prime support has
-not been deployed to staging or production, and the extension has not been
-loaded for Prime acceptance. The [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
+This record describes source contracts and evidence at the pre-delivery
+checkpoint. The owner loaded the extension and authorized careful staging
+delivery after the old server rejected Prime room creation. The
+[execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
 ## Source and permission scope
@@ -72,8 +73,9 @@ safe content, limited to 0.5–2, and confirmed through
 `playback.getPlaybackRate()`. Read-only SDK inspection showed that this path
 keeps the desired rate in memory and forces 1x during ads. The UI-facing
 `playback.setPlaybackRate` persists preferences and is never used. Fixture
-tests cover this contract; an actual facade rate command remains a live
-acceptance gate.
+tests cover this contract. The loaded bridge confirmed a transient 1.25 rate
+command on one episode. A subsequent seek returned rate 1; sustained rate
+across seek and shared-room synchronization remain live acceptance cases.
 
 ## Source generations and navigation
 
@@ -200,18 +202,23 @@ click changed provider CSS state while `document.fullscreenElement` remained
 absent, so real fullscreen is unproved.
 
 The browser connector cannot load/reload developer extensions through
-`chrome://extensions`; loading and starting the final candidate require a user
-handoff. The final candidate was handed off for manual load and player start;
-the owner explicitly deferred browser checks to a later session. No completed
-load has been observed yet. Whole-branch source review of `2c24f661..16aea5dd`
+`chrome://extensions`; artifact changes require a user handoff. After initially
+deferring checks, the owner loaded the artifact built at `66ce7f85`. On episode
+`0FX1R3RCDS4LZSFJ9KPUBXJFAA`, the actual loaded MAIN bridge confirmed coherent
+episode/season/season-1-anchor identity, 3752-second duration, pause, transient
+1.25 rate, seek and restoration. Original playback state was restored. This
+does not prove isolated-controller or room/history end-to-end behavior.
+Whole-branch source review of `2c24f661..16aea5dd`
 passed with no critical or important findings; this is local code readiness,
 not release acceptance. Remaining gates are loaded
 movie/episode/ads/rate/fullscreen/chat/source-replacement/resume checks,
 authenticated website/editor acceptance, and two-client Prime room/history
 acceptance against compatible staging. The current staging server lacks this
 Prime support, so a new extension alone cannot prove that end-to-end flow.
-No staging write/deployment, two-client test or production publication occurred
-as part of this local implementation.
+At this checkpoint staging Web deployment `dpl_4xRP13qGVo1dFA1MHwk6TgmPzGhV`
+still serves baseline `2c24f661`; its provider enum rejects Prime with the
+reported `Invalid room source (400)`. The owner explicitly authorized careful
+staging delivery to resolve this mismatch. Production remains excluded.
 
 Graphify refresh exception: the repository safe adapter extracted 291 pending
 AST sources, including inherited staging backlog, then refused publication with
@@ -220,21 +227,40 @@ owned by `apps/web/lib/utils.ts`; the fresh import stub has different ownership.
 All three tracked graph artifacts remain unchanged. Semantic publication uses
 the same adapter and is also blocked by this pending AST collision. No guard was
 bypassed, historical hash stamped, or unrelated graph record rewritten. Resolve
-the ownership collision separately, then refresh the four changed documents
+the ownership collision separately, then refresh the changed documents
 through Codex semantic extraction and the safe adapter. The stale graph is a
 navigation limitation; source, tests and artifact receipts remain authoritative.
 
 ## Ordered delivery and rollback
 
-The additive dependency order is:
+The November 16 owner authorization permits this bounded staging procedure:
 
-1. Apply `apps/web/supabase/migrations/20261116090000_prime_video_history_and_room_sources.sql`.
-2. Deliver compatible Web and Worker code through the approved staging flow.
-3. Load/distribute the matching Prime-capable v3 clients and record acceptance.
+1. Freeze the reviewed feature head, open its PR into `staging`, run the required
+   CI, and verify that the migration diff contains only
+   `20261116090000_prime_video_history_and_room_sources.sql`.
+2. Confirm current staging baseline `2c24f661` has no pending migrations using
+   `db-staging.yml` on `staging`. With that baseline and the sole migration diff
+   established, run only that guarded DB workflow from the frozen, reviewed,
+   CI-green feature ref. Its project equality guard must resolve to
+   `cyppqpprkygjloyfvvvj` before linking. Inspect dry-run/apply logs for exactly
+   the Prime migration, a successful transaction and no unrelated migrations.
+3. Merge through the normal staging PR path after schema success. Verify matching
+   Web/Worker source, successful no-op staging DB rerun, Worker and protected Web
+   smoke, password gate/noindex and exclusion from the production sitemap.
+4. Build/validate the narrow staging extension from the delivered source. Record
+   immutable workflow/deployment IDs, source SHAs and artifact hashes in the PR
+   and controller report; avoid a docs-only redeployment loop for these receipts.
+5. Verify Create room and history with the loaded Prime client, then complete
+   the remaining acceptance matrix before any future production promotion.
+
+Only the additive DB step may run from the feature ref; Web, Worker and release
+artifacts still deliver from `staging`. This is not a general feature-ref release
+permission. The compatible recovery baseline is `2c24f661`; coordinated runtime
+rollback must retain the additive Prime schema and all newly written rows.
 
 The migration extends provider admission and adds server-only capacity v3; it
-preserves existing rows, privileges and policy fences. No migration/deployment
-is authorized by this documentation. Keep staging password-gated/noindex and
+preserves existing rows, privileges and policy fences. The explicit owner
+instruction authorizes staging only. Keep staging password-gated/noindex and
 follow feature PR → staging → accepted promotion PR → main.
 
 On recovery, roll back clients/server before considering removal of compatible

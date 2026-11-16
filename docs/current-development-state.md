@@ -1,6 +1,6 @@
 # Current Development State
 
-## Prime Video local candidate: November 16, 2026
+## Prime Video staging candidate: November 16, 2026
 
 `codex/prime-video-adapter` implements and has task-level review for Prime source
 contracts, additive SQL/server admission, the MAIN-world player adapter and
@@ -16,17 +16,21 @@ Native Prime research observed content-clock behavior through ads and episode
 replacement; it did not exercise the loaded extension. The narrow staging
 artifact built at `66ce7f85` passed validation, including the Prime MAIN script
 and bundled logo. Whole-branch source review passed at `16aea5dd` without
-critical or important findings. The owner deferred browser acceptance to a
-later session. Graphify's
+critical or important findings. The owner subsequently loaded the artifact:
+the actual MAIN bridge confirmed episode identity, pause, transient 1.25 rate,
+seek and restoration. Graphify's
 safe refresh stopped on an inherited `ref_clsx` ownership collision before
-publication; the curated graph is unchanged. Loaded movie/episode/rate/ads,
+publication; the curated graph is unchanged. Loaded movie/ads,
 fullscreen/chat/resume and two-client room/history acceptance are still open.
 
-Prime support is not deployed to staging or production. Delivery requires
-additive migration → compatible Web/Worker → matching v3 clients; an extension
-alone cannot validate Prime history against the older deployed server. Preserve
-Prime rows and epochs on rollback. No staging write/deploy, production promotion,
-Store publication or public support announcement is included. See the
+At this source checkpoint staging Web remains `2c24f661` and rejects Prime room
+creation with `Invalid room source (400)`. The owner authorized careful staging
+delivery: additive migration → compatible Web/Worker → matching v3 clients.
+The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
+records the bounded schema-first exception; final deployment receipts belong in
+the feature PR and controller report. Preserve Prime rows and epochs on rollback.
+Production promotion, Store publication and public support announcements remain
+outside this authorization. See the
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md).
 
 ## Free20 production launch: November 7, 2026
