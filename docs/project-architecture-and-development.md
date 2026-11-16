@@ -410,6 +410,18 @@ are rejected. Loaded regional acceptance belongs to the owner;
 two-client staging acceptance remains open. See the
 [Prime contract and evidence](prime-video-adapter-notes.md).
 
+Prime Task 11 separates observed regional playback links (`primeNavigation`)
+from canonical room/history identity. Nullable room/progress fields and catalog
+projections retain exact-title routes; history HTTP readers explicitly opt in
+to the new field so older strict clients remain compatible. Invitation launch,
+website/popup Resume, unseen catalog episodes and source switches share the
+extension resolver. Its account-scoped marketplace choice and bounded
+`chrome.storage.session` intent survive full document redirects but establish
+neither content identity nor room authority. Unknown regional mappings offer
+explicit recovery instead of a guessed URL. The Prime execution plan tracks
+ordered staging schema/runtime/artifact delivery and the remaining owner-led
+regional and two-client acceptance.
+
 Important UI constraints:
 
 - overlay should stay inside or visually tied to the player;

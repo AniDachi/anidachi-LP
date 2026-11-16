@@ -101,6 +101,18 @@ Verified SDK identity, canonical persisted URLs and exact same-origin catalog
 transport remain authoritative. Other providers and server schemas are outside
 this amendment; the owner still owns browser acceptance.
 
+Task 11 is the owner-authorized Amazon launch-continuity follow-up in the same
+PR #563. Diagnosis found that observed exact Amazon episode links are discarded
+before room/history persistence, and launch consumers use the canonical
+primevideo.com URL. The candidate preserves canonical identity while carrying
+bounded observed navigation hints, selecting the recipient's marketplace with
+explicit recovery when no route is known, and retaining intent through full
+redirects. It includes additive nullable storage, explicit history-read opt-in,
+a Prime invitation launch step and a shared extension resolver. Final review
+and staging delivery are pending; the existing `49f86b06` artifact does not
+include this follow-up. See the provider notes and active plan for scope;
+staging migration/runtime/artifact receipts will be recorded after verification.
+
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of

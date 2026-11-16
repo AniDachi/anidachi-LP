@@ -138,7 +138,34 @@ HTTP, arbitrary TLDs, unrelated providers or global host permissions.
    PR #563 and provide the new ZIP. The owner chose to do browser acceptance
    personally; do not resume browser control or repeatedly request reloads.
 
-Original baseline constraints below describe Tasks 1–8; apply Tasks 9–10's
+### Task 11: Amazon navigation and launch continuity
+
+The owner explicitly requests closing the Amazon-specific gaps after learning
+that invitations, personal Resume and source switches still navigate to the
+canonical primevideo.com URL. Canonical content identity and the local playback
+destination must remain separate. Scope is the eight already approved domain
+families and existing room/history flows, not a new provider or global redirect.
+
+1. Trace source creation, invitation/join, popup and website Resume, catalog
+   episode launch and host-driven source switches. Record where Amazon origin
+   or an observed exact episode route is lost, including redirects and early
+   fragment clearing. Choose a coherent cross-plane contract before coding.
+2. Keep the canonical compactGTI and fingerprint authoritative. Prefer verified
+   provider links for the exact episode and a recipient's own marketplace;
+   never infer region from display language, reuse a season/previous-episode
+   address, fabricate an ASIN, or let a navigation hint authorize a mismatch.
+   Unknown regional availability must remain an explicit recoverable state.
+3. Implement the smallest compatible solution across affected launch consumers,
+   including old clients/data, delayed player startup, account/source changes,
+   missing preferences, expired intents, redirect loops and unsafe URLs. Any
+   new wire/storage contract must be additive and checked in all consumers.
+4. Prove the identified failures with behavioral regression tests before fixes;
+   run affected package checks/tests, independent review, dev:check and narrow
+   staging build/validation. Update PR #563 and provide a candidate ZIP.
+   Staging delivery is authorized where required; production is not. Owner
+   browser acceptance remains separate, with no repeated reload prompts.
+
+Original baseline constraints below describe Tasks 1–8; apply Tasks 9–11's
 explicit browser-scope amendments where they conflict.
 
 - Work only in the clean-development worktree on `codex/prime-video-adapter`,

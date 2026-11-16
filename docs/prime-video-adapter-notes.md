@@ -57,6 +57,51 @@ tracked in the same PR. The owner will perform loaded-artifact acceptance.
 This scope is not evidence that every marketplace/account has been tested. No public
 announcement, Store publication, secret or environment addition is included.
 
+## Amazon launch continuity follow-up
+
+Task 11 separates canonical identity from the observed Amazon destination.
+Optional `primeNavigation: { contentId, routes: [{ url, observedAt }] }` carries
+exact-title links through room sources, progress, catalog variants and history
+projections. There is at most one route per approved marketplace, eight routes
+in total, with a 16 KiB payload limit. Public same-origin metadata must map the
+link to the exact compactGTI; the eventual SDK source still proves playback
+identity. Plain canonical Prime links need no redundant navigation hint. An
+address-bar season URL is never an episode destination, and an Amazon ASIN is
+never manufactured from a compactGTI or translated title.
+
+Invitation, website/popup Resume, unseen catalog episodes and room source
+switches consult the same recipient marketplace selection. A missing
+verified route for that marketplace is an unknown mapping, not proof that the
+title is unavailable. The extension's `prime-launch.html` offers known links,
+canonical Prime, or manual navigation to the selected marketplace. It remembers
+the choice per AniDachi account, not per display language. It does not rewrite
+an Amazon host or silently substitute another edition. Legacy data
+without navigation hints keeps canonical Prime behavior unless the recipient
+has explicitly selected an Amazon marketplace that cannot be resolved.
+
+Prime invitations pass through `/room/[roomId]/launch` after server admission.
+The website prepares and commits a launch through the approved extension ID;
+missing or older extensions receive explicit fallback links. The background
+stores a five-minute, tab/account/login/generation/source-bound intent in
+`chrome.storage.session` before navigation, with at most 64 pending entries and
+one navigation attempt. This survives provider redirects, fragment removal and
+service-worker restarts. SDK identity, server room authority and personal Resume
+account/generation checks still gate admission and seeking. No room token or
+provider credential is placed in the destination URL.
+
+Migration `20261116160000_prime_navigation_continuity.sql` adds nullable room
+and progress JSONB fields and compatible server-only RPC/projection handling.
+Same-source legacy writes preserve observed routes; a source replacement clears
+stale routes. New history HTTP readers opt in with
+`x-anidachi-prime-navigation: 1`; responses to older strict readers omit the new
+field. Navigation timestamps do not establish a new source generation.
+
+Delivery order is additive staging schema, compatible Web/Worker, then the new
+extension artifact. Runtime rollback retains the nullable columns and history
+rows. Task 11 is under final verification; the previous `49f86b06` ZIP does not
+contain this behavior. Loaded regional/two-account acceptance remains separate
+from source, SQL and isolated UI verification.
+
 ## Runtime ownership and safe playback
 
 Implementation lives in `apps/extension/src/source-adapters/primevideo/`;
@@ -118,8 +163,9 @@ Obsolete requests cannot update a replacement binding. Binding cancellation is
 separate from subscription lifetime: temporary binding loss can recover when
 the same video/source returns before lifecycle reconciliation. Source navigation
 invalidates the old binding before assigning the new URL. It preserves room
-provider pinning and uses the exact canonical movie/episode URL with autoplay
-and room decorations. An already-current result requires a MAIN snapshot;
+provider pinning and uses the exact movie/episode destination selected by the
+Prime launch resolver, with autoplay and room decorations. Canonical identity
+remains unchanged. An already-current result requires a MAIN snapshot;
 address-bar equality is insufficient. Resume uses the existing bounded local
 intent with exact source, expiry, owner/account guards and confirmed SDK seek.
 Delivered PR #560 permits waiting without a source descriptor only
