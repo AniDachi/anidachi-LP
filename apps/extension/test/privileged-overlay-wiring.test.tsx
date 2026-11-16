@@ -103,6 +103,100 @@ describe("privileged overlay wiring", () => {
 		vi.mocked(createFriendInviteLink).mockReset();
 	});
 
+	it("creates from the current Prime episode after session preparation despite an unchanged season URL", async () => {
+		const seasonUrl = "https://www.primevideo.com/detail/0HAQAA7JM43QWX0H6GUD3IOF70?jic=8%7CEgRzdm9k&ref_=atv_hm_hom_c_lAPtVn_brws_2_1";
+		vi.stubGlobal("location", new URL(seasonUrl));
+		let contentId = "0TBFWHTQWLSMFW67KBP9IC4UMU";
+		const requests: unknown[] = [];
+		let prepareGate: ReturnType<typeof deferred<ReturnType<typeof roomSessionStorageResponse>>> | null = null;
+		const sendMessage = vi.fn(async (message: { type?: string; command?: string; input?: unknown }) => {
+			if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+				if (message.command === "prepare" && prepareGate) return prepareGate.promise;
+				return roomSessionStorageResponse(message.command);
+			}
+			if (message.command === "create-room") {
+				requests.push(message.input);
+				return { ok: false, error: "Offline; retry" };
+			}
+			return { ok: false };
+		});
+		installOverlayRuntime(sendMessage);
+		const view = await renderOverlay(adapter => {
+			adapter.provider = "primevideo";
+			adapter.getFingerprint = () => "primevideo|detail/0TBFWHTQWLSMFW67KBP9IC4UMU";
+			adapter.getSourceDescriptor = () => ({
+				provider: "primevideo", sourceUrl: `https://www.primevideo.com/detail/${contentId}`,
+				canonicalUrl: `https://www.primevideo.com/detail/${contentId}`,
+				videoFingerprint: `primevideo|detail/${contentId}`, title: "Fallout", duration: 2925,
+			});
+		});
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			expect(requests[0]).toMatchObject({
+				sourceUrl: "https://www.primevideo.com/detail/0TBFWHTQWLSMFW67KBP9IC4UMU",
+				videoFingerprint: "primevideo|detail/0TBFWHTQWLSMFW67KBP9IC4UMU",
+			});
+			prepareGate = deferred();
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			expect(requests).toHaveLength(1);
+			expect(sendMessage.mock.calls.filter(([message]) => message.command === "prepare")).toHaveLength(2);
+			// Prime replaces its native episode while async preparation is in flight.
+			contentId = "BBBBBBBBBBBBBBBBBBBBBBBBBB";
+			await act(async () => prepareGate!.resolve(roomSessionStorageResponse("prepare")));
+			await flushRoomActionWork();
+			expect(requests).toHaveLength(2);
+			expect(requests[1]).toMatchObject({
+				sourceUrl: "https://www.primevideo.com/detail/BBBBBBBBBBBBBBBBBBBBBBBBBB",
+				videoFingerprint: "primevideo|detail/BBBBBBBBBBBBBBBBBBBBBBBBBB",
+			});
+			expect(location.href).toBe(seasonUrl);
+		} finally {
+			await unmount(view.root);
+		}
+	});
+
+	it.each(["primevideo", "youtube"] as const)("handles a descriptor-less %s adapter safely at room creation", async provider => {
+		vi.stubGlobal("location", new URL(provider === "primevideo"
+			? "https://www.primevideo.com/detail/0HAQAA7JM43QWX0H6GUD3IOF70"
+			: "https://www.youtube.com/watch?v=test#keep=1"));
+		const requests: unknown[] = [];
+		const sendMessage = vi.fn(async (message: { type?: string; command?: string; input?: unknown }) => {
+			if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") return roomSessionStorageResponse(message.command);
+			if (message.command === "create-room") {
+				requests.push(message.input);
+				return { ok: false, error: "Offline; retry" };
+			}
+			return { ok: false };
+		});
+		installOverlayRuntime(sendMessage);
+		const view = await renderOverlay(adapter => {
+			adapter.provider = provider;
+			adapter.getSourceDescriptor = () => undefined;
+			adapter.getFingerprint = () => provider === "primevideo"
+				? "primevideo|detail/0HAQAA7JM43QWX0H6GUD3IOF70" : "youtube|test";
+		});
+		try {
+			await click(button(view.container, "Open Anidachi controls"));
+			await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			if (provider === "primevideo") {
+				expect(requests).toHaveLength(0);
+				expect(view.container.textContent).toContain("Prime Video is loading. Try again in a moment.");
+				expect(sendMessage.mock.calls.some(([message]) => message.command === "discard-prepared")).toBe(true);
+			} else {
+				expect(requests).toHaveLength(1);
+				expect(requests[0]).toMatchObject({ sourceUrl: "https://www.youtube.com/watch?v=test#keep=1", videoFingerprint: "youtube|test" });
+			}
+		} finally {
+			await unmount(view.root);
+		}
+	});
+
 	it("shows the first-run tour in the production overlay without creating a room or capturing media", async () => {
 		vi.stubEnv("WXT_EXTENSION_CHANNEL", "production");
 		vi.useFakeTimers();

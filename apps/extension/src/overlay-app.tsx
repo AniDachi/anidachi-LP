@@ -4835,9 +4835,15 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 					await discardPreparedRoomSession(preparedRoomSession);
 					return null;
 				}
+				// Read one coherent playing source after async identity/session work.
+				// Prime can replace the episode without changing the address bar.
+				const source = adapter.getSourceDescriptor();
+				if (!source && adapter.provider === "primevideo") {
+					throw new Error("Prime Video is loading. Try again in a moment.");
+				}
 				created = await createRoom(activeAccessToken, preparedRoomSession, {
-					sourceUrl: buildCurrentSourceUrlForInvite(),
-					videoFingerprint: adapter.getFingerprint(),
+					sourceUrl: source?.sourceUrl ?? buildCurrentSourceUrlForInvite(),
+					videoFingerprint: source?.videoFingerprint ?? adapter.getFingerprint(),
 					title: adapter.getTitle() ?? document.title,
 					clientRequestId: createRequestIdRef.current,
 				});

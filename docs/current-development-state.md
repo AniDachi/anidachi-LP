@@ -31,12 +31,23 @@ saved episode but landed on Prime's detail/Resume screen. Delivered staging
 [PR #559](https://github.com/AniDachi/anidachi-LP/pull/559) at `2a93c598` adds `autoplay=1` to initial room invitation
 launch and shared website/popup Resume navigation while retaining canonical
 identity, bounded intent and room exclusion. Actual website Resume now opens the
-primary player automatically; the saved-position seek remains unproved. Pending
-`codex/prime-resume-readiness` fixes a reproduced cancellation before Prime's
-first SDK snapshot, waiting only for an exact bound fingerprint in transition.
-The candidate also captures initial Prime room/Resume data before the provider's
-observed fragment removal, with a bounded one-use document-local handoff.
-Its staging delivery/acceptance and room-launch browser acceptance remain open.
+primary player automatically. Delivered staging
+[PR #560](https://github.com/AniDachi/anidachi-LP/pull/560) at `def49ed8`
+fixes cancellation before Prime's first SDK snapshot and captures initial
+room/Resume data before the provider clears the fragment. Controller receipts
+confirm website Resume restored `625.824822` seconds and an invitation opened
+previously unwatched episode 5 and joined automatically. These are same-account
+checks; two independent accounts/devices for synchronization remain open.
+
+Task 7 locally fixes a separate native Create room failure: Prime can keep a
+season URL in the address bar while playing an episode. Overlay creation reads
+the current adapter descriptor's source URL and fingerprint together after
+identity/session preparation. A Prime binding without a descriptor returns a
+retryable loading message; ordinary descriptor-less adapters retain the URL
+fallback. Source validation is unchanged. Regression tests cover the reported
+Fallout season/episode pair, native episode replacement during preparation and
+both fallback cases. Build, staging delivery and loaded-client acceptance for
+this follow-up remain open.
 The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
 records the bounded schema-first exception; final deployment receipts belong in
 the feature PR and controller report. Preserve Prime rows and epochs on rollback.
