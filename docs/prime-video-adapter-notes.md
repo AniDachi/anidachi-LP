@@ -103,17 +103,30 @@ provider pinning and uses the exact canonical movie/episode URL with autoplay
 and room decorations. An already-current result requires a MAIN snapshot;
 address-bar equality is insufficient. Resume uses the existing bounded local
 intent with exact source, expiry, owner/account guards and confirmed SDK seek.
-The pending readiness fix permits waiting without a source descriptor only
+Delivered PR #560 permits waiting without a source descriptor only
 while Prime is in transition and its bound content fingerprint exactly matches
 the canonical intent. Missing/changed identity outside that state cancels;
 claim and seek still require the full exact descriptor and all existing guards.
-The same pending candidate captures validated initial Prime room/Resume data in
+The same delivered change captures validated initial Prime room/Resume data in
 isolated-world memory at `document_start`, before a detectable player or overlay
 exists. Prime was observed to clear the entire fragment during autoplay startup.
 The one-use handoff requires the original canonical route and bound fingerprint,
 expires within five minutes, gives rooms precedence and drops stale data on
 source/account change, a new explicit intent, consumption or lifecycle disposal.
 It never exposes launch state through MAIN, DOM or persistent storage.
+
+Room creation also treats the playing descriptor as source authority. Prime
+may leave a season or previous episode URL in the address bar after replacing
+the native episode. The Task 7 local follow-up reads the descriptor at the
+actual create boundary after async identity/session preparation and uses its
+source URL and fingerprint as one pair. A known Prime adapter without a ready
+descriptor fails closed with a retryable loading message; ordinary
+descriptor-less adapters retain the existing address-bar fallback. Raw URL,
+canonical-source validation and strict Prime host/ID rules remain unchanged.
+Overlay regressions reproduce the reported Fallout season/episode mismatch,
+episode replacement during preparation, missing Prime descriptor and ordinary
+fallback. Direct room-client coverage still rejects the mismatched pair.
+Task 7 staging build and loaded-client acceptance remain open.
 
 Player geometry and composer isolation use the existing overlay seams and
 semantic controls, without English button-label or hashed-class assumptions.
@@ -241,10 +254,15 @@ migration applied. Actual overlay room creation and authenticated saved episode
 history passed. Resume reached the exact saved episode but stopped at Prime's
 detail/Resume screen; PR #559 supplied `autoplay=1` in both initial room launch
 and shared personal Resume navigation. Post-delivery website Resume opens the
-primary player automatically, but confirmed application of the saved position
-remains unproved. The pending readiness fix addresses a locally reproduced
-cancellation before Prime's first SDK snapshot. Confirmed Resume seek,
-two-client sync and the remaining loaded-client cases are still acceptance gates.
+primary player automatically. PR #560 merged at `def49ed8` and its reviewed
+artifact `3b69197d-staging-20261116161316` was loaded. Controller delivery receipts
+in `task-6-final-delivery-report.md` confirm website Resume restored exactly
+`625.824822` seconds; an invitation opened previously unwatched episode 5 despite
+prior episode 2 history and joined automatically. CI, staging smoke and Vercel
+delivery passed; the compatible Worker remains the PR #559 version. This proves
+those same-account flows only. Two independent accounts/devices for
+host-authoritative position, pause/play, seek and episode transition, plus the
+remaining loaded-client matrix, are still acceptance gates.
 Production remains excluded.
 
 Graphify refresh exception: the repository safe adapter extracted 291 pending
