@@ -1,8 +1,9 @@
+import { PRIME_CONTENT_MATCHES } from "../src/source-adapters/primevideo/url";
 import "../src/zod-csp";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { startPrimeBridge } from "../src/source-adapters/primevideo/main-bridge";
 export default defineContentScript({
-	matches: ["https://www.primevideo.com/*"],
+	matches: PRIME_CONTENT_MATCHES,
 	allFrames: false,
 	runAt: "document_start",
 	world: "MAIN",

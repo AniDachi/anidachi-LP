@@ -1,3 +1,5 @@
+import { primeDocumentRouteId } from "./source-adapters/primevideo/metadata";
+import { parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import {
 	canonicalizeRoomSourceUrl,
 	MAX_ROOM_ID_CHARS,
@@ -8,6 +10,12 @@ import {
 import type { VideoAdapter } from "./source-adapters/core/types";
 
 export interface PrimeLaunchHandoff {
+ /** Optional session transaction is committed only after lifecycle acceptance. */
+ rejected?: true;
+ intentId?: string;
+ commit?(): Promise<boolean>;
+ blocksFragment?(href: string): boolean;
+
 	readRoom(
 		href: string,
 		fingerprint: string,
@@ -29,7 +37,13 @@ type Launch = {
 	resume: PersonalHistoryResume | null;
 };
 function source(href: string) {
-	return canonicalizeRoomSourceUrl(href.split("#", 1)[0]!, "primevideo");
+	const route = parsePrimePageUrl(href);
+	const id =
+		route?.token.length === 26
+			? route.token
+			: primeDocumentRouteId(document, href);
+	const canonical = id ? `https://www.primevideo.com/detail/${id}` : "";
+	return canonicalizeRoomSourceUrl(canonical, "primevideo");
 }
 function signature(href: string): string | null {
 	const params = new URLSearchParams(new URL(href).hash.slice(1));
@@ -56,7 +70,12 @@ function readLaunch(href: string, now: number): Launch | null {
 			params.getAll("anidachiRoom").length !== 1)
 	)
 		return null;
-	const resume = roomId ? null : parsePersonalHistoryResumeUrl(href, now);
+	const resume = roomId
+		? null
+		: parsePersonalHistoryResumeUrl(
+				`${canonical.source.sourceUrl}${new URL(href).hash}`,
+				now,
+			);
 	if (!roomId && !resume) return null;
 	return {
 		sourceUrl: canonical.source.sourceUrl,
@@ -73,17 +92,40 @@ function readLaunch(href: string, now: number): Launch | null {
 /** Isolated-world, document-lifetime state only. Never exposed to the page or storage. */
 export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 	let launch = readLaunch(href, now);
-	let lastSignature = launch ? signature(href) : null;
+	let pendingHref: string | null =
+		!launch && parsePrimePageUrl(href) && signature(href) ? href : null;
+	let lastSignature = launch || pendingHref ? signature(href) : null;
 	let handed = false;
 	let roomOwner: string | null | undefined;
 	const dispose = () => {
 		launch = null;
+		pendingHref = null;
 		lastSignature = null;
 		roomOwner = undefined;
 		handed = true;
 	};
 	const observe = (currentHref: string) => {
 		if (handed && !launch) return;
+		if (pendingHref) {
+			const initial = parsePrimePageUrl(pendingHref),
+				current = parsePrimePageUrl(currentHref);
+			if (
+				!initial ||
+				!current ||
+				initial.url.origin !== current.url.origin ||
+				(initial.token !== current.token &&
+					!(() => {
+						const previous = source(pendingHref),
+							next = source(currentHref);
+						return (
+							previous.ok &&
+							next.ok &&
+							previous.source.sourceUrl === next.source.sourceUrl
+						);
+					})())
+			)
+				pendingHref = null;
+		}
 		if (launch && Date.now() >= launch.expiresAt) {
 			dispose();
 			return;
@@ -159,6 +201,12 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 			currentHref: string,
 		): PrimeLaunchHandoff | null {
 			if (handed) return null;
+			observe(currentHref);
+			if (!launch && pendingHref) {
+				launch = readLaunch(pendingHref, now);
+				if (launch) lastSignature = signature(pendingHref);
+				pendingHref = null;
+			}
 			const admitted =
 				adapter.provider === "primevideo" &&
 				valid(currentHref, adapter.getFingerprint(), Date.now());
@@ -170,4 +218,16 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 			return handoff;
 		},
 	};
+}
+
+/** Fence only the rejected launch, leaving a genuinely new explicit launch usable. */
+export function suppressedPrimeLaunch(href: string, rejection?: {intentId?:string;roomId?:string;resumeIntentId?:string}): PrimeLaunchHandoff {
+ const rejected=signature(href);
+ return {rejected:true,intentId:rejection?.intentId,blocksFragment: current => {
+  if(!rejection)return rejected!==null&&signature(current)===rejected;
+  const params=new URLSearchParams(new URL(current).hash.slice(1));
+  if(params.has("anidachiRoom"))return rejection.roomId!==undefined&&params.get("anidachiRoom")===rejection.roomId;
+  if(params.has("anidachiResume")){try{return JSON.parse(params.get("anidachiResume")!).intentId===rejection.resumeIntentId;}catch{return false;}}
+  return false;
+ },readRoom:()=>null,consumeRoom(){},takeResume:()=>null};
 }

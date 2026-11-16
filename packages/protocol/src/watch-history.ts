@@ -1,3 +1,4 @@
+import { PrimeNavigationSchema, primeNavigationMatches, primeNavigationTreeMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import {
   AccountOwnedResponseMetaSchema,
@@ -104,8 +105,10 @@ function catalogVariantSchema(provider: "crunchyroll" | "netflix" | "primevideo"
       original: z.boolean(),
       order: z.number().int().nonnegative(),
       sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     })
     .superRefine((variant, context) => {
+      if(!primeNavigationMatches(variant.primeNavigation,variant.sourceUrl,provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
       const canonical = canonicalizeRoomSourceUrl(
         variant.sourceUrl,
         provider,
@@ -408,7 +411,7 @@ export const WatchCatalogBeginAckSchema = z
   .refine((ack) => historyKeyMatchesProvider(ack.provider, ack.titleKey, ["series"]), {
     message: "Catalog acknowledgement identity must match provider", path: ["titleKey"],
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Acknowledgement generation must match response metadata",
     path: ["accountGeneration"],
   });
@@ -449,7 +452,7 @@ export const WatchCatalogCommitAckSchema = z
   .refine((ack) => historyKeyMatchesProvider(ack.provider, ack.titleKey, ["series"]), {
     message: "Catalog acknowledgement identity must match provider", path: ["titleKey"],
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Acknowledgement generation must match response metadata",
     path: ["accountGeneration"],
   });
@@ -482,6 +485,7 @@ export const WatchProgressEventSchema = z
     seasonNumber: SeasonNumberSchema.nullable(),
     episodeNumber: z.number().finite().nonnegative().nullable(),
     sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     currentTime: PlaybackSecondsSchema,
     duration: PlaybackSecondsSchema,
     progress: PlaybackProgressSchema,
@@ -494,6 +498,7 @@ export const WatchProgressEventSchema = z
     youtubeVideoId: StableKeySchema.optional(),
   })
   .superRefine((event, context) => {
+    if(!primeNavigationMatches(event.primeNavigation,event.sourceUrl,event.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
     if (event.provider !== "primevideo" &&
       ([event.titleKey, event.episodeKey, event.seasonKey].some(key => key?.startsWith("primevideo:")) ||
         hasPrimeVideoHostname(event.sourceUrl)))
@@ -663,6 +668,7 @@ export const WatchHistoryEpisodeSchema = z.strictObject({
   seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
   currentTime: PlaybackSecondsSchema,
   duration: PlaybackSecondsSchema,
   progress: PlaybackProgressSchema,
@@ -679,6 +685,7 @@ export const WatchHistoryNextEpisodeSchema = z.strictObject({
   seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
   releasedAt: TimestampSchema.nullable(),
 });
 
@@ -836,6 +843,7 @@ export const WatchHistoryEpisodePageSchema = z
     nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
   })
   .superRefine((page, context) => {
+    if(!primeNavigationTreeMatches(page))context.addIssue({code:"custom",message:"Invalid navigation binding"});
     if (page.complete && page.nextCursor !== null) {
       context.addIssue({
         code: "custom",
@@ -862,6 +870,7 @@ export const WatchHistoryItemSchema = z
     itemKind: WatchItemKindSchema,
     title: DisplayTitleSchema,
     sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     artworkUrl: NullableHttpUrlSchema,
     catalogState: WatchCatalogStateSchema,
     aggregate: WatchHistoryAggregateSchema,
@@ -873,6 +882,8 @@ export const WatchHistoryItemSchema = z
     lastWatchedAt: TimestampSchema,
   })
   .superRefine((item, context) => {
+    if(!primeNavigationTreeMatches(item))context.addIssue({code:"custom",message:"Invalid navigation binding"});
+    if(!primeNavigationMatches(item.primeNavigation,item.sourceUrl,item.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
     const references = item.seasons.flatMap(season => [...season.episodes, ...(season.nextEpisode ? [season.nextEpisode] : [])]);
     if (!historyReadReferencesMatchProvider(item.provider,
       [item.titleKey, item.latestActivity.episodeKey, ...item.seasons.map(season => season.seasonKey),
@@ -1025,6 +1036,7 @@ export const WatchHistoryTitleEpisodesResponseSchema = z
     nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
   })
   .superRefine((page, context) => {
+    if(!primeNavigationTreeMatches(page))context.addIssue({code:"custom",message:"Invalid navigation binding"});
     if (
       page.completedEpisodeCount > page.observedEpisodeCount ||
       page.episodes.length > page.observedEpisodeCount
@@ -1094,7 +1106,7 @@ export const WatchProgressAckSchema = z
     duplicate: z.boolean(),
     episode: WatchHistoryEpisodeSchema,
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Acknowledgement generation must match response metadata",
     path: ["meta", "accountGeneration"],
   });
@@ -1143,7 +1155,7 @@ export const WatchHistoryDeletionAckSchema = z
     target: WatchHistoryDeleteScopeSchema,
     deletedAt: TimestampSchema,
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Deletion generation must match response metadata",
     path: ["meta", "accountGeneration"],
   });

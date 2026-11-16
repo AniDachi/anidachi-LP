@@ -493,6 +493,8 @@ describe("production watch browsing", () => {
   });
 
   it.each([true, false])("opens Prime movie=%s with exact identity, real seasons and local resume", async movie => {
+    const primeSend=vi.fn(async(_message:unknown)=>({status:"ready"}));
+    vi.stubGlobal("chrome",{runtime:{sendMessage:primeSend}});
     const id = "E".repeat(26), anchor = "A".repeat(26), season = "B".repeat(26);
     const titleKey = `primevideo:${movie ? "movie" : "series"}:${movie ? id : anchor}`;
     const episodeKey = movie ? titleKey : `primevideo:episode:${id}`;
@@ -529,11 +531,9 @@ describe("production watch browsing", () => {
       expect(container.textContent).toContain("full catalog unavailable");
     }
     await click("Resume Matching episode");
-    await settles(() => expect(client.openUrl).toHaveBeenCalledTimes(1));
-    const url = vi.mocked(client.openUrl).mock.calls[0]![0];
-    expect(parsePersonalHistoryResumeUrl(url)).toMatchObject({ provider: "primevideo", sourceUrl, currentTime: 600 });
-    expect(new URL(url).pathname).toBe(`/detail/${id}`);
-    expect(new URL(url).search).toBe("?autoplay=1");
+    await settles(() => expect(primeSend).toHaveBeenCalledTimes(1));
+    expect(primeSend.mock.calls[0]![0]).toMatchObject({type:"ANIDACHI_PRIME_LAUNCH",action:"start",contentId:id,newTab:true,resume:{provider:"primevideo",sourceUrl,currentTime:600}});
+    expect(client.openUrl).not.toHaveBeenCalled();
   });
 
   it("hides all four streams when Prime loses shared authority", async () => {

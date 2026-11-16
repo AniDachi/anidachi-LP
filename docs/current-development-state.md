@@ -72,6 +72,50 @@ and all four seasons. Loaded acceptance and delivery receipts are tracked in
 [PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); see also the
 [provider notes](prime-video-adapter-notes.md#full-series-catalog-follow-up-evidence).
 
+Task 9 on `codex/prime-regional-routes`, based on delivered staging `61d814d7`,
+addresses a confirmed missing overlay on SOR at `/region/na/detail/` and the
+owner's broader regional-address request. Browser recognition is being separated
+from canonical room/history identity, with exact official Prime marketplace
+hosts and verified ASIN/full-GTI mappings. Live SOR evidence also has an empty
+season roster despite a verified season-1 self record and episode membership;
+that can support current-episode progress, but cannot prove a complete series
+catalog. The observed Amazon movie page uses an ASIN key and a distinct public
+canonical alias. Sanitized fixtures preserve both actual shapes. Extension checks
+and independent review passed after correcting stale deferred-alias launches and
+order-dependent malformed mappings. Chrome then rejected the first artifact's
+resource match paths; the reviewed correction separates resource origins from
+content routes and tests rejection of invalid manifests. Corrected narrow build
+and validation passed at `90caab1d`. The owner chose to perform browser acceptance
+personally; it is still pending. CI and delivery receipts belong to
+[PR #563](https://github.com/AniDachi/anidachi-LP/pull/563). Server schemas,
+production and other chats are outside this follow-up.
+
+The owner's subsequent Task 10 request expands those eight Prime/Amazon domain
+families to HTTPS base domains and subdomains, including ordinary numeric,
+hyphenated and nested DNS labels. Browser admission and manifest matching are
+updated together in the same PR #563. Extension check and the local 3,165-test
+suite passed; review, artifact and final CI receipts are tracked in that PR.
+Resource matches retain Chrome's
+origin-only `/*` constraint; Amazon injection retains video/share routes.
+Verified SDK identity, canonical persisted URLs and exact same-origin catalog
+transport remain authoritative. Other providers and server schemas are outside
+this amendment; the owner still owns browser acceptance.
+
+Task 11 is the owner-authorized Amazon launch-continuity follow-up in the same
+PR #563. Diagnosis found that observed exact Amazon episode links are discarded
+before room/history persistence, and launch consumers use the canonical
+primevideo.com URL. The candidate preserves canonical identity while carrying
+bounded observed navigation hints, selecting the recipient's marketplace with
+explicit recovery when no route is known, and retaining intent through full
+redirects. It includes additive nullable storage, versioned server reads with
+unchanged legacy RPC/stored JSON shapes, explicit history-read opt-in, a Prime
+invitation launch step and a shared extension resolver. Independent source/fix
+reviews, 771 SQL assertions and frozen legacy Web/protocol replay passed.
+Delivery and artifact receipts are tracked in
+[PR #563](https://github.com/AniDachi/anidachi-LP/pull/563); the existing `49f86b06`
+artifact does not include this follow-up. Owner-led regional/two-account
+acceptance remains open. See the provider notes and active plan for scope.
+
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of

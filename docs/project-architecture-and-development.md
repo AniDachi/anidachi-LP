@@ -391,16 +391,38 @@ Current responsibilities:
 - capture camera/microphone only for explicit media features;
 - expose debug logs/build metadata for testing.
 
-The November 16 local candidate adds Prime Video through a dedicated MAIN-world
-SDK bridge and isolated adapter under `source-adapters/primevideo`. It admits only
-exact `https://www.primevideo.com/detail/<compactGTI>` sources and one verified
+The November 16 Prime Video adapter uses a dedicated MAIN-world SDK bridge and
+isolated adapter under `source-adapters/primevideo`. Its persisted source remains
+exact `https://www.primevideo.com/detail/<compactGTI>` and requires one verified
 open/initiated primary player. Preview/preload, ad, recap, unknown and replacement
 states cannot drive remote control or history. Content time uses the provider's
 content clock; commands and non-persisting rate changes use its SDK with bounded
 confirmation and generation fencing. Same-video, same-URL episode changes still
-replace source identity. The narrow manifest adds only `www.primevideo.com`.
-Loaded extension and two-client staging acceptance remain open; see the
+replace source identity. The regional-address follow-up separates browser route
+recognition from persisted identity: regional/locale paths and official Amazon
+video aliases are resolved through matching public metadata and the SDK title.
+Observed same-origin season links own catalog transport; canonical compactGTIs
+own room/history identity. The owner-authorized subdomain follow-up expands
+HTTPS matching to the base and subdomains of eight explicit Prime/Amazon domain
+families. Separate resource-origin and video-script path patterns retain the
+manifest boundary; cross-subdomain catalog requests remain cross-origin and
+are rejected. Loaded regional acceptance belongs to the owner;
+two-client staging acceptance remains open. See the
 [Prime contract and evidence](prime-video-adapter-notes.md).
+
+Prime Task 11 separates observed regional playback links (`primeNavigation`)
+from canonical room/history identity. Nullable room/progress fields and a
+separate catalog route map retain exact-title routes. Legacy RPC results and
+stored JSON remain unchanged; versioned server reads enrich new responses and
+history HTTP readers explicitly opt in. This keeps old Web deployments and
+strict clients compatible across schema-first delivery and rollback. Invitation launch,
+website/popup Resume, unseen catalog episodes and source switches share the
+extension resolver. Its account-scoped marketplace choice and bounded
+`chrome.storage.session` intent survive full document redirects but establish
+neither content identity nor room authority. Unknown regional mappings offer
+explicit recovery instead of a guessed URL. The Prime execution plan tracks
+ordered staging schema/runtime/artifact delivery and the remaining owner-led
+regional and two-client acceptance.
 
 Important UI constraints:
 

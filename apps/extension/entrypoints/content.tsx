@@ -1,3 +1,6 @@
+import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
+import { recoverPrimeLaunch } from "../src/prime-launch-client";
+import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
 import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
@@ -94,7 +97,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  "https://www.primevideo.com/*",
+  ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -136,6 +139,29 @@ export function startContentLifecycle(
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
 
+  let acceptedLaunch: {fingerprint:string;handoff:PrimeLaunchHandoff;ready:Promise<boolean>} | null = null;
+  const mountWithLaunch = (adapter: VideoAdapter) => {
+    const href=location.href;
+    const current=()=>!disposed&&manager.current===adapter;
+    if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
+      void recoverPrimeLaunch(adapter,current).catch(() => undefined).then(async recovered => {
+        if(!current())return;
+        const fingerprint=adapter.getFingerprint();
+        // Once accepted, the transaction belongs to this lifecycle, not the replaced video.
+        let accepted=recovered!==undefined&&acceptedLaunch?.fingerprint===fingerprint&&(!recovered||recovered.intentId===acceptedLaunch.handoff.intentId)?acceptedLaunch:null;
+        if(!accepted && recovered && !recovered.rejected){accepted={fingerprint,handoff:recovered,ready:recovered.commit?.()??Promise.resolve(true)};acceptedLaunch=accepted;}
+        if(accepted){
+          const ok=await accepted.ready.catch(()=>false);
+          if(!current())return;
+          recovered=ok?accepted.handoff:false;
+        }
+        if (recovered === false || recovered === undefined || recovered?.rejected) primeLaunch.dispose();
+        if (recovered && mounted) { mounted.dispose(); mounted = null; }
+        if (!mounted) mounted = dependencies.mount(adapter, (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? primeLaunch.handoff(adapter, location.href));
+      });
+    } else if (!mounted) mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
+  };
+
   const manager = new AdapterManager({
     detached(previous) {
       logDebug("content", "detach adapter", {
@@ -153,7 +179,7 @@ export function startContentLifecycle(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
+      mountWithLaunch(adapter);
     },
     relocated() {
       mounted?.relocate();
@@ -168,6 +194,7 @@ export function startContentLifecycle(
         video: videoDebugSnapshot(next.video),
       });
       mounted?.replaceAdapter(next);
+      mountWithLaunch(next);
     },
     suspended(previous) {
       logDebug("content", "suspend adapter", {
@@ -333,7 +360,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
-    if (hostname === "www.primevideo.com") return "primevideo";
+    if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")
@@ -351,7 +378,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
-  const isIsolatedProviderComposer = () => ["www.netflix.com", "www.primevideo.com"].includes(location.hostname) && isComposerOpen();
+  const isIsolatedProviderComposer = () => (location.hostname === "www.netflix.com" || !!parsePrimePageUrl(location.href)) && isComposerOpen();
   let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
     document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";

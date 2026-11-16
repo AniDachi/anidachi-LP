@@ -14,9 +14,39 @@ afterEach(() => {
 	vi.useRealTimers();
 	document.body.innerHTML = "";
 });
-it("replaces a same-video same-URL source through immediate binding notification and disposes old subscription", async () => {
+it.each([
+	"root",
+	"regional",
+	"amazon",
+	"synthetic-subdomain",
+	"synthetic-amazon-subdomain",
+])("replaces same-video source through MAIN binding, registry and mount on %s", async (route) => {
 	vi.useFakeTimers();
 	const f = fixture();
+	if (route !== "root") {
+		const origin =
+			route === "synthetic-subdomain"
+				? "https://synthetic-2.edge3.primevideo.com"
+				: route === "synthetic-amazon-subdomain"
+					? "https://synthetic-2.edge3.amazon.co.uk"
+					: route === "amazon"
+						? "https://www.amazon.com"
+						: "https://www.primevideo.com";
+		const prefix = route.includes("amazon")
+			? "/gp/video/detail/"
+			: "/region/na/detail/";
+		const original = f.write;
+		f.write = () => {
+			original();
+			document.getElementById("dv-web-page-hydration-data")!.textContent =
+				JSON.stringify(f.data).replaceAll("/detail/", prefix);
+		};
+		f.write();
+		Object.defineProperty(window, "location", {
+			configurable: true,
+			value: new URL(`${origin}${prefix}${ids.season}`),
+		});
+	}
 	bridgeTransport();
 	stops.push(startPrimeBridge());
 	let active: VideoAdapter | null = null,

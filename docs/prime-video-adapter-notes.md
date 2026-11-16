@@ -15,7 +15,7 @@ tracks the remaining integration gates.
 
 ## Source and permission scope
 
-The admitted source is exactly
+The persisted room/history source is exactly
 `https://www.primevideo.com/detail/<compactGTI>`, with a 26-character uppercase
 alphanumeric compactGTI. An optional trailing slash, query and hash are removed
 from persisted identity. The fingerprint is `primevideo|detail/<compactGTI>`.
@@ -27,19 +27,89 @@ canonical even when the input already has autoplay decorations. Provider redirec
 may replace autoplay with `ref_=atv_plr_detail_play`; parsing still binds the same
 exact episode/movie. A room hash remains ineligible for personal Resume.
 
-The shared validator rejects HTTP, credentials, explicit ports including `:443`,
-lookalike or alternate hosts, localized/unsupported routes, slugs, encoded IDs,
-dot-segment normalization and malformed IDs. Recognizing a Prime host family
-triggers strict validation; it does not admit extra hosts. Known Prime pages
-never fall through to Generic HTML5. The legacy `amazon` account-provider
-placeholder remains distinct.
+The shared wire validator remains strict: browser routes and aliases must be
+resolved before they reach it. HTTP, credentials, explicit ports including
+`:443`, lookalikes, malformed IDs and normalization tricks remain invalid.
+Known Prime pages never fall through to Generic HTML5. The legacy `amazon`
+account-provider placeholder remains distinct.
 
-The narrow staging/release manifest path adds only
-`https://www.primevideo.com/*`, with one top-frame MAIN script at
-`document_start`. Regional Amazon domains require further observed evidence
-and a separate admission decision. No wildcard Amazon permission, public
-provider announcement, Store publication, secret or environment addition is
-part of this candidate.
+The owner-authorized Tasks 9–10 broaden browser recognition independently of
+that persisted contract. They cover regional and locale detail addresses and
+Amazon video/share aliases on eight official domain families: `primevideo.com`,
+`amazon.com`, `amazon.co.uk`, `amazon.de`, `amazon.co.jp`, `amazon.ca`,
+`amazon.in`, and `amazon.com.mx`. Task 10 explicitly adds their base domains and
+subdomains through HTTPS patterns such as `https://*.primevideo.com/*`,
+superseding Task 9's initial exact-www permission scope. Host matching requires
+the exact root or a dot-separated subdomain, not a textual suffix lookalike.
+The host inventory comes from [Prime's marketplace directory](https://www.primevideo.com/help?nodeId=202064890).
+An ASIN or full-GTI route needs matching public page/self metadata and the current
+SDK title before it can become a canonical compactGTI source. Shopping videos,
+trailers, tracking parameters and title text cannot establish that identity.
+The extension separates explicit host/resource origins from Amazon video/share
+script paths, with one top-frame MAIN entry at `document_start`. Chrome requires
+web-accessible resource matches to end in `/*`; the exposed resource remains
+only the logo. Wildcards are limited to the eight named families; unrelated
+Amazon TLDs, HTTP and global host access are not admitted. Family recognition
+does not admit a shopping video without the existing Prime SDK and metadata proof.
+Catalog transport still requires the same exact origin, including the subdomain.
+Task 9 source review passed; Task 10's source, review and artifact receipts are
+tracked in the same PR. The owner will perform loaded-artifact acceptance.
+This scope is not evidence that every marketplace/account has been tested. No public
+announcement, Store publication, secret or environment addition is included.
+
+## Amazon launch continuity follow-up
+
+Task 11 separates canonical identity from the observed Amazon destination.
+Optional `primeNavigation: { contentId, routes: [{ url, observedAt }] }` carries
+exact-title links through room sources, progress, catalog variants and history
+projections. There is at most one route per approved marketplace, eight routes
+in total, with a 16 KiB payload limit. Public same-origin metadata must map the
+link to the exact compactGTI; the eventual SDK source still proves playback
+identity. Plain canonical Prime links need no redundant navigation hint. An
+address-bar season URL is never an episode destination, and an Amazon ASIN is
+never manufactured from a compactGTI or translated title.
+
+Invitation, website/popup Resume, unseen catalog episodes and room source
+switches consult the same recipient marketplace selection. A missing
+verified route for that marketplace is an unknown mapping, not proof that the
+title is unavailable. The extension's `prime-launch.html` offers known links,
+canonical Prime, or manual navigation to the selected marketplace. It remembers
+the choice per AniDachi account, not per display language. It does not rewrite
+an Amazon host or silently substitute another edition. Legacy data
+without navigation hints keeps canonical Prime behavior unless the recipient
+has explicitly selected an Amazon marketplace that cannot be resolved.
+
+Prime invitations pass through `/room/[roomId]/launch` after server admission.
+The website prepares and commits a launch through the approved extension ID;
+missing or older extensions receive explicit fallback links. The background
+stores a five-minute, tab/account/login/generation/source-bound intent in
+`chrome.storage.session` before navigation, with at most 64 pending entries and
+one navigation attempt. This survives provider redirects, fragment removal and
+service-worker restarts. Recovery checks the current adapter before handing the
+intent to the overlay; only an accepted handoff consumes it. A retained Amazon
+fragment cannot discard a matching recovered Resume, and a rejected pending
+room launch cannot fall back to its stale raw fragment. SDK identity, server
+room authority and personal Resume account/generation checks still gate
+admission and seeking. No room token or provider credential is placed in the
+destination URL.
+
+Migration `20261116160000_prime_navigation_continuity.sql` adds nullable room,
+progress and catalog route-map JSONB fields. Existing RPC results, stored catalog
+snapshots/projections and progress receipts retain their legacy JSON shapes.
+Versioned server reads and progress wrappers enrich new-runtime responses;
+history HTTP readers additionally opt in with `x-anidachi-prime-navigation: 1`.
+This protects both older clients and older Web deployments during the schema-first
+window or runtime rollback. Same-source legacy writes preserve observed routes;
+source replacement or removal clears stale routes. Navigation timestamps do not
+establish a new source generation.
+
+Delivery order is additive staging schema, compatible Web/Worker, then the new
+extension artifact. Runtime rollback retains the nullable columns and history
+rows. Task 11's source and fix reviews passed, together with 771 SQL assertions
+and replay through the frozen pre-task Web/protocol code. Delivery and artifact
+receipts are recorded in [PR #563](https://github.com/AniDachi/anidachi-LP/pull/563).
+The previous `49f86b06` ZIP does not contain this behavior. Loaded regional and
+two-account acceptance remains separate from these checks.
 
 ## Runtime ownership and safe playback
 
@@ -102,8 +172,9 @@ Obsolete requests cannot update a replacement binding. Binding cancellation is
 separate from subscription lifetime: temporary binding loss can recover when
 the same video/source returns before lifecycle reconciliation. Source navigation
 invalidates the old binding before assigning the new URL. It preserves room
-provider pinning and uses the exact canonical movie/episode URL with autoplay
-and room decorations. An already-current result requires a MAIN snapshot;
+provider pinning and uses the exact movie/episode destination selected by the
+Prime launch resolver, with autoplay and room decorations. Canonical identity
+remains unchanged. An already-current result requires a MAIN snapshot;
 address-bar equality is insufficient. Resume uses the existing bounded local
 intent with exact source, expiry, owner/account guards and confirmed SDK seek.
 Delivered PR #560 permits waiting without a source descriptor only
@@ -113,7 +184,7 @@ claim and seek still require the full exact descriptor and all existing guards.
 The same delivered change captures validated initial Prime room/Resume data in
 isolated-world memory at `document_start`, before a detectable player or overlay
 exists. Prime was observed to clear the entire fragment during autoplay startup.
-The one-use handoff requires the original canonical route and bound fingerprint,
+The one-use handoff requires the original accepted route and bound fingerprint,
 expires within five minutes, gives rooms precedence and drops stale data on
 source/account change, a new explicit intent, consumption or lifecycle disposal.
 It never exposes launch state through MAIN, DOM or persistent storage.
@@ -174,10 +245,16 @@ full/compact GTI, consistently with any known self mapping. Conflicting,
 malformed or absent anchor evidence suspends detailed series capture/catalog.
 Independently verified playing source identity can remain available. Selecting
 another season or grouping by translated title is not a fallback.
+Task 9 also handles the observed SOR shape: no season roster, but an exact
+season-1 self record, matching page/SDK ordinals and episode membership. This
+can establish the current episode's anchor and partial catalog; missing roster
+data cannot establish full-series completeness.
 
 The Task 8 follow-up loads the series catalog from observed season detail
-links after the existing eligible catalog attempt begins. It reads only strict
-same-origin canonical HTTPS detail URLs, without autoplay or page navigation.
+links after the existing eligible catalog attempt begins. Task 9 keeps the
+observed same-origin regional/marketplace route for transport instead of
+synthesizing a root `/detail/` URL. Only verified HTTPS detail links are read,
+without tracking, autoplay, fragments or page navigation.
 Requests retain provider credentials inside that origin, reject redirects, and
 are bounded by 100 seasons, 2,000 episodes, 8 MB per response, 32 MB total and a
 45-second loader deadline (50 seconds at the catalog client). Playback command
@@ -187,7 +264,7 @@ stale work; a binding/context has at most one catalog attempt.
 Completeness requires every observed season, consistent full/compact mappings
 and season-1 anchor, exact unique episode membership/count, and no unexplained
 pagination. Availability uses allowlisted typed `Entitled` / `PLAY` / `PLAYBACK`
-Feature actions whose full GTI and canonical autoplay link match the episode,
+Feature actions whose full GTI and verified autoplay link match the episode,
 together with launched episode metadata. Raw playback envelopes, provider
 account data and surrounding action payloads never leave the provider page.
 SSR-disabled Play buttons are placeholders, so their state is not used as
@@ -250,6 +327,32 @@ Prime/coordinator tests pass 134 cases, with extension check and rebuilt narrow
 artifact validation. Live acceptance and staging delivery are recorded in
 [PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); fixture evidence alone
 is not a loaded-browser claim.
+
+## Regional-address follow-up evidence
+
+The reported SOR URL uses `/region/na/detail/`. The old extension loaded its
+styles but rejected the route before creating a player binding or overlay.
+The same page's public self/episode links also use that prefix, and its season
+roster is empty. The regression fixture preserves those facts and the observed
+SDK season-1 episode-1 identity; the admitted catalog remains partial.
+
+An inspected Amazon US movie page has a requested ASIN different from its
+same-origin canonical ASIN. Its public self record is keyed by ASIN and supplies
+the full GTI and compactGTI separately. This evidence informs alias resolution;
+the account could not play this title, so its playback test uses an explicitly
+synthetic SDK identity. This is parsing/integration evidence, not live Amazon
+playback acceptance. The first regional artifact passed the project validator but
+Chrome rejected its manifest: resource matches incorrectly reused path-scoped
+Amazon script matches. The correction separates origin and injection lists and
+adds negative manifest validation cases. [Chrome's resource manifest contract](https://developer.chrome.com/docs/extensions/reference/manifest/web-accessible-resources)
+requires origin-only matching. Regional loaded-artifact acceptance and delivery
+receipts are tracked in [PR #563](https://github.com/AniDachi/anidachi-LP/pull/563).
+The corrected narrow artifact at `90caab1d` passes the strengthened validator;
+the same validator rejects deliberately invalid Amazon resource paths. The owner
+chose to check Chrome personally, so installation, regional capsule/progress and
+broader marketplace playback are not marked accepted from source tests alone.
+No source IDs, seasons or totals are inferred from translated
+labels, an account's watch position or a missing season list.
 
 ## Local evidence and remaining acceptance
 

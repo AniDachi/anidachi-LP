@@ -32,12 +32,59 @@ const videoHosts = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  "https://www.primevideo.com/*",
+  "https://*.primevideo.com/*",
+  "https://*.amazon.com/gp/video/*",
+  "https://*.amazon.com/*/gp/video/*",
+  "https://*.amazon.com/dp/*",
+  "https://*.amazon.com/*/dp/*",
+  "https://*.amazon.co.uk/gp/video/*",
+  "https://*.amazon.co.uk/*/gp/video/*",
+  "https://*.amazon.co.uk/dp/*",
+  "https://*.amazon.co.uk/*/dp/*",
+  "https://*.amazon.de/gp/video/*",
+  "https://*.amazon.de/*/gp/video/*",
+  "https://*.amazon.de/dp/*",
+  "https://*.amazon.de/*/dp/*",
+  "https://*.amazon.co.jp/gp/video/*",
+  "https://*.amazon.co.jp/*/gp/video/*",
+  "https://*.amazon.co.jp/dp/*",
+  "https://*.amazon.co.jp/*/dp/*",
+  "https://*.amazon.ca/gp/video/*",
+  "https://*.amazon.ca/*/gp/video/*",
+  "https://*.amazon.ca/dp/*",
+  "https://*.amazon.ca/*/dp/*",
+  "https://*.amazon.in/gp/video/*",
+  "https://*.amazon.in/*/gp/video/*",
+  "https://*.amazon.in/dp/*",
+  "https://*.amazon.in/*/dp/*",
+  "https://*.amazon.com.mx/gp/video/*",
+  "https://*.amazon.com.mx/*/gp/video/*",
+  "https://*.amazon.com.mx/dp/*",
+  "https://*.amazon.com.mx/*/dp/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
+const videoOrigins = [
+  "https://youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtu.be/*",
+  "https://*.youtu.be/*",
+  "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
+  "https://*.primevideo.com/*",
+  "https://*.amazon.com/*",
+  "https://*.amazon.co.uk/*",
+  "https://*.amazon.de/*",
+  "https://*.amazon.co.jp/*",
+  "https://*.amazon.ca/*",
+  "https://*.amazon.in/*",
+  "https://*.amazon.com.mx/*",
+  "https://crunchyroll.com/*",
+  "https://*.crunchyroll.com/*",
+];
+
 const productionHostPermissions = [
-  ...videoHosts,
+  ...videoOrigins,
   "https://www.anidachi.app/*",
   "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
 ];
@@ -210,7 +257,7 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.permissions ?? []).not.toContain("downloads");
     expectExact(manifest.host_permissions, productionHostPermissions);
     expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-public", {
       web: "https://www.anidachi.app",
@@ -234,12 +281,12 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.key).toBeTypeOf("string");
     expect(deriveId(manifest.key ?? "")).toBe(stagingId);
     expectExact(manifest.host_permissions, [
-      ...videoHosts,
+      ...videoOrigins,
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
     expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
       web: "https://staging.anidachi.app",
@@ -276,7 +323,35 @@ describe.sequential("extension release channel builds", () => {
     expectExact(contentMatches(manifest), [
       ...localHostPermissions,
       "https://www.netflix.com/*",
-      "https://www.primevideo.com/*",
+      "https://*.primevideo.com/*",
+      "https://*.amazon.com/gp/video/*",
+      "https://*.amazon.com/*/gp/video/*",
+      "https://*.amazon.com/dp/*",
+      "https://*.amazon.com/*/dp/*",
+      "https://*.amazon.co.uk/gp/video/*",
+      "https://*.amazon.co.uk/*/gp/video/*",
+      "https://*.amazon.co.uk/dp/*",
+      "https://*.amazon.co.uk/*/dp/*",
+      "https://*.amazon.de/gp/video/*",
+      "https://*.amazon.de/*/gp/video/*",
+      "https://*.amazon.de/dp/*",
+      "https://*.amazon.de/*/dp/*",
+      "https://*.amazon.co.jp/gp/video/*",
+      "https://*.amazon.co.jp/*/gp/video/*",
+      "https://*.amazon.co.jp/dp/*",
+      "https://*.amazon.co.jp/*/dp/*",
+      "https://*.amazon.ca/gp/video/*",
+      "https://*.amazon.ca/*/gp/video/*",
+      "https://*.amazon.ca/dp/*",
+      "https://*.amazon.ca/*/dp/*",
+      "https://*.amazon.in/gp/video/*",
+      "https://*.amazon.in/*/gp/video/*",
+      "https://*.amazon.in/dp/*",
+      "https://*.amazon.in/*/dp/*",
+      "https://*.amazon.com.mx/gp/video/*",
+      "https://*.amazon.com.mx/*/gp/video/*",
+      "https://*.amazon.com.mx/dp/*",
+      "https://*.amazon.com.mx/*/dp/*",
       "https://*.crunchyroll.com/*",
     ]);
     expectCanonicalRuntime("anidachi-extension-staging-local-broad", {

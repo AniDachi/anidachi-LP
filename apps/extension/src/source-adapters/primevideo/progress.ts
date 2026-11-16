@@ -21,6 +21,7 @@ export const primeHistoryPolicy: SourceAdapterHistoryPolicy = {
 			provider: "primevideo",
 			providerLabel: "Prime Video",
 			primevideoIdentity: identity,
+   ...(metadata.primeNavigation ? {primeNavigation:metadata.primeNavigation} : {}),
 			...keys,
 			title: metadata.title,
 			episodeTitle: metadata.episodeTitle,

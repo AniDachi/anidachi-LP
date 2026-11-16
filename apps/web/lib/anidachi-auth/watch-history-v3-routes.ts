@@ -1,3 +1,4 @@
+import { primeNavigationResponse } from "./prime-navigation-response";
 import { getAccountAccessSession, HISTORY_PRIVATE_HEADERS } from "./watch-history-access";
 import { applyPersonalWatchProgress } from "./personal-watch-history";
 import { checkPersonalHistoryOperation } from "./personal-history-policy";
@@ -313,7 +314,8 @@ export function createWatchHistoryV3RouteHandlers(
   };
   return Object.fromEntries(Object.entries(handlers).map(([key, handler]) => [key,
     async (request: NextRequest) => {
-      const response = await handler(request);
+      const original = await handler(request);
+      const response = NextResponse.json(primeNavigationResponse(request,await original.json()),{status:original.status,headers:original.headers});
       for (const [name, value] of Object.entries(HISTORY_PRIVATE_HEADERS)) response.headers.set(name, value);
       return response;
     },

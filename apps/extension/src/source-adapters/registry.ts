@@ -1,4 +1,4 @@
-import { hasPrimeVideoHostname } from "@anidachi/protocol";
+import { hasPrimeBrowserHost } from "./primevideo/url";
 import { primeVideoDefinition } from "./primevideo/definition";
 import type {
 	SourceAdapterDefinition,
@@ -22,7 +22,7 @@ const sourceAdapterDefinitions = [
 export function detectSourceAdapter(
 	documentValue: Document = document,
 ): VideoAdapter | null {
-	if (hasPrimeVideoHostname(location.href)) {
+	if (hasPrimeBrowserHost(location.href)) {
 		const videos = documentValue.querySelectorAll<HTMLVideoElement>("#dv-web-player video");
 		return videos.length === 1 ? primeVideoDefinition.detect(videos[0]!) : null;
 	}

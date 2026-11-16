@@ -637,6 +637,7 @@ function toEvent(
 		...(observation.identityPending
 			? { identityPending: observation.identityPending }
 			: {}),
+		...(observation.primeNavigation ? {primeNavigation:observation.primeNavigation} : {}),
 		...(observation.primevideoIdentity ? { primevideoIdentity: observation.primevideoIdentity } : {}),
 		...(observation.netflixIdentity ? { netflixIdentity: observation.netflixIdentity } : {}),
 		...(observation.crunchyrollIdentity

@@ -1,3 +1,4 @@
+import { hasPrimeBrowserHost, parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
   WatchHistoryCapacityCompatibleSchema,
@@ -1437,7 +1438,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     try {
       response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
         ...init,
-        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-history-owner": session.user.id },
+        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id },
       });
     } catch {
       return { ok: false, error: { ok: false, status: "retryable" }, session };
@@ -1470,7 +1471,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           headers: {
             Authorization: `Bearer ${refreshed.accessToken}`,
             "Content-Type": "application/json",
-            "x-anidachi-history-owner": session.user.id,
+            "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id,
           },
         });
       } catch {
@@ -2061,8 +2062,8 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
-  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com", "www.primevideo.com"].includes(url.hostname)) return false;
-  if (url.hostname === "www.primevideo.com" && !canonicalizeRoomSourceUrl(sender.url, "primevideo").ok) return false;
+  if (url.protocol !== "https:" || !hasPrimeBrowserHost(sender.url) && !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com", "www.primevideo.com"].includes(url.hostname)) return false;
+  if (hasPrimeBrowserHost(sender.url) && !parsePrimePageUrl(sender.url)) return false;
   if (url.hostname === "www.netflix.com") {
     if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
     // Trust the document origin, not its initial route: Netflix opens players

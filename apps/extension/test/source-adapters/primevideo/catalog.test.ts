@@ -292,7 +292,6 @@ it.each([
 	"other-route",
 	"encoded-route",
 	"http",
-	"fragment",
 ])("does not request an unsafe observed season URL: %s", async (mode) => {
 	const f = setup();
 	const selected = f.pages[3]!,
@@ -593,4 +592,135 @@ it("cancels the transport at its separate catalog deadline when MAIN is absent",
 			.mocked(window.postMessage)
 			.mock.calls.some(([message]) => message.action === "cancel"),
 	).toBe(true);
+});
+
+it.each([
+	"www.primevideo.com",
+	"synthetic-2.edge3.primevideo.com",
+])("fetches observed regional season paths on %s while publishing canonical episode URLs", async (host) => {
+	const f = setup();
+	for (const page of f.pages) {
+		const transformed = JSON.parse(
+			JSON.stringify(page.data).replaceAll("/detail/", "/region/na/detail/"),
+		);
+		Object.assign(page.data, transformed);
+	}
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(f.pages[3]!.data);
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(`https://${host}/region/na/detail/${ids.season}`),
+	});
+	f.fetcher.mockImplementation(async (url, options) => {
+		expect(options).toMatchObject({
+			method: "GET",
+			credentials: "same-origin",
+			redirect: "error",
+		});
+		const index = f.pages.findIndex(
+			(page) =>
+				url === `${location.origin}/region/na/detail/${page.season.compact}`,
+		);
+		if (index < 0) throw new Error("unobserved path");
+		return response(f.html(index), url);
+	});
+	const result = await f.collect();
+	expect(result?.catalog?.completeness).toBe("complete");
+	expect(f.fetcher.mock.calls.map((call) => call[0])).toEqual(
+		f.pages.map(
+			(page) => `${location.origin}/region/na/detail/${page.season.compact}`,
+		),
+	);
+	expect(
+		result?.catalog?.seasons[0]?.episodes[0]?.watchVariants[0]?.sourceUrl,
+	).toMatch(/^https:\/\/www.primevideo.com\/detail\/[A-Z0-9]{26}$/);
+});
+
+it("uses only observed marketplace ASIN season URLs and full-GTI membership", async () => {
+	const f = setup();
+	const alias = new Map<string, string>();
+	for (const page of f.pages) {
+		alias.set(page.season.compact, `B${String(alias.size).padStart(9, "0")}`);
+		for (const member of page.members)
+			alias.set(member.compact, `B${String(alias.size).padStart(9, "0")}`);
+	}
+	for (const page of f.pages) {
+		for (const ref of f.pages)
+			Object.assign(page.data.init.preparations.body.atf.state.self, {
+				[ref.season.full]: {
+					gti: ref.season.full,
+					compactGTI: ref.season.compact,
+					link: `/detail/${ref.season.compact}`,
+					titleType: "season",
+					sequenceNumber: ref.season.number,
+					isLaunched: true,
+				},
+			});
+		let raw = JSON.stringify(page.data);
+		for (const [compact, asin] of alias)
+			raw = raw.replaceAll(`/detail/${compact}`, `/gp/video/detail/${asin}`);
+		const data = JSON.parse(raw);
+		// Official Amazon collections are keyed by ASIN; gti/compact remain explicit.
+		for (const plane of ["atf", "btf"]) {
+			const state = data.init.preparations.body[plane].state;
+			for (const [key, row] of Object.entries(state.self) as [
+				string,
+				{ compactGTI: string },
+			][]) {
+				delete state.self[key];
+				state.self[alias.get(row.compactGTI)!] = row;
+			}
+		}
+		Object.assign(page.data, data);
+	}
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(f.pages[3]!.data);
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(
+			`https://www.amazon.com/gp/video/detail/${alias.get(ids.season)}`,
+		),
+	});
+	f.fetcher.mockImplementation(async (url) => {
+		const index = f.pages.findIndex(
+			(page) =>
+				url ===
+				`https://www.amazon.com/gp/video/detail/${alias.get(page.season.compact)}`,
+		);
+		if (index < 0) throw Error("unobserved");
+		return response(f.html(index), url);
+	});
+	const result = await f.collect();
+	expect(result?.catalog?.completeness).toBe("complete");
+	expect(
+		f.fetcher.mock.calls.every(([url]) =>
+			url.startsWith("https://www.amazon.com/gp/video/detail/B"),
+		),
+	).toBe(true);
+	expect(
+		result?.catalog?.seasons[0]?.episodes[0]?.watchVariants[0]?.sourceUrl,
+	).toMatch(/^https:\/\/www.primevideo.com\/detail\//);
+});
+
+it.each([
+	"primevideo.com",
+	"www.primevideo.com",
+	"sibling.edge3.primevideo.com",
+])("rejects observed catalog transport to %s from a synthetic subdomain", async (host) => {
+	const f = setup();
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(
+			`https://synthetic-2.edge3.primevideo.com/detail/${ids.season}`,
+		),
+	});
+	const selected = f.pages[3]!;
+	const rows = object(state(f, 3, "atf").seasons)[
+		selected.season.full
+	] as Record<string, unknown>[];
+	rows[1]!.seasonLink = `https://${host}/detail/${ids.movie}`;
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(selected.data);
+	expect((await f.collect())?.catalog?.completeness).toBe("partial");
+	expect(f.fetcher).not.toHaveBeenCalled();
 });

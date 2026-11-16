@@ -2,6 +2,7 @@ import { withPersonalHistoryRead } from "./personal-history-policy";
 import { createHash } from "node:crypto";
 import {
 	WatchCatalogSnapshotInputSchema,
+ PrimeNavigationSchema,
 	WatchHistoryEpisodeSchema,
 	WatchHistoryGridQuerySchema,
 	WatchHistoryGridResponseSchema,
@@ -39,7 +40,7 @@ const fail = (code = "INVALID_RESPONSE", status = 502) =>
 		"Could not read the episode catalog",
 	);
 const metadataColumns =
-	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,projection,preferred_audio_locale";
+	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,projection,preferred_audio_locale,prime_navigation";
 
 export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 	async settings(owner) {
@@ -61,14 +62,14 @@ export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 			.eq("title_key", title)
 			.maybeSingle();
 		if (result.error) throw result.error;
-		return result.data as unknown as RecordValue | null;
+		return restorePrimeCatalogNavigation(result.data as unknown as RecordValue | null);
 	},
 	async progress(owner, generation, title, episodes, provider) {
 		if (!episodes.length) return [];
 		const result = await db()
 			.from("watch_episode_progress")
 			.select(
-				"user_id,history_generation,provider,title_key,episode_key,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time_seconds,duration,progress,completed_at,observed_at",
+				"user_id,history_generation,provider,title_key,episode_key,episode_title,season_key,season_title,season_number,episode_number,source_url,prime_navigation,current_time_seconds,duration,progress,completed_at,observed_at",
 			)
 			.eq("user_id", owner)
 			.eq("history_generation", generation)
@@ -307,6 +308,7 @@ export async function readWatchHistoryGrid(params: {
 					seasonNumber: progress.season_number,
 					episodeNumber: progress.episode_number,
 					sourceUrl: progress.source_url,
+     ...(progress.prime_navigation?{primeNavigation:progress.prime_navigation}:{}),
 					currentTime: progress.current_time_seconds,
 					duration: progress.duration,
 					progress: progress.progress,
@@ -362,6 +364,7 @@ export async function readWatchHistoryGrid(params: {
 					(!episode.releasedAt ||
 						Date.parse(episode.releasedAt) <= now.getTime()),
 				sourceUrl: variant.sourceUrl,
+    ...(variant.primeNavigation?{primeNavigation:variant.primeNavigation}:{}),
 				// Catalog launch choice must not rewrite the saved Resume observation.
 				history,
 			};
@@ -409,4 +412,14 @@ export async function readWatchHistoryGrid(params: {
 	)
 		throw fail("HISTORY_CHANGED", 409);
 	return WatchHistoryGridResponseSchema.parse(result);
+}
+
+/** New Web alone merges the opt-in route column; legacy JSON stays parseable on rollback. */
+export function restorePrimeCatalogNavigation(row: RecordValue | null): RecordValue | null {
+ if(!row || row.provider!=="primevideo" || !row.prime_navigation || typeof row.prime_navigation!=="object")return row;
+ const hints=new Map<string,unknown>();
+ for(const [url,value] of Object.entries(row.prime_navigation)){const parsed=PrimeNavigationSchema.safeParse(value);if(parsed.success&&url===`https://www.primevideo.com/detail/${parsed.data.contentId}`)hints.set(url,parsed.data);}
+ let nodes=0;
+ const enrich=(value:unknown):unknown=>{if(++nodes>100000)throw fail();if(Array.isArray(value))return value.map(enrich);if(value&&typeof value==="object"){const item=value as RecordValue;const result=Object.fromEntries(Object.entries(item).map(([key,child])=>[key,enrich(child)]));const hint=typeof item.sourceUrl==="string"?hints.get(item.sourceUrl):undefined;return hint?{...result,primeNavigation:hint}:result;}return value;};
+ return {...row,snapshot:enrich(row.snapshot),projection:enrich(row.projection)};
 }
