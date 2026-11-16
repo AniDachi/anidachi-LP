@@ -1,8 +1,9 @@
 # Current Development State
 
-## Prime Video staging candidate: November 16, 2026
+## Prime Video staging baseline and launch follow-up: November 16, 2026
 
-`codex/prime-video-adapter` implements and has task-level review for Prime source
+Merged staging [PR #557](https://github.com/AniDachi/anidachi-LP/pull/557),
+`2bbf955d66e6825fe376128356cbb4aeef98bd69`, delivers reviewed Prime source
 contracts, additive SQL/server admission, the MAIN-world player adapter and
 popup/website history presentation. Scope is exact HTTPS `www.primevideo.com`
 detail URLs. Series history uses the verified season-1 compactGTI as an explicit
@@ -23,9 +24,14 @@ safe refresh stopped on an inherited `ref_clsx` ownership collision before
 publication; the curated graph is unchanged. Loaded movie/ads,
 fullscreen/chat/resume and two-client room/history acceptance are still open.
 
-At this source checkpoint staging Web remains `2c24f661` and rejects Prime room
-creation with `Invalid room source (400)`. The owner authorized careful staging
-delivery: additive migration → compatible Web/Worker → matching v3 clients.
+Compatible staging Web/Worker and the additive migration are delivered. Actual
+loaded extension room creation and authenticated saved episode history passed;
+the former `Invalid room source (400)` is resolved. Resume reached the exact
+saved episode but landed on Prime's detail/Resume screen. The pending
+`codex/prime-video-launch` follow-up adds `autoplay=1` to initial room invitation
+launch and shared website/popup Resume navigation while retaining canonical
+identity, bounded intent and room exclusion. Staging delivery, confirmed Resume
+seek and room-launch browser acceptance for this follow-up remain pending.
 The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
 records the bounded schema-first exception; final deployment receipts belong in
 the feature PR and controller report. Preserve Prime rows and epochs on rollback.

@@ -533,7 +533,7 @@ describe("production watch browsing", () => {
     const url = vi.mocked(client.openUrl).mock.calls[0]![0];
     expect(parsePersonalHistoryResumeUrl(url)).toMatchObject({ provider: "primevideo", sourceUrl, currentTime: 600 });
     expect(new URL(url).pathname).toBe(`/detail/${id}`);
-    expect(new URL(url).search).toBe("");
+    expect(new URL(url).search).toBe("?autoplay=1");
   });
 
   it("hides all four streams when Prime loses shared authority", async () => {
