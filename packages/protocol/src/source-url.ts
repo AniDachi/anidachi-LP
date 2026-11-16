@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { primeVideoFingerprint, primeVideoSourceUrl } from "./prime-video-identity";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "./limits";
 
-export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix"]);
+export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix", "primevideo"]);
 
 export type RoomSourceProvider = z.infer<typeof RoomSourceProviderSchema>;
 
@@ -70,6 +71,12 @@ export function canonicalizeRoomSourceUrl(
     return { ok: false, code: "INVALID_URL" };
   }
 
+  // URL parsing normalizes dot segments and default ports. Prime admits only
+  // the exact observed detail route and authority, before those normalizations.
+  if (providerForHostname(url.hostname) === "primevideo" &&
+    !/^https:\/\/www\.primevideo\.com\/detail\/[A-Z0-9]{26}\/?(?:[?#]|$)/i.test(value)) {
+    return { ok: false, code: "UNSUPPORTED_ROUTE" };
+  }
   const source = canonicalizeProviderUrl(url);
   if (!source) {
     return { ok: false, code: providerForHostname(url.hostname) ? "UNSUPPORTED_ROUTE" : "UNSUPPORTED_PROVIDER" };
@@ -86,6 +93,16 @@ export function hasNetflixHostname(value: string): boolean {
   try {
     const hostname = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
     return hostname === "netflix.com" || hostname.endsWith(".netflix.com");
+  } catch {
+    return false;
+  }
+}
+
+/** Recognition only: invalid Prime routes/transport must still trigger validation. */
+export function hasPrimeVideoHostname(value: string): boolean {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
+    return hostname === "primevideo.com" || hostname.endsWith(".primevideo.com");
   } catch {
     return false;
   }
@@ -198,6 +215,13 @@ function canonicalizeProviderUrl(url: URL): CanonicalRoomSource | null {
       videoFingerprint: `netflix|watch/${match[1]}`,
     });
   }
+  if (provider === "primevideo") {
+    const match = url.pathname.match(/^\/detail\/([A-Z0-9]{26})\/?$/);
+    if (!match) return null;
+    const canonicalUrl = primeVideoSourceUrl(match[1]!);
+    return boundedCanonicalRoomSource({ provider, sourceUrl: canonicalUrl, canonicalUrl,
+      videoFingerprint: primeVideoFingerprint(match[1]!) });
+  }
   return null;
 }
 
@@ -215,6 +239,7 @@ function providerForHostname(hostname: string): RoomSourceProvider | null {
     return "crunchyroll";
   }
   if (normalized === "www.netflix.com") return "netflix";
+  if (normalized === "www.primevideo.com") return "primevideo";
   return null;
 }
 

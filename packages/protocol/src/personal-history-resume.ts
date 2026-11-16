@@ -9,7 +9,7 @@ export const PersonalHistoryResumeSchema = z
 		intentId: z.uuid(),
 		ownerBinding: z.string().regex(/^[a-f0-9]{64}$/),
 		accountGeneration: z.number().int().positive(),
-		provider: z.enum(["crunchyroll", "youtube", "netflix"]),
+		provider: z.enum(["crunchyroll", "youtube", "netflix", "primevideo"]),
 		sourceUrl: z.string().url().max(2048),
 		currentTime: z.number().finite().nonnegative().max(604800),
 		issuedAt: z.number().int().nonnegative(),
@@ -47,7 +47,7 @@ export async function personalHistoryResumeOwnerBinding(
 export async function buildPersonalHistoryResumeUrl(input: {
 	ownerUserId: string;
 	accountGeneration: number;
-	provider: "crunchyroll" | "youtube" | "netflix";
+	provider: "crunchyroll" | "youtube" | "netflix" | "primevideo";
 	sourceUrl: string;
 	currentTime: number;
 	now?: number;

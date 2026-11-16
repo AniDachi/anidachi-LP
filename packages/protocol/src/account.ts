@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalizeRoomSourceUrl, hasPrimeVideoHostname } from "./source-url";
 
 export const ACCOUNT_RESPONSE_SCHEMA_VERSION = 1 as const;
 
@@ -58,6 +59,7 @@ export const WatchProviderSchema = z.enum([
   "netflix",
   "youtube",
   "amazon",
+  "primevideo",
 ]);
 export const WatchItemKindSchema = z.enum(["series", "movie"]);
 export const AccountPlanCodeSchema = z.enum(["free", "plus", "pro"]);
@@ -339,6 +341,18 @@ export const WatchLibraryItemSchema = z.strictObject({
   active: z.boolean(),
   lastWatchedAt: TimestampSchema,
   episodes: z.array(WatchLibraryEpisodeSchema),
+}).superRefine((item, context) => {
+  // Legacy seasonId has no Prime mapping. Only v3 history defines season keys.
+  const urls = [item.sourceUrl, ...item.episodes.map(episode => episode.sourceUrl)];
+  if (item.provider !== "primevideo") {
+    if (urls.some(hasPrimeVideoHostname))
+      context.addIssue({ code: "custom", message: "Prime library sources require Prime provider" });
+    return;
+  }
+  if (urls.some(value => {
+    const canonical = canonicalizeRoomSourceUrl(value, "primevideo");
+    return !canonical.ok || canonical.source.sourceUrl !== value;
+  })) context.addIssue({ code: "custom", message: "Prime library sources must be canonical Prime detail URLs" });
 });
 
 export const WatchLibraryLimitsSchema = z.strictObject({
