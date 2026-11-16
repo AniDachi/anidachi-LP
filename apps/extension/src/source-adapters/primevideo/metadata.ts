@@ -21,6 +21,24 @@ function artwork(...values: unknown[]): string | null {
     const url = images[key]; if (typeof url === "string" && url.length <= 2048 && isPrimeArtwork(url)) return url;
   } } return null;
 }
+/** History requires agreement across every admitted list and known ID mapping. */
+function seriesAnchor(lists: { entries: ObjectValue[] }[], records: Map<string, PublicRecord>, invalidRecords: Set<string>): string | null {
+  let confirmed: { full: string; compact: string } | null = null;
+  for (const list of lists) {
+    const anchors = list.entries.filter(row => row.sequenceNumber === 1);
+    if (anchors.length !== 1) return null;
+    const candidate = anchors[0]!;
+    if (!fullId(candidate.seasonId) || typeof candidate.seasonLink !== "string" || invalidRecords.has(candidate.seasonId)) return null;
+    const compact = primeVideoId(`https://www.primevideo.com${candidate.seasonLink}`);
+    if (!compact || confirmed && (confirmed.full !== candidate.seasonId || confirmed.compact !== compact)) return null;
+    const known = records.get(candidate.seasonId);
+    if (known && (known.compact !== compact || known.type !== "season" || known.sequence !== 1)) return null;
+    for (const row of records.values()) if (row.compact === compact && row.id !== candidate.seasonId) return null;
+    confirmed = { full: candidate.seasonId, compact };
+  }
+  return confirmed?.compact ?? null;
+}
+
 /** Reads only public title collections; never serialize the surrounding hydration/account state. */
 export function readPrimePage(documentValue: Document, titleInfo: unknown, territory: unknown, locale: unknown): PrimePage | null {
   const element = documentValue.getElementById("dv-web-page-hydration-data");
@@ -32,10 +50,12 @@ export function readPrimePage(documentValue: Document, titleInfo: unknown, terri
   const records = new Map<string, PublicRecord>(); const details = new Map<string, ObjectValue>();
   for (const state of states) {
     const entries = Object.entries(object(state.self)); if (entries.length > 2000) return null;
-    for (const [key, value] of entries) { const parsed = record(value, key); if (!parsed) { if (records.has(key)) return null; invalidRecords.add(key); continue; }
-      if (invalidRecords.has(key)) return null;
-      const prior = records.get(key); if (prior && (prior.compact !== parsed.compact || prior.type !== parsed.type || prior.sequence !== parsed.sequence)) return null;
-      records.set(key, parsed);
+    for (const [key, value] of entries) {
+      const parsed = record(value, key), prior = records.get(key);
+      if (!parsed || prior && (prior.compact !== parsed.compact || prior.type !== parsed.type || prior.sequence !== parsed.sequence)) {
+        invalidRecords.add(key); records.delete(key); continue;
+      }
+      if (!invalidRecords.has(key)) records.set(key, parsed);
     }
     const detail = object(state.detail);
     for (const collection of [detail.headerDetail, detail.detail]) {
@@ -65,10 +85,10 @@ export function readPrimePage(documentValue: Document, titleInfo: unknown, terri
     const entries = value.map(object); const selected = entries.filter(row => row.isSelected === true);
     if (selected.length === 1 && selected[0]!.seasonId === seasonId) lists.push({ season, entries });
   }
-  const compacts = new Set<string>();
-  for (const row of records.values()) { if (compacts.has(row.compact)) return null; compacts.add(row.compact); }
   const selected = lists[0]; if (!selected || lists.some(list => list.season.id !== selected.season.id)) return null;
   const { season, entries } = selected;
+  // Ambiguous playback IDs are fatal; unrelated anchor conflicts only suspend history.
+  for (const target of [current, season]) if ([...records.values()].some(row => row.id !== target.id && row.compact === target.compact)) return null;
   const selectedRow = entries.find(row => row.isSelected === true)!;
   if (typeof selectedRow.seasonLink !== "string" || primeVideoId(`https://www.primevideo.com${selectedRow.seasonLink}`) !== season.compact || selectedRow.sequenceNumber !== season.sequence) return null;
   if (routeId !== season.compact && ![...records.values()].some(row => row.compact === routeId && row.type === "episode")) return null;
@@ -85,9 +105,7 @@ export function readPrimePage(documentValue: Document, titleInfo: unknown, terri
     info.seasonNumber !== seasonNumber || info.episodeNumber !== episodeNumber) return null;
   const seriesTitle = text(info.seriesTitle), seasonTitle = text(seasonDetail.title);
   if (!seriesTitle || seasonDetail.parentTitle !== seriesTitle || !seasonTitle) return null;
-  const anchors = entries.filter(row => row.sequenceNumber === 1);
-  const anchor = anchors.length === 1 && fullId(anchors[0]!.seasonId) && typeof anchors[0]!.seasonLink === "string"
-    ? primeVideoId(`https://www.primevideo.com${anchors[0]!.seasonLink}`) : null;
+  const anchor = seriesAnchor(lists, records, invalidRecords);
   const identity = anchor ? { kind: "episode" as const, seriesAnchorSeasonId: anchor, providerSeasonIdentifier: season.compact, providerEpisodeIdentifier: current.compact } : null;
   const metadata = PrimeMetadataSchema.safeParse({ identity, title: seriesTitle, episodeTitle: title, seasonTitle, seasonNumber, episodeNumber,
     artworkUrl: artwork(seasonDetail.images, detail.images), context });

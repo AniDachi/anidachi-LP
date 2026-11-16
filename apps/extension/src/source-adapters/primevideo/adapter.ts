@@ -14,6 +14,7 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
   private snapshot: PrimeSnapshot | null = null;
   private receivedAt = 0;
   private abort: AbortController | null = null;
+  private bindingAbort: AbortController | null = null;
   private stop: (() => void) | null = null;
   private listeners = new Set<(event: PlayerEvent) => void>();
   getPrimeSnapshot(): PrimeSnapshot | null {
@@ -49,18 +50,18 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
   // Use only the non-persisting provider facade through the generation-fenced bridge.
   setPlaybackRate(rate: number): void { if (Number.isFinite(rate) && rate >= 0.5 && rate <= 2) void this.command("rate", rate); }
   private async command(action: "play" | "pause" | "seek" | "rate", time?: number, options?: { signal: AbortSignal; expiresAt: number }): Promise<boolean> {
-    const snapshot = this.getPrimeSnapshot(), abort = this.abort;
-    if (!snapshot || snapshot.phase !== "content" || !abort || abort.signal.aborted) return false;
+    const snapshot = this.getPrimeSnapshot(), abort = this.abort, bindingAbort = this.bindingAbort;
+    if (!snapshot || snapshot.phase !== "content" || !abort || abort.signal.aborted || !bindingAbort || bindingAbort.signal.aborted) return false;
     const requestAbort = new AbortController();
     const cancel = () => requestAbort.abort();
-    abort.signal.addEventListener("abort", cancel, { once: true }); options?.signal.addEventListener("abort", cancel, { once: true });
+    abort.signal.addEventListener("abort", cancel, { once: true }); bindingAbort.signal.addEventListener("abort", cancel, { once: true }); options?.signal.addEventListener("abort", cancel, { once: true });
     if (options?.signal.aborted) requestAbort.abort();
     let result;
     try {
       result = await runPrimeCommand({ action, contentId: snapshot.contentId, generation: snapshot.generation,
         ...(time !== undefined ? action === "rate" ? { rate: time } : { time } : {}), ...(options ? { expiresAt: options.expiresAt } : {}) }, requestAbort.signal);
     } finally {
-      abort.signal.removeEventListener("abort", cancel); options?.signal.removeEventListener("abort", cancel);
+      abort.signal.removeEventListener("abort", cancel); bindingAbort.signal.removeEventListener("abort", cancel); options?.signal.removeEventListener("abort", cancel);
     }
     if (!requestAbort.signal.aborted && !abort.signal.aborted && result?.ok && result.snapshot && readPrimeBinding(this.video)?.generation === result.snapshot.generation &&
       result.snapshot.contentId === this.contentId) { this.snapshot = result.snapshot; this.receivedAt = Date.now(); return true; }
@@ -86,29 +87,41 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
     this.listeners.add(callback);
     if (!this.stop) {
       const abort = new AbortController(); this.abort = abort;
+      let bindingAbort = new AbortController(); this.bindingAbort = bindingAbort;
+      let generation = readPrimeBinding(this.video)?.generation;
       let refreshing: Promise<void> | null = null;
       const refresh = (): Promise<void> => {
         if (refreshing) return refreshing;
         const before = this.getPlaybackSnapshot().phase;
-        refreshing = (async () => {
-          const result = this.contentId ? await runPrimeCommand({ action: "snapshot", contentId: this.contentId }, abort.signal) : null;
-          if (abort.signal.aborted) return;
+        const requestOwner = bindingAbort, binding = readPrimeBinding(this.video);
+        if (abort.signal.aborted || requestOwner.signal.aborted || binding?.contentId !== this.contentId) return Promise.resolve();
+        const job = (async () => {
+          const result = await runPrimeCommand({ action: "snapshot", contentId: binding.contentId, generation: binding.generation }, requestOwner.signal);
+          if (abort.signal.aborted || requestOwner.signal.aborted || requestOwner !== bindingAbort) return;
           this.snapshot = result?.ok && result.snapshot && readPrimeBinding(this.video)?.generation === result.snapshot.generation ? result.snapshot : null;
           this.receivedAt = Date.now();
           const snapshot = this.getPlaybackSnapshot();
           if (snapshot.phase !== before) for (const listener of this.listeners) listener({ type: "phasechange", snapshot });
-        })().finally(() => { refreshing = null; });
-        return refreshing;
+        })().finally(() => { if (refreshing === job) refreshing = null; });
+        refreshing = job;
+        return job;
       };
-      const native = (event: Event) => { void refresh().then(() => {
-        if (abort.signal.aborted || this.getPrimeSnapshot()?.phase !== "content") return;
+      const native = (event: Event) => { const eventGeneration = readPrimeBinding(this.video)?.generation; void refresh().then(() => {
+        if (eventGeneration !== readPrimeBinding(this.video)?.generation || abort.signal.aborted || this.getPrimeSnapshot()?.phase !== "content") return;
         const type = event.type === "seeked" ? "seek" : event.type;
         if (type === "play" || type === "pause" || type === "seek" || type === "timeupdate") {
           for (const listener of this.listeners) listener({ type, time: this.getCurrentTime() });
         } else if (type === "ratechange") for (const listener of this.listeners) listener({ type, time: this.getCurrentTime(), playbackRate: this.getPrimeSnapshot()!.playbackRate });
       }); };
       const changed = () => {
-        if (readPrimeBinding(this.video)?.contentId !== this.contentId) { abort.abort(); this.snapshot = null;
+        const binding = readPrimeBinding(this.video);
+        if (binding?.generation !== generation) {
+          // Binding requests are disposable; the subscription remains reusable when
+          // the same video/source returns before content lifecycle reconciliation.
+          bindingAbort.abort(); bindingAbort = new AbortController(); this.bindingAbort = bindingAbort;
+          generation = binding?.generation; refreshing = null; this.snapshot = null;
+        }
+        if (binding?.contentId !== this.contentId) {
           for (const listener of this.listeners) listener({ type: "phasechange", snapshot: this.getPlaybackSnapshot() });
         } else void refresh();
       };
@@ -116,9 +129,9 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
       for (const name of events) this.video.addEventListener(name, native);
       document.addEventListener(PRIME_BINDING_CHANGED, changed);
       const timer = setInterval(() => { void refresh(); }, 500); void refresh();
-      this.stop = () => { abort.abort(); clearInterval(timer); document.removeEventListener(PRIME_BINDING_CHANGED, changed);
+      this.stop = () => { abort.abort(); bindingAbort.abort(); clearInterval(timer); document.removeEventListener(PRIME_BINDING_CHANGED, changed);
         for (const name of events) this.video.removeEventListener(name, native);
-        this.snapshot = null; this.abort = null; this.stop = null;
+        this.snapshot = null; this.abort = null; this.bindingAbort = null; this.stop = null;
       };
     }
     let removed = false;

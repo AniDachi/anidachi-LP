@@ -67,3 +67,28 @@ it("admits unplayed episodes only with launched record and enabled exact Play ac
   for (const action of document.querySelectorAll('a[data-testid="episodes-playbutton"]')) if (action.getAttribute("href")?.includes(ids.second)) action.setAttribute("href", `https://evil.example/detail/${ids.second}?autoplay=1`);
   expect(episodes()).toHaveLength(1);
 });
+
+it.each(["different-link", "different-full-id", "missing-anchor", "self-conflict", "self-type-conflict", "duplicate-self-conflict", "reverse-self-conflict"])("suspends history but preserves verified playback for %s season1 evidence", mode => {
+  const f = fixture(), body = f.data.init.preparations.body;
+  const secondList = structuredClone(body.atf.state.seasons);
+  const anchor = secondList[gtis.season]![0]!;
+  if (mode === "different-link") anchor.seasonLink = `/detail/${ids.movie}`;
+  if (mode === "different-full-id") anchor.seasonId = gtis.movie;
+  if (mode === "missing-anchor") secondList[gtis.season]!.splice(0, 1);
+  if (mode === "duplicate-self-conflict") Object.assign(body.atf.state.self, { [gtis.anchor]: { gti: gtis.anchor, compactGTI: ids.anchor, link: `/detail/${ids.anchor}`, titleType: "season", sequenceNumber: 1, isLaunched: true } });
+  if (mode === "reverse-self-conflict") Object.assign(body.btf.state.self, { [gtis.movie]: { gti: gtis.movie, compactGTI: ids.anchor, link: `/detail/${ids.anchor}`, titleType: "season", sequenceNumber: 1, isLaunched: true } });
+  if (mode.startsWith("self-") || mode === "duplicate-self-conflict") Object.assign(body.btf.state.self, { [gtis.anchor]: {
+    gti: gtis.anchor, compactGTI: ids.movie, link: `/detail/${ids.movie}`, titleType: mode === "self-type-conflict" ? "episode" : "season", sequenceNumber: 1, isLaunched: true,
+  } });
+  Object.assign(body.btf.state, { seasons: secondList }); f.write();
+  const sdk = inspectPrimeSdk();
+  expect(sdk?.page.contentId).toBe(ids.first); expect(sdk?.snapshot.phase).toBe("content");
+  expect(sdk?.page.metadata.identity).toBeNull(); expect(sdk?.page.catalog).toBeNull();
+});
+it("accepts agreeing ATF/BTF season1 evidence and matching known self identity", () => {
+  const f = fixture(), body = f.data.init.preparations.body;
+  Object.assign(body.btf.state, { seasons: structuredClone(body.atf.state.seasons) });
+  Object.assign(body.btf.state.self, { [gtis.anchor]: { gti: gtis.anchor, compactGTI: ids.anchor, link: `/detail/${ids.anchor}`, titleType: "season", sequenceNumber: 1, isLaunched: true } });
+  f.write(); expect(inspectPrimeSdk()?.page.metadata.identity).toMatchObject({ seriesAnchorSeasonId: ids.anchor });
+  expect(inspectPrimeSdk()?.page.catalog?.providerSeriesId).toBe(ids.anchor);
+});

@@ -27,3 +27,23 @@ it("isolates Prime composer keyboard events and releases the guard on disposal",
     runtime.dispose(); window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true })); expect(native).toHaveBeenCalledTimes(1);
   } finally { document.documentElement.removeAttribute("data-anidachi-composer-open"); }
 });
+
+it("recovers snapshots and commands after binding loss/restoration before one reconciliation frame", async () => {
+  vi.useFakeTimers(); const f = fixture(); bridgeTransport(); stops.push(startPrimeBridge());
+  let adapter!: PrimeVideoAdapter, unsubscribe: (() => void) | null = null;
+  const replace = vi.fn();
+  const runtime = startContentLifecycle({ ensureStyles: () => {}, installKeyboardGuard: () => () => {}, startProviderStudy: () => null,
+    mount: active => { adapter = active as PrimeVideoAdapter; unsubscribe = adapter.subscribe(() => {});
+      return { adapter, replaceAdapter: replace, relocate() {}, suspend() {}, dispose() { unsubscribe?.(); } }; } });
+  stops.push(runtime.dispose); await vi.advanceTimersByTimeAsync(100);
+  expect(adapter.getPrimeSnapshot()?.contentId).toBe(ids.first);
+  adapter.seek(50); await vi.advanceTimersByTimeAsync(1);
+  f.context.webPlayer.isPlayerOpen = false; f.video.dispatchEvent(new Event("timeupdate"));
+  expect(adapter.getPrimeSnapshot()).toBeNull();
+  f.context.webPlayer.isPlayerOpen = true; f.video.dispatchEvent(new Event("timeupdate"));
+  await vi.advanceTimersByTimeAsync(100);
+  expect(replace).not.toHaveBeenCalled(); expect(adapter.getPrimeSnapshot()?.contentId).toBe(ids.first);
+  expect(f.context.playback.seek).not.toHaveBeenCalled();
+  adapter.seek(200); await vi.advanceTimersByTimeAsync(100);
+  expect(f.context.playback.seek).toHaveBeenCalledExactlyOnceWith(200000);
+});
