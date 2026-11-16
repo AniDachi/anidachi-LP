@@ -1,10 +1,11 @@
 # Prime Video adapter notes
 
-Staging candidate, 2026-11-16. Provider key: `primevideo`; display name: **Prime
-Video**. Tasks 1–4 are implemented and reviewed on `codex/prime-video-adapter`.
-This record describes source contracts and evidence at the pre-delivery
-checkpoint. The owner loaded the extension and authorized careful staging
-delivery after the old server rejected Prime room creation. The
+Staging baseline delivered through [PR #557](https://github.com/AniDachi/anidachi-LP/pull/557),
+2026-11-16, at `2bbf955d66e6825fe376128356cbb4aeef98bd69`. Provider key:
+`primevideo`; display name: **Prime Video**. The additive schema and compatible
+Web/Worker are delivered; loaded room creation and saved episode history passed.
+The launch follow-up on `codex/prime-video-launch` is pending staging delivery
+and browser acceptance. The
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
@@ -15,6 +16,12 @@ The admitted source is exactly
 alphanumeric compactGTI. An optional trailing slash, query and hash are removed
 from persisted identity. The fingerprint is `primevideo|detail/<compactGTI>`.
 Autoplay query parameters and the room hash decorate navigation only.
+The launch follow-up adds `autoplay=1` to initial room invitation/join URLs and
+the shared personal Resume URL used by the website and extension popup. Resume
+validates raw Prime input before URL normalization and keeps its intent source
+canonical even when the input already has autoplay decorations. Provider redirects
+may replace autoplay with `ref_=atv_plr_detail_play`; parsing still binds the same
+exact episode/movie. A room hash remains ineligible for personal Resume.
 
 The shared validator rejects HTTP, credentials, explicit ports including `:443`,
 lookalike or alternate hosts, localized/unsupported routes, slugs, encoded IDs,
@@ -213,12 +220,16 @@ passed with no critical or important findings; this is local code readiness,
 not release acceptance. Remaining gates are loaded
 movie/episode/ads/rate/fullscreen/chat/source-replacement/resume checks,
 authenticated website/editor acceptance, and two-client Prime room/history
-acceptance against compatible staging. The current staging server lacks this
-Prime support, so a new extension alone cannot prove that end-to-end flow.
-At this checkpoint staging Web deployment `dpl_4xRP13qGVo1dFA1MHwk6TgmPzGhV`
-still serves baseline `2c24f661`; its provider enum rejects Prime with the
-reported `Invalid room source (400)`. The owner explicitly authorized careful
-staging delivery to resolve this mismatch. Production remains excluded.
+acceptance against compatible staging. At that pre-delivery checkpoint the
+staging server lacked Prime support, blocking that end-to-end flow.
+That pre-delivery mismatch is resolved: PR #557 delivered staging merge
+`2bbf955d66e6825fe376128356cbb4aeef98bd69` to Web and Worker, with the sole Prime
+migration applied. Actual overlay room creation and authenticated saved episode
+history passed. Resume reached the exact saved episode but stopped at Prime's
+detail/Resume screen; the pending launch follow-up supplies `autoplay=1` in both
+initial room launch and shared personal Resume navigation. Confirmed Resume seek,
+two-client sync and the remaining loaded-client cases are still acceptance gates.
+Production remains excluded.
 
 Graphify refresh exception: the repository safe adapter extracted 291 pending
 AST sources, including inherited staging backlog, then refused publication with
@@ -233,7 +244,11 @@ navigation limitation; source, tests and artifact receipts remain authoritative.
 
 ## Ordered delivery and rollback
 
-The November 16 owner authorization permits this bounded staging procedure:
+The November 16 owner authorization permitted the following bounded staging
+procedure. Schema/runtime delivery steps 1–4 completed for PR #557; step 5 still
+has the acceptance limits above. Deployment and browser receipts are recorded
+in the controller's SDD delivery report. The launch follow-up requires its own
+staging PR, compatible artifact and browser acceptance:
 
 1. Freeze the reviewed feature head, open its PR into `staging`, run the required
    CI, and verify that the migration diff contains only

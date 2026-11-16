@@ -234,19 +234,20 @@ describe("explicit personal Resume", () => {
 
 it("Prime resume waits for provider readiness and uses guarded provider seeking, never raw seek", async () => {
   const sourceUrl = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
-  const launch = parsePersonalHistoryResumeUrl(await buildPersonalHistoryResumeUrl({
+  const url = new URL(await buildPersonalHistoryResumeUrl({
     ownerUserId: historyOwner, accountGeneration: 1, provider: "primevideo",
     sourceUrl, currentTime: 42, now,
-  }), now)!;
+  }));
+  expect(url.searchParams.get("autoplay")).toBe("1");
+  const replace = vi.fn();
+  const launch = takePersonalHistoryResume({ href: url.href }, replace, now)!;
   expect(launch.sourceUrl).toBe(sourceUrl);
-  const decorated = new URL(await buildPersonalHistoryResumeUrl({ ownerUserId: historyOwner, accountGeneration: 1, provider: "primevideo", sourceUrl, currentTime: 42, now }));
-  decorated.searchParams.set("autoplay", "1");
-  expect(parsePersonalHistoryResumeUrl(decorated.href, now)?.sourceUrl).toBe(sourceUrl);
+  expect(replace).toHaveBeenCalledExactlyOnceWith(`${sourceUrl}?autoplay=1`);
   let readiness = "waiting";
   const seek = vi.fn();
   const seekPersonalResume = vi.fn(async (_intent, guard) => guard() ? "consumed" : "cancelled");
   const adapter = { provider: "primevideo", video: { readyState: 1, duration: 100 },
-    getPlaybackSnapshot: () => ({ phase: "content" }), getSourceDescriptor: () => ({ sourceUrl }),
+    getPlaybackSnapshot: () => ({ phase: "content" }), getSourceDescriptor: () => ({ sourceUrl: `${sourceUrl}?ref_=atv_plr_detail_play` }),
     getPersonalResumeReadiness: vi.fn(async () => readiness), seekPersonalResume, seek } as unknown as VideoAdapter;
   const claim = vi.fn(async () => true);
   const input = { adapter, getOwner: () => historyOwner, roomActive: () => false, isCurrent: () => true,

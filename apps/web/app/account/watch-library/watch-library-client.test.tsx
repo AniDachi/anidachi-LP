@@ -1,6 +1,7 @@
 import { WATCH_HISTORY_OWNER_HEADER } from "../../../lib/watch-history-owner";
 import assert from "node:assert/strict";
 import { afterEach, it } from "node:test";
+import { parsePersonalHistoryResumeUrl } from "@anidachi/protocol";
 import type {
   WatchHistoryEditRequest,
   WatchHistoryDeleteScope,
@@ -2077,8 +2078,9 @@ it("Prime movies and partial series keep provider identity in filters, editor an
       await waitFor(() => assert.equal(new URL(testWindow.location.href).hostname, "www.primevideo.com"));
       const url = new URL(testWindow.location.href);
       assert.equal(url.pathname, `/detail/${"E".repeat(26)}`);
-      assert.equal(url.search, "");
-      assert.ok(url.hash.includes("anidachiResume="));
+      assert.equal(url.search, "?autoplay=1");
+      assert.equal(parsePersonalHistoryResumeUrl(url.href)?.sourceUrl,
+        `https://www.primevideo.com/detail/${"E".repeat(26)}`);
     } finally { await unmount(view.root); }
   }
 });
