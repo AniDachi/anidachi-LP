@@ -72,6 +72,19 @@ and all four seasons. Loaded acceptance and delivery receipts are tracked in
 [PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); see also the
 [provider notes](prime-video-adapter-notes.md#full-series-catalog-follow-up-evidence).
 
+Task 9 on `codex/prime-regional-routes`, based on delivered staging `61d814d7`,
+addresses a confirmed missing overlay on SOR at `/region/na/detail/` and the
+owner's broader regional-address request. Browser recognition is being separated
+from canonical room/history identity, with exact official Prime marketplace
+hosts and verified ASIN/full-GTI mappings. Live SOR evidence also has an empty
+season roster despite a verified season-1 self record and episode membership;
+that can support current-episode progress, but cannot prove a complete series
+catalog. The observed Amazon movie page uses an ASIN key and a distinct public
+canonical alias. Sanitized fixtures preserve both actual shapes. Implementation
+has passed extension checks; independent review and loaded staging acceptance
+are in progress. Server schemas,
+production and other chats are outside this follow-up.
+
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of

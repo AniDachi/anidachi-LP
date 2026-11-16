@@ -391,15 +391,20 @@ Current responsibilities:
 - capture camera/microphone only for explicit media features;
 - expose debug logs/build metadata for testing.
 
-The November 16 local candidate adds Prime Video through a dedicated MAIN-world
-SDK bridge and isolated adapter under `source-adapters/primevideo`. It admits only
-exact `https://www.primevideo.com/detail/<compactGTI>` sources and one verified
+The November 16 Prime Video adapter uses a dedicated MAIN-world SDK bridge and
+isolated adapter under `source-adapters/primevideo`. Its persisted source remains
+exact `https://www.primevideo.com/detail/<compactGTI>` and requires one verified
 open/initiated primary player. Preview/preload, ad, recap, unknown and replacement
 states cannot drive remote control or history. Content time uses the provider's
 content clock; commands and non-persisting rate changes use its SDK with bounded
 confirmation and generation fencing. Same-video, same-URL episode changes still
-replace source identity. The narrow manifest adds only `www.primevideo.com`.
-Loaded extension and two-client staging acceptance remain open; see the
+replace source identity. The regional-address follow-up separates browser route
+recognition from persisted identity: regional/locale paths and official Amazon
+video aliases are resolved through matching public metadata and the SDK title.
+Observed same-origin season links own catalog transport; canonical compactGTIs
+own room/history identity. Explicit marketplace hosts and script paths retain
+the narrow manifest boundary. Loaded regional acceptance is in progress;
+two-client staging acceptance remains open. See the
 [Prime contract and evidence](prime-video-adapter-notes.md).
 
 Important UI constraints:

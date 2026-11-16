@@ -15,7 +15,7 @@ tracks the remaining integration gates.
 
 ## Source and permission scope
 
-The admitted source is exactly
+The persisted room/history source is exactly
 `https://www.primevideo.com/detail/<compactGTI>`, with a 26-character uppercase
 alphanumeric compactGTI. An optional trailing slash, query and hash are removed
 from persisted identity. The fingerprint is `primevideo|detail/<compactGTI>`.
@@ -27,19 +27,26 @@ canonical even when the input already has autoplay decorations. Provider redirec
 may replace autoplay with `ref_=atv_plr_detail_play`; parsing still binds the same
 exact episode/movie. A room hash remains ineligible for personal Resume.
 
-The shared validator rejects HTTP, credentials, explicit ports including `:443`,
-lookalike or alternate hosts, localized/unsupported routes, slugs, encoded IDs,
-dot-segment normalization and malformed IDs. Recognizing a Prime host family
-triggers strict validation; it does not admit extra hosts. Known Prime pages
-never fall through to Generic HTML5. The legacy `amazon` account-provider
-placeholder remains distinct.
+The shared wire validator remains strict: browser routes and aliases must be
+resolved before they reach it. HTTP, credentials, explicit ports including
+`:443`, lookalikes, malformed IDs and normalization tricks remain invalid.
+Known Prime pages never fall through to Generic HTML5. The legacy `amazon`
+account-provider placeholder remains distinct.
 
-The narrow staging/release manifest path adds only
-`https://www.primevideo.com/*`, with one top-frame MAIN script at
-`document_start`. Regional Amazon domains require further observed evidence
-and a separate admission decision. No wildcard Amazon permission, public
-provider announcement, Store publication, secret or environment addition is
-part of this candidate.
+The owner-authorized Task 9 follow-up broadens browser recognition independently
+of that persisted contract. It covers regional and locale detail addresses and
+Amazon video/share aliases on the explicit official marketplaces: `www.amazon.com`,
+`www.amazon.co.uk`, `www.amazon.de`, `www.amazon.co.jp`, `www.amazon.ca`,
+`www.amazon.in`, and `www.amazon.com.mx`, in addition to `www.primevideo.com`.
+The host inventory comes from [Prime's marketplace directory](https://www.primevideo.com/help?nodeId=202064890).
+An ASIN or full-GTI route needs matching public page/self metadata and the current
+SDK title before it can become a canonical compactGTI source. Shopping videos,
+trailers, tracking parameters and title text cannot establish that identity.
+The extension uses explicit hosts and Amazon video/share script paths, with one
+top-frame MAIN entry at `document_start`; there is no wildcard Amazon permission.
+Task 9 review and loaded-artifact acceptance are in progress; this scope
+is not evidence that every marketplace/account has been tested. No public
+announcement, Store publication, secret or environment addition is included.
 
 ## Runtime ownership and safe playback
 
@@ -113,7 +120,7 @@ claim and seek still require the full exact descriptor and all existing guards.
 The same delivered change captures validated initial Prime room/Resume data in
 isolated-world memory at `document_start`, before a detectable player or overlay
 exists. Prime was observed to clear the entire fragment during autoplay startup.
-The one-use handoff requires the original canonical route and bound fingerprint,
+The one-use handoff requires the original accepted route and bound fingerprint,
 expires within five minutes, gives rooms precedence and drops stale data on
 source/account change, a new explicit intent, consumption or lifecycle disposal.
 It never exposes launch state through MAIN, DOM or persistent storage.
@@ -174,10 +181,16 @@ full/compact GTI, consistently with any known self mapping. Conflicting,
 malformed or absent anchor evidence suspends detailed series capture/catalog.
 Independently verified playing source identity can remain available. Selecting
 another season or grouping by translated title is not a fallback.
+Task 9 also handles the observed SOR shape: no season roster, but an exact
+season-1 self record, matching page/SDK ordinals and episode membership. This
+can establish the current episode's anchor and partial catalog; missing roster
+data cannot establish full-series completeness.
 
 The Task 8 follow-up loads the series catalog from observed season detail
-links after the existing eligible catalog attempt begins. It reads only strict
-same-origin canonical HTTPS detail URLs, without autoplay or page navigation.
+links after the existing eligible catalog attempt begins. Task 9 keeps the
+observed same-origin regional/marketplace route for transport instead of
+synthesizing a root `/detail/` URL. Only verified HTTPS detail links are read,
+without tracking, autoplay, fragments or page navigation.
 Requests retain provider credentials inside that origin, reject redirects, and
 are bounded by 100 seasons, 2,000 episodes, 8 MB per response, 32 MB total and a
 45-second loader deadline (50 seconds at the catalog client). Playback command
@@ -187,7 +200,7 @@ stale work; a binding/context has at most one catalog attempt.
 Completeness requires every observed season, consistent full/compact mappings
 and season-1 anchor, exact unique episode membership/count, and no unexplained
 pagination. Availability uses allowlisted typed `Entitled` / `PLAY` / `PLAYBACK`
-Feature actions whose full GTI and canonical autoplay link match the episode,
+Feature actions whose full GTI and verified autoplay link match the episode,
 together with launched episode metadata. Raw playback envelopes, provider
 account data and surrounding action payloads never leave the provider page.
 SSR-disabled Play buttons are placeholders, so their state is not used as
@@ -250,6 +263,23 @@ Prime/coordinator tests pass 134 cases, with extension check and rebuilt narrow
 artifact validation. Live acceptance and staging delivery are recorded in
 [PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); fixture evidence alone
 is not a loaded-browser claim.
+
+## Regional-address follow-up evidence
+
+The reported SOR URL uses `/region/na/detail/`. The old extension loaded its
+styles but rejected the route before creating a player binding or overlay.
+The same page's public self/episode links also use that prefix, and its season
+roster is empty. The regression fixture preserves those facts and the observed
+SDK season-1 episode-1 identity; the admitted catalog remains partial.
+
+An inspected Amazon US movie page has a requested ASIN different from its
+same-origin canonical ASIN. Its public self record is keyed by ASIN and supplies
+the full GTI and compactGTI separately. This evidence informs alias resolution;
+the account could not play this title, so its playback test uses an explicitly
+synthetic SDK identity. This is parsing/integration evidence, not live Amazon
+playback acceptance. Regional loaded-artifact acceptance and delivery receipts
+remain pending. No source IDs, seasons or totals are inferred from translated
+labels, an account's watch position or a missing season list.
 
 ## Local evidence and remaining acceptance
 
