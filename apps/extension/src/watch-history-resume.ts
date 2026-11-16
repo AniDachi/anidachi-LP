@@ -75,7 +75,7 @@ export async function applyPersonalHistoryResume(
 		intent.currentTime <= input.adapter.video.duration;
 	if (!matches()) return "cancelled";
 	if (!ready()) return "waiting";
-	if (intent.provider === "crunchyroll" || intent.provider === "netflix") {
+	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo") {
 		if (
 			!input.adapter.getPersonalResumeReadiness ||
 			!input.adapter.seekPersonalResume

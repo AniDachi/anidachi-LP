@@ -21,7 +21,7 @@ type Props = {
   onResume(provider: WatchHistoryItem["provider"], url: string, time: number): void;
   onDelete(target: WatchHistoryDeleteScope): void;
 };
-const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", amazon: "Prime Video" })[provider];
+const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", primevideo: "Prime Video", amazon: "Prime Video" })[provider];
 const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
   useAccountScrollRestoration(`${props.owner}:library:scroll`);
@@ -94,6 +94,7 @@ const historyPlatforms = [
   { value: "crunchyroll", label: "Crunchyroll", name: "Crunchyroll" },
   { value: "youtube", label: "YouTube", name: "YouTube" },
   { value: "netflix", label: "Netflix", name: "Netflix" },
+  { value: "primevideo", label: "Prime Video", name: "Prime Video" },
 ] as const;
 
 function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; onChange(value: HistoryPlatform): void }) {
@@ -118,6 +119,7 @@ function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; on
         <path d="m9.545 15.568 6.273-3.568-6.273-3.568v7.136Z" fill="#fff" />
       </svg>}
       {platform.value === "netflix" && <svg viewBox="0 0 141 277" className="wh-platform-logo wh-platform-netflix" aria-hidden="true"><path fill="currentColor" d="M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z" /></svg>}
+      {platform.value === "primevideo" && <img src="/platforms/primevideo.svg" alt="" className="wh-platform-logo wh-platform-primevideo" aria-hidden="true" />}
       <span>{platform.label}</span>
     </button>)}
   </div>;
@@ -336,7 +338,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
-        {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</p>}
+        {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. {item.provider === "primevideo" ? "Prime Video has supplied only a partial catalog for the current season." : <>Open this title in {providerName(item.provider)} with the extension to load its full catalog.</>}</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
         </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "saved"}` : `${episodes.filter(watched).length} watched`}</span></div>}

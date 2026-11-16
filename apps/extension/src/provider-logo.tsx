@@ -1,3 +1,6 @@
+// Shared official brand artwork from the website asset bundle.
+const primeVideoLogo = new URL("../../web/public/platforms/primevideo.svg", import.meta.url).href;
+
 export function ProviderLogo({
 	label,
 	provider,
@@ -27,6 +30,11 @@ export function ProviderLogo({
 				</svg>
 			</span>
 		);
+	}
+	if (provider === "primevideo") {
+		return <span aria-hidden="true" className="resource-provider-logo primevideo">
+			<img src={primeVideoLogo} alt="" />
+		</span>;
 	}
 	if (provider === "youtube") {
 		return (

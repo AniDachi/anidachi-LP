@@ -231,3 +231,34 @@ describe("explicit personal Resume", () => {
 		expect(seek).not.toHaveBeenCalled();
 	});
 });
+
+it("Prime resume waits for provider readiness and uses guarded provider seeking, never raw seek", async () => {
+  const sourceUrl = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
+  const launch = parsePersonalHistoryResumeUrl(await buildPersonalHistoryResumeUrl({
+    ownerUserId: historyOwner, accountGeneration: 1, provider: "primevideo",
+    sourceUrl, currentTime: 42, now,
+  }), now)!;
+  expect(launch.sourceUrl).toBe(sourceUrl);
+  const decorated = new URL(await buildPersonalHistoryResumeUrl({ ownerUserId: historyOwner, accountGeneration: 1, provider: "primevideo", sourceUrl, currentTime: 42, now }));
+  decorated.searchParams.set("autoplay", "1");
+  expect(parsePersonalHistoryResumeUrl(decorated.href, now)?.sourceUrl).toBe(sourceUrl);
+  let readiness = "waiting";
+  const seek = vi.fn();
+  const seekPersonalResume = vi.fn(async (_intent, guard) => guard() ? "consumed" : "cancelled");
+  const adapter = { provider: "primevideo", video: { readyState: 1, duration: 100 },
+    getPlaybackSnapshot: () => ({ phase: "content" }), getSourceDescriptor: () => ({ sourceUrl }),
+    getPersonalResumeReadiness: vi.fn(async () => readiness), seekPersonalResume, seek } as unknown as VideoAdapter;
+  const claim = vi.fn(async () => true);
+  const input = { adapter, getOwner: () => historyOwner, roomActive: () => false, isCurrent: () => true,
+    getLease: async () => paidHistoryLease(historyOwner, now), claim, now: () => now };
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("waiting");
+  expect(claim).not.toHaveBeenCalled();
+  expect(seekPersonalResume).not.toHaveBeenCalled();
+  readiness = "ready";
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("consumed");
+  expect(seekPersonalResume).toHaveBeenCalledTimes(1);
+  expect(seek).not.toHaveBeenCalled();
+  expect(await applyPersonalHistoryResume(launch, { ...input, adapter: { ...adapter, getPersonalResumeReadiness: undefined } as VideoAdapter })).toBe("waiting");
+  expect(await applyPersonalHistoryResume(launch, { ...input, claim: async () => { readiness = "cancelled"; return true; },
+    adapter: { ...adapter, getSourceDescriptor: () => ({ sourceUrl: `${sourceUrl}X` }) } as unknown as VideoAdapter })).toBe("cancelled");
+});
