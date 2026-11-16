@@ -71,7 +71,7 @@ export async function loadPrimeCatalog(
 		let count = 0;
 		for (const observed of seed.seasons) {
 			if (!alive()) return null;
-			const url = `${origin}/detail/${observed.compact}`;
+			const url = observed.url;
 			const response = await fetch(url, {
 				method: "GET",
 				credentials: "same-origin",

@@ -287,3 +287,25 @@ it("accepts agreeing ATF/BTF season1 evidence and matching known self identity",
 	});
 	expect(inspectPrimeSdk()?.page.catalog?.providerSeriesId).toBe(ids.anchor);
 });
+
+it("admits regional metadata through SDK, binding and provider definition across native episode replacement", () => {
+	const f = fixture();
+	const raw = JSON.stringify(f.data).replaceAll(
+		"/detail/",
+		"/region/na/detail/",
+	);
+	document.getElementById("dv-web-page-hydration-data")!.textContent = raw;
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(
+			`https://www.primevideo.com/region/na/detail/${ids.season}?ref_=x`,
+		),
+	});
+	stops.push(startPrimeBridge());
+	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.first);
+	expect(primeVideoDefinition.detect(f.video)?.provider).toBe("primevideo");
+	f.next();
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(f.data).replaceAll("/detail/", "/region/na/detail/");
+	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.second);
+});

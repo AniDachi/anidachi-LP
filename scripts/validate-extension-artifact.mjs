@@ -67,6 +67,34 @@ const videoHosts = [
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
   "https://www.primevideo.com/*",
+  "https://www.amazon.com/gp/video/*",
+  "https://www.amazon.com/*/gp/video/*",
+  "https://www.amazon.com/dp/*",
+  "https://www.amazon.com/*/dp/*",
+  "https://www.amazon.co.uk/gp/video/*",
+  "https://www.amazon.co.uk/*/gp/video/*",
+  "https://www.amazon.co.uk/dp/*",
+  "https://www.amazon.co.uk/*/dp/*",
+  "https://www.amazon.de/gp/video/*",
+  "https://www.amazon.de/*/gp/video/*",
+  "https://www.amazon.de/dp/*",
+  "https://www.amazon.de/*/dp/*",
+  "https://www.amazon.co.jp/gp/video/*",
+  "https://www.amazon.co.jp/*/gp/video/*",
+  "https://www.amazon.co.jp/dp/*",
+  "https://www.amazon.co.jp/*/dp/*",
+  "https://www.amazon.ca/gp/video/*",
+  "https://www.amazon.ca/*/gp/video/*",
+  "https://www.amazon.ca/dp/*",
+  "https://www.amazon.ca/*/dp/*",
+  "https://www.amazon.in/gp/video/*",
+  "https://www.amazon.in/*/gp/video/*",
+  "https://www.amazon.in/dp/*",
+  "https://www.amazon.in/*/dp/*",
+  "https://www.amazon.com.mx/gp/video/*",
+  "https://www.amazon.com.mx/*/gp/video/*",
+  "https://www.amazon.com.mx/dp/*",
+  "https://www.amazon.com.mx/*/dp/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -138,10 +166,12 @@ assertExactAllowlist(
 const primeMainScripts = (manifest.content_scripts ?? []).filter((script) =>
   script.world === "MAIN" && (script.matches ?? []).includes("https://www.primevideo.com/*"));
 if (primeMainScripts.length !== 1 || primeMainScripts[0].all_frames === true ||
-    primeMainScripts[0].run_at !== "document_start" || primeMainScripts[0].matches.length !== 1 ||
+    primeMainScripts[0].run_at !== "document_start" || primeMainScripts[0].matches.length !== 29 ||
     !(primeMainScripts[0].js ?? []).length) {
   throw new Error("Prime Video requires exactly one top-frame document_start MAIN bridge on its narrow host");
 }
+
+assertExactAllowlist("Prime MAIN matches", primeMainScripts[0].matches, videoHosts.filter(value => /primevideo|amazon/.test(value)));
 
 const publicResources = manifest.web_accessible_resources ?? [];
 if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {

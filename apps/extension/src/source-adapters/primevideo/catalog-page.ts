@@ -1,3 +1,5 @@
+import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
+import { primePublicRecord } from "./metadata";
 import {
 	PrimeVideoProviderIdSchema,
 	primeVideoSourceUrl,
@@ -7,7 +9,12 @@ import {
 import { object, ordinal, text, type ObjectValue } from "./metadata";
 
 export const PRIME_CATALOG_PAGE_BYTES = 8_000_000;
-type SeasonReference = { full: string; compact: string; number: number };
+type SeasonReference = {
+	full: string;
+	compact: string;
+	number: number;
+	url: string;
+};
 export type PrimeCatalogPage = {
 	anchor: string;
 	locale: string;
@@ -19,35 +26,12 @@ export type PrimeCatalogPage = {
 const fullId = (value: unknown): value is string =>
 	typeof value === "string" && /^amzn1\.dv\.gti\.[a-z0-9-]{1,100}$/.test(value);
 
-/** Only observed relative detail links, stripped of all query parameters. */
+/** Observed same-origin detail links, stripped of query, ref suffix and hash. */
 export function primeCatalogLink(
 	value: unknown,
 	origin: string,
 ): string | null {
-	if (
-		typeof value !== "string" ||
-		value.length > 2048 ||
-		!/^\/detail\/[A-Z0-9]+(?:\?[^#\\\s]*)?$/.test(value)
-	)
-		return null;
-	try {
-		const base = new URL(origin);
-		if (
-			base.protocol !== "https:" ||
-			base.hostname !== "www.primevideo.com" ||
-			base.port ||
-			base.username ||
-			base.password
-		)
-			return null;
-		const url = new URL(value, base.origin);
-		const compact = url.pathname.slice("/detail/".length);
-		return PrimeVideoProviderIdSchema.safeParse(compact).success
-			? `${base.origin}/detail/${compact}`
-			: null;
-	} catch {
-		return null;
-	}
+	return primeObservedLink(value, origin);
 }
 export function primeCatalogLocale(value: unknown): string | null {
 	if (typeof value !== "string" || !/^[a-z]{2,3}[-_][a-z]{2}$/i.test(value))
@@ -87,6 +71,8 @@ function parsePage(
 			type: unknown;
 			number: number | null;
 			launched: boolean;
+			linkToken: string;
+			aliases: string[];
 		}
 	>();
 	const details = new Map<
@@ -103,26 +89,30 @@ function parsePage(
 		const entries = Object.entries(object(state.self));
 		if (entries.length > WATCH_CATALOG_MAX_EPISODES + 100) return null;
 		for (const [key, value] of entries) {
-			const item = object(value),
-				link = primeCatalogLink(item.link, origin);
+			const parsed = primePublicRecord(value, key, origin);
+			if (!parsed) return null;
+			const record = {
+				full: parsed.id,
+				compact: parsed.compact,
+				type: parsed.type,
+				number: parsed.sequence,
+				launched: parsed.launched,
+				linkToken: parsed.linkToken,
+				aliases: parsed.aliases,
+			};
+			const prior = records.get(parsed.id);
 			if (
-				!fullId(key) ||
-				item.gti !== key ||
-				!link ||
-				link.split("/").at(-1) !== item.compactGTI
+				prior &&
+				(prior.compact !== record.compact ||
+					prior.type !== record.type ||
+					prior.number !== record.number ||
+					prior.launched !== record.launched)
 			)
 				return null;
-			const record = {
-				full: key,
-				compact: item.compactGTI as string,
-				type: item.titleType,
-				number: ordinal(item.sequenceNumber),
-				launched: item.isLaunched === true,
-			};
-			const prior = records.get(key);
-			if (prior && JSON.stringify(prior) !== JSON.stringify(record))
-				return null;
-			records.set(key, record);
+			record.aliases = [
+				...new Set([...(prior?.aliases ?? []), ...record.aliases]),
+			];
+			records.set(parsed.id, record);
 		}
 		const detail = object(state.detail);
 		for (const collection of [detail.headerDetail, detail.detail]) {
@@ -144,6 +134,26 @@ function parsePage(
 			}
 		}
 	}
+	const aliases = new Map<string, string | null>();
+	for (const record of records.values())
+		for (const alias of [
+			record.full,
+			record.compact,
+			record.linkToken,
+			...record.aliases,
+		]) {
+			const prior = aliases.get(alias);
+			aliases.set(
+				alias,
+				prior === undefined || prior === record.full ? record.full : null,
+			);
+		}
+	const resolve = (key: unknown) =>
+		typeof key === "string" ? (aliases.get(key) ?? null) : null;
+	for (const [key, value] of [...details]) {
+		const full = resolve(key);
+		if (full) details.set(full, value);
+	}
 	if (
 		new Set([...records.values()].map((row) => row.compact)).size !==
 		records.size
@@ -164,18 +174,29 @@ function parsePage(
 					link = primeCatalogLink(row.seasonLink, origin),
 					number = ordinal(row.sequenceNumber);
 				if (
-					!fullId(row.seasonId) ||
+					!(resolve(row.seasonId) || fullId(row.seasonId)) ||
 					!link ||
 					!number ||
 					typeof row.isSelected !== "boolean"
 				)
 					return null;
 				const reference = {
-					full: row.seasonId,
-					compact: link.split("/").at(-1)!,
+					full: resolve(row.seasonId) ?? (row.seasonId as string),
+					compact: "",
+					url: link,
 					number,
 				};
 				const record = records.get(reference.full);
+				const route = parsePrimePageUrl(link)!;
+				reference.compact =
+					record &&
+					primeRouteMatches(route.token, { id: record.full, ...record })
+						? record.compact
+						: route.token.length === 26
+							? route.token
+							: "";
+				if (!PrimeVideoProviderIdSchema.safeParse(reference.compact).success)
+					return null;
 				if (
 					record &&
 					(record.compact !== reference.compact ||
@@ -197,7 +218,11 @@ function parsePage(
 					chosen = reference;
 				}
 			}
-			if (!chosen || chosen.full !== key || state.pageTitleId !== key)
+			if (
+				!chosen ||
+				chosen.full !== resolve(key) ||
+				resolve(state.pageTitleId) !== chosen.full
+			)
 				return null;
 			if (
 				new Set(mapping.map((row) => row.full)).size !== mapping.length ||
@@ -216,7 +241,8 @@ function parsePage(
 		}
 	}
 	if (!seasons || !selected || seasons[0]?.number !== 1) return null;
-	if (states.some((state) => state.pageTitleId !== selected!.full)) return null;
+	if (states.some((state) => resolve(state.pageTitleId) !== selected!.full))
+		return null;
 	const seasonRecord = records.get(selected.full),
 		seasonDetail = details.get(selected.full);
 	if (
@@ -276,7 +302,7 @@ function parsePage(
 			!Array.isArray(list.cardTitleIds) ||
 			list.cardTitleIds.length < 1 ||
 			list.cardTitleIds.length > WATCH_CATALOG_MAX_EPISODES ||
-			!list.cardTitleIds.every(fullId) ||
+			!list.cardTitleIds.every((value) => !!resolve(value)) ||
 			new Set(list.cardTitleIds).size !== list.cardTitleIds.length ||
 			list.totalCardSize !== list.cardTitleIds.length ||
 			actions.episodePages.length !== 1
@@ -284,10 +310,11 @@ function parsePage(
 			return null;
 		if (
 			members &&
-			JSON.stringify(members) !== JSON.stringify(list.cardTitleIds)
+			JSON.stringify(members) !==
+				JSON.stringify(list.cardTitleIds.map((value) => resolve(value)))
 		)
 			return null;
-		members = list.cardTitleIds as string[];
+		members = list.cardTitleIds.map((value) => resolve(value)!);
 	}
 	if (!members) return null;
 	const episodes: WatchCatalogSnapshotInput["seasons"][number]["episodes"] = [];
@@ -308,7 +335,12 @@ function parsePage(
 		episodeNumbers.add(detail.episode);
 		// Read only the observed, typed availability fields. Do not retain payloads,
 		// correlation/session material, translated labels or playback envelopes.
-		const action = object(object(object(states[1]!.action).btf)[full]);
+		const actions = object(object(states[1]!.action).btf);
+		const actionKeys = Object.keys(actions).filter(
+			(key) => resolve(key) === full,
+		);
+		if (actionKeys.length !== 1) return null;
+		const action = object(actions[actionKeys[0]!]);
 		if (
 			object(action.messages).entitlementType !== "Entitled" ||
 			!Array.isArray(action.primaryActions) ||
@@ -323,11 +355,17 @@ function parsePage(
 			playback = object(payload.playback);
 		if (
 			payload.payloadType !== "PLAYBACK" ||
-			playback.playbackID !== full ||
+			resolve(playback.playbackID) !== full ||
 			playback.isTrailer !== false ||
 			playback.videoMaterialType !== "Feature" ||
-			primeCatalogLink(playback.playbackURL, origin) !==
-				`${origin}/detail/${record.compact}`
+			!(() => {
+				const link = primeCatalogLink(playback.playbackURL, origin);
+				const route = link ? parsePrimePageUrl(link) : null;
+				return (
+					route &&
+					primeRouteMatches(route.token, { id: record.full, ...record })
+				);
+			})()
 		)
 			return null;
 		const playbackUrl = new URL(playback.playbackURL as string, origin);

@@ -1,3 +1,4 @@
+import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
 import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
@@ -94,7 +95,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  "https://www.primevideo.com/*",
+  ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -333,7 +334,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
-    if (hostname === "www.primevideo.com") return "primevideo";
+    if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")
@@ -351,7 +352,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
-  const isIsolatedProviderComposer = () => ["www.netflix.com", "www.primevideo.com"].includes(location.hostname) && isComposerOpen();
+  const isIsolatedProviderComposer = () => (location.hostname === "www.netflix.com" || !!parsePrimePageUrl(location.href)) && isComposerOpen();
   let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
     document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";

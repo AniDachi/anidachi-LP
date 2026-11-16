@@ -1,8 +1,6 @@
+import { hasPrimeBrowserHost, parsePrimePageUrl } from "./url";
 import { runPrimeCommand } from "./bridge-client";
-import {
-	canonicalizeRoomSourceUrl,
-	hasPrimeVideoHostname,
-} from "@anidachi/protocol";
+import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import type { SourceAdapterDefinition } from "../core/types";
 import { withRoomHash } from "../core/source-navigation";
 import { PrimeVideoAdapter } from "./adapter";
@@ -15,7 +13,7 @@ export const primeVideoDefinition: SourceAdapterDefinition = {
 	historyPolicy: primeHistoryPolicy,
 	detect(video) {
 		if (
-			!primeVideoId(location.href) ||
+			!parsePrimePageUrl(location.href) ||
 			!video.isConnected ||
 			!readPrimeBinding(video)
 		)
@@ -40,7 +38,7 @@ export const primeVideoDefinition: SourceAdapterDefinition = {
 			canonical.source.canonicalUrl !== source.canonicalUrl
 		)
 			return { status: "unsupported", reason: "invalid-source" };
-		if (!hasPrimeVideoHostname(location.href))
+		if (!hasPrimeBrowserHost(location.href))
 			return { status: "unsupported", reason: "unsupported-route" };
 		const videos = [
 			...document.querySelectorAll<HTMLVideoElement>("#dv-web-player video"),

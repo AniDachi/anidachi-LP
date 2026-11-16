@@ -1,3 +1,4 @@
+import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
 import {
 	PrimeVideoProviderIdSchema,
 	primeVideoSourceUrl,
@@ -6,7 +7,6 @@ import {
 } from "@anidachi/protocol";
 import {
 	isPrimeArtwork,
-	primeVideoId,
 	PrimeMetadataSchema,
 	type PrimeMetadata,
 } from "./contract";
@@ -28,7 +28,10 @@ export const ordinal = (value: unknown): number | null =>
 		: null;
 const fullId = (value: unknown): value is string =>
 	typeof value === "string" && /^amzn1\.dv\.gti\.[a-z0-9-]{1,100}$/.test(value);
-type PublicRecord = {
+export type PublicRecord = {
+	linkToken: string;
+	linkUrl: string;
+	aliases: string[];
 	id: string;
 	compact: string;
 	type: string;
@@ -41,25 +44,38 @@ export type PrimePage = {
 	metadata: PrimeMetadata;
 	catalog: WatchCatalogSnapshotInput | null;
 };
-function record(value: unknown, key: string): PublicRecord | null {
+export function primePublicRecord(
+	value: unknown,
+	key: string,
+	origin: string,
+): PublicRecord | null {
 	const item = object(value);
 	if (
-		!fullId(key) ||
-		item.gti !== key ||
+		!fullId(item.gti) ||
 		!PrimeVideoProviderIdSchema.safeParse(item.compactGTI).success ||
 		typeof item.link !== "string" ||
-		item.link.length > 2048 ||
-		!item.link.startsWith("/detail/")
+		item.link.length > 2048
 	)
 		return null;
 	const compact = item.compactGTI as string;
+	const link = primeObservedLink(item.link, origin);
+	const route = link ? parsePrimePageUrl(link) : null;
 	if (
-		primeVideoId(`https://www.primevideo.com${item.link}`) !== compact ||
+		!route ||
+		(route.token.length === 26
+			? route.token !== compact
+			: route.token.startsWith("amzn1.")
+				? route.token !== item.gti
+				: false) ||
+		(key !== item.gti && key !== compact && key !== route.token) ||
 		!["movie", "episode", "season"].includes(String(item.titleType))
 	)
 		return null;
 	return {
-		id: key,
+		id: item.gti as string,
+		linkToken: route.token,
+		linkUrl: link!,
+		aliases: [key, route.token],
 		compact,
 		type: String(item.titleType),
 		sequence: ordinal(item.sequenceNumber),
@@ -82,6 +98,7 @@ function seriesAnchor(
 	lists: { entries: ObjectValue[] }[],
 	records: Map<string, PublicRecord>,
 	invalidRecords: Set<string>,
+	origin: string,
 ): string | null {
 	let confirmed: { full: string; compact: string } | null = null;
 	for (const list of lists) {
@@ -94,9 +111,15 @@ function seriesAnchor(
 			invalidRecords.has(candidate.seasonId)
 		)
 			return null;
-		const compact = primeVideoId(
-			`https://www.primevideo.com${candidate.seasonLink}`,
-		);
+		const link = primeObservedLink(candidate.seasonLink, origin);
+		const route = link ? parsePrimePageUrl(link) : null;
+		const known = records.get(candidate.seasonId);
+		const compact =
+			route && known && primeRouteMatches(route.token, known)
+				? known.compact
+				: route?.token.length === 26
+					? route.token
+					: null;
 		if (
 			!compact ||
 			(confirmed &&
@@ -104,7 +127,6 @@ function seriesAnchor(
 					confirmed.compact !== compact))
 		)
 			return null;
-		const known = records.get(candidate.seasonId);
 		if (
 			known &&
 			(known.compact !== compact ||
@@ -126,6 +148,11 @@ export function readPrimePage(
 	territory: unknown,
 	locale: unknown,
 ): PrimePage | null {
+	const pageRoute = parsePrimePageUrl(
+		documentValue.defaultView?.location.href ?? "",
+	);
+	if (!pageRoute) return null;
+	const origin = pageRoute.url.origin;
 	const element = documentValue.getElementById("dv-web-page-hydration-data");
 	const raw = element?.textContent;
 	if (!raw || raw.length > 8_000_000) return null;
@@ -147,8 +174,8 @@ export function readPrimePage(
 		const entries = Object.entries(object(state.self));
 		if (entries.length > 2000) return null;
 		for (const [key, value] of entries) {
-			const parsed = record(value, key),
-				prior = records.get(key);
+			const parsed = primePublicRecord(value, key, origin),
+				prior = parsed ? records.get(parsed.id) : null;
 			if (
 				!parsed ||
 				(prior &&
@@ -156,11 +183,26 @@ export function readPrimePage(
 						prior.type !== parsed.type ||
 						prior.sequence !== parsed.sequence))
 			) {
-				invalidRecords.add(key);
-				records.delete(key);
+				const claimed = object(value).gti;
+				const invalidIds = new Set([
+					key,
+					...(fullId(claimed) ? [claimed] : []),
+					...[...records.values()]
+						.filter((row) => primeRouteMatches(key, row))
+						.map((row) => row.id),
+				]);
+				for (const id of invalidIds) {
+					invalidRecords.add(id);
+					records.delete(id);
+				}
 				continue;
 			}
-			if (!invalidRecords.has(key)) records.set(key, parsed);
+			if (!invalidRecords.has(parsed.id)) {
+				parsed.aliases = [
+					...new Set([...(prior?.aliases ?? []), ...parsed.aliases]),
+				];
+				records.set(parsed.id, parsed);
+			}
 		}
 		const detail = object(state.detail);
 		for (const collection of [detail.headerDetail, detail.detail]) {
@@ -169,13 +211,57 @@ export function readPrimePage(
 			for (const [key, value] of entries) details.set(key, object(value));
 		}
 	}
+	// Resolve public collection keys only through the verified full/compact/ASIN mapping.
+	const resolve = (key: unknown) => {
+		if (typeof key !== "string") return null;
+		const matches = [...records.values()].filter((row) =>
+			primeRouteMatches(key, row),
+		);
+		return matches.length === 1 ? matches[0]!.id : null;
+	};
+	for (const [key, value] of [...details]) {
+		const id = resolve(key);
+		if (id) details.set(id, value);
+	}
 	const info = object(titleInfo);
 	const id = info.titleId;
 	if (!fullId(id)) return null;
 	const current = records.get(id);
-	if (!current || !["episode", "movie"].includes(current.type)) return null;
-	const routeId = primeVideoId(documentValue.defaultView?.location.href ?? "");
-	if (!routeId) return null;
+	if (
+		!current ||
+		!["episode", "movie"].includes(current.type) ||
+		[...records.values()].some(
+			(row) => row.id !== current.id && row.compact === current.compact,
+		)
+	)
+		return null;
+	const canonicalHref = documentValue
+		.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+		?.getAttribute("href");
+	const canonicalLink = canonicalHref
+		? primeObservedLink(canonicalHref, origin)
+		: null;
+	if (canonicalHref && !canonicalLink) return null;
+	const canonicalRoute = canonicalLink
+		? parsePrimePageUrl(canonicalLink)
+		: null;
+	const mapped = (token: string) =>
+		[...records.values()].filter((row) => primeRouteMatches(token, row));
+	let routes = mapped(pageRoute.token);
+	// A marketplace address ASIN may differ from the public self ASIN. Only its
+	// same-origin canonical link can establish that alias; active SDK still must agree.
+	if (routes.length === 0 && pageRoute.token.length === 10 && canonicalRoute)
+		routes = mapped(canonicalRoute.token);
+	if (routes.length !== 1) return null;
+	if (canonicalRoute) {
+		const canonicalRecords = mapped(canonicalRoute.token);
+		if (
+			canonicalRecords.length !== 1 ||
+			canonicalRecords[0]!.id !== routes[0]!.id
+		)
+			return null;
+	}
+	const routeId = routes[0]!.compact;
 	const detail = details.get(id) ?? {};
 	const title = text(info.title);
 	if (!title) return null;
@@ -219,7 +305,8 @@ export function readPrimePage(
 	const lists: { season: PublicRecord; entries: ObjectValue[] }[] = [];
 	for (const state of states)
 		for (const [seasonId, value] of Object.entries(object(state.seasons))) {
-			const season = records.get(seasonId);
+			const fullSeason = resolve(seasonId);
+			const season = fullSeason ? records.get(fullSeason) : null;
 			if (
 				!season ||
 				season.type !== "season" ||
@@ -227,11 +314,41 @@ export function readPrimePage(
 				value.length > 100
 			)
 				continue;
-			const entries = value.map(object);
+			const entries: ObjectValue[] = value.map((value) => {
+				const row = object(value);
+				return { ...row, seasonId: resolve(row.seasonId) ?? row.seasonId };
+			});
 			const selected = entries.filter((row) => row.isSelected === true);
-			if (selected.length === 1 && selected[0]!.seasonId === seasonId)
+			if (selected.length === 1 && selected[0]!.seasonId === fullSeason)
 				lists.push({ season, entries });
 		}
+	// Some season pages expose no switcher. A proven season-1 page record,
+	// matching pageTitleId and header ordinal is an explicit season-1 anchor.
+	if (
+		!lists.length &&
+		states.every((state) => Object.keys(object(state.seasons)).length === 0)
+	) {
+		const pageIds = states.map((state) => resolve(state.pageTitleId));
+		const season = pageIds[0] ? records.get(pageIds[0]) : null;
+		if (
+			season?.type === "season" &&
+			season.sequence === 1 &&
+			pageIds.every((id) => id === season.id) &&
+			details.get(season.id)?.seasonNumber === 1
+		) {
+			lists.push({
+				season,
+				entries: [
+					{
+						seasonId: season.id,
+						seasonLink: season.linkUrl,
+						sequenceNumber: 1,
+						isSelected: true,
+					},
+				],
+			});
+		}
+	}
 	const selected = lists[0];
 	if (!selected || lists.some((list) => list.season.id !== selected.season.id))
 		return null;
@@ -247,8 +364,11 @@ export function readPrimePage(
 	const selectedRow = entries.find((row) => row.isSelected === true)!;
 	if (
 		typeof selectedRow.seasonLink !== "string" ||
-		primeVideoId(`https://www.primevideo.com${selectedRow.seasonLink}`) !==
-			season.compact ||
+		!(() => {
+			const link = primeObservedLink(selectedRow.seasonLink, origin);
+			const route = link ? parsePrimePageUrl(link) : null;
+			return route && primeRouteMatches(route.token, season);
+		})() ||
 		selectedRow.sequenceNumber !== season.sequence
 	)
 		return null;
@@ -263,7 +383,10 @@ export function readPrimePage(
 	for (const state of states) {
 		const ids = object(state.episodeList).cardTitleIds;
 		if (Array.isArray(ids) && ids.length <= 2000)
-			for (const value of ids) if (fullId(value)) memberIds.add(value);
+			for (const value of ids) {
+				const id = resolve(value);
+				if (id) memberIds.add(id);
+			}
 	}
 	if (
 		!memberIds.has(id) ||
@@ -294,7 +417,7 @@ export function readPrimePage(
 		seasonTitle = text(seasonDetail.title);
 	if (!seriesTitle || seasonDetail.parentTitle !== seriesTitle || !seasonTitle)
 		return null;
-	const anchor = seriesAnchor(lists, records, invalidRecords);
+	const anchor = seriesAnchor(lists, records, invalidRecords, origin);
 	const identity = anchor
 		? {
 				kind: "episode" as const,
@@ -331,7 +454,10 @@ export function readPrimePage(
 					action.getAttribute("href") ?? "",
 					documentValue.defaultView?.location.href,
 				);
-				const compact = primeVideoId(url.href);
+				const safe = primeObservedLink(action.getAttribute("href"), origin);
+				const route = safe ? parsePrimePageUrl(safe) : null;
+				const matches = route ? mapped(route.token) : [];
+				const compact = matches.length === 1 ? matches[0]!.compact : null;
 				if (compact && url.searchParams.get("autoplay") === "1")
 					playable.add(compact);
 			} catch {
@@ -400,4 +526,76 @@ export function readPrimePage(
 		metadata: metadata.data,
 		catalog: catalog?.success ? catalog.data : null,
 	};
+}
+
+/** Public alias mapping for an isolated-world launch; the adapter must separately
+ * prove active SDK playback before using the returned canonical identity. */
+export function primeDocumentRouteId(
+	documentValue: Document,
+	href: string,
+): string | null {
+	const route = parsePrimePageUrl(href);
+	const liveRoute = parsePrimePageUrl(
+		documentValue.defaultView?.location.href ?? "",
+	);
+	if (!route || !liveRoute || route.url.origin !== liveRoute.url.origin)
+		return null;
+	const raw = documentValue.getElementById(
+		"dv-web-page-hydration-data",
+	)?.textContent;
+	if (!raw || raw.length > 8_000_000) return null;
+	try {
+		const body = object(
+			object(object(object(JSON.parse(raw)).init).preparations).body,
+		);
+		const records = new Map<string, PublicRecord>();
+		for (const plane of [body.atf, body.btf]) {
+			const entries = Object.entries(object(object(plane).state).self ?? {});
+			if (entries.length > 2000) return null;
+			for (const [key, value] of entries) {
+				const parsed = primePublicRecord(value, key, route.url.origin);
+				if (!parsed) return null;
+				const prior = records.get(parsed.id);
+				if (
+					prior &&
+					(prior.compact !== parsed.compact ||
+						prior.type !== parsed.type ||
+						prior.sequence !== parsed.sequence)
+				)
+					return null;
+				parsed.aliases = [
+					...new Set([...(prior?.aliases ?? []), ...parsed.aliases]),
+				];
+				records.set(parsed.id, parsed);
+			}
+		}
+		const matching = (token: string) =>
+			[...records.values()].filter((row) => primeRouteMatches(token, row));
+		let matches = matching(route.token);
+		const canonicalHref = documentValue
+			.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+			?.getAttribute("href");
+		const canonicalLink = canonicalHref
+			? primeObservedLink(canonicalHref, route.url.origin)
+			: null;
+		if (canonicalHref && !canonicalLink) return null;
+		const canonical = canonicalLink ? parsePrimePageUrl(canonicalLink) : null;
+		if (!matches.length && route.token.length === 10 && canonical)
+			matches = matching(canonical.token);
+		if (
+			matches.length !== 1 ||
+			[...records.values()].some(
+				(row) =>
+					row.id !== matches[0]!.id && row.compact === matches[0]!.compact,
+			)
+		)
+			return null;
+		if (canonical) {
+			const proof = matching(canonical.token);
+			if (proof.length !== 1 || proof[0]!.id !== matches[0]!.id) return null;
+		}
+		return matches[0]!.compact;
+	} catch {
+		return null;
+	}
 }

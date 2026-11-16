@@ -1,3 +1,4 @@
+import { PRIME_CONTENT_MATCHES } from "./src/source-adapters/primevideo/url";
 import { defineConfig } from "wxt";
 import {
   getExtensionManifestKey,
@@ -20,7 +21,7 @@ const STORE_VIDEO_HOST_PERMISSIONS = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  "https://www.primevideo.com/*",
+  ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];

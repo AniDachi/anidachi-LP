@@ -1,0 +1,78 @@
+{
+  "canonical": "https://www.amazon.com/gp/video/detail/B0FX2ZCPFK",
+  "hydration": {
+    "init": {
+      "preparations": {
+        "body": {
+          "atf": {
+            "state": {
+              "action": {
+                "btf": {}
+              },
+              "detail": {
+                "detail": {},
+                "headerDetail": {
+                  "B0FX2ZCPFK": {
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/S/pv-target-images/9d2e17ddfc1eb8e2bfc5374852eea40b06a45182f7a1cd50b4a2669d937d068b.jpg",
+                      "packshot": "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/S/pv-target-images/8f6adaeccf7c862f5247d0b325467a9e5384dc3b33cdcf0687116fb85e536f0a.jpg",
+                      "titleshot": "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/S/pv-target-images/8f6adaeccf7c862f5247d0b325467a9e5384dc3b33cdcf0687116fb85e536f0a.jpg"
+                    },
+                    "title": "Hunting Season",
+                    "titleType": "movie"
+                  }
+                }
+              },
+              "episodeList": {},
+              "pageTitleId": "B0FX2ZCPFK",
+              "seasons": {},
+              "self": {
+                "B0FX2ZCPFK": {
+                  "compactGTI": "0IUGS56V361WRU60PCC5XH5D8Z",
+                  "gti": "amzn1.dv.gti.3e561ae5-0185-4a0d-a821-0163dadcf753",
+                  "isLaunched": true,
+                  "link": "/gp/video/detail/B0FX2ZCPFK",
+                  "titleType": "movie"
+                }
+              }
+            }
+          },
+          "btf": {
+            "state": {
+              "action": {
+                "btf": {}
+              },
+              "detail": {
+                "detail": {
+                  "B0FX2ZCPFK": {
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/S/pv-target-images/9d2e17ddfc1eb8e2bfc5374852eea40b06a45182f7a1cd50b4a2669d937d068b.jpg",
+                      "packshot": "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/S/pv-target-images/8f6adaeccf7c862f5247d0b325467a9e5384dc3b33cdcf0687116fb85e536f0a.jpg"
+                    },
+                    "title": "Hunting Season",
+                    "titleType": "movie"
+                  }
+                },
+                "headerDetail": {}
+              },
+              "episodeList": {},
+              "pageTitleId": "B0FX2ZCPFK",
+              "seasons": {},
+              "self": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "locale": "en_US",
+  "playLinks": [],
+  "territory": "PL",
+  "titleInfo": {
+    "episodeNumber": null,
+    "seasonNumber": null,
+    "seriesTitle": null,
+    "title": null
+  },
+  "url": "https://www.amazon.com/gp/video/detail/B0FX33MPNX"
+}

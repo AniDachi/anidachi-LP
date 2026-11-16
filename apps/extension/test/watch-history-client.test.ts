@@ -3102,3 +3102,13 @@ it("accepts Prime history only from the exact canonical-detail document boundary
     expect(isWatchHistorySenderAllowed({ ...message, command: "list" }, sender)).toBe(false);
   } finally { vi.unstubAllGlobals(); }
 });
+
+it.each(["https://www.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://www.amazon.com/gp/video/detail/B0FX33MPNX", "https://www.amazon.de/Hunting-Season/dp/B0FX33MPNX/ref=x"])("allows a scoped Prime history sender from %s", url => {
+ vi.stubGlobal("chrome", {runtime:{id:"test-extension",getURL:()=>"chrome-extension://test-extension/"}});
+ try {
+  const message = {type:"ANIDACHI_WATCH_HISTORY_V3",command:"bootstrap-cache",expectedOwnerUserId:session.user.id} as const;
+  const sender = {id:"test-extension",url,tab:{id:8},frameId:0} as chrome.runtime.MessageSender;
+  expect(isWatchHistorySenderAllowed(message,sender)).toBe(true);
+  expect(isWatchHistorySenderAllowed(message,{...sender,url:"https://www.amazon.com/product-reviews/B0FX33MPNX"})).toBe(false);
+ } finally {vi.unstubAllGlobals();}
+});

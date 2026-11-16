@@ -1,3 +1,5 @@
+import { primeDocumentRouteId } from "./source-adapters/primevideo/metadata";
+import { parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import {
 	canonicalizeRoomSourceUrl,
 	MAX_ROOM_ID_CHARS,
@@ -29,7 +31,13 @@ type Launch = {
 	resume: PersonalHistoryResume | null;
 };
 function source(href: string) {
-	return canonicalizeRoomSourceUrl(href.split("#", 1)[0]!, "primevideo");
+	const route = parsePrimePageUrl(href);
+	const id =
+		route?.token.length === 26
+			? route.token
+			: primeDocumentRouteId(document, href);
+	const canonical = id ? `https://www.primevideo.com/detail/${id}` : "";
+	return canonicalizeRoomSourceUrl(canonical, "primevideo");
 }
 function signature(href: string): string | null {
 	const params = new URLSearchParams(new URL(href).hash.slice(1));
@@ -56,7 +64,12 @@ function readLaunch(href: string, now: number): Launch | null {
 			params.getAll("anidachiRoom").length !== 1)
 	)
 		return null;
-	const resume = roomId ? null : parsePersonalHistoryResumeUrl(href, now);
+	const resume = roomId
+		? null
+		: parsePersonalHistoryResumeUrl(
+				`${canonical.source.sourceUrl}${new URL(href).hash}`,
+				now,
+			);
 	if (!roomId && !resume) return null;
 	return {
 		sourceUrl: canonical.source.sourceUrl,
@@ -73,17 +86,31 @@ function readLaunch(href: string, now: number): Launch | null {
 /** Isolated-world, document-lifetime state only. Never exposed to the page or storage. */
 export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 	let launch = readLaunch(href, now);
+	let pendingHref: string | null =
+		!launch && parsePrimePageUrl(href) && signature(href) ? href : null;
 	let lastSignature = launch ? signature(href) : null;
 	let handed = false;
 	let roomOwner: string | null | undefined;
 	const dispose = () => {
 		launch = null;
+		pendingHref = null;
 		lastSignature = null;
 		roomOwner = undefined;
 		handed = true;
 	};
 	const observe = (currentHref: string) => {
 		if (handed && !launch) return;
+		if (pendingHref) {
+			const initial = parsePrimePageUrl(pendingHref),
+				current = parsePrimePageUrl(currentHref);
+			if (
+				!initial ||
+				!current ||
+				initial.url.origin !== current.url.origin ||
+				(initial.token !== current.token && source(pendingHref).ok === false)
+			)
+				pendingHref = null;
+		}
 		if (launch && Date.now() >= launch.expiresAt) {
 			dispose();
 			return;
@@ -159,6 +186,11 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 			currentHref: string,
 		): PrimeLaunchHandoff | null {
 			if (handed) return null;
+			if (!launch && pendingHref) {
+				launch = readLaunch(pendingHref, now);
+				if (launch) lastSignature = signature(pendingHref);
+				pendingHref = null;
+			}
 			const admitted =
 				adapter.provider === "primevideo" &&
 				valid(currentHref, adapter.getFingerprint(), Date.now());
