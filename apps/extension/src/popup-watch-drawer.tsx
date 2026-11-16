@@ -590,9 +590,10 @@ function WatchDrawer({
 	const remaining = {
 		youtube: 20 * Math.max(1, browsing.providers.youtube.pages.length) - known.filter(item => item.provider === "youtube").length,
 		netflix: 20 * Math.max(1, browsing.providers.netflix.pages.length) - known.filter(item => item.provider === "netflix").length,
+		primevideo: 20 * Math.max(1, browsing.providers.primevideo.pages.length) - known.filter(item => item.provider === "primevideo").length,
 		crunchyroll: 20 * Math.max(1, browsing.providers.crunchyroll.pages.length) - known.filter(item => item.provider === "crunchyroll").length,
 	};
-	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix")
+	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix" || item.provider === "primevideo")
 		&& (knownKeys.has(pendingTitleKey(item.provider, item.titleKey)) || remaining[item.provider]-- > 0)).map((item) => {
 		const durable = known.find(
 			(value) =>
@@ -657,7 +658,7 @@ function WatchDrawer({
 				await client.openUrl(url);
 				return;
 			}
-			if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix") return;
+			if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix" && provider !== "primevideo") return;
 			const bootstrapped = await requestPopupWatchHistory(client, {
 				type: "ANIDACHI_WATCH_HISTORY_V3",
 				command: "bootstrap",
@@ -892,7 +893,7 @@ function WatchDrawer({
 			{items.length ? (
 				<div className="popup-resource-list">
 					{groupWatchHistoryItems(items).map((group) => {
-						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix") return null;
+						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix" && group.provider !== "primevideo") return null;
 						const stream = browsing.providers[group.provider];
 						const count = stream.pages[0]?.history.totalTitleCount;
 						const branch = JSON.stringify([group.provider]);

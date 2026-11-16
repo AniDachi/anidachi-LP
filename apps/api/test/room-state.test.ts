@@ -1068,3 +1068,21 @@ describe("Netflix room source admission", () => {
     expect(snapshot.source?.provider).toBe("netflix");
   });
 });
+
+
+describe("Prime Video room source admission", () => {
+  it("retains host authority, provider pin and source generations", () => {
+    const room = new RoomState("prime-room"); room.join(participant("host", "host"));
+    room.join(participant("viewer", "viewer"));
+    const source = (id: string): WatchSourceDescriptor => ({ provider: "primevideo", sourceUrl: `https://www.primevideo.com/detail/${id}`, canonicalUrl: `https://www.primevideo.com/detail/${id}`, videoFingerprint: `primevideo|detail/${id}`, title: "Prime episode" });
+    const first = source("A".repeat(26)), next = source("B".repeat(26));
+    expect(room.updateHostState("viewer", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(false);
+    expect(room.updateHostState("host", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(true);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), next).sourceChanged).toBe(true);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, provider: "netflix" }).accepted).toBe(false);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, sourceUrl: next.sourceUrl.replace("https:","http:") }).accepted).toBe(false);
+    const snapshot = room.snapshot;
+    if (snapshot.type !== "ROOM_SNAPSHOT") throw Error("unexpected snapshot");
+    expect(snapshot.source?.provider).toBe("primevideo");
+  });
+});

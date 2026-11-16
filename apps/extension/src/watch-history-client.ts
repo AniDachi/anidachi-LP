@@ -1,6 +1,7 @@
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
   WatchHistoryCapacityCompatibleSchema,
+  canonicalizeRoomSourceUrl,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -565,7 +566,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "list") return refresh(session, message);
     if (message.command === "capacity") {
       const lease = await readLease(session);
-      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=2");
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=3");
       if (!response.ok) return response.error;
       const parsed = WatchHistoryCapacityCompatibleSchema.safeParse(response.body);
       if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
@@ -682,7 +683,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const startedRoot = await storage.readRoot();
     const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
     const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
-    const query = new URLSearchParams({ providerVersion: "2" });
+    const query = new URLSearchParams({ providerVersion: "3" });
     if (message.limit !== undefined) query.set("limit", String(message.limit));
     if (message.cursor) query.set("cursor", message.cursor);
     const response = await authenticatedRequest(session, `/api/watch-history/v3${query.size ? `?${query}` : ""}`);
@@ -1926,7 +1927,7 @@ function parseBrowseInput(
   const parsed = schema.safeParse(message.input);
   if (!parsed.success) return null;
   return message.command === "browse" || message.command === "browse-sessions" || message.command === "browse-options"
-    ? { ...parsed.data, providerVersion: 2 }
+    ? { ...parsed.data, providerVersion: 3 }
     : parsed.data;
 }
 
@@ -2060,7 +2061,8 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
-  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname)) return false;
+  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com", "www.primevideo.com"].includes(url.hostname)) return false;
+  if (url.hostname === "www.primevideo.com" && !canonicalizeRoomSourceUrl(sender.url, "primevideo").ok) return false;
   if (url.hostname === "www.netflix.com") {
     if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
     // Trust the document origin, not its initial route: Netflix opens players

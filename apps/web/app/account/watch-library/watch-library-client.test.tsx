@@ -1687,7 +1687,7 @@ it("poster failure before hydration has a fallback and a new URL can load", asyn
   const container = document.createElement("div");
   container.innerHTML = renderToString(element);
   document.body.append(container);
-  Object.defineProperties(container.querySelector("img"), {
+  Object.defineProperties(container.querySelector(".wh-cover img"), {
     complete: { value: true },
     naturalWidth: { value: 0 },
   });
@@ -1696,14 +1696,14 @@ it("poster failure before hydration has a fallback and a new URL can load", asyn
     root = hydrateRoot(container, element);
   });
   try {
-    assert.equal(container.querySelector("img"), null);
+    assert.equal(container.querySelector(".wh-cover img"), null);
     assert.ok(container.querySelector(".wh-artwork-fallback"));
     history = structuredClone(history);
     history.items[0].artworkUrl = "https://www.crunchyroll.com/new.jpg";
     await click(buttonByLabel(container, "Refresh history"));
     await waitFor(() =>
       assert.equal(
-        container.querySelector("img")?.getAttribute("src"),
+        container.querySelector(".wh-cover img")?.getAttribute("src"),
         history.items[0].artworkUrl,
       ),
     );
@@ -1963,7 +1963,7 @@ it("Netflix movies and shows retain their own provider, editor identity and resu
     try {
       await click(buttonByLabel(view.container, "Netflix"));
       await waitFor(() => assert.ok(view.container.querySelector(`button[aria-label="Manage ${history.items[0].title}"]`)));
-      assert.ok(server.calls.some(call => call.path.includes("provider=netflix") && call.path.includes("providerVersion=2")));
+      assert.ok(server.calls.some(call => call.path.includes("provider=netflix") && call.path.includes("providerVersion=3")));
       assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Netflix 200 \/ 200 titles.*Netflix history is full/);
       await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
       await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
@@ -1985,7 +1985,7 @@ it("legacy capacity shows Netflix unavailable rather than manufacturing zero usa
     await waitFor(() => assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Netflix storage unavailable/));
     await click(buttonByLabel(view.container, "Netflix"));
     assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /^Netflix storage unavailable$/);
-    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=2"));
+    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=3"));
   } finally { await unmount(view.root); }
 });
 
@@ -2026,4 +2026,99 @@ it("an empty platform filter keeps the switcher and does not show installation",
     assert.ok(view.container.querySelector('[aria-label="Filter by platform"]'));
     assert.doesNotMatch(view.container.textContent ?? "", /Your watch library|Install AniDachi/);
   } finally { await unmount(view.root); }
+});
+
+function primeFixture(movie: boolean) {
+  const { history, editor } = netflixFixture(movie);
+  const id = "E".repeat(26), anchor = "A".repeat(26), seasonId = "B".repeat(26);
+  const title = history.items[0];
+  title.provider = "primevideo";
+  title.titleKey = `primevideo:${movie ? "movie" : "series"}:${movie ? id : anchor}`;
+  title.title = movie ? "Prime film" : "Prime show";
+  title.sourceUrl = `https://www.primevideo.com/detail/${id}`;
+  title.latestActivity.episodeKey = movie ? title.titleKey : `primevideo:episode:${id}`;
+  title.catalogState = "partial";
+  title.aggregate = { completedEpisodes: 0, availableEpisodes: null, progress: null };
+  title.seasons = movie ? [] : [{ ...title.seasons[0], seasonKey: `primevideo:season:${seasonId}`, seasonNumber: 2, seasonTitle: "Season Two", aggregate: title.aggregate,
+    episodes: title.seasons[0].episodes.map((ep, index) => ({ ...ep, seasonKey: `primevideo:season:${seasonId}`, seasonNumber: 2, seasonTitle: "Season Two", episodeKey: `primevideo:episode:${index ? "F".repeat(26) : id}`, sourceUrl: `https://www.primevideo.com/detail/${index ? "F".repeat(26) : id}` })) }];
+  editor.provider = "primevideo";
+  editor.titleKey = title.titleKey;
+  editor.episodes = editor.episodes.map((ep, index) => ({ ...ep, episodeKey: movie ? title.titleKey : `primevideo:episode:${index ? "F".repeat(26) : id}`,
+    sourceUrl: `https://www.primevideo.com/detail/${index ? "F".repeat(26) : id}`,
+    seasonKey: movie ? null : `primevideo:season:${seasonId}`, seasonNumber: movie ? null : 2, seasonTitle: movie ? null : "Season Two" })) as typeof editor.episodes;
+  return { history, editor };
+}
+
+it("Prime movies and partial series keep provider identity in filters, editor and resume", async () => {
+  for (const movie of [true, false]) {
+    const { history, editor } = primeFixture(movie);
+    const server = installServer({ intercept: path => {
+      if (path.includes("/browse?")) return Response.json({ history, matches: [] });
+      if (path.includes("/editor?")) return Response.json(editor);
+      if (path.includes("/capacity?")) return Response.json({ ...capacityFixture(), capacityVersion: 3, providers: { ...capacityFixture().providers, netflix: { used: 1, limit: 200 }, primevideo: { used: 200, limit: 200 } } });
+      return undefined;
+    } });
+    const view = await renderClient(history);
+    try {
+      await click(buttonByLabel(view.container, "Prime Video"));
+      await waitFor(() => assert.ok(view.container.querySelector(`button[aria-label="Manage ${history.items[0].title}"]`)));
+      assert.ok(server.calls.some(call => call.path.includes("provider=primevideo") && call.path.includes("providerVersion=3")));
+      assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Prime Video 200 \/ 200 titles.*Prime Video history is full/);
+      await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
+      await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
+      assert.equal(Boolean(view.container.querySelector(".wh-season-row")), !movie);
+      if (!movie) {
+        assert.match(view.container.textContent ?? "", /Season Two/);
+        assert.match(view.container.textContent ?? "", /partial catalog for the current season/);
+        assert.doesNotMatch(view.container.textContent ?? "", /load its full catalog/);
+      }
+      assert.ok(server.calls.some(call => call.path.includes("/editor?provider=primevideo") && call.path.includes(encodeURIComponent(history.items[0].titleKey))));
+      await click(buttonByText(view.container, "Resume"));
+      await waitFor(() => assert.equal(new URL(testWindow.location.href).hostname, "www.primevideo.com"));
+      const url = new URL(testWindow.location.href);
+      assert.equal(url.pathname, `/detail/${"E".repeat(26)}`);
+      assert.equal(url.search, "");
+      assert.ok(url.hash.includes("anidachiResume="));
+    } finally { await unmount(view.root); }
+  }
+});
+
+for (const version of [1, 2, 3]) it(`capacity v${version} preserves Prime availability and independent counts`, async () => {
+  const server = installServer({ intercept: path => path.includes("/capacity?") ? Response.json({
+    ...capacityFixture(1), capacityVersion: version,
+    providers: { ...capacityFixture(1).providers,
+      ...(version >= 2 ? { netflix: { used: 7, limit: 200 } } : {}),
+      ...(version === 3 ? { primevideo: { used: 23, limit: 200 } } : {}),
+    },
+  }) : undefined });
+  const view = await renderClient();
+  try {
+    await waitFor(() => assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", version === 3 ? /Prime Video 23 \/ 200 titles/ : /Prime Video storage unavailable/));
+    await click(buttonByLabel(view.container, "Prime Video"));
+    assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", version === 3 ? /^Prime Video 23 \/ 200 titles$/ : /^Prime Video storage unavailable$/);
+    assert.doesNotMatch(view.container.textContent ?? "", /Prime Video 0 \/ 200|Prime Video history is full/);
+    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=3"));
+  } finally { await unmount(view.root); }
+});
+
+it("Prime progress edits preserve movie and anchored-series keys", async () => {
+  for (const movie of [true, false]) {
+    const { history, editor } = primeFixture(movie);
+    const server = installServer({ history, editor });
+    const view = await renderClient(history);
+    try {
+      await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
+      await waitFor(() => assert.equal(buttonByText(view.container, "Edit").disabled, false));
+      await click(buttonByText(view.container, "Edit"));
+      if (!movie) await click(view.container.querySelector<HTMLButtonElement>('[role="checkbox"]')!);
+      await click(buttonByText(view.container, "Mark watched"));
+      await click(buttonByLabel(view.container, "Save 1 change"));
+      await waitFor(() => assert.ok(server.calls.find(call => call.path.endsWith("/editor") && call.body)));
+      const body = server.calls.find(call => call.path.endsWith("/editor") && call.body)!.body!;
+      assert.equal(body.provider, "primevideo");
+      assert.equal(body.titleKey, history.items[0].titleKey);
+      assert.deepEqual(body.changes, [{ episodeKey: editor.episodes[0].episodeKey, watched: true }]);
+      assert.equal(body.accountGeneration, 1);
+    } finally { await unmount(view.root); }
+  }
 });

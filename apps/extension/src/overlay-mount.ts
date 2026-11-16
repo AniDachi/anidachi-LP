@@ -1,3 +1,5 @@
+import { hasPrimeVideoHostname } from "@anidachi/protocol";
+import { primeVideoId } from "./source-adapters/primevideo/contract";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
 import {
   isYouTubeProviderHost,
@@ -19,6 +21,7 @@ export function getOverlayPageDecision(
 }
 
 export function isOverlayAllowedOnPage(pageUrl: string): boolean {
+  if (hasPrimeVideoHostname(pageUrl)) return primeVideoId(pageUrl) !== null;
   try {
     const url = new URL(pageUrl);
     const hostname = url.hostname.toLowerCase();
