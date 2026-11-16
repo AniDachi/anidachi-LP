@@ -46,8 +46,8 @@ The extension separates explicit host/resource origins from Amazon video/share
 script paths, with one top-frame MAIN entry at `document_start`. Chrome requires
 web-accessible resource matches to end in `/*`; the exposed resource remains
 only the logo. There is no wildcard Amazon permission.
-Task 9 review and loaded-artifact acceptance are in progress; this scope
-is not evidence that every marketplace/account has been tested. No public
+Task 9 source review passed; the owner will perform loaded-artifact acceptance.
+This scope is not evidence that every marketplace/account has been tested. No public
 announcement, Store publication, secret or environment addition is included.
 
 ## Runtime ownership and safe playback
@@ -285,6 +285,10 @@ Amazon script matches. The correction separates origin and injection lists and
 adds negative manifest validation cases. [Chrome's resource manifest contract](https://developer.chrome.com/docs/extensions/reference/manifest/web-accessible-resources)
 requires origin-only matching. Regional loaded-artifact acceptance and delivery
 receipts are tracked in [PR #563](https://github.com/AniDachi/anidachi-LP/pull/563).
+The corrected narrow artifact at `90caab1d` passes the strengthened validator;
+the same validator rejects deliberately invalid Amazon resource paths. The owner
+chose to check Chrome personally, so installation, regional capsule/progress and
+broader marketplace playback are not marked accepted from source tests alone.
 No source IDs, seasons or totals are inferred from translated
 labels, an account's watch position or a missing season list.
 
