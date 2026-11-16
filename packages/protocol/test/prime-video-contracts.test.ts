@@ -290,6 +290,36 @@ it("guards legacy account-library Prime sources without inventing a seasonId map
   expect(WatchLibraryItemSchema.safeParse({ ...prime, sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk" }).success).toBe(false);
 });
 
+it("binds legacy Prime library item/episode keys and source IDs while retaining seasonId compatibility", () => {
+  const episode = { episodeKey, episodeTitle: "Episode", seasonId: "legacy-season-row-id", seasonTitle: "Season 2", seasonNumber: 2,
+    sourceUrl, currentTime: 600, duration: 1200, progress: .5, lastWatchedAt: NOW, sessions: [] };
+  const series = { provider: "primevideo", itemKey: titleKey, itemKind: "series", itemTitle: "Series", sourceUrl,
+    artworkUrl: null, active: true, lastWatchedAt: NOW, episodes: [episode] };
+  expect(WatchLibraryItemSchema.safeParse(series).success).toBe(true);
+  for (const patch of [{ itemKey: "youtube:video:abcdefghijk" }, { itemKey: movieKey }, { itemKey: "bare-key" },
+    { episodes: [{ ...episode, episodeKey: "youtube:video:abcdefghijk" }] },
+    { episodes: [{ ...episode, episodeKey: movieKey, sourceUrl: movieUrl }] },
+    { episodes: [{ ...episode, sourceUrl: movieUrl }] }])
+    expect(WatchLibraryItemSchema.safeParse({ ...series, ...patch }).success).toBe(false);
+  const movie = { ...series, itemKind: "movie", itemKey: movieKey, sourceUrl: movieUrl,
+    episodes: [{ ...episode, episodeKey: movieKey, sourceUrl: movieUrl, seasonId: null, seasonTitle: null, seasonNumber: null }] };
+  expect(WatchLibraryItemSchema.safeParse(movie).success).toBe(true);
+  for (const patch of [{ itemKey: "youtube:video:abcdefghijk" }, { itemKey: titleKey }, { sourceUrl },
+    { episodes: [episode] }, { episodes: [{ ...movie.episodes[0], episodeKey: `primevideo:movie:${EPISODE}`, sourceUrl }] }])
+    expect(WatchLibraryItemSchema.safeParse({ ...movie, ...patch }).success).toBe(false);
+});
+
+it.each(["youtube", "crunchyroll", "netflix", "amazon"])("rejects qualified Prime library keys under %s with otherwise legacy-compatible URLs", provider => {
+  const legacyUrl = "https://www.youtube.com/watch?v=abcdefghijk";
+  const episode = { episodeKey: "bare-episode", episodeTitle: "Episode", seasonId: "legacy-season-row-id", seasonTitle: "Season", seasonNumber: 1,
+    sourceUrl: legacyUrl, currentTime: 600, duration: 1200, progress: .5, lastWatchedAt: NOW, sessions: [] };
+  const legacy = { provider, itemKey: "bare-title", itemKind: "series", itemTitle: "Series", sourceUrl: legacyUrl,
+    artworkUrl: null, active: true, lastWatchedAt: NOW, episodes: [episode] };
+  expect(WatchLibraryItemSchema.safeParse(legacy).success).toBe(true);
+  expect(WatchLibraryItemSchema.safeParse({ ...legacy, itemKey: movieKey }).success).toBe(false);
+  expect(WatchLibraryItemSchema.safeParse({ ...legacy, episodes: [{ ...episode, episodeKey }] }).success).toBe(false);
+});
+
 it("does not admit Prime identity under valid legacy progress identities", () => {
   const youtube = { ...progress(), provider: "youtube", titleKey: "youtube:video:abcdefghijk", episodeKey: "youtube:video:abcdefghijk",
     youtubeVideoId: "abcdefghijk", primevideoIdentity: undefined, seasonKey: null, sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk" };
