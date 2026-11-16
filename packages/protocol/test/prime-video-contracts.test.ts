@@ -769,12 +769,9 @@ describe("Prime Video reads and editing", () => {
 			sourceUrl,
 			currentTime: 600,
 		});
-		expect(
-			parsePersonalHistoryResumeUrl(
-				url.replace(`/detail/${EPISODE}#`, `/detail/${MOVIE}#`),
-				1000,
-			),
-		).toBeNull();
+		const differentMovie = new URL(url);
+		differentMovie.pathname = `/detail/${MOVIE}`;
+		expect(parsePersonalHistoryResumeUrl(differentMovie.href, 1000)).toBeNull();
 		expect(parsePersonalHistoryResumeUrl(url, 301000)).toBeNull();
 	});
 });

@@ -293,6 +293,35 @@ test("launch handoff adds the room hash only after exact canonical validation", 
 	assert.equal(buildRoomSourceLaunchUrl(youtubeSource, ""), null);
 });
 
+test("Prime room launch opens the exact player without decorating persisted identity", () => {
+	for (const id of ["0FX1R3RCDS4LZSFJ9KPUBXJFAA", "B".repeat(26)]) {
+		const sourceUrl = `https://www.primevideo.com/detail/${id}`;
+		const source = {
+			provider: "primevideo",
+			sourceUrl,
+			canonicalUrl: sourceUrl,
+			videoFingerprint: `primevideo|detail/${id}`,
+		};
+		assert.equal(
+			buildRoomSourceLaunchUrl(source, "room-1"),
+			`${sourceUrl}?autoplay=1#anidachiRoom=room-1`,
+		);
+		assert.equal(source.sourceUrl, sourceUrl);
+		assert.equal(source.videoFingerprint, `primevideo|detail/${id}`);
+		for (const invalid of [
+			{ ...source, sourceUrl: `${sourceUrl}?autoplay=1` },
+			{ ...source, sourceUrl: sourceUrl.replace("https:", "http:") },
+			{
+				...source,
+				sourceUrl: sourceUrl.replace("www.primevideo.com", "evil.test"),
+			},
+			{ ...source, provider: "netflix" },
+			{ ...source, videoFingerprint: "primevideo|detail/WRONG" },
+		])
+			assert.equal(buildRoomSourceLaunchUrl(invalid, "room-1"), null);
+	}
+});
+
 test("the RPC wrapper arguments are exactly the five deployed Task 5A arguments", () => {
 	assert.deepEqual(roomSourcePersistenceRpcArguments(callback), {
 		p_room_id: "room-1",

@@ -182,6 +182,7 @@ export function buildRoomSourceLaunchUrl(
 	}
 
 	const url = new URL(parsed.data.sourceUrl);
+	if (parsed.data.provider === "primevideo") url.searchParams.set("autoplay", "1");
 	const hash = new URLSearchParams();
 	hash.set("anidachiRoom", roomId);
 	url.hash = hash.toString();
