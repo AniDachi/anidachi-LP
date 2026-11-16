@@ -13,6 +13,7 @@ import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { WEB_HTTP_BASE } from "../src/constants";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
+import { createPrimeLaunchCapture, type PrimeLaunchHandoff } from "../src/prime-launch-capture";
 import * as hostingAccessClient from "../src/hosting-access-client";
 import * as accountHostingClient from "../src/account-hosting-status-client";
 import * as free20WarningClient from "../src/free20-warning-client";
@@ -2337,6 +2338,43 @@ describe("privileged overlay wiring", () => {
       expect(view.container.querySelector(".panel-action-timer strong")?.textContent).toBe("13:00");
       expect(view.container.textContent).not.toMatch(/Creating room|Room created/);
     } finally { await unmount(view.root); if (outcome.startsWith("slow-admission")) vi.useRealTimers(); }
+  });
+
+  it("keeps captured Prime room A selected over persisted B during deferred initial admission", async () => {
+    installActiveHostRoomRuntime();
+    const sourceUrl = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
+    const fingerprint = `primevideo|detail/${"A".repeat(26)}`;
+    vi.stubGlobal("location", new URL(sourceUrl));
+    const launch = createPrimeLaunchCapture(`${sourceUrl}#anidachiRoom=room-a`).handoff({
+      provider: "primevideo", getFingerprint: () => fingerprint,
+    } as VideoAdapter, sourceUrl)!;
+    const identity = deferred<unknown>(), admission = deferred<unknown>();
+    const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
+    send.mockImplementation(async (...args: any[]) => {
+      const message = args[0];
+      if (message.type === "ANIDACHI_AUTH" && message.command === "get-session") return identity.promise;
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && ["load", "migrate"].includes(message.command))
+        return { ok: true, record: { ...confirmedRoomSession(), roomId: "room-b" } };
+      if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE" && message.command === "prepare")
+        return { ok: true, record: null, prepared: { ...preparedRoomSession(), roomId: message.roomId } };
+      if (message.type === "ANIDACHI_ROOM_HTTP" && message.command === "connect-room") return admission.promise;
+      return (original as any)(...args);
+    });
+    const view = await renderOverlay(adapter => Object.assign(adapter, {
+      id: "primevideo", provider: "primevideo", getFingerprint: () => fingerprint,
+    }), launch);
+    try {
+      await flushMountedWork();
+      expect(launch.readRoom(location.href, fingerprint, "user-a")).toBeNull();
+      // Consumption and pending-join state both rerender the real OverlayApp.
+      await act(async () => { view.root.render(<overlayApp.OverlayApp adapter={view.adapter} initialPrimeLaunch={launch} />); });
+      await flushMountedWork();
+      await act(async () => identity.resolve({ ok: true, tokens: sessionFor("user-a") }));
+      await flushMountedWork();
+      const joins = send.mock.calls.map(([message]: any) => message)
+        .filter(message => message.type === "ANIDACHI_ROOM_HTTP" && message.command === "connect-room");
+      expect(joins.map(message => message.roomId)).toEqual(["room-a"]);
+    } finally { await unmount(view.root); }
   });
 
   it.each(["free-invite", "paid-invite", "pro-invite", "exhausted-invite", "restored-guest", "rejected-invite", "host-exhausted-invite", "host-exhausted-reconnect", "storage-failure", "slow-snapshot", "guest-leave", "delayed-host-role"])("does not show hosting controls while entering another room: %s", async scenario => {
@@ -5426,7 +5464,7 @@ function deferred<T>(): {
 	return { promise, resolve };
 }
 
-async function renderOverlay(prepare?: (adapter: VideoAdapter) => void): Promise<{
+async function renderOverlay(prepare?: (adapter: VideoAdapter) => void, initialPrimeLaunch?: PrimeLaunchHandoff): Promise<{
 	container: HTMLDivElement;
 	root: Root;
 	adapter: VideoAdapter;
@@ -5447,7 +5485,7 @@ async function renderOverlay(prepare?: (adapter: VideoAdapter) => void): Promise
 	prepare?.(adapter);
 	await act(async () => {
 		root.render(
-			<overlayApp.OverlayApp adapter={adapter} />,
+			<overlayApp.OverlayApp adapter={adapter} initialPrimeLaunch={initialPrimeLaunch} />,
 		);
 		await Promise.resolve();
 		await Promise.resolve();

@@ -524,6 +524,7 @@ export async function runOverlayPrivilegedAction(
 
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }: OverlayAppProps) {
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
+	const capturedPrimeRestoreOwnerRef = useRef<string | null>(null);
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
 	const adapterActiveRef = useRef(adapterActive);
@@ -4985,7 +4986,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 		const hashRoomId = getRoomIdFromHash() ?? capturedPrimeRoomId;
 		const persistedRoomId =
-			storedRoomSession?.ownerUserId === currentUserId
+			storedRoomSession?.ownerUserId === currentUserId &&
+			capturedPrimeRestoreOwnerRef.current !== currentUserId
 				? storedRoomSession.roomId
 				: null;
 		const initialRoomId = hashRoomId ?? persistedRoomId;
@@ -4995,6 +4997,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				setPanelOpen(true);
 				return;
 			}
+			// Consuming launch A must not expose an older persisted B on rerender.
+			if (capturedPrimeRoomId === initialRoomId) capturedPrimeRestoreOwnerRef.current = currentUserId;
 			initialPrimeLaunchRef.current?.consumeRoom();
 
 			void connectToExistingWebsiteRoom(
