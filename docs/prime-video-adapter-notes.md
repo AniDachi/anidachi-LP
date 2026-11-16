@@ -85,16 +85,23 @@ missing or older extensions receive explicit fallback links. The background
 stores a five-minute, tab/account/login/generation/source-bound intent in
 `chrome.storage.session` before navigation, with at most 64 pending entries and
 one navigation attempt. This survives provider redirects, fragment removal and
-service-worker restarts. SDK identity, server room authority and personal Resume
-account/generation checks still gate admission and seeking. No room token or
-provider credential is placed in the destination URL.
+service-worker restarts. Recovery checks the current adapter before handing the
+intent to the overlay; only an accepted handoff consumes it. A retained Amazon
+fragment cannot discard a matching recovered Resume, and a rejected pending
+room launch cannot fall back to its stale raw fragment. SDK identity, server
+room authority and personal Resume account/generation checks still gate
+admission and seeking. No room token or provider credential is placed in the
+destination URL.
 
-Migration `20261116160000_prime_navigation_continuity.sql` adds nullable room
-and progress JSONB fields and compatible server-only RPC/projection handling.
-Same-source legacy writes preserve observed routes; a source replacement clears
-stale routes. New history HTTP readers opt in with
-`x-anidachi-prime-navigation: 1`; responses to older strict readers omit the new
-field. Navigation timestamps do not establish a new source generation.
+Migration `20261116160000_prime_navigation_continuity.sql` adds nullable room,
+progress and catalog route-map JSONB fields. Existing RPC results, stored catalog
+snapshots/projections and progress receipts retain their legacy JSON shapes.
+Versioned server reads and progress wrappers enrich new-runtime responses;
+history HTTP readers additionally opt in with `x-anidachi-prime-navigation: 1`.
+This protects both older clients and older Web deployments during the schema-first
+window or runtime rollback. Same-source legacy writes preserve observed routes;
+source replacement or removal clears stale routes. Navigation timestamps do not
+establish a new source generation.
 
 Delivery order is additive staging schema, compatible Web/Worker, then the new
 extension artifact. Runtime rollback retains the nullable columns and history

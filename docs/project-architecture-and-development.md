@@ -411,9 +411,11 @@ two-client staging acceptance remains open. See the
 [Prime contract and evidence](prime-video-adapter-notes.md).
 
 Prime Task 11 separates observed regional playback links (`primeNavigation`)
-from canonical room/history identity. Nullable room/progress fields and catalog
-projections retain exact-title routes; history HTTP readers explicitly opt in
-to the new field so older strict clients remain compatible. Invitation launch,
+from canonical room/history identity. Nullable room/progress fields and a
+separate catalog route map retain exact-title routes. Legacy RPC results and
+stored JSON remain unchanged; versioned server reads enrich new responses and
+history HTTP readers explicitly opt in. This keeps old Web deployments and
+strict clients compatible across schema-first delivery and rollback. Invitation launch,
 website/popup Resume, unseen catalog episodes and source switches share the
 extension resolver. Its account-scoped marketplace choice and bounded
 `chrome.storage.session` intent survive full document redirects but establish

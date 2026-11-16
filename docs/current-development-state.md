@@ -107,8 +107,9 @@ before room/history persistence, and launch consumers use the canonical
 primevideo.com URL. The candidate preserves canonical identity while carrying
 bounded observed navigation hints, selecting the recipient's marketplace with
 explicit recovery when no route is known, and retaining intent through full
-redirects. It includes additive nullable storage, explicit history-read opt-in,
-a Prime invitation launch step and a shared extension resolver. Final review
+redirects. It includes additive nullable storage, versioned server reads with
+unchanged legacy RPC/stored JSON shapes, explicit history-read opt-in, a Prime
+invitation launch step and a shared extension resolver. Final review
 and staging delivery are pending; the existing `49f86b06` artifact does not
 include this follow-up. See the provider notes and active plan for scope;
 staging migration/runtime/artifact receipts will be recorded after verification.
