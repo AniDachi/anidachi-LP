@@ -64,8 +64,27 @@ const videoHosts = [
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
+const videoOrigins = [
+  "https://youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtu.be/*",
+  "https://*.youtu.be/*",
+  "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
+  "https://www.primevideo.com/*",
+  "https://www.amazon.com/*",
+  "https://www.amazon.co.uk/*",
+  "https://www.amazon.de/*",
+  "https://www.amazon.co.jp/*",
+  "https://www.amazon.ca/*",
+  "https://www.amazon.in/*",
+  "https://www.amazon.com.mx/*",
+  "https://crunchyroll.com/*",
+  "https://*.crunchyroll.com/*",
+];
+
 const productionHostPermissions = [
-  ...videoHosts,
+  ...videoOrigins,
   "https://www.anidachi.app/*",
   "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
 ];
@@ -238,7 +257,7 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.permissions ?? []).not.toContain("downloads");
     expectExact(manifest.host_permissions, productionHostPermissions);
     expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-public", {
       web: "https://www.anidachi.app",
@@ -262,12 +281,12 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.key).toBeTypeOf("string");
     expect(deriveId(manifest.key ?? "")).toBe(stagingId);
     expectExact(manifest.host_permissions, [
-      ...videoHosts,
+      ...videoOrigins,
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
     expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
       web: "https://staging.anidachi.app",
