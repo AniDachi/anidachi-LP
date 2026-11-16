@@ -2070,8 +2070,7 @@ it("Prime movies and partial series keep provider identity in filters, editor an
       assert.equal(Boolean(view.container.querySelector(".wh-season-row")), !movie);
       if (!movie) {
         assert.match(view.container.textContent ?? "", /Season Two/);
-        assert.match(view.container.textContent ?? "", /partial catalog for the current season/);
-        assert.doesNotMatch(view.container.textContent ?? "", /load its full catalog/);
+        assert.match(view.container.textContent ?? "", /Open this title in Prime Video with the extension to load its full catalog/);
       }
       assert.ok(server.calls.some(call => call.path.includes("/editor?provider=primevideo") && call.path.includes(encodeURIComponent(history.items[0].titleKey))));
       await click(buttonByText(view.container, "Resume"));
@@ -2083,6 +2082,36 @@ it("Prime movies and partial series keep provider identity in filters, editor an
         `https://www.primevideo.com/detail/${"E".repeat(26)}`);
     } finally { await unmount(view.root); }
   }
+});
+
+it("complete Prime catalog exposes an unplayed season and opens its exact episode without writing progress", async () => {
+  const { history, editor } = primeFixture(false);
+  const unseenId = "G".repeat(26), unseenSeason = `primevideo:season:${"A".repeat(26)}`;
+  editor.catalogComplete = true;
+  editor.episodes.push({ ...editor.episodes[0],
+    episodeKey: `primevideo:episode:${unseenId}`, episodeTitle: "Новая серия", episodeNumber: 1,
+    seasonKey: unseenSeason, seasonTitle: "Сезон 1", seasonNumber: 1, seasonOrder: 0, order: 0,
+    sourceUrl: `https://www.primevideo.com/detail/${unseenId}`,
+    watched: false, currentTime: 0, duration: 0, progress: 0,
+  });
+  const server = installServer({ intercept: path => path.includes("/editor?") ? Response.json(editor) : undefined });
+  const view = await renderClient(history);
+  try {
+    await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
+    await waitFor(() => assert.equal(view.container.querySelectorAll(".wh-season-row option").length, 2));
+    assert.doesNotMatch(view.container.textContent ?? "", /Only saved episodes/);
+    await chooseSeason(view.container, unseenSeason);
+    const episode = episodeButton(view.container, "Новая серия");
+    assert.match(episode.getAttribute("aria-label") ?? "", /not watched/);
+    await click(episode);
+    assert.match(view.container.textContent ?? "", /Not started/);
+    await click(buttonByText(view.container, "Watch"));
+    await waitFor(() => assert.equal(new URL(testWindow.location.href).pathname, `/detail/${unseenId}`));
+    const resume = parsePersonalHistoryResumeUrl(testWindow.location.href);
+    assert.equal(resume?.sourceUrl, `https://www.primevideo.com/detail/${unseenId}`);
+    assert.equal(resume?.currentTime, 0);
+    assert.equal(server.calls.filter(call => call.path.includes("/editor") && call.body).length, 0);
+  } finally { await unmount(view.root); }
 });
 
 for (const version of [1, 2, 3]) it(`capacity v${version} preserves Prime availability and independent counts`, async () => {

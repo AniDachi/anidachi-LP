@@ -5,9 +5,11 @@ Staging baseline delivered through [PR #557](https://github.com/AniDachi/anidach
 `primevideo`; display name: **Prime Video**. The additive schema and compatible
 Web/Worker are delivered; loaded room creation and saved episode history passed.
 The autoplay launch follow-up shipped through [PR #559](https://github.com/AniDachi/anidachi-LP/pull/559)
-at `2a93c598ebef08ba78a79d1328b5c7daf43bd275`. A subsequent initial-SDK-snapshot
-Resume readiness fix on `codex/prime-resume-readiness` is pending staging
-delivery and browser acceptance. The
+at `2a93c598ebef08ba78a79d1328b5c7daf43bd275`. Resume readiness and early launch
+capture shipped in [PR #560](https://github.com/AniDachi/anidachi-LP/pull/560)
+at `def49ed8`; coherent playing-source room creation shipped in
+[PR #561](https://github.com/AniDachi/anidachi-LP/pull/561) at `465f79a9`.
+Loaded browser acceptance passed for both follow-ups. The
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
@@ -53,8 +55,9 @@ restart belong to the entrypoint.
 The undocumented SDK context is found through a bounded React child/sibling
 walk, with shape checks for the specific observed modules. A changed or unknown
 shape fails closed. Only whitelisted public title/hydration fields are read;
-whole provider state, account/session data, credentials and provider requests
-are outside this bridge.
+whole provider state, account/session data and credentials are never serialized
+through the bridge. The catalog path may read observed same-origin season
+detail pages as described below; playback commands make no provider requests.
 
 Content time comes from `playback.position` and duration from
 `timeline.getTimelineInfo().endPositionMs`, converted from milliseconds. During
@@ -72,7 +75,7 @@ The MAIN bridge executes `playback.play()`, `pause()` and `seek(milliseconds)`
 through Prime's own policy/seek machinery. Both seek directions must be enabled.
 Generation and safe phase are checked immediately before execution; returned
 SDK promises alone do not prove success. Confirmation reads are bounded to two
-seconds. The isolated client has a 3.5-second deadline, AbortSignal cleanup,
+seconds. The isolated playback client has a 3.5-second deadline, AbortSignal cleanup,
 strict bounded messages and request/source/generation binding. MAIN limits
 pending requests and replay IDs and rejects foreign/malformed messages.
 
@@ -117,7 +120,7 @@ It never exposes launch state through MAIN, DOM or persistent storage.
 
 Room creation also treats the playing descriptor as source authority. Prime
 may leave a season or previous episode URL in the address bar after replacing
-the native episode. The Task 7 local follow-up reads the descriptor at the
+the native episode. The delivered Task 7 follow-up reads the descriptor at the
 actual create boundary after async identity/session preparation and uses its
 source URL and fingerprint as one pair. A known Prime adapter without a ready
 descriptor fails closed with a retryable loading message; ordinary
@@ -126,7 +129,10 @@ canonical-source validation and strict Prime host/ID rules remain unchanged.
 Overlay regressions reproduce the reported Fallout season/episode mismatch,
 episode replacement during preparation, missing Prime descriptor and ordinary
 fallback. Direct room-client coverage still rejects the mismatched pair.
-Task 7 staging build and loaded-client acceptance remain open.
+Task 7 passed staging artifact validation and loaded Fallout S1 E4 room
+creation from a season URL. Persisted source and fingerprint matched the
+playing episode; the disposable room was ended. The tested candidate and
+staging merge trees are identical. Two-account synchronization remains open.
 
 Player geometry and composer isolation use the existing overlay seams and
 semantic controls, without English button-label or hashed-class assumptions.
@@ -134,7 +140,7 @@ Shared host authority, synchronization, P2P transport and media-seat policy
 remain unchanged. Actual fullscreen, chat/input isolation and overlay geometry
 still need inspection with the loaded candidate.
 
-## Identity, series anchor and partial catalogs
+## Identity, series anchor and catalog completeness
 
 `packages/protocol/src/prime-video-identity.ts` defines the strict identity:
 
@@ -169,14 +175,33 @@ malformed or absent anchor evidence suspends detailed series capture/catalog.
 Independently verified playing source identity can remain available. Selecting
 another season or grouping by translated title is not a fallback.
 
-Catalog snapshots remain **partial** and contain only observed entries from the
-selected season. Availability is proved by the actually playing episode, or by
-matching episode membership plus `self.isLaunched === true` and an enabled
-`a[data-testid="episodes-playbutton"][role="button"]` action with exact detail
-ID and `autoplay=1`. Responsive duplicate links deduplicate by identity.
-Membership or a self link alone is insufficient: unproved entries are omitted,
-rather than fabricated as available/unavailable. Other seasons are not fetched,
-and a partial snapshot never supplies an invented complete-series grid.
+The Task 8 follow-up loads the series catalog from observed season detail
+links after the existing eligible catalog attempt begins. It reads only strict
+same-origin canonical HTTPS detail URLs, without autoplay or page navigation.
+Requests retain provider credentials inside that origin, reject redirects, and
+are bounded by 100 seasons, 2,000 episodes, 8 MB per response, 32 MB total and a
+45-second loader deadline (50 seconds at the catalog client). Playback command
+deadlines are unchanged. Cancellation and source/context replacement discard
+stale work; a binding/context has at most one catalog attempt.
+
+Completeness requires every observed season, consistent full/compact mappings
+and season-1 anchor, exact unique episode membership/count, and no unexplained
+pagination. Availability uses allowlisted typed `Entitled` / `PLAY` / `PLAYBACK`
+Feature actions whose full GTI and canonical autoplay link match the episode,
+together with launched episode metadata. Raw playback envelopes, provider
+account data and surrounding action payloads never leave the provider page.
+SSR-disabled Play buttons are placeholders, so their state is not used as
+negative availability evidence. Display labels and translated titles do not
+establish identity.
+
+Only a fully verified series snapshot becomes **complete**. A failed, oversized,
+paginated, context-changed or ambiguous retrieval cannot invent totals or mark
+unknown episodes unavailable. The existing selected-season **partial** catalog
+remains the fallback; its positive availability proof is actual playback or
+matching launched membership plus an enabled exact provider Play link. The
+server's existing complete-catalog editor rule stays intact. Catalog entries
+are separate from personal progress: unseen episodes remain unplayed, and
+selecting them opens their exact episode URL with a zero-position intent.
 
 Artwork is separately validated as HTTPS `/images/` URLs on exactly
 `images-na.ssl-images-amazon.com` or `m.media-amazon.com`, with no credentials,
@@ -204,7 +229,27 @@ Current popup and website SSR/list/browse/session/options clients explicitly
 request provider version 3 and capacity version 3. Prime has independent popup
 query/cursor/cache/depth/search state alongside the three existing streams.
 The existing official SVG, provider filter and movie/anchored-series editing
-and resume flows are reused. Series copy states that the catalog is partial.
+and resume flows are reused. Incomplete-catalog copy directs the user to open the title with the extension;
+complete catalogs expose all verified seasons and episodes.
+
+## Full-series catalog follow-up evidence
+
+Authenticated read-only Upload season pages supplied 10, 7, 8 and 4 episodes
+(29 total) across four observed seasons without starting playback. Canonical
+season URLs without tracking query parameters returned the same evidence.
+The existing SQL fixture already verifies partial-to-complete admission and an
+unseen Prime episode in the editor. The website regression verifies an unplayed
+other-season episode with translated labels launches its exact source at zero
+without a progress write. Initial loaded acceptance exposed a missing-property
+case masked by fixture normalization: Prime supplies an empty ATF episode-list
+placeholder while BTF carries the actual complete list. The reviewed correction
+accepts absent/empty placeholders and still rejects malformed or orphaned
+counts, pagination and membership. Shape-faithful current-page/four-season
+evidence passes the parser, loader and actual MAIN/client bridge; covering
+Prime/coordinator tests pass 134 cases, with extension check and rebuilt narrow
+artifact validation. Live acceptance and staging delivery are recorded in
+[PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); fixture evidence alone
+is not a loaded-browser claim.
 
 ## Local evidence and remaining acceptance
 
@@ -220,7 +265,7 @@ The recorded automated runs are local evidence at their task revisions:
 | Final local integration | Staging Worker bundle dry-run passed; `pnpm dev:check` reviewed. Chrome rendered actual HistoryBrowser SSR/CSS with a synthetic empty library at widths 1470 and 360: SVG loaded, all five filter labels fit, no horizontal overflow and correct Prime selection. This is limited layout proof without authentication, live API/account data or editor acceptance. |
 | Staging artifact | Final narrow build and validation passed at `66ce7f85`, superseding the stale `5928aafa` artifact. One top-frame document-start Prime MAIN script, exact Prime host permission and emitted logo were verified; the popup references the SVG and its bytes match the canonical source. |
 
-Candidate ZIP: `artifacts/anidachi-extension-staging-66ce7f85.zip`.
+Baseline ZIP at Task 5: `artifacts/anidachi-extension-staging-66ce7f85.zip`.
 SHA-256: `afc652a2a1b149330bf2e0ef7dfb15f2b808b94de9b65703ffb2d31ecca6f403`.
 Loadable folder: `anidachi-extension-staging/`. These generated outputs are
 ignored local artifacts, not committed or published. The build reports the

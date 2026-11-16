@@ -261,3 +261,33 @@ separate gate until actually observed. Update provider notes and current state
 with exact evidence and limitations; refresh Graphify using the repository safe
 adapter and semantic skill workflow. Prepare a reviewable result, preserving
 experiments/Serena changes outside the feature. No production publication.
+
+## Task 8 — Full-series Prime history catalog follow-up
+
+Owner report on November 16: the library exposes only episodes already watched.
+Confirmed cause: the adapter emits selected-season partial snapshots, while the
+existing editor correctly admits unseen catalog rows only from a complete
+accepted snapshot. The server/protocol already support complete Prime catalogs;
+their source and progress safeguards remain unchanged.
+
+Implement a bounded provider-local loader of observed season detail links. Each
+response must prove its season, the same season-1 anchor, the same season set,
+exact episode membership/count and typed matching Feature PLAY actions. No
+provider playback payloads or credentials cross the normalized catalog bridge.
+Cancel stale fetches/results on source, context or lifecycle changes and retain
+existing owner/account/access/deletion/revision guards. Only a fully verified
+series may become complete; failed or ambiguous retrieval remains partial.
+
+Authenticated read-only evidence: Upload supplied four seasons with 10, 7, 8
+and 4 episodes through same-origin detail GETs, without starting playback.
+SSR-disabled buttons are placeholders; typed entitlement/PLAY metadata proves
+availability independently of language. No season/episode identity is generated
+from titles, numbering or a guest's watch history.
+
+Follow-up branch: `codex/prime-history-catalog`, based on staging `465f79a9`.
+Validate loader/bridge cancellation and completeness, existing editor support
+for unplayed cross-season launch, extension checks/tests and narrow artifact.
+Require loaded browser evidence that all four Upload seasons and 29 episodes
+appear while existing personal progress stays intact before claiming acceptance.
+No new SQL migration, Worker behavior, permissions or production promotion is
+planned. The inherited Graphify publication exception remains unchanged.

@@ -12,18 +12,30 @@ import {
 } from "./contract";
 import { object } from "./metadata";
 import { callPrime, inspectPrimeSdk, type PrimeSdk } from "./sdk";
+import { loadPrimeCatalog, primeCatalogContext } from "./catalog";
+import { readPrimeCatalogPage } from "./catalog-page";
 type Binding = { sdk: PrimeSdk; generation: string; snapshot: PrimeSnapshot };
-/** MAIN-world owner. No extension APIs, network requests, credentials or native seeking. */
+/** MAIN-world owner. Catalog I/O is limited to observed same-origin detail metadata. */
 export function startPrimeBridge(): () => void {
 	let navigating = false;
 	let stopped = false,
 		binding: Binding | null = null;
 	const pending = new Map<string, AbortController>();
 	const retired = new Set<string>();
+	let catalogAttempt: {
+		key: string;
+		proof: string;
+		settled: boolean;
+		controller: AbortController;
+		promise: ReturnType<typeof loadPrimeCatalog>;
+	} | null = null;
+	const catalogProof = () =>
+		JSON.stringify(readPrimeCatalogPage(document, location.origin));
 	const announce = () =>
 		document.dispatchEvent(new Event(PRIME_BINDING_CHANGED));
 	function invalidate(notify = true) {
 		if (!binding) return;
+		catalogAttempt?.controller.abort();
 		binding.sdk.video.removeAttribute(PRIME_BINDING);
 		binding = null;
 		if (notify) announce();
@@ -60,8 +72,19 @@ export function startPrimeBridge(): () => void {
 			invalidate();
 			return null;
 		}
+		if (
+			binding &&
+			primeCatalogContext(binding.snapshot) !== primeCatalogContext(parsed.data)
+		)
+			catalogAttempt?.controller.abort();
 		if (changed) invalidate(false);
 		binding = { sdk, generation, snapshot: parsed.data };
+		if (
+			catalogAttempt &&
+			!catalogAttempt.settled &&
+			catalogAttempt.proof !== catalogProof()
+		)
+			catalogAttempt.controller.abort();
 		if (changed) {
 			sdk.video.setAttribute(
 				PRIME_BINDING,
@@ -106,12 +129,52 @@ export function startPrimeBridge(): () => void {
 			if (request.action === "snapshot")
 				result = { ok: true, snapshot: initial.snapshot };
 			else if (request.action === "catalog") {
-				if (initial.snapshot.phase === "content" && initial.sdk.page.catalog)
-					result = {
-						ok: true,
-						snapshot: initial.snapshot,
-						catalog: initial.sdk.page.catalog,
+				if (initial.snapshot.phase === "content" && initial.sdk.page.catalog) {
+					const context = primeCatalogContext(initial.snapshot);
+					const key = `${initial.generation}:${context}`;
+					const proof = catalogProof();
+					const fresh = () => {
+						const value = current(request, initial);
+						return (
+							!!value &&
+							value.snapshot.phase === "content" &&
+							primeCatalogContext(value.snapshot) === context &&
+							catalogProof() === proof
+						);
 					};
+					if (catalogAttempt?.key !== key) {
+						catalogAttempt?.controller.abort();
+						const controller = new AbortController();
+						const cancel = () => controller.abort();
+						abort.signal.addEventListener("abort", cancel, { once: true });
+						const attempt = {
+							key,
+							proof,
+							settled: false,
+							controller,
+							promise: Promise.resolve(null) as ReturnType<
+								typeof loadPrimeCatalog
+							>,
+						};
+						catalogAttempt = attempt;
+						attempt.promise = loadPrimeCatalog(
+							initial.snapshot,
+							controller.signal,
+							fresh,
+						).finally(() => {
+							attempt.settled = true;
+							abort.signal.removeEventListener("abort", cancel);
+						});
+					}
+					if (catalogAttempt.proof !== proof) return;
+					const catalog = await catalogAttempt.promise;
+					if (!abort.signal.aborted && fresh())
+						result = {
+							ok: true,
+							snapshot: current(request, initial)!.snapshot,
+							catalog: catalog ?? initial.sdk.page.catalog,
+						};
+				}
 			} else {
 				// Yield once so same-turn cancellation/disposal can fence a queued request.
 				await delay(abort.signal);
@@ -189,6 +252,7 @@ export function startPrimeBridge(): () => void {
 	}
 	const navigate = () => {
 		navigating = true;
+		catalogAttempt?.controller.abort();
 		for (const abort of pending.values()) abort.abort();
 		pending.clear();
 		invalidate();
@@ -238,6 +302,7 @@ export function startPrimeBridge(): () => void {
 	function stop() {
 		if (stopped) return;
 		stopped = true;
+		catalogAttempt?.controller.abort();
 		clearInterval(timer);
 		document.removeEventListener(PRIME_NAVIGATING, navigate);
 		window.removeEventListener("message", listener);

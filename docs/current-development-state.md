@@ -7,7 +7,8 @@ Merged staging [PR #557](https://github.com/AniDachi/anidachi-LP/pull/557),
 contracts, additive SQL/server admission, the MAIN-world player adapter and
 popup/website history presentation. Scope is exact HTTPS `www.primevideo.com`
 detail URLs. Series history uses the verified season-1 compactGTI as an explicit
-anchor; catalogs remain partial. Current clients explicitly request provider and
+anchor. The baseline emits partial catalogs; the Task 8 follow-up described
+below adds verified full-series loading. Current clients explicitly request provider and
 capacity version 3, with a separate Prime 200-title bucket and exact v1/v2
 compatibility. Legacy `amazon`, pricing and shared media policy are unchanged.
 
@@ -39,21 +40,37 @@ confirm website Resume restored `625.824822` seconds and an invitation opened
 previously unwatched episode 5 and joined automatically. These are same-account
 checks; two independent accounts/devices for synchronization remain open.
 
-Task 7 locally fixes a separate native Create room failure: Prime can keep a
+Delivered staging [PR #561](https://github.com/AniDachi/anidachi-LP/pull/561)
+at `465f79a9` fixes a separate native Create room failure: Prime can keep a
 season URL in the address bar while playing an episode. Overlay creation reads
 the current adapter descriptor's source URL and fingerprint together after
 identity/session preparation. A Prime binding without a descriptor returns a
 retryable loading message; ordinary descriptor-less adapters retain the URL
 fallback. Source validation is unchanged. Regression tests cover the reported
 Fallout season/episode pair, native episode replacement during preparation and
-both fallback cases. Build, staging delivery and loaded-client acceptance for
-this follow-up remain open.
+both fallback cases. Build, staging CI and loaded Fallout S1 E4 creation passed;
+the persisted room source matched the playing episode and the test room was
+ended. The tested extension candidate has the same tree as the staging merge.
 The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
 records the bounded schema-first exception; final deployment receipts belong in
 the feature PR and controller report. Preserve Prime rows and epochs on rollback.
 Production promotion, Store publication and public support announcements remain
 outside this authorization. See the
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md).
+
+Task 8 on `codex/prime-history-catalog` addresses history showing only saved
+episodes. It adds bounded same-origin season metadata loading with strict
+series/episode identity, completeness and cancellation checks. Complete
+snapshots use the existing editor/server contract; personal progress remains
+separate. Live read-only Upload evidence covers four seasons and 29 episodes.
+No SQL migration or Worker behavior change is needed. The candidate passed
+independent review, extension checks and narrow artifact validation. Live
+acceptance caught an empty ATF placeholder rejected before the real BTF episode
+list was read; the reviewed correction retains strict validation of declared
+list/count/pagination evidence. Shape-faithful tests cover the real current page
+and all four seasons. Loaded acceptance and delivery receipts are tracked in
+[PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); see also the
+[provider notes](prime-video-adapter-notes.md#full-series-catalog-follow-up-evidence).
 
 ## Free20 production launch: November 7, 2026
 

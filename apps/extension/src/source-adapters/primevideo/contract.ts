@@ -5,6 +5,7 @@ import {
 	PrimeVideoHistoryIdentitySchema,
 	WatchCatalogLocaleContextSchema,
 	WatchCatalogSnapshotInputSchema,
+	WATCH_CATALOG_MAX_BYTES,
 } from "@anidachi/protocol";
 
 export const PRIME_REQUEST = "anidachi-primevideo-request-v1";
@@ -117,19 +118,24 @@ export const PrimeResultSchema = z.strictObject({
 	ok: z.boolean(),
 	snapshot: PrimeSnapshotSchema.nullable().optional(),
 	catalog: WatchCatalogSnapshotInputSchema.refine(
-		(c) => c.provider === "primevideo" && c.completeness === "partial",
+		(c) => c.provider === "primevideo",
 	).optional(),
 });
 export type PrimeResult = z.infer<typeof PrimeResultSchema>;
 /** Reject oversized/cyclic page payloads before schema traversal. */
-export function boundedMessage(value: unknown, maxNodes = 20000): boolean {
+export function boundedMessage(value: unknown, maxNodes = 60000): boolean {
 	let nodes = 0;
+	let bytes = 0;
 	const seen = new Set<object>();
 	const queue: unknown[] = [value];
 	while (queue.length) {
 		const item = queue.pop();
 		if (++nodes > maxNodes) return false;
-		if (typeof item === "string" && item.length > 4096) return false;
+		if (typeof item === "string") {
+			if (item.length > 4096) return false;
+			bytes += new TextEncoder().encode(item).byteLength;
+			if (bytes > WATCH_CATALOG_MAX_BYTES + 16_384) return false;
+		}
 		if (!item || typeof item !== "object") continue;
 		if (seen.has(item)) return false;
 		seen.add(item);
