@@ -1,3 +1,4 @@
+import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import { primeVideoFingerprint, primeVideoSourceUrl } from "./prime-video-identity";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "./limits";
@@ -143,11 +144,13 @@ function stableFingerprintHash(value: string): string {
 export const RoomSourceDescriptorSchema = z
   .strictObject({
     provider: RoomSourceProviderSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     sourceUrl: z.string().max(MAX_URL_CHARS).url(),
     canonicalUrl: z.string().max(MAX_URL_CHARS).url(),
     videoFingerprint: z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS),
   })
   .superRefine((source, context) => {
+    if (!primeNavigationMatches(source.primeNavigation, source.sourceUrl, source.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch",path:["primeNavigation"]});
     const canonical = canonicalizeRoomSourceUrl(source.sourceUrl, source.provider);
     if (!canonical.ok) {
       context.addIssue({

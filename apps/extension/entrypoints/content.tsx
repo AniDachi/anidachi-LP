@@ -1,3 +1,4 @@
+import { recoverPrimeLaunch } from "../src/prime-launch-client";
 import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
 import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
@@ -137,6 +138,17 @@ export function startContentLifecycle(
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
 
+  const mountWithLaunch = (adapter: VideoAdapter) => {
+    if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
+      void recoverPrimeLaunch(adapter).catch(() => false as const).then(recovered => {
+        if (disposed || manager.current !== adapter) return;
+        if (recovered === false) primeLaunch.dispose();
+        if (recovered && mounted) { mounted.dispose(); mounted = null; }
+        if (!mounted) mounted = dependencies.mount(adapter, recovered === false ? null : recovered ?? primeLaunch.handoff(adapter, location.href));
+      });
+    } else if (!mounted) mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
+  };
+
   const manager = new AdapterManager({
     detached(previous) {
       logDebug("content", "detach adapter", {
@@ -154,7 +166,7 @@ export function startContentLifecycle(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
+      mountWithLaunch(adapter);
     },
     relocated() {
       mounted?.relocate();
@@ -169,6 +181,7 @@ export function startContentLifecycle(
         video: videoDebugSnapshot(next.video),
       });
       mounted?.replaceAdapter(next);
+      mountWithLaunch(next);
     },
     suspended(previous) {
       logDebug("content", "suspend adapter", {

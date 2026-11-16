@@ -1,8 +1,10 @@
+import {samePrimeNavigation} from "@anidachi/protocol";
 import {
 	canonicalizeRoomSourceUrl,
 	isLegacyRoomSourceFingerprintAlias,
 	MAX_ROOM_ID_CHARS,
 	type RoomSourceDescriptor,
+ type PrimeNavigation,
 	RoomSourceDescriptorSchema,
 	type RoomSourcePersistenceAcknowledgement,
 	RoomSourcePersistenceAcknowledgementSchema,
@@ -34,6 +36,7 @@ export class RoomSourcePersistenceError extends Error {
 
 export type RoomSourceCreationColumns = {
 	source_provider: RoomSourceProvider | null;
+ prime_navigation?:PrimeNavigation;
 	source_url: string | null;
 	video_fingerprint: string | null;
 	source_generation: number | null;
@@ -41,13 +44,14 @@ export type RoomSourceCreationColumns = {
 
 export function roomSourceCreationColumns(input: {
 	sourceUrl?: unknown;
+ primeNavigation?:unknown;
 	sourceProvider?: unknown;
 	videoFingerprint?: unknown;
 }): RoomSourceCreationColumns {
 	const hasSourceInput =
 		input.sourceUrl !== undefined ||
 		input.sourceProvider !== undefined ||
-		input.videoFingerprint !== undefined;
+		input.videoFingerprint !== undefined || input.primeNavigation !== undefined;
 	if (!hasSourceInput) {
 		return {
 			source_provider: null,
@@ -87,8 +91,11 @@ export function roomSourceCreationColumns(input: {
 		);
 	}
 
+ const descriptor=RoomSourceDescriptorSchema.safeParse({...canonical.source,...(input.primeNavigation!==undefined?{primeNavigation:input.primeNavigation}:{})});
+ if(!descriptor.success)throw new RoomSourcePersistenceError("invalid","Invalid navigation");
 	return {
 		source_provider: canonical.source.provider,
+  ...(descriptor.data.primeNavigation?{prime_navigation:descriptor.data.primeNavigation}:{}),
 		source_url: canonical.source.sourceUrl,
 		video_fingerprint: canonical.source.videoFingerprint,
 		source_generation: 1,
@@ -97,6 +104,7 @@ export function roomSourceCreationColumns(input: {
 
 export type DurableRoomSourceRow = {
 	source_provider: unknown;
+ prime_navigation?:unknown;
 	source_url: unknown;
 	video_fingerprint: unknown;
 	source_generation: unknown;
@@ -154,6 +162,7 @@ export function deriveDurableRoomSource(
 	}
 	const parsed = RoomSourceDescriptorSchema.safeParse({
 		provider: row.source_provider,
+  ...(row.prime_navigation ? {primeNavigation:row.prime_navigation} : {}),
 		sourceUrl: row.source_url,
 		canonicalUrl: row.source_url,
 		videoFingerprint: row.video_fingerprint,
@@ -197,6 +206,7 @@ export function roomSourcePersistenceRpcArguments(
 	p_source_url: string;
 	p_video_fingerprint: string;
 	p_source_generation: number;
+ p_prime_navigation?:PrimeNavigation;
 } {
 	const parsed = RoomSourcePersistenceCallbackSchema.parse(callback);
 	return {
@@ -205,6 +215,7 @@ export function roomSourcePersistenceRpcArguments(
 		p_source_url: parsed.source.sourceUrl,
 		p_video_fingerprint: parsed.source.videoFingerprint,
 		p_source_generation: parsed.sourceGeneration,
+  ...(parsed.source.primeNavigation ? {p_prime_navigation:parsed.source.primeNavigation} : {}),
 	};
 }
 
@@ -345,6 +356,7 @@ function acknowledgePersistedEndedSource(
 	// must never acknowledge a generation the database has not actually saved.
 	const source = RoomSourceDescriptorSchema.safeParse({
 		provider: proof.source_provider,
+  ...(proof.prime_navigation ? {primeNavigation:proof.prime_navigation} : {}),
 		sourceUrl: proof.source_url,
 		canonicalUrl: proof.source_url,
 		videoFingerprint: proof.video_fingerprint,
@@ -353,7 +365,8 @@ function acknowledgePersistedEndedSource(
 	if (proof.source_generation === callback.sourceGeneration &&
 		(source.data.sourceUrl !== callback.source.sourceUrl ||
 		 source.data.canonicalUrl !== callback.source.canonicalUrl ||
-		 source.data.videoFingerprint !== callback.source.videoFingerprint)) return null;
+		 source.data.videoFingerprint !== callback.source.videoFingerprint ||
+   (callback.source.primeNavigation !== undefined && !samePrimeNavigation(source.data.primeNavigation,callback.source.primeNavigation)))) return null;
 	return {
 		ok: true,
 		outcome: proof.source_generation === callback.sourceGeneration ? "persisted" : "stale",

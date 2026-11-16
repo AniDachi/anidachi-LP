@@ -152,3 +152,15 @@ test("Prime movie identity cannot be relabeled, mixed or point at another episod
 			{ code: "INVALID_REQUEST" },
 		);
 });
+
+test('durable navigation survives real history builders but legacy HTTP projection strips it', async () => {
+ const {primeNavigationResponse}=await import('./prime-navigation-response');
+ const e=parseWatchProgressEventV3(event(true));
+ const navigation={contentId:'AAAAAAAAAAAAAAAAAAAAAAAAAA',routes:[{url:'https://www.amazon.com/gp/video/detail/B0FX2ZCPFK',observedAt:'2026-11-16T00:00:00Z'}]};
+ const row={user_id:owner,provider:e.provider,title_key:e.titleKey,episode_key:e.episodeKey,item_kind:e.itemKind,title:e.title,artwork_url:e.artworkUrl,episode_title:e.episodeTitle,season_key:e.seasonKey,season_title:e.seasonTitle,season_number:e.seasonNumber,episode_number:e.episodeNumber,source_url:e.sourceUrl,prime_navigation:navigation,current_time_seconds:e.currentTime,duration:e.duration,progress:e.progress,completed_at:null,latest_session_id:null,observed_at:now,server_order:1,history_generation:1};
+ const result=buildWatchHistoryV3Response({userId:owner,accountGeneration:1,progressRows:[row],sessions:[],limit:20,generatedAt:new Date(now)});
+ assert.deepEqual(result.items[0]?.primeNavigation,navigation);
+ assert.equal(primeNavigationResponse({headers:new Headers()},result).items[0]?.primeNavigation,undefined);
+ assert.deepEqual(primeNavigationResponse({headers:new Headers({'x-anidachi-prime-navigation':'1'})},result).items[0]?.primeNavigation,navigation);
+ assert.throws(()=>buildWatchHistoryV3Response({userId:owner,accountGeneration:1,progressRows:[{...row,prime_navigation:{...navigation,contentId:'BBBBBBBBBBBBBBBBBBBBBBBBBB'}}],sessions:[],limit:20,generatedAt:new Date(now)}));
+});

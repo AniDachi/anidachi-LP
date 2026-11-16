@@ -261,3 +261,9 @@ it.each([
 		),
 	).toBeNull();
 });
+
+it('retains the exact public-record ASIN route for a canonical movie, never its address alias', () => {
+ page(amazon);
+ const result = readPrimePage(document, {titleId:'amzn1.dv.gti.3e561ae5-0185-4a0d-a821-0163dadcf753',title:'Hunting Season',type:'MOVIE'}, amazon.territory, amazon.locale);
+ expect((result?.metadata as any)?.primeNavigation).toEqual({contentId:'0IUGS56V361WRU60PCC5XH5D8Z',routes:[{url:'https://www.amazon.com/gp/video/detail/B0FX2ZCPFK',observedAt:expect.any(String)}]});
+});

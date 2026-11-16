@@ -1,3 +1,4 @@
+import {PrimeNavigationSchema,primeNavigationMatches,type PrimeNavigation} from "@anidachi/protocol";
 import { isPrimeVideoArtworkUrl } from "./prime-video-artwork";
 import { isNetflixArtworkUrl } from "./netflix-artwork";
 import { withPersonalHistoryRead, personalHistoryError } from "./personal-history-policy";
@@ -67,6 +68,7 @@ export type WatchHistoryProgressRow = {
   season_number: number | null;
   episode_number: number | null;
   source_url: string;
+  prime_navigation?:PrimeNavigation|null;
   current_time_seconds: number;
   duration: number;
   progress: number;
@@ -566,6 +568,7 @@ export function buildWatchHistoryV3Response(params: {
         itemKind: latest.item_kind,
         title: catalog.title ?? latest.title,
         sourceUrl: latest.source_url,
+        ...(latest.prime_navigation?{primeNavigation:latest.prime_navigation}:{}),
         artworkUrl: latest.artwork_url,
         catalogState: catalog.state,
         aggregate: catalog.aggregate ?? {
@@ -1607,6 +1610,7 @@ function mapProgressRowToEpisode(
     seasonNumber: row.season_number,
     episodeNumber: row.episode_number,
     sourceUrl: row.source_url,
+    ...(row.prime_navigation?{primeNavigation:row.prime_navigation}:{}),
     currentTime: row.current_time_seconds,
     duration: row.duration,
     progress: row.progress,
@@ -1672,7 +1676,7 @@ function parseHistorySessionRecord(value: unknown): WatchHistorySessionRecord {
 
 function parseProgressRow(value: unknown): WatchHistoryProgressRow {
   if (!isRecord(value)) throw invalidDatabaseResponse();
-  const row = value;
+  const row: Record<string, unknown> = {...value,prime_navigation:value.prime_navigation??null};
   if (
     !hasOnlyKeys(row, [
       "user_id",
@@ -1688,6 +1692,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
       "season_number",
       "episode_number",
       "source_url",
+      "prime_navigation",
       "current_time_seconds",
       "duration",
       "progress",
@@ -1724,6 +1729,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
   ) {
     throw invalidDatabaseResponse();
   }
+  if(row.prime_navigation!==null && row.prime_navigation!==undefined){const parsed=PrimeNavigationSchema.safeParse(row.prime_navigation);if(!parsed.success||!primeNavigationMatches(parsed.data,String(row.source_url),String(row.provider)))throw invalidDatabaseResponse();}
   return row as WatchHistoryProgressRow;
 }
 

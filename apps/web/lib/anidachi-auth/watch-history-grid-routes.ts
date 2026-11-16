@@ -1,3 +1,4 @@
+import { primeNavigationResponse } from "./prime-navigation-response";
 import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
 import {
 	getAccountAccessSession,
@@ -48,7 +49,7 @@ export function createWatchHistoryGridGet(
 					"Invalid catalog query",
 				);
 			return NextResponse.json(
-				await dependencies.read({ userId: session.userId, input: parsed.data }),
+				primeNavigationResponse(request,await dependencies.read({ userId: session.userId, input: parsed.data })),
 				{ headers },
 			);
 		} catch (error) {

@@ -1,3 +1,4 @@
+import { primeNavigationResponse } from "./prime-navigation-response";
 import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
 import {
 	getAccountAccessSession,
@@ -59,10 +60,10 @@ export function createWatchHistoryBrowseHandler(
 			}
 			const query = parseWatchHistoryBrowseQuery(input, scope);
 			return NextResponse.json(
-				await dependencies.browse(
+				primeNavigationResponse(request,await dependencies.browse(
 					{ userId: session.userId, input: query },
 					scope,
-				),
+				)),
 				{ headers },
 			);
 		} catch (error) {

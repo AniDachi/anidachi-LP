@@ -1,3 +1,4 @@
+import {primeNavigationResponse} from "./prime-navigation-response";
 import {
   WatchHistoryEditorQuerySchema, WatchHistoryEditRequestSchema,
   WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema,
@@ -77,7 +78,7 @@ export function createWatchHistoryEditorHandlers(deps: {
       const result = WatchHistoryEditorResponseSchema.safeParse(await store.read(owner, parsed.data));
       if (!result.success || result.data.meta.ownerUserId !== owner || result.data.meta.accountGeneration !== parsed.data.accountGeneration || result.data.provider !== parsed.data.provider || result.data.titleKey !== parsed.data.titleKey)
         throw fail(502, "INVALID_RESPONSE", "Could not load the title's progress.");
-      return NextResponse.json(result.data, { headers: HISTORY_PRIVATE_HEADERS });
+      return NextResponse.json(primeNavigationResponse(request,result.data), { headers: HISTORY_PRIVATE_HEADERS });
     } catch (error) {
       const failure = historyEditorError(error);
       return NextResponse.json({ error: failure.message, code: failure.code }, { status: failure.status, headers: HISTORY_PRIVATE_HEADERS });

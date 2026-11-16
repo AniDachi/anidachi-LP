@@ -1438,7 +1438,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     try {
       response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
         ...init,
-        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-history-owner": session.user.id },
+        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id },
       });
     } catch {
       return { ok: false, error: { ok: false, status: "retryable" }, session };
@@ -1471,7 +1471,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           headers: {
             Authorization: `Bearer ${refreshed.accessToken}`,
             "Content-Type": "application/json",
-            "x-anidachi-history-owner": session.user.id,
+            "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id,
           },
         });
       } catch {

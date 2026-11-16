@@ -38,7 +38,7 @@ export type PublicRecord = {
 	sequence: number | null;
 	launched: boolean;
 };
-type Episode = { id: string; title: string; number: number };
+type Episode = { id: string; title: string; number: number; linkUrl: string };
 export type PrimePage = {
 	contentId: string;
 	metadata: PrimeMetadata;
@@ -314,6 +314,7 @@ export function readPrimePage(
 			return null;
 		const metadata = PrimeMetadataSchema.safeParse({
 			identity: { kind: "movie", providerMovieId: current.compact },
+   primeNavigation: primeObservedNavigation(current.compact,current.linkUrl),
 			title,
 			episodeTitle: title,
 			seasonTitle: null,
@@ -453,6 +454,7 @@ export function readPrimePage(
 			}
 		: null;
 	const metadata = PrimeMetadataSchema.safeParse({
+  primeNavigation: primeObservedNavigation(current.compact,current.linkUrl),
 		identity,
 		title: seriesTitle,
 		episodeTitle: title,
@@ -505,7 +507,7 @@ export function readPrimePage(
 			episodeTitle &&
 			item.titleType === "episode"
 		)
-			episodes.push({ id: row.compact, title: episodeTitle, number });
+			episodes.push({ id: row.compact, title: episodeTitle, number, linkUrl:row.linkUrl });
 	}
 	const catalog =
 		anchor && context
@@ -540,6 +542,7 @@ export function readPrimePage(
 										original: true,
 										order: 0,
 										sourceUrl: primeVideoSourceUrl(episode.id),
+          primeNavigation: primeObservedNavigation(episode.id,episode.linkUrl),
 									},
 								],
 							})),
@@ -635,4 +638,14 @@ export function primeDocumentRouteId(
 	} catch {
 		return null;
 	}
+}
+
+// Stable for repeated inspections of the same exact public mapping. Observation
+// time is metadata, not a source generation or playback authority.
+const observationTimes = new Map<string,string>();
+export function primeObservedNavigation(contentId:string,url:string) {
+ if(url===primeVideoSourceUrl(contentId))return undefined;
+ const key=JSON.stringify([contentId,url]);let observedAt=observationTimes.get(key);
+ if(!observedAt){observedAt=new Date().toISOString();if(observationTimes.size>=10000)observationTimes.delete(observationTimes.keys().next().value!);observationTimes.set(key,observedAt);}
+ return {contentId,routes:[{url,observedAt}]};
 }

@@ -1,3 +1,4 @@
+import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import { HostingTimeEventSchema, LegacyHostingTimeEventSchema } from "./hosting-time";
 import {
@@ -135,6 +136,7 @@ export const WatchSourceProviderSchema = z.enum([
 
 export const WatchSourceDescriptorSchema = z.object({
   provider: WatchSourceProviderSchema,
+  primeNavigation: PrimeNavigationSchema.optional(),
   sourceUrl: UrlSchema,
   canonicalUrl: UrlSchema,
   videoFingerprint: VideoFingerprintSchema,
@@ -146,6 +148,7 @@ export const WatchSourceDescriptorSchema = z.object({
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
 }).superRefine((source, context) => {
+  if (!primeNavigationMatches(source.primeNavigation,source.sourceUrl,source.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
   const hasNetflixSource = hasNetflixHostname(source.sourceUrl) ||
     hasNetflixHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("netflix|");
   const hasPrimeSource = hasPrimeVideoHostname(source.sourceUrl) ||

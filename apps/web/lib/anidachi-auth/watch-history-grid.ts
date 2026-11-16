@@ -68,7 +68,7 @@ export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 		const result = await db()
 			.from("watch_episode_progress")
 			.select(
-				"user_id,history_generation,provider,title_key,episode_key,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time_seconds,duration,progress,completed_at,observed_at",
+				"user_id,history_generation,provider,title_key,episode_key,episode_title,season_key,season_title,season_number,episode_number,source_url,prime_navigation,current_time_seconds,duration,progress,completed_at,observed_at",
 			)
 			.eq("user_id", owner)
 			.eq("history_generation", generation)
@@ -307,6 +307,7 @@ export async function readWatchHistoryGrid(params: {
 					seasonNumber: progress.season_number,
 					episodeNumber: progress.episode_number,
 					sourceUrl: progress.source_url,
+     ...(progress.prime_navigation?{primeNavigation:progress.prime_navigation}:{}),
 					currentTime: progress.current_time_seconds,
 					duration: progress.duration,
 					progress: progress.progress,
@@ -362,6 +363,7 @@ export async function readWatchHistoryGrid(params: {
 					(!episode.releasedAt ||
 						Date.parse(episode.releasedAt) <= now.getTime()),
 				sourceUrl: variant.sourceUrl,
+    ...(variant.primeNavigation?{primeNavigation:variant.primeNavigation}:{}),
 				// Catalog launch choice must not rewrite the saved Resume observation.
 				history,
 			};

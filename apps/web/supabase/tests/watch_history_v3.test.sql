@@ -418,6 +418,7 @@ select is(
     'item_kind',
     'latest_session_id',
     'observed_at',
+    'prime_navigation',
     'progress',
     'provider',
     'season_key',

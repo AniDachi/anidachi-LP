@@ -1,3 +1,4 @@
+import {PrimeNavigationSchema,primeNavigationMatches} from "./prime-video-navigation";
 import { z } from "zod";
 import { WatchHistoryResponseMetaSchema } from "./watch-history";
 
@@ -32,6 +33,7 @@ export const WatchHistoryEditorEpisodeSchema = z.strictObject({
   seasonKey: Key.nullable(), seasonTitle: z.string().max(300).nullable(),
   seasonNumber: z.number().int().nonnegative().nullable(),
   seasonOrder: z.number().int().nonnegative(), order: z.number().finite().nonnegative(),
+  primeNavigation:PrimeNavigationSchema.optional(),
   sourceUrl: z.url().max(2048), available: z.boolean(), watched: z.boolean(),
   currentTime: z.number().finite().nonnegative(), duration: z.number().finite().nonnegative(),
   progress: z.number().finite().min(0).max(1),
@@ -46,7 +48,7 @@ export const WatchHistoryEditorResponseSchema = z.strictObject({
   if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]))
     ctx.addIssue({ code: "custom", message: "Editor title must match provider" });
   for (const episode of value.episodes) {
-    if (!historyEpisodeSourceMatches(value.provider, episode) ||
+    if (!primeNavigationMatches(episode.primeNavigation,episode.sourceUrl,value.provider) || !historyEpisodeSourceMatches(value.provider, episode) ||
       (value.provider === "youtube" && !/^[\w-]{11}$/.test(new URL(episode.sourceUrl).searchParams.get("v") ?? "")) ||
       ((value.provider === "netflix" || value.provider === "primevideo") && (value.titleKey.startsWith(`${value.provider}:movie:`)
         ? episode.episodeKey !== value.titleKey || episode.seasonTitle !== null || episode.seasonNumber !== null || episode.episodeNumber !== null

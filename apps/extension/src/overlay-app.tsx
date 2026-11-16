@@ -4843,6 +4843,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				}
 				created = await createRoom(activeAccessToken, preparedRoomSession, {
 					sourceUrl: source?.sourceUrl ?? buildCurrentSourceUrlForInvite(),
+     ...(source?.primeNavigation ? {primeNavigation:source.primeNavigation} : {}),
 					videoFingerprint: source?.videoFingerprint ?? adapter.getFingerprint(),
 					title: adapter.getTitle() ?? document.title,
 					clientRequestId: createRequestIdRef.current,

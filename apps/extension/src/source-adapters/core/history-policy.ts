@@ -4,6 +4,7 @@ import type { VideoAdapter } from "./types";
 
 export type HistoryObservation = {
   identityPending?: WatchHistoryLocalEvent["identityPending"];
+  primeNavigation?: WatchHistoryLocalEvent["primeNavigation"];
   primevideoIdentity?: WatchHistoryLocalEvent["primevideoIdentity"];
   netflixIdentity?: WatchHistoryLocalEvent["netflixIdentity"];
   crunchyrollIdentity?: WatchHistoryLocalEvent["crunchyrollIdentity"];

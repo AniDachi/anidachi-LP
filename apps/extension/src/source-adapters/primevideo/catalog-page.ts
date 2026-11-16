@@ -1,5 +1,5 @@
 import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
-import { primePublicRecord } from "./metadata";
+import { primePublicRecord, primeObservedNavigation } from "./metadata";
 import {
 	PrimeVideoProviderIdSchema,
 	primeVideoSourceUrl,
@@ -72,6 +72,7 @@ function parsePage(
 			number: number | null;
 			launched: boolean;
 			linkToken: string;
+   linkUrl:string;
 			aliases: string[];
 		}
 	>();
@@ -98,6 +99,7 @@ function parsePage(
 				number: parsed.sequence,
 				launched: parsed.launched,
 				linkToken: parsed.linkToken,
+    linkUrl:parsed.linkUrl,
 				aliases: parsed.aliases,
 			};
 			const prior = records.get(parsed.id);
@@ -105,6 +107,7 @@ function parsePage(
 				prior &&
 				(prior.compact !== record.compact ||
 					prior.type !== record.type ||
+     prior.linkUrl !== record.linkUrl ||
 					prior.number !== record.number ||
 					prior.launched !== record.launched)
 			)
@@ -389,6 +392,7 @@ function parsePage(
 					original: true,
 					order: 0,
 					sourceUrl: primeVideoSourceUrl(record.compact),
+     primeNavigation:primeObservedNavigation(record.compact,record.linkUrl),
 				},
 			],
 		});
