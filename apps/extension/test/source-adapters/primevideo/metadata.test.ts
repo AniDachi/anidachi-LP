@@ -309,3 +309,13 @@ it("admits regional metadata through SDK, binding and provider definition across
 		JSON.stringify(f.data).replaceAll("/detail/", "/region/na/detail/");
 	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.second);
 });
+
+it("keeps playback but suspends history when a malformed self alias contradicts the season-1 compact link", () => {
+	const f = fixture();
+	Object.assign(f.data.init.preparations.body.atf.state.self, {
+		B012345678: { link: `/detail/${ids.anchor}` },
+	});
+	f.write();
+	expect(inspectPrimeSdk()?.page.contentId).toBe(ids.first);
+	expect(inspectPrimeSdk()?.page.metadata.identity).toBeNull();
+});

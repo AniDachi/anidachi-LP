@@ -1,3 +1,5 @@
+import { createPrimeLaunchCapture } from "../../../src/prime-launch-capture";
+import type { VideoAdapter } from "../../../src/source-adapters/core/types";
 import { afterEach, expect, it } from "vitest";
 import amazon from "./amazon-movie-public.json";
 import sor from "./regional-sor-public.json";
@@ -175,5 +177,87 @@ it("invalidates an earlier valid ASIN mapping when another public state contradi
 	};
 	expect(
 		readPrimePage(document, sdk, amazon.territory, amazon.locale),
+	).toBeNull();
+});
+
+it.each([
+	[true, false],
+	[false, false],
+	[true, true],
+	[false, true],
+])("drops an unresolved ASIN launch on unrelated SPA source change (observe=%s, retainHash=%s)", (observe, retainHash) => {
+	const initial =
+		"https://www.amazon.com/gp/video/detail/B000000001#anidachiRoom=old-movie-room";
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(initial),
+	});
+	const capture = createPrimeLaunchCapture(initial);
+	page(amazon);
+	if (retainHash)
+		Object.defineProperty(window, "location", {
+			configurable: true,
+			value: new URL(`${amazon.url}#anidachiRoom=old-movie-room`),
+		});
+	if (observe) capture.observe(location.href);
+	const adapter = {
+		provider: "primevideo",
+		getFingerprint: () => "primevideo|detail/0IUGS56V361WRU60PCC5XH5D8Z",
+	} as VideoAdapter;
+	expect(capture.handoff(adapter, location.href)).toBeNull();
+});
+it("retains a deferred ASIN transition only with explicit old/new alias membership", () => {
+	const initial = `${amazon.canonical}#anidachiRoom=same-movie-room`;
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(initial),
+	});
+	const capture = createPrimeLaunchCapture(initial);
+	page(amazon);
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(
+			"https://www.amazon.com/gp/video/detail/0IUGS56V361WRU60PCC5XH5D8Z",
+		),
+	});
+	const adapter = {
+		provider: "primevideo",
+		getFingerprint: () => "primevideo|detail/0IUGS56V361WRU60PCC5XH5D8Z",
+	} as VideoAdapter;
+	expect(
+		capture
+			.handoff(adapter, location.href)
+			?.readRoom(location.href, adapter.getFingerprint()),
+	).toBe("same-movie-room");
+});
+it.each([
+	"key",
+	"link",
+])("rejects earlier malformed ASIN %s alias before its later valid mapping", (mode) => {
+	page(amazon);
+	const data = structuredClone(amazon.hydration);
+	const original = data.init.preparations.body.atf.state.self.B0FX2ZCPFK;
+	delete (data.init.preparations.body.atf.state.self as Record<string, unknown>)
+		.B0FX2ZCPFK;
+	Object.assign(data.init.preparations.body.atf.state.self, {
+		[mode === "key" ? "B0FX2ZCPFK" : "B099999999"]: {
+			link:
+				mode === "key"
+					? "https://evil.example/gp/video/detail/B0FX2ZCPFK"
+					: "/gp/video/detail/B0FX2ZCPFK",
+		},
+	});
+	Object.assign(data.init.preparations.body.btf.state.self, {
+		B0FX2ZCPFK: original,
+	});
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(data);
+	expect(
+		readPrimePage(
+			document,
+			{ titleId: original.gti, title: "Hunting Season", type: "MOVIE" },
+			amazon.territory,
+			amazon.locale,
+		),
 	).toBeNull();
 });

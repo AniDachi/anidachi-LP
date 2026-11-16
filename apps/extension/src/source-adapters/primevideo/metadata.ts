@@ -122,6 +122,7 @@ function seriesAnchor(
 					: null;
 		if (
 			!compact ||
+			invalidRecords.has(compact) ||
 			(confirmed &&
 				(confirmed.full !== candidate.seasonId ||
 					confirmed.compact !== compact))
@@ -183,9 +184,15 @@ export function readPrimePage(
 						prior.type !== parsed.type ||
 						prior.sequence !== parsed.sequence))
 			) {
-				const claimed = object(value).gti;
+				const item = object(value);
+				const claimed = item.gti;
+				const observedLink = primeObservedLink(item.link, origin);
+				const linkAlias = observedLink
+					? parsePrimePageUrl(observedLink)?.token
+					: null;
 				const invalidIds = new Set([
 					key,
+					...(linkAlias ? [linkAlias] : []),
 					...(fullId(claimed) ? [claimed] : []),
 					...[...records.values()]
 						.filter((row) => primeRouteMatches(key, row))
@@ -197,11 +204,19 @@ export function readPrimePage(
 				}
 				continue;
 			}
-			if (!invalidRecords.has(parsed.id)) {
+			if (
+				![parsed.id, parsed.compact, ...parsed.aliases].some((alias) =>
+					invalidRecords.has(alias),
+				)
+			) {
 				parsed.aliases = [
 					...new Set([...(prior?.aliases ?? []), ...parsed.aliases]),
 				];
 				records.set(parsed.id, parsed);
+			} else {
+				// Once an alias is contradicted, later full/compact aliases cannot revive it.
+				for (const alias of [parsed.id, parsed.compact, ...parsed.aliases])
+					invalidRecords.add(alias);
 			}
 		}
 		const detail = object(state.detail);
@@ -211,6 +226,17 @@ export function readPrimePage(
 			for (const [key, value] of entries) details.set(key, object(value));
 		}
 	}
+	// A malformed alias can precede or follow its otherwise valid self record.
+	// Resolve tombstones against the final mapping rather than relying on state order.
+	for (const [id, record] of records)
+		if (
+			[id, record.compact, ...record.aliases].some((alias) =>
+				invalidRecords.has(alias),
+			)
+		) {
+			invalidRecords.add(id);
+			records.delete(id);
+		}
 	// Resolve public collection keys only through the verified full/compact/ASIN mapping.
 	const resolve = (key: unknown) => {
 		if (typeof key !== "string") return null;
@@ -580,7 +606,14 @@ export function primeDocumentRouteId(
 			: null;
 		if (canonicalHref && !canonicalLink) return null;
 		const canonical = canonicalLink ? parsePrimePageUrl(canonicalLink) : null;
-		if (!matches.length && route.token.length === 10 && canonical)
+		// Only the live document route owns its canonical-tag alias proof. An old
+		// unknown ASIN must never borrow a new SPA document's canonical identity.
+		if (
+			!matches.length &&
+			route.token === liveRoute.token &&
+			route.token.length === 10 &&
+			canonical
+		)
 			matches = matching(canonical.token);
 		if (
 			matches.length !== 1 ||
@@ -590,6 +623,10 @@ export function primeDocumentRouteId(
 			)
 		)
 			return null;
+		if (route.token !== liveRoute.token) {
+			const live = matching(liveRoute.token);
+			if (live.length !== 1 || live[0]?.id !== matches[0]?.id) return null;
+		}
 		if (canonical) {
 			const proof = matching(canonical.token);
 			if (proof.length !== 1 || proof[0]!.id !== matches[0]!.id) return null;

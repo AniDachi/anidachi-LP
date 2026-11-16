@@ -88,7 +88,7 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 	let launch = readLaunch(href, now);
 	let pendingHref: string | null =
 		!launch && parsePrimePageUrl(href) && signature(href) ? href : null;
-	let lastSignature = launch ? signature(href) : null;
+	let lastSignature = launch || pendingHref ? signature(href) : null;
 	let handed = false;
 	let roomOwner: string | null | undefined;
 	const dispose = () => {
@@ -107,7 +107,16 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 				!initial ||
 				!current ||
 				initial.url.origin !== current.url.origin ||
-				(initial.token !== current.token && source(pendingHref).ok === false)
+				(initial.token !== current.token &&
+					!(() => {
+						const previous = source(pendingHref),
+							next = source(currentHref);
+						return (
+							previous.ok &&
+							next.ok &&
+							previous.source.sourceUrl === next.source.sourceUrl
+						);
+					})())
 			)
 				pendingHref = null;
 		}
@@ -186,6 +195,7 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 			currentHref: string,
 		): PrimeLaunchHandoff | null {
 			if (handed) return null;
+			observe(currentHref);
 			if (!launch && pendingHref) {
 				launch = readLaunch(pendingHref, now);
 				if (launch) lastSignature = signature(pendingHref);
