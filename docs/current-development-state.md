@@ -109,10 +109,12 @@ bounded observed navigation hints, selecting the recipient's marketplace with
 explicit recovery when no route is known, and retaining intent through full
 redirects. It includes additive nullable storage, versioned server reads with
 unchanged legacy RPC/stored JSON shapes, explicit history-read opt-in, a Prime
-invitation launch step and a shared extension resolver. Final review
-and staging delivery are pending; the existing `49f86b06` artifact does not
-include this follow-up. See the provider notes and active plan for scope;
-staging migration/runtime/artifact receipts will be recorded after verification.
+invitation launch step and a shared extension resolver. Independent source/fix
+reviews, 771 SQL assertions and frozen legacy Web/protocol replay passed.
+Delivery and artifact receipts are tracked in
+[PR #563](https://github.com/AniDachi/anidachi-LP/pull/563); the existing `49f86b06`
+artifact does not include this follow-up. Owner-led regional/two-account
+acceptance remains open. See the provider notes and active plan for scope.
 
 ## Free20 production launch: November 7, 2026
 

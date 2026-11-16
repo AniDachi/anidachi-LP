@@ -105,9 +105,11 @@ establish a new source generation.
 
 Delivery order is additive staging schema, compatible Web/Worker, then the new
 extension artifact. Runtime rollback retains the nullable columns and history
-rows. Task 11 is under final verification; the previous `49f86b06` ZIP does not
-contain this behavior. Loaded regional/two-account acceptance remains separate
-from source, SQL and isolated UI verification.
+rows. Task 11's source and fix reviews passed, together with 771 SQL assertions
+and replay through the frozen pre-task Web/protocol code. Delivery and artifact
+receipts are recorded in [PR #563](https://github.com/AniDachi/anidachi-LP/pull/563).
+The previous `49f86b06` ZIP does not contain this behavior. Loaded regional and
+two-account acceptance remains separate from these checks.
 
 ## Runtime ownership and safe playback
 
