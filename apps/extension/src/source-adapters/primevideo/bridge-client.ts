@@ -6,6 +6,7 @@ import {
 	type PrimeRequest,
 	type PrimeResult,
 } from "./contract";
+import { PRIME_CATALOG_CLIENT_TIMEOUT } from "./catalog";
 export function runPrimeCommand(
 	input: Omit<PrimeRequest, "id" | "source">,
 	signal?: AbortSignal,
@@ -46,6 +47,7 @@ export function runPrimeCommand(
 			if (!parsedResult.success) return;
 			const result = parsedResult.data,
 				snapshot = result.snapshot;
+			const identity = snapshot?.metadata.identity;
 			if (
 				result.ok &&
 				(!snapshot ||
@@ -59,12 +61,38 @@ export function runPrimeCommand(
 					!snapshot ||
 					snapshot.metadata.identity?.kind !== "episode" ||
 					result.catalog.providerSeriesId !==
-						snapshot.metadata.identity.seriesAnchorSeasonId)
+						snapshot.metadata.identity.seriesAnchorSeasonId ||
+					JSON.stringify([
+						result.catalog.context.region,
+						result.catalog.context.requestedLocale,
+						result.catalog.context.audioLocale,
+						result.catalog.context.subtitleLocales,
+					]) !==
+						JSON.stringify([
+							snapshot.metadata.context?.region,
+							snapshot.metadata.context?.requestedLocale,
+							snapshot.metadata.context?.audioLocale,
+							snapshot.metadata.context?.subtitleLocales,
+						]) ||
+					!result.catalog.seasons.some(
+						(season) =>
+							season.providerSeasonIdentifier ===
+								(identity?.kind === "episode"
+									? identity.providerSeasonIdentifier
+									: null) &&
+							season.episodes.some(
+								(episode) =>
+									episode.providerEpisodeIdentifier === snapshot.contentId,
+							),
+					))
 			)
 				return;
 			finish(result);
 		};
-		const timer = setTimeout(abort, 3500);
+		const timer = setTimeout(
+			abort,
+			input.action === "catalog" ? PRIME_CATALOG_CLIENT_TIMEOUT : 3500,
+		);
 		window.addEventListener("message", listener);
 		signal?.addEventListener("abort", abort, { once: true });
 		window.postMessage(request, location.origin);
