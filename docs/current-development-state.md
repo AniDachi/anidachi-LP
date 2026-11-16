@@ -1,5 +1,14 @@
 # Current Development State
 
+## Prime capsule detection follow-up
+
+Based on delivered staging `1443ae27`, `codex/prime-capsule-detection` closes a
+confirmed Back/Forward-cache lifecycle gap and exercises delayed player mount
+on all eight existing Prime/Amazon domain families, including subdomains and
+regional/language routes. Permissions, shared contracts and backend remain
+unchanged. See the [provider notes](prime-video-adapter-notes.md#capsule-detection-and-cached-page-return).
+Authenticated regional/two-account acceptance remains owner-led.
+
 ## Prime Video staging baseline and launch follow-up: November 16, 2026
 
 Merged staging [PR #557](https://github.com/AniDachi/anidachi-LP/pull/557),
