@@ -13,7 +13,7 @@ const Key = z.string().trim().min(1).max(220);
 export const WATCH_HISTORY_GRID_PAGE_SIZE = 50;
 
 export const WatchHistoryGridQuerySchema = z.strictObject({
-	provider: z.enum(["crunchyroll", "netflix"]),
+	provider: z.enum(["crunchyroll", "netflix", "primevideo"]),
 	titleKey: Key,
 	seasonKey: Key.optional(),
 	limit: z
@@ -53,7 +53,7 @@ export const WatchHistoryGridEpisodeSchema = z.strictObject({
 	sourceUrl: z
 		.string()
 		.max(2048)
-		.regex(/^https:\/\/www\.(?:crunchyroll\.com\/watch\/[A-Za-z0-9_-]+|netflix\.com\/watch\/[1-9][0-9]{0,19})$/),
+		.regex(/^https:\/\/www\.(?:crunchyroll\.com\/watch\/[A-Za-z0-9_-]+|netflix\.com\/watch\/[1-9][0-9]{0,19}|primevideo\.com\/detail\/[A-Z0-9]{26})$/),
 	history: WatchHistoryEpisodeSchema.extend({
 		sessions: WatchHistoryEpisodeSchema.shape.sessions.max(0),
 	}).nullable(),
@@ -62,7 +62,7 @@ export const WatchHistoryGridEpisodeSchema = z.strictObject({
 export const WatchHistoryGridResponseSchema = z
 	.strictObject({
 		meta: WatchHistoryResponseMetaSchema,
-		provider: z.enum(["crunchyroll", "netflix"]),
+		provider: z.enum(["crunchyroll", "netflix", "primevideo"]),
 		titleKey: Key,
 		state: WatchCatalogStateSchema,
 		revision: z.string().min(1).max(64).nullable(),

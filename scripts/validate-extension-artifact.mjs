@@ -66,6 +66,7 @@ const videoHosts = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  "https://www.primevideo.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -133,6 +134,14 @@ assertExactAllowlist(
   contentMatches,
   expected.contentMatches,
 );
+
+const primeMainScripts = (manifest.content_scripts ?? []).filter((script) =>
+  script.world === "MAIN" && (script.matches ?? []).includes("https://www.primevideo.com/*"));
+if (primeMainScripts.length !== 1 || primeMainScripts[0].all_frames === true ||
+    primeMainScripts[0].run_at !== "document_start" || primeMainScripts[0].matches.length !== 1 ||
+    !(primeMainScripts[0].js ?? []).length) {
+  throw new Error("Prime Video requires exactly one top-frame document_start MAIN bridge on its narrow host");
+}
 
 const publicResources = manifest.web_accessible_resources ?? [];
 if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {

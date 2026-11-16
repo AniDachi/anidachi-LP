@@ -142,7 +142,7 @@ export function isWatchHistoryAccessCurrent(
 		accessEpoch: number;
 		youtubeConsentEpoch: number;
 		now: number;
-		provider: "crunchyroll" | "youtube" | "netflix";
+		provider: "crunchyroll" | "youtube" | "netflix" | "primevideo";
 	},
 ): boolean {
 	return (

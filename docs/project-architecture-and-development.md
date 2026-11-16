@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-11-04.
+Last updated: 2026-11-16.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -34,6 +34,8 @@ Read domain-specific documents when the task touches that area:
 - `docs/shared-watch-progress-tracker.md` for the planned watch progress model.
 - `docs/netflix-adapter-notes.md` and `docs/netflix-staging-verification.md` for
   the October 8 Netflix candidate, compatibility and pending staging acceptance.
+- `docs/prime-video-adapter-notes.md` for the November 16 local Prime Video
+  candidate, explicit season-1 anchor and remaining loaded/staging acceptance.
 - `apps/web/docs/seo-content-guidelines.md` for SEO/content pages.
 
 Historical execution plans live in `docs/superpowers/plans/`. They explain why
@@ -389,6 +391,17 @@ Current responsibilities:
 - capture camera/microphone only for explicit media features;
 - expose debug logs/build metadata for testing.
 
+The November 16 local candidate adds Prime Video through a dedicated MAIN-world
+SDK bridge and isolated adapter under `source-adapters/primevideo`. It admits only
+exact `https://www.primevideo.com/detail/<compactGTI>` sources and one verified
+open/initiated primary player. Preview/preload, ad, recap, unknown and replacement
+states cannot drive remote control or history. Content time uses the provider's
+content clock; commands and non-persisting rate changes use its SDK with bounded
+confirmation and generation fencing. Same-video, same-URL episode changes still
+replace source identity. The narrow manifest adds only `www.primevideo.com`.
+Loaded extension and two-client staging acceptance remain open; see the
+[Prime contract and evidence](prime-video-adapter-notes.md).
+
 Important UI constraints:
 
 - overlay should stay inside or visually tied to the player;
@@ -459,9 +472,28 @@ Its MAIN-world bridge isolates the observed undocumented Netflix player API,
 checks route/player/video generations and suspends history/control in unsafe or
 unknown phases. The existing background writer, access leases, account generation,
 catalog fencing and owner-private library remain authoritative. Default v1 reads
-exclude Netflix before counts/pagination; new popup, website SSR/client and browse
-consumers opt into `providerVersion=2`. Capacity v2 adds Netflix's 200-title bucket
-while the v1 shape stays exact. See the [adapter notes](netflix-adapter-notes.md).
+exclude Netflix before counts/pagination; `providerVersion=2` adds Netflix.
+Capacity v2 adds Netflix's 200-title bucket while the v1 shape stays exact. See
+the [adapter notes](netflix-adapter-notes.md).
+
+The November 16 Prime candidate extends those boundaries additively. Its explicit
+`primevideoIdentity` separates movie IDs from episode/season IDs and a confirmed
+season-1 compactGTI used as the series anchor. No separate provider series GTI
+was observed; missing/conflicting anchor evidence suspends detailed series
+capture rather than grouping by name. Catalogs include only observed selected
+season entries with verified availability and remain partial. Existing outbox,
+owner/account generation, access, lease, catalog and deletion fences apply.
+Legacy reconciliation does not admit Prime writes.
+
+Current candidate clients request `providerVersion=3` and `capacityVersion=3`;
+these negotiation versions are separate from the history API v3 route version.
+Provider filtering precedes counts, pagination and enrichment. V1/v2 shapes and
+selection remain exact; v3 adds a separate Prime 200-title bucket. Older response
+data missing that bucket is unavailable. Popup streams remain independently
+paged and account-scoped. Ordered delivery is additive migration, compatible
+Web/Worker, then matching clients, with Prime rows/epochs retained on recovery.
+These changes are local and undeployed; the [Prime notes](prime-video-adapter-notes.md)
+separate automated/native-provider evidence from pending loaded acceptance.
 
 Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work
 adds bounded server-side search, date,

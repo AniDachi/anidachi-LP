@@ -1,3 +1,5 @@
+import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
+import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -90,6 +92,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  "https://www.primevideo.com/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -230,6 +233,7 @@ export function startContentLifecycle(
     childList: true,
     subtree: true,
   });
+  document.addEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
   document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
   document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
   document.addEventListener("emptied", handleVideoLifecycleEvent, true);
@@ -255,6 +259,7 @@ export function startContentLifecycle(
       mountCheckFrame = null;
     }
     videoObserver.disconnect();
+    document.removeEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
     document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
     document.removeEventListener(
       "loadedmetadata",
@@ -321,6 +326,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
+    if (hostname === "www.primevideo.com") return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")
@@ -338,7 +344,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
-  const isNetflixComposer = () => location.hostname === "www.netflix.com" && isComposerOpen();
+  const isIsolatedProviderComposer = () => ["www.netflix.com", "www.primevideo.com"].includes(location.hostname) && isComposerOpen();
   let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
     document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";
@@ -390,20 +396,20 @@ function installMessageComposerKeyboardGuard(): () => void {
       }
       return;
     }
-    if (isNetflixComposer()) {
+    if (isIsolatedProviderComposer()) {
       // Netflix installs capture handlers above the overlay. Preserve native
       // text editing/default shortcuts while keeping those handlers quiet.
       netflixTypingKeys.add(keyId(event));
       event.stopImmediatePropagation();
     }
   };
-  const handleKeyPress = (event: KeyboardEvent) => { if (isNetflixComposer()) event.stopImmediatePropagation(); };
+  const handleKeyPress = (event: KeyboardEvent) => { if (isIsolatedProviderComposer()) event.stopImmediatePropagation(); };
   const handleKeyUp = (event: KeyboardEvent) => {
     // Submission removes the input before keyup; its new target can be the player.
     const wasConsumed = consumedKeys.delete(keyId(event));
     if (wasConsumed || (isComposerOpen() && event.key === "Enter"))
       consume(event);
-    else if (netflixTypingKeys.delete(keyId(event)) || isNetflixComposer()) event.stopImmediatePropagation();
+    else if (netflixTypingKeys.delete(keyId(event)) || isIsolatedProviderComposer()) event.stopImmediatePropagation();
   };
   const clearConsumedKeys = () => { consumedKeys.clear(); netflixTypingKeys.clear(); };
   window.addEventListener("keydown", handleKeyDown, true);
@@ -720,6 +726,7 @@ function ensurePageStyles(): void {
   style.textContent = `
     ${YOUTUBE_COMPOSER_CHROME_STYLES}
     ${NETFLIX_COMPOSER_CHROME_STYLES}
+    ${PRIME_COMPOSER_CHROME_STYLES}
 
     [data-anidachi-adapter="generic-html5-video"] video[data-anidachi-video="true"]::-webkit-media-controls-fullscreen-button {
       display: none !important;
@@ -731,7 +738,8 @@ function ensurePageStyles(): void {
 
     [data-anidachi-adapter="youtube"] anidachi-overlay-root,
     [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root,
-    [data-anidachi-adapter="netflix"] anidachi-overlay-root {
+    [data-anidachi-adapter="netflix"] anidachi-overlay-root,
+    [data-anidachi-adapter="primevideo"] anidachi-overlay-root {
       position: absolute !important;
       inset: 0 !important;
       z-index: 2147483647 !important;
