@@ -1,4 +1,4 @@
-import { PRIME_VIDEO_HOSTS } from "./src/source-adapters/primevideo/url";
+import { PRIME_VIDEO_DOMAIN_ROOTS } from "./src/source-adapters/primevideo/url";
 import { defineConfig } from "wxt";
 import {
   getExtensionManifestKey,
@@ -23,7 +23,7 @@ const STORE_VIDEO_ORIGINS = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  ...PRIME_VIDEO_HOSTS.map((host) => `https://${host}/*`),
+  ...PRIME_VIDEO_DOMAIN_ROOTS.map((host) => `https://*.${host}/*`),
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];

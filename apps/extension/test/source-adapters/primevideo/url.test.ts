@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
 	parsePrimePageUrl,
 	primeObservedLink,
-	PRIME_VIDEO_HOSTS,
+	hasPrimeBrowserHost,
+	PRIME_CONTENT_MATCHES,
 } from "../../../src/source-adapters/primevideo/url";
 const id = "0GS9E1N0I97ENRMJPEH38ZYO1J";
 describe("Prime browser routes without canonical identity assumptions", () => {
@@ -55,7 +56,6 @@ describe("Prime browser routes without canonical identity assumptions", () => {
 			`/foo/../detail/${id}`,
 		])
 			expect(primeObservedLink(value, "https://www.amazon.com")).toBeNull();
-		expect(PRIME_VIDEO_HOSTS).toHaveLength(8);
 	});
 });
 it.each([
@@ -87,4 +87,115 @@ it("does not label ordinary shopping video as a Prime source", async () => {
 	expect(
 		sourceProviderFromUrl("https://www.amazon.com/gp/video/detail/B0FX33MPNX"),
 	).toBe("primevideo");
+});
+
+// Synthetic DNS fixtures exercise the bounded families; no live-host support claim.
+const families = [
+	"primevideo.com",
+	"amazon.com",
+	"amazon.co.uk",
+	"amazon.de",
+	"amazon.co.jp",
+	"amazon.ca",
+	"amazon.in",
+	"amazon.com.mx",
+];
+const familyRoutes = families.flatMap((root) =>
+	[root, `www.${root}`, `synthetic-2.edge3.${root}`].flatMap((host) =>
+		root === "primevideo.com"
+			? [
+					`https://${host}/detail/${id}`,
+					`https://${host}/region/eu/-/de_DE/detail/${id}`,
+				]
+			: [
+					`https://${host}/gp/video/detail/B0FX33MPNX`,
+					`https://${host}/-/de_DE/gp/video/detail/B0FX33MPNX`,
+					`https://${host}/Title/dp/B0FX33MPNX`,
+				],
+	),
+);
+it.each(
+	familyRoutes,
+)("recognizes the official DNS family and permits script injection at %s", (value) => {
+	expect(parsePrimePageUrl(value)).not.toBeNull();
+	const url = new URL(value);
+	// Chrome's *.root host covers the apex and dot-separated subdomains.
+	const injected = PRIME_CONTENT_MATCHES.some((pattern) => {
+		const match = /^https:\/\/([^/]+)(\/.*)$/.exec(pattern)!;
+		const root = match[1]!.replace(/^\*\./, "");
+		const hostMatches = match[1]!.startsWith("*.")
+			? url.hostname === root || url.hostname.endsWith(`.${root}`)
+			: url.hostname === root;
+		const path = new RegExp(
+			`^${match[2]!
+				.split("*")
+				.map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+				.join(".*")}$`,
+		);
+		return hostMatches && path.test(url.pathname);
+	});
+	expect(injected).toBe(true);
+});
+it("normalizes hostname case without accepting non-DNS authority syntax", () => {
+	expect(
+		parsePrimePageUrl(`https://Synthetic-2.EDGE3.PrimeVideo.COM/detail/${id}`)
+			?.url.hostname,
+	).toBe("synthetic-2.edge3.primevideo.com");
+	for (const host of [
+		"evilprimevideo.com",
+		"primevideo.com.evil",
+		"amazon.com.evil",
+		"notamazon.com",
+		".primevideo.com",
+		"a..primevideo.com",
+		"-a.primevideo.com",
+		"a-.primevideo.com",
+		"a_b.primevideo.com",
+		"primevideo.com.",
+		`${"x".repeat(64)}.primevideo.com`,
+		`${("x".repeat(60) + ".").repeat(4)}primevideo.com`,
+		"%77ww.primevideo.com",
+		"www%2eprimevideo.com",
+		"u@primevideo.com",
+		"primevideo.com:443",
+		"primevideo.com:0443",
+		"primevideo.com:80",
+	]) {
+		expect(parsePrimePageUrl(`https://${host}/detail/${id}`), host).toBeNull();
+	}
+	expect(
+		parsePrimePageUrl(`https://synthetic-2.amazon.com/detail/${id}`),
+	).toBeNull();
+	expect(
+		parsePrimePageUrl(
+			`https://synthetic-2.primevideo.com/gp/video/detail/${id}`,
+		),
+	).toBeNull();
+	expect(
+		hasPrimeBrowserHost(`http://synthetic-2.edge3.primevideo.com/not-a-detail`),
+	).toBe(true);
+	expect(
+		parsePrimePageUrl(`http://synthetic-2.edge3.primevideo.com/detail/${id}`),
+	).toBeNull();
+});
+it("keeps same-origin observations inside a synthetic subdomain", () => {
+	const origin = "https://synthetic-2.edge3.primevideo.com";
+	expect(primeObservedLink(`/region/na/detail/${id}?ref_=x`, origin)).toBe(
+		`${origin}/region/na/detail/${id}`,
+	);
+	for (const host of [
+		"primevideo.com",
+		"www.primevideo.com",
+		"sibling.edge3.primevideo.com",
+		"synthetic-2.edge3.amazon.com",
+	])
+		expect(
+			primeObservedLink(`https://${host}/detail/${id}`, origin),
+		).toBeNull();
+	for (const origin of [
+		"https://synthetic-2.primevideo.com:443",
+		"https://synthetic-2.primevideo.com.",
+		"https://u@synthetic-2.primevideo.com",
+	])
+		expect(primeObservedLink(`/detail/${id}`, origin)).toBeNull();
 });

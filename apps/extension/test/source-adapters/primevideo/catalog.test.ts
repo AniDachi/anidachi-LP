@@ -594,7 +594,10 @@ it("cancels the transport at its separate catalog deadline when MAIN is absent",
 	).toBe(true);
 });
 
-it("fetches observed regional season paths while publishing canonical episode URLs", async () => {
+it.each([
+	"www.primevideo.com",
+	"synthetic-2.edge3.primevideo.com",
+])("fetches observed regional season paths on %s while publishing canonical episode URLs", async (host) => {
 	const f = setup();
 	for (const page of f.pages) {
 		const transformed = JSON.parse(
@@ -606,9 +609,14 @@ it("fetches observed regional season paths while publishing canonical episode UR
 		JSON.stringify(f.pages[3]!.data);
 	Object.defineProperty(window, "location", {
 		configurable: true,
-		value: new URL(`https://www.primevideo.com/region/na/detail/${ids.season}`),
+		value: new URL(`https://${host}/region/na/detail/${ids.season}`),
 	});
-	f.fetcher.mockImplementation(async (url) => {
+	f.fetcher.mockImplementation(async (url, options) => {
+		expect(options).toMatchObject({
+			method: "GET",
+			credentials: "same-origin",
+			redirect: "error",
+		});
 		const index = f.pages.findIndex(
 			(page) =>
 				url === `${location.origin}/region/na/detail/${page.season.compact}`,
@@ -692,4 +700,27 @@ it("uses only observed marketplace ASIN season URLs and full-GTI membership", as
 	expect(
 		result?.catalog?.seasons[0]?.episodes[0]?.watchVariants[0]?.sourceUrl,
 	).toMatch(/^https:\/\/www.primevideo.com\/detail\//);
+});
+
+it.each([
+	"primevideo.com",
+	"www.primevideo.com",
+	"sibling.edge3.primevideo.com",
+])("rejects observed catalog transport to %s from a synthetic subdomain", async (host) => {
+	const f = setup();
+	Object.defineProperty(window, "location", {
+		configurable: true,
+		value: new URL(
+			`https://synthetic-2.edge3.primevideo.com/detail/${ids.season}`,
+		),
+	});
+	const selected = f.pages[3]!;
+	const rows = object(state(f, 3, "atf").seasons)[
+		selected.season.full
+	] as Record<string, unknown>[];
+	rows[1]!.seasonLink = `https://${host}/detail/${ids.movie}`;
+	document.getElementById("dv-web-page-hydration-data")!.textContent =
+		JSON.stringify(selected.data);
+	expect((await f.collect())?.catalog?.completeness).toBe("partial");
+	expect(f.fetcher).not.toHaveBeenCalled();
 });

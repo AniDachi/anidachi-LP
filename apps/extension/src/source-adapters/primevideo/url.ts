@@ -1,29 +1,43 @@
 /** Browser addresses are provider evidence, never the persisted room identity. */
-export const PRIME_VIDEO_HOSTS = [
-	"www.primevideo.com",
-	"www.amazon.com",
-	"www.amazon.co.uk",
-	"www.amazon.de",
-	"www.amazon.co.jp",
-	"www.amazon.ca",
-	"www.amazon.in",
-	"www.amazon.com.mx",
+export const PRIME_VIDEO_DOMAIN_ROOTS = [
+	"primevideo.com",
+	"amazon.com",
+	"amazon.co.uk",
+	"amazon.de",
+	"amazon.co.jp",
+	"amazon.ca",
+	"amazon.in",
+	"amazon.com.mx",
 ] as const;
-export const PRIME_CONTENT_MATCHES = PRIME_VIDEO_HOSTS.flatMap((host) =>
-	host === "www.primevideo.com"
-		? [`https://${host}/*`]
+export const PRIME_CONTENT_MATCHES = PRIME_VIDEO_DOMAIN_ROOTS.flatMap((host) =>
+	host === "primevideo.com"
+		? [`https://*.${host}/*`]
 		: [
-				`https://${host}/gp/video/*`,
-				`https://${host}/*/gp/video/*`,
-				`https://${host}/dp/*`,
-				`https://${host}/*/dp/*`,
+				`https://*.${host}/gp/video/*`,
+				`https://*.${host}/*/gp/video/*`,
+				`https://*.${host}/dp/*`,
+				`https://*.${host}/*/dp/*`,
 			],
 );
+/** Bound DNS labels before checking a dot-separated official domain suffix. */
+function primeDomainFamily(hostname: string) {
+	const host = hostname.toLowerCase();
+	if (
+		host.length > 253 ||
+		!host
+			.split(".")
+			.every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))
+	)
+		return undefined;
+	return PRIME_VIDEO_DOMAIN_ROOTS.find(
+		(root) => host === root || host.endsWith(`.${root}`),
+	);
+}
 export function hasPrimeBrowserHost(value: string): boolean {
 	try {
-		return (PRIME_VIDEO_HOSTS as readonly string[]).includes(
-			new URL(value).hostname,
-		);
+		// Classification intentionally includes known-family non-source pages, so
+		// they cannot fall through to the generic HTML5 adapter.
+		return !!primeDomainFamily(new URL(value).hostname);
 	} catch {
 		return false;
 	}
@@ -39,7 +53,7 @@ export function parsePrimePageUrl(value: string): PrimeRoute | null {
 	const raw = /^https:\/\/([^/?#]+)([^?#]*)/.exec(value);
 	if (
 		!raw ||
-		!/^[a-z.]+$/.test(raw[1]!) ||
+		!primeDomainFamily(raw[1]!) ||
 		/%(?:2e|2f|5c|25)|(?:^|\/)\.{1,2}(?:\/|$)/i.test(raw[2]!)
 	)
 		return null;
@@ -64,7 +78,7 @@ export function parsePrimePageUrl(value: string): PrimeRoute | null {
 			);
 		const parts = path.split("/").slice(1);
 		let rest: string[];
-		if (url.hostname === "www.primevideo.com") {
+		if (primeDomainFamily(url.hostname) === "primevideo.com") {
 			if (parts[0] !== "detail") return null;
 			rest = parts.slice(1);
 		} else if (
@@ -105,7 +119,8 @@ export function primeObservedLink(
 		if (
 			base.origin !== origin ||
 			!hasPrimeBrowserHost(origin) ||
-			!/^https:\/\/[a-z.]+$/.test(origin)
+			!/^https:\/\/[^/?#]+$/.test(origin) ||
+			!primeDomainFamily(origin.slice("https://".length))
 		)
 			return null;
 		const absolute = value.startsWith("/") ? `${origin}${value}` : value;

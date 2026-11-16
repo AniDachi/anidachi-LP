@@ -3077,7 +3077,7 @@ it("allows Netflix's final history write and catalog cleanup after returning to 
   } finally { vi.unstubAllGlobals(); }
 });
 
-it("accepts Prime history only from the exact canonical-detail document boundary", () => {
+it("accepts Prime history only from a valid official-detail document boundary", () => {
   vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
   try {
     const source = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
@@ -3092,7 +3092,6 @@ it("accepts Prime history only from the exact canonical-detail document boundary
       source.replace("www.primevideo.com", "www.primevideo.com:8443"),
       source.replace("https:", "http:"), source.replace("/detail/", "/watch/"),
       source.toLowerCase(), `${source}/extra`, source.slice(0, -1),
-      source.replace("www.primevideo.com", "primevideo.com"),
       source.replace("www.primevideo.com", "www.amazon.com"),
       source.replace("/detail/", "/x/../detail/"),
     ]) expect(isWatchHistorySenderAllowed(message, { ...sender, url }), url).toBe(false);
@@ -3103,12 +3102,16 @@ it("accepts Prime history only from the exact canonical-detail document boundary
   } finally { vi.unstubAllGlobals(); }
 });
 
-it.each(["https://www.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://www.amazon.com/gp/video/detail/B0FX33MPNX", "https://www.amazon.de/Hunting-Season/dp/B0FX33MPNX/ref=x"])("allows a scoped Prime history sender from %s", url => {
+it.each(["https://primevideo.com/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://synthetic-2.edge3.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://synthetic-2.edge3.amazon.co.uk/gp/video/detail/B0FX33MPNX", "https://www.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://www.amazon.com/gp/video/detail/B0FX33MPNX", "https://www.amazon.de/Hunting-Season/dp/B0FX33MPNX/ref=x"])("allows a scoped Prime history sender from %s", url => {
  vi.stubGlobal("chrome", {runtime:{id:"test-extension",getURL:()=>"chrome-extension://test-extension/"}});
  try {
   const message = {type:"ANIDACHI_WATCH_HISTORY_V3",command:"bootstrap-cache",expectedOwnerUserId:session.user.id} as const;
   const sender = {id:"test-extension",url,tab:{id:8},frameId:0} as chrome.runtime.MessageSender;
   expect(isWatchHistorySenderAllowed(message,sender)).toBe(true);
+  expect(isWatchHistorySenderAllowed(message, {...sender, id: "foreign-extension"})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message, {...sender, frameId: 1})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message, {...sender, tab: undefined})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message, {...sender, url: url.replace(new URL(url).hostname, `${new URL(url).hostname}.evil`)})).toBe(false);
   expect(isWatchHistorySenderAllowed(message,{...sender,url:"https://www.amazon.com/product-reviews/B0FX33MPNX"})).toBe(false);
  } finally {vi.unstubAllGlobals();}
 });

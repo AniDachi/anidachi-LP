@@ -6,16 +6,16 @@ import { expect, it, vi } from "vitest";
 import { getExtensionManifestKey } from "../src/extension-channel-identity";
 const root = resolve(process.cwd(), "../..");
 const amazonHosts = [
-	"www.amazon.com",
-	"www.amazon.co.uk",
-	"www.amazon.de",
-	"www.amazon.co.jp",
-	"www.amazon.ca",
-	"www.amazon.in",
-	"www.amazon.com.mx",
+	"*.amazon.com",
+	"*.amazon.co.uk",
+	"*.amazon.de",
+	"*.amazon.co.jp",
+	"*.amazon.ca",
+	"*.amazon.in",
+	"*.amazon.com.mx",
 ];
 const primeRoutes = [
-	"https://www.primevideo.com/*",
+	"https://*.primevideo.com/*",
 	...amazonHosts.flatMap((host) => [
 		`https://${host}/gp/video/*`,
 		`https://${host}/*/gp/video/*`,
@@ -30,7 +30,7 @@ const origins = [
 	"https://*.youtu.be/*",
 	"https://*.youtube-nocookie.com/*",
 	"https://www.netflix.com/*",
-	"https://www.primevideo.com/*",
+	"https://*.primevideo.com/*",
 	...amazonHosts.map((host) => `https://${host}/*`),
 	"https://crunchyroll.com/*",
 	"https://*.crunchyroll.com/*",
@@ -133,4 +133,22 @@ it("generates Chrome-valid resource origins without broadening content routes", 
 	} finally {
 		vi.unstubAllEnvs();
 	}
+});
+
+it.each([
+	"https://*/*",
+	"https://*.amazon.fr/*",
+	"http://*.amazon.com/*",
+	"https://*amazon.com/*",
+	"https://*.amazon.com.evil/*",
+])("rejects unapproved family permission %s", (pattern) => {
+	const value = manifest();
+	value.host_permissions.push(pattern);
+	const result = validate(value);
+	expect(result.status).not.toBe(0);
+});
+it("rejects a globally broadened MAIN bridge even with an otherwise approved manifest", () => {
+	const value = manifest();
+	value.content_scripts[1]!.matches.push("https://*/*");
+	expect(validate(value).status).not.toBe(0);
 });

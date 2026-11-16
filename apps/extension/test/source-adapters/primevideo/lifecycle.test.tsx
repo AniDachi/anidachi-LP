@@ -18,16 +18,23 @@ it.each([
 	"root",
 	"regional",
 	"amazon",
+	"synthetic-subdomain",
+	"synthetic-amazon-subdomain",
 ])("replaces same-video source through MAIN binding, registry and mount on %s", async (route) => {
 	vi.useFakeTimers();
 	const f = fixture();
 	if (route !== "root") {
 		const origin =
-			route === "amazon"
-				? "https://www.amazon.com"
-				: "https://www.primevideo.com";
-		const prefix =
-			route === "amazon" ? "/gp/video/detail/" : "/region/na/detail/";
+			route === "synthetic-subdomain"
+				? "https://synthetic-2.edge3.primevideo.com"
+				: route === "synthetic-amazon-subdomain"
+					? "https://synthetic-2.edge3.amazon.co.uk"
+					: route === "amazon"
+						? "https://www.amazon.com"
+						: "https://www.primevideo.com";
+		const prefix = route.includes("amazon")
+			? "/gp/video/detail/"
+			: "/region/na/detail/";
 		const original = f.write;
 		f.write = () => {
 			original();
