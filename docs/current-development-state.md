@@ -90,6 +90,17 @@ personally; it is still pending. CI and delivery receipts belong to
 [PR #563](https://github.com/AniDachi/anidachi-LP/pull/563). Server schemas,
 production and other chats are outside this follow-up.
 
+The owner's subsequent Task 10 request expands those eight Prime/Amazon domain
+families to HTTPS base domains and subdomains, including ordinary numeric,
+hyphenated and nested DNS labels. Browser admission and manifest matching are
+updated together in the same PR #563. Extension check and the local 3,165-test
+suite passed; review, artifact and final CI receipts are tracked in that PR.
+Resource matches retain Chrome's
+origin-only `/*` constraint; Amazon injection retains video/share routes.
+Verified SDK identity, canonical persisted URLs and exact same-origin catalog
+transport remain authoritative. Other providers and server schemas are outside
+this amendment; the owner still owns browser acceptance.
+
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of

@@ -109,8 +109,37 @@ videos must not become a source merely because the host is Amazon.
    Browser acceptance on one marketplace is not a claim that every account and
    regional catalog was live-tested. Production remains separately authorized.
 
-Original baseline constraints below describe Tasks 1–8; apply Task 9's explicit
-browser-scope amendment where they conflict.
+### Task 10: Official domain families and subdomains
+
+The owner's subsequent request explicitly broadens Task 9's exact-www scope to
+base domains and subdomains. Apply this amendment instead of the historical
+wildcard prohibition for these eight domain families only: `primevideo.com`,
+`amazon.com`, `amazon.co.uk`, `amazon.de`, `amazon.co.jp`, `amazon.ca`, `amazon.in`
+and `amazon.com.mx`. Use HTTPS wildcard host patterns such as
+`https://*.primevideo.com/*`, covering the apex as well as subdomains. Do not add
+HTTP, arbitrary TLDs, unrelated providers or global host permissions.
+
+1. Match a validated DNS hostname at the exact family root or a dot-separated
+   suffix, supporting ordinary digits, hyphens and nested subdomains. Reject
+   suffix lookalikes, malformed labels, credentials, explicit ports and encoded
+   authority tricks. Prime-family hosts use Prime detail routes; Amazon-family
+   hosts use the existing video/detail/share routes.
+2. Expand host/resource origins and content/MAIN injection patterns together.
+   Keep resource paths exactly `/*`, with separate route-scoped Amazon script
+   patterns and independent artifact allowlists. Retain the invalid-resource
+   path regressions learned from the failed Chrome load.
+3. Prove base/subdomain recognition through the real MAIN/binding/lifecycle and
+   catalog transport paths. A known family is not sufficient to admit a source:
+   SDK identity and public metadata still must agree. Cross-subdomain catalog
+   requests remain cross-origin and must be rejected. Persisted source URLs and
+   all server/account/history contracts remain unchanged.
+4. Run the relevant regressions, extension check/full tests, independent review,
+   dev:check and a new narrow staging build/validation. Update the existing
+   PR #563 and provide the new ZIP. The owner chose to do browser acceptance
+   personally; do not resume browser control or repeatedly request reloads.
+
+Original baseline constraints below describe Tasks 1–8; apply Tasks 9–10's
+explicit browser-scope amendments where they conflict.
 
 - Work only in the clean-development worktree on `codex/prime-video-adapter`,
   based on staging `2c24f661d160e6d474cce997466e7e357f21b5ad`.

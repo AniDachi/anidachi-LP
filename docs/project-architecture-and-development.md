@@ -402,8 +402,11 @@ replace source identity. The regional-address follow-up separates browser route
 recognition from persisted identity: regional/locale paths and official Amazon
 video aliases are resolved through matching public metadata and the SDK title.
 Observed same-origin season links own catalog transport; canonical compactGTIs
-own room/history identity. Explicit marketplace hosts and script paths retain
-the narrow manifest boundary. Loaded regional acceptance is in progress;
+own room/history identity. The owner-authorized subdomain follow-up expands
+HTTPS matching to the base and subdomains of eight explicit Prime/Amazon domain
+families. Separate resource-origin and video-script path patterns retain the
+manifest boundary; cross-subdomain catalog requests remain cross-origin and
+are rejected. Loaded regional acceptance belongs to the owner;
 two-client staging acceptance remains open. See the
 [Prime contract and evidence](prime-video-adapter-notes.md).
 

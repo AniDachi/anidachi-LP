@@ -33,11 +33,14 @@ resolved before they reach it. HTTP, credentials, explicit ports including
 Known Prime pages never fall through to Generic HTML5. The legacy `amazon`
 account-provider placeholder remains distinct.
 
-The owner-authorized Task 9 follow-up broadens browser recognition independently
-of that persisted contract. It covers regional and locale detail addresses and
-Amazon video/share aliases on the explicit official marketplaces: `www.amazon.com`,
-`www.amazon.co.uk`, `www.amazon.de`, `www.amazon.co.jp`, `www.amazon.ca`,
-`www.amazon.in`, and `www.amazon.com.mx`, in addition to `www.primevideo.com`.
+The owner-authorized Tasks 9–10 broaden browser recognition independently of
+that persisted contract. They cover regional and locale detail addresses and
+Amazon video/share aliases on eight official domain families: `primevideo.com`,
+`amazon.com`, `amazon.co.uk`, `amazon.de`, `amazon.co.jp`, `amazon.ca`,
+`amazon.in`, and `amazon.com.mx`. Task 10 explicitly adds their base domains and
+subdomains through HTTPS patterns such as `https://*.primevideo.com/*`,
+superseding Task 9's initial exact-www permission scope. Host matching requires
+the exact root or a dot-separated subdomain, not a textual suffix lookalike.
 The host inventory comes from [Prime's marketplace directory](https://www.primevideo.com/help?nodeId=202064890).
 An ASIN or full-GTI route needs matching public page/self metadata and the current
 SDK title before it can become a canonical compactGTI source. Shopping videos,
@@ -45,8 +48,12 @@ trailers, tracking parameters and title text cannot establish that identity.
 The extension separates explicit host/resource origins from Amazon video/share
 script paths, with one top-frame MAIN entry at `document_start`. Chrome requires
 web-accessible resource matches to end in `/*`; the exposed resource remains
-only the logo. There is no wildcard Amazon permission.
-Task 9 source review passed; the owner will perform loaded-artifact acceptance.
+only the logo. Wildcards are limited to the eight named families; unrelated
+Amazon TLDs, HTTP and global host access are not admitted. Family recognition
+does not admit a shopping video without the existing Prime SDK and metadata proof.
+Catalog transport still requires the same exact origin, including the subdomain.
+Task 9 source review passed; Task 10's source, review and artifact receipts are
+tracked in the same PR. The owner will perform loaded-artifact acceptance.
 This scope is not evidence that every marketplace/account has been tested. No public
 announcement, Store publication, secret or environment addition is included.
 
