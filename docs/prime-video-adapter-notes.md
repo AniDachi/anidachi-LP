@@ -240,8 +240,16 @@ season URLs without tracking query parameters returned the same evidence.
 The existing SQL fixture already verifies partial-to-complete admission and an
 unseen Prime episode in the editor. The website regression verifies an unplayed
 other-season episode with translated labels launches its exact source at zero
-without a progress write. Local implementation/review, artifact and loaded
-library acceptance for this follow-up must be recorded before claiming delivery.
+without a progress write. Initial loaded acceptance exposed a missing-property
+case masked by fixture normalization: Prime supplies an empty ATF episode-list
+placeholder while BTF carries the actual complete list. The reviewed correction
+accepts absent/empty placeholders and still rejects malformed or orphaned
+counts, pagination and membership. Shape-faithful current-page/four-season
+evidence passes the parser, loader and actual MAIN/client bridge; covering
+Prime/coordinator tests pass 134 cases, with extension check and rebuilt narrow
+artifact validation. Live acceptance and staging delivery are recorded in
+[PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); fixture evidence alone
+is not a loaded-browser claim.
 
 ## Local evidence and remaining acceptance
 

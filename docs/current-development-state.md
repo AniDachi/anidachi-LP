@@ -63,8 +63,13 @@ episodes. It adds bounded same-origin season metadata loading with strict
 series/episode identity, completeness and cancellation checks. Complete
 snapshots use the existing editor/server contract; personal progress remains
 separate. Live read-only Upload evidence covers four seasons and 29 episodes.
-No SQL migration or Worker behavior change is needed. Reviewed artifact,
-staging delivery and loaded full-catalog acceptance are pending; see the
+No SQL migration or Worker behavior change is needed. The candidate passed
+independent review, extension checks and narrow artifact validation. Live
+acceptance caught an empty ATF placeholder rejected before the real BTF episode
+list was read; the reviewed correction retains strict validation of declared
+list/count/pagination evidence. Shape-faithful tests cover the real current page
+and all four seasons. Loaded acceptance and delivery receipts are tracked in
+[PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); see also the
 [provider notes](prime-video-adapter-notes.md#full-series-catalog-follow-up-evidence).
 
 ## Free20 production launch: November 7, 2026
