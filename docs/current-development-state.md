@@ -27,11 +27,16 @@ fullscreen/chat/resume and two-client room/history acceptance are still open.
 Compatible staging Web/Worker and the additive migration are delivered. Actual
 loaded extension room creation and authenticated saved episode history passed;
 the former `Invalid room source (400)` is resolved. Resume reached the exact
-saved episode but landed on Prime's detail/Resume screen. The pending
-`codex/prime-video-launch` follow-up adds `autoplay=1` to initial room invitation
+saved episode but landed on Prime's detail/Resume screen. Delivered staging
+[PR #559](https://github.com/AniDachi/anidachi-LP/pull/559) at `2a93c598` adds `autoplay=1` to initial room invitation
 launch and shared website/popup Resume navigation while retaining canonical
-identity, bounded intent and room exclusion. Staging delivery, confirmed Resume
-seek and room-launch browser acceptance for this follow-up remain pending.
+identity, bounded intent and room exclusion. Actual website Resume now opens the
+primary player automatically; the saved-position seek remains unproved. Pending
+`codex/prime-resume-readiness` fixes a reproduced cancellation before Prime's
+first SDK snapshot, waiting only for an exact bound fingerprint in transition.
+The candidate also captures initial Prime room/Resume data before the provider's
+observed fragment removal, with a bounded one-use document-local handoff.
+Its staging delivery/acceptance and room-launch browser acceptance remain open.
 The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
 records the bounded schema-first exception; final deployment receipts belong in
 the feature PR and controller report. Preserve Prime rows and epochs on rollback.
