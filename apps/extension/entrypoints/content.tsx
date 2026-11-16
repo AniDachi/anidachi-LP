@@ -19,6 +19,7 @@ import {
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
 import { OverlayApp } from "../src/overlay-app";
+import { createPrimeLaunchCapture, type PrimeLaunchHandoff } from "../src/prime-launch-capture";
 import { installOverlayKeyboardRouter } from "../src/overlay-keyboard-router";
 import { installPlayerIntroductionKeyboardGuard } from "../src/player-onboarding-input";
 import {
@@ -58,6 +59,7 @@ interface ResizeObserverBinding {
 }
 
 interface MountOverlayOptions {
+	initialLaunch?: PrimeLaunchHandoff | null;
   createResizeObserver?: (
     callback: ResizeObserverCallback,
   ) => ResizeObserverBinding;
@@ -68,7 +70,7 @@ interface ContentLifecycleDependencies {
   detect(current: VideoAdapter | null): AdapterDetectionResult;
   ensureStyles(): void;
   installKeyboardGuard(): () => void;
-  mount(adapter: VideoAdapter): MountedOverlay;
+  mount(adapter: VideoAdapter, initialLaunch?: PrimeLaunchHandoff | null): MountedOverlay;
   startProviderStudy(): (() => void) | null | undefined;
 }
 
@@ -118,12 +120,13 @@ export default defineContentScript({
 export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
+  const primeLaunch = createPrimeLaunchCapture(location.href);
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,
     installKeyboardGuard: installMessageComposerKeyboardGuard,
-    mount: mountOverlay,
+    mount: (adapter, initialLaunch) => mountOverlay(adapter, { initialLaunch }),
     startProviderStudy: startCrunchyrollStudyIfEnabled,
     ...overrides,
   };
@@ -150,7 +153,7 @@ export function startContentLifecycle(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mounted = dependencies.mount(adapter);
+      mounted = dependencies.mount(adapter, primeLaunch.handoff(adapter, location.href));
     },
     relocated() {
       mounted?.relocate();
@@ -176,11 +179,14 @@ export function startContentLifecycle(
     },
   });
 
-  const reconcile = () =>
-    manager.reconcile(dependencies.detect(manager.current));
+  const reconcile = () => {
+    primeLaunch.observe(location.href);
+    return manager.reconcile(dependencies.detect(manager.current));
+  };
 
   let mountCheckFrame: number | null = null;
   const scheduleMountCheck = () => {
+    primeLaunch.observe(location.href);
     if (disposed || mountCheckFrame !== null) {
       return;
     }
@@ -250,6 +256,7 @@ export function startContentLifecycle(
       return;
     }
     disposed = true;
+    primeLaunch.dispose();
     if (mountPollTimer !== null) {
       window.clearTimeout(mountPollTimer);
       mountPollTimer = null;
@@ -469,7 +476,7 @@ export function mountOverlay(
   const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
-  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot);
+  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot, options.initialLaunch);
 
   let animationFrame = 0;
   let fullscreenTransitionGeneration = 0;
@@ -692,12 +699,12 @@ export function mountOverlay(
   }
 }
 
-function createReactOverlayRenderer(appRoot: HTMLElement): OverlayRenderer {
+function createReactOverlayRenderer(appRoot: HTMLElement, initialLaunch?: PrimeLaunchHandoff | null): OverlayRenderer {
   const root: Root = createRoot(appRoot);
   return {
     render(adapter, active) {
       flushSync(() => {
-        root.render(<OverlayApp adapter={adapter} adapterActive={active} />);
+        root.render(<OverlayApp adapter={adapter} adapterActive={active} initialPrimeLaunch={initialLaunch} />);
       });
     },
     unmount() {

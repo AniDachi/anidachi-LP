@@ -1,6 +1,7 @@
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
 import { readHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
+import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import type {
 	ClientEvent,
 	P2PSignal,
@@ -321,6 +322,7 @@ import {
 interface OverlayAppProps {
 	adapter: VideoAdapter;
 	adapterActive?: boolean;
+	initialPrimeLaunch?: PrimeLaunchHandoff | null;
 }
 
 interface CatchUpState {
@@ -520,7 +522,9 @@ export async function runOverlayPrivilegedAction(
 	await afterApproval();
 }
 
-export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
+export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }: OverlayAppProps) {
+	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
+	const capturedPrimeRestoreOwnerRef = useRef<string | null>(null);
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
 	const adapterActiveRef = useRef(adapterActive);
@@ -833,7 +837,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 	const hostingTimeCredentialKey = authAuthenticated ? JSON.stringify([authRevision, authAccessToken, authSessionKey, accountUser?.plan]) : null;
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
-	const initialRoomTarget = getRoomIdFromHash() ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
+	const capturedPrimeRoomId = initialPrimeLaunchRef.current?.readRoom(location.href, adapter.getFingerprint(), identityLoaded ? participant?.id ?? null : undefined) ?? null;
+	const initialRoomTarget = getRoomIdFromHash() ?? capturedPrimeRoomId ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
@@ -2806,7 +2811,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }, [adapter, adapterActive, participant?.id]);
 
 	const personalResumeIntentRef = useRef<ReturnType<typeof takePersonalHistoryResume> | undefined>(undefined);
-	useEffect(() => { if (personalResumeIntentRef.current === undefined) personalResumeIntentRef.current = takePersonalHistoryResume(location, (url) => history.replaceState(history.state, "", url)); }, []);
+	useEffect(() => {
+		if (personalResumeIntentRef.current !== undefined) return;
+		const params = new URLSearchParams(location.hash.slice(1));
+		const explicit = params.has("anidachiRoom") || params.has("anidachiResume");
+		const captured = initialPrimeLaunchRef.current?.takeResume(location.href, adapter.getFingerprint()) ?? null;
+		const live = takePersonalHistoryResume(location, (url) => history.replaceState(history.state, "", url));
+		personalResumeIntentRef.current = explicit ? live : captured;
+	}, []);
 	useEffect(() => {
 		const intent = personalResumeIntentRef.current;
 		if (!intent || !identityLoaded || !participant?.id || !adapterActive) return;
@@ -4972,9 +4984,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 			return;
 		}
 
-		const hashRoomId = getRoomIdFromHash();
+		const hashRoomId = getRoomIdFromHash() ?? capturedPrimeRoomId;
 		const persistedRoomId =
-			storedRoomSession?.ownerUserId === currentUserId
+			storedRoomSession?.ownerUserId === currentUserId &&
+			capturedPrimeRestoreOwnerRef.current !== currentUserId
 				? storedRoomSession.roomId
 				: null;
 		const initialRoomId = hashRoomId ?? persistedRoomId;
@@ -4984,6 +4997,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				setPanelOpen(true);
 				return;
 			}
+			// Consuming launch A must not expose an older persisted B on rerender.
+			if (capturedPrimeRoomId === initialRoomId) capturedPrimeRestoreOwnerRef.current = currentUserId;
+			initialPrimeLaunchRef.current?.consumeRoom();
 
 			void connectToExistingWebsiteRoom(
 				initialRoomId,
@@ -5045,6 +5061,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		}
 	}, [
 		accountHostingTime.refresh,
+		capturedPrimeRoomId,
 		clearStoredRoomSession,
 		connectToExistingWebsiteRoom,
 		identityLoaded,
@@ -6463,7 +6480,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 				canStart={() =>
 					roomSessionLoadedForUserId === (participant?.id ?? null) &&
 					!roomIdRef.current && !storedRoomSessionRef.current &&
-					!getRoomIdFromHash() && !personalResumeIntentRef.current &&
+					!getRoomIdFromHash() && !capturedPrimeRoomId && !personalResumeIntentRef.current &&
 					!panelOpen && !roomCreatePending
 				}
 				roomId={roomId}
