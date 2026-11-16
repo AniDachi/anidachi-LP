@@ -361,9 +361,9 @@ test('new Web restores exact catalog hints from the opt-in column without changi
  const hint={contentId:id,routes:[{url:'https://www.amazon.com/gp/video/detail/B0FX2ZCPFK',observedAt:'2026-11-16T00:00:00Z'}]};
  const row={provider:'primevideo',snapshot:{seasons:[{episodes:[{watchVariants:[{sourceUrl}]}]}]},projection:{seasons:[{episodes:[{sourceUrl}]}]},prime_navigation:{[sourceUrl]:hint}};
  const before=structuredClone(row);
- const restored=restorePrimeCatalogNavigation(row)! as any;
- assert.deepEqual(restored.snapshot.seasons[0].episodes[0].watchVariants[0].primeNavigation,hint);
- assert.deepEqual(restored.projection.seasons[0].episodes[0].primeNavigation,hint);
+ const restored=restorePrimeCatalogNavigation(row)!;
+ assert.deepEqual(restored.snapshot,{seasons:[{episodes:[{watchVariants:[{sourceUrl,primeNavigation:hint}]}]}]});
+ assert.deepEqual(restored.projection,{seasons:[{episodes:[{sourceUrl,primeNavigation:hint}]}]});
  assert.deepEqual(row,before);
- assert.equal((restorePrimeCatalogNavigation({...row,prime_navigation:{[sourceUrl]:{...hint,contentId:'B'.repeat(26)}}}) as any).projection.seasons[0].episodes[0].primeNavigation,undefined);
+ assert.deepEqual(restorePrimeCatalogNavigation({...row,prime_navigation:{[sourceUrl]:{...hint,contentId:'B'.repeat(26)}}})?.projection,row.projection);
 });
