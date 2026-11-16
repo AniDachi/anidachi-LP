@@ -194,3 +194,13 @@ test("room watch participant targets include host and accepted room members once
     },
   ]);
 });
+
+
+test("legacy reconciliation cannot manufacture Prime identity or accept mislabeled Prime sources", () => {
+  const base = { provider: "primevideo", kind: "episode", itemId: "primevideo:series:" + "A".repeat(26), itemTitle: "Prime title",
+    episodeId: "primevideo:episode:" + "B".repeat(26), seasonNumber: 2,
+    sourceUrl: "https://www.primevideo.com/detail/" + "B".repeat(26), currentTime: 10, duration: 100 };
+  assert.equal(cleanWatchProgressEntry(base), null);
+  assert.equal(cleanWatchProgressEntry({ ...base, provider: "youtube", itemId: "youtube:video:abcdef", episodeId: "abcdef" }), null);
+  assert.equal(cleanWatchProgressEntry({ ...base, provider: "youtube", sourceUrl: "https://www.youtube.com/watch?v=abcdef" }), null);
+});
