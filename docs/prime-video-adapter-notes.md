@@ -202,8 +202,11 @@ absent, so real fullscreen is unproved.
 The browser connector cannot load/reload developer extensions through
 `chrome://extensions`; loading and starting the final candidate require a user
 handoff. The final candidate was handed off for manual load and player start;
-no completed load has been observed yet. Remaining gates are whole-branch review,
-loaded movie/episode/ads/rate/fullscreen/chat/source-replacement/resume checks,
+the owner explicitly deferred browser checks to a later session. No completed
+load has been observed yet. Whole-branch source review of `2c24f661..16aea5dd`
+passed with no critical or important findings; this is local code readiness,
+not release acceptance. Remaining gates are loaded
+movie/episode/ads/rate/fullscreen/chat/source-replacement/resume checks,
 authenticated website/editor acceptance, and two-client Prime room/history
 acceptance against compatible staging. The current staging server lacks this
 Prime support, so a new extension alone cannot prove that end-to-end flow.

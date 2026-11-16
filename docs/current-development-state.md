@@ -15,7 +15,9 @@ evidence is recorded in the [provider notes](prime-video-adapter-notes.md).
 Native Prime research observed content-clock behavior through ads and episode
 replacement; it did not exercise the loaded extension. The narrow staging
 artifact built at `66ce7f85` passed validation, including the Prime MAIN script
-and bundled logo. Whole-branch review remains an integration gate. Graphify's
+and bundled logo. Whole-branch source review passed at `16aea5dd` without
+critical or important findings. The owner deferred browser acceptance to a
+later session. Graphify's
 safe refresh stopped on an inherited `ref_clsx` ownership collision before
 publication; the curated graph is unchanged. Loaded movie/episode/rate/ads,
 fullscreen/chat/resume and two-client room/history acceptance are still open.
