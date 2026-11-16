@@ -7,7 +7,9 @@ and production promotion remain separate operations.
 ## Implementation status — 2026-11-16
 
 Tasks 1–4 are implemented and task-reviewed. Task 5 documentation/readability
-is integrated; final artifact, Graphify and whole-branch review remain open.
+is integrated and reviewed. The final narrow artifact is built and validated;
+whole-branch review and live acceptance remain open. Graphify refresh is blocked
+by an inherited ownership collision, with existing artifacts preserved.
 No Prime staging delivery or loaded-extension acceptance is claimed. The
 [provider notes](../../prime-video-adapter-notes.md) record the full contract,
 local evidence, deployment order and recovery limits.
@@ -18,7 +20,7 @@ local evidence, deployment order and recovery limits.
 | 2 | Additive migration, Web/Worker room and history admission | `d21f25b8`; reviewed. API 330, room harness 39, web full 1,832 passed / 6 skipped plus scoped fixes; disposable SQL 728 assertions. Downstream UI map check failures were resolved in Task 4. |
 | 3 | MAIN bridge, adapter, source lifecycle, history/catalog and narrow manifest | `5928aafa` plus lifecycle/anchor fix `a26c3504`; reviewed. Initial extension full 2,904; fix regression set 81. Initial staging artifact passed build/validation but is stale. |
 | 4 | Popup/website Prime stream, presentation, v3 clients and guarded resume | `7c521dad`; reviewed. Extension full 2,926 / 172 files, focused 276; website component 56 and capacity 7; web/extension checks passed. |
-| 5 | Contract/evidence documentation and formatting of newly added TS/TSX only | Controller owns final build/validation, Graphify and whole-branch review; acceptance gates below remain open. |
+| 5 | Contract/evidence documentation and formatting of newly added TS/TSX only | `66ce7f85`; reviewed, 20/20 normalized ASTs equivalent. Final narrow build/validation passed at that commit. Whole-branch review and acceptance below remain open; Graphify exception is recorded. |
 
 Full extension runs exclude the existing production-emitting release fixture,
 as no production artifact is authorized. Task 2's repeated-fixture resource
@@ -35,12 +37,14 @@ exercise authentication, live API/account data or editor behavior.
 
 Remaining Task 5 gates:
 
-- Rebuild and validate the final narrow staging extension after all reviewed
-  fixes and UI/docs integration; inspect the emitted Prime SVG and manifest.
-- Refresh the curated Graphify through the safe adapter and complete the
-  whole-branch review. The documentation update covers these four changed docs.
-- Hand the reviewed artifact to the user for extension load/reload and player
-  start; the connector cannot do this through `chrome://extensions`.
+- Complete the whole-branch review. Final build/validation at `66ce7f85` verified
+  the emitted Prime SVG and narrow manifest; exact ZIP hash is in provider notes.
+- Graphify exception: safe publication stopped at `Foreign node collision:
+  ref_clsx` while processing inherited AST backlog. All tracked graph artifacts
+  remain unchanged; defer ownership repair and the four-document semantic update
+  rather than bypassing the guard or rewriting unrelated historical records.
+- The reviewed artifact was handed to the user for extension load/reload and
+  player start; the connector cannot do this through `chrome://extensions`.
 - With the loaded candidate, verify movie/episode, safe ad transitions,
   transient rate, real fullscreen, chat/input isolation, source replacement,
   navigation and guarded resume. Native SDK research and fixtures do not close

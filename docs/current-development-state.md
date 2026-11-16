@@ -13,9 +13,11 @@ compatibility. Legacy `amazon`, pricing and shared media policy are unchanged.
 Local protocol/API/web/extension, room harness, disposable SQL and Worker runtime
 evidence is recorded in the [provider notes](prime-video-adapter-notes.md).
 Native Prime research observed content-clock behavior through ads and episode
-replacement; it did not exercise the loaded extension. The artifact built at
-`5928aafa` is stale after reviewed fixes; final build/validation, Graphify and
-whole-branch review remain integration gates. Loaded movie/episode/rate/ads,
+replacement; it did not exercise the loaded extension. The narrow staging
+artifact built at `66ce7f85` passed validation, including the Prime MAIN script
+and bundled logo. Whole-branch review remains an integration gate. Graphify's
+safe refresh stopped on an inherited `ref_clsx` ownership collision before
+publication; the curated graph is unchanged. Loaded movie/episode/rate/ads,
 fullscreen/chat/resume and two-client room/history acceptance are still open.
 
 Prime support is not deployed to staging or production. Delivery requires

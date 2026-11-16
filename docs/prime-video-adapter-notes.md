@@ -183,7 +183,13 @@ The recorded automated runs are local evidence at their task revisions:
 | SQL | Clean disposable replay of all 97 migrations; 728 assertions across 12 suites. Existing resource-bounds planner assertion varied after repeated fixtures; all 69 passed on pristine focused replay without weakening SQL/tests. |
 | Extension | Task 4 full run: 2,926 tests / 172 files, excluding the existing production-emitting release fixture. Check passed. Earlier reviewed lifecycle/anchor fixes passed 81 focused tests. |
 | Final local integration | Staging Worker bundle dry-run passed; `pnpm dev:check` reviewed. Chrome rendered actual HistoryBrowser SSR/CSS with a synthetic empty library at widths 1470 and 360: SVG loaded, all five filter labels fit, no horizontal overflow and correct Prime selection. This is limited layout proof without authentication, live API/account data or editor acceptance. |
-| Staging artifact | Build/validation passed at `5928aafa`; that artifact predates review fixes and final UI integration and is stale. Final rebuild/validation is pending. |
+| Staging artifact | Final narrow build and validation passed at `66ce7f85`, superseding the stale `5928aafa` artifact. One top-frame document-start Prime MAIN script, exact Prime host permission and emitted logo were verified; the popup references the SVG and its bytes match the canonical source. |
+
+Candidate ZIP: `artifacts/anidachi-extension-staging-66ce7f85.zip`.
+SHA-256: `afc652a2a1b149330bf2e0ef7dfb15f2b808b94de9b65703ffb2d31ecca6f403`.
+Loadable folder: `anidachi-extension-staging/`. These generated outputs are
+ignored local artifacts, not committed or published. The build reports the
+existing ineffective-dynamic-import advisory for the history client; no error.
 
 Native authenticated Prime research observed pause/seek, content-clock freeze
 through a real ad, same-video/same-season-URL Next Episode, and direct episode
@@ -195,14 +201,25 @@ absent, so real fullscreen is unproved.
 
 The browser connector cannot load/reload developer extensions through
 `chrome://extensions`; loading and starting the final candidate require a user
-handoff. Remaining gates are final quality/build/manifest and asset validation,
+handoff. The final candidate was handed off for manual load and player start;
+no completed load has been observed yet. Remaining gates are whole-branch review,
 loaded movie/episode/ads/rate/fullscreen/chat/source-replacement/resume checks,
 authenticated website/editor acceptance, and two-client Prime room/history
 acceptance against compatible staging. The current staging server lacks this
 Prime support, so a new extension alone cannot prove that end-to-end flow.
 No staging write/deployment, two-client test or production publication occurred
-as part of this local implementation. Graphify publication and whole-branch
-review follow the final code/docs integration.
+as part of this local implementation.
+
+Graphify refresh exception: the repository safe adapter extracted 291 pending
+AST sources, including inherited staging backlog, then refused publication with
+`Foreign node collision: ref_clsx`. The existing record is a semantic concept
+owned by `apps/web/lib/utils.ts`; the fresh import stub has different ownership.
+All three tracked graph artifacts remain unchanged. Semantic publication uses
+the same adapter and is also blocked by this pending AST collision. No guard was
+bypassed, historical hash stamped, or unrelated graph record rewritten. Resolve
+the ownership collision separately, then refresh the four changed documents
+through Codex semantic extraction and the safe adapter. The stale graph is a
+navigation limitation; source, tests and artifact receipts remain authoritative.
 
 ## Ordered delivery and rollback
 
