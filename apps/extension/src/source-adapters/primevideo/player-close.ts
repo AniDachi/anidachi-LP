@@ -3,11 +3,12 @@ import {
 	PRIME_PLAYER,
 	PRIME_PLAYER_STATE,
 	PRIME_PLAYER_ENDED,
+	PRIME_PLAYER_CLOSE_WINDOW_MS,
 	PRIME_BINDING_CHANGED,
 	readPrimeBinding,
 } from "./contract";
 
-/** ISOLATED world: a page-authored state/event alone can never request departure. */
+/** ISOLATED world: pairs provider lifecycle evidence with this adapter's native media. */
 export function subscribePrimePlayerClose(
 	container: HTMLElement,
 	video: HTMLVideoElement,
@@ -32,23 +33,27 @@ export function subscribePrimePlayerClose(
 			return;
 		}
 		if (container.getAttribute(PRIME_PLAYER_STATE) !== "closed") return;
-		if (pending.natural && container.getAttribute(PRIME_PLAYER_ENDED) !== "true") return;
+		if (pending.natural) {
+			const endedAt = container.getAttribute(PRIME_PLAYER_ENDED);
+			const age = performance.now() - Number(endedAt);
+			if (endedAt === null || !Number.isFinite(age) || age < 0 || age > PRIME_PLAYER_CLOSE_WINDOW_MS) return;
+		}
 		const { event } = pending;
 		cancel();
 		observedOpen = false;
 		listener(event);
 	};
 	const unloaded = (event: Event) => {
-		// Native media unload plus SDK end+Close: neither page markup nor a
-		// synthetic event alone may retire a room. Ads and source swaps unload too.
+		// Natural completion trusts the selected provider's lifecycle, not user
+		// activation. Native unload alone also occurs for ads and source swaps.
 		if (!event.isTrusted || event.target !== video || !observedOpen || pending) return;
 		pending = { event, contentId: readPrimeBinding(video)?.contentId ?? null, natural: true };
-		timer = setTimeout(cancel, 1000);
+		timer = setTimeout(cancel, PRIME_PLAYER_CLOSE_WINDOW_MS);
 		check();
 	};
 	const gesture = (event: Event) => {
 		if (!event.isTrusted) return;
-		cancel();
+		if (!pending?.natural) cancel();
 		const target = event.target;
 		if (
 			!(target instanceof Element) ||
@@ -73,9 +78,10 @@ export function subscribePrimePlayerClose(
 			!event.metaKey &&
 			!document.fullscreenElement;
 		if (!closeClick && !escape) return;
+		cancel();
 		pending = { event, contentId: readPrimeBinding(video)?.contentId ?? null };
 		// SDK's existing 250ms observation confirms closure. No additional polling.
-		timer = setTimeout(cancel, 1000);
+		timer = setTimeout(cancel, PRIME_PLAYER_CLOSE_WINDOW_MS);
 	};
 	const observer = new MutationObserver(check);
 	observer.observe(container, {

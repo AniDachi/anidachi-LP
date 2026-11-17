@@ -128,6 +128,49 @@ it("rejects stale SDK Close before the next lifecycle poll", async () => {
 	await Promise.resolve();
 	expect(f.closed).not.toHaveBeenCalled();
 });
+
+it("expires SDK-first completion before an unrelated later unload", async () => {
+	const f = setup();
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(1100);
+	unload(f.video);
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).not.toHaveBeenCalled();
+});
+
+it("rebinds a replaced webPlayer with the same SDK context and emitter", async () => {
+	const f = setup();
+	f.context.webPlayer = { ...f.context.webPlayer };
+	await vi.advanceTimersByTimeAsync(250);
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	const event = unload(f.video);
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+	expect(f.context.webPlayer.eventEmitter.on).toHaveBeenCalledTimes(2);
+	expect(f.context.webPlayer.eventEmitter.off).toHaveBeenCalledTimes(1);
+});
+
+it("keeps a natural close pending while the viewer types in chat", async () => {
+	const f = setup();
+	const chat = document.createElement("input");
+	const overlay = document.createElement("anidachi-overlay-root");
+	overlay.append(chat);
+	f.root.append(overlay);
+	const event = unload(f.video);
+	const typing = new KeyboardEvent("keydown", { key: "a", bubbles: true });
+	Object.defineProperty(typing, "isTrusted", { value: true });
+	chat.dispatchEvent(typing);
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+});
+
 it.each([
 	"click",
 	"Escape",

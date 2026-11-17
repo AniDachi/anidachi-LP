@@ -15,8 +15,9 @@ export const PRIME_BINDING = "data-anidachi-primevideo-binding";
 // Presence permits the overlay only. Commands/history still require PRIME_BINDING.
 export const PRIME_PLAYER = "data-anidachi-primevideo-player";
 export const PRIME_PLAYER_STATE = "data-anidachi-primevideo-state";
-// SDK Close with a completed timeline; ordinary media replacement is not an exit.
+// performance.now() at SDK Close with a completed timeline; bounded in both event orders.
 export const PRIME_PLAYER_ENDED = "data-anidachi-primevideo-ended";
+export const PRIME_PLAYER_CLOSE_WINDOW_MS = 1000;
 export const PRIME_NAVIGATING = "anidachi-primevideo-navigating";
 export const PRIME_BINDING_CHANGED = "anidachi-primevideo-binding-changed";
 const token = z.string().min(1).max(80);
