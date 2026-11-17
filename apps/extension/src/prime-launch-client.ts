@@ -151,7 +151,7 @@ export async function recoverPrimeLaunch(
 			consumed = true;
 		},
 		takeResume(_href, fingerprint, now = Date.now()) {
-			if (!sameExplicit(_href) || !valid(fingerprint, now)) return null;
+			if (!pending.resume || !sameExplicit(_href) || !valid(fingerprint, now)) return null;
 			consumed = true;
 			return pending.resume ?? null;
 		},

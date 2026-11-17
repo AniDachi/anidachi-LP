@@ -65,9 +65,12 @@ export function resolvePrimeContext(root: HTMLElement): ObjectValue | null {
 	}
 	return candidates.size === 1 ? [...candidates][0]! : null;
 }
-export function inspectPrimeSdk(
+type PrimePlayer = Pick<PrimeSdk, "video" | "context" | "webPlayer" | "playback">;
+
+/** Player presence is independent of page labels, catalog and content identity. */
+export function inspectPrimePlayer(
 	documentValue: Document = document,
-): PrimeSdk | null {
+): PrimePlayer | null {
 	try {
 		const root = documentValue.getElementById("dv-web-player");
 		if (!root) return null;
@@ -79,12 +82,7 @@ export function inspectPrimeSdk(
 			context = resolvePrimeContext(root);
 		if (!context) return null;
 		const webPlayer = object(context.webPlayer),
-			playback = object(context.playback),
-			title = object(context.title),
-			timeline = object(context.timeline),
-			ad = object(context.adPlayback),
-			recap = object(context.recapStore),
-			policy = object(context.playbackControlsPolicy);
+			playback = object(context.playback);
 		if (
 			webPlayer.isPlayerOpen !== true ||
 			webPlayer.hasPlaybackInitiated !== true
@@ -99,6 +97,24 @@ export function inspectPrimeSdk(
 			"getPlaybackRate",
 		])
 			if (!method(playback, key)) return null;
+		return { video, context, webPlayer, playback };
+	} catch {
+		return null;
+	}
+}
+
+export function inspectPrimeSdk(
+	documentValue: Document = document,
+	player = inspectPrimePlayer(documentValue),
+): PrimeSdk | null {
+	try {
+		if (!player) return null;
+		const { video, context, webPlayer, playback } = player;
+		const title = object(context.title),
+			timeline = object(context.timeline),
+			ad = object(context.adPlayback),
+			recap = object(context.recapStore),
+			policy = object(context.playbackControlsPolicy);
 		const info = object(callPrime(title, "getTitleInfo"));
 		if (webPlayer.currentTitleId !== info.titleId) return null;
 		const page = readPrimePage(
