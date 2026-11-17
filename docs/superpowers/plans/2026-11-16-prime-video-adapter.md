@@ -66,6 +66,20 @@ Prime rows, epochs and receipts when rolling clients/server back.
 
 ## Global Constraints
 
+### Task 13: Native SPA page metadata
+
+Reproduced the owner's Grimm failure after Supernatural → Home → Grimm in
+authenticated Chrome. Initial hydration/canonical HTML stays on the first title;
+the committed page provider and player SDK move to Grimm. Use that current public
+page context for MAIN metadata and catalog parsing, preserving exact route/title
+and membership guards. Cover stale HTML, late/replaced live context, ambiguous
+providers, bounded traversal and canonical-alias ownership in regressions.
+Candidate MAIN replacement already restored the capsule without document reload;
+finish extension checks, review and staging packaging. Final artifact reload and
+broader regional/two-account acceptance remain separate. No backend/permission
+change. Graphify safe refresh still stops at inherited `ref_clsx` ownership
+collision; preserve existing graph and defer semantic publication with it.
+
 ### Task 12: Verify capsule detection on supported Amazon surfaces
 
 Owner requests checking recognition and capsule presence across Amazon. Verify
