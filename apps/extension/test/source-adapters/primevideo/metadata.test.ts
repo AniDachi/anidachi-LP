@@ -45,7 +45,7 @@ describe("Prime exact public metadata admission", () => {
 		"wrong-full-id",
 		"wrong-compact-link",
 		"wrong-ordinal",
-		"wrong-title",
+		"missing-title",
 		"missing-membership",
 		"duplicate-selected",
 	])("fails closed for %s", (mode) => {
@@ -56,7 +56,7 @@ describe("Prime exact public metadata admission", () => {
 		if (mode === "wrong-compact-link")
 			btf.self[gtis.first]!.link = `/detail/${ids.second}`;
 		if (mode === "wrong-ordinal") f.titleInfo.episodeNumber = 2;
-		if (mode === "wrong-title") f.titleInfo.title = "Other episode";
+		if (mode === "missing-title") btf.detail.detail[gtis.first]!.title = "";
 		if (mode === "missing-membership") btf.episodeList.cardTitleIds = [];
 		if (mode === "duplicate-selected")
 			atf.seasons[gtis.season]![0]!.isSelected = true;

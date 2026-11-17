@@ -13,6 +13,28 @@ Loaded browser acceptance passed for both follow-ups. The
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
+## Display labels are not playback identity
+
+On November 17, Gilmore Girls S2 E1 failed with the current `43614bb2` artifact.
+The active SDK and live page agreed on full GTI, compact GTI, season, episode and
+membership. The SDK title was `Sadie, Sadie...`; the page title was
+`Sadie, Sadie ...`. Strict text equality incorrectly rejected that same episode.
+
+Mapped public page labels now supply displayed movie/episode/series titles.
+SDK label spelling, punctuation and translation are not identity gates. Exact
+GTI/compact mapping, route, content type, selected season, membership and ordinal
+checks remain mandatory. Labels remain bounded/nonempty, and existing ad/recap
+handling is unchanged. Tests cover punctuation, translated series/episodes,
+localized movie labels with marketplace alias proof, and identity conflicts.
+
+The SPA reader also skips initial hydration parsing entirely when the current
+route differs from the initial navigation route. Live candidate MAIN validation
+restored the capsule on the paused Gilmore Girls tab without reload: S2 E1,
+0:06 / 41:27 and 22 current-season catalog entries. Thirty local SDK inspections
+averaged about 1.8 ms on that page; this is a measured sample, not a universal
+performance guarantee. Packaged reload and broader regional acceptance remain
+separate. No server, permission, network or schema change is required.
+
 ## Native SPA metadata and missing capsule on Grimm
 
 On November 17, authenticated Chrome reproduced Supernatural → Home → Grimm

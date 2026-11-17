@@ -56,16 +56,16 @@ export function readPrimePageState(
 	) {
 		const states = livePageState(root);
 		if (!states) return null;
-		const initial = readInitialPageState(documentValue);
+		const initial = initialDocumentRoute(documentValue)
+			? readInitialPageState(documentValue)
+			: null;
 		// A direct marketplace load may need its canonical ASIN alias. It remains
 		// evidence only while both HTML collections identify this same live page.
-		const samePage =
-			initialDocumentRoute(documentValue) &&
-			initial?.states.every(
-				(state, index) =>
-					typeof state.pageTitleId === "string" &&
-					state.pageTitleId === states[index]?.pageTitleId,
-			);
+		const samePage = initial?.states.every(
+			(state, index) =>
+				typeof state.pageTitleId === "string" &&
+				state.pageTitleId === states[index]?.pageTitleId,
+		);
 		return { states, canonicalHref: samePage ? initial!.canonicalHref : null };
 	}
 	return readInitialPageState(documentValue);
