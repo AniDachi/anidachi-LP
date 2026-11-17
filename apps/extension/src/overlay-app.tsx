@@ -210,6 +210,7 @@ import { HostingPaywall } from "./hosting-paywall";
 import { useHostingAccess } from "./use-hosting-access";
 import { useAccountHostingStatus } from "./use-account-hosting-status";
 import { useRoomClosingPresentation } from "./use-room-closing-presentation";
+import { requestPlayerRoomDeparture } from "./player-room-departure";
 import { RoomHostingTime } from "./room-hosting-time";
 import { useRoomHostingTime } from "./use-room-hosting-time";
 import { useFree20Warning } from "./use-free20-warning";
@@ -525,6 +526,9 @@ export async function runOverlayPrivilegedAction(
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }: OverlayAppProps) {
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
 	const capturedPrimeRestoreOwnerRef = useRef<string | null>(null);
+	const playerCloseEpochRef = useRef(0);
+	const playerRoomClosedRef = useRef(false);
+	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
 	const adapterActiveRef = useRef(adapterActive);
@@ -1583,9 +1587,15 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		let cancelled = false;
 		const currentUserId = participant?.id ?? null;
 		setRoomSessionLoadError(null);
+		const closeEpoch = playerCloseEpochRef.current;
 		void migrateLegacyRoomSession(currentUserId)
 			.then((record) => {
 				if (cancelled) {
+					return;
+				}
+				if (playerCloseEpochRef.current !== closeEpoch || playerRoomClosedRef.current) {
+					if (record) void requestPlayerRoomDeparture(record).catch(error => logDebug("overlay.room", "late player departure failed", {message:String(error)}));
+					setRoomSessionLoadedForUserId(currentUserId);
 					return;
 				}
 
@@ -4137,7 +4147,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			await rememberRoomSessionRecoveryHint(
 				nextRoomId,
 				activeParticipant.id,
+				{ canWrite: isCurrentJoin },
 			);
+			if (!isCurrentJoin()) return false;
 			ensureRoomHash(nextRoomId);
 			logDebug("overlay.room", "connect requested", {
 				roomId: nextRoomId,
@@ -4219,6 +4231,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			}
 
 			const joinSequence = roomJoinSequenceRef.current + 1;
+			playerRoomClosedRef.current = false;
+			const closeEpoch = playerCloseEpochRef.current;
 			roomJoinSequenceRef.current = joinSequence;
 			setRoomJoinAttempt({ roomId: nextRoomId, ownerUserId: participantRef.current?.id ?? null, sequence: joinSequence, pending: true,
 				startedAt: performance.now(), presentationExpired: false });
@@ -4295,6 +4309,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 					throw error;
 				}
 
+				if (playerCloseEpochRef.current !== closeEpoch) {
+					await requestPlayerRoomDeparture(connected.roomSession);
+					return;
+				}
 				if (skipStaleJoin("room-token") || skipActiveConnection()) {
 					return;
 				}
@@ -4346,6 +4364,60 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		roomJoinInFlightRef.current = null;
 		setRoomJoinAttempt(null);
 	}, []);
+
+	const handleNativePlayerClose = useCallback((event: Event) => {
+		if (!event.isTrusted) return;
+		const record = storedRoomSessionRef.current;
+		const login = roomAuthSessionKeyRef.current;
+		const pending = playerDepartureRef.current;
+		if ((playerRoomClosedRef.current && !record) ||
+			(record && pending?.login === login && roomSessionIdentityMatches(record, pending.record))) return;
+		playerRoomClosedRef.current = true;
+		playerCloseEpochRef.current += 1;
+		cancelPendingRoomJoin();
+		initialPrimeLaunchRef.current?.consumeRoom();
+		initialPrimeLaunchRef.current = null;
+		clearRoomHash();
+		clearRoomSessionRecoveryHint();
+		roomReconnectSuppressedRef.current = true;
+		if (roomReconnectTimerRef.current !== null) {
+			window.clearTimeout(roomReconnectTimerRef.current);
+			roomReconnectTimerRef.current = null;
+		}
+		// Stop local sync/media now; storage is retired only after the background
+		// has captured exact retry ownership, so clearing cannot race its lookup.
+		roomEventOwnerRef.current = null;
+		clientRef.current.close();
+		releaseRoomTabLock();
+		roomIdRef.current = null;
+		setRoomId(null);
+		setParticipants([]);
+		setCamsEnabled(false);
+		setPrivilegedRoomAuthority(null);
+		// A pending create still owns its prepared record. Its late response must
+		// confirm that identity so the epoch check can request exact departure.
+		if (!record) return;
+		const departure = { record, login };
+		playerDepartureRef.current = departure;
+		setRoomLeavePending(true);
+		void requestPlayerRoomDeparture(record).then(() => {
+			if (roomAuthSessionKeyRef.current === login && playerDepartureRef.current === departure)
+				resetLocalRoomSession("", false, record);
+		}).catch(error => {
+			if (roomAuthSessionKeyRef.current === login && storedRoomSessionRef.current &&
+				roomSessionIdentityMatches(storedRoomSessionRef.current, record)) setAuthMessage(error instanceof Error ? error.message : String(error));
+			logDebug("overlay.room", "player departure failed", {message:String(error)});
+		}).finally(() => {
+			if (playerDepartureRef.current !== departure) return;
+			playerDepartureRef.current = null;
+			if (roomAuthSessionKeyRef.current !== login) return;
+			setRoomLeavePending(false);
+		});
+	}, [cancelPendingRoomJoin, resetLocalRoomSession]);
+
+	// Deliberately survives adapterActive=false: a confirmed close arrives during
+	// suspension. Replacing the adapter unsubscribes; a missing player alone exits nothing.
+	useEffect(() => adapter.subscribePlayerClose?.(handleNativePlayerClose), [adapter, handleNativePlayerClose]);
 
 	const clearRoomReconnectTimer = useCallback(() => {
 		if (roomReconnectTimerRef.current === null) {
@@ -4807,6 +4879,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			}
 
 			cancelPendingRoomJoin();
+			playerRoomClosedRef.current = false;
+			const closeEpoch = playerCloseEpochRef.current;
 			const createSequence = roomJoinSequenceRef.current;
 			const isCurrentCreate = () =>
 				roomJoinSequenceRef.current === createSequence;
@@ -4891,6 +4965,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				throw error;
 			}
 			createRequestIdRef.current = null;
+			if (playerCloseEpochRef.current !== closeEpoch) {
+				await requestPlayerRoomDeparture(created.roomSession);
+				return null;
+			}
 			if (!isCurrentCreate()) {
 				return null;
 			}
@@ -5002,6 +5080,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	useEffect(() => {
 		const currentUserId = participant?.id ?? null;
 		if (
+			playerRoomClosedRef.current ||
 			!identityLoaded ||
 			(adapter.provider === "primevideo" && !adapter.getSourceDescriptor()) ||
 			roomSessionLoadedForUserId !== currentUserId ||

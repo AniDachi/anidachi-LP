@@ -1,5 +1,16 @@
 # Current Development State
 
+## Prime player close — November 17, 2026
+
+Owner-approved candidate `codex/prime-player-close-room` makes explicit native
+player close leave the room: host ends it, guest leaves individually. In-player
+episode/season changes, autoplay and reload keep their existing continuity.
+The extension uses trusted close intent plus confirmed SDK state and existing
+exact-session departure retries. No backend, schema, permissions or production
+change. See [provider notes](prime-video-adapter-notes.md#intentional-player-close).
+Loaded-artifact acceptance follows the owner's update of the reviewed build;
+automated results do not establish cross-region playback.
+
 ## Prime two-account acceptance corrections — November 17, 2026
 
 Testing the loaded staging artifact with two accounts reproduced a guest reload
