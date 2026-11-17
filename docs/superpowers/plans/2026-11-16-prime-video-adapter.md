@@ -1,5 +1,27 @@
 # Prime Video adapter
 
+## Task 23: Recover the joined guest's inactive Prime player
+
+Loaded8876fbf4 confirmed ten-episode history, exact invite launch and aligned
+pause/seek. Native episode completion then closed both players (SDK autoplay
+false), retaining next-title metadata. Starting E3 on the host left the joined
+guest inactive because both overlay and controller discard host state then.
+
+Reuse existing source navigation for an inactive Prime guest with a confirmed
+room source when the matching host plays. Make the capability explicit on the
+Prime adapter; preserve other providers, deduplication, latest-state rebinding,
+session/source cancellation and timeout. Never issue playback commands through
+an inactive adapter or turn local cached metadata into room-source authority.
+Explicit native close must cancel recovery immediately and leave the room.
+Do not change provider autoplay settings, add polling, UI or backend contracts.
+
+Regress controller and real overlay inactive delivery/close races before edits;
+run extension suite/check, API/room gates, independent whole-branch review,
+dev:check and narrow staging build/validation. Deliver by PR into staging and
+verify loaded next-episode, ads when served, history and explicit close on both
+available accounts. Distinct-market access remains unavailable. Preserve the
+inherited Graphify collision exception; no production promotion.
+
 ## Task 22: Preserve observed Prime episodes and resume local interstitials
 
 Loaded Task 21 acceptance found two remaining cases: Love in Disguise exposes

@@ -65,6 +65,8 @@ export interface VideoAdapter {
   provider: SourceProvider;
   name: string;
   enforcesAuthoritativeRoomSource?: boolean;
+  /** Reopen the joined room's source after natural player disappearance. */
+  recoversRoomSourceWhileInactive?: boolean;
   video: HTMLVideoElement;
   container: HTMLElement;
   playbackPolicy: AdapterPlaybackPolicy;

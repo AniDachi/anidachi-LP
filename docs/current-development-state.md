@@ -1,5 +1,17 @@
 # Current Development State
 
+## Prime inactive guest recovery — November 18, 2026
+
+Loaded staging build `8876fbf4` confirmed room creation on the reported Amazon
+ASIN, exact guest invite launch, aligned playback/seek and ten known episodes
+in website history. Natural episode completion exposed a further gap: the room
+survived, but a closed guest player ignored the host's next episode.
+Candidate `codex/prime-inactive-room-recovery`, based on staging `a646ef58`,
+reuses existing room-source navigation while Prime is inactive. Explicit close
+and room termination cancel that work immediately. Loaded acceptance of this
+candidate is pending; the two available accounts do not prove distinct-market
+playback. See [active plan](superpowers/plans/2026-11-16-prime-video-adapter.md#task-23-recover-the-joined-guests-inactive-prime-player).
+
 ## Amazon SPA identity — November 18, 2026
 
 `codex/prime-amazon-readiness` fixes the reproduced metadata wait on Amazon's

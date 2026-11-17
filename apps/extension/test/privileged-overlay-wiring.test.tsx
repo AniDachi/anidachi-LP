@@ -43,6 +43,7 @@ import {
 	listRoomInvites,
 } from "../src/social-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
+import { DEFAULT_PLAYBACK_POLICY } from "../src/source-adapters/core/playback-policy";
 import { TOP_BUBBLE_HIDE_DELAY_MS } from "../src/top-bubble-reveal";
 
 const extensionStorage = vi.hoisted(() => {
@@ -97,6 +98,70 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+
+  it.each(["follow", "close-before-navigation", "close-during-navigation", "room-ended"] as const)("handles inactive Prime room recovery through the real overlay: %s", async scenario => {
+    installActiveHostRoomRuntime();
+    const source = { provider: "primevideo" as const, title: "Episode", videoFingerprint: "primevideo|detail/0TBFWHTQWLSMFW67KBP9IC4UMU", sourceUrl: "https://www.primevideo.com/detail/0TBFWHTQWLSMFW67KBP9IC4UMU", canonicalUrl: "https://www.primevideo.com/detail/0TBFWHTQWLSMFW67KBP9IC4UMU" };
+    const state = { hostTime: 20, playing: false, playbackRate: 1, updatedAt: Date.now(), videoFingerprint: source.videoFingerprint };
+    let connection!: Parameters<RoomClient["connect"]>[0];
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+      connection = options;
+      options.onStatus("connected");
+    });
+    const Original = playbackSyncModule.PlaybackSyncController;
+    const navigation = vi.fn<ConstructorParameters<typeof Original>[0]["ensureRemoteSource"]>().mockResolvedValue({ status: "navigation-started", targetUrl: source.sourceUrl });
+    vi.spyOn(playbackSyncModule, "PlaybackSyncController").mockImplementation(function(options: ConstructorParameters<typeof Original>[0]) { return new Original({ ...options, ensureRemoteSource: navigation }); });
+    vi.spyOn(playerDeparture, "requestPlayerRoomDeparture").mockResolvedValue();
+    let closed!: (event: Event) => void;
+    const view = await renderOverlay(adapter => {
+      adapter.provider = "primevideo";
+      adapter.playbackPolicy = DEFAULT_PLAYBACK_POLICY;
+      adapter.enforcesAuthoritativeRoomSource = true;
+      Object.assign(adapter, { recoversRoomSourceWhileInactive: true });
+      adapter.getFingerprint = () => source.videoFingerprint;
+      adapter.getSourceDescriptor = () => source;
+      adapter.getState = () => state;
+      adapter.getPlaybackSnapshot = () => ({ capturedAt: Date.now(), contentTime: 0, phase: "content", playbackRate: 1, playing: false });
+      adapter.subscribePlayerClose = listener => { closed = listener; return () => {}; };
+      adapter.play = vi.fn().mockResolvedValue(undefined);
+    });
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await flushRoomActionWork();
+      await act(async () => connection.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{ ...hostParticipant(), role: "viewer" }], source, hostState: state }));
+      await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false}/>));
+      const change = { type: "SOURCE_CHANGED" as const, roomId: "room-a", roomGeneration: 1, sourceGeneration: 2, serverSeq: 2, serverReceivedAt: Date.now(), source, hostState: state };
+      await act(async () => connection.onEvent(change));
+      expect(navigation).not.toHaveBeenCalled();
+      const event = new Event("click"); Object.defineProperty(event, "isTrusted", { value: true });
+      await act(async () => {
+        connection.onEvent({ type: "HOST_STATE", state: { ...state, playing: true } });
+        if (scenario === "close-before-navigation") closed(event);
+      });
+      if (scenario === "close-before-navigation") {
+        expect(navigation).not.toHaveBeenCalled();
+        return;
+      }
+      expect(navigation).toHaveBeenCalledExactlyOnceWith(source, expect.objectContaining({ roomId: "room-a", roomProvider: "primevideo" }));
+      const signal = navigation.mock.calls[0]![1].signal!;
+      expect(view.adapter.play).not.toHaveBeenCalled();
+      if (scenario !== "follow") {
+        await act(async () => {
+          if (scenario === "room-ended") connection.onEvent({ type: "ROOM_ENDED", roomId: "room-a", endedAt: Date.now(), reason: "host_ended" });
+          else closed(event);
+          // Departure must cancel before React flushes effects or navigation resolves.
+          expect(signal.aborted).toBe(true);
+          connection.onEvent({ type: "HOST_STATE", state: { ...state, playing: true } });
+        });
+        expect(navigation).toHaveBeenCalledTimes(1);
+      } else {
+        await act(async () => connection.onEvent({ ...change, sourceGeneration: 1, source: { ...source, videoFingerprint: "primevideo|stale" }, hostState: { ...state, playing: true, videoFingerprint: "primevideo|stale" } }));
+        expect(signal.aborted).toBe(false);
+        expect(navigation).toHaveBeenCalledTimes(1);
+      }
+    } finally { await unmount(view.root); }
+  });
 
   it("removes the real Resume control when local ad playback succeeds", async () => {
     installActiveHostRoomRuntime();

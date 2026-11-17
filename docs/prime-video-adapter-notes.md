@@ -40,6 +40,16 @@ unavailable, and the inherited Graphify `ref_clsx` publication blocker remains.
 
 ## Intentional player close
 
+Natural player disappearance retains room membership. The Prime adapter opts
+into receiving authoritative room sources while inactive: a matching playing
+host can reopen the exact episode through existing source navigation. Cached
+metadata from a closed player is not proof that its episode is already open.
+Playback commands wait for the active adapter to bind; pending navigation keeps
+the newest host state and existing generation, cancellation and timeout fences.
+Explicit close or room termination clears the sync session synchronously so a
+queued transition cannot reopen a departed guest. Other adapters retain their
+inactive behavior. This adds no polling or provider autoplay setting changes.
+
 Task 20 makes a viewer's explicit Prime player close leave the exact current
 room session. The host's departure ends the room; a guest's departure removes
 only that guest. Selecting another episode/season inside the player or autoplay

@@ -714,6 +714,70 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.pause).not.toHaveBeenCalled();
 	});
 
+	it.each(["previous", "next"])("reopens inactive Prime from room authority even with %s cached metadata", async cached => {
+		const ensureRemoteSource = vi.fn(async (_source: WatchSourceDescriptor, _context: SourceNavigationContext): Promise<EnsureSourceResult> => ({ status: "navigation-started", targetUrl: "https://www.primevideo.com/detail/next" }));
+		const source = watchSource("primevideo", "next");
+		const harness = createHarness({ isHost: false, provider: "primevideo", fingerprint: `primevideo|${cached}`, ensureRemoteSource });
+		harness.controller.suspend();
+		await harness.controller.handleHostState(playbackState({ videoFingerprint: source.videoFingerprint }), source);
+		expect(ensureRemoteSource).not.toHaveBeenCalled();
+		await harness.controller.handleHostState(playbackState({ videoFingerprint: source.videoFingerprint, playing: true, hostTime: 20 }));
+		await settleAsyncWork();
+		expect(ensureRemoteSource).toHaveBeenCalledExactlyOnceWith(source, expect.objectContaining({ roomId: "room-1", roomProvider: "primevideo" }));
+		const signal = ensureRemoteSource.mock.calls[0]![1].signal!;
+		await harness.controller.handleHostState(playbackState({ videoFingerprint: source.videoFingerprint, hostTime: 35 }));
+		harness.controller.handleRemoteCommand({ type: "SEEK", roomId: "room-1", byUserId: "host", to: 50 });
+		expect(ensureRemoteSource).toHaveBeenCalledTimes(1);
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+		const replacement = createFakeAdapter({ provider: "primevideo", fingerprint: source.videoFingerprint });
+		harness.controller.bindAdapter(replacement);
+		await settleAsyncWork();
+		expect(replacement.seek).toHaveBeenLastCalledWith(35, { resumeIfPlaying: false });
+		expect(replacement.play).not.toHaveBeenCalled();
+		expect(signal.aborted).toBe(true);
+	});
+
+	it.each(["missing-source", "wrong-source-provider", "wrong-fingerprint", "host", "missing-room", "missing-participant", "unbound-provider", "other-provider"])("does not reopen an inactive player with %s", async scenario => {
+		const ensureRemoteSource = vi.fn(async (): Promise<EnsureSourceResult> => ({ status: "navigation-started", targetUrl: "https://www.primevideo.com/detail/next" }));
+		const provider = scenario === "other-provider" ? "youtube" : "primevideo";
+		const harness = createHarness({ isHost: scenario === "host", provider, ensureRemoteSource });
+		harness.controller.suspend();
+		if (scenario === "missing-room") harness.controller.setSession(session({ roomProvider: provider, roomId: null }));
+		if (scenario === "missing-participant") harness.controller.setSession(session({ roomProvider: provider, participantId: null }));
+		if (scenario === "unbound-provider") harness.controller.setSession(session({ roomProvider: null }));
+		const source = watchSource(scenario === "wrong-source-provider" ? "youtube" : provider, "next");
+		await harness.controller.handleHostState(playbackState({ playing: true, videoFingerprint: scenario === "wrong-fingerprint" ? `${provider}|different` : source.videoFingerprint }), scenario === "missing-source" ? undefined : source);
+		await settleAsyncWork();
+		expect(ensureRemoteSource).not.toHaveBeenCalled();
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+	});
+
+	it.each(["connection", "room", "source", "left", "disposed"])("cancels inactive Prime recovery and forgets authority after %s changes", async change => {
+		const gate = deferred<EnsureSourceResult>();
+		const ensureRemoteSource = vi.fn((_source: WatchSourceDescriptor, _context: SourceNavigationContext) => gate.promise);
+		const harness = createHarness({ isHost: false, provider: "primevideo", ensureRemoteSource });
+		const source = watchSource("primevideo", "next");
+		const state = playbackState({ playing: true, hostTime: 20, videoFingerprint: source.videoFingerprint });
+		harness.controller.suspend();
+		await harness.controller.handleHostState(state, source);
+		await settleAsyncWork();
+		expect(ensureRemoteSource).toHaveBeenCalledTimes(1);
+		const signal = ensureRemoteSource.mock.calls[0]![1].signal!;
+		if (change === "disposed") harness.controller.dispose();
+		else harness.controller.setSession(session({ roomProvider: "primevideo", ...(change === "connection" ? { connectionGeneration: 2 } : change === "room" ? { roomGeneration: 2 } : change === "source" ? { sourceGeneration: 2 } : { roomId: null, participantId: null }) }));
+		expect(signal.aborted).toBe(true);
+		gate.resolve({ status: "navigation-started", targetUrl: source.sourceUrl });
+		await harness.controller.handleHostState(state);
+		const replacement = createFakeAdapter({ provider: "primevideo", fingerprint: source.videoFingerprint });
+		harness.controller.bindAdapter(replacement);
+		await settleAsyncWork();
+		expect(ensureRemoteSource).toHaveBeenCalledTimes(1);
+		expect(replacement.play).not.toHaveBeenCalled();
+		expect(replacement.seek).not.toHaveBeenCalled();
+	});
+
 	it("disposes timers and adapter subscriptions exactly once", () => {
 		const clearIntervalSpy = vi.spyOn(window, "clearInterval");
 		const harness = createHarness({ isHost: true });
@@ -1262,7 +1326,8 @@ function createFakeAdapter({
 	return {
 		container: document.createElement("div"),
 		duckVolume: () => () => undefined,
-		enforcesAuthoritativeRoomSource: provider === "youtube",
+		enforcesAuthoritativeRoomSource: provider === "youtube" || provider === "primevideo",
+		recoversRoomSourceWhileInactive: provider === "primevideo",
 		emit: (event) => {
 			if (phase === "content" || phase === "buffering") {
 				confirmedContentTime = currentTime;

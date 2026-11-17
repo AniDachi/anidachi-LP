@@ -227,6 +227,10 @@ export class PlaybackSyncController {
 		this.restartHeartbeatTimer();
 	}
 
+	clearSession(): void {
+		this.setSession(EMPTY_SESSION);
+	}
+
 	handleLocalEvent(event: PlayerEvent): void {
 		const adapter = this.getActiveAdapter();
 		if (!adapter) {
@@ -290,10 +294,13 @@ export class PlaybackSyncController {
 		state: PlaybackState,
 		source?: WatchSourceDescriptor,
 	): Promise<void> {
-		const adapter = this.getActiveAdapter();
+		const adapter = this.adapter?.recoversRoomSourceWhileInactive
+			? this.adapter
+			: this.getActiveAdapter();
 		if (
+			this.disposed ||
 			!adapter ||
-			!this.hasProviderBoundRoomSession() ||
+			!this.hasProviderBoundRoomSession(adapter) ||
 			this.session.isHost
 		) {
 			return Promise.resolve();
@@ -311,6 +318,16 @@ export class PlaybackSyncController {
 		this.confirmedHostFingerprint = state.videoFingerprint;
 		const navigationSource =
 			source ?? this.getRememberedAuthoritativeRoomSource(state);
+		if (!this.adapterActive) {
+			// A closed Prime player can retain the next title's metadata. Room
+			// authority, not that stale adapter, decides what to open. Playback
+			// commands still wait for an active adapter to bind.
+			if (navigationSource && (state.playing ||
+				this.pendingSourceNavigation?.source.videoFingerprint === state.videoFingerprint)) {
+				this.queueSourceNavigation(navigationSource, state);
+			}
+			return Promise.resolve();
+		}
 		if (navigationSource) {
 			if (state.videoFingerprint !== adapter.getFingerprint()) {
 				this.queueSourceNavigation(navigationSource, state);
@@ -822,8 +839,7 @@ export class PlaybackSyncController {
 		return this.hasProviderBoundRoomSession();
 	}
 
-	private hasProviderBoundRoomSession(): boolean {
-		const adapter = this.getActiveAdapter();
+	private hasProviderBoundRoomSession(adapter = this.getActiveAdapter()): boolean {
 		return Boolean(
 			this.session.roomId &&
 				this.session.participantId &&

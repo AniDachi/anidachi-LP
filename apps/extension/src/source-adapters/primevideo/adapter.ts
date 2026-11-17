@@ -26,6 +26,7 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
 	readonly provider = "primevideo";
 	readonly name = "Prime Video";
 	readonly enforcesAuthoritativeRoomSource = true;
+	readonly recoversRoomSourceWhileInactive = true;
 	readonly playbackPolicy = {
 		...DEFAULT_PLAYBACK_POLICY,
 		remoteSeekThrottleMs: 2500,

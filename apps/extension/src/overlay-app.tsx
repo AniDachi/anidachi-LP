@@ -531,8 +531,6 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
-	const adapterActiveRef = useRef(adapterActive);
-	adapterActiveRef.current = adapterActive;
 	const flameTimersRef = useRef<Record<string, number | undefined>>({});
 	const fireHoldRef = useRef<FireHoldState | null>(null);
 	const liveChatTimersRef = useRef<Record<string, number | undefined>>({});
@@ -1737,6 +1735,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				window.clearTimeout(roomReconnectTimerRef.current);
 				roomReconnectTimerRef.current = null;
 			}
+			playbackSyncController.clearSession();
 			clientRef.current.close();
 			releaseRoomTabLock();
 			roomIdRef.current = null;
@@ -1759,7 +1758,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			}
 			return true;
 		},
-		[clearRoomQuotaDisplay, clearStoredRoomSession],
+		[clearRoomQuotaDisplay, clearStoredRoomSession, playbackSyncController],
 	);
 
 	const syncAuthUserScopedState = useCallback(
@@ -3588,9 +3587,6 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 	const applyHostState = useCallback(
 		async (state: PlaybackState, source?: WatchSourceDescriptor) => {
-			if (!adapterActiveRef.current) {
-				return;
-			}
 			await playbackSyncController.handleHostState(state, source);
 		},
 		[playbackSyncController],
@@ -3608,6 +3604,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				window.clearTimeout(roomReconnectTimerRef.current);
 				roomReconnectTimerRef.current = null;
 			}
+			playbackSyncController.clearSession();
 			clientRef.current.close();
 			releaseRoomTabLock();
 			roomIdRef.current = null;
@@ -3631,7 +3628,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			announcedRoomClosingRef.current = null;
 			if (revealPanel) setPanelOpen(true);
 		},
-		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop, showRoomActionFeedback],
+		[clearRoomQuotaDisplay, clearStoredRoomSession, ghostCamSession.stop, playbackSyncController, showRoomActionFeedback],
 	);
 
 	const handleServerEvent = useCallback(
@@ -4390,6 +4387,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		// Stop local sync/media now; storage is retired only after the background
 		// has captured exact retry ownership, so clearing cannot race its lookup.
 		roomEventOwnerRef.current = null;
+		playbackSyncController.clearSession();
 		clientRef.current.close();
 		releaseRoomTabLock();
 		roomIdRef.current = null;
@@ -4416,7 +4414,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			if (roomAuthSessionKeyRef.current !== login) return;
 			setRoomLeavePending(false);
 		});
-	}, [cancelPendingRoomJoin, resetLocalRoomSession]);
+	}, [cancelPendingRoomJoin, playbackSyncController, resetLocalRoomSession]);
 
 	// Deliberately survives adapterActive=false: a confirmed close arrives during
 	// suspension. Replacing the adapter unsubscribes; a missing player alone exits nothing.
