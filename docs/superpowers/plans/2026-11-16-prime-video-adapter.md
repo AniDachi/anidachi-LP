@@ -464,3 +464,20 @@ preservation. Run protocol, extension, affected web/API checks, room harness,
 independent review and narrow staging artifact validation. No production
 promotion or schema/permission change. The inherited Graphify collision remains
 an explicit publication exception; do not overwrite the curated graph.
+
+## Task 17 — Direct episode readiness
+
+Owner reports prolonged “Waiting for Prime Video title information”. Diagnosis
+found a real direct Rings of Power S3 E2 URL whose canonical points to its
+selected season. The existing equality check rejects this page on every poll.
+Accept only that proven episode-to-season relationship; keep movie canonical
+matching and all exact SDK ID, unique mapping, membership and ordinal guards.
+Do not add retries, polling loops or UI workarounds.
+
+Branch `codex/prime-metadata-readiness` starts at staging `29fafc86`. First
+reproduce in regression tests, then verify the public parser on the unchanged
+real page. Run the full extension suite/check, independent source review,
+staging build/validation and standard PR-to-staging gates. No backend or
+permission change. Loaded playback and the exact owner screenshot remain
+separate acceptance evidence; a title/URL has been requested. The inherited
+Graphify collision exception remains in force.

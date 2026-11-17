@@ -266,13 +266,11 @@ export function readPrimePage(
 	if (routes.length === 0 && pageRoute.token.length === 10 && canonicalRoute)
 		routes = mapped(canonicalRoute.token);
 	if (routes.length !== 1) return null;
+	let canonicalRecord: PublicRecord | undefined;
 	if (canonicalRoute) {
 		const canonicalRecords = mapped(canonicalRoute.token);
-		if (
-			canonicalRecords.length !== 1 ||
-			canonicalRecords[0]!.id !== routes[0]!.id
-		)
-			return null;
+		if (canonicalRecords.length !== 1) return null;
+		canonicalRecord = canonicalRecords[0];
 	}
 	const routeId = routes[0]!.compact;
 	const detail = details.get(id) ?? {};
@@ -297,6 +295,7 @@ export function readPrimePage(
 	if (current.type === "movie") {
 		if (
 			routeId !== current.compact ||
+			(canonicalRecord && canonicalRecord.id !== current.id) ||
 			info.type !== "MOVIE" ||
 			(detail.titleType !== undefined && detail.titleType !== "movie")
 		)
@@ -369,6 +368,15 @@ export function readPrimePage(
 	if (!selected || lists.some((list) => list.season.id !== selected.season.id))
 		return null;
 	const { season, entries } = selected;
+	// Prime canonicalizes direct episode URLs to their parent season. Accept
+	// that observed season, then still require exact episode/season membership
+	// and SDK ordinals below. A different episode or season cannot substitute.
+	if (
+		canonicalRecord &&
+		canonicalRecord.id !== routes[0]!.id &&
+		canonicalRecord.id !== season.id
+	)
+		return null;
 	// Ambiguous playback IDs are fatal; unrelated anchor conflicts only suspend history.
 	for (const target of [current, season])
 		if (
