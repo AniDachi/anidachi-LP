@@ -1,5 +1,5 @@
 import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
-import { readPrimePageState } from "./page-state";
+import { initialDocumentRoute, readPrimePageState } from "./page-state";
 import {
 	PrimeVideoProviderIdSchema,
 	primeVideoSourceUrl,
@@ -625,6 +625,7 @@ export function primeDocumentRouteId(
 			!matches.length &&
 			route.token === liveRoute.token &&
 			route.token.length === 10 &&
+			initialDocumentRoute(documentValue) &&
 			canonical
 		)
 			matches = matching(canonical.token);

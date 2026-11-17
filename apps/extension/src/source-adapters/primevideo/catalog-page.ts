@@ -18,6 +18,7 @@ type SeasonReference = {
 };
 export type PrimeCatalogPage = {
 	anchor: string;
+	hasSeasonRoster: boolean;
 	locale: string;
 	selected: SeasonReference;
 	seasons: SeasonReference[];
@@ -252,7 +253,8 @@ function parseStates(
 			selected = chosen;
 		}
 	}
-	// Single-season titles may omit the switcher entirely. Use the same explicit
+	const hasSeasonRoster = seasons !== null;
+	// Season-1 titles may omit the switcher entirely. Use the same explicit
 	// season-1 proof as playback metadata, never an inferred ordinal/title label.
 	if (!seasons && states.every(state => Object.keys(object(state.seasons)).length === 0)) {
 		const pageIds = states.map(state => resolve(state.pageTitleId));
@@ -427,6 +429,7 @@ function parseStates(
 		return null;
 	return {
 		anchor: seasons[0]!.compact,
+		hasSeasonRoster,
 		locale: language,
 		selected,
 		seasons,

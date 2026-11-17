@@ -171,9 +171,9 @@ export class PlaybackSyncController {
 		this.suppressLocalEventsUntil = 0;
 		this.lastConfirmedContentState = null;
 		this.lastPlaybackPhase = null;
-		// Replacing the player retires the old ad notice even if the new player
+		// Replacing the player retires the old phase notice even if the new player
 		// already reports content (and therefore has no barrier-exit event).
-		if (this.playbackBarrier === "interstitial") this.onStatus({ kind: "synced" });
+		if (this.playbackBarrier === "interstitial" || this.playbackBarrier === "unsupported") this.onStatus({ kind: "synced" });
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
 		this.hostBufferingHoldSent = false;
@@ -206,7 +206,7 @@ export class PlaybackSyncController {
 		this.pendingRemoteSeek = null;
 		// Membership/connection refresh resets the barrier too. Re-read the
 		// current phase below instead of retaining feedback from the old session.
-		if (this.playbackBarrier === "interstitial") this.onStatus({ kind: "synced" });
+		if (this.playbackBarrier === "interstitial" || this.playbackBarrier === "unsupported") this.onStatus({ kind: "synced" });
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
 		this.hostBufferingHoldSent = false;

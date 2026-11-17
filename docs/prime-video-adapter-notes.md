@@ -11,7 +11,9 @@ The former route check rejected this valid playback forever.
 For an unmapped ASIN only, current live page collections may now establish the
 page identity when they agree. The SDK's full GTI must still map uniquely to
 the exact episode/movie; type, ordinals, season and membership checks remain.
-This does not create an ASIN alias or weaken invitation/Resume URL validation.
+This does not create an ASIN alias. Canonical-derived invitation/Resume aliases
+also require the original document navigation path; a later SPA URL cannot
+borrow initial HTML's canonical identity, including detail-to-detail transitions.
 Static, missing, contradictory and foreign identity evidence stays rejected.
 Display labels and UI language are not used as identity. A read-only candidate
 inspection of the original paused player recovered S1 E1, its history identity
@@ -21,11 +23,13 @@ The full catalog reader also accepts an explicit season-1 page without a
 season switcher, using the same page ID and ordinal proof as playback metadata.
 Exact episode counts, pagination, membership and typed playback availability
 remain required. It never guesses unplayed availability.
+Without an observed series roster the ten proved episodes remain a partial
+series snapshot, preserving other seasons already saved in history.
 
 Prime's observed `Auxiliary` intro uses an interstitial control barrier, allowing
 the provider to finish it without room seek/pause/rate commands. Unsupported
-and interstitial notices are cleared when their phase ends, including solo
-playback. This classification alone is not evidence that every provider-side
+and interstitial notices are cleared when their phase ends or their adapter/
+session is replaced, including solo playback. This classification alone is not evidence that every provider-side
 paused intro auto-resumes; the loaded two-account test must establish that.
 
 Candidate: `codex/prime-amazon-readiness`, based on staging `f83479ce`.

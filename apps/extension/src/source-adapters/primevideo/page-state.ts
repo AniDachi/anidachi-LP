@@ -72,7 +72,7 @@ export function readPrimePageState(
 	return readInitialPageState(documentValue);
 }
 
-function initialDocumentRoute(documentValue: Document): boolean {
+export function initialDocumentRoute(documentValue: Document): boolean {
 	try {
 		const view = documentValue.defaultView;
 		const navigation = view?.performance.getEntriesByType("navigation");

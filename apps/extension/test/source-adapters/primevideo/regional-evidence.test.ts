@@ -1,10 +1,11 @@
 import { createPrimeLaunchCapture } from "../../../src/prime-launch-capture";
 import type { VideoAdapter } from "../../../src/source-adapters/core/types";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import amazon from "./amazon-movie-public.json";
 import sor from "./regional-sor-public.json";
 import { readPrimePage } from "../../../src/source-adapters/primevideo/metadata";
 function page(data: typeof amazon | typeof sor) {
+	vi.spyOn(performance, "getEntriesByType").mockReturnValue([{name:data.url} as PerformanceEntry]);
 	Object.defineProperty(window, "location", {
 		configurable: true,
 		value: new URL(data.url),
@@ -25,6 +26,7 @@ function page(data: typeof amazon | typeof sor) {
 	}
 }
 afterEach(() => {
+	vi.restoreAllMocks();
 	document.head.innerHTML = "";
 	document.body.innerHTML = "";
 });

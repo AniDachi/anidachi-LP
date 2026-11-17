@@ -338,6 +338,20 @@ describe("PlaybackSyncController", () => {
 		harness.controller.dispose();
 	});
 
+	it.each(["adapter", "session"] as const)("clears unsupported notice when content resumes through %s replacement", mode => {
+		const harness = createHarness({isHost: false});
+		harness.adapter.setPhase("unsupported");
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({kind:"unsupported-media"});
+		if (mode === "adapter") harness.controller.bindAdapter(createFakeAdapter({provider:"youtube"}));
+		else {
+			harness.adapter.setPhase("content");
+			harness.controller.setSession(session({connectionGeneration: 2}));
+		}
+		expect(harness.statuses.at(-1)).toEqual({kind:"synced"});
+		harness.controller.dispose();
+	});
+
 	it("blocks unsupported media without touching playback", () => {
 		const harness = createHarness({ isHost: false });
 		harness.adapter.setPhase("unsupported");
