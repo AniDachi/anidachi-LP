@@ -265,6 +265,20 @@ export function readPrimePage(
 	// same-origin canonical link can establish that alias; active SDK still must agree.
 	if (routes.length === 0 && pageRoute.token.length === 10 && canonicalRoute)
 		routes = mapped(canonicalRoute.token);
+	// Amazon's SPA can retain a marketing ASIN absent from self, while its
+	// committed page identifies the season/movie under another ASIN. That live
+	// page may describe active SDK playback; it does not prove a URL alias.
+	// Keep launch URL resolution separate and still validate SDK membership below.
+	if (
+		routes.length === 0 && pageRoute.token.length === 10 &&
+		pageState.fromLivePage && !canonicalRoute &&
+		!invalidRecords.has(pageRoute.token)
+	) {
+		const pageIds = states.map(state => resolve(state.pageTitleId));
+		const pageId = pageIds[0];
+		if (pageId && pageIds.every(id => id === pageId))
+			routes = [records.get(pageId)!];
+	}
 	if (routes.length !== 1) return null;
 	let canonicalRecord: PublicRecord | undefined;
 	if (canonicalRoute) {

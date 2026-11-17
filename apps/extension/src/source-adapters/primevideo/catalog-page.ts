@@ -252,6 +252,18 @@ function parseStates(
 			selected = chosen;
 		}
 	}
+	// Single-season titles may omit the switcher entirely. Use the same explicit
+	// season-1 proof as playback metadata, never an inferred ordinal/title label.
+	if (!seasons && states.every(state => Object.keys(object(state.seasons)).length === 0)) {
+		const pageIds = states.map(state => resolve(state.pageTitleId));
+		const pageId = pageIds[0];
+		const record = pageId ? records.get(pageId) : null;
+		if (record?.type === "season" && record.number === 1 &&
+			pageIds.every(id => id === record.full) && details.get(record.full)?.season === 1) {
+			selected = {full: record.full, compact: record.compact, number: 1, url: record.linkUrl};
+			seasons = [selected];
+		}
+	}
 	if (!seasons || !selected || seasons[0]?.number !== 1) return null;
 	if (states.some((state) => resolve(state.pageTitleId) !== selected!.full))
 		return null;

@@ -323,6 +323,21 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.play).not.toHaveBeenCalled();
 	});
 
+	it.each(["content", "transition", "interstitial"] as const)("clears a solo unsupported notice when playback becomes %s", phase => {
+		const harness = createHarness({ isHost: false });
+		harness.controller.setSession(session({roomId: null, roomProvider: null}));
+		harness.adapter.setPhase("unsupported");
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({kind: "unsupported-media"});
+		harness.adapter.setPhase(phase);
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({kind: "synced"});
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+		expect(harness.sent).toEqual([]);
+		harness.controller.dispose();
+	});
+
 	it("blocks unsupported media without touching playback", () => {
 		const harness = createHarness({ isHost: false });
 		harness.adapter.setPhase("unsupported");

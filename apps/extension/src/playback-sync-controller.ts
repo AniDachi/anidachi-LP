@@ -870,9 +870,10 @@ export class PlaybackSyncController {
 
 		const previousBarrier = this.playbackBarrier;
 		this.playbackBarrier = nextBarrier;
-		// Transition/unsupported is still a playback barrier, but it is no longer
-		// an advertisement. Do not leave the old ad copy attached to that state.
-		if (previousBarrier === "interstitial" && nextBarrier) this.onStatus({ kind: "synced" });
+		// Retire the previous phase's notice before applying the new one. This
+		// also matters during solo playback, which returns before room sync below.
+		if (previousBarrier === "interstitial" || previousBarrier === "unsupported")
+			this.onStatus({ kind: "synced" });
 		if (nextBarrier) {
 			this.clearHostBufferingTimer();
 			this.hostBufferingHoldSent = false;

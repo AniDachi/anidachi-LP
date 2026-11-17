@@ -1,5 +1,39 @@
 # Prime Video adapter
 
+## Task 21: Amazon SPA identity and provider intro recovery
+
+Observed Love in Disguise on amazon.com: native storefront navigation retains
+ASIN B0HL3NHK3N in the URL, while the committed page identifies B0HL3HTYVG and
+the active SDK identifies episode 1 by its full GTI. Initial canonical HTML
+still identifies the storefront. Metadata waiting never resolves.
+
+1. Add sanitized public evidence and regressions for this live page, direct
+   reload, native next episode, localized labels, missing/contradictory page
+   IDs and mismatched SDK membership. Expected: the reported positive fails
+   before the fix; conflicting identities remain rejected.
+2. Use the committed page identity only for an otherwise unmapped marketplace
+   ASIN during active SDK playback. Preserve exact GTI/compact mapping, types,
+   ordinals, episode membership, source-command generations and strict launch
+   URL proof. Never turn an unknown ASIN into a fabricated public identifier.
+   Expected: current episode metadata and catalog recover without reload.
+3. Reproduce the observed Auxiliary intro barrier and stale unsupported notice;
+   classify provider intro safely, clear notices when the phase changes, and
+   investigate paused intro behavior before changing playback control.
+   Expected: no seek/rate/remote pause during provider interstitials; safe
+   content synchronization resumes after them, with no stale warning.
+4. Run extension checks/full non-production-emitting suite, room harness,
+   independent whole-branch review, narrow staging build/validation and dev:check.
+   Expected: all relevant gates pass; existing Graphify collision exception
+   remains recorded. Deliver only to staging through PR.
+5. After the owner reloads the final artifact, verify actual amazon.com and
+   primevideo.com flows in both available accounts: creation/invite, SPA next
+   episode, pause/seek, reload, history and explicit exit. Record measured
+   coverage and any unavailable region/account scenarios separately.
+
+Shared interfaces: metadata feeds MAIN binding, room source and history; phase
+feeds sync barriers and history suspension. Preserve existing protocol and
+permissions. No new marketplace picker, polling loop or production promotion.
+
 ## Task 20 — Intentional player close leaves the room, November 17
 
 Owner-approved behavior: closing Prime's player ends the host's room or leaves
