@@ -155,8 +155,19 @@ export function fixture() {
 		shouldShowSlate: false,
 		slateUrl: null,
 	};
+	const sdkListeners = new Map<string, Set<() => void>>();
+	const eventEmitter = {
+		on: vi.fn((name: string, listener: () => void) => {
+			const listeners = sdkListeners.get(name) ?? new Set();
+			listeners.add(listener);
+			sdkListeners.set(name, listeners);
+		}),
+		off: vi.fn((name: string, listener: () => void) => sdkListeners.get(name)?.delete(listener)),
+		emit: (name: string) => { for (const listener of [...(sdkListeners.get(name) ?? [])]) listener(); },
+	};
 	const context = {
 		webPlayer: {
+			eventEmitter,
 			isPlayerOpen: true,
 			hasPlaybackInitiated: true,
 			currentTitleId: gtis.first,
@@ -186,6 +197,7 @@ export function fixture() {
 			setPlaybackRate: vi.fn(),
 		},
 		timeline: {
+			titleEnded: false,
 			getTimelineInfo: () => ({
 				endPositionMs: titleInfo.episodeNumber === 1 ? 3823000 : 3752000,
 			}),

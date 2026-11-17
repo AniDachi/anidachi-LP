@@ -43,6 +43,9 @@ import {
 	listRoomInvites,
 } from "../src/social-client";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
+import { subscribePrimePlayerClose } from "../src/source-adapters/primevideo/player-close";
+import { startPrimeBridge } from "../src/source-adapters/primevideo/main-bridge";
+import { fixture as primeCloseFixture, ids as primeCloseIds } from "./source-adapters/primevideo/fixture";
 import { TOP_BUBBLE_HIDE_DELAY_MS } from "../src/top-bubble-reveal";
 
 const extensionStorage = vi.hoisted(() => {
@@ -97,6 +100,46 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+
+  it.each(["host", "viewer"] as const)("retires the exact %s room after real Prime SDK end+Close and native unload", async role => {
+    const originalLocation = Object.getOwnPropertyDescriptor(window, "location")!;
+    const prime = primeCloseFixture();
+    const stopBridge = startPrimeBridge();
+    installActiveHostRoomRuntime();
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+      options.onStatus("connected");
+      options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{ ...hostParticipant(), role }] });
+    });
+    const depart = vi.spyOn(playerDeparture, "requestPlayerRoomDeparture").mockResolvedValue();
+    const sourceUrl = `https://www.primevideo.com/detail/${primeCloseIds.first}`;
+    const view = await renderOverlay(adapter => {
+      adapter.provider = "primevideo";
+      adapter.getFingerprint = () => `primevideo|detail/${primeCloseIds.first}`;
+      adapter.getSourceDescriptor = () => ({ provider: "primevideo", sourceUrl, canonicalUrl: sourceUrl, title: "Episode", videoFingerprint: adapter.getFingerprint() });
+      adapter.subscribePlayerClose = listener => subscribePrimePlayerClose(prime.root, prime.video, listener);
+    });
+    try {
+      await click(button(view.container, "Open Anidachi controls"));
+      await click(button(view.container, "Create room"));
+      await flushRoomActionWork();
+      const connections = vi.mocked(RoomClient.prototype.connect).mock.calls.length;
+      const event = new Event("emptied"); Object.defineProperty(event, "isTrusted", { value: true });
+      await act(async () => {
+        prime.context.timeline.titleEnded = true;
+        prime.context.webPlayer.isPlayerOpen = false;
+        prime.context.webPlayer.eventEmitter.emit("Close");
+        prime.video.dispatchEvent(event);
+      });
+      await flushRoomActionWork();
+      expect(depart).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ roomId: "room-a", ownerUserId: "user-a", participantSessionId: confirmedRoomSession().participantSessionId }));
+      expect(location.hash).not.toContain("anidachiRoom");
+      await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false}/>));
+      await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive/>));
+      await flushRoomActionWork();
+      expect(RoomClient.prototype.connect).toHaveBeenCalledTimes(connections);
+      expect(button(view.container, "Create room")).toBeDefined();
+    } finally { await unmount(view.root); stopBridge(); Object.defineProperty(window, "location", originalLocation); }
+  });
 
   it("removes the real Resume control when local ad playback succeeds", async () => {
     installActiveHostRoomRuntime();
