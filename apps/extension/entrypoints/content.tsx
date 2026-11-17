@@ -167,6 +167,7 @@ function startContentLifecycleSession(
     ...overrides,
   };
   let mounted: MountedOverlay | null = null;
+  let waitingForPrimeLaunch = false;
   let disposed = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
@@ -175,6 +176,17 @@ function startContentLifecycleSession(
   let acceptedLaunch: {fingerprint:string;handoff:PrimeLaunchHandoff;ready:Promise<boolean>} | null = null;
   const mountWithLaunch = (adapter: VideoAdapter) => {
     const href=location.href;
+    // Show the primary player while identity is pending, without consuming a
+    // captured invitation/Resume or trusting the current address-bar episode.
+    if (adapter.provider === "primevideo" && adapter.getFingerprint() === "primevideo|unknown") {
+      if (!mounted) {
+        waitingForPrimeLaunch = true;
+        mounted = dependencies.mount(adapter, {
+          ...suppressedPrimeLaunch(href), blocksFragment: () => true,
+        });
+      }
+      return;
+    }
     // Returning to a cached document is not a new invitation/Resume. A valid
     // background pending intent may recover, but the old fragment must not replay.
     const capturedLaunch = () => adapter.provider === "primevideo" && restoredLaunch?.blocksFragment?.(location.href)
@@ -194,10 +206,17 @@ function startContentLifecycleSession(
           recovered=ok?accepted.handoff:false;
         }
         if (recovered === false || recovered === undefined || recovered?.rejected) primeLaunch.dispose();
-        if (recovered && mounted) { mounted.dispose(); mounted = null; }
-        if (!mounted) mounted = dependencies.mount(adapter, (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch());
+        const launch = (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch();
+        if ((waitingForPrimeLaunch || (launch && !launch.rejected)) && mounted) { mounted.dispose(); mounted = null; }
+        waitingForPrimeLaunch = false;
+        if (!mounted) mounted = dependencies.mount(adapter, launch);
       });
-    } else if (!mounted) mounted = dependencies.mount(adapter, capturedLaunch());
+    } else {
+      const launch = capturedLaunch();
+      if ((waitingForPrimeLaunch || launch) && mounted) { mounted.dispose(); mounted = null; }
+      waitingForPrimeLaunch = false;
+      if (!mounted) mounted = dependencies.mount(adapter, launch);
+    }
   };
 
   const manager = new AdapterManager({

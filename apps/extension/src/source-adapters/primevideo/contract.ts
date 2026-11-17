@@ -12,6 +12,8 @@ import {
 export const PRIME_REQUEST = "anidachi-primevideo-request-v1";
 export const PRIME_RESULT = "anidachi-primevideo-result-v1";
 export const PRIME_BINDING = "data-anidachi-primevideo-binding";
+// Presence permits the overlay only. Commands/history still require PRIME_BINDING.
+export const PRIME_PLAYER = "data-anidachi-primevideo-player";
 export const PRIME_NAVIGATING = "anidachi-primevideo-navigating";
 export const PRIME_BINDING_CHANGED = "anidachi-primevideo-binding-changed";
 const token = z.string().min(1).max(80);

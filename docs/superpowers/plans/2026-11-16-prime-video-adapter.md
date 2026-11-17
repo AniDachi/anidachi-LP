@@ -66,6 +66,22 @@ Prime rows, epochs and receipts when rolling clients/server back.
 
 ## Global Constraints
 
+### Task 15: Separate player presence from source readiness
+
+Use the existing observed primary-player SDK and one MAIN inspection loop to
+publish overlay presence separately from the strict content/generation binding.
+Do not derive identity from labels or manufacture IDs when metadata is pending.
+Pending UI shows a waiting notice, blocks create/sync and initial join, and keeps
+launch recovery ahead of saved-room restoration. Retain the existing phase and
+history suspension guards. Cover missing/recovered metadata, same-video episode
+replacement, stale commands and real OverlayApp saved-room/launch ordering.
+The read-only candidate inspector admitted the owner's paused Gen V S1 E1;
+this is not proof of the packaged extension reload. Extension checks, full
+non-production-emitting tests, room harness, independent review and staging
+build/validation are the gates. No permissions, backend or wire-contract change.
+Graphify publication remains blocked by the inherited `ref_clsx` collision;
+preserve the curated graph and defer semantic publication with that exception.
+
 ### Task 14: Provider display labels and inspection cost
 
 Reproduced Gilmore Girls S2 E1 with the latest loaded artifact: a space before

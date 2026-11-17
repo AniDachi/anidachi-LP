@@ -1,5 +1,36 @@
 # Prime Video adapter notes
 
+## Player presence and source readiness
+
+Task 15 (`codex/prime-player-readiness`, based on staging `d765b69f`) separates
+the MAIN-owned primary-player marker from the verified content/generation binding.
+Only the observed open SDK player with one connected video is eligible; previews
+outside that player and ambiguous video roots remain rejected. Metadata parsing
+no longer decides whether the capsule can mount. One bounded SDK traversal and
+the existing refresh loop serve both checks; no extra observer or polling loop.
+
+Without a current verified snapshot, the panel shows a waiting notice and blocks
+create/sync. Commands and history retain their existing phase, identity and
+generation guards. Pending initial UI blocks both fragment and saved-room joins
+until launch recovery finishes; admission also requires a verified source at
+entry. An already accepted join retains that adapter's immutable verified ID
+through transient metadata loss. The personal Resume reader cannot consume a
+room-only handoff.
+Transient metadata loss does not remove a confirmed player overlay; source
+replacement retires stale commands and progress rather than carrying them forward.
+
+Regression evidence includes real MAIN/discovery/overlay-host transitions and
+the real React panel with persisted room B plus delayed background invitation A.
+The candidate read-only inspector recognized the owner's paused Gen V S1 E1
+(`0SUT1GY0LZ1A8A5MGO47KC4HCQ`, "God U.") in Chrome. This probe did not replace the
+loaded extension or exercise two users. Final artifact reload, DRM playback and
+independent regional/account acceptance remain distinct gates. Permissions,
+shared schemas and backend are unchanged. Graphify's safe refresh still aborts
+on inherited `Foreign node collision: ref_clsx`; tracked graph artifacts remain
+unchanged and semantic publication is deferred with the same exception.
+
+## Delivered baseline
+
 Staging baseline delivered through [PR #557](https://github.com/AniDachi/anidachi-LP/pull/557),
 2026-11-16, at `2bbf955d66e6825fe376128356cbb4aeef98bd69`. Provider key:
 `primevideo`; display name: **Prime Video**. The additive schema and compatible

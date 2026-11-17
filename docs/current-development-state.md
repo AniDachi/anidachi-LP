@@ -1,5 +1,16 @@
 # Current Development State
 
+## Prime player readiness follow-up — November 17, 2026
+
+Based on staging `d765b69f`, `codex/prime-player-readiness` separates confirmed
+primary-player presence from verified episode metadata. The capsule can mount
+while metadata is pending; room creation/join, playback commands and history
+remain gated by the verified source. Initial pending UI also waits for launch
+recovery before restoring a saved room. A room-only handoff is no longer consumed
+by the personal Resume reader. See
+[provider notes](prime-video-adapter-notes.md#player-presence-and-source-readiness).
+Final loaded-artifact and independent-account acceptance remain separate.
+
 ## Prime title identity follow-up — November 17, 2026
 
 Based on staging `ae767836`, `codex/prime-title-identity` fixes Gilmore Girls
