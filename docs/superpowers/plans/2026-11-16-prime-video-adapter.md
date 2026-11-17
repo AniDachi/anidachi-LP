@@ -66,6 +66,18 @@ Prime rows, epochs and receipts when rolling clients/server back.
 
 ## Global Constraints
 
+### Task 14: Provider display labels and inspection cost
+
+Reproduced Gilmore Girls S2 E1 with the latest loaded artifact: a space before
+the title ellipsis differs between SDK and public page. Use public labels for
+display and exact IDs/type/route/season/membership/ordinals for playback identity.
+Cover equivalent display variants and retained conflict rejection. Skip initial
+hydration reads after native SPA navigation. Candidate MAIN restored the capsule
+on the real paused player; extension tests/typecheck and source review passed.
+Finish staging packaging/delivery and distinguish final-artifact reload from
+candidate source evidence. Graphify's inherited `ref_clsx` blocker remains a
+documented publication exception. No backend or permission changes.
+
 ### Task 13: Native SPA page metadata
 
 Reproduced the owner's Grimm failure after Supernatural → Home → Grimm in

@@ -58,12 +58,26 @@ describe("Prime public page state after native SPA navigation", () => {
 			readPrimeCatalogPage(document, location.origin)?.season.episodes,
 		).toHaveLength(2);
 	});
+	it("does not re-read initial hydration after navigating to a different title", () => {
+		const f = fixture();
+		livePage(f.data.init.preparations.body);
+		vi.spyOn(window.performance, "getEntriesByType").mockReturnValue([
+			{ name: "https://www.primevideo.com/" } as PerformanceEntry,
+		]);
+		const read = vi.spyOn(
+			document.getElementById("dv-web-page-hydration-data")!,
+			"textContent",
+			"get",
+		);
+		expect(inspectPrimeSdk()?.snapshot.contentId).toBe(ids.first);
+		expect(read).not.toHaveBeenCalled();
+	});
 	it("does not fall back to initial HTML when a live page contradicts playback", () => {
 		const f = fixture();
 		const body = structuredClone(f.data.init.preparations.body);
 		body.btf.state.detail.detail[
 			Object.keys(body.btf.state.detail.detail)[0]!
-		]!.title = "Other title";
+		]!.episodeNumber = 99;
 		livePage(body);
 		expect(inspectPrimeSdk()).toBeNull();
 	});

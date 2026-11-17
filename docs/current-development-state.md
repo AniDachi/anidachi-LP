@@ -1,5 +1,15 @@
 # Current Development State
 
+## Prime title identity follow-up — November 17, 2026
+
+Based on staging `ae767836`, `codex/prime-title-identity` fixes Gilmore Girls
+S2 E1 detection with the current loaded artifact. The page and SDK use different
+spacing in the same episode title. Display-label equality no longer rejects
+otherwise verified identity; GTI, route, type, season, ordinal and membership
+guards remain. SPA inspection also avoids reparsing irrelevant initial HTML.
+Candidate MAIN verification restored the capsule on the original paused player.
+See [provider notes](prime-video-adapter-notes.md#display-labels-are-not-playback-identity).
+
 ## Prime native SPA metadata follow-up — November 17, 2026
 
 Based on staging `bd333006`, `codex/prime-spa-metadata` fixes the reproduced
