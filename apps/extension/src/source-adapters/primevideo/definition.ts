@@ -4,7 +4,7 @@ import { runPrimeCommand } from "./bridge-client";
 import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import type { SourceAdapterDefinition } from "../core/types";
 import { PrimeVideoAdapter } from "./adapter";
-import { PRIME_NAVIGATING, primeVideoId, readPrimeBinding } from "./contract";
+import { PRIME_NAVIGATING, PRIME_PLAYER, primeVideoId, readPrimeBinding } from "./contract";
 import { primeHistoryPolicy } from "./progress";
 export const primeVideoDefinition: SourceAdapterDefinition = {
 	id: "primevideo",
@@ -15,7 +15,7 @@ export const primeVideoDefinition: SourceAdapterDefinition = {
 		if (
 			!parsePrimePageUrl(location.href) ||
 			!video.isConnected ||
-			!readPrimeBinding(video)
+			video.getAttribute(PRIME_PLAYER) !== "true"
 		)
 			return null;
 		const root = video.closest<HTMLElement>("#dv-web-player");

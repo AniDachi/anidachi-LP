@@ -2,6 +2,7 @@ import {
 	boundedMessage,
 	PRIME_NAVIGATING,
 	PRIME_BINDING,
+	PRIME_PLAYER,
 	PRIME_BINDING_CHANGED,
 	PRIME_RESULT,
 	PrimeRequestSchema,
@@ -11,7 +12,7 @@ import {
 	type PrimeRequest,
 } from "./contract";
 import { object } from "./metadata";
-import { callPrime, inspectPrimeSdk, type PrimeSdk } from "./sdk";
+import { callPrime, inspectPrimePlayer, inspectPrimeSdk, type PrimeSdk } from "./sdk";
 import { loadPrimeCatalog, primeCatalogContext } from "./catalog";
 import { readPrimeCatalogPage } from "./catalog-page";
 type Binding = { sdk: PrimeSdk; generation: string; snapshot: PrimeSnapshot };
@@ -20,6 +21,7 @@ export function startPrimeBridge(): () => void {
 	let navigating = false;
 	let stopped = false,
 		binding: Binding | null = null;
+	let playerVideo: HTMLVideoElement | null = null;
 	const pending = new Map<string, AbortController>();
 	const retired = new Set<string>();
 	let catalogAttempt: {
@@ -33,6 +35,13 @@ export function startPrimeBridge(): () => void {
 		JSON.stringify(readPrimeCatalogPage(document, location.origin));
 	const announce = () =>
 		document.dispatchEvent(new Event(PRIME_BINDING_CHANGED));
+	function setPlayer(video: HTMLVideoElement | null) {
+		if (playerVideo === video) return;
+		playerVideo?.removeAttribute(PRIME_PLAYER);
+		playerVideo = video;
+		video?.setAttribute(PRIME_PLAYER, "true");
+		announce();
+	}
 	function invalidate(notify = true) {
 		if (!binding) return;
 		catalogAttempt?.controller.abort();
@@ -42,7 +51,9 @@ export function startPrimeBridge(): () => void {
 	}
 	function inspect(): Binding | null {
 		if (stopped || navigating) return null;
-		const sdk = inspectPrimeSdk();
+		const player = inspectPrimePlayer();
+		setPlayer(player?.video ?? null);
+		const sdk = inspectPrimeSdk(document, player);
 		if (!sdk) {
 			invalidate();
 			return null;
@@ -252,6 +263,7 @@ export function startPrimeBridge(): () => void {
 	}
 	const navigate = () => {
 		navigating = true;
+		setPlayer(null);
 		catalogAttempt?.controller.abort();
 		for (const abort of pending.values()) abort.abort();
 		pending.clear();
@@ -302,6 +314,7 @@ export function startPrimeBridge(): () => void {
 	function stop() {
 		if (stopped) return;
 		stopped = true;
+		setPlayer(null);
 		catalogAttempt?.controller.abort();
 		clearInterval(timer);
 		document.removeEventListener(PRIME_NAVIGATING, navigate);
