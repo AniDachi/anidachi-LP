@@ -1,5 +1,16 @@
 # Current Development State
 
+## Amazon SPA identity — November 18, 2026
+
+`codex/prime-amazon-readiness` fixes the reproduced metadata wait on Amazon's
+Love in Disguise after storefront navigation: marketing and page ASINs differ.
+Current page/SDK agreement now permits playback metadata while exact episode
+and launch guards remain. Single-season catalog loading and transient Prime
+intro/status handling are corrected in the same extension-only candidate.
+The original paused player passes a read-only candidate inspection without
+reload; final loaded-artifact/two-account acceptance is still a separate gate.
+See [provider notes](prime-video-adapter-notes.md#amazon-spa-identity-and-intro-recovery).
+
 ## Prime player close — November 17, 2026
 
 Owner-approved candidate `codex/prime-player-close-room` makes explicit native

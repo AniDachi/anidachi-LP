@@ -31,6 +31,13 @@
 
 ## Progress Log
 
+- **2026-11-18, `codex/prime-amazon-readiness`:** reproduced a persistent Amazon
+  SPA ASIN metadata wait and corrected it using committed page/SDK agreement.
+  [Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)
+  also covers single-season catalogs and transient provider intro barriers.
+  Existing identity, room authority, protocol and P2P transport are unchanged;
+  final loaded-artifact and two-account acceptance remain separate gates.
+
 - **2026-11-17, `codex/prime-room-reload-fix`:** two-account Prime acceptance
   reproduced reload restoration blocked by a consumed invitation. The scoped
   extension correction separates that replay fence from matching saved

@@ -180,6 +180,9 @@ export function inspectPrimeSdk(
 			recapInfo.shouldShowSlate === false &&
 			recapInfo.slateUrl === null;
 		if (
+			// Prime's own logo/intro has a frozen content clock. Let the provider
+			// finish it under the same control barrier as ads and recaps.
+			itemType === "Auxiliary" ||
 			itemType === "Advertisement" ||
 			(adBreak !== null && typeof adBreak === "object") ||
 			(adPlayback !== null && typeof adPlayback === "object") ||

@@ -1,5 +1,14 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Prime Amazon readiness follow-up — 2026-11-18
+
+[Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)
+corrects native Amazon ASIN readiness, single-season catalog and intro barriers.
+Exact room identity, invitation validation and server/media contracts stay
+unchanged. Candidate inspection on the reported page passes without reload;
+tests, review, staging packaging and loaded two-account acceptance are recorded
+separately in its delivery receipt. No production promotion is included.
+
 ## Prime player-close follow-up — 2026-11-17
 
 Owner approved explicit player close as room departure (host ends, guest leaves),
