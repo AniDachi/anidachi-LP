@@ -70,9 +70,18 @@ describe("Prime public page state after native SPA navigation", () => {
 	it("follows the committed root rather than the container's old fiber", () => {
 		const f = fixture();
 		const root = livePage({ atf: { state: {} }, btf: { state: {} } });
+		const host = document.getElementById("dv-web-page-hydration-root")!;
+		const container = Reflect.get(host, "__reactContainer$observed");
+		container.child = root.child;
 		staleHtml();
 		expect(inspectPrimeSdk()).toBeNull();
-		root.child.memoizedProps.value = f.data.init.preparations.body;
+		container.stateNode.current = {
+			child: { memoizedProps: { value: f.data.init.preparations.body } },
+		};
+		expect(inspectPrimeSdk()?.snapshot.contentId).toBe(ids.first);
+		host.remove();
+		expect(inspectPrimeSdk()).toBeNull();
+		livePage(f.data.init.preparations.body);
 		expect(inspectPrimeSdk()?.snapshot.contentId).toBe(ids.first);
 	});
 	it("keeps a direct marketplace canonical alias only while initial and live page IDs agree", () => {
