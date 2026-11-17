@@ -67,19 +67,31 @@ export function resolvePrimeContext(root: HTMLElement): ObjectValue | null {
 }
 type PrimePlayer = Pick<PrimeSdk, "video" | "context" | "webPlayer" | "playback">;
 
+/** Missing DOM/context is unknown, never evidence that the viewer closed playback. */
+export function inspectPrimePlayerLifecycle(documentValue: Document = document) {
+	const root = documentValue.getElementById("dv-web-player");
+	try {
+		const context = root ? resolvePrimeContext(root) : null;
+		const open = context ? object(context.webPlayer).isPlayerOpen : undefined;
+		return { root, context, open: typeof open === "boolean" ? open : null };
+	} catch {
+		return { root, context: null, open: null };
+	}
+}
+
 /** Player presence is independent of page labels, catalog and content identity. */
 export function inspectPrimePlayer(
 	documentValue: Document = document,
+	lifecycle = inspectPrimePlayerLifecycle(documentValue),
 ): PrimePlayer | null {
 	try {
-		const root = documentValue.getElementById("dv-web-player");
+		const { root, context } = lifecycle;
 		if (!root) return null;
 		const videos = [...root.querySelectorAll("video")].filter(
 			(video) => video.isConnected,
 		);
 		if (videos.length !== 1) return null;
-		const video = videos[0]!,
-			context = resolvePrimeContext(root);
+		const video = videos[0]!;
 		if (!context) return null;
 		const webPlayer = object(context.webPlayer),
 			playback = object(context.playback);

@@ -1,4 +1,5 @@
 import * as primeBridgeClient from "../src/source-adapters/primevideo/bridge-client";
+import * as playerDeparture from "../src/player-room-departure";
 import {createPrimePendingStore,type PrimePending} from "../src/prime-launch-session";
 import {buildPersonalHistoryResumeUrl,parsePersonalHistoryResumeUrl} from "@anidachi/protocol";
 import {paidHistoryLease,historyOwner} from "./watch-history-personal-fixtures";
@@ -93,6 +94,69 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+
+  it.each(["host", "viewer"] as const)("leaves the exact %s session on native player close and never restores on reopen", async role => {
+    installActiveHostRoomRuntime();
+    vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
+      options.onStatus("connected");
+      options.onEvent({type:"ROOM_SNAPSHOT",roomId:"room-a",roomGeneration:1,sourceGeneration:1,serverSeq:1,participants:[{...hostParticipant(),role}]});
+    });
+    const exit = deferred<void>();
+    const depart = vi.spyOn(playerDeparture,"requestPlayerRoomDeparture").mockReturnValue(exit.promise);
+    let closed: ((event:Event)=>void) | undefined;
+    const unsubscribe = vi.fn();
+    const view=await renderOverlay(adapter=>{adapter.subscribePlayerClose=listener=>{closed=listener;return unsubscribe;};});
+    try {
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));await flushRoomActionWork();
+      const count=vi.mocked(RoomClient.prototype.connect).mock.calls.length;
+      const event=new Event("click");Object.defineProperty(event,"isTrusted",{value:true});
+      await act(async()=>{closed!(event);closed!(event);});
+      expect(depart).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({roomId:"room-a",ownerUserId:"user-a",participantSessionId:confirmedRoomSession().participantSessionId}));
+      await act(async()=>exit.resolve());await flushRoomActionWork();
+      expect(location.hash).not.toContain("anidachiRoom");
+      await act(async()=>view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false}/>));
+      await act(async()=>view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive/>));
+      await flushRoomActionWork();
+      expect(vi.mocked(RoomClient.prototype.connect)).toHaveBeenCalledTimes(count);
+      expect(button(view.container,"Create room")).toBeDefined();
+      expect(unsubscribe).not.toHaveBeenCalled();
+    } finally { await unmount(view.root); }
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it("retires late room creation after the player was closed during admission", async()=>{
+    installActiveHostRoomRuntime();
+    const gate=deferred<void>(), send=vi.mocked(chrome.runtime.sendMessage), original=send.getMockImplementation()!;
+    send.mockImplementation(async (...args:any[])=>{if(args[0]?.command==="create-room") await gate.promise;return (original as any)(...args);});
+    const depart=vi.spyOn(playerDeparture,"requestPlayerRoomDeparture").mockResolvedValue();
+    let closed:((event:Event)=>void)|undefined;
+    const view=await renderOverlay(adapter=>{adapter.subscribePlayerClose=listener=>{closed=listener;return ()=>{};};});
+    try {
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));
+      await vi.waitFor(()=>expect(send.mock.calls.some(([m]:any)=>m.command==="create-room")).toBe(true));
+      const event=new Event("click");Object.defineProperty(event,"isTrusted",{value:true});
+      await act(async()=>closed!(event));await act(async()=>gate.resolve());await flushRoomActionWork();
+      expect(depart).toHaveBeenCalledExactlyOnceWith(confirmedRoomSession());
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+      expect(location.hash).not.toContain("anidachiRoom");
+    }finally{await unmount(view.root);}
+  });
+
+  it("ignores synthetic native close and ignores old departure completion after account switch",async()=>{
+    let session=sessionFor("user-a");installActiveHostRoomRuntime({getSession:()=>session});
+    const gate=deferred<void>(), depart=vi.spyOn(playerDeparture,"requestPlayerRoomDeparture").mockReturnValue(gate.promise);
+    let closed:((event:Event)=>void)|undefined;
+    const view=await renderOverlay(adapter=>{adapter.subscribePlayerClose=listener=>{closed=listener;return ()=>{};};});
+    try{
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));await flushRoomActionWork();
+      await act(async()=>closed!(new Event("click")));expect(depart).not.toHaveBeenCalled();
+      const event=new Event("click");Object.defineProperty(event,"isTrusted",{value:true});await act(async()=>closed!(event));
+      session=sessionFor("user-b");await act(async()=>extensionStorage.storage.setItem(AUTH_TOKENS_KEY,session));await flushMountedWork();
+      const clearsBefore=vi.mocked(chrome.runtime.sendMessage).mock.calls.filter(([m]:any)=>m.command==="clear-departure").length;
+      await act(async()=>gate.resolve());await flushRoomActionWork();
+      expect(vi.mocked(chrome.runtime.sendMessage).mock.calls.filter(([m]:any)=>m.command==="clear-departure")).toHaveLength(clearsBefore);
+    }finally{await unmount(view.root);}
+  });
 	afterEach(() => {
 		vi.restoreAllMocks();
 		vi.unstubAllGlobals();

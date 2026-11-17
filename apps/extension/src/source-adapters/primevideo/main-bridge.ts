@@ -3,6 +3,7 @@ import {
 	PRIME_NAVIGATING,
 	PRIME_BINDING,
 	PRIME_PLAYER,
+	PRIME_PLAYER_STATE,
 	PRIME_BINDING_CHANGED,
 	PRIME_RESULT,
 	PrimeRequestSchema,
@@ -12,7 +13,7 @@ import {
 	type PrimeRequest,
 } from "./contract";
 import { object } from "./metadata";
-import { callPrime, inspectPrimePlayer, inspectPrimeSdk, type PrimeSdk } from "./sdk";
+import { callPrime, inspectPrimePlayer, inspectPrimePlayerLifecycle, inspectPrimeSdk, type PrimeSdk } from "./sdk";
 import { loadPrimeCatalog, primeCatalogContext } from "./catalog";
 import { readPrimeCatalogPage } from "./catalog-page";
 type Binding = { sdk: PrimeSdk; generation: string; snapshot: PrimeSnapshot };
@@ -22,6 +23,7 @@ export function startPrimeBridge(): () => void {
 	let stopped = false,
 		binding: Binding | null = null;
 	let playerVideo: HTMLVideoElement | null = null;
+	let playerRoot: HTMLElement | null = null;
 	const pending = new Map<string, AbortController>();
 	const retired = new Set<string>();
 	let catalogAttempt: {
@@ -51,7 +53,16 @@ export function startPrimeBridge(): () => void {
 	}
 	function inspect(): Binding | null {
 		if (stopped || navigating) return null;
-		const player = inspectPrimePlayer();
+		const lifecycle = inspectPrimePlayerLifecycle();
+		if (playerRoot !== lifecycle.root) playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
+		playerRoot = lifecycle.root;
+		if (lifecycle.open === null) playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
+		else {
+			const state = lifecycle.open ? "open" : "closed";
+			if (playerRoot?.getAttribute(PRIME_PLAYER_STATE) !== state)
+				playerRoot?.setAttribute(PRIME_PLAYER_STATE, state);
+		}
+		const player = inspectPrimePlayer(document, lifecycle);
 		setPlayer(player?.video ?? null);
 		const sdk = inspectPrimeSdk(document, player);
 		if (!sdk) {
@@ -263,6 +274,7 @@ export function startPrimeBridge(): () => void {
 	}
 	const navigate = () => {
 		navigating = true;
+		playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		setPlayer(null);
 		catalogAttempt?.controller.abort();
 		for (const abort of pending.values()) abort.abort();
@@ -314,6 +326,7 @@ export function startPrimeBridge(): () => void {
 	function stop() {
 		if (stopped) return;
 		stopped = true;
+		playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		setPlayer(null);
 		catalogAttempt?.controller.abort();
 		clearInterval(timer);

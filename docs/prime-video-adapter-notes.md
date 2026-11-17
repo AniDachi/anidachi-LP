@@ -1,5 +1,35 @@
 # Prime Video adapter notes
 
+## Intentional player close
+
+Task 20 makes a viewer's explicit Prime player close leave the exact current
+room session. The host's departure ends the room; a guest's departure removes
+only that guest. Selecting another episode/season inside the player or autoplay
+keeps the room. Closing playback first and then choosing another episode is an
+exit. Reload and transient connection loss keep the existing reconnect behavior.
+
+Detection uses the observed `atvwebplayersdk-close-player-button` and trusted
+Escape, followed by `webPlayer.isPlayerOpen === false`. Escape that closes a
+menu or exits fullscreen does not leave. Missing video, metadata, SDK context or
+page-authored events alone never authorize departure. The existing MAIN
+observation publishes lifecycle state; no additional polling or localized-label
+matching is added. Adapter suspension preserves the close listener; adapter
+replacement disposes it.
+
+The overlay stops local room media/sync, cancels pending admission and suppresses
+automatic restoration. The extension background checks exact sender-tab,
+account and participant-session identity, then reuses persisted departure
+cleanup. Offline attempts stay in the existing retry queue; server closure is
+not claimed until acknowledged. Late admission is cleaned without connecting,
+and delayed cleanup cannot delete a successor session. Server/SQL/protocol and
+host permissions are unchanged. Roll back the extension artifact to restore
+the former close behavior; no migration rollback is needed.
+
+Observed on the available US Prime page: native close has a stable ID; Escape
+checks modal/menu/fullscreen before invoking lifecycle close. Automated
+regressions and loaded two-client acceptance are recorded separately in the
+Task 20 PR. Distinct-region accounts remain unavailable.
+
 ## Two-account acceptance and reload correction
 
 Task 18 exercised the loaded `2b393527` staging scripts in two user-opened Chrome

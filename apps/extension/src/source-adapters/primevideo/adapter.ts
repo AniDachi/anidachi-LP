@@ -20,6 +20,7 @@ import {
 } from "./contract";
 import { getPrimeGeometry, subscribePrimeGeometry } from "./player-chrome";
 import type { PlayerOverlayGeometryListener } from "../core/overlay-geometry";
+import { subscribePrimePlayerClose } from "./player-close";
 export class PrimeVideoAdapter extends Html5VideoAdapter {
 	readonly id = "primevideo";
 	readonly provider = "primevideo";
@@ -112,6 +113,9 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
 	}
 	subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener) {
 		return subscribePrimeGeometry(this.container, listener);
+	}
+	subscribePlayerClose(listener: (event: Event) => void) {
+		return subscribePrimePlayerClose(this.container, this.video, listener);
 	}
 	// Use only the non-persisting provider facade through the generation-fenced bridge.
 	setPlaybackRate(rate: number): void {

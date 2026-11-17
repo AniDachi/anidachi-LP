@@ -1,5 +1,27 @@
 # Prime Video adapter
 
+## Task 20 — Intentional player close leaves the room, November 17
+
+Owner-approved behavior: closing Prime's player ends the host's room or leaves
+only the guest's membership. Native episode/season changes, autoplay, temporary
+player replacement, fullscreen exit and reload must retain existing continuity.
+Closing the player before choosing another episode is an explicit exit; selecting
+an episode inside the open player is a transition.
+
+Use the observed native close control ID and trusted Escape plus confirmed SDK
+closed state, never translated labels, missing video or missing metadata. Keep
+provider detection in the adapter and reuse exact account/tab/session departure
+and its existing retry machinery. No new server protocol, permissions or polling.
+Cancel pending admission, suppress reconnect and retire local media/session on
+explicit exit. Late completion must not touch a successor account/session.
+
+RED→GREEN: native close/Escape, localized labels, synthetic events, menus and
+fullscreen, episode/root replacement, navigation/reload, host/guest departure,
+pending admission, offline failure and stale completion. Run extension checks,
+suite, room harness, independent review and narrow staging build/validation.
+Loaded host/guest acceptance follows owner reload of the final artifact.
+Inherited Graphify collision exception remains; no production promotion.
+
 ## Task 19 — Two-account acceptance corrections, November 17
 
 The owner authorized fixing the two failures recorded in the local Task 18
