@@ -514,13 +514,21 @@ describe("production watch browsing", () => {
     details.detail.catalog = { state: "partial", title: null, aggregate: null, seasons: [] };
     details.detail.episodes[0] = { ...details.detail.episodes[0], seasonKey: movie ? null : seasonKey,
       seasonTitle: movie ? null : "Season 2", seasonNumber: movie ? null : 2, episodeNumber: movie ? null : 1 };
+    const saved = (letter:string,number:number) => ({...details.detail.episodes[0],episodeKey:`primevideo:episode:${letter.repeat(26)}`,episodeTitle:`Saved episode ${number}`,episodeNumber:number,sourceUrl:`https://www.primevideo.com/detail/${letter.repeat(26)}`});
+    const catalogEpisode = (letter:string,number:number,title:string) => ({episodeKey:`primevideo:episode:${letter.repeat(26)}`,episodeTitle:title,episodeNumber:number,seasonKey,order:number-1,releasedAt:null,available:true,sourceUrl:`https://www.primevideo.com/detail/${letter.repeat(26)}`,history:null});
+    if(observed) {details.detail.episodes.push(saved("G",3)); details.detail.nextCursor="saved-next"; details.detail.complete=false;}
     const client = clientFixture(async message => {
       if (message.command === "browse") return { ok: true, data: (message.input as WatchHistoryBrowseQuery).provider === "primevideo" ? page : { ...page, history: { ...page.history, items: [], totalTitleCount: 0 }, matches: [] } };
-      if (message.command === "browse-title-episodes") return { ok: true, data: details };
+      if (message.command === "browse-title-episodes") return { ok: true, data: observed && (message.input as {cursor?:string}).cursor === "saved-next" ? {
+        ...details,detail:{...details.detail,episodes:[saved("H",4)],nextCursor:null,complete:true},matches:[],
+      } : details };
       if (message.command === "browse-catalog") return { ok: true, data: observed ? {
         ...convert(unavailableGrid()), state:"partial", revision:"observed-1", seasonKey,
         seasons:[{seasonKey,seasonTitle:"Season 2",seasonNumber:2,order:0,kind:"season",aggregate:null,nextEpisode:null}],
-        episodes:[{episodeKey:`primevideo:episode:${"F".repeat(26)}`,episodeTitle:"Confirmed unplayed",episodeNumber:2,seasonKey,order:1,releasedAt:null,available:true,sourceUrl:`https://www.primevideo.com/detail/${"F".repeat(26)}`,history:null}],
+        nextCursor:(message.input as {cursor?:string}).cursor ? null : "catalog-next",
+        episodes:(message.input as {cursor?:string}).cursor
+          ? [catalogEpisode("I",5,"Next catalog episode")]
+          : [catalogEpisode("E",1,"Matching episode"),catalogEpisode("F",2,"Confirmed unplayed")],
       } : convert(unavailableGrid()) };
       return { ok: true };
     });
@@ -533,7 +541,14 @@ describe("production watch browsing", () => {
       expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "primevideo", titleKey, seasonKey, includePartial:true } }));
       expect(container.textContent).toContain("Season 2");
       expect(container.textContent).toContain("full catalog unavailable");
-      if(observed) expect(container.querySelector('[aria-label*="Confirmed unplayed"]')).not.toBeNull();
+      if(observed) {
+        expect(container.querySelector('[aria-label*="Confirmed unplayed"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label*="Saved episode 3"]')).not.toBeNull();
+        await click("Load more episodes for Frieren");
+        await settles(()=>expect(container.querySelector('[aria-label*="Saved episode 4"]')).not.toBeNull());
+        await settles(()=>expect(container.querySelector('[aria-label*="Next catalog episode"]')).not.toBeNull());
+        expect(container.querySelectorAll(`[data-episode-key="${episodeKey}"]`)).toHaveLength(1);
+      }
     }
     await click("Resume Matching episode");
     await settles(() => expect(primeSend).toHaveBeenCalledTimes(1));

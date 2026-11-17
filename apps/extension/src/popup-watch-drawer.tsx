@@ -1314,7 +1314,7 @@ function PopupWatchHistoryItem({
 			episode.episodeKey === item.latestActivity.episodeKey &&
 			(episode.seasonKey ?? "__unseasoned__") === selectedSeason?.seasonKey,
 	);
-	const choices: PopupEpisodeChoice[] = rosterReady
+	const catalogChoices: PopupEpisodeChoice[] = rosterReady
 		? mergeBy(
 				grid.pages.flatMap((page) => page.episodes),
 				(episode) => episode.episodeKey,
@@ -1346,7 +1346,8 @@ function PopupWatchHistoryItem({
 					pending: personal ? episodePending(personal) : undefined,
 				};
 			})
-		: matchingEpisodes
+		: [];
+	const savedChoices: PopupEpisodeChoice[] = matchingEpisodes
 				.filter(
 					(episode) =>
 						(episode.seasonKey ?? "__unseasoned__") ===
@@ -1371,6 +1372,12 @@ function PopupWatchHistoryItem({
 						pending: episodePending(personal),
 					};
 				});
+	// A partial catalog adds confirmed episodes; it cannot replace saved history.
+	const choices = !rosterReady ? savedChoices : exactCatalog ? catalogChoices :
+		mergeBy([...savedChoices, ...catalogChoices], (episode) => episode.key).sort(
+			(a, b) => (a.number ?? Infinity) - (b.number ?? Infinity) || a.key.localeCompare(b.key),
+		);
+	const includeSavedPages = !rosterReady || !exactCatalog;
 
 	const renderEpisode = (episode: Episode, detail = false) => (
 		<PopupEpisode
@@ -1533,14 +1540,16 @@ function PopupWatchHistoryItem({
 									selectedSeason.seasonKey === "__unseasoned__"
 								}
 								loading={
-									rosterReady || (fullHistory && knownCatalog)
-										? grid.loading
-										: page.loading
+									Boolean((fullHistory && knownCatalog && grid.loading) ||
+										(includeSavedPages && page.loading))
 								}
 								hasMore={Boolean(
-									rosterReady ? grid.nextCursor : page.nextCursor,
+									(rosterReady && grid.nextCursor) || (includeSavedPages && page.nextCursor),
 								)}
-								loadMore={rosterReady ? grid.loadMore : page.loadMore}
+								loadMore={() => {
+									if (rosterReady) grid.loadMore();
+									if (includeSavedPages) page.loadMore();
+								}}
 								renderSelected={(entry) =>
 									entry.history ? (
 										renderEpisode(entry.history, true)

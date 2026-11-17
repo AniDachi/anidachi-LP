@@ -43,7 +43,12 @@ reads merge its known rows with personal progress; the grid requires explicit
 No canonical aliases or playback progress are fabricated. The guest's optional
 interstitial operation only plays the matching local ad/intro, once until the
 phase changes; room/session/adapter replacement or host pause cancels it. A real
-autoplay rejection uses the existing Resume control.
+autoplay rejection uses the existing Resume control. Partial popup rows merge
+with saved episodes and retain both bounded pagination streams. A host pause
+cancels pending ad playback without restoring the automatic attempt; a cancelled
+attempt can use the same Resume control with an accurate paused-ad message.
+Native playback and successful Resume clear that control immediately. A bare
+PLAY command cannot substitute local identity for a confirmed host fingerprint.
 
 Delivery order: apply `20261118020000_prime_observed_catalog.sql` to staging,
 deploy Web, then reload the extension artifact. Old grid queries remain empty

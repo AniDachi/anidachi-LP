@@ -316,12 +316,52 @@ describe("PlaybackSyncController", () => {
 		expect(resume).toHaveBeenCalledTimes(1);
 		h.adapter.setPaused(true); // A later native pause is the viewer's choice.
 		h.adapter.emitPhase();
+		await h.controller.handleHostState({...state, playing:false});
 		await h.controller.handleHostState({...state, playing:true});
 		expect(resume).toHaveBeenCalledTimes(1);
 		expect(h.adapter.play).not.toHaveBeenCalled();
 		expect(h.adapter.pause).not.toHaveBeenCalled();
 		expect(h.adapter.seek).not.toHaveBeenCalled();
 		expect(h.adapter.setPlaybackRate).not.toHaveBeenCalled();
+		h.controller.dispose();
+	});
+
+	it("requires a confirmed host fingerprint before a command can continue a local ad", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		const resume=vi.fn(async (_signal:AbortSignal)=>undefined); h.adapter.resumeInterstitial=resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		h.controller.handleRemoteCommand({type:"PLAY",roomId:"room-1",byUserId:"host",at:10});
+		expect(resume).not.toHaveBeenCalled();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:false}));
+		h.controller.handleRemoteCommand({type:"PLAY",roomId:"room-1",byUserId:"host",at:10});
+		expect(resume).toHaveBeenCalledTimes(1);
+		h.controller.dispose();
+	});
+
+	it("clears the blocked-ad prompt after native Prime Play", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		h.adapter.resumeInterstitial=vi.fn().mockRejectedValue(Object.assign(new Error("blocked"),{name:"NotAllowedError"}));
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:true}));
+		await Promise.resolve(); await Promise.resolve();
+		expect(h.statuses.at(-1)).toEqual({kind:"resume-required"});
+		h.adapter.setPaused(false); h.adapter.emitPhase();
+		expect(h.statuses.at(-1)).toEqual({kind:"watching-local-ad"});
+		h.controller.dispose();
+	});
+
+	it("offers manual continuation after a cancelled ad attempt without claiming a browser permission denial", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		const resume=vi.fn((_signal:AbortSignal)=>new Promise<void>(()=>undefined)); h.adapter.resumeInterstitial=resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		const state=playbackState({videoFingerprint:"primevideo|video",playing:true});
+		await h.controller.handleHostState(state);
+		await h.controller.handleHostState({...state,playing:false});
+		await h.controller.handleHostState(state);
+		expect(resume).toHaveBeenCalledTimes(1);
+		expect(h.statuses.at(-1)).toEqual({kind:"resume-required",reason:"interstitial-paused"});
+		h.controller.resumeFromUserGesture();
+		expect(resume).toHaveBeenCalledTimes(2);
 		h.controller.dispose();
 	});
 
