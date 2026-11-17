@@ -12,6 +12,8 @@ import type { VideoAdapter } from "./source-adapters/core/types";
 export interface PrimeLaunchHandoff {
  /** Optional session transaction is committed only after lifecycle acceptance. */
  rejected?: true;
+ /** Only identifies the blocked invitation; never grants room admission. */
+ rejectedRoomId?: string;
  intentId?: string;
  commit?(): Promise<boolean>;
  blocksFragment?(href: string): boolean;
@@ -223,7 +225,7 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 /** Fence only the rejected launch, leaving a genuinely new explicit launch usable. */
 export function suppressedPrimeLaunch(href: string, rejection?: {intentId?:string;roomId?:string;resumeIntentId?:string}): PrimeLaunchHandoff {
  const rejected=signature(href);
- return {rejected:true,intentId:rejection?.intentId,blocksFragment: current => {
+ return {rejected:true,rejectedRoomId:rejection?.roomId,intentId:rejection?.intentId,blocksFragment: current => {
   if(!rejection)return rejected!==null&&signature(current)===rejected;
   const params=new URLSearchParams(new URL(current).hash.slice(1));
   if(params.has("anidachiRoom"))return rejection.roomId!==undefined&&params.get("anidachiRoom")===rejection.roomId;

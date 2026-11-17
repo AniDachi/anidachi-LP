@@ -1,5 +1,41 @@
 # Prime Video adapter notes
 
+## Two-account acceptance and reload correction
+
+Task 18 exercised the loaded `2b393527` staging scripts in two user-opened Chrome
+profiles (Plus host, Free guest). Invitations, play/pause/seek, S3 E2 to E3 source
+navigation, S1 E5 launch from a different prior season, separate guest preroll,
+Russian/English interfaces and Plus history catalogue/progress/Resume worked in
+the tested cases. Movie playback across interface languages resumed after ads
+at exactly the host's paused content position. Both SDKs reported US; this is
+not proof of distinct-marketplace or geographically separate account playback.
+The supplied regional SOR route was unavailable in Prime itself.
+
+Guest reload was reproducibly stuck at `Joining room`: after Resume, the source
+was correctly verified, but the host remained paused at 866.075 seconds while
+the guest played independently to 946.019683. The consumed invitation's fence
+incorrectly suppressed a previously confirmed room session as well. Task 19
+keeps the old fragment blocked and permits only its matching persisted room,
+owned by the current account, to enter normal fresh server admission. Missing,
+different-room and different-owner sessions cannot restore this way. Pending
+metadata/launch recovery still block restoration; no one-use launch is replayed.
+Initial pending UI follows the same restoration decision instead of waiting
+forever on an unrelated saved room.
+
+The capsule also mixed content position with raw video duration including ads:
+the same movie displayed 117:41 versus 118:25 and 85% versus 84%. It now uses the
+source descriptor's content duration, with the existing raw fallback only when
+the adapter supplies no duration. History and synchronization timing are unchanged.
+
+Candidate branch: `codex/prime-room-reload-fix`, staging base `0f84123f`.
+Regression tests reproduce both failures before the correction and cover
+immediate/delayed metadata and session mismatches. Exact final check, review,
+artifact and live acceptance receipts belong in the Task 19 PR. These are
+extension-only corrections; no schema, Worker, permission or new polling loop.
+Native fullscreen, different audio tracks, distinct marketplaces and regional
+accounts remain separate acceptance gaps. The inherited Graphify collision
+exception remains unchanged.
+
 ## Direct episode links and parent-season canonical
 
 Task 17 (`codex/prime-metadata-readiness`, based on staging `29fafc86`) fixes a

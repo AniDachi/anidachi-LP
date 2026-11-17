@@ -1,5 +1,23 @@
 # Prime Video adapter
 
+## Task 19 — Two-account acceptance corrections, November 17
+
+The owner authorized fixing the two failures recorded in the local Task 18
+browser report. Restore a confirmed account/tab room after reload even when
+its invitation has already been consumed. Keep the invitation blocked; only
+the matching existing room session may use normal fresh server admission.
+Unknown, different-room or different-owner records must not restore, and the
+UI must not show a permanent join when no initial room can actually be joined.
+Pending Prime metadata and launch recovery remain gates before restoration.
+
+Use the source descriptor's content duration with content time in the capsule,
+retaining the raw duration fallback for providers without a descriptor duration.
+Reproduce both failures before implementation; run lifecycle/replay regressions,
+extension check/full suite, room harness, independent review and narrow staging
+build/validation. Then verify reload and ad duration on the loaded artifact.
+No new backend, protocol, permission, polling or marketplace flow is needed.
+The inherited Graphify ownership collision exception remains in force.
+
 User request: add Amazon Prime Video with the reliability and existing product
 flows of the other adapters. This plan implements the local candidate; publication
 and production promotion remain separate operations.
