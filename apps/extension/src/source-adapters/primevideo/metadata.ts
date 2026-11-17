@@ -276,7 +276,10 @@ export function readPrimePage(
 	}
 	const routeId = routes[0]!.compact;
 	const detail = details.get(id) ?? {};
-	const title = text(info.title);
+	// Prime's page and SDK can localize/format the same title differently (even
+	// "Sadie, Sadie ..." vs "Sadie, Sadie..."). GTI, type, route, membership and
+	// ordinals prove identity. Display labels come from the mapped public record.
+	const title = text(detail.title);
 	if (!title) return null;
 	const context =
 		typeof territory === "string" &&
@@ -293,7 +296,6 @@ export function readPrimePage(
 			: null;
 	if (current.type === "movie") {
 		if (
-			text(detail.title) !== title ||
 			routeId !== current.compact ||
 			info.type !== "MOVIE" ||
 			(detail.titleType !== undefined && detail.titleType !== "movie")
@@ -404,7 +406,6 @@ export function readPrimePage(
 	}
 	if (
 		!memberIds.has(id) ||
-		text(detail.title) !== title ||
 		detail.titleType !== "episode"
 	)
 		return null;
@@ -427,9 +428,9 @@ export function readPrimePage(
 		info.episodeNumber !== episodeNumber
 	)
 		return null;
-	const seriesTitle = text(info.seriesTitle),
+	const seriesTitle = text(seasonDetail.parentTitle),
 		seasonTitle = text(seasonDetail.title);
-	if (!seriesTitle || seasonDetail.parentTitle !== seriesTitle || !seasonTitle)
+	if (!seriesTitle || !seasonTitle)
 		return null;
 	const anchor = seriesAnchor(lists, records, invalidRecords, origin);
 	const identity = anchor
