@@ -120,6 +120,49 @@ function fixture() {
 const read = (store: WatchHistoryGridStore, input: unknown = query) =>
 	readWatchHistoryGrid({ userId: OWNER, store, input, now: new Date(NOW) });
 
+test("observed Prime episodes require opt-in, keep totals unknown, and respect region and attempt fences", async () => {
+	const id = "A".repeat(26), episodeId = "B".repeat(26);
+	const input = {provider: "primevideo", titleKey: `primevideo:series:${id}`};
+	const context = {region: "US", requestedLocale: "en-US", audioLocale: null, subtitleLocales: [], observedAt: NOW};
+	const snapshot = {schemaVersion: 3, ...input, providerSeriesId: id, title: "Known series", completeness: "partial", context,
+		seasons: [{seasonKey: `primevideo:season:${id}`, providerSeasonIdentifier: id, title: "Season 1", seasonNumber: 1, order: 0,
+			episodes: [{episodeKey: `primevideo:episode:${episodeId}`, providerEpisodeIdentifier: episodeId, title: "Unplayed episode", episodeNumber: 1, order: 0, releasedAt: null, available: true,
+				watchVariants: [{providerContentId: episodeId, audioLocale: null, original: true, order: 0, sourceUrl: `https://www.primevideo.com/detail/${episodeId}`}]}]}]};
+	const row = {user_id: OWNER, history_generation: 3, provider: "primevideo", title_key: input.titleKey,
+		revision: 1, accepted_revision: null, accepted_hash: null, accepted_context: null, context, projection: null,
+		attempt_status: "partial", snapshot};
+	const store: WatchHistoryGridStore = {settings: async () => ({history_generation: 3, write_schema_version: 3}), catalog: async () => structuredClone(row), progress: async () => []};
+	assert.equal((await read(store, input)).episodes.length, 0);
+	const observed = await read(store, {...input, includePartial: true});
+	assert.equal(observed.state, "partial");
+	assert.equal(observed.episodes[0]?.episodeTitle, "Unplayed episode");
+	assert.equal(observed.episodes[0]?.history, null);
+	assert.equal(observed.mainAggregate, null);
+	assert.equal(observed.seasons[0]?.aggregate, null);
+	row.context = {...context, region: "DE"};
+	assert.equal((await read(store, {...input, includePartial: true})).episodes.length, 0);
+	row.context = context;
+	row.attempt_status = "pending";
+	assert.equal((await read(store, {...input, includePartial: true})).episodes.length, 0);
+	row.attempt_status = "partial";
+	let reads = 0;
+	store.catalog = async () => ({...row, attempt_status: ++reads === 1 ? "partial" : "pending"});
+	await assert.rejects(read(store, {...input, includePartial: true}), {code: "CATALOG_CHANGED"});
+});
+
+test("grid route accepts explicit partial opt-in and rejects ambiguous booleans", async () => {
+	const {store} = fixture();
+	let received: unknown;
+	const get = createWatchHistoryGridGet({getSession: async () => ({userId: OWNER}) as never,
+		read: async ({input}) => {received = input; return read(store);}});
+	for (const value of ["true", "false"]) {
+		const result = await get(new NextRequest(`https://example.test/api/grid?provider=crunchyroll&titleKey=${TITLE}&includePartial=${value}`));
+		assert.equal(result.status, 200);
+		assert.equal((received as {includePartial: boolean}).includePartial, value === "true");
+	}
+	assert.equal((await get(new NextRequest(`https://example.test/api/grid?provider=crunchyroll&titleKey=${TITLE}&includePartial=1`))).status, 400);
+});
+
 test("catalog pages real episodes, keeps E0 in its season, and separates specials from series totals", async () => {
 	const { store, calls } = fixture();
 	const first = await read(store);

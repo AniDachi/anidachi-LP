@@ -128,6 +128,8 @@ export class PlaybackSyncController {
 	private pendingRemoteSeek: PendingRemoteSeek | null = null;
 	private pendingSourceNavigation: PendingSourceNavigation | null = null;
 	private playbackBarrier: AdapterPlaybackPhase | null = null;
+	private interstitialPlayAttempted = false;
+	private interstitialPlayAbort: AbortController | null = null;
 	private hostInterstitialHoldSent = false;
 	private hostBufferingHoldSent = false;
 	private hostBufferingTimeoutId: number | null = null;
@@ -454,6 +456,7 @@ export class PlaybackSyncController {
 		}
 		if (this.refreshPlaybackPhase(adapter)) {
 			this.updateLatestHostStateFromCommand(event);
+			this.continueGuestInterstitial(adapter);
 			return;
 		}
 
@@ -540,6 +543,10 @@ export class PlaybackSyncController {
 	resumeFromUserGesture(): void {
 		const adapter = this.getActiveAdapter();
 		const state = this.latestHostState;
+		if (adapter?.getPlaybackSnapshot().phase === "interstitial" && this.resumeRequired && !this.resumeAttemptPending) {
+			this.continueGuestInterstitial(adapter, true);
+			return;
+		}
 		if (
 			!adapter ||
 			!state?.playing ||
@@ -865,11 +872,14 @@ export class PlaybackSyncController {
 			previousPhase,
 		);
 		if (nextBarrier === this.playbackBarrier) {
+			if (nextBarrier === "interstitial") this.continueGuestInterstitial(adapter);
 			return nextBarrier !== null || guestBufferingBlocked;
 		}
 
 		const previousBarrier = this.playbackBarrier;
 		this.playbackBarrier = nextBarrier;
+		this.resetInterstitialPlayback();
+		if (previousBarrier === "interstitial") this.clearResumeRequired();
 		// Retire the previous phase's notice before applying the new one. This
 		// also matters during solo playback, which returns before room sync below.
 		if (previousBarrier === "interstitial" || previousBarrier === "unsupported")
@@ -889,6 +899,7 @@ export class PlaybackSyncController {
 					this.onStatus({ kind: "waiting-for-host-ad" });
 				} else {
 					this.onStatus({ kind: "watching-local-ad" });
+					this.continueGuestInterstitial(adapter);
 				}
 			} else if (nextBarrier === "unsupported") {
 				this.onStatus({ kind: "unsupported-media" });
@@ -1076,7 +1087,47 @@ export class PlaybackSyncController {
 
 	private invalidateAsyncWork(): void {
 		this.asyncGeneration += 1;
+		this.resetInterstitialPlayback();
 		this.cancelPendingRemotePlayback();
+	}
+
+	private resetInterstitialPlayback(): void {
+		this.interstitialPlayAbort?.abort();
+		this.interstitialPlayAbort = null;
+		this.interstitialPlayAttempted = false;
+		this.resumeAttemptPending = false;
+	}
+
+	private continueGuestInterstitial(adapter: VideoAdapter, userGesture = false): void {
+		if (!adapter.resumeInterstitial || adapter !== this.getActiveAdapter() ||
+			this.playbackBarrier !== "interstitial" || this.session.isHost || !this.hasActiveRoomSession()) return;
+		const host = this.latestHostState;
+		if (!host?.playing || host.videoFingerprint !== adapter.getFingerprint()) {
+			this.resetInterstitialPlayback();
+			return;
+		}
+		if (!adapter.video.paused) { this.interstitialPlayAttempted = true; return; }
+		if (!userGesture && (this.interstitialPlayAttempted || this.resumeRequired)) return;
+		this.interstitialPlayAttempted = true;
+		this.interstitialPlayAbort?.abort();
+		const abort = new AbortController(), generation = this.asyncGeneration;
+		this.interstitialPlayAbort = abort;
+		this.resumeAttemptPending = true;
+		const current = () => !abort.signal.aborted && this.asyncGeneration === generation &&
+			this.getActiveAdapter() === adapter && this.playbackBarrier === "interstitial" &&
+			this.latestHostState?.playing && this.latestHostState.videoFingerprint === adapter.getFingerprint();
+		const failed = (error: unknown) => {
+			if (!current()) return;
+			this.resumeAttemptPending = false;
+			this.handlePlayFailure(error);
+		};
+		try {
+			void adapter.resumeInterstitial(abort.signal).then(() => {
+				if (!current()) return;
+				this.clearResumeRequired();
+				this.onStatus({kind: "watching-local-ad"});
+			}, failed);
+		} catch (error) { failed(error); }
 	}
 
 	private isAsyncEpochCurrent(epoch: AsyncEpoch): boolean {

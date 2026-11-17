@@ -1152,6 +1152,7 @@ function PopupWatchHistoryItem({
 			input: {
 				provider: item.provider,
 				titleKey: item.titleKey,
+				...(item.provider === "primevideo" ? { includePartial: true } : {}),
 				...(requestedSeason && requestedSeason !== "__unseasoned__"
 					? { seasonKey: requestedSeason }
 					: {}),
@@ -1198,8 +1199,10 @@ function PopupWatchHistoryItem({
 		catalog?.state === "complete" && item.catalogState === "complete"
 			? catalog
 			: undefined;
+	const knownCatalog = exactCatalog ?? (catalog?.provider === "primevideo" &&
+		catalog.state === "partial" && catalog.revision ? catalog : undefined);
 	const seasonMetadata =
-		exactCatalog?.seasons ??
+		knownCatalog?.seasons ??
 		page.pages[0]?.detail.catalog.seasons ??
 		item.seasons;
 	const observedSeasons = matchingEpisodes.map((episode) => ({
@@ -1221,7 +1224,7 @@ function PopupWatchHistoryItem({
 		.filter(
 			(season) =>
 				(fullHistory &&
-					exactCatalog?.seasons.some(
+					knownCatalog?.seasons.some(
 						(known) => known.seasonKey === season.seasonKey,
 					)) ||
 				matchingEpisodes.some(
@@ -1298,10 +1301,10 @@ function PopupWatchHistoryItem({
 	};
 	const rosterReady =
 		fullHistory &&
-		exactCatalog &&
-		grid.pages[0]?.state === "complete" &&
+		knownCatalog &&
+		grid.pages[0]?.revision === knownCatalog.revision &&
 		grid.pages[0].seasonKey === selectedSeason?.seasonKey &&
-		exactCatalog.seasons.some(
+		knownCatalog.seasons.some(
 			(season) => season.seasonKey === selectedSeason?.seasonKey,
 		);
 	// Keep Resume attached to the known current episode even when its catalog
@@ -1505,7 +1508,7 @@ function PopupWatchHistoryItem({
 							<PopupEpisodePicker
 								pending={
 									fullHistory &&
-									Boolean(exactCatalog) &&
+									Boolean(knownCatalog) &&
 									!rosterReady &&
 									grid.loading
 								}
@@ -1530,7 +1533,7 @@ function PopupWatchHistoryItem({
 									selectedSeason.seasonKey === "__unseasoned__"
 								}
 								loading={
-									rosterReady || (fullHistory && exactCatalog)
+									rosterReady || (fullHistory && knownCatalog)
 										? grid.loading
 										: page.loading
 								}
@@ -1550,7 +1553,7 @@ function PopupWatchHistoryItem({
 									)
 								}
 							/>
-							{fullHistory && !rosterReady ? (
+							{fullHistory && (!rosterReady || !exactCatalog) ? (
 								<p
 									className="popup-catalog-note"
 									role={grid.loading ? "status" : undefined}

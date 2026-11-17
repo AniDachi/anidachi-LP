@@ -29,6 +29,39 @@ async function tick(ms = 60) {
 	await vi.advanceTimersByTimeAsync(ms);
 }
 describe("Prime observed SDK and real MAIN/client boundary", () => {
+	it("permits only explicit play for the bound local interstitial", async () => {
+		vi.useFakeTimers();
+		const f=setup(); f.setAd(true); f.video.dispatchEvent(new Event("timeupdate"));
+		const binding=readPrimeBinding(f.video)!;
+		const pending=runPrimeCommand({action:"resume-interstitial",...binding});
+		await tick();
+		expect((await pending)?.ok).toBe(true);
+		expect(f.context.playback.play).toHaveBeenCalledTimes(1);
+		expect(f.context.playback.seek).not.toHaveBeenCalled();
+		expect(f.context.playback.pause).not.toHaveBeenCalled();
+		f.setAd(false); f.video.dispatchEvent(new Event("timeupdate"));
+		const content=runPrimeCommand({action:"resume-interstitial",...readPrimeBinding(f.video)!});
+		await tick(); expect((await content)?.ok).toBe(false);
+		expect(f.context.playback.play).toHaveBeenCalledTimes(1);
+	});
+	it.each(["cancel", "replacement"])("fences interstitial play after %s", async kind => {
+		vi.useFakeTimers(); const f=setup(); f.setAd(true); f.video.dispatchEvent(new Event("timeupdate"));
+		const abort=new AbortController();
+		const pending=runPrimeCommand({action:"resume-interstitial",...readPrimeBinding(f.video)!},abort.signal);
+		await tick(1);
+		if(kind==="cancel")abort.abort(); else f.attach({...f.context});
+		await tick();
+		expect((await pending)?.ok).not.toBe(true);
+		expect(f.context.playback.play).not.toHaveBeenCalled();
+	});
+	it("reports a real autoplay rejection without exposing provider error details", async () => {
+		vi.useFakeTimers(); const f=setup(); f.setAd(true); f.video.dispatchEvent(new Event("timeupdate"));
+		f.context.playback.play.mockRejectedValueOnce(Object.assign(new Error("provider private detail"),{name:"NotAllowedError"}));
+		const pending=runPrimeCommand({action:"resume-interstitial",...readPrimeBinding(f.video)!});
+		await tick(2100);
+		expect(await pending).toMatchObject({ok:false,error:"autoplay-blocked"});
+		expect(JSON.stringify(await pending)).not.toContain("provider private detail");
+	});
 	it("reads actual hydration mapping and content milliseconds, not misleading native clock", async () => {
 		const f = setup();
 		f.video.currentTime = 999;

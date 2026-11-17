@@ -142,6 +142,7 @@ export function startPrimeBridge(): () => void {
 	async function run(request: PrimeRequest, abort: AbortController) {
 		let result: {
 			ok: boolean;
+			error?: "autoplay-blocked";
 			snapshot?: PrimeSnapshot;
 			catalog?: PrimeSdk["page"]["catalog"];
 		} = { ok: false };
@@ -198,13 +199,15 @@ export function startPrimeBridge(): () => void {
 						};
 				}
 			} else {
+				const interstitial = request.action === "resume-interstitial";
+				const expectedPhase = interstitial ? "interstitial" : "content";
 				// Yield once so same-turn cancellation/disposal can fence a queued request.
 				await delay(abort.signal);
 				const before = current(request, initial);
 				if (
 					!before ||
 					abort.signal.aborted ||
-					before.snapshot.phase !== "content" ||
+					before.snapshot.phase !== expectedPhase ||
 					(request.expiresAt !== undefined && request.expiresAt <= Date.now())
 				)
 					return;
@@ -215,7 +218,7 @@ export function startPrimeBridge(): () => void {
 					return;
 				if (request.action === "pause" && !before.sdk.pauseAllowed) return;
 				if (request.action === "rate" && !before.sdk.rateAllowed) return;
-				if (!["play", "pause", "seek", "rate"].includes(request.action)) return;
+				if (!["play", "resume-interstitial", "pause", "seek", "rate"].includes(request.action)) return;
 				// Call only after the last synchronous identity, phase and cancellation check.
 				const returned =
 					request.action === "rate"
@@ -226,24 +229,28 @@ export function startPrimeBridge(): () => void {
 							)
 						: request.action === "seek"
 							? callPrime(before.sdk.playback, "seek", request.time! * 1000)
-							: callPrime(before.sdk.playback, request.action);
+							: callPrime(before.sdk.playback, interstitial ? "play" : request.action);
 				// SDK completion is not trusted as proof; consume rejection without awaiting an unbounded page promise.
+				let autoplayBlocked = false;
 				if (
 					returned &&
 					typeof (returned as PromiseLike<unknown>).then === "function"
 				)
-					Promise.resolve(returned).catch(() => undefined);
+					Promise.resolve(returned).catch(error => {
+						autoplayBlocked = (interstitial || request.action === "play") && error?.name === "NotAllowedError";
+					});
 				const until = Date.now() + 2000;
 				while (!abort.signal.aborted && Date.now() < until) {
 					const after = current(request, before);
 					if (!after) break;
+					if (autoplayBlocked) { result = {ok:false,error:"autoplay-blocked"}; break; }
 					if (after.snapshot.phase === "buffering") {
 						await delay(abort.signal);
 						continue;
 					}
-					if (after.snapshot.phase !== "content") break;
+					if (after.snapshot.phase !== expectedPhase) break;
 					const confirmed =
-						request.action === "rate"
+						interstitial ? callPrime(after.sdk.playback, "getPlaybackState") === "Playing" : request.action === "rate"
 							? Math.abs(after.snapshot.playbackRate - request.rate!) < 0.001
 							: request.action === "seek"
 								? Math.abs(after.snapshot.currentTime - request.time!) <= 1.25
@@ -257,7 +264,9 @@ export function startPrimeBridge(): () => void {
 					await delay(abort.signal);
 				}
 			}
-		} catch {
+		} catch (error) {
+			if ((request.action === "play" || request.action === "resume-interstitial") &&
+				error instanceof Error && error.name === "NotAllowedError") result = {ok:false,error:"autoplay-blocked"};
 			/* Undocumented API changes fail closed. */
 		} finally {
 			if (!stopped && !abort.signal.aborted) {

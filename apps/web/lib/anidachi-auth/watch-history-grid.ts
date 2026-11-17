@@ -1,5 +1,6 @@
 import { withPersonalHistoryRead } from "./personal-history-policy";
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import {
 	WatchCatalogSnapshotInputSchema,
  PrimeNavigationSchema,
@@ -40,7 +41,7 @@ const fail = (code = "INVALID_RESPONSE", status = 502) =>
 		"Could not read the episode catalog",
 	);
 const metadataColumns =
-	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,projection,preferred_audio_locale,prime_navigation";
+	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,attempt_status,projection,preferred_audio_locale,prime_navigation";
 
 export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 	async settings(owner) {
@@ -91,6 +92,7 @@ function fingerprint(row: RecordValue | null): string | null {
 					row.revision,
 					row.accepted_revision,
 					row.accepted_hash,
+					row.attempt_status,
 					row.context,
 					row.accepted_context,
 					row.projection,
@@ -117,11 +119,11 @@ function progressFingerprint(rows: RecordValue[]): string {
 }
 function aggregate(seasons: WatchHistoryGridSeason[]) {
 	const completedEpisodes = seasons.reduce(
-		(sum, s) => sum + s.aggregate.completedEpisodes,
+		(sum, s) => sum + s.aggregate!.completedEpisodes,
 		0,
 	);
 	const availableEpisodes = seasons.reduce(
-		(sum, s) => sum + s.aggregate.availableEpisodes,
+		(sum, s) => sum + s.aggregate!.availableEpisodes,
 		0,
 	);
 	return {
@@ -194,25 +196,36 @@ export async function readWatchHistoryGrid(params: {
 	};
 	const context = row?.context as RecordValue | null;
 	const accepted = row?.accepted_context as RecordValue | null;
-	if (
-		row?.projection &&
+	const complete = Boolean(row?.projection &&
 		accepted &&
 		typeof accepted.region === "string" &&
 		context?.region === accepted.region
-	) {
+	);
+	const observed = query.includePartial === true && query.provider === "primevideo" &&
+		row?.attempt_status === "partial" && !complete &&
+		(row.snapshot as RecordValue | null)?.completeness === "partial" &&
+		typeof context?.region === "string" &&
+		isDeepStrictEqual((row.snapshot as RecordValue).context, context);
+	if (row && (complete || observed)) {
 		const snapshot = WatchCatalogSnapshotInputSchema.safeParse(row.snapshot);
-		const projection = row.projection as RecordValue;
+		const projection = row.projection as RecordValue | null;
 		if (
 			!snapshot.success ||
 			snapshot.data.titleKey !== query.titleKey ||
 			snapshot.data.provider !== query.provider ||
-			snapshot.data.completeness !== "complete" ||
-			!Array.isArray(projection.seasons)
+			snapshot.data.completeness !== (complete ? "complete" : "partial") ||
+			(complete && !Array.isArray(projection?.seasons))
 		)
 			throw fail();
-		const seasons = projection.seasons
+		const summaries = complete ? projection!.seasons as unknown[] : snapshot.data.seasons.map(season => ({
+			seasonKey: season.seasonKey, seasonTitle: season.title, seasonNumber: season.seasonNumber,
+			order: season.order, aggregate: null, nextEpisode: null,
+		}));
+		const seasons: WatchHistoryGridSeason[] = summaries
 			.map((value) => {
-				const season = WatchHistoryCatalogSeasonProjectionSchema.parse(value);
+				const season = WatchHistoryCatalogSeasonProjectionSchema.extend({
+					aggregate: WatchHistoryCatalogSeasonProjectionSchema.shape.aggregate.nullable(),
+				}).parse(value);
 				return {
 					...season,
 					kind: isWatchSpecialSeasonLabel(season.seasonTitle)
@@ -318,15 +331,15 @@ export async function readWatchHistoryGrid(params: {
 				}),
 			);
 		}
-		result.state = "complete";
-		result.revision = revision;
+		result.state = complete ? "complete" : "partial";
+		result.revision = seasons.length ? revision : null;
 		result.seasonKey = seasonKey;
 		result.seasons = seasons;
-		result.mainAggregate = aggregate(
+		result.mainAggregate = complete ? aggregate(
 			seasons.filter((s) => s.kind === "season"),
-		);
+		) : null;
 		const specialSeasons = seasons.filter((s) => s.kind === "specials");
-		result.specialsAggregate = specialSeasons.length
+		result.specialsAggregate = complete && specialSeasons.length
 			? aggregate(specialSeasons)
 			: null;
 		result.episodes = slice.map((episode) => {

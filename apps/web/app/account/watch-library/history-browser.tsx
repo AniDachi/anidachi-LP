@@ -339,13 +339,13 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
-        {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</p>}
+        {!data.catalogComplete && !single && <p className="wh-hint">Showing known episodes; the full catalog is unavailable. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
-        </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "saved"}` : `${episodes.filter(watched).length} watched`}</span></div>}
+        </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "known"}` : `${episodes.filter(watched).length} watched`}</span></div>}
         {editing && <div className={`wh-selection-tools ${single ? "wh-single-tools" : ""}`}>
           {!single && <div className="wh-selection-row">
-            <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all saved"}</label>
+            <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all shown"}</label>
             <div className="wh-selection-count"><span role="status">{targets.length} selected</span><button type="button" className="wh-icon" aria-label="Clear selection" disabled={editLocked || !targets.length} onClick={clearSelection}><X size={14} /></button></div>
           </div>}
           <div className="wh-selection-actions" aria-label={single ? "Progress actions" : "Actions for selected episodes"}>

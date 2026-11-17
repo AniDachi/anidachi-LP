@@ -492,7 +492,7 @@ describe("production watch browsing", () => {
     expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
   });
 
-  it.each([true, false])("opens Prime movie=%s with exact identity, real seasons and local resume", async movie => {
+  it.each([[true, false], [false, false], [false, true]])("opens Prime movie=%s observed=%s with exact identity, real seasons and local resume", async (movie, observed) => {
     const primeSend=vi.fn(async(_message:unknown)=>({status:"ready"}));
     vi.stubGlobal("chrome",{runtime:{sendMessage:primeSend}});
     const id = "E".repeat(26), anchor = "A".repeat(26), season = "B".repeat(26);
@@ -517,7 +517,11 @@ describe("production watch browsing", () => {
     const client = clientFixture(async message => {
       if (message.command === "browse") return { ok: true, data: (message.input as WatchHistoryBrowseQuery).provider === "primevideo" ? page : { ...page, history: { ...page.history, items: [], totalTitleCount: 0 }, matches: [] } };
       if (message.command === "browse-title-episodes") return { ok: true, data: details };
-      if (message.command === "browse-catalog") return { ok: true, data: convert(unavailableGrid()) };
+      if (message.command === "browse-catalog") return { ok: true, data: observed ? {
+        ...convert(unavailableGrid()), state:"partial", revision:"observed-1", seasonKey,
+        seasons:[{seasonKey,seasonTitle:"Season 2",seasonNumber:2,order:0,kind:"season",aggregate:null,nextEpisode:null}],
+        episodes:[{episodeKey:`primevideo:episode:${"F".repeat(26)}`,episodeTitle:"Confirmed unplayed",episodeNumber:2,seasonKey,order:1,releasedAt:null,available:true,sourceUrl:`https://www.primevideo.com/detail/${"F".repeat(26)}`,history:null}],
+      } : convert(unavailableGrid()) };
       return { ok: true };
     });
     WatchHistoryBrowseResponseSchema.parse(page);
@@ -526,9 +530,10 @@ describe("production watch browsing", () => {
     expect(container.querySelector('[data-provider="primevideo"]')).not.toBeNull();
     if (movie) expect(container.querySelector(".popup-season-toolbar")).toBeNull();
     else {
-      expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "primevideo", titleKey, seasonKey } }));
+      expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "primevideo", titleKey, seasonKey, includePartial:true } }));
       expect(container.textContent).toContain("Season 2");
       expect(container.textContent).toContain("full catalog unavailable");
+      if(observed) expect(container.querySelector('[aria-label*="Confirmed unplayed"]')).not.toBeNull();
     }
     await click("Resume Matching episode");
     await settles(() => expect(primeSend).toHaveBeenCalledTimes(1));

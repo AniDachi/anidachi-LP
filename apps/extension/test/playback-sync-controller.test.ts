@@ -302,6 +302,66 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.pause).toHaveBeenCalledTimes(1);
 	});
 
+	it("continues a paused guest interstitial once when the matching host starts, retaining the content barrier", async () => {
+		const h = createHarness({isHost: false, provider: "primevideo"});
+		const resume = vi.fn(async (_signal: AbortSignal) => {h.adapter.setPaused(false);});
+		h.adapter.resumeInterstitial = resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		const state = playbackState({videoFingerprint: "primevideo|video", playing: false});
+		await h.controller.handleHostState(state);
+		expect(resume).not.toHaveBeenCalled();
+		await h.controller.handleHostState({...state, videoFingerprint:"primevideo|another", playing:true});
+		expect(resume).not.toHaveBeenCalled();
+		await h.controller.handleHostState({...state, playing:true});
+		expect(resume).toHaveBeenCalledTimes(1);
+		h.adapter.setPaused(true); // A later native pause is the viewer's choice.
+		h.adapter.emitPhase();
+		await h.controller.handleHostState({...state, playing:true});
+		expect(resume).toHaveBeenCalledTimes(1);
+		expect(h.adapter.play).not.toHaveBeenCalled();
+		expect(h.adapter.pause).not.toHaveBeenCalled();
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+		expect(h.adapter.setPlaybackRate).not.toHaveBeenCalled();
+		h.controller.dispose();
+	});
+
+	it.each(["session", "adapter", "phase", "suspend", "host-pause"] as const)("cancels guest interstitial continuation on %s without stale error feedback", async change => {
+		const h = createHarness({isHost:false,provider:"primevideo"});
+		let reject!: (error: Error) => void;
+		let signal!: AbortSignal;
+		h.adapter.resumeInterstitial = vi.fn((s: AbortSignal) => {signal=s; return new Promise<void>((_resolve, r)=>{reject=r;});});
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:true}));
+		expect(signal?.aborted).toBe(false);
+		if(change==="session") h.controller.setSession(session({roomId:null}));
+		else if(change==="adapter") h.controller.bindAdapter(null);
+		else if(change==="suspend") h.controller.suspend();
+		else if(change==="host-pause") await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:false}));
+		else {h.adapter.setPhase("content"); h.adapter.emitPhase();}
+		expect(signal.aborted).toBe(true);
+		const before=h.statuses.length;
+		reject(Object.assign(new Error("blocked"),{name:"NotAllowedError"}));
+		await Promise.resolve(); await Promise.resolve();
+		expect(h.statuses.slice(before)).not.toContainEqual({kind:"resume-required"});
+		h.controller.dispose();
+	});
+
+	it("retries an autoplay-blocked local interstitial only through the existing Resume action", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		const resume=vi.fn().mockRejectedValueOnce(Object.assign(new Error("blocked"),{name:"NotAllowedError"})).mockResolvedValue(undefined);
+		h.adapter.resumeInterstitial=resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:true}));
+		await Promise.resolve(); await Promise.resolve();
+		expect(h.statuses.at(-1)).toEqual({kind:"resume-required"});
+		h.adapter.emitPhase(); expect(resume).toHaveBeenCalledTimes(1);
+		h.controller.resumeFromUserGesture();
+		await Promise.resolve(); await Promise.resolve();
+		expect(resume).toHaveBeenCalledTimes(2);
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+		h.controller.dispose();
+	});
+
 	it("cancels pending remote play when a transition begins", async () => {
 		const harness = createHarness({ isHost: false, provider: "youtube" });
 		harness.adapter.setPaused(true);
@@ -1038,8 +1098,8 @@ interface HarnessOptions {
 	fingerprint?: string;
 	isHost: boolean;
 	playImplementation?: () => Promise<void>;
-	provider?: "crunchyroll" | "youtube" | "generic";
-	roomProvider?: "crunchyroll" | "youtube" | "generic" | null;
+	provider?: "crunchyroll" | "youtube" | "generic" | "primevideo";
+	roomProvider?: "crunchyroll" | "youtube" | "generic" | "primevideo" | null;
 }
 
 function createHarness(options: HarnessOptions) {
