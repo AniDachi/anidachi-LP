@@ -167,18 +167,24 @@ address-bar season URL is never an episode destination, and an Amazon ASIN is
 never manufactured from a compactGTI or translated title.
 
 Invitation, website/popup Resume, unseen catalog episodes and room source
-switches consult the same recipient marketplace selection. A missing
-verified route for that marketplace is an unknown mapping, not proof that the
-title is unavailable. The extension's `prime-launch.html` offers known links,
-canonical Prime, or manual navigation to the selected marketplace. It remembers
-the choice per AniDachi account, not per display language. It does not rewrite
-an Amazon host or silently substitute another edition. Legacy data
-without navigation hints keeps canonical Prime behavior unless the recipient
-has explicitly selected an Amazon marketplace that cannot be resolved.
+switches now open the first supplied verified exact-title route directly. Amazon
+handles regional redirects; AniDachi does not rewrite the hostname or invent an
+ASIN. If no observed route exists, launch uses the canonical Prime compactGTI
+URL. Current metadata emits a single route. For bounded multi-route payloads,
+input order determines the primary destination; changing that first route is a
+navigation change, while observation timestamps remain metadata.
+
+Task 16 supersedes Task 11's unsolicited marketplace picker. No saved recipient
+marketplace or current-origin preference overrides the supplied destination.
+Normal launches never enter `prime-launch.html`; it remains only as a small
+compatibility redirect for an unexpired, unconsumed old launch tab. Expired,
+replayed or account-changed launches cannot restart there. The website fallback
+for a missing/disabled extension offers one link to the same destination, with
+no marketplace selector.
 
 Prime invitations pass through `/room/[roomId]/launch` after server admission.
 The website prepares and commits a launch through the approved extension ID;
-missing or older extensions receive explicit fallback links. The background
+missing or older extensions receive a single explicit fallback link. The background
 stores a five-minute, tab/account/login/generation/source-bound intent in
 `chrome.storage.session` before navigation, with at most 64 pending entries and
 one navigation attempt. This survives provider redirects, fragment removal and
@@ -562,3 +568,14 @@ database support. Preserve stored Prime rows, access epochs and receipts;
 removing provider admission after writes is not a safe destructive downgrade.
 Record the exact compatible recovery ref before any later rollout. Production
 promotion and Store publication remain separate decisions.
+
+## Direct Prime launch correction — November 17, 2026
+
+`codex/prime-direct-launch`, based on staging `9f294b07`, removes the manual
+marketplace UI at the owner's explicit request. Protocol resolution, background
+start/commit, legacy-tab recovery and the website fallback share the supplied
+route policy above. Account/login/generation binding, five-minute lifetime,
+exact episode verification and one-use room/Resume handoff remain unchanged.
+No database migration, permission, secret, Worker event or production change.
+Checks and delivery evidence are recorded in the follow-up PR; loaded-artifact
+and independent regional-account acceptance remain separate from unit tests.

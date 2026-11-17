@@ -3,6 +3,15 @@ import assert from "node:assert/strict";
 import { requestPrimeLaunch } from "./prime-launch-client";
 test("website commits navigation only after prepared response and current caller fence", async () => {
 	const calls: Record<string, unknown>[] = [];
+	const navigation = {
+		contentId: "A".repeat(26),
+		routes: [
+			{
+				url: "https://www.amazon.de/gp/video/detail/B0FX2ZCPFK",
+				observedAt: "2026-11-16T00:00:00Z",
+			},
+		],
+	};
 	const prior = Object.getOwnPropertyDescriptor(globalThis, "chrome");
 	Object.defineProperty(globalThis, "chrome", {
 		configurable: true,
@@ -34,6 +43,7 @@ test("website commits navigation only after prepared response and current caller
 					expectedOwnerUserId: "owner",
 					contentId: "A".repeat(26),
 					roomId: "room",
+					navigation,
 				},
 				() => false,
 			),
@@ -49,6 +59,7 @@ test("website commits navigation only after prepared response and current caller
 				expectedOwnerUserId: "owner",
 				contentId: "A".repeat(26),
 				roomId: "room",
+				navigation,
 			}),
 			true,
 		);
@@ -56,6 +67,7 @@ test("website commits navigation only after prepared response and current caller
 			calls.map((c) => c.action),
 			["start", "commit"],
 		);
+		assert.deepEqual(calls[0]?.navigation, navigation);
 	} finally {
 		if (prior) Object.defineProperty(globalThis, "chrome", prior);
 		else Reflect.deleteProperty(globalThis, "chrome");

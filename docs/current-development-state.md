@@ -1,5 +1,14 @@
 # Current Development State
 
+## Direct Prime launch correction — November 17, 2026
+
+`codex/prime-direct-launch`, based on staging `9f294b07`, removes the
+unsolicited marketplace picker. Invitations and Resume open their supplied
+verified episode URL directly; Amazon handles regional redirects. Existing
+recipient preferences no longer alter the destination. Pending room/Resume
+recovery and exact episode/account checks remain in force. See
+[provider notes](prime-video-adapter-notes.md#direct-prime-launch-correction--november-17-2026).
+
 ## Prime player readiness follow-up — November 17, 2026
 
 Based on staging `d765b69f`, `codex/prime-player-readiness` separates confirmed

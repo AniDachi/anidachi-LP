@@ -55,21 +55,54 @@ describe("Prime navigation contract", () => {
 			}).success,
 		).toBe(false);
 	});
-	it("resolves explicit market without rewriting or guessing a foreign exact link", () => {
-		const resolve = protocol.resolvePrimeLaunch;
+	it.each(
+		protocol.PRIME_VIDEO_DOMAIN_ROOTS,
+	)("opens the supplied %s route directly", (domain) => {
+		const url =
+			domain === "primevideo.com"
+				? `https://www.${domain}/region/na/detail/${id}`
+				: `https://www.${domain}/-/de/gp/video/detail/B0FX2ZCPFK`;
 		expect(
-			resolve({ contentId: id, navigation, marketplace: "amazon.com" }),
-		).toMatchObject({ status: "ready", url: navigation.routes[0]!.url });
-		expect(
-			resolve({ contentId: id, navigation, marketplace: "amazon.de" }),
-		).toMatchObject({ status: "regional-route-unknown" });
-		expect(resolve({ contentId: id, navigation })).toMatchObject({
-			status: "choice-required",
-		});
-		expect(resolve({ contentId: id })).toEqual({
+			protocol.resolvePrimeLaunch({
+				contentId: id,
+				navigation: {
+					contentId: id,
+					routes: [{ url, observedAt: "2026-11-16T00:00:00Z" }],
+				},
+			}),
+		).toEqual({ status: "ready", url });
+	});
+	it("uses canonical Prime only without an observed route and rejects a different episode", () => {
+		expect(protocol.resolvePrimeLaunch({ contentId: id })).toEqual({
 			status: "ready",
 			url: source.sourceUrl,
 		});
+		expect(() =>
+			protocol.resolvePrimeLaunch({
+				contentId: "0GS9E1N0I97ENRMJPEH38ZYO1J",
+				navigation,
+			}),
+		).toThrow("Prime navigation identity mismatch");
+	});
+	it("preserves the supplied primary route instead of inferring one from observation dates", () => {
+		const multiple = {
+			...navigation,
+			routes: [
+				...navigation.routes,
+				{
+					url: source.sourceUrl,
+					observedAt: "2026-11-17T00:00:00Z",
+				},
+			],
+		};
+		expect(
+			protocol.resolvePrimeLaunch({ contentId: id, navigation: multiple }).url,
+		).toBe(navigation.routes[0]!.url);
+		const reordered = { ...multiple, routes: [...multiple.routes].reverse() };
+		expect(
+			protocol.resolvePrimeLaunch({ contentId: id, navigation: reordered }).url,
+		).toBe(source.sourceUrl);
+		expect(protocol.samePrimeNavigation(multiple, reordered)).toBe(false);
 	});
 });
 

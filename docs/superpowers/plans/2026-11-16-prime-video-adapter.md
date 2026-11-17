@@ -445,3 +445,22 @@ Require loaded browser evidence that all four Upload seasons and 29 episodes
 appear while existing personal progress stays intact before claiming acceptance.
 No new SQL migration, Worker behavior, permissions or production promotion is
 planned. The inherited Graphify publication exception remains unchanged.
+
+## Task 16 — Direct launch without a marketplace picker
+
+Owner correction on November 17 explicitly rejects the unsolicited marketplace
+selection screen. Open the supplied verified exact episode URL immediately and
+let Amazon handle regional redirects. Remove preference-based destination
+selection and the manual-choice/homepage flow. Canonical Prime is the fallback
+only for records without an observed route. Retain the existing bound pending
+intent so room/Resume survives redirects without accepting another episode.
+
+Branch `codex/prime-direct-launch` starts at staging `9f294b07`. Keep only an
+automatic compatibility redirect for old, still-valid launch tabs; the normal
+path never opens that page. The website's missing-extension fallback uses one
+link to the same supplied destination. Verify direct popup Resume, room
+prepare/commit, legacy tab lifetime/account/replay guards and regional route
+preservation. Run protocol, extension, affected web/API checks, room harness,
+independent review and narrow staging artifact validation. No production
+promotion or schema/permission change. The inherited Graphify collision remains
+an explicit publication exception; do not overwrite the curated graph.
