@@ -1,5 +1,62 @@
 # Prime Video adapter
 
+## Task 22: Preserve observed Prime episodes and resume local interstitials
+
+Loaded Task 21 acceptance found two remaining cases: Love in Disguise exposes
+ten proven episodes but no season roster, while history discards the partial
+catalog; a guest that seeks while paused into a provider ad remains paused when
+the host resumes. Keep the adapter independent of translated labels and titles.
+
+1. Regress partial-catalog persistence and reads before changing code. Store
+   validated Prime partial evidence in the existing snapshot only when there is
+   no accepted complete snapshot. Preserve complete catalogs, account/region/
+   revision/deletion fences, bounded payloads and old read contracts. Expected:
+   the ten proven episodes remain available without claiming a full-series total.
+2. Expose observed episodes in the existing history editor and an explicitly
+   opted-in grid response. Keep legacy grid requests unchanged, incomplete totals
+   unknown, and existing saved progress authoritative. Expected: website and new
+   extension display unplayed proven episodes with their exact launch targets.
+3. Regress the paused-seek ad case. Allow a generation-fenced Prime play-only
+   continuation for the guest's current local interstitial when the matching
+   host is playing; retain the seek/rate/pause barrier and cancellation checks.
+   Attempt once per interstitial, preserve explicit later local pauses and
+   surface a real autoplay restriction through the existing Resume action.
+   Expected: ads/intros can finish normally and content catches up afterward.
+4. Run protocol, affected Web/SQL and extension regressions, checks, full suites,
+   room harness, one independent whole-branch review, dev:check and narrow
+   staging build/validation. Expected: clean gates, no new permissions, tables,
+   account settings or polling loops. The inherited Graphify exception remains.
+5. Deliver through PR to staging in schema/Web/client order, then verify the
+   loaded artifact on both available accounts: original title, ten-episode
+   history, exact invite, native next episode, ad recovery and explicit close.
+   Record account/region and provider prompts honestly. No production promotion.
+
+Shared interfaces: the existing catalog snapshot and history grid/editor are
+consumed by Web and extension; the optional adapter interstitial operation is
+consumed by the sync controller. Existing complete catalogs and other providers
+retain their behavior. Whole-task gate: affected suites plus live acceptance.
+
+Implementation: a validated Prime partial response fills the existing snapshot
+only for the first pending attempt and only without a complete snapshot. Editor
+reads merge its known rows with personal progress; the grid requires explicit
+`includePartial=true`, exposes no totals, and fences context/attempt changes.
+No canonical aliases or playback progress are fabricated. The guest's optional
+interstitial operation only plays the matching local ad/intro, once until the
+phase changes; room/session/adapter replacement or host pause cancels it. A real
+autoplay rejection uses the existing Resume control. Partial popup rows merge
+with saved episodes and retain both bounded pagination streams. A host pause
+cancels pending ad playback without restoring the automatic attempt; a cancelled
+attempt can use the same Resume control with an accurate paused-ad message.
+Native playback and successful Resume clear that control immediately. A bare
+PLAY command cannot substitute local identity for a confirmed host fingerprint.
+
+Delivery order: apply `20261118020000_prime_observed_catalog.sql` to staging,
+deploy Web, then reload the extension artifact. Old grid queries remain empty
+for partial catalogs and legacy editor response shapes remain unchanged, so
+rollback can revert the application changes while retaining the safe migration.
+No secrets, permissions, tables or columns added. Loaded Task 22 acceptance is
+still required before production; no production promotion is authorized.
+
 ## Task 21: Amazon SPA identity and provider intro recovery
 
 Observed Love in Disguise on amazon.com: native storefront navigation retains

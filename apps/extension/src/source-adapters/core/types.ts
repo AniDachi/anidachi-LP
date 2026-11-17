@@ -79,6 +79,8 @@ export interface VideoAdapter {
   getOverlayBinding(): AdapterOverlayBinding;
   setPlaybackRate(rate: number): void;
   play(): Promise<void>;
+  /** Continue a provider's local ad/intro; never seek or alter its rate. */
+  resumeInterstitial?(signal: AbortSignal): Promise<void>;
   pause(): void;
   seek(time: number, options?: SeekOptions): void;
   subscribe(callback: (event: PlayerEvent) => void): () => void;

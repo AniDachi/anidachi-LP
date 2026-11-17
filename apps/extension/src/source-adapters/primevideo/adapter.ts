@@ -123,16 +123,16 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
 			void this.command("rate", rate);
 	}
 	private async command(
-		action: "play" | "pause" | "seek" | "rate",
+		action: "play" | "resume-interstitial" | "pause" | "seek" | "rate",
 		time?: number,
-		options?: { signal: AbortSignal; expiresAt: number },
+		options?: { signal: AbortSignal; expiresAt?: number },
 	): Promise<boolean> {
 		const snapshot = this.getPrimeSnapshot(),
 			abort = this.abort,
 			bindingAbort = this.bindingAbort;
 		if (
 			!snapshot ||
-			snapshot.phase !== "content" ||
+			snapshot.phase !== (action === "resume-interstitial" ? "interstitial" : "content") ||
 			!abort ||
 			abort.signal.aborted ||
 			!bindingAbort ||
@@ -157,7 +157,7 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
 							? { rate: time }
 							: { time }
 						: {}),
-					...(options ? { expiresAt: options.expiresAt } : {}),
+					...(options?.expiresAt !== undefined ? { expiresAt: options.expiresAt } : {}),
 				},
 				requestAbort.signal,
 			);
@@ -178,7 +178,13 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
 			this.receivedAt = Date.now();
 			return true;
 		}
+		if (!requestAbort.signal.aborted && result?.error === "autoplay-blocked")
+			throw new DOMException("Prime Video requires a playback gesture", "NotAllowedError");
 		return false;
+	}
+	async resumeInterstitial(signal: AbortSignal) {
+		if (!(await this.command("resume-interstitial", undefined, {signal})))
+			throw new DOMException("Prime Video interstitial could not continue", signal.aborted ? "AbortError" : "Error");
 	}
 	async play() {
 		if (!(await this.command("play")))

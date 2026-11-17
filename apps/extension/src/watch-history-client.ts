@@ -1964,6 +1964,8 @@ function browsePath(command: BrowseCommand, input: BrowseInput): string {
     if (typeof value === "string" || typeof value === "number") query.set(key, String(value));
   }
   if (command === "browse") query.set("includeEpisodePreviews", "true");
+  if (command === "browse-catalog" && typeof values.includePartial === "boolean")
+    query.set("includePartial", String(values.includePartial));
   const suffix = command === "browse-catalog" ? "/catalog" : command === "browse"
     ? ""
     : command === "browse-title-episodes"

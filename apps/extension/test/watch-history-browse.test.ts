@@ -988,8 +988,9 @@ describe("optional catalog browse command", () => {
     const { NextRequest } = webRequire("next/server");
     const titleKey = provider === "primevideo" ? `primevideo:series:${"A".repeat(26)}` : provider === "netflix" ? "netflix:series:900" : input.titleKey;
     const seasonKey = provider === "primevideo" ? `primevideo:season:${"B".repeat(26)}` : provider === "netflix" ? "netflix:season:800" : input.seasonKey;
+    const partial = provider === "primevideo" ? {includePartial: true} : {};
     const read = vi.fn(async ({ input: query }: { userId: string; input: unknown }) => {
-      expect(query).toEqual({ provider, titleKey, seasonKey, limit: 50 });
+      expect(query).toEqual({ provider, titleKey, seasonKey, limit: 50, ...partial });
       return { ...response(), provider, titleKey, seasonKey, state: "unavailable" as const };
     });
     const handler = createWatchHistoryGridGet({
@@ -1003,7 +1004,7 @@ describe("optional catalog browse command", () => {
       expect(result.status).toBe(200);
       return result;
     } });
-    expect(await setup.client.handle({ ...message, input: { provider, titleKey, seasonKey, limit: 50 } })).toMatchObject({ ok: true, data: { provider, titleKey, seasonKey } });
+    expect(await setup.client.handle({ ...message, input: { provider, titleKey, seasonKey, limit: 50, ...partial } })).toMatchObject({ ok: true, data: { provider, titleKey, seasonKey } });
     expect(new URL(emittedUrl).searchParams.has("providerVersion")).toBe(false);
     expect(read).toHaveBeenCalledTimes(1);
   });

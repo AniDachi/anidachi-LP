@@ -1,4 +1,6 @@
 import * as primeBridgeClient from "../src/source-adapters/primevideo/bridge-client";
+import * as playbackSyncModule from "../src/playback-sync-controller";
+import type { PlaybackSyncStatus } from "../src/playback-sync-status";
 import * as playerDeparture from "../src/player-room-departure";
 import * as roomSessionStorage from "../src/room-session-storage";
 import {createPrimePendingStore,type PrimePending} from "../src/prime-launch-session";
@@ -95,6 +97,28 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+
+  it("removes the real Resume control when local ad playback succeeds", async () => {
+    installActiveHostRoomRuntime();
+    let status!: (value:PlaybackSyncStatus)=>void;
+    const Original=playbackSyncModule.PlaybackSyncController;
+    vi.spyOn(playbackSyncModule,"PlaybackSyncController").mockImplementation(function(options:ConstructorParameters<typeof Original>[0]) {
+      status=options.onStatus;
+      return new Original(options);
+    });
+    const view=await renderOverlay();
+    try {
+      await click(button(view.container,"Open Anidachi controls"));
+      await act(async()=>status({kind:"resume-required"}));
+      expect(view.container.querySelector(".playback-sync-resume")).not.toBeNull();
+      await act(async()=>status({kind:"resume-required",reason:"interstitial-paused"}));
+      expect(view.container.textContent).toContain("Resume the ad to continue syncing");
+      expect(view.container.textContent).not.toContain("Playback needs your permission");
+      await act(async()=>status({kind:"watching-local-ad"}));
+      expect(view.container.querySelector(".playback-sync-resume")).toBeNull();
+      expect(view.container.textContent).not.toContain("Playback needs your permission");
+    } finally {await unmount(view.root);}
+  });
 
   it("preserves real pending create ownership until late admission can depart",async()=>{
     vi.stubGlobal("location",new URL("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));

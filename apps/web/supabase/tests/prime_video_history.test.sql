@@ -96,10 +96,26 @@ select is(apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',(select 
 select is(apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',(select value from p_calls where name='commit'))->>'outcome','applied','Prime Video catalog commit replay is idempotent');
 -- Partial evidence remains partial and does not manufacture unseen grid rows.
 select is(watch_catalog_read_v3('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->>'state','partial','partial catalog never claims completeness');
+select is((select snapshot->>'completeness' from watch_catalog_snapshots where user_id='e1111111-1111-4111-8111-111111111111' and provider='primevideo'),'partial','proven partial Prime inventory is retained');
+select is(jsonb_array_length(get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->'episodes'),2,'partial editor includes the proven unplayed episode');
+select is(get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->>'catalogComplete','false','observed episodes do not claim a complete series');
+select is(jsonb_array_length(get_watch_history_editor_v1_prime_navigation_v1('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->'episodes'),2,'navigation editor exposes the same observed episodes');
+select is(apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',(select jsonb_set(value,'{snapshot,seasons,0,episodes}','[]') from p_calls where name='commit'))->>'outcome','applied','partial duplicate remains idempotent');
+select is((select jsonb_array_length(snapshot#>'{seasons,0,episodes}') from watch_catalog_snapshots where provider='primevideo'),2,'a duplicate partial attempt cannot overwrite its first inventory');
+savepoint context_fence;
+update watch_catalog_snapshots set context=jsonb_set(context,'{region}','"DE"') where provider='primevideo';
+select is(jsonb_array_length(get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->'episodes'),1,'partial inventory from another region is hidden');
+rollback to context_fence;
+savepoint attempt_fence;
+update watch_catalog_snapshots set attempt_status='pending' where provider='primevideo';
+select is(jsonb_array_length(get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->'episodes'),1,'a new pending attempt cannot expose the previous partial snapshot');
+rollback to attempt_fence;
 -- A later explicit complete fixture proves the existing complete-catalog editor.
 insert into p_calls select 'complete_begin',begin_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',value) from p_calls where name='request';
 update p_calls set value=jsonb_set(jsonb_set(value,'{snapshot,completeness}','"complete"'),'{revision}',(select value->'revision' from p_calls where name='complete_begin')) where name='commit';
 select is(apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',(select value from p_calls where name='commit'))->>'outcome','applied','explicit complete catalog fixture commits');
+select is(apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',(select jsonb_set(jsonb_set(value,'{snapshot,completeness}','"partial"'),'{snapshot,seasons,0,episodes}','[]') from p_calls where name='commit'))->>'outcome','applied','late partial delivery cannot downgrade complete evidence');
+select is((select snapshot->>'completeness' from watch_catalog_snapshots where provider='primevideo'),'complete','complete inventory remains intact after partial delivery');
 select is(watch_catalog_read_v3('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')#>>'{aggregate,availableEpisodes}','2','projection includes both episodes');
 select is(list_watch_history_v3_title_episodes_page('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836',50,null)#>>'{catalog,seasons,0,seasonTitle}','Season 2','season/detail read supports Prime Video');
 select is((get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'primevideo','primevideo:series:AAAAAAAAAAAAAAAAAA70143836')->'episodes')->1->>'sourceUrl','https://www.primevideo.com/detail/AAAAAAAAAAAAAAAAAA70196260','editor includes unseen canonical Prime Video episode');

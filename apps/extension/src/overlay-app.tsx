@@ -801,11 +801,14 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				if (syncStatus.kind === "waiting-for-host-ad") {
 					setPlaybackSyncNotice("Ad playing · room paused");
 				} else if (syncStatus.kind === "watching-local-ad") {
+					setResumeSyncRequired(false);
 					setPlaybackSyncNotice("Ad playing · sync will resume automatically");
 				} else if (syncStatus.kind === "buffering") {
 					setPlaybackSyncNotice("Buffering · room paused");
 				} else if (syncStatus.kind === "resume-required") {
-					setPlaybackSyncNotice("Playback needs your permission");
+					setPlaybackSyncNotice(syncStatus.reason === "interstitial-paused"
+						? "Resume the ad to continue syncing"
+						: "Playback needs your permission");
 					setResumeSyncRequired(true);
 				} else if (syncStatus.kind === "unsupported-media") {
 					setPlaybackSyncNotice("This video cannot be synchronized");

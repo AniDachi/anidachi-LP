@@ -2084,10 +2084,10 @@ it("Prime movies and partial series keep provider identity in filters, editor an
   }
 });
 
-it("complete Prime catalog exposes an unplayed season and opens its exact episode without writing progress", async () => {
+for (const complete of [true, false]) it(`Prime complete=${complete} catalog exposes an unplayed season and opens its exact episode without writing progress`, async () => {
   const { history, editor } = primeFixture(false);
   const unseenId = "G".repeat(26), unseenSeason = `primevideo:season:${"A".repeat(26)}`;
-  editor.catalogComplete = true;
+  editor.catalogComplete = complete;
   editor.episodes.push({ ...editor.episodes[0],
     episodeKey: `primevideo:episode:${unseenId}`, episodeTitle: "Новая серия", episodeNumber: 1,
     seasonKey: unseenSeason, seasonTitle: "Сезон 1", seasonNumber: 1, seasonOrder: 0, order: 0,
