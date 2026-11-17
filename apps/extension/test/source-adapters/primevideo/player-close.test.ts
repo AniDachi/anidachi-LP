@@ -43,6 +43,134 @@ function gesture(
 	target.dispatchEvent(event);
 	return event;
 }
+function unload(video: HTMLVideoElement, trusted = true) {
+	const event = new Event("emptied");
+	Object.defineProperty(event, "isTrusted", { value: trusted });
+	video.dispatchEvent(event);
+	return event;
+}
+
+it.each(["media-first", "sdk-first"])("leaves exactly once on natural SDK end+close and trusted media unload: %s", async order => {
+	const f = setup();
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	if (order === "sdk-first") f.context.webPlayer.eventEmitter.emit("Close");
+	const event = unload(f.video);
+	if (order === "media-first") f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+	unload(f.video);
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(1000);
+	expect(f.closed).toHaveBeenCalledTimes(1);
+});
+
+it.each(["synthetic-unload", "no-unload", "no-sdk-close", "not-ended", "still-open", "new-title", "navigation", "pagehide", "disposed", "expired"])("natural completion does not leave for %s", async mode => {
+	const f = setup();
+	f.context.timeline.titleEnded = mode !== "not-ended";
+	if (mode === "navigation") document.dispatchEvent(new Event(PRIME_NAVIGATING));
+	if (mode === "pagehide") window.dispatchEvent(new Event("pagehide"));
+	if (mode === "disposed") stops.pop()!();
+	if (mode !== "no-unload") unload(f.video, mode !== "synthetic-unload");
+	if (mode === "expired") await vi.advanceTimersByTimeAsync(1100);
+	if (mode === "new-title") { f.next(); await vi.advanceTimersByTimeAsync(250); }
+	f.context.webPlayer.isPlayerOpen = mode === "still-open";
+	if (mode !== "no-sdk-close") f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(500);
+	expect(f.closed).not.toHaveBeenCalled();
+});
+
+it("retires natural close evidence on reopening and detaches the SDK observer on teardown", async () => {
+	const f = setup();
+	await vi.advanceTimersByTimeAsync(1000);
+	expect(f.context.webPlayer.eventEmitter.on).toHaveBeenCalledTimes(1);
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	unload(f.video);
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledTimes(1);
+	f.context.webPlayer.isPlayerOpen = true;
+	f.context.timeline.titleEnded = false;
+	f.next();
+	await vi.advanceTimersByTimeAsync(250);
+	unload(f.video);
+	f.context.webPlayer.isPlayerOpen = false;
+	await vi.advanceTimersByTimeAsync(500);
+	expect(f.closed).toHaveBeenCalledTimes(1);
+	stops.pop()!();
+	stops.pop()!();
+	expect(f.context.webPlayer.eventEmitter.off).toHaveBeenCalledExactlyOnceWith("Close", expect.any(Function));
+});
+
+it("ignores an ended Close from a retired SDK context", async () => {
+	const f = setup();
+	const replacement = { ...f.context, webPlayer: { ...f.context.webPlayer, eventEmitter: { on: vi.fn(), off: vi.fn(), emit: vi.fn() } } };
+	f.attach(replacement);
+	await vi.advanceTimersByTimeAsync(250);
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	unload(f.video);
+	replacement.webPlayer.isPlayerOpen = false;
+	await vi.advanceTimersByTimeAsync(500);
+	expect(f.closed).not.toHaveBeenCalled();
+	expect(f.context.webPlayer.eventEmitter.off).toHaveBeenCalledOnce();
+});
+
+it("rejects stale SDK Close before the next lifecycle poll", async () => {
+	const f = setup();
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	unload(f.video);
+	f.attach({ ...f.context, webPlayer: { ...f.context.webPlayer, isPlayerOpen: true, eventEmitter: { on: vi.fn(), off: vi.fn(), emit: vi.fn() } } });
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await Promise.resolve();
+	expect(f.closed).not.toHaveBeenCalled();
+});
+
+it("expires SDK-first completion before an unrelated later unload", async () => {
+	const f = setup();
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(1100);
+	unload(f.video);
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).not.toHaveBeenCalled();
+});
+
+it("rebinds a replaced webPlayer with the same SDK context and emitter", async () => {
+	const f = setup();
+	f.context.webPlayer = { ...f.context.webPlayer };
+	await vi.advanceTimersByTimeAsync(250);
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	const event = unload(f.video);
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+	expect(f.context.webPlayer.eventEmitter.on).toHaveBeenCalledTimes(2);
+	expect(f.context.webPlayer.eventEmitter.off).toHaveBeenCalledTimes(1);
+});
+
+it("keeps a natural close pending while the viewer types in chat", async () => {
+	const f = setup();
+	const chat = document.createElement("input");
+	const overlay = document.createElement("anidachi-overlay-root");
+	overlay.append(chat);
+	f.root.append(overlay);
+	const event = unload(f.video);
+	const typing = new KeyboardEvent("keydown", { key: "a", bubbles: true });
+	Object.defineProperty(typing, "isTrusted", { value: true });
+	chat.dispatchEvent(typing);
+	f.context.timeline.titleEnded = true;
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+});
+
 it.each([
 	"click",
 	"Escape",

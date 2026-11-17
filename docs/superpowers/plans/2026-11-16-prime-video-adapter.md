@@ -1,5 +1,33 @@
 # Prime Video adapter
 
+## Task 24: Definitive natural close leaves the room
+
+Owner reaffirmed close-as-departure and delegated the natural-end decision.
+If Prime closes after a completed episode without continuing playback, host
+closure ends the room and guest closure leaves individually. Episode/season
+transitions and temporary loading retain membership. Automatic reopening in
+Task 23/PR 574 was abandoned and closed unmerged; its artifact was restored to
+reviewed `8876fbf4` before this successor began from staging `a646ef58`.
+
+Live Amazon E4 ended through SDK TimelineEnded, then Close with isPlayerOpen=false
+and titleEnded=true; media emitted trusted abort/emptied, not a native ended
+event. Observe that SDK end+Close for the current root/context and pair it with
+trusted unload of the owned video. Reuse the existing bounded close-confirmation
+window and exact-session departure. Markup or synthetic page events alone cannot
+request departure. Clear evidence on reopen, navigation, context replacement and
+teardown; preserve explicit-close handling and existing playback control.
+Natural completion trusts the selected provider's page/SDK, as playback sync
+does; native media events do not establish human intent. Session authorization
+remains in the extension background. The lifecycle evidence is bounded in both
+event orders and unrelated chat input does not discard it.
+
+Regress both event orders, exactly-once departure, transient/advertising/source
+unloads, stale contexts, synthetic events, teardown and real overlay host/guest
+departure. Run extension checks/suite, API/rooms, fresh whole-branch review,
+dev:check and narrow staging build/validation before loaded two-account tests.
+No new polling, autoplay settings, backend/schema changes or production promotion.
+Keep the inherited Graphify ownership collision exception documented.
+
 ## Task 22: Preserve observed Prime episodes and resume local interstitials
 
 Loaded Task 21 acceptance found two remaining cases: Love in Disguise exposes
