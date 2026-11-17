@@ -5,7 +5,7 @@
 Testing the loaded staging artifact with two accounts reproduced a guest reload
 stuck on `Joining room`, plus ad-inclusive duration in the capsule. Candidate
 `codex/prime-room-reload-fix`, based on staging `0f84123f`, keeps consumed
-invitations blocked while allowing the matching confirmed account/tab room
+invitations blocked while allowing the matching saved account/tab room
 session to reconnect through fresh server admission. Unrelated saved sessions
 no longer produce a permanent pending join. Capsule time and duration now use
 the same content timeline. See [provider notes](prime-video-adapter-notes.md#two-account-acceptance-and-reload-correction).

@@ -839,8 +839,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const capturedPrimeRoomId = initialPrimeLaunchRef.current?.readRoom(location.href, adapter.getFingerprint(), identityLoaded ? participant?.id ?? null : undefined) ?? null;
 	const primeLaunchSuppressed = initialPrimeLaunchRef.current?.blocksFragment?.(location.href) ?? false;
-	// A consumed invitation cannot replay, but a confirmed, account-bound room
-	// session may reconnect through normal server admission after a page reload.
+	// A consumed invitation cannot replay, but a saved account-bound room session
+	// may request fresh server admission. Storage alone never proves membership.
 	const primeRoomRestoreSuppressed = primeLaunchSuppressed && !(
 		storedRoomSession?.ownerUserId === participant?.id &&
 		storedRoomSession?.roomId === initialPrimeLaunchRef.current?.rejectedRoomId &&

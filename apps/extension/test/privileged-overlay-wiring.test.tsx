@@ -2504,6 +2504,27 @@ describe("privileged overlay wiring", () => {
     } finally { await act(async () => f.runtime.dispose()); }
   });
 
+  it("requires fresh server admission for a saved Prime room and exits joining when membership is denied", async () => {
+    const connect = vi.spyOn(RoomClient.prototype, "connect");
+    const pending: PrimePending = { intentId: crypto.randomUUID(), contentId: "A".repeat(26),
+      owner: { userId: historyOwner, loginId: "login", generation: 1 }, roomId: "room-a",
+      expiresAt: Date.now() + 60_000, attempts: 1 };
+    const f = await primeOverlayLifecycle(pending,
+      `https://www.primevideo.com/detail/${pending.contentId}#anidachiRoom=room-a`,
+      { consumed: true, persistedRoom: true, persistedRoomId: "room-a", admissionDenied: true });
+    try {
+      for (let i=0;i<8;i++) await flushMountedWork();
+      await flushRoomActionWork();
+      expect(f.send.mock.calls.filter(([m]: any) => m.command === "connect-room")).toHaveLength(1);
+      expect(connect).not.toHaveBeenCalled();
+      const open = f.container.querySelector<HTMLButtonElement>('button[aria-label="Open Anidachi controls"]');
+      if (open) await click(open);
+      expect(f.container.textContent).not.toContain("Joining room");
+      expect(f.container.querySelector('button[aria-label="Leave room"]')).toBeNull();
+      expect(f.seek).not.toHaveBeenCalled();
+    } finally { await act(async () => f.runtime.dispose()); }
+  });
+
   it("does not suppress a genuinely new explicit room after retiring an older launch",async()=>{
     const pending:PrimePending={intentId:crypto.randomUUID(),contentId:"A".repeat(26),owner:{userId:historyOwner,loginId:"login",generation:1},roomId:"old-room",expiresAt:Date.now()+60000,attempts:1};
     const f=await primeOverlayLifecycle(pending,"https://www.amazon.com/gp/video/detail/B0FX2ZCPFK#anidachiRoom=new-room",{reason:"expired"});
@@ -5883,7 +5904,7 @@ async function selectQuickMicrophoneMode(
 	if (control.dataset.mode !== mode) await click(control);
 }
 
-async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{reason?:string;phase?:string;gate?:ReturnType<typeof deferred<void>>;startPending?:boolean;persistedRoom?:boolean;persistedRoomId?:string;persistedOwner?:string;consumed?:boolean}={}){
+async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{reason?:string;phase?:string;gate?:ReturnType<typeof deferred<void>>;startPending?:boolean;persistedRoom?:boolean;persistedRoomId?:string;persistedOwner?:string;consumed?:boolean;admissionDenied?:boolean}={}){
  (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
  vi.stubGlobal("location",new URL(href));
  vi.spyOn(history,"replaceState").mockImplementation((_data,_unused,url)=>{if(url)vi.stubGlobal("location",new URL(String(url),location.href));});
@@ -5896,7 +5917,8 @@ async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{r
  const wait=async(phase:string)=>{if(options.phase===phase&&firstPhase){firstPhase=false;await options.gate!.promise;}};
  const send=vi.fn(async(m:any)=>{
   if(m.type==="ANIDACHI_AUTH")return {ok:true,tokens:sessionFor(historyOwner)};
-  if(m.type==="ANIDACHI_ROOM_HTTP"&&m.command==="connect-room")return new Promise(()=>{});
+  if(m.type==="ANIDACHI_ROOM_HTTP"&&m.command==="connect-room")return options.admissionDenied
+   ? {ok:false,status:403,error:"You are not a participant in this room"} : new Promise(()=>{});
   if(m.type==="ANIDACHI_ROOM_SESSION_STORAGE") {
    if(options.persistedRoom && ["load", "migrate"].includes(m.command)) return {ok:true,record:{...confirmedRoomSession(),ownerUserId:options.persistedOwner??historyOwner,roomId:options.persistedRoomId??"room-b"}};
    return roomSessionStorageResponse(m.command)??{ok:true};

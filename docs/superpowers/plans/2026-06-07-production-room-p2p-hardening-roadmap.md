@@ -33,7 +33,7 @@
 
 - **2026-11-17, `codex/prime-room-reload-fix`:** two-account Prime acceptance
   reproduced reload restoration blocked by a consumed invitation. The scoped
-  extension correction separates that replay fence from matching confirmed
+  extension correction separates that replay fence from matching saved
   room-session admission; pending UI and content-duration display are corrected.
   [Task 19](2026-11-16-prime-video-adapter.md) records checks and loaded-artifact
   acceptance. Shared media, room authority and wire contracts remain unchanged;

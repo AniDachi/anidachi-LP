@@ -3,12 +3,15 @@
 ## Task 19 — Two-account acceptance corrections, November 17
 
 The owner authorized fixing the two failures recorded in the local Task 18
-browser report. Restore a confirmed account/tab room after reload even when
+browser report. Restore a saved account/tab room after reload even when
 its invitation has already been consumed. Keep the invitation blocked; only
 the matching existing room session may use normal fresh server admission.
 Unknown, different-room or different-owner records must not restore, and the
 UI must not show a permanent join when no initial room can actually be joined.
 Pending Prime metadata and launch recovery remain gates before restoration.
+Saved sessions include legacy recovery pointers, not membership proof: require
+fresh server host/member admission and surface a denied restoration without
+opening a room socket or synchronizing. Do not add a duplicate membership store.
 
 Use the source descriptor's content duration with content time in the capsule,
 retaining the raw duration fallback for providers without a descriptor duration.

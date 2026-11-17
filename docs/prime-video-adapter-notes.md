@@ -14,11 +14,14 @@ The supplied regional SOR route was unavailable in Prime itself.
 Guest reload was reproducibly stuck at `Joining room`: after Resume, the source
 was correctly verified, but the host remained paused at 866.075 seconds while
 the guest played independently to 946.019683. The consumed invitation's fence
-incorrectly suppressed a previously confirmed room session as well. Task 19
+incorrectly suppressed a previously saved room session as well. Task 19
 keeps the old fragment blocked and permits only its matching persisted room,
 owned by the current account, to enter normal fresh server admission. Missing,
 different-room and different-owner sessions cannot restore this way. Pending
 metadata/launch recovery still block restoration; no one-use launch is replayed.
+Saved records can include legacy recovery pointers, so they do not establish
+membership: the server must confirm existing host/member access before any
+room socket or synchronization starts. A 403 ends restoration visibly.
 Initial pending UI follows the same restoration decision instead of waiting
 forever on an unrelated saved room.
 
