@@ -178,6 +178,27 @@ describe("Prime observed SDK and real MAIN/client boundary", () => {
 		expect((await replacement)?.ok).toBe(false);
 		expect(f.context.playback.play).not.toHaveBeenCalled();
 	});
+	it("treats the observed Auxiliary intro as an interstitial, fencing remote controls until content returns", async () => {
+		vi.useFakeTimers();
+		const f = setup();
+		Object.defineProperty(f.context.timeline.playhead.item.contentInfo, "contentType", { configurable: true, value: "Auxiliary" });
+		f.context.playback.position = 0;
+		f.video.dispatchEvent(new Event("timeupdate"));
+		expect(inspectPrimeSdk()?.snapshot.phase).toBe("interstitial");
+		const intro = readPrimeBinding(f.video)!;
+		for (const action of ["play", "pause", "seek", "rate"] as const) {
+			const pending = runPrimeCommand({ action, contentId: ids.first, generation: intro.generation, ...(action === "seek" ? {time: 50} : action === "rate" ? {rate: 1.05} : {}) });
+			await tick();
+			expect((await pending)?.ok).toBe(false);
+		}
+		expect(f.context.playback.pause).not.toHaveBeenCalled();
+		expect(f.context.playback.seek).not.toHaveBeenCalled();
+		Object.defineProperty(f.context.timeline.playhead.item.contentInfo, "contentType", { configurable: true, value: "Feature" });
+		f.video.dispatchEvent(new Event("timeupdate"));
+		expect(inspectPrimeSdk()?.snapshot.phase).toBe("content");
+		expect(readPrimeBinding(f.video)?.generation).not.toBe(intro.generation);
+	});
+
 	it("honors cancellation, pause/seek policy, disposal and inert detection", async () => {
 		vi.useFakeTimers();
 		const f = setup(),

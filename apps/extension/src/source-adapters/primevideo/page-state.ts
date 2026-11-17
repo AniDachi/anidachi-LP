@@ -6,6 +6,7 @@ const record = (value: unknown): RecordValue =>
 
 export type PrimePageState = {
 	states: RecordValue[];
+	fromLivePage: boolean;
 	// The HTML canonical belongs to the initial load, not native SPA navigation.
 	canonicalHref: string | null;
 };
@@ -66,12 +67,12 @@ export function readPrimePageState(
 				typeof state.pageTitleId === "string" &&
 				state.pageTitleId === states[index]?.pageTitleId,
 		);
-		return { states, canonicalHref: samePage ? initial!.canonicalHref : null };
+		return { states, fromLivePage: true, canonicalHref: samePage ? initial!.canonicalHref : null };
 	}
 	return readInitialPageState(documentValue);
 }
 
-function initialDocumentRoute(documentValue: Document): boolean {
+export function initialDocumentRoute(documentValue: Document): boolean {
 	try {
 		const view = documentValue.defaultView;
 		const navigation = view?.performance.getEntriesByType("navigation");
@@ -97,6 +98,7 @@ function readInitialPageState(documentValue: Document): PrimePageState | null {
 		);
 		return {
 			states: [record(record(body.atf).state), record(record(body.btf).state)],
+			fromLivePage: false,
 			canonicalHref:
 				documentValue
 					.querySelector('link[rel="canonical"]')

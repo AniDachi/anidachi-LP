@@ -69,6 +69,7 @@ export async function loadPrimeCatalog(
 		const seasons: WatchCatalogSnapshotInput["seasons"] = [],
 			fullIds = new Set<string>();
 		let count = 0;
+		let hasSeasonRoster = seed.hasSeasonRoster;
 		for (const observed of seed.seasons) {
 			if (!alive()) return null;
 			const url = observed.url;
@@ -133,6 +134,7 @@ export async function loadPrimeCatalog(
 				primeSeasonMapping(page) !== primeSeasonMapping(seed)
 			)
 				return null;
+			hasSeasonRoster = hasSeasonRoster && page.hasSeasonRoster;
 			if (
 				observed.compact === seed.selected.compact &&
 				(!matchesSnapshot(page, initial) ||
@@ -173,7 +175,7 @@ export async function loadPrimeCatalog(
 			titleKey: `primevideo:series:${seed.anchor}`,
 			providerSeriesId: seed.anchor,
 			title: initial.metadata.title,
-			completeness: "complete",
+			completeness: hasSeasonRoster ? "complete" : "partial",
 			context: initial.metadata.context,
 			seasons,
 		});
