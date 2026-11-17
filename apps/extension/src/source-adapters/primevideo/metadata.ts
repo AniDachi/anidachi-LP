@@ -1,4 +1,5 @@
 import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
+import { readPrimePageState } from "./page-state";
 import {
 	PrimeVideoProviderIdSchema,
 	primeVideoSourceUrl,
@@ -154,20 +155,9 @@ export function readPrimePage(
 	);
 	if (!pageRoute) return null;
 	const origin = pageRoute.url.origin;
-	const element = documentValue.getElementById("dv-web-page-hydration-data");
-	const raw = element?.textContent;
-	if (!raw || raw.length > 8_000_000) return null;
-	let data: ObjectValue;
-	try {
-		data = object(JSON.parse(raw));
-	} catch {
-		return null;
-	}
-	const body = object(object(object(data.init).preparations).body);
-	const states = [
-		object(object(body.atf).state),
-		object(object(body.btf).state),
-	];
+	const pageState = readPrimePageState(documentValue);
+	if (!pageState) return null;
+	const { states, canonicalHref } = pageState;
 	const invalidRecords = new Set<string>();
 	const records = new Map<string, PublicRecord>();
 	const details = new Map<string, ObjectValue>();
@@ -261,9 +251,6 @@ export function readPrimePage(
 		)
 	)
 		return null;
-	const canonicalHref = documentValue
-		.querySelector<HTMLLinkElement>('link[rel="canonical"]')
-		?.getAttribute("href");
 	const canonicalLink = canonicalHref
 		? primeObservedLink(canonicalHref, origin)
 		: null;

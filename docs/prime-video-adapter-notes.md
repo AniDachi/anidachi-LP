@@ -13,6 +13,33 @@ Loaded browser acceptance passed for both follow-ups. The
 [execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
 tracks the remaining integration gates.
 
+## Native SPA metadata and missing capsule on Grimm
+
+On November 17, authenticated Chrome reproduced Supernatural → Home → Grimm
+without a document reload. Prime's URL, visible detail page and active SDK
+identified Grimm, while `dv-web-page-hydration-data` and the HTML canonical still
+identified Supernatural. The adapter rejected that mismatch and never bound the
+player. Refreshing the page hid the bug by replacing the initial HTML.
+
+The MAIN reader now follows the committed React root under the observed
+`dv-web-page-hydration-root` to its current ATF/BTF page provider. Traversal is
+bounded to child/sibling fiber links, stops below the page provider, and rejects
+ambiguous or unavailable live state. Existing parsers still validate public ID
+mapping, route, SDK title, season membership and availability. They never export
+the surrounding account/action state. SDK metadata and catalog reads use the
+same current source. No extra network requests or permissions are introduced.
+Static HTML remains the isolated-world/SSR fallback. A static canonical alias is
+used with live state only on the original document route with matching page IDs.
+
+The regression fixture deliberately leaves the initial HTML and canonical stale.
+In the original failing Chrome tab, replacing only the MAIN bridge with the
+candidate restored the capsule without reloading: Grimm S1 E1, 0:59 / 44:11,
+and 22 current-season catalog entries. This is live source-level evidence;
+loading the final packaged extension and regional/two-account acceptance remain
+separate checks. Rollback is the previous staging extension; no server/schema
+change is involved. Graphify publication remains blocked by the inherited
+`Foreign node collision: ref_clsx`; existing graph artifacts are preserved.
+
 ## Capsule detection and cached-page return
 
 The follow-up to staging `1443ae27` verifies all eight supported domain families

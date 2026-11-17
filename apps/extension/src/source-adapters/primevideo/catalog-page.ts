@@ -1,4 +1,5 @@
 import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
+import { readPrimePageState } from "./page-state";
 import { primePublicRecord, primeObservedNavigation } from "./metadata";
 import {
 	PrimeVideoProviderIdSchema,
@@ -63,6 +64,14 @@ function parsePage(
 		object(object(body.atf).state),
 		object(object(body.btf).state),
 	];
+	return parseStates(states, language, origin);
+}
+
+function parseStates(
+	states: ObjectValue[],
+	language: string,
+	origin: string,
+): PrimeCatalogPage | null {
 	const records = new Map<
 		string,
 		{
@@ -424,11 +433,10 @@ export function readPrimeCatalogPage(
 	documentValue: Document,
 	origin: string,
 ): PrimeCatalogPage | null {
-	const raw = documentValue.getElementById(
-		"dv-web-page-hydration-data",
-	)?.textContent;
-	return raw
-		? parsePage(raw, documentValue.documentElement.lang, origin)
+	const pageState = readPrimePageState(documentValue);
+	const language = primeCatalogLocale(documentValue.documentElement.lang);
+	return pageState && language
+		? parseStates(pageState.states, language, origin)
 		: null;
 }
 /** Extract inert JSON only: never build a fetched DOM that can load resources. */
