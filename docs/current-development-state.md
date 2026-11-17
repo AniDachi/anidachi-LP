@@ -1,5 +1,17 @@
 # Current Development State
 
+## Prime native SPA metadata follow-up — November 17, 2026
+
+Based on staging `bd333006`, `codex/prime-spa-metadata` fixes the reproduced
+Supernatural → Home → Grimm failure: Prime retains initial hydration/canonical
+HTML after native navigation, while the visible page and SDK already show Grimm.
+The MAIN adapter and catalog now read the committed current page context, with
+the existing identity/availability checks. Live candidate-bridge verification
+restored the capsule on the failing tab without reload. Permissions and backend
+are unchanged; final packaged-artifact and broader regional acceptance are
+separate from that source-level check. See the
+[provider notes](prime-video-adapter-notes.md#native-spa-metadata-and-missing-capsule-on-grimm).
+
 ## Prime capsule detection follow-up
 
 Based on delivered staging `1443ae27`, `codex/prime-capsule-detection` closes a
