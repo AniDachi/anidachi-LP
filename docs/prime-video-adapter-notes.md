@@ -21,7 +21,11 @@ automatic restoration. The extension background checks exact sender-tab,
 account and participant-session identity, then reuses persisted departure
 cleanup. Offline attempts stay in the existing retry queue; server closure is
 not claimed until acknowledged. Late admission is cleaned without connecting,
-and delayed cleanup cannot delete a successor session. Server/SQL/protocol and
+and delayed cleanup cannot delete a successor session. Closing during creation
+preserves the prepared identity until the response can be retired. If retry
+storage itself fails, the exact recovery record remains available for another
+departure attempt; a delayed recovery-scope response cannot recreate a closed
+room's page hint. Server/SQL/protocol and
 host permissions are unchanged. Roll back the extension artifact to restore
 the former close behavior; no migration rollback is needed.
 

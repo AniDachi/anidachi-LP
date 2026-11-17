@@ -1,5 +1,6 @@
 import * as primeBridgeClient from "../src/source-adapters/primevideo/bridge-client";
 import * as playerDeparture from "../src/player-room-departure";
+import * as roomSessionStorage from "../src/room-session-storage";
 import {createPrimePendingStore,type PrimePending} from "../src/prime-launch-session";
 import {buildPersonalHistoryResumeUrl,parsePersonalHistoryResumeUrl} from "@anidachi/protocol";
 import {paidHistoryLease,historyOwner} from "./watch-history-personal-fixtures";
@@ -28,7 +29,7 @@ import {
 	REACTION_SHORTCUTS_STORAGE_KEY,
 	REACTIONS_ENABLED_STORAGE_KEY,
 } from "../src/reaction-shortcuts";
-import { RoomClient } from "../src/room-client";
+import { RoomClient, handleRoomHttpMessage } from "../src/room-client";
 import { RoomMediaSession } from "../src/room-media-session";
 import { cameraEnabledPreferenceStorageKeyForUser, roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
 import { voiceModePreferenceStorageKeyForUser } from "../src/voice-mode-preference";
@@ -95,6 +96,74 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 
 describe("privileged overlay wiring", () => {
 
+  it("preserves real pending create ownership until late admission can depart",async()=>{
+    vi.stubGlobal("location",new URL("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+    installActiveHostRoomRuntime();
+    const memory=()=>{const data=new Map<string,unknown>();return {get:async(key:string)=>({[key]:data.get(key)}),set:async(values:Record<string,unknown>)=>{for(const [k,v] of Object.entries(values))data.set(k,v);},remove:async(key:string)=>{data.delete(key);}};};
+    const storageDeps={sessionStorage:memory(),localStorage:memory(),runtimeId:"test-extension",randomUUID:()=>crypto.randomUUID()};
+    const sender={tab:{id:12}}, gate=deferred<void>(), serverRoomId="11111111-1111-4111-8111-111111111111";
+    const depart=vi.fn(async()=>"room_ended"), send=vi.mocked(chrome.runtime.sendMessage), original=send.getMockImplementation()!;
+    const request=vi.fn(async()=>{await gate.promise;return new Response(JSON.stringify({roomId:serverRoomId,roomToken:"token",shareableLink:"https://example.com/room"}),{status:200});});
+    send.mockImplementation(async(...args:any[])=>{
+      const m=args[0];
+      if(m.type==="ANIDACHI_ROOM_SESSION_STORAGE")return roomSessionStorage.handleRoomSessionStorageMessage(m,sender,storageDeps);
+      if(m.command==="create-room")return handleRoomHttpMessage(m,sender,{request,roomSessionDependencies:storageDeps,issueAuthority:async()=>null});
+      if(m.type===playerDeparture.PLAYER_ROOM_DEPARTURE)return playerDeparture.handlePlayerRoomDeparture(m,sender,{load:(tab,message)=>roomSessionStorage.loadRoomSessionForExactDeparture(tab,message,storageDeps),depart,clear:(tab,record)=>roomSessionStorage.clearRoomSessionForDepartureIfMatch(tab,record,storageDeps)});
+      return (original as any)(...args);
+    });
+    let closed:((event:Event)=>void)|undefined;
+    const view=await renderOverlay(adapter=>{
+      adapter.getFingerprint=()=>"youtube|dQw4w9WgXcQ";
+      adapter.getSourceDescriptor=()=>({provider:"youtube",videoFingerprint:"youtube|dQw4w9WgXcQ",sourceUrl:location.href,canonicalUrl:location.href,title:"Video"});
+      adapter.subscribePlayerClose=listener=>{closed=listener;return ()=>{};};
+    });
+    try{
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));await vi.waitFor(()=>expect(request).toHaveBeenCalledOnce());
+      const e=new Event("click");Object.defineProperty(e,"isTrusted",{value:true});await act(async()=>closed!(e));
+      await act(async()=>gate.resolve());await flushRoomActionWork();
+      expect(depart).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({roomId:serverRoomId,ownerUserId:"user-a"}));
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+      expect(await roomSessionStorage.loadRoomSessionForTab(12,storageDeps)).toBeNull();
+    }finally{await unmount(view.root);}
+  });
+
+  it("preserves failed player departure recovery and can retry after reopening",async()=>{
+    installActiveHostRoomRuntime();
+    const depart=vi.spyOn(playerDeparture,"requestPlayerRoomDeparture").mockRejectedValueOnce(Error("durable storage failed")).mockResolvedValue();
+    let closed:((event:Event)=>void)|undefined;
+    const view=await renderOverlay(adapter=>{adapter.subscribePlayerClose=listener=>{closed=listener;return ()=>{};};});
+    try{
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));await flushRoomActionWork();
+      const send=vi.mocked(chrome.runtime.sendMessage);send.mockClear();
+      const e=new Event("click");Object.defineProperty(e,"isTrusted",{value:true});await act(async()=>closed!(e));await flushRoomActionWork();
+      expect(depart).toHaveBeenCalledOnce();
+      expect(send.mock.calls.filter(([m]:any)=>m.command==="clear-departure-if-match")).toHaveLength(0);
+      expect(view.container.textContent).toContain("durable storage failed");
+      await act(async()=>view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false}/>));
+      await act(async()=>view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive/>));
+      await act(async()=>closed!(e));await flushRoomActionWork();
+      expect(depart).toHaveBeenCalledTimes(2);
+      expect(send.mock.calls.filter(([m]:any)=>m.command==="clear-departure-if-match")).toEqual([[expect.objectContaining({record:confirmedRoomSession()})]]);
+    }finally{await unmount(view.root);}
+  });
+
+  it("does not recreate the room hint when recovery scope resolves after native close",async()=>{
+    installActiveHostRoomRuntime();
+    const gate=deferred<void>(), send=vi.mocked(chrome.runtime.sendMessage), original=send.getMockImplementation()!;
+    let created=false, waiting=false;
+    send.mockImplementation(async(...args:any[])=>{const m=args[0];if(m.command==="create-room")created=true;if(m.command==="recovery-scope"&&created){waiting=true;await gate.promise;return {ok:true,record:null,recoveryScope:"scope-user-a"};}return (original as any)(...args);});
+    vi.spyOn(playerDeparture,"requestPlayerRoomDeparture").mockResolvedValue();
+    let closed:((event:Event)=>void)|undefined;
+    const view=await renderOverlay(adapter=>{adapter.subscribePlayerClose=listener=>{closed=listener;return ()=>{};};});
+    try{
+      await click(button(view.container,"Open Anidachi controls"));await click(button(view.container,"Create room"));await vi.waitFor(()=>expect(waiting).toBe(true));
+      const e=new Event("click");Object.defineProperty(e,"isTrusted",{value:true});await act(async()=>closed!(e));await flushRoomActionWork();
+      await act(async()=>gate.resolve());await flushRoomActionWork();
+      expect(RoomClient.prototype.connect).not.toHaveBeenCalled();
+      expect(sessionStorage.getItem(roomSessionStorage.ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY)).toBeNull();
+    }finally{await unmount(view.root);}
+  });
+
   it.each(["host", "viewer"] as const)("leaves the exact %s session on native player close and never restores on reopen", async role => {
     installActiveHostRoomRuntime();
     vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
@@ -152,9 +221,9 @@ describe("privileged overlay wiring", () => {
       await act(async()=>closed!(new Event("click")));expect(depart).not.toHaveBeenCalled();
       const event=new Event("click");Object.defineProperty(event,"isTrusted",{value:true});await act(async()=>closed!(event));
       session=sessionFor("user-b");await act(async()=>extensionStorage.storage.setItem(AUTH_TOKENS_KEY,session));await flushMountedWork();
-      const clearsBefore=vi.mocked(chrome.runtime.sendMessage).mock.calls.filter(([m]:any)=>m.command==="clear-departure").length;
+      const clearsBefore=vi.mocked(chrome.runtime.sendMessage).mock.calls.filter(([m]:any)=>m.command==="clear-departure-if-match").length;
       await act(async()=>gate.resolve());await flushRoomActionWork();
-      expect(vi.mocked(chrome.runtime.sendMessage).mock.calls.filter(([m]:any)=>m.command==="clear-departure")).toHaveLength(clearsBefore);
+      expect(vi.mocked(chrome.runtime.sendMessage).mock.calls.filter(([m]:any)=>m.command==="clear-departure-if-match")).toHaveLength(clearsBefore);
     }finally{await unmount(view.root);}
   });
 	afterEach(() => {

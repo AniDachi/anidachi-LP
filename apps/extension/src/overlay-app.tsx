@@ -528,6 +528,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const capturedPrimeRestoreOwnerRef = useRef<string | null>(null);
 	const playerCloseEpochRef = useRef(0);
 	const playerRoomClosedRef = useRef(false);
+	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
 	const clientRef = useRef(new RoomClient());
 	const adapterActiveRef = useRef(adapterActive);
@@ -4146,6 +4147,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			await rememberRoomSessionRecoveryHint(
 				nextRoomId,
 				activeParticipant.id,
+				{ canWrite: isCurrentJoin },
 			);
 			if (!isCurrentJoin()) return false;
 			ensureRoomHash(nextRoomId);
@@ -4364,13 +4366,19 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	}, []);
 
 	const handleNativePlayerClose = useCallback((event: Event) => {
-		if (!event.isTrusted || playerRoomClosedRef.current) return;
+		if (!event.isTrusted) return;
+		const record = storedRoomSessionRef.current;
+		const login = roomAuthSessionKeyRef.current;
+		const pending = playerDepartureRef.current;
+		if ((playerRoomClosedRef.current && !record) ||
+			(record && pending?.login === login && roomSessionIdentityMatches(record, pending.record))) return;
 		playerRoomClosedRef.current = true;
 		playerCloseEpochRef.current += 1;
 		cancelPendingRoomJoin();
 		initialPrimeLaunchRef.current?.consumeRoom();
 		initialPrimeLaunchRef.current = null;
 		clearRoomHash();
+		clearRoomSessionRecoveryHint();
 		roomReconnectSuppressedRef.current = true;
 		if (roomReconnectTimerRef.current !== null) {
 			window.clearTimeout(roomReconnectTimerRef.current);
@@ -4386,17 +4394,23 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		setParticipants([]);
 		setCamsEnabled(false);
 		setPrivilegedRoomAuthority(null);
-		const record = storedRoomSessionRef.current;
-		const login = roomAuthSessionKeyRef.current;
-		if (!record) { resetLocalRoomSession(); return; }
+		// A pending create still owns its prepared record. Its late response must
+		// confirm that identity so the epoch check can request exact departure.
+		if (!record) return;
+		const departure = { record, login };
+		playerDepartureRef.current = departure;
 		setRoomLeavePending(true);
-		void requestPlayerRoomDeparture(record).catch(error => {
+		void requestPlayerRoomDeparture(record).then(() => {
+			if (roomAuthSessionKeyRef.current === login && playerDepartureRef.current === departure)
+				resetLocalRoomSession("", false, record);
+		}).catch(error => {
 			if (roomAuthSessionKeyRef.current === login && storedRoomSessionRef.current &&
-				roomSessionIdentityMatches(storedRoomSessionRef.current, record)) setAuthMessage(String(error));
+				roomSessionIdentityMatches(storedRoomSessionRef.current, record)) setAuthMessage(error instanceof Error ? error.message : String(error));
 			logDebug("overlay.room", "player departure failed", {message:String(error)});
 		}).finally(() => {
+			if (playerDepartureRef.current !== departure) return;
+			playerDepartureRef.current = null;
 			if (roomAuthSessionKeyRef.current !== login) return;
-			resetLocalRoomSession(undefined, false, record);
 			setRoomLeavePending(false);
 		});
 	}, [cancelPendingRoomJoin, resetLocalRoomSession]);
