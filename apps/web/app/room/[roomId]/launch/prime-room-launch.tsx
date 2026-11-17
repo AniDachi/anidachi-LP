@@ -1,19 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { RoomSourceDescriptor } from "@anidachi/protocol";
+import {
+	resolvePrimeLaunch,
+	type RoomSourceDescriptor,
+} from "@anidachi/protocol";
 import { requestPrimeLaunch } from "@/lib/prime-launch-client";
 export function PrimeRoomLaunch({
 	source,
 	roomId,
 	owner,
 	extensionId,
-	fallback,
 }: {
 	source: RoomSourceDescriptor;
 	roomId: string;
 	owner: string;
 	extensionId: string | null;
-	fallback: string;
 }) {
 	const [unavailable, setUnavailable] = useState(false);
 	useEffect(() => {
@@ -34,31 +35,27 @@ export function PrimeRoomLaunch({
 			current = false;
 		};
 	}, [source, roomId, owner, extensionId]);
+	const destination = new URL(
+		resolvePrimeLaunch({
+			contentId: source.sourceUrl.split("/").at(-1)!,
+			navigation: source.primeNavigation,
+		}).url,
+	);
+	destination.searchParams.set("autoplay", "1");
+	destination.hash = new URLSearchParams({ anidachiRoom: roomId }).toString();
 	return (
 		<main style={{ maxWidth: 640, margin: "64px auto", padding: 24 }}>
 			<h1>Open Prime Video</h1>
 			<p>
 				{unavailable
-					? "Update or enable the AniDachi extension to keep this invitation through provider redirects. You can also choose a link below."
+					? "Update or enable the AniDachi extension to keep this invitation through provider redirects. You can also open the title below."
 					: "Opening your watch party…"}
 			</p>
 			{unavailable && (
 				<>
 					<p>
-						<a href={fallback}>Open on Prime Video</a>
+						<a href={destination.toString()}>Open Prime Video</a>
 					</p>
-					{source.primeNavigation?.routes.map((route) => {
-						const url = new URL(route.url);
-						url.searchParams.set("autoplay", "1");
-						url.hash = new URLSearchParams({ anidachiRoom: roomId }).toString();
-						return (
-							<p key={route.url}>
-								<a href={url.toString()}>
-									Open on {new URL(route.url).hostname}
-								</a>
-							</p>
-						);
-					})}
 					<p>
 						If the provider changes the link, return to this invitation after
 						enabling the extension.

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
 	PrimeNavigationSchema,
-	PrimeMarketplaceSchema,
 	PersonalHistoryResumeSchema,
 	personalHistoryResumeOwnerBinding,
 	primeVideoSourceUrl,
@@ -19,7 +18,6 @@ import {
 import { isTrialWebsiteSender } from "./trial-installation";
 import { WEB_HTTP_BASE } from "./constants";
 const KEY = "anidachi.primePending.v1";
-const preferencesKey = "anidachi.primeMarketplace.v1";
 const StartSchema = z
 	.strictObject({
 		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
@@ -31,6 +29,7 @@ const StartSchema = z
 		expectedOwnerUserId: z.string().min(1).max(128).optional(),
 		newTab: z.boolean().optional(),
 		prepareOnly: z.boolean().optional(),
+		// Accepted for older clients; the supplied route always determines the destination.
 		currentVerifiedOrigin: z.string().max(256).optional(),
 	})
 	.refine((v) => !!v.roomId !== !!v.resume)
@@ -40,6 +39,7 @@ const CommitSchema = z.strictObject({
 	action: z.literal("commit"),
 	intentId: z.uuid(),
 	expectedOwnerUserId: z.string().min(1).max(128),
+	// Accepted for older clients; the supplied route always determines the destination.
 	currentVerifiedOrigin: z.string().max(256).optional(),
 });
 const CommandSchema = z.discriminatedUnion("action", [
@@ -61,14 +61,6 @@ const CommandSchema = z.discriminatedUnion("action", [
 		action: z.literal("take"),
 		contentId: PrimeVideoProviderIdSchema,
 		intentId: z.uuid(),
-	}),
-	z.strictObject({
-		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
-		action: z.literal("choose"),
-		intentId: z.uuid(),
-		marketplace: PrimeMarketplaceSchema,
-		url: z.string().max(2048).optional(),
-		manual: z.boolean().optional(),
 	}),
 ]);
 let queue: Promise<unknown> = Promise.resolve();
@@ -124,9 +116,9 @@ async function handle(
 	if (sender.tab && sender.frameId !== 0) return { status: "cancelled" };
 	const trustedUi =
 		!sender.tab && !!sender.url?.startsWith(chrome.runtime.getURL(""));
-	const choiceUi = !!sender.url?.startsWith(
-		chrome.runtime.getURL("/prime-launch.html"),
-	);
+	const legacyLaunchUi =
+		sender.url?.split(/[?#]/)[0] ===
+		chrome.runtime.getURL("/prime-launch.html");
 	const provider = !!sender.url && !!parsePrimePageUrl(sender.url);
 	let current = await owner();
 	if (!current)
@@ -204,29 +196,11 @@ async function handle(
 				intentId: pending.intentId,
 				ownerUserId: current.userId,
 			};
-		const preferences = ((await chrome.storage.local.get(preferencesKey))[
-			preferencesKey
-		] ?? {}) as Record<string, unknown>;
-		const market = PrimeMarketplaceSchema.safeParse(
-			preferences[current.userId],
-		);
-		// Only an internal provider sender may supply the currently verified origin.
-		const verified =
-			provider && input.currentVerifiedOrigin === new URL(sender.url!).origin
-				? input.currentVerifiedOrigin
-				: undefined;
 		const resolution = resolvePrimeLaunch({
 			contentId: input.contentId,
 			navigation: input.navigation,
-			marketplace: market.success ? market.data : undefined,
-			currentVerifiedOrigin: verified,
 		});
-		if (resolution.status === "ready")
-			return navigate(tab, pending, resolution.url);
-		await chrome.tabs.update(tab, {
-			url: chrome.runtime.getURL("/prime-launch.html"),
-		});
-		return { status: "choice-required" };
+		return navigate(tab, pending, resolution.url);
 	}
 	const commit = CommitSchema.safeParse(message);
 	if (
@@ -243,29 +217,11 @@ async function handle(
 			commit.data.expectedOwnerUserId !== current.userId
 		)
 			return { status: "cancelled" };
-		const preferences = ((await chrome.storage.local.get(preferencesKey))[
-			preferencesKey
-		] ?? {}) as Record<string, unknown>;
-		const market = PrimeMarketplaceSchema.safeParse(
-			preferences[current.userId],
-		);
 		const resolution = resolvePrimeLaunch({
 			contentId: pending.contentId,
 			navigation: pending.navigation,
-			marketplace: market.success ? market.data : undefined,
-			currentVerifiedOrigin:
-				provider &&
-				commit.data.currentVerifiedOrigin === new URL(sender.url!).origin
-					? commit.data.currentVerifiedOrigin
-					: undefined,
 		});
-		if (resolution.status === "ready")
-			return navigate(tab, pending, resolution.url);
-		if (!same(current, await owner())) return { status: "cancelled" };
-		await chrome.tabs.update(tab, {
-			url: chrome.runtime.getURL("/prime-launch.html"),
-		});
-		return { status: "choice-required" };
+		return navigate(tab, pending, resolution.url);
 	}
 	const command = CommandSchema.safeParse(message),
 		tab = sender.tab?.id;
@@ -291,64 +247,21 @@ async function handle(
 					...(existed ? { rejection: await store().rejection(tab) } : {}),
 				};
 	}
-	if (!choiceUi) return { status: "cancelled" };
+	// Compatibility for an old launch tab left open during an extension update.
+	// Normal launches never visit this page. No preference or choice is applied.
+	if (!legacyLaunchUi) return { status: "cancelled" };
 	if (command.data.action === "cancel") {
 		await store().cancel(tab);
 		return { status: "cancelled" };
 	}
 	const pending = await store().peek(tab, current);
 	if (!pending) return { status: "expired" };
-	const preferences = ((await chrome.storage.local.get(preferencesKey))[
-		preferencesKey
-	] ?? {}) as Record<string, unknown>;
-	const market = PrimeMarketplaceSchema.safeParse(preferences[current.userId]);
-	if (command.data.action === "read")
-		return {
-			status: "choice-required",
-			pending,
-			marketplace: market.success ? market.data : undefined,
-			resolution: resolvePrimeLaunch({
-				contentId: pending.contentId,
-				navigation: pending.navigation,
-				marketplace: market.success ? market.data : undefined,
-			}),
-		};
-	const choice = command.data;
-	if (choice.intentId !== pending.intentId || pending.attempts !== 0)
-		return { status: "cancelled" };
+	if (pending.attempts !== 0) return { status: "cancelled" };
 	const resolution = resolvePrimeLaunch({
 		contentId: pending.contentId,
 		navigation: pending.navigation,
-		marketplace: choice.marketplace,
 	});
-	const url = choice.url;
-	const allowed =
-		url === primeVideoSourceUrl(pending.contentId) ||
-		pending.navigation?.routes.some((route) => route.url === url);
-	if (!choice.manual && (!allowed || !url)) return { status: "cancelled" };
-	if (!same(current, await owner())) return { status: "cancelled" };
-	// At most the current account's single preference; no route cache or language inference.
-	const retained = Object.fromEntries(
-		Object.entries(preferences)
-			.filter(
-				([key, value]) =>
-					key.length <= 128 && PrimeMarketplaceSchema.safeParse(value).success,
-			)
-			.slice(-63),
-	);
-	await chrome.storage.local.set({
-		[preferencesKey]: { ...retained, [current.userId]: choice.marketplace },
-	});
-	if (choice.manual) {
-		if (resolution.status === "ready")
-			return navigate(tab, pending, resolution.url);
-		await store().put(tab, { ...pending, attempts: 1 });
-		await chrome.tabs.update(tab, {
-			url: `https://www.${choice.marketplace}/`,
-		});
-		return { status: "ready" };
-	}
-	return navigate(tab, pending, url!);
+	return navigate(tab, pending, resolution.url);
 }
 export function registerPrimeLaunchBridge() {
 	const listener =

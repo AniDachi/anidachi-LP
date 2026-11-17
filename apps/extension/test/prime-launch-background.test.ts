@@ -110,72 +110,197 @@ it("registers room intent before new-tab navigation and survives missing fragmen
 		type: "ANIDACHI_PRIME_LAUNCH",
 		action: "take",
 		contentId: id,
-        intentId:(session["anidachi.primePending.v1"] as any)[7].intentId,
+		intentId: (session["anidachi.primePending.v1"] as any)[7].intentId,
 	};
 	expect(await send(message, { ...provider, frameId: 1 })).toEqual({
 		status: "cancelled",
 	});
-	expect(await send({...message,action:"recover",intentId:undefined},provider)).toEqual({status:"cancelled"});
- const recovering={type:"ANIDACHI_PRIME_LAUNCH",action:"recover",contentId:id};
- expect(await send(recovering,provider)).toMatchObject({status:"ready"});
- expect(await send(recovering,provider)).toMatchObject({status:"ready"});
- expect(await send(message, provider)).toMatchObject({
+	expect(
+		await send(
+			{ ...message, action: "recover", intentId: undefined },
+			provider,
+		),
+	).toEqual({ status: "cancelled" });
+	const recovering = {
+		type: "ANIDACHI_PRIME_LAUNCH",
+		action: "recover",
+		contentId: id,
+	};
+	expect(await send(recovering, provider)).toMatchObject({ status: "ready" });
+	expect(await send(recovering, provider)).toMatchObject({ status: "ready" });
+	expect(await send(message, provider)).toMatchObject({
 		status: "ready",
 		pending: { roomId: "room", contentId: id },
 	});
 	expect(await send(message, provider)).toMatchObject({ status: "blocked" });
 });
-it("offers exact host and canonical choices for first guest and never guesses preferred foreign route", async () => {
+const amazonUrl = "https://www.amazon.com/-/de/gp/video/detail/B0FX2ZCPFK";
+const navigation = {
+	contentId: id,
+	routes: [
+		{
+			url: amazonUrl,
+			observedAt: "2026-11-16T00:00:00Z",
+		},
+	],
+};
+const legacyUi = {
+	id: ext,
+	tab: { id: 7 },
+	frameId: 0,
+	url: `chrome-extension://${ext}/prime-launch.html`,
+};
+it("opens the supplied episode directly, ignoring the old preference and current provider origin", async () => {
 	local["anidachi.primeMarketplace.v1"] = { owner: "amazon.de" };
+	const result = await send(
+		{
+			type: "ANIDACHI_PRIME_LAUNCH",
+			action: "start",
+			contentId: id,
+			roomId: "room",
+			navigation,
+			currentVerifiedOrigin: "https://www.amazon.de",
+		},
+		{
+			id: ext,
+			tab: { id: 7 },
+			frameId: 0,
+			url: "https://www.amazon.de/gp/video/detail/B0FX2ZCPFK",
+		},
+	);
+	expect(result.status).toBe("ready");
+	expect(navigations).toEqual([`${amazonUrl}?autoplay=1#anidachiRoom=room`]);
+	expect(local).toEqual({
+		"anidachi.primeMarketplace.v1": { owner: "amazon.de" },
+	});
+	// Amazon can redirect or strip the fragment; SDK content binding still gates recovery.
+	const redirected = {
+		id: ext,
+		tab: { id: 7 },
+		frameId: 0,
+		url: `https://www.primevideo.com/region/na/detail/${id}`,
+	};
+	expect(
+		await send(
+			{ type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id },
+			redirected,
+		),
+	).toMatchObject({ status: "ready", pending: { roomId: "room" } });
+	state.generation++;
+	expect(
+		await send(
+			{ type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id },
+			redirected,
+		),
+	).toMatchObject({ status: "blocked" });
+});
+it("automatically resumes an unexpired old launch tab once without accepting a destination choice", async () => {
 	await send({
 		type: "ANIDACHI_PRIME_LAUNCH",
 		action: "start",
 		contentId: id,
 		roomId: "room",
+		navigation,
 		newTab: true,
-		navigation: {
-			contentId: id,
-			routes: [
-				{
-					url: "https://www.amazon.com/gp/video/detail/B0FX2ZCPFK",
-					observedAt: "2026-11-16T00:00:00Z",
-				},
-			],
-		},
+		prepareOnly: true,
 	});
-	expect(navigations).toEqual([`chrome-extension://${ext}/prime-launch.html`]);
-	const ui = {
+	expect(
+		await send({ type: "ANIDACHI_PRIME_LAUNCH", action: "read" }, legacyUi),
+	).toMatchObject({ status: "ready" });
+	expect(navigations).toEqual([`${amazonUrl}?autoplay=1#anidachiRoom=room`]);
+	expect(
+		await send({ type: "ANIDACHI_PRIME_LAUNCH", action: "read" }, legacyUi),
+	).toEqual({ status: "cancelled" });
+	expect(
+		await send(
+			{
+				type: "ANIDACHI_PRIME_LAUNCH",
+				action: "choose",
+				intentId: (session["anidachi.primePending.v1"] as any)[7].intentId,
+				marketplace: "amazon.de",
+				url: "https://www.amazon.de/",
+				manual: true,
+			},
+			legacyUi,
+		),
+	).toEqual({ status: "cancelled" });
+	expect(navigations).toHaveLength(1);
+	expect(local).toEqual({});
+});
+it.each([
+	"expired",
+	"owner",
+	"login",
+	"generation",
+])("does not restart a %s legacy launch", async (reason) => {
+	await send({
+		type: "ANIDACHI_PRIME_LAUNCH",
+		action: "start",
+		contentId: id,
+		roomId: "room",
+		navigation,
+		newTab: true,
+		prepareOnly: true,
+	});
+	if (reason === "expired")
+		(session["anidachi.primePending.v1"] as any)[7].expiresAt = Date.now() - 1;
+	else if (reason === "owner") state.owner = "other";
+	else if (reason === "login") state.login = "other";
+	else state.generation++;
+	expect(
+		await send({ type: "ANIDACHI_PRIME_LAUNCH", action: "read" }, legacyUi),
+	).toEqual({ status: "expired" });
+	expect(navigations).toEqual([]);
+});
+it("preserves personal Resume intent and position through a direct Amazon launch and redirect", async () => {
+	const { personalHistoryResumeOwnerBinding, primeVideoSourceUrl } =
+		await import("@anidachi/protocol");
+	const intentId = crypto.randomUUID();
+	const resume = {
+		resumeVersion: 1,
+		intentId,
+		ownerBinding: await personalHistoryResumeOwnerBinding("owner", intentId),
+		accountGeneration: 3,
+		provider: "primevideo",
+		sourceUrl: primeVideoSourceUrl(id),
+		currentTime: 126,
+		issuedAt: Date.now(),
+		expiresAt: Date.now() + 60000,
+	};
+	const result = await send({
+		type: "ANIDACHI_PRIME_LAUNCH",
+		action: "start",
+		contentId: id,
+		resume,
+		navigation,
+		newTab: true,
+		expectedOwnerUserId: "owner",
+	});
+	expect(result.status).toBe("ready");
+	const destination = new URL(navigations[0]!);
+	expect(`${destination.origin}${destination.pathname}`).toBe(amazonUrl);
+	expect(
+		JSON.parse(
+			new URLSearchParams(destination.hash.slice(1)).get("anidachiResume")!,
+		),
+	).toEqual(resume);
+	const redirected = {
 		id: ext,
 		tab: { id: 7 },
 		frameId: 0,
-		url: `chrome-extension://${ext}/prime-launch.html`,
+		url: `https://www.primevideo.com/detail/${id}`,
 	};
-	const read = await send(
-		{ type: "ANIDACHI_PRIME_LAUNCH", action: "read" },
-		ui,
-	);
-	expect(read.resolution.status).toBe("regional-route-unknown");
-	const choice = {
-		type: "ANIDACHI_PRIME_LAUNCH",
-		action: "choose",
-		intentId: read.pending.intentId,
-		marketplace: "amazon.de",
-		manual: true,
-	};
-	expect(await send(choice, ui)).toEqual({ status: "ready" });
-	expect(navigations.at(-1)).toBe("https://www.amazon.de/");
-	state.generation++;
 	expect(
 		await send(
-			{ type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id },
 			{
-				id: ext,
-				tab: { id: 7 },
-				frameId: 0,
-				url: "https://www.amazon.de/gp/video/detail/B0FX2ZCPFK",
+				type: "ANIDACHI_PRIME_LAUNCH",
+				action: "take",
+				contentId: id,
+				intentId,
 			},
+			redirected,
 		),
-	).toMatchObject({ status: "blocked" });
+	).toMatchObject({ status: "ready", pending: { resume } });
 });
 it("rejects untrusted external and stale-owner requests without navigation", async () => {
 	const request = {
@@ -205,7 +330,8 @@ it("rejects untrusted external and stale-owner requests without navigation", asy
 	).toEqual({ status: "cancelled" });
 	expect(navigations).toEqual([]);
 });
-it("trusted website preparation never navigates until a matching current intent is committed", async () => {
+it("trusted website commits only the current intent directly to its supplied route", async () => {
+	local["anidachi.primeMarketplace.v1"] = { owner: "amazon.de" };
 	const from = {
 		url: "https://staging.anidachi.app/room/room/launch",
 		tab: { id: 4 },
@@ -216,6 +342,7 @@ it("trusted website preparation never navigates until a matching current intent 
 		action: "start",
 		contentId: id,
 		roomId: "room",
+		navigation,
 		expectedOwnerUserId: "owner",
 	};
 	const first = await send(input, from, true);
@@ -246,4 +373,5 @@ it("trusted website preparation never navigates until a matching current intent 
 			true,
 		),
 	).toMatchObject({ status: "ready" });
+	expect(navigations).toEqual([`${amazonUrl}?autoplay=1#anidachiRoom=room`]);
 });
