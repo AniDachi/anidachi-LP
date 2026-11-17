@@ -839,7 +839,15 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const capturedPrimeRoomId = initialPrimeLaunchRef.current?.readRoom(location.href, adapter.getFingerprint(), identityLoaded ? participant?.id ?? null : undefined) ?? null;
 	const primeLaunchSuppressed = initialPrimeLaunchRef.current?.blocksFragment?.(location.href) ?? false;
- const initialRoomTarget = (primeLaunchSuppressed ? null : getRoomIdFromHash()) ?? capturedPrimeRoomId ?? (storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
+	// A consumed invitation cannot replay, but a saved account-bound room session
+	// may request fresh server admission. Storage alone never proves membership.
+	const primeRoomRestoreSuppressed = primeLaunchSuppressed && !(
+		storedRoomSession?.ownerUserId === participant?.id &&
+		storedRoomSession?.roomId === initialPrimeLaunchRef.current?.rejectedRoomId &&
+		storedRoomSession?.roomId === getRoomIdFromHash()
+	);
+	const initialRoomTarget = (primeLaunchSuppressed ? null : getRoomIdFromHash()) ?? capturedPrimeRoomId ??
+		(!primeRoomRestoreSuppressed && storedRoomSession?.ownerUserId === participant?.id ? storedRoomSession?.roomId : null);
 	const accountHostingTime = useAccountHostingStatus({
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: hostingTimeSessionKey,
@@ -5009,7 +5017,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			capturedPrimeRestoreOwnerRef.current !== currentUserId
 				? storedRoomSession.roomId
 				: null;
-		const initialRoomId = primeLaunchSuppressed ? null : hashRoomId ?? persistedRoomId;
+		const initialRoomId = primeRoomRestoreSuppressed ? null : hashRoomId ?? persistedRoomId;
 		if (initialRoomId) {
 			if (!participant) {
 				setAuthMessage("Sign in to join Anidachi rooms.");
@@ -5082,6 +5090,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		accountHostingTime.refresh,
 		adapter,
 		primeSourcePending,
+		primeRoomRestoreSuppressed,
 		capturedPrimeRoomId,
 		clearStoredRoomSession,
 		connectToExistingWebsiteRoom,

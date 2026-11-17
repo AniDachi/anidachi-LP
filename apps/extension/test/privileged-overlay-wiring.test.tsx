@@ -2463,6 +2463,68 @@ describe("privileged overlay wiring", () => {
     }finally{await act(async()=>f.runtime.dispose());}
   });
 
+  it.each([false, true])("restores a confirmed Prime room after reload without replaying its consumed invite (metadata delayed: %s)", async startPending => {
+    const pending: PrimePending = { intentId: crypto.randomUUID(), contentId: "A".repeat(26),
+      owner: { userId: historyOwner, loginId: "login", generation: 1 }, roomId: "room-a",
+      expiresAt: Date.now() + 60_000, attempts: 1 };
+    const f = await primeOverlayLifecycle(pending,
+      `https://www.primevideo.com/detail/${pending.contentId}#anidachiRoom=room-a`,
+      { consumed: true, persistedRoom: true, persistedRoomId: "room-a", startPending });
+    const joins = () => f.send.mock.calls.map(([m]: any) => m).filter(m => m.command === "connect-room");
+    try {
+      for (let i=0;i<8;i++) await flushMountedWork();
+      if (startPending) {
+        expect(joins()).toEqual([]);
+        await act(async () => f.replace());
+        for (let i=0;i<8;i++) await flushMountedWork();
+      }
+      await flushRoomActionWork();
+      expect(joins().map(m => m.roomId)).toEqual(["room-a"]);
+      expect(f.send.mock.calls.some(([m]: any) => m.type === "ANIDACHI_PRIME_LAUNCH" && ["take", "start"].includes(m.action))).toBe(false);
+      expect(f.seek).not.toHaveBeenCalled();
+    } finally { await act(async () => f.runtime.dispose()); }
+  });
+
+  it.each(["missing", "different-room", "different-owner"] as const)("does not restore or display a permanent Prime join for a consumed invitation with %s saved session", async saved => {
+    const pending: PrimePending = { intentId: crypto.randomUUID(), contentId: "A".repeat(26),
+      owner: { userId: historyOwner, loginId: "login", generation: 1 }, roomId: "room-a",
+      expiresAt: Date.now() + 60_000, attempts: 1 };
+    const f = await primeOverlayLifecycle(pending,
+      `https://www.primevideo.com/detail/${pending.contentId}#anidachiRoom=room-a`,
+      { consumed: true, persistedRoom: saved !== "missing", persistedRoomId: saved === "different-room" ? "room-b" : "room-a",
+        persistedOwner: saved === "different-owner" ? "other" : historyOwner });
+    try {
+      for (let i=0;i<8;i++) await flushMountedWork();
+      await flushRoomActionWork();
+      expect(f.send.mock.calls.some(([m]: any) => m.command === "connect-room")).toBe(false);
+      const open = f.container.querySelector<HTMLButtonElement>('button[aria-label="Open Anidachi controls"]');
+      expect(open).not.toBeNull();
+      await click(open!);
+      expect(f.container.textContent).not.toContain("Joining room");
+    } finally { await act(async () => f.runtime.dispose()); }
+  });
+
+  it("requires fresh server admission for a saved Prime room and exits joining when membership is denied", async () => {
+    const connect = vi.spyOn(RoomClient.prototype, "connect");
+    const pending: PrimePending = { intentId: crypto.randomUUID(), contentId: "A".repeat(26),
+      owner: { userId: historyOwner, loginId: "login", generation: 1 }, roomId: "room-a",
+      expiresAt: Date.now() + 60_000, attempts: 1 };
+    const f = await primeOverlayLifecycle(pending,
+      `https://www.primevideo.com/detail/${pending.contentId}#anidachiRoom=room-a`,
+      { consumed: true, persistedRoom: true, persistedRoomId: "room-a", admissionDenied: true });
+    try {
+      for (let i=0;i<8;i++) await flushMountedWork();
+      await flushRoomActionWork();
+      expect(f.send.mock.calls.filter(([m]: any) => m.command === "connect-room")).toHaveLength(1);
+      expect(connect).not.toHaveBeenCalled();
+      const open = f.container.querySelector<HTMLButtonElement>('button[aria-label="Open Anidachi controls"]');
+      if (open) await click(open);
+      expect(f.container.textContent).not.toContain("Joining room");
+      expect(f.container.querySelector('button[aria-label="Leave room"]')).toBeNull();
+      expect(f.seek).not.toHaveBeenCalled();
+    } finally { await act(async () => f.runtime.dispose()); }
+  });
+
   it("does not suppress a genuinely new explicit room after retiring an older launch",async()=>{
     const pending:PrimePending={intentId:crypto.randomUUID(),contentId:"A".repeat(26),owner:{userId:historyOwner,loginId:"login",generation:1},roomId:"old-room",expiresAt:Date.now()+60000,attempts:1};
     const f=await primeOverlayLifecycle(pending,"https://www.amazon.com/gp/video/detail/B0FX2ZCPFK#anidachiRoom=new-room",{reason:"expired"});
@@ -5842,7 +5904,7 @@ async function selectQuickMicrophoneMode(
 	if (control.dataset.mode !== mode) await click(control);
 }
 
-async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{reason?:string;phase?:string;gate?:ReturnType<typeof deferred<void>>;startPending?:boolean;persistedRoom?:boolean}={}){
+async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{reason?:string;phase?:string;gate?:ReturnType<typeof deferred<void>>;startPending?:boolean;persistedRoom?:boolean;persistedRoomId?:string;persistedOwner?:string;consumed?:boolean;admissionDenied?:boolean}={}){
  (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
  vi.stubGlobal("location",new URL(href));
  vi.spyOn(history,"replaceState").mockImplementation((_data,_unused,url)=>{if(url)vi.stubGlobal("location",new URL(String(url),location.href));});
@@ -5850,13 +5912,15 @@ async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{r
  if(options.reason==="expired")(stored as any)[7].expiresAt=Date.now()-1;
  const store=createPrimePendingStore({get:async()=>stored,set:async v=>{stored=structuredClone(v)},remove:async()=>{stored={}}});
  const owner={...pending.owner,...(options.reason==="owner"?{userId:"other"}:{}),...(options.reason==="generation"?{generation:2}:{})};
+ if(options.consumed) await store.take(7, owner, pending.contentId, Date.now(), pending.intentId);
  const seek=vi.fn();let firstPhase=true;
  const wait=async(phase:string)=>{if(options.phase===phase&&firstPhase){firstPhase=false;await options.gate!.promise;}};
  const send=vi.fn(async(m:any)=>{
   if(m.type==="ANIDACHI_AUTH")return {ok:true,tokens:sessionFor(historyOwner)};
-  if(m.type==="ANIDACHI_ROOM_HTTP"&&m.command==="connect-room")return new Promise(()=>{});
+  if(m.type==="ANIDACHI_ROOM_HTTP"&&m.command==="connect-room")return options.admissionDenied
+   ? {ok:false,status:403,error:"You are not a participant in this room"} : new Promise(()=>{});
   if(m.type==="ANIDACHI_ROOM_SESSION_STORAGE") {
-   if(options.persistedRoom && ["load", "migrate"].includes(m.command)) return {ok:true,record:{...confirmedRoomSession(),ownerUserId:historyOwner,roomId:"room-b"}};
+   if(options.persistedRoom && ["load", "migrate"].includes(m.command)) return {ok:true,record:{...confirmedRoomSession(),ownerUserId:options.persistedOwner??historyOwner,roomId:options.persistedRoomId??"room-b"}};
    return roomSessionStorageResponse(m.command)??{ok:true};
   }
   if(m.type==="ANIDACHI_PRIME_LAUNCH"){
@@ -5883,5 +5947,5 @@ async function primeOverlayLifecycle(pending:PrimePending,href:string,options:{r
   const node=document.createElement("div");container.append(node);const root=createRoot(node);root.render(<overlayApp.OverlayApp adapter={active} initialPrimeLaunch={launch}/>);
   return {adapter:active,relocate(){},suspend(){},replaceAdapter(next){root.render(<overlayApp.OverlayApp adapter={next} initialPrimeLaunch={launch}/>);},dispose(){root.unmount();node.remove();}};
  }});});
- return {runtime,send,seek,store,replace(){metadataReady=true;adapter=make();runtime.reconcile();}};
+ return {runtime,send,seek,store,container,replace(){metadataReady=true;adapter=make();runtime.reconcile();}};
 }

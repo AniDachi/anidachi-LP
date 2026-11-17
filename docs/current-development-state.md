@@ -1,5 +1,18 @@
 # Current Development State
 
+## Prime two-account acceptance corrections — November 17, 2026
+
+Testing the loaded staging artifact with two accounts reproduced a guest reload
+stuck on `Joining room`, plus ad-inclusive duration in the capsule. Candidate
+`codex/prime-room-reload-fix`, based on staging `0f84123f`, keeps consumed
+invitations blocked while allowing the matching saved account/tab room
+session to reconnect through fresh server admission. Unrelated saved sessions
+no longer produce a permanent pending join. Capsule time and duration now use
+the same content timeline. See [provider notes](prime-video-adapter-notes.md#two-account-acceptance-and-reload-correction).
+Loaded-artifact acceptance of this correction remains separate from the tests;
+both available Prime players reported US, so different-region acceptance is
+still unverified. No backend, permissions or production change is included.
+
 ## Prime direct-episode readiness — November 17, 2026
 
 `codex/prime-metadata-readiness`, based on staging `29fafc86`, fixes indefinite
