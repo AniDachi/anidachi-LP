@@ -1,5 +1,15 @@
 # Current Development State
 
+## Prime direct-episode readiness — November 17, 2026
+
+`codex/prime-metadata-readiness`, based on staging `29fafc86`, fixes indefinite
+metadata waiting when Prime gives an episode page its parent-season canonical
+URL. The verified episode/season relationship now admits this normal provider
+shape without relaxing foreign-source, membership or playback checks. A real
+Rings of Power S3 E2 metadata probe confirms the parser fix; loaded-artifact
+acceptance remains separate. See
+[provider notes](prime-video-adapter-notes.md#direct-episode-links-and-parent-season-canonical).
+
 ## Direct Prime launch correction — November 17, 2026
 
 `codex/prime-direct-launch`, based on staging `9f294b07`, removes the

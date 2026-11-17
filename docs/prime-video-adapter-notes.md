@@ -1,5 +1,26 @@
 # Prime Video adapter notes
 
+## Direct episode links and parent-season canonical
+
+Task 17 (`codex/prime-metadata-readiness`, based on staging `29fafc86`) fixes a
+confirmed indefinite readiness failure. The Rings of Power S3 E2 exposes episode
+`0LZABJABL5M8CPUHVTDW9VKBQR` in the URL and season
+`0NGJWN4I3V9O8AY50RRY31MQV4` in the HTML canonical. The previous parser required
+those records to be identical and rejected every inspection, so faster polling
+could not help. A direct episode may now use its proven selected season as the
+canonical. Exact SDK ID, ordinals, membership and unique same-origin route
+checks remain mandatory; foreign seasons, sibling episode canonicals and movies
+do not acquire this exception. Poll frequency, permissions and room protocol
+are unchanged.
+
+A read-only probe on that real page returned null before the change and the
+exact episode after it. The probe used public episode metadata while playback
+was closed; it is not loaded-artifact or two-account playback acceptance.
+Regression tests exercise immediate MAIN binding, native Next Episode, live
+page context and all eight admitted domain families with regional/localized
+paths. The owner-reported screenshot has no title/URL; its exact reproduction
+remains awaiting the requested link.
+
 ## Player presence and source readiness
 
 Task 15 (`codex/prime-player-readiness`, based on staging `d765b69f`) separates
