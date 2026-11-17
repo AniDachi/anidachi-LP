@@ -218,18 +218,14 @@ export function primeNavigationMatches(
 			sourceUrl === primeVideoSourceUrl(navigation.contentId))
 	);
 }
-export type PrimeLaunchResolution =
-	| { status: "ready"; url: string }
-	| {
-			status: "choice-required" | "regional-route-unknown";
-			choices: { url: string; marketplace: PrimeMarketplace }[];
-	  };
-/** Navigation only: a selected destination never establishes playback identity. */
+export type PrimeLaunchResolution = { status: "ready"; url: string };
+/** Open the supplied exact-title route; Amazon owns regional redirects.
+ * Navigation never establishes playback identity. Route order is preserved;
+ * observation timestamps are metadata, not recipient marketplace preferences.
+ */
 export function resolvePrimeLaunch(input: {
 	contentId: string;
 	navigation?: PrimeNavigation;
-	marketplace?: PrimeMarketplace;
-	currentVerifiedOrigin?: string;
 }): PrimeLaunchResolution {
 	const id = PrimeVideoProviderIdSchema.parse(input.contentId);
 	const navigation = input.navigation
@@ -237,29 +233,10 @@ export function resolvePrimeLaunch(input: {
 		: undefined;
 	if (navigation && navigation.contentId !== id)
 		throw new Error("Prime navigation identity mismatch");
-	const canonical = primeVideoSourceUrl(id);
-	const choices = [
-		...(navigation?.routes ?? []).map((route) => ({
-			url: route.url,
-			marketplace: primeDomainFamily(new URL(route.url).hostname)!,
-		})),
-		{ url: canonical, marketplace: "primevideo.com" as const },
-	];
-	const market =
-		input.marketplace ??
-		(input.currentVerifiedOrigin
-			? primeDomainFamily(new URL(input.currentVerifiedOrigin).hostname)
-			: undefined);
-	if (market === "primevideo.com") return { status: "ready", url: canonical };
-	if (market) {
-		const exact = choices.find((choice) => choice.marketplace === market);
-		return exact
-			? { status: "ready", url: exact.url }
-			: { status: "regional-route-unknown", choices };
-	}
-	return choices.some((choice) => choice.marketplace !== "primevideo.com")
-		? { status: "choice-required", choices }
-		: { status: "ready", url: canonical };
+	return {
+		status: "ready",
+		url: navigation?.routes[0]?.url ?? primeVideoSourceUrl(id),
+	};
 }
 /** Explicit legacy projection; old strict readers must never receive new keys. */
 export function stripPrimeNavigation<T>(value: T): T {
@@ -277,7 +254,13 @@ export function samePrimeNavigation(
 	right: PrimeNavigation | undefined,
 ): boolean {
 	const key = (v: PrimeNavigation | undefined) =>
-		v ? JSON.stringify([v.contentId, v.routes.map((r) => r.url).sort()]) : "";
+		v
+			? JSON.stringify([
+					v.contentId,
+					v.routes[0]?.url,
+					v.routes.map((r) => r.url).sort(),
+				])
+			: "";
 	return key(left) === key(right);
 }
 /** Validate every flattened read source without widening canonical identity. */
