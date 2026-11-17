@@ -94,6 +94,7 @@ import {
   isWatchHistoryMessage,
   reconcileWatchHistoryThenDrain,
 } from "../src/watch-history-client";
+import { handlePlayerRoomDeparture, isPlayerRoomDeparture } from "../src/player-room-departure";
 
 export interface PrivilegedRoomRuntimeDependencies {
   admissionDepartureTimeoutMs?: number;
@@ -151,6 +152,7 @@ export function dispatchPrivilegedRoomRuntimeMessage(
   sender: { tab?: { id?: number } },
   dependencies: PrivilegedRoomRuntimeDependencies = {},
 ): Promise<unknown> | null {
+  if (isPlayerRoomDeparture(message)) return handlePlayerRoomDeparture(message, sender);
   if (isRoomAdmissionHandoffMessage(message)) {
     return handleRoomAdmissionHandoffMessage(
       message,

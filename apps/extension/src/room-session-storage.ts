@@ -1053,7 +1053,7 @@ export async function migrateLegacyRoomSession(
 export async function rememberRoomSessionRecoveryHint(
   roomId: string,
   currentUserId: string,
-  dependencies: RoomSessionClientDependencies = {},
+  dependencies: RoomSessionClientDependencies & { canWrite?: () => boolean } = {},
 ): Promise<boolean> {
   if (
     !isBoundedString(roomId, MAX_ROOM_ID_CHARS) ||
@@ -1076,6 +1076,7 @@ export async function rememberRoomSessionRecoveryHint(
     if (!isBoundedString(accountScope, MAX_SESSION_ID_CHARS)) {
       return false;
     }
+    if (dependencies.canWrite && !dependencies.canWrite()) return false;
     pageStorage.setItem(
       ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
       JSON.stringify({
