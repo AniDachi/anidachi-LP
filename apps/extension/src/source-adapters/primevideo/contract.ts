@@ -87,6 +87,7 @@ export const PrimeRequestSchema = z
 		action: z.enum([
 			"snapshot",
 			"play",
+			"resume-interstitial",
 			"pause",
 			"seek",
 			"catalog",
@@ -122,6 +123,7 @@ export const PrimeResultSchema = z.strictObject({
 	source: z.literal(PRIME_RESULT),
 	id: token,
 	ok: z.boolean(),
+	error: z.literal("autoplay-blocked").optional(),
 	snapshot: PrimeSnapshotSchema.nullable().optional(),
 	catalog: WatchCatalogSnapshotInputSchema.refine(
 		(c) => c.provider === "primevideo",

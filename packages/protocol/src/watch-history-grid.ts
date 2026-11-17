@@ -17,6 +17,7 @@ export const WatchHistoryGridQuerySchema = z.strictObject({
 	provider: z.enum(["crunchyroll", "netflix", "primevideo"]),
 	titleKey: Key,
 	seasonKey: Key.optional(),
+	includePartial: z.boolean().optional(),
 	limit: z
 		.number()
 		.int()
@@ -41,6 +42,7 @@ export function isWatchSpecialSeasonLabel(label: string): boolean {
 
 export const WatchHistoryGridSeasonSchema =
 	WatchHistoryCatalogSeasonProjectionSchema.extend({
+		aggregate: WatchHistoryCatalogSeasonProjectionSchema.shape.aggregate.nullable(),
 		kind: z.enum(["season", "specials"]),
 	});
 
@@ -93,8 +95,13 @@ export const WatchHistoryGridResponseSchema = z
 		    (episode.history && !historyEpisodeSourceMatches(value.provider, episode.history)))
 		    context.addIssue({ code: "custom", message: "Grid episode source must match provider" });
 		}
+		const observed = value.provider === "primevideo" && value.state === "partial" && value.revision !== null;
+		if (observed && (!value.seasons.length || value.mainAggregate || value.specialsAggregate ||
+			value.seasons.some(season => season.aggregate !== null || season.nextEpisode !== null))) {
+			context.addIssue({code: "custom", message: "Observed grids cannot claim exact totals or next episodes"});
+		}
 		if (
-			value.state !== "complete" &&
+			value.state !== "complete" && !observed &&
 			(value.revision ||
 				value.seasons.length ||
 				value.episodes.length ||
@@ -109,7 +116,7 @@ export const WatchHistoryGridResponseSchema = z
 		}
 		if (
 			value.state === "complete" &&
-			(!value.revision || !value.mainAggregate || !value.seasons.length)
+			(!value.revision || !value.mainAggregate || !value.seasons.length || value.seasons.some(season => !season.aggregate))
 		) {
 			context.addIssue({
 				code: "custom",
