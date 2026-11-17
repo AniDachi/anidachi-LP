@@ -1,5 +1,19 @@
 # Current Development State
 
+## Prime definitive natural close — November 18, 2026
+
+Loaded8876fbf4 confirmed the reported Amazon ASIN, exact room invite launch,
+aligned playback/seek and ten known episodes in website history. A native episode
+end then closed Prime while leaving the room alive. Owner reaffirmed that a
+definitively closed player should leave/end the room; only episode/season
+transitions preserve it. Automatic reopening candidate PR574 was closed unmerged.
+
+Candidate `codex/prime-natural-player-close`, based on staginga646ef58, pairs Prime's
+completed-timeline Close with trusted native media unload and reuses exact-session
+departure. It adds no polling or provider-setting changes. Loaded acceptance is
+pending; the available accounts do not establish different-market playback.
+See [active plan](superpowers/plans/2026-11-16-prime-video-adapter.md#task-24-definitive-natural-close-leaves-the-room).
+
 ## Amazon SPA identity — November 18, 2026
 
 `codex/prime-amazon-readiness` fixes the reproduced metadata wait on Amazon's

@@ -40,6 +40,17 @@ unavailable, and the inherited Graphify `ref_clsx` publication blocker remains.
 
 ## Intentional player close
 
+Definitive natural completion follows the same exit rule: host ends the room,
+guest leaves individually. Prime's SDK emits Close with a completed timeline;
+the MAIN bridge records it only for its current player context while closed.
+ISOLATED pairs that evidence with trusted native unload of the owned video and
+uses the existing departure path. No native ended event is assumed. Ordinary
+media replacement, advertisements, missing metadata and episode transitions
+cannot leave from disappearance or a page-authored marker alone. Reopen,
+navigation, context replacement and teardown retire the completion evidence.
+This reuses the existing confirmation window without additional polling or
+changing Prime's autoplay preference. Loaded acceptance remains a separate gate.
+
 Task 20 makes a viewer's explicit Prime player close leave the exact current
 room session. The host's departure ends the room; a guest's departure removes
 only that guest. Selecting another episode/season inside the player or autoplay

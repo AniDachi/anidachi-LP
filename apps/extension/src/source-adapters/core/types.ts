@@ -84,7 +84,7 @@ export interface VideoAdapter {
   pause(): void;
   seek(time: number, options?: SeekOptions): void;
   subscribe(callback: (event: PlayerEvent) => void): () => void;
-  /** Explicit native player close only; never suspension, source replacement or reload. */
+  /** Confirmed native player close only; never suspension, source replacement or reload. */
   subscribePlayerClose?(listener: (event: Event) => void): () => void;
   getOverlayGeometry(): PlayerOverlayGeometry;
   subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener): () => void;

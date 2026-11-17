@@ -2,6 +2,8 @@ import {
 	PRIME_NAVIGATING,
 	PRIME_PLAYER,
 	PRIME_PLAYER_STATE,
+	PRIME_PLAYER_ENDED,
+	PRIME_BINDING_CHANGED,
 	readPrimeBinding,
 } from "./contract";
 
@@ -11,13 +13,15 @@ export function subscribePrimePlayerClose(
 	video: HTMLVideoElement,
 	listener: (event: Event) => void,
 ): () => void {
-	let pending: { event: Event; contentId: string | null } | null = null;
+	let pending: { event: Event; contentId: string | null; natural?: boolean } | null = null;
+	let observedOpen = container.getAttribute(PRIME_PLAYER_STATE) === "open";
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	const cancel = () => {
 		pending = null;
 		clearTimeout(timer);
 	};
 	const check = () => {
+		if (container.getAttribute(PRIME_PLAYER_STATE) === "open") observedOpen = true;
 		if (!pending) return;
 		const id = readPrimeBinding(video)?.contentId;
 		if (
@@ -28,9 +32,19 @@ export function subscribePrimePlayerClose(
 			return;
 		}
 		if (container.getAttribute(PRIME_PLAYER_STATE) !== "closed") return;
+		if (pending.natural && container.getAttribute(PRIME_PLAYER_ENDED) !== "true") return;
 		const { event } = pending;
 		cancel();
+		observedOpen = false;
 		listener(event);
+	};
+	const unloaded = (event: Event) => {
+		// Native media unload plus SDK end+Close: neither page markup nor a
+		// synthetic event alone may retire a room. Ads and source swaps unload too.
+		if (!event.isTrusted || event.target !== video || !observedOpen || pending) return;
+		pending = { event, contentId: readPrimeBinding(video)?.contentId ?? null, natural: true };
+		timer = setTimeout(cancel, 1000);
+		check();
 	};
 	const gesture = (event: Event) => {
 		if (!event.isTrusted) return;
@@ -66,8 +80,10 @@ export function subscribePrimePlayerClose(
 	const observer = new MutationObserver(check);
 	observer.observe(container, {
 		attributes: true,
-		attributeFilter: [PRIME_PLAYER_STATE],
+		attributeFilter: [PRIME_PLAYER_STATE, PRIME_PLAYER_ENDED],
 	});
+	video.addEventListener("emptied", unloaded);
+	document.addEventListener(PRIME_BINDING_CHANGED, check);
 	document.addEventListener("click", gesture, true);
 	document.addEventListener("keydown", gesture, true);
 	document.addEventListener(PRIME_NAVIGATING, cancel);
@@ -75,6 +91,8 @@ export function subscribePrimePlayerClose(
 	return () => {
 		cancel();
 		observer.disconnect();
+		video.removeEventListener("emptied", unloaded);
+		document.removeEventListener(PRIME_BINDING_CHANGED, check);
 		document.removeEventListener("click", gesture, true);
 		document.removeEventListener("keydown", gesture, true);
 		document.removeEventListener(PRIME_NAVIGATING, cancel);

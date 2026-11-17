@@ -4,6 +4,7 @@ import {
 	PRIME_BINDING,
 	PRIME_PLAYER,
 	PRIME_PLAYER_STATE,
+	PRIME_PLAYER_ENDED,
 	PRIME_BINDING_CHANGED,
 	PRIME_RESULT,
 	PrimeRequestSchema,
@@ -24,6 +25,7 @@ export function startPrimeBridge(): () => void {
 		binding: Binding | null = null;
 	let playerVideo: HTMLVideoElement | null = null;
 	let playerRoot: HTMLElement | null = null;
+	let endObserver: { root: HTMLElement; context: PrimeSdk["context"]; emitter: object; stop: () => void } | null = null;
 	const pending = new Map<string, AbortController>();
 	const retired = new Set<string>();
 	let catalogAttempt: {
@@ -51,11 +53,38 @@ export function startPrimeBridge(): () => void {
 		binding = null;
 		if (notify) announce();
 	}
+	function observePlayerEnd(lifecycle: ReturnType<typeof inspectPrimePlayerLifecycle>) {
+		const { root, context } = lifecycle;
+		const webPlayer = object(context?.webPlayer);
+		const emitter = object(webPlayer.eventEmitter);
+		if (endObserver?.root === root && endObserver.context === context && endObserver.emitter === emitter) return;
+		endObserver?.stop();
+		endObserver = null;
+		if (!root || !context || typeof emitter.on !== "function" || typeof emitter.off !== "function") return;
+		const on = emitter.on, off = emitter.off;
+		const close = () => {
+			if (stopped || navigating || endObserver?.context !== context || endObserver.root !== root || !root.isConnected) return;
+			const current = inspectPrimePlayerLifecycle();
+			if (current.root !== root || current.context !== context || context.webPlayer !== webPlayer || webPlayer.eventEmitter !== emitter) return;
+			if (webPlayer.isPlayerOpen === false && object(context.timeline).titleEnded === true)
+				root.setAttribute(PRIME_PLAYER_ENDED, "true");
+		};
+		const stop = () => {
+			root.removeAttribute(PRIME_PLAYER_ENDED);
+			try { off.call(emitter, "Close", close); } catch { /* Retired SDK. */ }
+		};
+		try {
+			on.call(emitter, "Close", close);
+			endObserver = { root, context, emitter, stop };
+		} catch { stop(); }
+	}
 	function inspect(): Binding | null {
 		if (stopped || navigating) return null;
 		const lifecycle = inspectPrimePlayerLifecycle();
 		if (playerRoot !== lifecycle.root) playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		playerRoot = lifecycle.root;
+		observePlayerEnd(lifecycle);
+		if (lifecycle.open === true) playerRoot?.removeAttribute(PRIME_PLAYER_ENDED);
 		if (lifecycle.open === null) playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		else {
 			const state = lifecycle.open ? "open" : "closed";
@@ -283,6 +312,8 @@ export function startPrimeBridge(): () => void {
 	}
 	const navigate = () => {
 		navigating = true;
+		endObserver?.stop();
+		endObserver = null;
 		playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		setPlayer(null);
 		catalogAttempt?.controller.abort();
@@ -335,6 +366,8 @@ export function startPrimeBridge(): () => void {
 	function stop() {
 		if (stopped) return;
 		stopped = true;
+		endObserver?.stop();
+		endObserver = null;
 		playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		setPlayer(null);
 		catalogAttempt?.controller.abort();
