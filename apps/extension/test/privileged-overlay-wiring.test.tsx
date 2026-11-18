@@ -101,6 +101,33 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 
 describe("privileged overlay wiring", () => {
 
+	it("isolates pointer movement around the open Prime panel and releases the player on close", async () => {
+		installActiveHostRoomRuntime();
+		const view = await renderOverlay(adapter => { adapter.provider = "primevideo"; });
+		const playerMove = vi.fn();
+		view.container.addEventListener("pointermove", playerMove);
+		const move = (target: Element) => target.dispatchEvent(new PointerEvent("pointermove", { bubbles: true }));
+		try {
+			const launcher = button(view.container, "Open Anidachi controls");
+			expect(view.container.querySelector(".prime-panel-pointer-guard")).toBeNull();
+			await click(launcher);
+			const guard = view.container.querySelector(".prime-panel-pointer-guard");
+			expect(guard).not.toBeNull();
+			move(guard!);
+			move(launcher);
+			expect(playerMove).not.toHaveBeenCalled();
+			move(view.container);
+			expect(playerMove).toHaveBeenCalledTimes(1);
+			await click(launcher);
+			expect(view.container.querySelector(".prime-panel-pointer-guard")).toBeNull();
+			move(view.container);
+			expect(playerMove).toHaveBeenCalledTimes(2);
+		} finally {
+			view.container.removeEventListener("pointermove", playerMove);
+			await unmount(view.root);
+		}
+	});
+
   it.each(["host", "viewer"] as const)("retires the exact %s room after real Prime SDK end+Close and native unload", async role => {
     const originalLocation = Object.getOwnPropertyDescriptor(window, "location")!;
     const prime = primeCloseFixture();
