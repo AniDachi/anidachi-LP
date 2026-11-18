@@ -27,7 +27,7 @@ export function startPrimeBridge(): () => void {
 		binding: Binding | null = null;
 	let playerVideo: HTMLVideoElement | null = null;
 	let playerRoot: HTMLElement | null = null;
-	let endObserver: { root: HTMLElement; context: PrimeSdk["context"]; webPlayer: object; emitter: object; stop: () => void } | null = null;
+	let endObserver: { root: HTMLElement; context: PrimeSdk["context"]; webPlayer: object; emitter: object; publishClose: () => void; stop: () => void } | null = null;
 	const pending = new Map<string, AbortController>();
 	const retired = new Set<string>();
 	let catalogAttempt: {
@@ -60,16 +60,26 @@ export function startPrimeBridge(): () => void {
 		const webPlayer = object(context?.webPlayer);
 		const emitter = object(webPlayer.eventEmitter);
 		if (endObserver?.root === root && endObserver.context === context && endObserver.webPlayer === webPlayer && endObserver.emitter === emitter) return;
+		// The closed SDK can outlive its React root. Sample it once before release.
+		if (!context) endObserver?.publishClose();
 		endObserver?.stop();
 		endObserver = null;
 		if (!root || !context || typeof emitter.on !== "function" || typeof emitter.off !== "function") return;
 		const on = emitter.on, off = emitter.off;
-		const close = () => {
-			if (stopped || navigating || endObserver?.context !== context || endObserver.root !== root || !root.isConnected) return;
+		const publishClose = () => {
+			if (stopped || navigating || endObserver?.context !== context || endObserver.root !== root ||
+				context.webPlayer !== webPlayer || webPlayer.eventEmitter !== emitter || webPlayer.isPlayerOpen !== false) return;
 			const current = inspectPrimePlayerLifecycle();
-			if (current.root !== root || current.context !== context || context.webPlayer !== webPlayer || webPlayer.eventEmitter !== emitter) return;
-			if (webPlayer.isPlayerOpen === false && object(context.timeline).titleEnded === true)
+			if ((current.root && current.root !== root) || (current.context && current.context !== context)) return;
+			if (current.context === context && object(context.timeline).titleEnded === true)
 				root.setAttribute(PRIME_PLAYER_ENDED, String(performance.now()));
+			// Deliver before Amazon removes the root or reopens it for a different title.
+			root.setAttribute(PRIME_PLAYER_STATE, "closed");
+			announce();
+		};
+		const close = () => {
+			if (webPlayer.isPlayerOpen === false) publishClose();
+			else queueMicrotask(publishClose);
 		};
 		const stop = () => {
 			root.removeAttribute(PRIME_PLAYER_ENDED);
@@ -77,7 +87,7 @@ export function startPrimeBridge(): () => void {
 		};
 		try {
 			on.call(emitter, "Close", close);
-			endObserver = { root, context, webPlayer, emitter, stop };
+			endObserver = { root, context, webPlayer, emitter, publishClose, stop };
 		} catch { stop(); }
 	}
 	function inspect(): Binding | null {
