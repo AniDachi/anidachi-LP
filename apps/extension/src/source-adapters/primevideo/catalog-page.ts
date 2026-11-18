@@ -1,13 +1,18 @@
 import { parsePrimePageUrl, primeObservedLink, primeRouteMatches } from "./url";
 import { readPrimePageState } from "./page-state";
-import { primePublicRecord, primeObservedNavigation } from "./metadata";
+import { primePublicRecord, type PublicRecord } from "./metadata";
 import {
 	PrimeVideoProviderIdSchema,
-	primeVideoSourceUrl,
 	WATCH_CATALOG_MAX_EPISODES,
 	type WatchCatalogSnapshotInput,
 } from "@anidachi/protocol";
 import { object, ordinal, text, type ObjectValue } from "./metadata";
+
+import {
+	readCatalogEpisode,
+	readEpisodeRange,
+	type EpisodeRange,
+} from "./catalog-episodes";
 
 export const PRIME_CATALOG_PAGE_BYTES = 8_000_000;
 type SeasonReference = {
@@ -24,6 +29,8 @@ export type PrimeCatalogPage = {
 	seasons: SeasonReference[];
 	season: WatchCatalogSnapshotInput["seasons"][number];
 	episodeFullIds: string[];
+	range: EpisodeRange;
+	pageTitleId: string;
 };
 const fullId = (value: unknown): value is string =>
 	typeof value === "string" && /^amzn1\.dv\.gti\.[a-z0-9-]{1,100}$/.test(value);
@@ -73,19 +80,7 @@ function parseStates(
 	language: string,
 	origin: string,
 ): PrimeCatalogPage | null {
-	const records = new Map<
-		string,
-		{
-			full: string;
-			compact: string;
-			type: unknown;
-			number: number | null;
-			launched: boolean;
-			linkToken: string;
-   linkUrl:string;
-			aliases: string[];
-		}
-	>();
+	const records = new Map<string, PublicRecord>();
 	const details = new Map<
 		string,
 		{
@@ -102,23 +97,14 @@ function parseStates(
 		for (const [key, value] of entries) {
 			const parsed = primePublicRecord(value, key, origin);
 			if (!parsed) return null;
-			const record = {
-				full: parsed.id,
-				compact: parsed.compact,
-				type: parsed.type,
-				number: parsed.sequence,
-				launched: parsed.launched,
-				linkToken: parsed.linkToken,
-    linkUrl:parsed.linkUrl,
-				aliases: parsed.aliases,
-			};
+			const record = parsed;
 			const prior = records.get(parsed.id);
 			if (
 				prior &&
 				(prior.compact !== record.compact ||
 					prior.type !== record.type ||
-     prior.linkUrl !== record.linkUrl ||
-					prior.number !== record.number ||
+					prior.linkUrl !== record.linkUrl ||
+					prior.sequence !== record.sequence ||
 					prior.launched !== record.launched)
 			)
 				return null;
@@ -150,7 +136,7 @@ function parseStates(
 	const aliases = new Map<string, string | null>();
 	for (const record of records.values())
 		for (const alias of [
-			record.full,
+			record.id,
 			record.compact,
 			record.linkToken,
 			...record.aliases,
@@ -158,7 +144,7 @@ function parseStates(
 			const prior = aliases.get(alias);
 			aliases.set(
 				alias,
-				prior === undefined || prior === record.full ? record.full : null,
+				prior === undefined || prior === record.id ? record.id : null,
 			);
 		}
 	const resolve = (key: unknown) =>
@@ -202,8 +188,7 @@ function parseStates(
 				const record = records.get(reference.full);
 				const route = parsePrimePageUrl(link)!;
 				reference.compact =
-					record &&
-					primeRouteMatches(route.token, { id: record.full, ...record })
+					record && primeRouteMatches(route.token, record)
 						? record.compact
 						: route.token.length === 26
 							? route.token
@@ -213,7 +198,7 @@ function parseStates(
 				if (
 					record &&
 					(record.compact !== reference.compact ||
-						record.number !== number ||
+						record.sequence !== number ||
 						record.type !== "season")
 				)
 					return null;
@@ -221,7 +206,7 @@ function parseStates(
 					[...records.values()].some(
 						(other) =>
 							other.compact === reference.compact &&
-							other.full !== reference.full,
+							other.id !== reference.full,
 					)
 				)
 					return null;
@@ -256,13 +241,25 @@ function parseStates(
 	const hasSeasonRoster = seasons !== null;
 	// Season-1 titles may omit the switcher entirely. Use the same explicit
 	// season-1 proof as playback metadata, never an inferred ordinal/title label.
-	if (!seasons && states.every(state => Object.keys(object(state.seasons)).length === 0)) {
-		const pageIds = states.map(state => resolve(state.pageTitleId));
+	if (
+		!seasons &&
+		states.every((state) => Object.keys(object(state.seasons)).length === 0)
+	) {
+		const pageIds = states.map((state) => resolve(state.pageTitleId));
 		const pageId = pageIds[0];
 		const record = pageId ? records.get(pageId) : null;
-		if (record?.type === "season" && record.number === 1 &&
-			pageIds.every(id => id === record.full) && details.get(record.full)?.season === 1) {
-			selected = {full: record.full, compact: record.compact, number: 1, url: record.linkUrl};
+		if (
+			record?.type === "season" &&
+			record.sequence === 1 &&
+			pageIds.every((id) => id === record.id) &&
+			details.get(record.id)?.season === 1
+		) {
+			selected = {
+				full: record.id,
+				compact: record.compact,
+				number: 1,
+				url: record.linkUrl,
+			};
 			seasons = [selected];
 		}
 	}
@@ -275,7 +272,7 @@ function parseStates(
 		!seasonRecord?.launched ||
 		seasonRecord.type !== "season" ||
 		seasonRecord.compact !== selected.compact ||
-		seasonRecord.number !== selected.number ||
+		seasonRecord.sequence !== selected.number ||
 		!seasonDetail?.title ||
 		!seasonDetail.parent ||
 		seasonDetail.type !== "season" ||
@@ -283,6 +280,7 @@ function parseStates(
 	)
 		return null;
 	let members: string[] | null = null;
+	let range: EpisodeRange | null = null;
 	for (const state of states) {
 		// ATF can omit episodeList or contain only an empty placeholder. It is
 		// not positive membership evidence; the actual BTF collection must still
@@ -317,23 +315,19 @@ function parseStates(
 			continue;
 		}
 		if (
-			!Array.isArray(actions.pagination) ||
-			actions.pagination.length !== 0 ||
-			!Array.isArray(actions.episodePages) ||
-			actions.episodePages.length > 1 ||
-			actions.episodePages.some((page) => object(page).isSelected !== true)
-		)
-			return null;
-		if (
 			!Array.isArray(list.cardTitleIds) ||
-			list.cardTitleIds.length < 1 ||
-			list.cardTitleIds.length > WATCH_CATALOG_MAX_EPISODES ||
 			!list.cardTitleIds.every((value) => !!resolve(value)) ||
-			new Set(list.cardTitleIds).size !== list.cardTitleIds.length ||
-			list.totalCardSize !== list.cardTitleIds.length ||
-			actions.episodePages.length !== 1
+			new Set(list.cardTitleIds).size !== list.cardTitleIds.length
 		)
 			return null;
+		const slice = readEpisodeRange(
+			actions,
+			list.totalCardSize,
+			list.cardTitleIds.length,
+		);
+		if (!slice || (range && JSON.stringify(range) !== JSON.stringify(slice)))
+			return null;
+		range = slice;
 		if (
 			members &&
 			JSON.stringify(members) !==
@@ -342,88 +336,39 @@ function parseStates(
 			return null;
 		members = list.cardTitleIds.map((value) => resolve(value)!);
 	}
-	if (!members) return null;
+	if (!members || !range) return null;
 	const episodes: WatchCatalogSnapshotInput["seasons"][number]["episodes"] = [];
 	const episodeNumbers = new Set<number>();
 	for (const [order, full] of members.entries()) {
 		const record = records.get(full),
 			detail = details.get(full);
 		if (
-			!record?.launched ||
-			record.type !== "episode" ||
-			!detail?.title ||
-			detail.type !== "episode" ||
+			!record ||
+			detail?.type !== "episode" ||
 			!detail.episode ||
-			detail.episode !== record.number ||
 			episodeNumbers.has(detail.episode)
 		)
 			return null;
-		episodeNumbers.add(detail.episode);
-		// Read only the observed, typed availability fields. Do not retain payloads,
-		// correlation/session material, translated labels or playback envelopes.
 		const actions = object(object(states[1]!.action).btf);
-		const actionKeys = Object.keys(actions).filter(
-			(key) => resolve(key) === full,
-		);
-		if (actionKeys.length !== 1) return null;
-		const action = object(actions[actionKeys[0]!]);
-		if (
-			object(action.messages).entitlementType !== "Entitled" ||
-			!Array.isArray(action.primaryActions) ||
-			action.primaryActions.length > 32
-		)
-			return null;
-		const plays = action.primaryActions
-			.map(object)
-			.filter((item) => item.actionType === "PLAY");
-		if (plays.length !== 1) return null;
-		const payload = object(plays[0]!.payload),
-			playback = object(payload.playback);
-		if (
-			payload.payloadType !== "PLAYBACK" ||
-			resolve(playback.playbackID) !== full ||
-			playback.isTrailer !== false ||
-			playback.videoMaterialType !== "Feature" ||
-			!(() => {
-				const link = primeCatalogLink(playback.playbackURL, origin);
-				const route = link ? parsePrimePageUrl(link) : null;
-				return (
-					route &&
-					primeRouteMatches(route.token, { id: record.full, ...record })
-				);
-			})()
-		)
-			return null;
-		const playbackUrl = new URL(playback.playbackURL as string, origin);
-		if (
-			playbackUrl.searchParams.getAll("autoplay").length !== 1 ||
-			playbackUrl.searchParams.get("autoplay") !== "1"
-		)
-			return null;
-		episodes.push({
-			episodeKey: `primevideo:episode:${record.compact}`,
-			providerEpisodeIdentifier: record.compact,
-			title: detail.title,
-			episodeNumber: detail.episode,
+		const keys = Object.keys(actions).filter((key) => resolve(key) === full);
+		if (keys.length !== 1) return null;
+		const episode = readCatalogEpisode(
+			record,
+			detail.title,
+			detail.episode,
+			actions[keys[0]!],
 			order,
-			releasedAt: null,
-			available: true,
-			watchVariants: [
-				{
-					providerContentId: record.compact,
-					audioLocale: null,
-					original: true,
-					order: 0,
-					sourceUrl: primeVideoSourceUrl(record.compact),
-     primeNavigation:primeObservedNavigation(record.compact,record.linkUrl),
-				},
-			],
-		});
+			origin,
+			(value) => resolve(value) === full,
+		);
+		if (!episode) return null;
+		episodeNumbers.add(detail.episode);
+		episodes.push(episode);
 	}
 	// All observed episode self records must be accounted for by exact membership.
 	if (
 		[...records.values()].some(
-			(record) => record.type === "episode" && !members.includes(record.full),
+			(record) => record.type === "episode" && !members.includes(record.id),
 		)
 	)
 		return null;
@@ -434,6 +379,8 @@ function parseStates(
 		selected,
 		seasons,
 		episodeFullIds: members,
+		range,
+		pageTitleId: states[0]!.pageTitleId as string,
 		season: {
 			seasonKey: `primevideo:season:${selected.compact}`,
 			providerSeasonIdentifier: selected.compact,
