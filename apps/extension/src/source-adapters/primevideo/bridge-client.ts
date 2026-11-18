@@ -32,7 +32,7 @@ export function runPrimeCommand(
 		const abort = () => {
 			if (done) return;
 			finish(null);
-			const { time: _time, rate: _rate, ...cancel } = request;
+			const { time: _time, rate: _rate, targetContentId: _target, ...cancel } = request;
 			window.postMessage({ ...cancel, action: "cancel" }, location.origin);
 		};
 		const listener = (event: MessageEvent) => {

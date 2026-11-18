@@ -89,6 +89,7 @@ export const PrimeRequestSchema = z
 		id: token,
 		action: z.enum([
 			"snapshot",
+			"next-episode",
 			"play",
 			"resume-interstitial",
 			"pause",
@@ -98,6 +99,7 @@ export const PrimeRequestSchema = z
 			"cancel",
 		]),
 		contentId: PrimeVideoProviderIdSchema,
+		targetContentId: PrimeVideoProviderIdSchema.optional(),
 		generation: token.optional(),
 		expiresAt: z
 			.number()
@@ -110,6 +112,9 @@ export const PrimeRequestSchema = z
 	})
 	.refine(
 		(r) => r.action === "snapshot" || r.action === "cancel" || !!r.generation,
+	)
+	.refine((r) =>
+		r.action === "next-episode" ? !!r.targetContentId && r.targetContentId !== r.contentId : r.targetContentId === undefined,
 	)
 	.refine((r) =>
 		r.action === "seek" ? r.time !== undefined : r.time === undefined,
