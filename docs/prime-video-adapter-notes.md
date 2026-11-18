@@ -520,20 +520,24 @@ deadlines are unchanged. Cancellation and source/context replacement discard
 stale work; a binding/context has at most one catalog attempt.
 
 Completeness requires every observed season, consistent full/compact mappings
-and season-1 anchor, exact unique episode membership/count, and no unexplained
-pagination. Availability uses allowlisted typed `Entitled` / `PLAY` / `PLAYBACK`
+and season-1 anchor, and exact unique episode membership and count. For a
+paginated season, the adapter requests the episode ranges advertised by Prime
+through the same-origin EpisodeList widget, verifies the season and selected
+range, and joins the ranges in provider order. Availability uses allowlisted typed `Entitled` / `PLAY` / `PLAYBACK`
 Feature actions whose full GTI and verified autoplay link match the episode,
 together with launched episode metadata. Raw playback envelopes, provider
 account data and surrounding action payloads never leave the provider page.
-SSR-disabled Play buttons are placeholders, so their state is not used as
+A message-only primary action with a typed message and no entitlement lists
+the episode as unavailable for this viewer. SSR-disabled Play buttons are
+placeholders, so their state is not used as
 negative availability evidence. Display labels and translated titles do not
 establish identity.
 
-Only a fully verified series snapshot becomes **complete**. A failed, oversized,
-paginated, context-changed or ambiguous retrieval cannot invent totals or mark
-unknown episodes unavailable. The existing selected-season **partial** catalog
-remains the fallback; its positive availability proof is actual playback or
-matching launched membership plus an enabled exact provider Play link. The
+Only a fully verified series snapshot becomes **complete**. On incomplete
+retrieval a partial snapshot contains confirmed episodes from the verified
+ranges and seasons. Source or context changes discard the traversal. The
+selected-season snapshot remains the fallback when the collector cannot
+independently verify the selected page. The
 server's existing complete-catalog editor rule stays intact. Catalog entries
 are separate from personal progress: unseen episodes remain unplayed, and
 selecting them opens their exact episode URL with a zero-position intent.
