@@ -4,8 +4,40 @@ import { runPrimeCommand } from "./bridge-client";
 import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import type { SourceAdapterDefinition } from "../core/types";
 import { PrimeVideoAdapter } from "./adapter";
-import { PRIME_NAVIGATING, PRIME_PLAYER, primeVideoId, readCurrentPrimePlayerBinding } from "./contract";
+import { PRIME_BINDING_CHANGED, PRIME_PLAYER, PRIME_PLAYER_STATE, primeVideoId, readCurrentPrimePlayerBinding } from "./contract";
 import { primeHistoryPolicy } from "./progress";
+
+const AUTOPLAY_GRACE_MS = 500;
+const EPISODE_LOAD_GRACE_MS = 3500;
+
+async function currentPrimeSnapshot(signal: AbortSignal) {
+	const binding = readCurrentPrimePlayerBinding(document);
+	if (!binding) return null;
+	const result = await runPrimeCommand({ action: "snapshot", ...binding }, signal);
+	return result?.ok ? result.snapshot ?? null : null;
+}
+
+// The MAIN bridge already observes SDK title changes, including on the same video and URL.
+function waitForPrimeTarget(targetId: string, signal: AbortSignal, timeoutMs: number) {
+	return new Promise<void>(resolve => {
+		const finish = () => {
+			clearTimeout(timer);
+			document.removeEventListener(PRIME_BINDING_CHANGED, check);
+			signal.removeEventListener("abort", finish);
+			resolve();
+		};
+		const check = () => {
+			if (signal.aborted || readCurrentPrimePlayerBinding(document)?.contentId === targetId ||
+				document.getElementById("dv-web-player")?.getAttribute(PRIME_PLAYER_STATE) === "closed")
+				finish();
+		};
+		const timer = setTimeout(finish, timeoutMs);
+		document.addEventListener(PRIME_BINDING_CHANGED, check);
+		signal.addEventListener("abort", finish, { once: true });
+		check();
+	});
+}
+
 export const primeVideoDefinition: SourceAdapterDefinition = {
 	id: "primevideo",
 	provider: "primevideo",
@@ -40,38 +72,46 @@ export const primeVideoDefinition: SourceAdapterDefinition = {
 			return { status: "unsupported", reason: "invalid-source" };
 		if (!hasPrimeBrowserHost(location.href))
 			return { status: "unsupported", reason: "unsupported-route" };
-		const current = readCurrentPrimePlayerBinding(document);
-		// Address-bar equality is insufficient: native Next Episode may preserve it.
-		let verifiedCurrent = false;
-		if (current) {
-			const verified = await runPrimeCommand(
-				{
-					action: "snapshot",
-					contentId: current.contentId,
-					generation: current.generation,
-				},
-				context.signal,
-			);
-			if (context.signal.aborted)
-				return { status: "failed", reason: "navigation-failed" };
-			verifiedCurrent =
-				!!verified?.ok &&
-				verified.snapshot?.contentId === current.contentId &&
-				verified.snapshot?.generation === current.generation;
-			if (
-				verifiedCurrent &&
-				current.contentId === primeVideoId(source.sourceUrl)
-			)
-				return { status: "already-current" };
+		const targetId = primeVideoId(source.sourceUrl);
+		if (!targetId) return { status: "unsupported", reason: "invalid-source" };
+		const { signal } = context;
+		const initial = await currentPrimeSnapshot(signal);
+		if (initial?.contentId === targetId) return { status: "already-current" };
+		if (!context.roomId || signal.aborted) return { status: "failed", reason: "navigation-failed" };
+
+		const root = document.getElementById("dv-web-player");
+		const wasOpen = root?.getAttribute(PRIME_PLAYER_STATE) === "open";
+		let current = initial;
+		if (wasOpen && (!initial || initial.metadata.episodeNumber !== null)) {
+			// Give a simultaneous native autoplay a chance to settle before requesting Next.
+			await waitForPrimeTarget(targetId, signal, initial ? AUTOPLAY_GRACE_MS : EPISODE_LOAD_GRACE_MS);
+			current = await currentPrimeSnapshot(signal);
+			if (current?.contentId !== targetId) {
+				let settling = !!initial;
+				if (current?.phase === "content") {
+					const next = await runPrimeCommand({
+						action: "next-episode",
+						contentId: current.contentId,
+						generation: current.generation,
+						targetContentId: targetId,
+					}, signal);
+					settling = next?.ok === true || readCurrentPrimePlayerBinding(document)?.generation !== current.generation;
+				}
+				if (settling) {
+					await waitForPrimeTarget(targetId, signal, EPISODE_LOAD_GRACE_MS);
+					current = await currentPrimeSnapshot(signal);
+				}
+			}
+			if (current?.contentId === targetId && !signal.aborted)
+				return { status: "navigation-started", targetUrl: location.href };
 		}
-		if (context.signal.aborted)
+		if (signal.aborted || (wasOpen && root?.getAttribute(PRIME_PLAYER_STATE) === "closed"))
 			return { status: "failed", reason: "navigation-failed" };
 		try {
-			document.dispatchEvent(new Event(PRIME_NAVIGATING));
 			const result = await startPrimeRoom(
 				source,
 				context.roomId,
-				verifiedCurrent ? location.origin : undefined,
+				current || initial ? location.origin : undefined,
 				context.signal,
 			);
 			return result && ["ready", "choice-required"].includes(result.status)

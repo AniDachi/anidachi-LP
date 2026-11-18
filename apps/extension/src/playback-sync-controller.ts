@@ -657,7 +657,8 @@ export class PlaybackSyncController {
 
 		const latestHostState = pending.latestHostState;
 		this.clearPendingSourceNavigation();
-		void this.applyHostState(latestHostState);
+		// Identity can bind before playback is ready. Retain the state across that barrier.
+		void this.handleHostState(latestHostState);
 	}
 
 	private getRememberedAuthoritativeRoomSource(

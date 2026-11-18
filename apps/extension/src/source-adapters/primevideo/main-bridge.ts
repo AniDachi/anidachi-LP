@@ -15,6 +15,7 @@ import {
 	type PrimeRequest,
 } from "./contract";
 import { object } from "./metadata";
+import { primeRouteMatches } from "./url";
 import { callPrime, inspectPrimePlayer, inspectPrimePlayerLifecycle, inspectPrimeSdk, type PrimeSdk } from "./sdk";
 import { loadPrimeCatalog, primeCatalogContext } from "./catalog";
 import { readPrimeCatalogPage } from "./catalog-page";
@@ -243,6 +244,22 @@ export function startPrimeBridge(): () => void {
 					(request.expiresAt !== undefined && request.expiresAt <= Date.now())
 				)
 					return;
+				if (request.action === "next-episode") {
+					const next = before.sdk.page.nextEpisode;
+					if (!next || next.compact !== request.targetContentId) return;
+					const advertisedId = object(object(before.sdk.context.nextTitle).nextTitleInfo).titleId;
+					if (advertisedId != null && (typeof advertisedId !== "string" || !primeRouteMatches(advertisedId, next))) return;
+					const buttons = before.sdk.video.closest("#dv-web-player")?.querySelectorAll<HTMLButtonElement>(
+						"button#atvwebplayersdk-next-episode-button",
+					);
+					const button = buttons?.length === 1 ? buttons[0] : null;
+					if (!button || button.matches(":disabled") || button.closest('[hidden], [inert], [aria-disabled="true"]'))
+						return;
+					button.click();
+					// Acknowledges only the click. The caller waits for the target binding.
+					result = { ok: true, snapshot: before.snapshot };
+					return;
+				}
 				if (
 					request.action === "seek" &&
 					(!before.sdk.seekAllowed || request.time! > before.snapshot.duration)
