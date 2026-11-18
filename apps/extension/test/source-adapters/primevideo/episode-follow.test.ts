@@ -78,12 +78,74 @@ it.each([false, true])("adopts Prime autoplay, including a temporarily unbound p
 	expect(launch).not.toHaveBeenCalled();
 });
 
-it.each(["jump", "disabled", "ambiguous-ordinal", "conflicting-next", "no-play-action", "interstitial", "ignored-click"])(
+it("adopts the replacement player when autoplay briefly removes the whole root", async () => {
+	const { player, launch, follow, switchEpisode } = setup();
+	player.root.remove();
+	const result = follow();
+	setTimeout(() => { document.body.append(player.root); switchEpisode(); }, 800);
+	await vi.advanceTimersByTimeAsync(1000);
+	expect((await result).status).toBe("already-current");
+	expect(launch).not.toHaveBeenCalled();
+});
+
+it("uses Prime's exact native successor with hidden controls and a slow episode load", async () => {
+	const { player, button, launch, follow, switchEpisode } = setup();
+	button.remove();
+	document.querySelectorAll('a[data-testid="episodes-playbutton"]').forEach(a => a.remove());
+	const info = { titleId: gtis.second };
+	const initiate = vi.fn(() => setTimeout(switchEpisode, 7000));
+	Object.assign(player.context, { nextTitle: {
+		nextTitleInfo: info, getNextEpisode: () => info, nextTitleInitiated: initiate,
+	} });
+	const result = follow();
+	await vi.advanceTimersByTimeAsync(8000);
+	expect(await result).toMatchObject({ status: "navigation-started" });
+	expect(initiate).toHaveBeenCalledExactlyOnceWith(1, "MouseClick", gtis.second);
+	expect(readCurrentPrimePlayerBinding(document)?.contentId).toBe(ids.second);
+	expect(launch).not.toHaveBeenCalled();
+});
+
+it("keeps a loading SDK switch in the player when another host update requests it", async () => {
+	const { player, button, launch, follow, switchEpisode } = setup();
+	button.remove();
+	const store = {
+		nextTitleInfo: { titleId: gtis.second } as { titleId: string } | null,
+		getNextEpisode: () => store.nextTitleInfo,
+		nextTitleInitiated: vi.fn(() => { store.nextTitleInfo = null; }),
+	};
+	Object.assign(player.context, { nextTitle: store });
+	const first = follow();
+	await vi.advanceTimersByTimeAsync(11000);
+	const retry = follow();
+	await vi.advanceTimersByTimeAsync(900);
+	switchEpisode();
+	expect((await first).status).toBe("navigation-started");
+	expect((await retry).status).toBe("navigation-started");
+	expect(store.nextTitleInitiated).toHaveBeenCalledTimes(1);
+	expect(launch).not.toHaveBeenCalled();
+});
+
+it.each(["other-series", "wrong-id", "disabled"])("never instructs the SDK to play a different or disabled target (%s)", async mode => {
+	const { player, button, launch, follow } = setup();
+	button.disabled = mode === "disabled";
+	const start = vi.fn();
+	const info = { titleId: gtis.second };
+	Object.assign(player.context, { nextTitle: {
+		nextTitleInfo: info, nextTitleInitiated: start,
+		getNextEpisode: () => mode === "other-series" ? null : { titleId: mode === "wrong-id" ? gtis.movie : gtis.second },
+	} });
+	const result = follow();
+	await vi.advanceTimersByTimeAsync(1000);
+	await result;
+	expect(start).not.toHaveBeenCalled();
+	expect(launch.mock.calls.map(([m]) => m.action)).toEqual(["start", "commit"]);
+});
+
+it.each(["jump", "disabled", "ambiguous-ordinal", "conflicting-next", "no-play-action"])(
 	"uses only the host's exact URL when native Next is unsuitable or unconfirmed (%s)", async mode => {
 		const { player, button, click, launch, follow } = setup();
 		if (mode === "disabled") button.disabled = true;
 		if (mode === "no-play-action") document.querySelectorAll('a[data-testid="episodes-playbutton"]').forEach(a => a.remove());
-		if (mode === "interstitial") player.setAd(true);
 		if (mode === "conflicting-next") Object.assign(player.context, { nextTitle: { nextTitleInfo: { titleId: gtis.movie } } });
 		if (mode === "ambiguous-ordinal") {
 			const state = player.data.init.preparations.body.btf.state;
@@ -95,11 +157,32 @@ it.each(["jump", "disabled", "ambiguous-ordinal", "conflicting-next", "no-play-a
 		const result = follow(target);
 		await vi.advanceTimersByTimeAsync(4500);
 		expect(await result).toMatchObject({ status: "navigation-started" });
-		expect(click).toHaveBeenCalledTimes(mode === "ignored-click" ? 1 : 0);
+		expect(click).not.toHaveBeenCalled();
 		expect(launch.mock.calls.map(([m]) => m.action)).toEqual(["start", "commit"]);
 		expect(launch).toHaveBeenCalledWith(expect.objectContaining({ action: "start", contentId: target, roomId: "room" }));
 	},
 );
+
+it("does not restart the room when an accepted button click is still loading", async () => {
+	const { click, launch, follow } = setup();
+	const result = follow();
+	await vi.advanceTimersByTimeAsync(8000);
+	expect(await result).toMatchObject({ status: "navigation-started" });
+	expect(click).toHaveBeenCalledTimes(1);
+	expect(launch).not.toHaveBeenCalled();
+});
+
+it("follows after the guest ad ends in the same player", async () => {
+	const { player, button, launch, follow, switchEpisode } = setup();
+	player.setAd(true);
+	button.addEventListener("click", switchEpisode);
+	const result = follow();
+	setTimeout(() => { player.setAd(false); player.video.dispatchEvent(new Event("playing")); }, 1500);
+	await vi.advanceTimersByTimeAsync(5000);
+	expect(await result).toMatchObject({ status: "navigation-started" });
+	expect(readCurrentPrimePlayerBinding(document)?.contentId).toBe(ids.second);
+	expect(launch).not.toHaveBeenCalled();
+});
 
 it.each(["before-click", "after-click", "player-closed"])("does not reopen a superseded or closed player (%s)", async mode => {
 	const { player, click, launch, follow, controller } = setup();
@@ -110,7 +193,7 @@ it.each(["before-click", "after-click", "player-closed"])("does not reopen a sup
 		player.video.dispatchEvent(new Event("emptied"));
 	} else controller.abort();
 	await vi.advanceTimersByTimeAsync(4500);
-	expect(await result).toMatchObject({ status: "failed" });
+	expect(await result).toMatchObject({ status: mode === "before-click" ? "failed" : "navigation-started" });
 	expect(click).toHaveBeenCalledTimes(mode === "before-click" ? 0 : 1);
 	expect(launch).not.toHaveBeenCalled();
 });

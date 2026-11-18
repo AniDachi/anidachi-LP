@@ -134,6 +134,7 @@ export function inspectPrimeSdk(
 			info,
 			object(object(context.playerInfo).info).territory,
 			context.webLocale,
+			object(object(context.nextTitle).nextTitleInfo).titleId,
 		);
 		if (!page) return null;
 		const timelineInfo = object(callPrime(timeline, "getTimelineInfo"));

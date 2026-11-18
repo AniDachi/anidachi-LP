@@ -20,6 +20,29 @@ import { callPrime, inspectPrimePlayer, inspectPrimePlayerLifecycle, inspectPrim
 import { loadPrimeCatalog, primeCatalogContext } from "./catalog";
 import { readPrimeCatalogPage } from "./catalog-page";
 type Binding = { sdk: PrimeSdk; generation: string; snapshot: PrimeSnapshot };
+// Prime's own Next Episode control uses NextTitleTransition.Button (1).
+const PRIME_NEXT_BUTTON_TRANSITION = 1;
+
+function startNativeNextEpisode(sdk: PrimeSdk, targetId: string | undefined): boolean {
+	const store = object(sdk.context.nextTitle);
+	const buttons = sdk.video.closest("#dv-web-player")?.querySelectorAll<HTMLButtonElement>("button#atvwebplayersdk-next-episode-button");
+	if (buttons && buttons.length > 1) return false;
+	const button = buttons?.[0];
+	if (button?.matches(":disabled") || button?.closest('[inert], [aria-disabled="true"]')) return false;
+	if (typeof store.getNextEpisode === "function" && typeof store.nextTitleInitiated === "function") {
+		const next = sdk.page.advertisedNextEpisode;
+		const id = object(store.getNextEpisode()).titleId;
+		if (!next || next.compact !== targetId || typeof id !== "string" || !primeRouteMatches(id, next)) return false;
+		store.nextTitleInitiated(PRIME_NEXT_BUTTON_TRANSITION, "MouseClick", id);
+		return true;
+	}
+	const next = sdk.page.nextEpisode;
+	const advertisedId = object(store.nextTitleInfo).titleId;
+	if (!next || next.compact !== targetId || !button || button.closest("[hidden]") ||
+		(advertisedId != null && (typeof advertisedId !== "string" || !primeRouteMatches(advertisedId, next)))) return false;
+	button.click();
+	return true;
+}
 /** MAIN-world owner. Catalog I/O is limited to observed same-origin detail metadata. */
 export function startPrimeBridge(): () => void {
 	let navigating = false;
@@ -27,6 +50,7 @@ export function startPrimeBridge(): () => void {
 		binding: Binding | null = null;
 	let playerVideo: HTMLVideoElement | null = null;
 	let playerRoot: HTMLElement | null = null;
+	let pendingNext: { player: object; from: string; to: string } | null = null;
 	let endObserver: { root: HTMLElement; context: PrimeSdk["context"]; webPlayer: object; emitter: object; publishClose: () => void; stop: () => void } | null = null;
 	const pending = new Map<string, AbortController>();
 	const retired = new Set<string>();
@@ -93,6 +117,7 @@ export function startPrimeBridge(): () => void {
 	function inspect(): Binding | null {
 		if (stopped || navigating) return null;
 		const lifecycle = inspectPrimePlayerLifecycle();
+		if (lifecycle.open === false) pendingNext = null;
 		if (playerRoot !== lifecycle.root) playerRoot?.removeAttribute(PRIME_PLAYER_STATE);
 		playerRoot = lifecycle.root;
 		observePlayerEnd(lifecycle);
@@ -112,6 +137,8 @@ export function startPrimeBridge(): () => void {
 			invalidate();
 			return null;
 		}
+		if (pendingNext && (pendingNext.player !== sdk.webPlayer || pendingNext.from !== sdk.snapshot.contentId))
+			pendingNext = null;
 		const changed =
 			!binding ||
 			binding.sdk.context !== sdk.context ||
@@ -255,19 +282,17 @@ export function startPrimeBridge(): () => void {
 				)
 					return;
 				if (request.action === "next-episode") {
-					const next = before.sdk.page.nextEpisode;
-					if (!next || next.compact !== request.targetContentId) return;
-					const advertisedId = object(object(before.sdk.context.nextTitle).nextTitleInfo).titleId;
-					if (advertisedId != null && (typeof advertisedId !== "string" || !primeRouteMatches(advertisedId, next))) return;
-					const buttons = before.sdk.video.closest("#dv-web-player")?.querySelectorAll<HTMLButtonElement>(
-						"button#atvwebplayersdk-next-episode-button",
-					);
-					const button = buttons?.length === 1 ? buttons[0] : null;
-					if (!button || button.matches(":disabled") || button.closest('[hidden], [inert], [aria-disabled="true"]'))
-						return;
-					button.click();
-					// Acknowledges only the click. The caller waits for the target binding.
-					result = { ok: true, snapshot: before.snapshot };
+					const target = request.targetContentId;
+					if (!target) return;
+					// Prime clears nextTitleInfo as soon as it starts the switch. A later
+					// room heartbeat can still see the outgoing episode during a slow load.
+					if (pendingNext?.to === target && !object(before.sdk.context.nextTitle).nextTitleInfo) {
+						result = { ok: true, snapshot: before.snapshot };
+					} else if (startNativeNextEpisode(before.sdk, target)) {
+						if (typeof object(before.sdk.context.nextTitle).nextTitleInitiated === "function")
+							pendingNext = { player: before.sdk.webPlayer, from: before.snapshot.contentId, to: target };
+						result = { ok: true, snapshot: before.snapshot };
+					}
 					return;
 				}
 				if (
