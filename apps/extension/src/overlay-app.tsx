@@ -38,6 +38,7 @@ import {
 	useCallback,
 	useEffect,
 	useId,
+	useLayoutEffect,
 	useMemo,
 	useReducer,
 	useRef,
@@ -99,6 +100,7 @@ import {
 	isWithinOverlayHotkeyBoundary,
 	overlayHotkeyBoundaryProps,
 	overlayInteractionBoundaryProps,
+	overlayPointerBoundaryProps,
 } from "./overlay-interaction-boundary";
 import { InterfaceSettingsPanel } from "./overlay-interface-settings";
 import {
@@ -6610,19 +6612,27 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		noticeKey: capsuleNoticeKey, bubbleVisible: topBubbleReveal.bubbleVisible || panelOpen,
 		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
 	});
-	useEffect(() => {
-		if (!capsuleNotice.present) return;
+	const primePanelOpen = panelOpen && adapter.provider === "primevideo";
+	useLayoutEffect(() => {
+		if (!capsuleNotice.present && !primePanelOpen) return;
 		const bubble = topBubbleRef.current, root = overlayRootRef.current;
 		if (!bubble || !root) return;
+		const panel = primePanelOpen ? miniPanelRef.current : null;
 		const measure = () => {
-			const width = bubble.getBoundingClientRect().width;
-			if (width > 0) root.style.setProperty("--free20-capsule-width", `${width}px`);
+			const width = bubble.offsetWidth;
+			if (width > 0) root.style.setProperty("--capsule-width", `${width}px`);
+			if (panel) root.style.setProperty("--open-panel-height", `${panel.offsetHeight}px`);
 		};
 		measure();
 		const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
 		observer?.observe(bubble);
-		return () => { observer?.disconnect(); root.style.removeProperty("--free20-capsule-width"); };
-	}, [capsuleNotice.present]);
+		if (panel) observer?.observe(panel);
+		return () => {
+			observer?.disconnect();
+			root.style.removeProperty("--capsule-width");
+			root.style.removeProperty("--open-panel-height");
+		};
+	}, [capsuleNotice.present, primePanelOpen]);
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6676,6 +6686,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				]
 					.filter(Boolean)
 					.join(" ")}
+				{...(primePanelOpen ? overlayPointerBoundaryProps : {})}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
@@ -6709,9 +6720,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				</button>
 			</div>
 
+			{primePanelOpen && (
+				<div aria-hidden="true" className="prime-panel-pointer-guard" {...overlayPointerBoundaryProps} />
+			)}
 			{panelOpen ? (
 				<section
 					className="mini-panel"
+					data-prime-panel={primePanelOpen || undefined}
 					id="anidachi-mini-panel"
 					aria-label="Anidachi controls"
 					ref={miniPanelRef}

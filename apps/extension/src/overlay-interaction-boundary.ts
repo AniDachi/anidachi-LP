@@ -36,12 +36,10 @@ function stopOverlayInteraction(event: SyntheticEvent<HTMLElement>): void {
   event.nativeEvent.stopImmediatePropagation();
 }
 
-export const overlayInteractionBoundaryProps = {
+export const overlayPointerBoundaryProps = {
   onClick: stopOverlayInteraction,
   onContextMenu: stopOverlayInteraction,
   onDoubleClick: stopOverlayInteraction,
-  onKeyDown: stopOverlayInteraction,
-  onKeyUp: stopOverlayInteraction,
   onMouseDown: stopOverlayInteraction,
   onMouseMove: stopOverlayInteraction,
   onMouseOut: stopOverlayInteraction,
@@ -58,6 +56,12 @@ export const overlayInteractionBoundaryProps = {
   onTouchMove: stopOverlayInteraction,
   onTouchStart: stopOverlayInteraction,
   onWheel: stopOverlayInteraction,
+} satisfies Omit<OverlayInteractionBoundaryProps, "onKeyDown" | "onKeyUp">;
+
+export const overlayInteractionBoundaryProps = {
+  ...overlayPointerBoundaryProps,
+  onKeyDown: stopOverlayInteraction,
+  onKeyUp: stopOverlayInteraction,
 } satisfies OverlayInteractionBoundaryProps;
 
 export function isWithinOverlayHotkeyBoundary(event: {
