@@ -18,7 +18,7 @@ async function currentPrimeSnapshot(signal: AbortSignal) {
 }
 
 // The MAIN bridge already observes SDK title changes, including on the same video and URL.
-function waitForPrimeTarget(targetId: string, signal: AbortSignal, timeoutMs: number) {
+function waitForPrimeTarget(targetId: string, signal: AbortSignal, timeoutMs: number, previousGeneration?: string | null) {
 	return new Promise<void>(resolve => {
 		const finish = () => {
 			clearTimeout(timer);
@@ -27,7 +27,9 @@ function waitForPrimeTarget(targetId: string, signal: AbortSignal, timeoutMs: nu
 			resolve();
 		};
 		const check = () => {
-			if (signal.aborted || readCurrentPrimePlayerBinding(document)?.contentId === targetId ||
+			const binding = readCurrentPrimePlayerBinding(document);
+			if (signal.aborted || binding?.contentId === targetId ||
+				(previousGeneration !== undefined && binding && binding.generation !== previousGeneration) ||
 				document.getElementById("dv-web-player")?.getAttribute(PRIME_PLAYER_STATE) === "closed")
 				finish();
 		};
@@ -75,35 +77,49 @@ export const primeVideoDefinition: SourceAdapterDefinition = {
 		const targetId = primeVideoId(source.sourceUrl);
 		if (!targetId) return { status: "unsupported", reason: "invalid-source" };
 		const { signal } = context;
-		const initial = await currentPrimeSnapshot(signal);
+		let root = document.getElementById("dv-web-player");
+		if (root?.getAttribute(PRIME_PLAYER_STATE) === "closed")
+			return { status: "failed", reason: "navigation-failed" };
+		let initial = await currentPrimeSnapshot(signal);
+		// Autoplay can replace the entire player before the room notification arrives.
+		if (!initial && root?.getAttribute(PRIME_PLAYER_STATE) !== "open" && context.roomId && !signal.aborted) {
+			await waitForPrimeTarget(targetId, signal, EPISODE_LOAD_GRACE_MS, null);
+			root = document.getElementById("dv-web-player") ?? root;
+			if (signal.aborted || root?.getAttribute(PRIME_PLAYER_STATE) === "closed")
+				return { status: "failed", reason: "navigation-failed" };
+			initial = await currentPrimeSnapshot(signal);
+		}
 		if (initial?.contentId === targetId) return { status: "already-current" };
 		if (!context.roomId || signal.aborted) return { status: "failed", reason: "navigation-failed" };
 
-		const root = document.getElementById("dv-web-player");
 		const wasOpen = root?.getAttribute(PRIME_PLAYER_STATE) === "open";
 		let current = initial;
 		if (wasOpen && (!initial || initial.metadata.episodeNumber !== null)) {
 			// Give a simultaneous native autoplay a chance to settle before requesting Next.
-			await waitForPrimeTarget(targetId, signal, initial ? AUTOPLAY_GRACE_MS : EPISODE_LOAD_GRACE_MS);
+			await waitForPrimeTarget(targetId, signal, initial ? AUTOPLAY_GRACE_MS : EPISODE_LOAD_GRACE_MS, initial ? undefined : null);
 			current = await currentPrimeSnapshot(signal);
-			if (current?.contentId !== targetId) {
-				let settling = !!initial;
-				if (current?.phase === "content") {
-					const next = await runPrimeCommand({
-						action: "next-episode",
-						contentId: current.contentId,
-						generation: current.generation,
-						targetContentId: targetId,
-					}, signal);
-					settling = next?.ok === true || readCurrentPrimePlayerBinding(document)?.generation !== current.generation;
-				}
-				if (settling) {
-					await waitForPrimeTarget(targetId, signal, EPISODE_LOAD_GRACE_MS);
-					current = await currentPrimeSnapshot(signal);
-				}
+			if (current?.contentId !== targetId && (!current || current.phase !== "content")) {
+				await waitForPrimeTarget(targetId, signal, EPISODE_LOAD_GRACE_MS, current?.generation ?? null);
+				current = await currentPrimeSnapshot(signal);
 			}
 			if (current?.contentId === targetId && !signal.aborted)
 				return { status: "navigation-started", targetUrl: location.href };
+			// Missing identity or an ad is not evidence that the title needs a new page.
+			if (!current || current.phase !== "content" || signal.aborted)
+				return { status: "failed", reason: "navigation-failed" };
+			const next = await runPrimeCommand({
+				action: "next-episode",
+				contentId: current.contentId,
+				generation: current.generation,
+				targetContentId: targetId,
+			}, signal);
+			if (next?.ok || readCurrentPrimePlayerBinding(document)?.generation !== current.generation) {
+				// Sync already waits for the exact target adapter and retains the latest
+				// host state. A slow accepted transition must never launch a second tab URL.
+				return signal.aborted || root?.getAttribute(PRIME_PLAYER_STATE) === "closed"
+					? { status: "failed", reason: "navigation-failed" }
+					: { status: "navigation-started", targetUrl: location.href };
+			}
 		}
 		if (signal.aborted || (wasOpen && root?.getAttribute(PRIME_PLAYER_STATE) === "closed"))
 			return { status: "failed", reason: "navigation-failed" };

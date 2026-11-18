@@ -43,6 +43,7 @@ type Episode = { id: string; title: string; number: number; linkUrl: string };
 export type PrimePage = {
 	contentId: string;
 	nextEpisode?: PublicRecord;
+	advertisedNextEpisode?: PublicRecord;
 	metadata: PrimeMetadata;
 	catalog: WatchCatalogSnapshotInput | null;
 };
@@ -150,6 +151,7 @@ export function readPrimePage(
 	titleInfo: unknown,
 	territory: unknown,
 	locale: unknown,
+	advertisedNextId?: unknown,
 ): PrimePage | null {
 	const pageRoute = parsePrimePageUrl(
 		documentValue.defaultView?.location.href ?? "",
@@ -565,8 +567,12 @@ export function readPrimePage(
 				})
 			: null;
 	const successor = successors.length === 1 ? successors[0] : undefined;
+	const advertisedId = resolve(advertisedNextId);
+	const advertised = advertisedId ? records.get(advertisedId) : undefined;
 	return {
 		contentId: current.compact,
+		advertisedNextEpisode: advertised?.type === "episode" && resolve(advertised.compact) === advertised.id
+			? advertised : undefined,
 		nextEpisode: successor && episodes.some(episode => episode.id === successor.compact && episode.number === episodeNumber + 1)
 			? successor : undefined,
 		metadata: metadata.data,
