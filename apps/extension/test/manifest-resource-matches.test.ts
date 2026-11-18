@@ -17,6 +17,8 @@ const amazonHosts = [
 const primeRoutes = [
 	"https://*.primevideo.com/*",
 	...amazonHosts.flatMap((host) => [
+		`https://${host}/Amazon-Video/*`,
+		`https://${host}/-/*/Amazon-Video/*`,
 		`https://${host}/gp/video/*`,
 		`https://${host}/*/gp/video/*`,
 		`https://${host}/dp/*`,
@@ -95,9 +97,15 @@ function validate(value: ReturnType<typeof manifest>) {
 }
 it("accepts explicit official resource origins while retaining narrow Prime MAIN routes", () => {
 	const value = manifest();
-	expect(primeRoutes).toHaveLength(29);
 	const result = validate(value);
 	expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
+});
+it("rejects a video catalogue matched only by the MAIN bridge", () => {
+	const value = manifest();
+	value.content_scripts[0]!.matches = contentMatches.filter(
+		(match) => match !== "https://*.amazon.com/Amazon-Video/*",
+	);
+	expect(validate(value).stderr).toContain("Missing overlay matches");
 });
 it.each([
 	"/gp/video/*",

@@ -114,13 +114,10 @@ const familyRoutes = families.flatMap((root) =>
 				],
 	),
 );
-it.each(
-	familyRoutes,
-)("recognizes the official DNS family and permits script injection at %s", (value) => {
-	expect(parsePrimePageUrl(value)).not.toBeNull();
+function matchesPrimeContentScript(value: string) {
 	const url = new URL(value);
 	// Chrome's *.root host covers the apex and dot-separated subdomains.
-	const injected = PRIME_CONTENT_MATCHES.some((pattern) => {
+	return PRIME_CONTENT_MATCHES.some((pattern) => {
 		const match = /^https:\/\/([^/]+)(\/.*)$/.exec(pattern)!;
 		const root = match[1]!.replace(/^\*\./, "");
 		const hostMatches = match[1]!.startsWith("*.")
@@ -134,7 +131,20 @@ it.each(
 		);
 		return hostMatches && path.test(url.pathname);
 	});
-	expect(injected).toBe(true);
+}
+it.each(familyRoutes)("recognizes the official DNS family and permits script injection at %s", (value) => {
+	expect(parsePrimePageUrl(value)).not.toBeNull();
+	expect(matchesPrimeContentScript(value)).toBe(true);
+});
+
+it.each([
+	["https://www.amazon.com/Amazon-Video/b/?node=2858778011", true],
+	["https://www.amazon.de/-/en/Amazon-Video/b?node=123", true],
+	["https://www.amazon.com/Books/b/?node=283155", false],
+	["https://www.amazon.com/b/?node=2858778011", false],
+])("keeps catalogue bootstrap separate from playable URLs at %s", (url, enabled) => {
+	expect(matchesPrimeContentScript(url)).toBe(enabled);
+	expect(parsePrimePageUrl(url)).toBeNull();
 });
 it("normalizes hostname case without accepting non-DNS authority syntax", () => {
 	expect(
