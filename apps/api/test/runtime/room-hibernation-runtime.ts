@@ -84,6 +84,40 @@ afterEach(async () => {
 	await reset();
 });
 
+describe("first host admission", () => {
+  const owner = "b0897822-7da2-41ec-9126-8b61272826ed";
+  for (const outcome of ["confirmed", "stale", "unavailable"] as const) {
+    it(`confirms a real host JOIN before sending its first snapshot: ${outcome}`, async () => {
+      const roomId = `host-admission-${outcome}`;
+      const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+      const stub = ns.get(ns.idFromName(roomId));
+      const confirmations: unknown[] = [];
+      vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = new URL(String(input)).pathname;
+        if (path.endsWith("/admission")) return Response.json({ roomId, roomGeneration: 1, allowed: true, confirmHostJoin: true });
+        if (path.endsWith("/host-joined")) {
+          confirmations.push(JSON.parse(String(init?.body)));
+          if (outcome === "unavailable") return new Response(null, { status: 503 });
+          return Response.json({ confirmed: outcome === "confirmed" });
+        }
+        return runtimeFetch(input, init);
+      });
+      const session = { roomId, role: "host" as const, userId: owner, sessionId: "first-host" };
+      const opened = await openRoomSocket(stub, session);
+      opened.close();
+      expect(confirmations).toEqual([]);
+      const client = await connectRoomClient(stub, session);
+      if (outcome === "confirmed") {
+        await client.waitFor(e => e.type === "ROOM_SNAPSHOT", "confirmed host");
+      } else {
+        await client.waitForClose(outcome === "stale" ? 4002 : 1011, "host admission failed");
+        expect(client.hasEvent(e => e.type === "ROOM_SNAPSHOT")).toBe(false);
+      }
+      expect(confirmations).toEqual([{ userId: owner, participantSessionId: "first-host" }]);
+    });
+  }
+});
+
 describe("RoomDurableObject independent presence", () => {
 	const ids = [
 		"a4444444-4444-4444-8444-444444444441",
