@@ -279,12 +279,18 @@ it.each([
 	if (mode === "conflicting-play") plays.push(structuredClone(plays[0]!));
 	const result = await f.collect();
 	expect(result?.catalog?.completeness).toBe("partial");
-	expect(result?.catalog?.seasons).toHaveLength(1);
+	const saved = result!.catalog!.seasons;
 	expect(
-		result?.catalog?.seasons[0]?.episodes.map(
-			(episode) => episode.providerEpisodeIdentifier,
+		saved.some(
+			(s) => s.providerSeasonIdentifier === f.pages[index]!.season.compact,
 		),
-	).toEqual([ids.first]);
+	).toBe(false);
+	expect(
+		saved
+			.flatMap((s) => s.episodes)
+			.some((e) => e.providerEpisodeIdentifier === ids.first),
+	).toBe(true);
+	expect(saved[0]?.seasonNumber).toBe(1);
 });
 
 it.each([
@@ -723,4 +729,117 @@ it.each([
 		JSON.stringify(selected.data);
 	expect((await f.collect())?.catalog?.completeness).toBe("partial");
 	expect(f.fetcher).not.toHaveBeenCalled();
+});
+
+it.each([
+	"complete",
+	"wrong-season",
+	"duplicate",
+	"wrong-page",
+	"wrong-count",
+	"missing-range",
+])("collects paginated seasons and message-only specials without inventing progress (%s)", async (mode) => {
+	const f = setup(),
+		first = f.pages[0]!,
+		btf = state(f, 0),
+		list = object(btf.episodeList);
+	const [left, right] = first.members;
+	const actions = object(btf.action).btf as Record<string, unknown>;
+	const details = object(object(btf.detail).detail),
+		records = object(btf.self);
+	const row = {
+		titleID: right!.full,
+		action: actions[right!.full],
+		detail: details[right!.full],
+		self: records[right!.full],
+	};
+	delete records[right!.full];
+	delete details[right!.full];
+	delete actions[right!.full];
+	list.cardTitleIds = [left!.full];
+	const pages = [
+		{ isSelected: true, token: "first==" },
+		{ isSelected: false, token: "next+/=" },
+	];
+	list.actions = {
+		pagination: [{ tokenType: "NextPage" }],
+		episodePages: pages,
+	};
+	const widget = {
+		widgets: {
+			pageContext: { pageTitleId: first.season.full },
+			episodeList: {
+				episodeCount: 2,
+				actions: {
+					episodePages: pages.map((p, i) => ({ ...p, isSelected: i === 1 })),
+					pagination: [{ tokenType: "PreviousPage" }],
+				},
+				episodes: [row],
+			},
+		},
+	};
+	const special = f.pages[2]!;
+	object(object(state(f, 2).action).btf)[special.members[0]!.full] = {
+		primaryActions: [
+			{
+				actionType: "MESSAGE",
+				payload: {
+					payloadType: "Message",
+					message: { message: { string: "Momentan nicht verfügbar" } },
+				},
+			},
+		],
+	};
+	if (mode === "wrong-season")
+		widget.widgets.pageContext.pageTitleId = special.season.full;
+	if (mode === "duplicate")
+		Object.assign(row, {
+			titleID: left!.full,
+			self: records[left!.full],
+			detail: details[left!.full],
+			action: actions[left!.full],
+		});
+	if (mode === "wrong-count") widget.widgets.episodeList.episodeCount = 3;
+	if (mode === "wrong-page")
+		widget.widgets.episodeList.actions.episodePages = pages;
+	const original = f.fetcher.getMockImplementation()!;
+	f.fetcher.mockImplementation(async (url, init) => {
+		const u = new URL(url);
+		if (u.pathname !== "/api/getDetailWidgets") return original(url, init);
+		expect(u.origin).toBe(location.origin);
+		expect(u.searchParams.get("titleID")).toBe(first.season.full);
+		expect(JSON.parse(u.searchParams.get("widgets")!)).toEqual([
+			{ widgetType: "EpisodeList", widgetToken: "next%2B%2F%3D" },
+		]);
+		expect(init).toMatchObject({
+			method: "GET",
+			redirect: "error",
+			credentials: "same-origin",
+		});
+		return response(
+			JSON.stringify(widget),
+			url,
+			mode === "missing-range" ? 503 : 200,
+			{ "content-type": "application/json" },
+		);
+	});
+	const catalog = (await f.collect())!.catalog!;
+	expect(catalog.completeness).toBe(
+		mode === "complete" ? "complete" : "partial",
+	);
+	expect(
+		catalog.seasons.find((s) => s.seasonNumber === 3)?.episodes[0]?.available,
+	).toBe(false);
+	if (mode === "complete") {
+		expect(
+			catalog.seasons[0]!.episodes.map((e) => [e.episodeNumber, e.order]),
+		).toEqual([
+			[1, 0],
+			[2, 1],
+		]);
+		expect(JSON.stringify(catalog)).not.toMatch(
+			/widgetToken|NextPage|Momentan/,
+		);
+	} else if (mode !== "duplicate")
+		expect(catalog.seasons[0]!.episodes).toHaveLength(1);
 });
