@@ -3077,12 +3077,38 @@ it("allows Netflix's final history write and catalog cleanup after returning to 
   } finally { vi.unstubAllGlobals(); }
 });
 
+it("finishes history after the Prime player returns to browse in the same document", () => {
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+  try {
+    const origin = "https://www.primevideo.com", id = "A".repeat(26), sourceUrl = origin + "/detail/" + id;
+    const sender = { id: "test-extension", frameId: 0, documentId: "prime-fixture", origin,
+      url: origin + "/region/na/storefront", tab: { id: 208, url: sourceUrl } } as chrome.runtime.MessageSender;
+    const returned = { ...sender, tab: { ...sender.tab!, url: sender.url } };
+    const bootstrap = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
+    const { crunchyrollIdentity, ...base } = progressEvent();
+    const event = { ...base, provider: "primevideo", sourceUrl, titleKey: "primevideo:movie:" + id, episodeKey: "primevideo:movie:" + id,
+      itemKind: "movie", seasonKey: null, episodeTitle: "Movie", primevideoIdentity: { kind: "movie", providerMovieId: id }, kind: "source_change" };
+    const final = { ...bootstrap, command: "observe-progress", event } as const;
+    expect(isWatchHistorySenderAllowed(final, returned)).toBe(false);
+    expect(isWatchHistorySenderAllowed(bootstrap, sender)).toBe(true);
+    expect(isWatchHistorySenderAllowed(final, returned)).toBe(true);
+    expect(isWatchHistorySenderAllowed(final, { ...returned, documentId: "new-document" })).toBe(false);
+    expect(isWatchHistorySenderAllowed({ ...final, event: { ...event, kind: "heartbeat" } }, returned)).toBe(false);
+    expect(isWatchHistorySenderAllowed(bootstrap, returned)).toBe(false);
+    expect(isWatchHistorySenderAllowed({ ...bootstrap, command: "catalog-release", accountGeneration: 1, revision: 1, titleKey: event.titleKey, pageId: "previous" }, returned)).toBe(true);
+  } finally { vi.unstubAllGlobals(); }
+});
+
 it("accepts Prime history only from a valid official-detail document boundary", () => {
   vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
   try {
     const source = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
     const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
     const sender = { id: "test-extension", url: source, tab: { id: 8 }, frameId: 0 } as chrome.runtime.MessageSender;
+    const fromCatalog = { ...sender, url: "https://www.primevideo.com/region/na/storefront", tab: { ...sender.tab!, url: source } };
+    expect(isWatchHistorySenderAllowed(message, fromCatalog)).toBe(true);
+    expect(isWatchHistorySenderAllowed(message, { ...fromCatalog, origin: "https://www.amazon.com" })).toBe(false);
+    expect(isWatchHistorySenderAllowed({ ...message, command: "list" }, fromCatalog)).toBe(false);
     expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
     expect(isWatchHistorySenderAllowed(message, { ...sender, url: `${source}?autoplay=1#local` })).toBe(true);
     for (const url of [

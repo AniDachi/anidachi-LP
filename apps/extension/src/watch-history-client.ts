@@ -1,4 +1,4 @@
-import { hasPrimeBrowserHost, parsePrimePageUrl } from "./source-adapters/primevideo/url";
+import { hasPrimeBrowserHost, isPrimePlayerPageSender } from "./source-adapters/primevideo/url";
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
   WatchHistoryCapacityCompatibleSchema,
@@ -2024,6 +2024,13 @@ function inferredObservationDisplayMode(
 
 let backgroundWatchHistoryClient: ReturnType<typeof createWatchHistoryClient> | undefined;
 const historyPageTabs = new Map<string, { tabId: number }>();
+// A final observation or catalog release can arrive after the same document returns to browse.
+const primeHistoryDocuments = new Map<number, string>();
+
+export function forgetWatchHistoryTab(tabId: number): void {
+  primeHistoryDocuments.delete(tabId);
+  cancelWatchHistoryCatalogForTab(tabId);
+}
 
 /** Trusted browser tab lifecycle: the document cannot send a final release after destruction. */
 export function cancelWatchHistoryCatalogForTab(tabId: number): void {
@@ -2064,15 +2071,27 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
-  if (url.protocol !== "https:" || !hasPrimeBrowserHost(sender.url) && !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com", "www.primevideo.com"].includes(url.hostname)) return false;
-  if (hasPrimeBrowserHost(sender.url) && !parsePrimePageUrl(sender.url)) return false;
+  if (url.protocol !== "https:") return false;
+  if (!["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command)) return false;
+  if (hasPrimeBrowserHost(sender.url)) {
+    if (isPrimePlayerPageSender(sender)) {
+      if (sender.documentId) primeHistoryDocuments.set(sender.tab.id, sender.documentId);
+      return true;
+    }
+    if (sender.frameId !== 0 || !sender.documentId || primeHistoryDocuments.get(sender.tab.id) !== sender.documentId ||
+        !sender.tab.url?.startsWith(url.origin + "/") || (sender.origin !== undefined && sender.origin !== url.origin)) return false;
+    if (message.command === "catalog-release") return true;
+    if (message.command !== "observe-progress") return false;
+    const parsed = parseWatchHistoryLocalEvent(message.event);
+    return parsed.success && parsed.data.provider === "primevideo" && inferredObservationDisplayMode(parsed.data) === null;
+  }
   if (url.hostname === "www.netflix.com") {
     if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
     // Trust the document origin, not its initial route: Netflix opens players
     // from /browse without reloading. The adapter/schema validate watch content;
     // final progress and catalog cleanup can arrive after returning to /browse.
   }
-  return ["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command);
+  return ["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname);
 }
 
 export function usesStoredWatchHistorySession(
