@@ -32,14 +32,20 @@ const supportedFamilies = [
 	"primevideo.com", "amazon.com", "amazon.co.uk", "amazon.de",
 	"amazon.co.jp", "amazon.ca", "amazon.in", "amazon.com.mx",
 ];
-it.each(supportedFamilies.flatMap((family) => [family, `www.${family}`, `edge-2.video.${family}`]))(
-	"mounts inside the primary player after delayed SPA startup on %s", async (host) => {
+const storefronts = supportedFamilies.flatMap((family) =>
+	[family, `www.${family}`, `edge-2.video.${family}`].map((host) => ({
+		host, path: family === "primevideo.com" ? "/region/na/storefront/home" : "/gp/video/storefront",
+	})),
+);
+storefronts.push({ host: "www.amazon.com", path: "/Amazon-Video/b/?node=2858778011" });
+it.each(storefronts)(
+	"mounts inside the primary player after delayed SPA startup on $host$path", async ({ host, path }) => {
 		vi.useFakeTimers();
 		const f = fixture();
 		const prefix = host.endsWith("primevideo.com")
 			? "/region/na/-/ja_JP/detail/" : "/-/ja_JP/gp/video/detail/";
 		Object.defineProperty(window, "location", { configurable: true, value: new URL(
-			`https://${host}/${host.endsWith("primevideo.com") ? "region/na/storefront/home" : "gp/video/storefront"}`,
+			`https://${host}${path}`,
 		) });
 		bridgeTransport();
 		stops.push(startPrimeBridge());
