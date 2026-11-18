@@ -6,8 +6,8 @@ import {
 	primeVideoSourceUrl,
 	PrimeVideoProviderIdSchema,
 	resolvePrimeLaunch,
-	parsePrimePageUrl,
 } from "@anidachi/protocol";
+import { isPrimePlayerPageSender } from "./source-adapters/primevideo/url";
 import { getStoredAuthTokens } from "./auth-tokens";
 import { createWatchHistoryStorage } from "./watch-history-storage";
 import {
@@ -120,7 +120,7 @@ async function handle(
 	const legacyLaunchUi =
 		sender.url?.split(/[?#]/)[0] ===
 		chrome.runtime.getURL("/prime-launch.html");
-	const provider = !!sender.url && !!parsePrimePageUrl(sender.url);
+	const provider = isPrimePlayerPageSender(sender);
 	const command = CommandSchema.safeParse(message);
 	let current = await owner();
 	if (!current && command.success && command.data.action === "pending-room") return { status: "empty" };
@@ -289,7 +289,7 @@ export function registerPrimeLaunchBridge() {
 				return false;
 			const work = queue.then(() => handle(message, sender, external));
 			queue = work.catch(() => undefined);
-			void work.then(respond, () => respond({ status: "cancelled" }));
+			void work.then(respond, () => respond({ status: "retryable" }));
 			return true;
 		};
 	chrome.runtime.onMessage.addListener(listener(false));

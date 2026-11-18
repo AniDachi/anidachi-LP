@@ -115,6 +115,10 @@ export async function recoverPrimeLaunch(
 	});
 	const reply = await recover();
 	if (!current()) return undefined;
+	if (reply?.status === "cancelled") {
+		// A definitive refusal ends preflight without restoring a room or replaying a launch.
+		return { ...suppressedPrimeLaunch(location.href), blocksFragment: () => true };
+	}
 	if (reply?.status === "blocked")
 		return suppressedPrimeLaunch(location.href, reply.rejection);
 	if (reply?.status === "empty") return null;

@@ -89,6 +89,7 @@ import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-clie
 import {
   flushWatchHistoryInBackground,
   cancelWatchHistoryCatalogForTab,
+  forgetWatchHistoryTab,
   handleWatchHistoryAuthSessionChange,
   handleWatchHistoryHttpMessage,
   isWatchHistoryMessage,
@@ -459,7 +460,7 @@ export default defineBackground(() => {
   void drainRoomDepartureRetries().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
-    cancelWatchHistoryCatalogForTab(tabId);
+    forgetWatchHistoryTab(tabId);
     void handleRemovedRoomTab(tabId).catch(() => undefined);
   });
   chrome.tabs.onUpdated?.addListener((tabId, changeInfo) => {
