@@ -171,3 +171,9 @@ export function readPrimeBinding(
 		? { contentId: contentId!, generation: generation! }
 		: null;
 }
+
+/** Resolve the current primary video even before the content lifecycle has reconciled. */
+export function readCurrentPrimePlayerBinding(doc: Document) {
+	const videos = doc.querySelectorAll<HTMLVideoElement>("#dv-web-player video");
+	return videos.length === 1 ? readPrimeBinding(videos[0]!) : null;
+}

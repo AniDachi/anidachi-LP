@@ -43,6 +43,7 @@ const CommitSchema = z.strictObject({
 	currentVerifiedOrigin: z.string().max(256).optional(),
 });
 const CommandSchema = z.discriminatedUnion("action", [
+	z.strictObject({ type: z.literal("ANIDACHI_PRIME_LAUNCH"), action: z.literal("pending-room") }),
 	z.strictObject({
 		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
 		action: z.literal("read"),
@@ -120,7 +121,9 @@ async function handle(
 		sender.url?.split(/[?#]/)[0] ===
 		chrome.runtime.getURL("/prime-launch.html");
 	const provider = !!sender.url && !!parsePrimePageUrl(sender.url);
+	const command = CommandSchema.safeParse(message);
 	let current = await owner();
+	if (!current && command.success && command.data.action === "pending-room") return { status: "empty" };
 	if (!current)
 		return {
 			status: "blocked",
@@ -223,10 +226,16 @@ async function handle(
 		});
 		return navigate(tab, pending, resolution.url);
 	}
-	const command = CommandSchema.safeParse(message),
-		tab = sender.tab?.id;
+	const tab = sender.tab?.id;
 	if (!command.success || external || tab === undefined)
 		return { status: "cancelled" };
+	if (command.data.action === "pending-room") {
+		if (!provider) return { status: "cancelled" };
+		const pending = await store().peek(tab, current);
+		return pending?.roomId && pending.attempts === 1
+			? { status: "ready", intentId: pending.intentId, contentId: pending.contentId }
+			: { status: "empty" };
+	}
 	if (command.data.action === "take" || command.data.action === "recover") {
 		if (!provider) return { status: "cancelled" };
 		const existed = await store().has(tab);

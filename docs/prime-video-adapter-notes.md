@@ -339,8 +339,12 @@ missing or older extensions receive a single explicit fallback link. The backgro
 stores a five-minute, tab/account/login/generation/source-bound intent in
 `chrome.storage.session` before navigation, with at most 64 pending entries and
 one navigation attempt. This survives provider redirects, fragment removal and
-service-worker restarts. Recovery checks the current adapter before handing the
-intent to the overlay; only an accepted handoff consumes it. A retained Amazon
+service-worker restarts. Recovery verifies the episode playing in the current tab.
+Personal Resume is claimed once. A room invitation survives a redirect or reload
+until admission confirms the guest's tab session. While identity is pending, the
+player shows a waiting action. A temporary admission error offers **Retry joining**
+on the same player. Closing the player or a terminal denial retires that invitation.
+A retained Amazon
 fragment cannot discard a matching recovered Resume, and a rejected pending
 room launch cannot fall back to its stale raw fragment. SDK identity, server
 room authority and personal Resume account/generation checks still gate

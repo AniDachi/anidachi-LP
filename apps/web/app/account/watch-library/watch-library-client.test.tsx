@@ -2070,7 +2070,7 @@ it("Prime movies and partial series keep provider identity in filters, editor an
       assert.equal(Boolean(view.container.querySelector(".wh-season-row")), !movie);
       if (!movie) {
         assert.match(view.container.textContent ?? "", /Season Two/);
-        assert.match(view.container.textContent ?? "", /Open this title in Prime Video with the extension to load its full catalog/);
+        assert.match(view.container.textContent ?? "", /Prime Video may have additional seasons or episodes/);
       }
       assert.ok(server.calls.some(call => call.path.includes("/editor?provider=primevideo") && call.path.includes(encodeURIComponent(history.items[0].titleKey))));
       await click(buttonByText(view.container, "Resume"));

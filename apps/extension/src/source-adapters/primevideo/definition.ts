@@ -4,7 +4,7 @@ import { runPrimeCommand } from "./bridge-client";
 import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import type { SourceAdapterDefinition } from "../core/types";
 import { PrimeVideoAdapter } from "./adapter";
-import { PRIME_NAVIGATING, PRIME_PLAYER, primeVideoId, readPrimeBinding } from "./contract";
+import { PRIME_NAVIGATING, PRIME_PLAYER, primeVideoId, readCurrentPrimePlayerBinding } from "./contract";
 import { primeHistoryPolicy } from "./progress";
 export const primeVideoDefinition: SourceAdapterDefinition = {
 	id: "primevideo",
@@ -40,10 +40,7 @@ export const primeVideoDefinition: SourceAdapterDefinition = {
 			return { status: "unsupported", reason: "invalid-source" };
 		if (!hasPrimeBrowserHost(location.href))
 			return { status: "unsupported", reason: "unsupported-route" };
-		const videos = [
-			...document.querySelectorAll<HTMLVideoElement>("#dv-web-player video"),
-		];
-		const current = videos.length === 1 ? readPrimeBinding(videos[0]!) : null;
+		const current = readCurrentPrimePlayerBinding(document);
 		// Address-bar equality is insufficient: native Next Episode may preserve it.
 		let verifiedCurrent = false;
 		if (current) {

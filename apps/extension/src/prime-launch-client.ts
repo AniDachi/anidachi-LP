@@ -9,9 +9,32 @@ import {
 	suppressedPrimeLaunch,
 	type PrimeLaunchHandoff,
 } from "./prime-launch-capture";
-import { readPrimeBinding } from "./source-adapters/primevideo/contract";
+import { readCurrentPrimePlayerBinding, readPrimeBinding } from "./source-adapters/primevideo/contract";
 import { runPrimeCommand } from "./source-adapters/primevideo/bridge-client";
 import type { VideoAdapter } from "./source-adapters/core/types";
+
+// Both commands are safe to repeat if Chrome restarts the worker mid-message.
+async function sendRoomIntentCommand(command: { action: "pending-room" } | { action: "take"; contentId: string; intentId: string }) {
+	for (let attempt = 0; attempt < 2; attempt++) {
+		try {
+			const reply = await chrome.runtime.sendMessage({ type: "ANIDACHI_PRIME_LAUNCH", ...command });
+			if (reply?.status === "ready" || reply?.status === "blocked" || reply?.status === "empty") return reply;
+		} catch { /* The service worker may restart between the write and its reply. */ }
+	}
+	return null;
+}
+
+/** Record only which pending room a native close could cancel before the SDK is ready. */
+export function preparePrimeRoomDismissal() {
+	const receipt = typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"
+		? sendRoomIntentCommand({ action: "pending-room" })
+		: Promise.resolve(null);
+	return async () => {
+		const target = await receipt;
+		if (target?.status === "ready") await sendRoomIntentCommand({ action: "take", contentId: target.contentId, intentId: target.intentId });
+	};
+}
+
 export async function startPrimeResume(
 	canonicalLaunch: string,
 	navigation: PrimeNavigation | undefined,
@@ -85,16 +108,19 @@ export async function recoverPrimeLaunch(
 		isCurrent() &&
 		JSON.stringify(readPrimeBinding(adapter.video)) === JSON.stringify(binding);
 	if (!current()) return undefined;
-	const reply = await chrome.runtime.sendMessage({
+	const recover = () => chrome.runtime.sendMessage({
 		type: "ANIDACHI_PRIME_LAUNCH",
 		action: "recover",
 		contentId: binding.contentId,
 	});
+	const reply = await recover();
 	if (!current()) return undefined;
 	if (reply?.status === "blocked")
 		return suppressedPrimeLaunch(location.href, reply.rejection);
+	if (reply?.status === "empty") return null;
+	if (reply?.status !== "ready") return undefined;
 	const parsed = PrimePendingSchema.safeParse(reply?.pending);
-	if (!parsed.success) return null;
+	if (!parsed.success) return false;
 	const pending = parsed.data;
 	if (pending.contentId !== binding.contentId) return false;
 	let commitment: Promise<boolean> | undefined;
@@ -132,13 +158,34 @@ export async function recoverPrimeLaunch(
 		return true;
 	};
 	let consumed = false;
+	let retirement: Promise<unknown> | undefined;
 	const valid = (fingerprint: string, now: number) =>
 		!consumed &&
 		now < pending.expiresAt &&
 		fingerprint === `primevideo|detail/${pending.contentId}`;
 	return {
 		intentId: pending.intentId,
-		commit,
+		...(pending.roomId ? {
+			hasDifferentRoomSource(player: VideoAdapter) {
+				if (player.provider !== "primevideo") return true;
+				// The SDK updates the video before React sees a replacement. Losing
+				// metadata briefly does not invalidate the already verified episode.
+				const live = readCurrentPrimePlayerBinding(player.video.ownerDocument) ??
+					(player.video.isConnected ? readPrimeBinding(player.video) : null);
+				if (live) return live.contentId !== pending.contentId;
+				const fingerprint = player.getFingerprint();
+				return fingerprint !== "primevideo|unknown" && fingerprint !== `primevideo|detail/${pending.contentId}`;
+			},
+			async verifyRoom() {
+				const next = await recover();
+				if (next?.status === "blocked" || next?.status === "empty") return false;
+				if (next?.status !== "ready") throw new Error("Could not verify the invitation. Try again.");
+				return next.pending?.intentId === pending.intentId;
+			},
+			blocksFragment(href: string) {
+				return new URLSearchParams(new URL(href).hash.slice(1)).get("anidachiRoom") === pending.roomId;
+			},
+		} : { commit }),
 		readRoom(_href, fingerprint, owner, now = Date.now()) {
 			return sameExplicit(_href) &&
 				valid(fingerprint, now) &&
@@ -149,6 +196,8 @@ export async function recoverPrimeLaunch(
 		},
 		consumeRoom() {
 			consumed = true;
+			if (pending.roomId) retirement ??= sendRoomIntentCommand({ action: "take", contentId: binding.contentId, intentId: pending.intentId })
+				.then(reply => { if (!reply) retirement = undefined; });
 		},
 		takeResume(_href, fingerprint, now = Date.now()) {
 			if (!pending.resume || !sameExplicit(_href) || !valid(fingerprint, now)) return null;
