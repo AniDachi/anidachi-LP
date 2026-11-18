@@ -66,6 +66,23 @@ function assertProductionReactRuntime(rootDir) {
 
 assertProductionReactRuntime(dir);
 
+const amazonVideoMatches = [
+  "amazon.com",
+  "amazon.co.uk",
+  "amazon.de",
+  "amazon.co.jp",
+  "amazon.ca",
+  "amazon.in",
+  "amazon.com.mx",
+].flatMap((host) => [
+  `https://*.${host}/Amazon-Video/*`,
+  `https://*.${host}/-/*/Amazon-Video/*`,
+  `https://*.${host}/gp/video/*`,
+  `https://*.${host}/*/gp/video/*`,
+  `https://*.${host}/dp/*`,
+  `https://*.${host}/*/dp/*`,
+]);
+
 const videoContentMatches = [
   "https://youtube.com/*",
   "https://*.youtube.com/*",
@@ -74,34 +91,7 @@ const videoContentMatches = [
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
   "https://*.primevideo.com/*",
-  "https://*.amazon.com/gp/video/*",
-  "https://*.amazon.com/*/gp/video/*",
-  "https://*.amazon.com/dp/*",
-  "https://*.amazon.com/*/dp/*",
-  "https://*.amazon.co.uk/gp/video/*",
-  "https://*.amazon.co.uk/*/gp/video/*",
-  "https://*.amazon.co.uk/dp/*",
-  "https://*.amazon.co.uk/*/dp/*",
-  "https://*.amazon.de/gp/video/*",
-  "https://*.amazon.de/*/gp/video/*",
-  "https://*.amazon.de/dp/*",
-  "https://*.amazon.de/*/dp/*",
-  "https://*.amazon.co.jp/gp/video/*",
-  "https://*.amazon.co.jp/*/gp/video/*",
-  "https://*.amazon.co.jp/dp/*",
-  "https://*.amazon.co.jp/*/dp/*",
-  "https://*.amazon.ca/gp/video/*",
-  "https://*.amazon.ca/*/gp/video/*",
-  "https://*.amazon.ca/dp/*",
-  "https://*.amazon.ca/*/dp/*",
-  "https://*.amazon.in/gp/video/*",
-  "https://*.amazon.in/*/gp/video/*",
-  "https://*.amazon.in/dp/*",
-  "https://*.amazon.in/*/dp/*",
-  "https://*.amazon.com.mx/gp/video/*",
-  "https://*.amazon.com.mx/*/gp/video/*",
-  "https://*.amazon.com.mx/dp/*",
-  "https://*.amazon.com.mx/*/dp/*",
+  ...amazonVideoMatches,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -189,15 +179,20 @@ assertExactAllowlist(
   expected.contentMatches,
 );
 
+const expectedPrimeMatches = ["https://*.primevideo.com/*", ...amazonVideoMatches];
 const primeMainScripts = (manifest.content_scripts ?? []).filter((script) =>
   script.world === "MAIN" && (script.matches ?? []).includes("https://*.primevideo.com/*"));
 if (primeMainScripts.length !== 1 || primeMainScripts[0].all_frames === true ||
-    primeMainScripts[0].run_at !== "document_start" || primeMainScripts[0].matches.length !== 29 ||
+    primeMainScripts[0].run_at !== "document_start" || primeMainScripts[0].matches.length !== expectedPrimeMatches.length ||
     !(primeMainScripts[0].js ?? []).length) {
   throw new Error("Prime Video requires exactly one top-frame document_start MAIN bridge on its narrow host");
 }
 
-assertExactAllowlist("Prime MAIN matches", primeMainScripts[0].matches, videoContentMatches.filter(value => /primevideo|amazon/.test(value)));
+assertExactAllowlist("Prime MAIN matches", primeMainScripts[0].matches, expectedPrimeMatches);
+const overlayScripts = (manifest.content_scripts ?? []).filter((script) =>
+  script.world !== "MAIN" && (script.matches ?? []).includes("https://*.primevideo.com/*"));
+if (overlayScripts.length !== 1) throw new Error("Expected one Prime overlay content script");
+assertExactAllowlist("overlay matches", overlayScripts[0].matches, videoContentMatches);
 
 const publicResources = manifest.web_accessible_resources ?? [];
 if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {

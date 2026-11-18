@@ -18,6 +18,9 @@ export const PRIME_CONTENT_MATCHES = PRIME_VIDEO_DOMAIN_ROOTS.flatMap((host) =>
 	host === "primevideo.com"
 		? [`https://*.${host}/*`]
 		: [
+				// Amazon can open a detail page inside the original video catalogue document.
+				`https://*.${host}/Amazon-Video/*`,
+				`https://*.${host}/-/*/Amazon-Video/*`,
 				`https://*.${host}/gp/video/*`,
 				`https://*.${host}/*/gp/video/*`,
 				`https://*.${host}/dp/*`,
