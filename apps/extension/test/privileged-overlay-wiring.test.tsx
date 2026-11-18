@@ -2782,9 +2782,11 @@ describe("privileged overlay wiring", () => {
     } finally { gate.resolve(); await act(async () => f.runtime.dispose()); }
   });
 
-  it("recovers a Prime invitation on the same video after the first SDK snapshot is unavailable", async () => {
+  it.each(["snapshot", "background"] as const)("recovers a Prime invitation on the same video after a temporary %s failure", async failure => {
     const pending = primeGuestInvitation();
-    const f = await primeOverlayLifecycle(pending, `https://www.primevideo.com/detail/${pending.contentId}`, { firstSnapshotUnavailable: true });
+    const f = await primeOverlayLifecycle(pending, `https://www.primevideo.com/detail/${pending.contentId}`, {
+      firstSnapshotUnavailable: failure === "snapshot", firstRecoverStatus: failure === "background" ? "retryable" : undefined,
+    });
     try {
       await flushRoomActionWork();
       expect(f.send.mock.calls.some(([m]) => m.command === "connect-room")).toBe(false);
@@ -2794,6 +2796,22 @@ describe("privileged overlay wiring", () => {
       await act(async () => f.runtime.reconcile());
       await flushRoomActionWork();
       expect(f.send.mock.calls.filter(([m]) => m.command === "connect-room").map(([m]) => m.roomId)).toEqual([pending.roomId]);
+    } finally { await act(async () => f.runtime.dispose()); }
+  });
+
+  it("ends a refused Prime check without retrying or joining from a fragment or saved room", async () => {
+    const pending = primeGuestInvitation();
+    const f = await primeOverlayLifecycle(pending, `https://www.primevideo.com/detail/${pending.contentId}#anidachiRoom=${pending.roomId}`, {
+      firstRecoverStatus: "cancelled", persistedRoom: true,
+    });
+    try {
+      await flushRoomActionWork();
+      await act(async () => f.runtime.reconcile());
+      await flushRoomActionWork();
+      await click(button(f.container, "Open Anidachi controls"));
+      expect(button(f.container, "Create room").disabled).toBe(false);
+      expect(f.send.mock.calls.filter(([m]) => m.action === "recover")).toHaveLength(1);
+      expect(f.send.mock.calls.some(([m]) => m.command === "connect-room" || m.action === "take")).toBe(false);
     } finally { await act(async () => f.runtime.dispose()); }
   });
 
@@ -6249,6 +6267,7 @@ async function primeOverlayLifecycle(pending: PrimePending, href: string, option
   consumed?: boolean;
   admissionDenied?: boolean;
   firstSnapshotUnavailable?: boolean;
+  firstRecoverStatus?: "retryable" | "cancelled";
   firstJoinUnavailable?: boolean;
   firstTakeUnavailable?: boolean;
   admit?: boolean;
@@ -6266,6 +6285,7 @@ async function primeOverlayLifecycle(pending: PrimePending, href: string, option
  const wait=async(phase:string)=>{if(options.phase===phase&&firstPhase){firstPhase=false;await options.gate!.promise;}};
  let joins = 0;
  let takes = 0;
+ let recoverStatus = options.firstRecoverStatus;
  let session = { ...sessionFor(historyOwner), authSessionId: "login" };
  let closed: ((event: Event) => void) | undefined;
  const send=vi.fn(async(m:any)=>{
@@ -6285,6 +6305,11 @@ async function primeOverlayLifecycle(pending: PrimePending, href: string, option
    return roomSessionStorageResponse(m.command)??{ok:true};
   }
   if(m.type==="ANIDACHI_PRIME_LAUNCH"){
+   if (m.action === "recover" && recoverStatus) {
+    const status = recoverStatus;
+    recoverStatus = undefined;
+    return { status };
+   }
    if(m.action==="pending-room") {
     const entry = await store.peek(7,owner);
     return entry?.roomId ? {status:"ready",contentId:entry.contentId,intentId:entry.intentId} : {status:"empty"};

@@ -87,6 +87,46 @@ beforeEach(() => {
 	registerPrimeLaunchBridge();
 });
 afterEach(() => vi.unstubAllGlobals());
+it.each([
+	["primevideo.com", "/region/na/storefront", "/region/na/detail/0ONGKHWBI6Y2CABWUR56DP08PM"],
+	["www.amazon.com", "/Amazon-Video/b", "/gp/video/detail/B0HCJ112J8"],
+	["www.amazon.co.uk", "/gp/video/storefront", "/dp/B0HCJ112J8"],
+	["video.amazon.de", "/-/de/Amazon-Video/b", "/-/de/gp/video/detail/B0HCJ112J8"],
+	["www.amazon.co.jp", "/gp/video/storefront", "/gp/video/detail/B0HCJ112J8"],
+	["www.amazon.ca", "/gp/video/storefront", "/gp/video/detail/B0HCJ112J8"],
+	["www.amazon.in", "/gp/video/storefront", "/gp/video/detail/B0HCJ112J8"],
+	["www.amazon.com.mx", "/gp/video/storefront", "/gp/video/detail/B0HCJ112J8"],
+])("uses the current %s tab for admission and the player's episode for recovery", async (host, catalog, detail) => {
+	const origin = "https://" + host;
+	const provider = { id: ext, origin, frameId: 0, url: origin + catalog, tab: { id: 7, url: origin + detail } };
+	const recover = { type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id };
+	expect(await send(recover, provider)).toEqual({ status: "empty" });
+	await send({ ...recover, action: "start", roomId: "room", newTab: true });
+	const recovered = await send(recover, provider);
+	expect(recovered).toMatchObject({ status: "ready", pending: { contentId: id, roomId: "room" } });
+	expect(await send({ ...recover, action: "take", intentId: recovered.pending.intentId }, provider)).toMatchObject({ status: "ready" });
+});
+it("rejects a stale detail after navigation away and mismatched document origins", async () => {
+	const origin = "https://www.primevideo.com";
+	const detail = origin + "/detail/" + id;
+	const sender = { id: ext, url: detail, origin, frameId: 0, tab: { id: 7, url: detail } };
+	const recover = { type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id };
+	for (const invalid of [
+		{ ...sender, tab: { id: 7, url: origin + "/storefront" } },
+		{ ...sender, url: "https://www.amazon.de/gp/video/storefront" },
+		{ ...sender, origin: "null" },
+		{ ...sender, frameId: 1 },
+	]) expect(await send(recover, invalid)).toEqual({ status: "cancelled" });
+});
+it("distinguishes a temporary recovery storage failure from a refused launch", async () => {
+	const provider = { id: ext, frameId: 0, url: "https://www.primevideo.com/detail/" + id, tab: { id: 7 } };
+	const recover = { type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id };
+	const get = vi.spyOn(chrome.storage.session, "get").mockRejectedValueOnce(new Error("Storage unavailable"));
+	try {
+		expect(await send(recover, provider)).toEqual({ status: "retryable" });
+		expect(await send(recover, provider)).toEqual({ status: "empty" });
+	} finally { get.mockRestore(); }
+});
 it("registers room intent before new-tab navigation and survives missing fragment with one-use binding", async () => {
 	expect(
 		await send({
@@ -305,9 +345,9 @@ it("preserves personal Resume intent and position through a direct Amazon launch
 	).toEqual(resume);
 	const redirected = {
 		id: ext,
-		tab: { id: 7 },
+		tab: { id: 7, url: `https://www.primevideo.com/detail/${id}` },
 		frameId: 0,
-		url: `https://www.primevideo.com/detail/${id}`,
+		url: "https://www.primevideo.com/region/na/storefront",
 	};
 	expect(await send({ type: "ANIDACHI_PRIME_LAUNCH", action: "pending-room" }, redirected)).toEqual({ status: "empty" });
 	expect(
