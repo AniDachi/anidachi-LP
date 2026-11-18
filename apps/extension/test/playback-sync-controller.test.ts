@@ -865,7 +865,7 @@ describe("PlaybackSyncController", () => {
 		expect(ensureRemoteSource).not.toHaveBeenCalled();
 	});
 
-	it("holds remote playback and applies the newest state after the target adapter binds", async () => {
+	it.each(["content", "transition", "interstitial", "buffering"] as const)("applies the newest host state when the target adapter binds during %s", async phase => {
 		const navigation = deferred<EnsureSourceResult>();
 		const ensureRemoteSource = vi.fn(() => navigation.promise);
 		const harness = createHarness({ isHost: false, ensureRemoteSource });
@@ -900,7 +900,13 @@ describe("PlaybackSyncController", () => {
 			fingerprint: targetSource.videoFingerprint,
 			provider: "youtube",
 		});
+		replacement.setPhase(phase);
 		harness.controller.bindAdapter(replacement);
+		if (phase !== "content") {
+			expect(replacement.seek).not.toHaveBeenCalled();
+			replacement.setPhase("content");
+			replacement.emitPhase();
+		}
 		await first;
 		await second;
 

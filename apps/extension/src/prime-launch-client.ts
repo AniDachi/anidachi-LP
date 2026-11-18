@@ -9,7 +9,7 @@ import {
 	suppressedPrimeLaunch,
 	type PrimeLaunchHandoff,
 } from "./prime-launch-capture";
-import { readCurrentPrimePlayerBinding, readPrimeBinding } from "./source-adapters/primevideo/contract";
+import { PRIME_NAVIGATING, readCurrentPrimePlayerBinding, readPrimeBinding } from "./source-adapters/primevideo/contract";
 import { runPrimeCommand } from "./source-adapters/primevideo/bridge-client";
 import type { VideoAdapter } from "./source-adapters/core/types";
 
@@ -72,6 +72,7 @@ export async function startPrimeRoom(
 		prepareOnly: true,
 	});
 	if (signal?.aborted || prepared?.status !== "prepared") return null;
+	document.dispatchEvent(new Event(PRIME_NAVIGATING));
 	return chrome.runtime.sendMessage({
 		type: "ANIDACHI_PRIME_LAUNCH",
 		action: "commit",
