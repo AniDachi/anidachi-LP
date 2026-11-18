@@ -36,20 +36,24 @@ function stopOverlayInteraction(event: SyntheticEvent<HTMLElement>): void {
   event.nativeEvent.stopImmediatePropagation();
 }
 
+export const overlayHoverBoundaryProps = {
+  onMouseMove: stopOverlayInteraction,
+  onMouseOut: stopOverlayInteraction,
+  onMouseOver: stopOverlayInteraction,
+  onPointerMove: stopOverlayInteraction,
+  onPointerOut: stopOverlayInteraction,
+  onPointerOver: stopOverlayInteraction,
+};
+
 export const overlayPointerBoundaryProps = {
+  ...overlayHoverBoundaryProps,
   onClick: stopOverlayInteraction,
   onContextMenu: stopOverlayInteraction,
   onDoubleClick: stopOverlayInteraction,
   onMouseDown: stopOverlayInteraction,
-  onMouseMove: stopOverlayInteraction,
-  onMouseOut: stopOverlayInteraction,
-  onMouseOver: stopOverlayInteraction,
   onMouseUp: stopOverlayInteraction,
   onPointerCancel: stopOverlayInteraction,
   onPointerDown: stopOverlayInteraction,
-  onPointerMove: stopOverlayInteraction,
-  onPointerOut: stopOverlayInteraction,
-  onPointerOver: stopOverlayInteraction,
   onPointerUp: stopOverlayInteraction,
   onTouchCancel: stopOverlayInteraction,
   onTouchEnd: stopOverlayInteraction,
