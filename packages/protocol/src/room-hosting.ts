@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SESSION_ID_CHARS } from "./limits";
 
 const time = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
 const positive = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
@@ -33,11 +34,18 @@ export const RoomHostingAdmissionRequestSchema = z
 	.object({ userId: z.string().uuid() })
 	.strict();
 
+export const RoomHostJoinConfirmationSchema = RoomHostingAdmissionRequestSchema.extend({
+  participantSessionId: z.string().min(1).max(MAX_SESSION_ID_CHARS),
+});
+export const RoomHostJoinReceiptSchema = z.strictObject({ confirmed: z.boolean() });
+
 export const RoomHostingAdmissionSchema = z
 	.object({
 		roomId: z.string().min(1).max(128),
 		roomGeneration: positive,
 		allowed: z.boolean(),
+		/** The first host JOIN must confirm its reserved session before publishing a snapshot. */
+		confirmHostJoin: z.literal(true).optional(),
 		/** Internal durable cohort, independent of frozen media plan. */
 		hostingTimeMode: z.literal("daily_free20").optional(),
 		code: z

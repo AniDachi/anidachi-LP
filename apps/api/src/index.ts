@@ -11,7 +11,7 @@ import {
 	nextRoomPolicyAlarm,
 	type RoomPolicyState,
 } from "./room-capability";
-import { InternalWebCallbackError, checkWebRoomAdmission, notifyWebRoomPolicy, notifyWebFree20Budget } from "./internal-web-client";
+import { InternalWebCallbackError, checkWebRoomAdmission, confirmWebHostJoin, notifyWebRoomPolicy, notifyWebFree20Budget } from "./internal-web-client";
 import { createFree20AccountingState, prepareFree20Accounting, acknowledgeFree20Accounting, settleFree20Accounting, type Free20AccountingState } from "./free20-room-accounting";
 import { readFree20LiveStatus, projectHostingTime, hostingTimeChangeKey, type HostingDisplayContext } from "./free20-live-status";
 import { nextHostingTimeSequence, readHostingTimeRight, writeHostingTimeRight } from "./hosting-time-storage";
@@ -1995,6 +1995,7 @@ export class RoomDurableObject {
         createRoomSocketAttachment(this.room.roomId, verified, admittedAt, {
           deadlineAt: reservation.deadlineAt,
           joined: false,
+          ...(verified.role === "host" && authority.confirmHostJoin ? { confirmHostJoin: true } : {}),
         }),
       );
       this.admissionIdBySocket.set(server, admissionId);
@@ -2868,15 +2869,34 @@ export class RoomDurableObject {
     if (event.hostingTimeVersion === 1) patch.hostingTimeVersion=1;
     const joinedAttachment = updateRoomSocketAttachment(attachment, patch);
 
+    let closeUnconfirmedHost = false;
     try {
       this.writeSocketAttachment(socket, joinedAttachment);
       this.persistRoomState();
+      if (attachment.admission.confirmHostJoin) {
+        const confirmed = await confirmWebHostJoin(
+          this.env, this.room.roomId, verified.sub, event.participantSessionId,
+        ).catch(() => null);
+        if (confirmed === false) {
+          socket.close(4002, "Host reservation no longer current");
+          throw new Error("Host reservation no longer current");
+        }
+        if (confirmed === null) {
+          if (existingSocket) throw new Error("Host admission unavailable");
+          // The DB may have committed before the reply was lost. Give this
+          // socket normal disconnect cleanup without publishing a first snapshot.
+          closeUnconfirmedHost = true;
+        }
+      }
       await cancelStoredParticipantDisconnectForJoin(
         this.state.storage,
         verified.sub,
         event.participantSessionId,
         reconcileStoredRoomAlarm,
-      );
+      ).catch(error => {
+        if (!attachment.admission.confirmHostJoin || existingSocket) throw error;
+        closeUnconfirmedHost = true;
+      });
     } catch {
       this.room = new RoomState(this.room.roomId, undefined, roomBeforeJoin);
       try {
@@ -2940,6 +2960,10 @@ export class RoomDurableObject {
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
     this.sessionIdBySocket.set(socket, event.participantSessionId);
+    if (closeUnconfirmedHost) {
+      socket.close(1011, "Host admission could not be confirmed");
+      return;
+    }
     // Capture only committed authoritative OPEN sockets. Disconnected grace
     // participants and pre-JOIN admissions are deliberately absent.
     const live = [...this.socketsByParticipant.entries()].flatMap(

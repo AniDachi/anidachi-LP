@@ -37,6 +37,7 @@ export interface RoomSocketAttachment {
 }
 
 export interface RoomSocketAdmission {
+  confirmHostJoin?: true;
   deadlineAt: number;
   joined: boolean;
 }
@@ -188,7 +189,9 @@ function parseAdmission(value: unknown): RoomSocketAdmission | null {
 	) {
     return null;
   }
-  return { deadlineAt: value.deadlineAt, joined: value.joined };
+  return { deadlineAt: value.deadlineAt, joined: value.joined,
+    ...(value.confirmHostJoin === true ? { confirmHostJoin: true } : {}),
+  };
 }
 
 function serializeVerifiedRoomToken(

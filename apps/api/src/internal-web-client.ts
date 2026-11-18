@@ -6,6 +6,7 @@ import {
   type Free20RoomBudgetRequest,
   type Free20RoomBudgetResponse,
   RoomHostingAdmissionSchema,
+  RoomHostJoinReceiptSchema,
   type RoomHostingAdmission,
   RoomPresenceEvidenceSchema,
 	RoomUsageSummarySchema,
@@ -60,6 +61,25 @@ export async function checkWebRoomAdmission(
     throw new Error("Room admission authority unavailable");
   }
   return result.data;
+}
+
+export async function confirmWebHostJoin(
+  env: InternalWebLifecycleEnv,
+  roomId: string,
+  userId: string,
+  participantSessionId: string,
+): Promise<boolean> {
+  const config = internalWebCallbackConfig(env);
+  const { response, body } = await fetchAndReadJsonWithBoundedTimeout(fetch,
+    new URL(`/api/internal/rooms/${encodeURIComponent(roomId)}/host-joined`, config.baseUrl),
+    { method: "POST", redirect: "manual",
+      headers: { Authorization: `Bearer ${config.secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, participantSessionId }) },
+    INTERNAL_WEB_CALLBACK_TIMEOUT_MS);
+  const receipt = RoomHostJoinReceiptSchema.safeParse(body);
+  if (response.status !== 200 || !receipt.success)
+    throw new Error("Invalid host JOIN acknowledgement");
+  return receipt.data.confirmed;
 }
 
 export async function notifyWebRoomEnded(
