@@ -128,7 +128,9 @@ describe("privileged overlay wiring", () => {
 		}
 	});
 
-  it.each(["host", "viewer"] as const)("retires the exact %s room after real Prime SDK end+Close and native unload", async role => {
+  it.each([
+    ["host", "end"], ["viewer", "end"], ["host", "manual"], ["viewer", "manual"],
+  ] as const)("retires the exact %s room after a %s Prime close", async (role, mode) => {
     const originalLocation = Object.getOwnPropertyDescriptor(window, "location")!;
     const prime = primeCloseFixture();
     const stopBridge = startPrimeBridge();
@@ -150,20 +152,37 @@ describe("privileged overlay wiring", () => {
       await click(button(view.container, "Create room"));
       await flushRoomActionWork();
       const connections = vi.mocked(RoomClient.prototype.connect).mock.calls.length;
-      const event = new Event("emptied"); Object.defineProperty(event, "isTrusted", { value: true });
       await act(async () => {
-        prime.context.timeline.titleEnded = true;
+        if (mode === "manual") {
+          const escape = new KeyboardEvent("keydown", { key: "Escape", bubbles: true });
+          Object.defineProperty(escape, "isTrusted", { value: true });
+          document.body.dispatchEvent(escape);
+        }
+        prime.context.timeline.titleEnded = mode === "end";
         prime.context.webPlayer.isPlayerOpen = false;
         prime.context.webPlayer.eventEmitter.emit("Close");
-        prime.video.dispatchEvent(event);
+        if (mode === "end") {
+          const event = new Event("emptied");
+          Object.defineProperty(event, "isTrusted", { value: true });
+          prime.video.dispatchEvent(event);
+        } else {
+          prime.root.remove();
+        }
       });
       await flushRoomActionWork();
       expect(depart).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ roomId: "room-a", ownerUserId: "user-a", participantSessionId: confirmedRoomSession().participantSessionId }));
       expect(location.hash).not.toContain("anidachiRoom");
       await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false}/>));
+      if (mode === "manual") {
+        prime.next();
+        prime.context.webPlayer.isPlayerOpen = true;
+        document.body.append(prime.root);
+      }
       await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive/>));
       await flushRoomActionWork();
       expect(RoomClient.prototype.connect).toHaveBeenCalledTimes(connections);
+      if (!view.container.querySelector(".mini-panel"))
+        await click(button(view.container, "Open Anidachi controls"));
       expect(button(view.container, "Create room")).toBeDefined();
     } finally { await unmount(view.root); stopBridge(); Object.defineProperty(window, "location", originalLocation); }
   });
@@ -196,13 +215,13 @@ describe("privileged overlay wiring", () => {
     const memory=()=>{const data=new Map<string,unknown>();return {get:async(key:string)=>({[key]:data.get(key)}),set:async(values:Record<string,unknown>)=>{for(const [k,v] of Object.entries(values))data.set(k,v);},remove:async(key:string)=>{data.delete(key);}};};
     const storageDeps={sessionStorage:memory(),localStorage:memory(),runtimeId:"test-extension",randomUUID:()=>crypto.randomUUID()};
     const sender={tab:{id:12}}, gate=deferred<void>(), serverRoomId="11111111-1111-4111-8111-111111111111";
-    const depart=vi.fn(async()=>"room_ended"), send=vi.mocked(chrome.runtime.sendMessage), original=send.getMockImplementation()!;
+    const depart=vi.fn(async()=>"room_ended" as const), send=vi.mocked(chrome.runtime.sendMessage), original=send.getMockImplementation()!;
     const request=vi.fn(async()=>{await gate.promise;return new Response(JSON.stringify({roomId:serverRoomId,roomToken:"token",shareableLink:"https://example.com/room"}),{status:200});});
     send.mockImplementation(async(...args:any[])=>{
       const m=args[0];
       if(m.type==="ANIDACHI_ROOM_SESSION_STORAGE")return roomSessionStorage.handleRoomSessionStorageMessage(m,sender,storageDeps);
       if(m.command==="create-room")return handleRoomHttpMessage(m,sender,{request,roomSessionDependencies:storageDeps,issueAuthority:async()=>null});
-      if(m.type===playerDeparture.PLAYER_ROOM_DEPARTURE)return playerDeparture.handlePlayerRoomDeparture(m,sender,{load:(tab,message)=>roomSessionStorage.loadRoomSessionForExactDeparture(tab,message,storageDeps),depart,clear:(tab,record)=>roomSessionStorage.clearRoomSessionForDepartureIfMatch(tab,record,storageDeps)});
+      if(m.type===playerDeparture.PLAYER_ROOM_DEPARTURE)return playerDeparture.handlePlayerRoomDeparture(m,sender,{storage:storageDeps,claim:async record=>({...record,generation:1}),settle:depart});
       return (original as any)(...args);
     });
     let closed:((event:Event)=>void)|undefined;

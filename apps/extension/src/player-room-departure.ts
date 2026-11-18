@@ -3,11 +3,10 @@ import {
 	MAX_PARTICIPANT_ID_CHARS,
 	RoomDepartureRequestSchema,
 } from "@anidachi/protocol";
-import { departPersistedRoomSession } from "./room-departure-retry";
+import { claimPersistedRoomDeparture, settleRoomDepartureAdmission } from "./room-departure-retry";
 import {
-	clearRoomSessionForDepartureIfMatch,
-	loadRoomSessionForExactDeparture,
-	roomSessionIdentityMatches,
+	retireRoomSessionForPlayerExit,
+	type RoomSessionBackgroundDependencies,
 	type RoomSessionRecord,
 } from "./room-session-storage";
 export const PLAYER_ROOM_DEPARTURE = "ANIDACHI_PLAYER_ROOM_DEPARTURE";
@@ -18,9 +17,9 @@ type Message = {
 	participantSessionId: string;
 };
 type Dependencies = {
-	load?: (tab: number, message: Message) => Promise<RoomSessionRecord | null>;
-	depart?: (record: RoomSessionRecord) => Promise<unknown>;
-	clear?: (tab: number, record: RoomSessionRecord) => Promise<boolean>;
+	storage?: RoomSessionBackgroundDependencies;
+	claim?: typeof claimPersistedRoomDeparture;
+	settle?: typeof settleRoomDepartureAdmission;
 };
 export function isPlayerRoomDeparture(value: unknown): value is Message {
 	if (!value || typeof value !== "object") return false;
@@ -62,25 +61,15 @@ export async function handlePlayerRoomDeparture(
 	if (!Number.isInteger(tab) || tab! < 0 || !isPlayerRoomDeparture(message))
 		return { ok: false };
 	try {
-		const record = await (
-			dependencies.load ?? loadRoomSessionForExactDeparture
-		)(tab!, message);
-		if (
-			!record ||
-			!roomSessionIdentityMatches(record, { ...message, version: 1 })
-		)
-			return { ok: false };
-		// Existing persisted cleanup verifies account ownership when sending and retries
-		// only this participant session. A delayed exit cannot close a newer session.
-		const outcome = await (dependencies.depart ?? departPersistedRoomSession)(
-			record,
-		);
-		if (outcome === "active-room-changed" || outcome === "account-changed")
-			return { ok: false };
-		await (dependencies.clear ?? clearRoomSessionForDepartureIfMatch)(
+		const operation = await retireRoomSessionForPlayerExit(
 			tab!,
-			record,
+			{ ...message, version: 1 },
+			dependencies.claim ?? claimPersistedRoomDeparture,
+			dependencies.storage,
 		);
+		if (!operation) return { ok: false };
+		// Retry ownership is durable. The tab can already open another title.
+		await (dependencies.settle ?? settleRoomDepartureAdmission)(operation).catch(() => undefined);
 		return { ok: true };
 	} catch {
 		return { ok: false };

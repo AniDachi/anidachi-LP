@@ -50,6 +50,61 @@ function unload(video: HTMLVideoElement, trusted = true) {
 	return event;
 }
 
+it("recognizes Escape with focus on the document when the same SDK closes", async () => {
+	const f = setup();
+	const event = gesture(document.body, "Escape");
+	f.context.webPlayer.isPlayerOpen = false;
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+});
+
+it("delivers manual SDK Close before a fast reopen or removal of the player", async () => {
+	const f = setup();
+	const event = gesture(f.button.firstElementChild!);
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	f.root.remove();
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+});
+
+it("confirms the departing SDK if Prime dismantles its root during the same close", async () => {
+	const f = setup();
+	const control = document.createElement("div");
+	control.id = f.button.id;
+	control.setAttribute("role", "button");
+	f.button.replaceWith(control);
+	const event = gesture(control);
+	f.context.webPlayer.eventEmitter.emit("Close");
+	f.root.remove();
+	f.context.webPlayer.isPlayerOpen = false;
+	await Promise.resolve();
+	expect(f.closed).toHaveBeenCalledExactlyOnceWith(event);
+});
+
+it("keeps the room when Escape belongs to the overlay or a different input", async () => {
+	const f = setup();
+	const overlay = document.createElement("anidachi-overlay-root");
+	f.root.append(overlay);
+	const input = document.createElement("input");
+	document.body.append(input);
+	gesture(overlay, "Escape");
+	gesture(input, "Escape");
+	f.context.webPlayer.isPlayerOpen = false;
+	f.context.webPlayer.eventEmitter.emit("Close");
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).not.toHaveBeenCalled();
+});
+
+it.each([true, false])("reads the departing SDK on root removal and requires confirmed closure (open=%s)", async open => {
+	const f = setup();
+	gesture(f.button);
+	f.root.remove();
+	f.context.webPlayer.isPlayerOpen = open;
+	await vi.advanceTimersByTimeAsync(250);
+	expect(f.closed).toHaveBeenCalledTimes(open ? 0 : 1);
+});
+
 it.each(["media-first", "sdk-first"])("leaves exactly once on natural SDK end+close and trusted media unload: %s", async order => {
 	const f = setup();
 	f.context.timeline.titleEnded = true;
