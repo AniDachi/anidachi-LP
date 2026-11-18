@@ -540,7 +540,7 @@ describe("production watch browsing", () => {
     else {
       expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "primevideo", titleKey, seasonKey, includePartial:true } }));
       expect(container.textContent).toContain("Season 2");
-      expect(container.textContent).toContain("full catalog unavailable");
+      expect(container.textContent).toContain(observed ? "Prime Video may have more" : "full catalog unavailable");
       if(observed) {
         expect(container.querySelector('[aria-label*="Confirmed unplayed"]')).not.toBeNull();
         expect(container.querySelector('[aria-label*="Saved episode 3"]')).not.toBeNull();

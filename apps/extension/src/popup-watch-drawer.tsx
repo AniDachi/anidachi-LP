@@ -1570,7 +1570,9 @@ function PopupWatchHistoryItem({
 								>
 									{grid.loading
 										? "Loading episode catalog..."
-										: "Known episodes only · full catalog unavailable"}
+										: knownCatalog?.state === "partial" && !grid.error
+											? "Showing known episodes. Prime Video may have more."
+											: "Known episodes only · full catalog unavailable"}
 									{grid.error ? (
 										<>
 											{" "}

@@ -525,7 +525,11 @@ export async function runOverlayPrivilegedAction(
 
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }: OverlayAppProps) {
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
+	const activePlayer = useRef<VideoAdapter | null>(adapter);
+	activePlayer.current = adapter;
 	const capturedPrimeRestoreOwnerRef = useRef<string | null>(null);
+	const attemptedPrimeInviteRef = useRef<PrimeLaunchHandoff | null>(null);
+	const [failedPrimeInvite, setFailedPrimeInvite] = useState<PrimeLaunchHandoff | null>(null);
 	const playerCloseEpochRef = useRef(0);
 	const playerRoomClosedRef = useRef(false);
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
@@ -845,6 +849,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const hostingTimeSessionKeyRef = useRef(hostingTimeSessionKey);
 	hostingTimeSessionKeyRef.current = hostingTimeSessionKey;
 	const capturedPrimeRoomId = initialPrimeLaunchRef.current?.readRoom(location.href, adapter.getFingerprint(), identityLoaded ? participant?.id ?? null : undefined) ?? null;
+	const canRetryPrimeInvite = !roomId && !!capturedPrimeRoomId && !!failedPrimeInvite &&
+		failedPrimeInvite === initialPrimeLaunchRef.current && authAuthenticated;
 	const primeLaunchSuppressed = initialPrimeLaunchRef.current?.blocksFragment?.(location.href) ?? false;
 	// A consumed invitation cannot replay, but a saved account-bound room session
 	// may request fresh server admission. Storage alone never proves membership.
@@ -1797,6 +1803,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				return;
 			}
 
+			initialPrimeLaunchRef.current?.consumeRoom();
+			setFailedPrimeInvite(null);
+			attemptedPrimeInviteRef.current = null;
 			logDebug("identity", "auth login changed; clearing local room session", {
 				reason,
 				previousAuthUserId,
@@ -2841,6 +2850,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const personalResumeIntentRef = useRef<ReturnType<typeof takePersonalHistoryResume> | undefined>(undefined);
 	useEffect(() => {
 		if (personalResumeIntentRef.current !== undefined) return;
+		if (initialPrimeLaunchRef.current?.waiting) return;
 		const params = new URLSearchParams(location.hash.slice(1));
 		const explicit = params.has("anidachiRoom") || params.has("anidachiResume");
 		const captured = initialPrimeLaunchRef.current?.takeResume(location.href, adapter.getFingerprint()) ?? null;
@@ -4199,9 +4209,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	);
 
 	const connectToExistingWebsiteRoom = useCallback(
-		async (nextRoomId: string, reason: string) => {
+		async (nextRoomId: string, reason: string, invitation?: PrimeLaunchHandoff) => {
 			const sourceReady = () => adapter.provider !== "primevideo" || !!adapter.getSourceDescriptor();
 			if (!sourceReady()) return;
+			const targetFingerprint = adapter.getFingerprint();
+			const sameInviteSource = () => !invitation || (activePlayer.current !== null && !invitation.hasDifferentRoomSource?.(activePlayer.current));
 			const skipActiveConnection = () => {
 				const activeRoomId = roomIdRef.current;
 				const activeStatus = statusRef.current;
@@ -4282,6 +4294,20 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 					return;
 				}
 
+				if (invitation?.verifyRoom) {
+					const verified = await invitation.verifyRoom();
+					if (skipStaleJoin("prime-invitation") || skipActiveConnection()) return;
+					if (!sameInviteSource()) {
+						invitation.consumeRoom();
+						return;
+					}
+					if (!verified || invitation.readRoom(location.href, targetFingerprint, activeParticipant.id) !== nextRoomId) {
+						invitation.consumeRoom();
+						setRoomTerminalMessage("This Prime Video invitation has expired or changed. Open the room link again.");
+						setPanelOpen(true);
+						return;
+					}
+				}
 				let preparedRoomSession: Awaited<
 					ReturnType<typeof prepareRoomSession>
 				> | null = null;
@@ -4291,8 +4317,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 						activeParticipant.id,
 						nextRoomId,
 					);
-					if (skipStaleJoin("session-prepared") || skipActiveConnection()) {
+					if (skipStaleJoin("session-prepared") || skipActiveConnection() || !sameInviteSource()) {
 						await discardPreparedRoomSession(preparedRoomSession);
+						if (isCurrentJoin() && !sameInviteSource()) invitation?.consumeRoom();
 						return;
 					}
 					connected = await connectWebsiteRoom(
@@ -4319,6 +4346,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				if (skipStaleJoin("room-token") || skipActiveConnection()) {
 					return;
 				}
+				if (!sameInviteSource()) {
+					invitation?.consumeRoom();
+					await requestPlayerRoomDeparture(connected.roomSession);
+					return;
+				}
 
 				roomTokenRef.current = connected.roomToken;
 				setRoomToken(connected.roomToken);
@@ -4328,16 +4360,21 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				const shareableLink = buildRoomShareableUrl(nextRoomId);
 				roomShareableLinkRef.current = shareableLink;
 				setRoomShareableLink(shareableLink);
-				await connectToRoomAsParticipant(
+				const started = await connectToRoomAsParticipant(
 					nextRoomId,
 					activeParticipant,
 					connected.roomToken,
 					connected.roomSession,
 					connected.admissionHandoff ?? null,
 					() =>
-						isCurrentJoin() &&
+						isCurrentJoin() && sameInviteSource() &&
 						participantRef.current?.id === activeParticipant.id,
 				);
+				if (!started && isCurrentJoin() && !sameInviteSource()) {
+					invitation?.consumeRoom();
+					await requestPlayerRoomDeparture(connected.roomSession);
+					if (isCurrentJoin()) resetLocalRoomSession(undefined, false, connected.roomSession);
+				}
 			})();
 
 			roomJoinInFlightRef.current = {
@@ -4355,7 +4392,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				}
 			}
 		},
-		[adapter, connectToRoomAsParticipant, refreshRoomActionIdentity, updateRoomQuota],
+		[adapter, connectToRoomAsParticipant, refreshRoomActionIdentity, resetLocalRoomSession, updateRoomQuota],
 	);
 
 	/*
@@ -4873,6 +4910,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 	const createAndConnectRoom = useCallback(
 		async (reason: string) => {
+			if (initialPrimeLaunchRef.current?.waiting) return null;
 			if (roomIdRef.current) {
 				logDebug("overlay.room", "create skipped while room is active", {
 					reason,
@@ -5075,6 +5113,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		});
 		return () => {
 			cancelled = true;
+			activePlayer.current = null;
+			roomJoinInFlightRef.current = null;
 			clientRef.current.close();
 			releaseRoomTabLock();
 		};
@@ -5099,7 +5139,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			capturedPrimeRestoreOwnerRef.current !== currentUserId
 				? storedRoomSession.roomId
 				: null;
-		const initialRoomId = primeRoomRestoreSuppressed ? null : hashRoomId ?? persistedRoomId;
+		const initialRoomId = hashRoomId ?? (primeRoomRestoreSuppressed ? null : persistedRoomId);
 		if (initialRoomId) {
 			if (!participant) {
 				setAuthMessage("Sign in to join Anidachi rooms.");
@@ -5108,13 +5148,29 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			}
 			// Consuming launch A must not expose an older persisted B on rerender.
 			if (capturedPrimeRoomId === initialRoomId) capturedPrimeRestoreOwnerRef.current = currentUserId;
-			initialPrimeLaunchRef.current?.consumeRoom();
+			const launch = initialPrimeLaunchRef.current;
+			const invitation = capturedPrimeRoomId === initialRoomId && launch?.verifyRoom ? launch : undefined;
+			const login = roomAuthSessionKeyRef.current;
+			if (invitation) {
+				if (attemptedPrimeInviteRef.current === invitation) return;
+				attemptedPrimeInviteRef.current = invitation;
+			} else {
+				launch?.consumeRoom();
+			}
 
 			void connectToExistingWebsiteRoom(
 				initialRoomId,
 				hashRoomId ? "hash" : "persisted",
-			).catch((error) => {
+				invitation,
+			).then(() => {
+				// Confirmed HTTP admission has installed a durable tab session for reconnect.
+				if (activePlayer.current && roomIdRef.current === initialRoomId && roomAuthSessionKeyRef.current === login) invitation?.consumeRoom();
+				else if (invitation && attemptedPrimeInviteRef.current === invitation) attemptedPrimeInviteRef.current = null;
+			}).catch((error) => {
+				if (invitation && (!activePlayer.current || initialPrimeLaunchRef.current !== invitation || playerRoomClosedRef.current ||
+					roomAuthSessionKeyRef.current !== login)) return;
 				if (showActiveRoomConflict(error)) {
+					invitation?.consumeRoom();
 					logDebug("overlay.room", "initial join found another active room", {
 						attemptedRoomId: initialRoomId,
 					});
@@ -5124,6 +5180,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				// Quota is exhausted — drop the stale room pointer so reloads stop
 				// re-attempting a join that can only fail, and show why.
 				if (isQuotaExhaustedError(error)) {
+					invitation?.consumeRoom();
 					logDebug("overlay.room", "initial join blocked by quota", {
 						roomId: initialRoomId,
 						resetAt: error.resetAt,
@@ -5141,6 +5198,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				}
 
 				if (isTerminalRoomJoinError(error)) {
+					invitation?.consumeRoom();
 					logDebug("overlay.room", "initial join terminally rejected", {
 						roomId: initialRoomId,
 						status: error.status,
@@ -5162,6 +5220,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 					message,
 				});
 				setAuthMessage(message);
+				if (invitation) setFailedPrimeInvite(invitation);
 				setPanelOpen(true);
 			});
 			// Restoring a room may re-enter this effect while admission is pending.
@@ -5174,6 +5233,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		primeSourcePending,
 		primeRoomRestoreSuppressed,
 		capturedPrimeRoomId,
+		failedPrimeInvite,
 		clearStoredRoomSession,
 		connectToExistingWebsiteRoom,
 		identityLoaded,
@@ -5191,7 +5251,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	});
 
 	const handleCreateRoom = async () => {
-		if (roomCreatePending) {
+		if (roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
 			return;
 		}
 
@@ -6503,7 +6563,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		Boolean(roomId && currentJoinAttempt?.roomId === roomId && !currentJoinAttempt.presentationExpired &&
 			!roomSnapshotReady && !participants.length && status !== "closed" && status !== "error")
 	);
-	const quotaExhausted = !joiningRoom && !roomExitPending && !roomId && (
+	const quotaExhausted = !joiningRoom && !initialPrimeLaunchRef.current?.waiting && !canRetryPrimeInvite && !roomExitPending && !roomId && (
 		accountHostingTime.mode === "legacy" ? displayedQuotaNotice?.kind === "exhausted" : accountHostingTime.exhausted
 	);
 	const panelPlan = authAuthenticated
@@ -6738,6 +6798,12 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 						roomId={roomId} roomReady={isConnected && roomSnapshotReady} isHost={isHost} label={primaryRoomActionLabel}
 						closing={roomExitPending} closingLabel={roomLeaving.closing ? "Leaving room" : "Closing room"}
 						joining={joiningRoom}
+						checkingPrime={initialPrimeLaunchRef.current?.waiting}
+						onRetryJoin={canRetryPrimeInvite ? () => {
+							attemptedPrimeInviteRef.current = null;
+							setAuthMessage(null);
+							setFailedPrimeInvite(null);
+						} : undefined}
 						connectionStalled={Boolean(roomId && !inviteMembershipReady && !roomCreatePending && !roomStartPending && !joiningRoom)}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
 						idleTimeUnavailable={((hasFreeTimePresentation || accountHostingTime.mode === "legacy") && (roomClosing.unavailable || roomLeaving.unavailable)) || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}

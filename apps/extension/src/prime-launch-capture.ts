@@ -12,10 +12,14 @@ import type { VideoAdapter } from "./source-adapters/core/types";
 export interface PrimeLaunchHandoff {
  /** Optional session transaction is committed only after lifecycle acceptance. */
  rejected?: true;
+ waiting?: true;
  /** Only identifies the blocked invitation; never grants room admission. */
  rejectedRoomId?: string;
  intentId?: string;
  commit?(): Promise<boolean>;
+ /** Recheck a recoverable room intent before requesting server admission. */
+ verifyRoom?(): Promise<boolean>;
+ hasDifferentRoomSource?(player: VideoAdapter): boolean;
  blocksFragment?(href: string): boolean;
 
 	readRoom(

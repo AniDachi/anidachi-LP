@@ -1,5 +1,5 @@
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
-import { recoverPrimeLaunch } from "../src/prime-launch-client";
+import { preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
 import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
 import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
@@ -168,23 +168,34 @@ function startContentLifecycleSession(
   };
   let mounted: MountedOverlay | null = null;
   let waitingForPrimeLaunch = false;
+  let retryPrimeRecovery: VideoAdapter | null = null;
+  let mountedRoomIntent: string | undefined;
+  let pendingDismissal: Promise<void> | null = null;
   let disposed = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
 
-  let acceptedLaunch: {fingerprint:string;handoff:PrimeLaunchHandoff;ready:Promise<boolean>} | null = null;
+  let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;
   const mountWithLaunch = (adapter: VideoAdapter) => {
-    const href=location.href;
+    const href = location.href;
+    retryPrimeRecovery = null;
+    const mountWaiting = () => {
+      if (mounted) return;
+      waitingForPrimeLaunch = true;
+      const dismiss = preparePrimeRoomDismissal();
+      mounted = dependencies.mount(adapter, {
+        ...suppressedPrimeLaunch(href), waiting: true, blocksFragment: () => true,
+        consumeRoom() {
+          primeLaunch.dispose();
+          pendingDismissal = dismiss();
+        },
+      });
+    };
     // Show the primary player while identity is pending, without consuming a
     // captured invitation/Resume or trusting the current address-bar episode.
     if (adapter.provider === "primevideo" && adapter.getFingerprint() === "primevideo|unknown") {
-      if (!mounted) {
-        waitingForPrimeLaunch = true;
-        mounted = dependencies.mount(adapter, {
-          ...suppressedPrimeLaunch(href), blocksFragment: () => true,
-        });
-      }
+      mountWaiting();
       return;
     }
     // Returning to a cached document is not a new invitation/Resume. A valid
@@ -192,24 +203,41 @@ function startContentLifecycleSession(
     const capturedLaunch = () => adapter.provider === "primevideo" && restoredLaunch?.blocksFragment?.(location.href)
       ? restoredLaunch
       : primeLaunch.handoff(adapter, location.href);
-    const current=()=>!disposed&&manager.current===adapter;
+    const dismissal = pendingDismissal;
+    const current = () => !disposed && manager.current === adapter && pendingDismissal === dismissal;
     if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
-      void recoverPrimeLaunch(adapter,current).catch(() => undefined).then(async recovered => {
-        if(!current())return;
-        const fingerprint=adapter.getFingerprint();
-        // Once accepted, the transaction belongs to this lifecycle, not the replaced video.
-        let accepted=recovered!==undefined&&acceptedLaunch?.fingerprint===fingerprint&&(!recovered||recovered.intentId===acceptedLaunch.handoff.intentId)?acceptedLaunch:null;
-        if(!accepted && recovered && !recovered.rejected){accepted={fingerprint,handoff:recovered,ready:recovered.commit?.()??Promise.resolve(true)};acceptedLaunch=accepted;}
-        if(accepted){
-          const ok=await accepted.ready.catch(()=>false);
-          if(!current())return;
-          recovered=ok?accepted.handoff:false;
+      // Listen for native Close even when the first SDK or background reply is slow.
+      mountWaiting();
+      const recover = () => recoverPrimeLaunch(adapter, current);
+      const recovery = dismissal ? dismissal.then(recover) : recover();
+      void recovery.catch(() => undefined).then(async recovered => {
+        if (!current()) return;
+        if (recovered === undefined) {
+          retryPrimeRecovery = adapter;
+          mountWaiting();
+          return;
         }
-        if (recovered === false || recovered === undefined || recovered?.rejected) primeLaunch.dispose();
-        const launch = (recovered === false || recovered === undefined) ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch();
+        const fingerprint = adapter.getFingerprint();
+        // A personal Resume is claimed once even if Prime replaces its video.
+        if (recovered && recovered.commit && (acceptedResume?.fingerprint !== fingerprint || acceptedResume.handoff.intentId !== recovered.intentId)) {
+          acceptedResume = { fingerprint, handoff: recovered, ready: recovered.commit() };
+        }
+        if (acceptedResume?.fingerprint === fingerprint && (!recovered || recovered.intentId === acceptedResume.handoff.intentId)) {
+          const { ready, handoff } = acceptedResume;
+          const ok = await ready.catch(() => false);
+          if (!current()) return;
+          recovered = ok ? handoff : false;
+        }
+        if (recovered === false || recovered?.rejected) primeLaunch.dispose();
+        const launch = recovered === false ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch();
+        // Keep the same overlay and in-flight admission through a video replacement.
+        if (mounted && launch?.verifyRoom && launch.intentId === mountedRoomIntent) return;
         if ((waitingForPrimeLaunch || (launch && !launch.rejected)) && mounted) { mounted.dispose(); mounted = null; }
         waitingForPrimeLaunch = false;
-        if (!mounted) mounted = dependencies.mount(adapter, launch);
+        if (!mounted) {
+          mounted = dependencies.mount(adapter, launch);
+          mountedRoomIntent = launch?.verifyRoom ? launch.intentId : undefined;
+        }
       });
     } else {
       const launch = capturedLaunch();
@@ -228,6 +256,7 @@ function startContentLifecycleSession(
       });
       mounted?.dispose();
       mounted = null;
+      mountedRoomIntent = undefined;
     },
     mounted(adapter) {
       logDebug("content", "mount adapter", {
@@ -263,9 +292,13 @@ function startContentLifecycleSession(
     },
   });
 
-  const reconcile = () => {
+  const reconcile = (retryLaunch = true) => {
     primeLaunch.observe(location.href);
-    return manager.reconcile(dependencies.detect(manager.current));
+    const result = manager.reconcile(dependencies.detect(manager.current));
+    if (retryLaunch && result === "relocated" && retryPrimeRecovery && manager.current === retryPrimeRecovery) {
+      mountWithLaunch(retryPrimeRecovery);
+    }
+    return result;
   };
 
   let mountCheckFrame: number | null = null;
@@ -277,7 +310,9 @@ function startContentLifecycleSession(
 
     mountCheckFrame = window.requestAnimationFrame(() => {
       mountCheckFrame = null;
-      reconcile();
+      // A transient SDK/background failure retries on the existing backed-off poll.
+      // Ordinary DOM mutations should not turn a busy player into a retry loop.
+      reconcile(false);
     });
   };
 
