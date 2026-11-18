@@ -339,7 +339,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
-        {!data.catalogComplete && !single && <p className="wh-hint">Showing known episodes; the full catalog is unavailable. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</p>}
+        {!data.catalogComplete && !single && <p className="wh-hint">{item.provider === "primevideo" && item.catalogState === "partial"
+          ? "Showing known episodes. Prime Video may have additional seasons or episodes."
+          : <>Showing known episodes; the full catalog is unavailable. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</>}</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
         </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "known"}` : `${episodes.filter(watched).length} watched`}</span></div>}

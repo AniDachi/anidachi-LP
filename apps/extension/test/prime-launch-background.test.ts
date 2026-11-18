@@ -135,6 +135,25 @@ it("registers room intent before new-tab navigation and survives missing fragmen
 	expect(await send(message, provider)).toMatchObject({ status: "blocked" });
 });
 const amazonUrl = "https://www.amazon.com/-/de/gp/video/detail/B0FX2ZCPFK";
+it("captures only the current tab's room identity for early player close", async () => {
+	const provider = { id: ext, tab: { id: 7 }, frameId: 0, url: amazonUrl };
+	const receipt = { type: "ANIDACHI_PRIME_LAUNCH", action: "pending-room" };
+	const start = { type: "ANIDACHI_PRIME_LAUNCH", action: "start", contentId: id, roomId: "room-a", newTab: true };
+	expect(await send(receipt, provider)).toEqual({ status: "empty" });
+	await send(start);
+	const first = await send(receipt, provider);
+	expect(first).toEqual({ status: "ready", intentId: expect.any(String), contentId: id });
+	expect(await send(receipt, { ...provider, tab: { id: 8 } })).toEqual({ status: "empty" });
+	expect(await send(receipt, { ...provider, frameId: 1 })).toEqual({ status: "cancelled" });
+	expect(await send(receipt, { ...provider, url: "https://staging.anidachi.app/room/a/launch" }, true)).toEqual({ status: "cancelled" });
+	await send({ ...start, roomId: "room-b" });
+	await send({ type: receipt.type, action: "take", contentId: id, intentId: first.intentId }, provider);
+	const next = await send(receipt, provider);
+	expect(next.status).toBe("ready");
+	expect(next.intentId).not.toBe(first.intentId);
+	state.login = "different-login";
+	expect(await send(receipt, provider)).toEqual({ status: "empty" });
+});
 const navigation = {
 	contentId: id,
 	routes: [
@@ -290,6 +309,7 @@ it("preserves personal Resume intent and position through a direct Amazon launch
 		frameId: 0,
 		url: `https://www.primevideo.com/detail/${id}`,
 	};
+	expect(await send({ type: "ANIDACHI_PRIME_LAUNCH", action: "pending-room" }, redirected)).toEqual({ status: "empty" });
 	expect(
 		await send(
 			{
