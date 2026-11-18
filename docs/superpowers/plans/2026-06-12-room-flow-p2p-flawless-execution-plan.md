@@ -230,7 +230,7 @@ Minimum startup for the next room/P2P PR:
 
 - [x] 2.1 Migration applied + verified on staging: `client_request_id`, `last_active_at`, `ended_at`, `host_connected_at`; partial unique index `uniq_rooms_host_client_request`; `(host_user_id, status, last_active_at)` index; `usage_daily` table + `increment_host_usage` RPC.
 - [x] 2.2 Idempotent create: per-click `clientRequestId` from the extension; conflict returns the existing non-ended room (`reused=true`). Verified 14/14 on staging.
-- [x] 2.3 Lifecycle transitions: `/connect` bumps `last_active_at` and promotes `lobby -> live` on first host connect; old active-room-count limit removed. Verified on staging.
+- [x] 2.3 Lifecycle transitions: `/connect` bumps `last_active_at` and originally promoted `lobby -> live` on first host connect (superseded by the host JOIN confirmation below); old active-room-count limit removed. Verified on staging.
 - [x] 2.4 `POST /api/rooms/:roomId/end` (host only) sets `ended`/`ended_at`, settles the segment, idempotent; ended rooms 404 on connect; overlay has a host "End room" control. Verified on staging.
 - [x] 2.5 PD2 quota v1 (web-side): create and `/connect` return `QUOTA_EXHAUSTED` + `resetAt` at zero quota; free-host tokens capped to remaining quota. Verified on staging.
 - [~] 2.6 Quota UX: overlay shows remaining free minutes and a graceful exhausted message with reset time. REMAINING: distinct <=5-minute warning state and explicit upgrade-prompt CTA (final cut still enforced by Block 6 DO alarm).
@@ -650,3 +650,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   1426/1426, API runtime tests 27/27, room harness 39/39, and real-WebRTC
   harness 26/26. Remaining: final staging artifact build/validation, CI, and
   loaded two-profile acceptance before promotion to `main`.
+
+### Host admission and failed first connections
+
+Issuing a host ticket reserves the account in a lobby. On the first host JOIN,
+the Worker confirms the exact room, account and participant session through
+`POST /api/internal/rooms/{roomId}/host-joined` before sending the first
+snapshot. A matching departure releases an unjoined lobby immediately. If the
+browser disappears, the database sweeps unconfirmed host reservations every
+minute after 60 seconds of inactivity. Joined rooms keep the existing Worker
+disconnect grace. For a rolling release, deploy the compatible Worker and its
+Web callback before activating the database and ticket changes.
