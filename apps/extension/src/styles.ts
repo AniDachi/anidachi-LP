@@ -16,6 +16,7 @@ ${free20WarningStyles}
   }
 
   .anidachi-overlay {
+    --mini-panel-width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
     position: absolute;
     inset: 0;
     z-index: 2147483647;
@@ -162,11 +163,28 @@ ${extensionThemeTokens}
     font-weight: 650;
   }
 
+  /* Prime aligns the launcher and panel on their right edge. Connect their padded
+     outlines so a diagonal pointer path stays inside without covering the toolbar. */
+  .prime-panel-pointer-guard {
+    --pad: 6px;
+    --rise: calc(var(--mini-panel-top) - var(--top-bubble-top));
+    position: absolute;
+    top: calc(var(--top-bubble-top) - var(--pad));
+    right: calc(var(--mini-panel-right) - var(--pad));
+    width: calc(var(--mini-panel-width) + 2 * var(--pad));
+    height: calc(var(--rise) + var(--open-panel-height, 0px) + 2 * var(--pad));
+    clip-path: polygon(calc(100% - var(--capsule-width, 78px) - 2 * var(--pad)) 0,
+      100% 0, 100% 100%, 0 100%, 0 var(--rise));
+    pointer-events: auto;
+    cursor: default;
+    z-index: 29;
+  }
+
   .mini-panel {
     position: absolute;
     top: min(var(--mini-panel-top, 48px), calc(100% - 28px));
     right: var(--mini-panel-right, 10px);
-    width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
+    width: var(--mini-panel-width);
     max-height: max(
       0px,
       calc(
@@ -209,6 +227,8 @@ ${extensionThemeTokens}
   .mini-panel::-webkit-scrollbar {
     display: none;
   }
+
+  .mini-panel[data-prime-panel] { container: prime-panel / inline-size; }
 
   .panel-header {
     display: grid;
@@ -4797,6 +4817,13 @@ ${hostingNoticeStyles}
     color: rgba(255, 255, 255, 0.48);
     font-size: 11px;
     line-height: 1.35;
+  }
+  @container prime-panel (max-width: 285px) {
+    .settings-surface { margin-top: 8px; padding: 8px; }
+    .settings-toggle-row { position: relative; }
+    .settings-help { position: static; }
+    .settings-help-tooltip { left: 0; max-width: 100%; }
+    .reaction-shortcut-grid { flex-wrap: wrap; gap: 2px; padding-block: 4px; }
   }
 ${panelRoomActionsStyles}
 `;
