@@ -13,6 +13,7 @@ import {
   createWatchHistoryContentReconnectMessage,
   createListWatchHistoryMessage,
   createWatchHistoryClient,
+  authorizeWatchHistorySender,
   bestEffortFlushWatchHistoryBeforeSignOut,
   flushWatchHistoryInBackground,
   handleWatchHistoryAuthSessionChange,
@@ -3077,8 +3078,10 @@ it("allows Netflix's final history write and catalog cleanup after returning to 
   } finally { vi.unstubAllGlobals(); }
 });
 
-it("finishes history after the Prime player returns to browse in the same document", () => {
-  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+it("finishes history after the Prime player returns to browse using only the browser-session receipt", async () => {
+  const stored: Record<string, unknown> = {};
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" },
+    storage: { session: { get: async (key: string) => ({ [key]: stored[key] }), set: async (v: object) => Object.assign(stored, v) } } });
   try {
     const origin = "https://www.primevideo.com", id = "A".repeat(26), sourceUrl = origin + "/detail/" + id;
     const sender = { id: "test-extension", frameId: 0, documentId: "prime-fixture", origin,
@@ -3089,13 +3092,13 @@ it("finishes history after the Prime player returns to browse in the same docume
     const event = { ...base, provider: "primevideo", sourceUrl, titleKey: "primevideo:movie:" + id, episodeKey: "primevideo:movie:" + id,
       itemKind: "movie", seasonKey: null, episodeTitle: "Movie", primevideoIdentity: { kind: "movie", providerMovieId: id }, kind: "source_change" };
     const final = { ...bootstrap, command: "observe-progress", event } as const;
-    expect(isWatchHistorySenderAllowed(final, returned)).toBe(false);
-    expect(isWatchHistorySenderAllowed(bootstrap, sender)).toBe(true);
-    expect(isWatchHistorySenderAllowed(final, returned)).toBe(true);
-    expect(isWatchHistorySenderAllowed(final, { ...returned, documentId: "new-document" })).toBe(false);
-    expect(isWatchHistorySenderAllowed({ ...final, event: { ...event, kind: "heartbeat" } }, returned)).toBe(false);
-    expect(isWatchHistorySenderAllowed(bootstrap, returned)).toBe(false);
-    expect(isWatchHistorySenderAllowed({ ...bootstrap, command: "catalog-release", accountGeneration: 1, revision: 1, titleKey: event.titleKey, pageId: "previous" }, returned)).toBe(true);
+    expect(await authorizeWatchHistorySender(final, returned)).toBe(false);
+    expect(await authorizeWatchHistorySender(bootstrap, sender)).toBe(true);
+    expect(await authorizeWatchHistorySender(final, returned)).toBe(true);
+    expect(await authorizeWatchHistorySender(final, { ...returned, documentId: "new-document" })).toBe(false);
+    expect(await authorizeWatchHistorySender({ ...final, event: { ...event, kind: "heartbeat" } }, returned)).toBe(false);
+    expect(await authorizeWatchHistorySender(bootstrap, returned)).toBe(false);
+    expect(await authorizeWatchHistorySender({ ...bootstrap, command: "catalog-release", accountGeneration: 1, revision: 1, titleKey: event.titleKey, pageId: "previous" }, returned)).toBe(true);
   } finally { vi.unstubAllGlobals(); }
 });
 
