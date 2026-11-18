@@ -25,10 +25,7 @@ export function subscribePrimePlayerClose(
 		if (container.getAttribute(PRIME_PLAYER_STATE) === "open") observedOpen = true;
 		if (!pending) return;
 		const id = readPrimeBinding(video)?.contentId;
-		if (
-			!container.isConnected ||
-			(id && pending.contentId && id !== pending.contentId)
-		) {
+		if ((pending.natural && !container.isConnected) || (id && pending.contentId && id !== pending.contentId)) {
 			cancel();
 			return;
 		}
@@ -56,20 +53,19 @@ export function subscribePrimePlayerClose(
 		if (!pending?.natural) cancel();
 		const target = event.target;
 		if (
-			!(target instanceof Element) ||
-			!container.contains(target) ||
-			target.closest("anidachi-overlay-root") ||
+			(target instanceof Element && target.closest("anidachi-overlay-root")) ||
 			!video.isConnected ||
 			video.getAttribute(PRIME_PLAYER) !== "true" ||
 			container.getAttribute(PRIME_PLAYER_STATE) !== "open"
 		)
 			return;
-		const button = target.closest("button#atvwebplayersdk-close-player-button");
+		const inside = target instanceof Element && container.contains(target);
+		const button = inside && target.closest("#atvwebplayersdk-close-player-button");
 		const closeClick =
 			event.type === "click" &&
-			button instanceof HTMLButtonElement &&
-			!button.disabled;
+			button && !button.matches(":disabled, [aria-disabled='true']");
 		const escape =
+			(inside || target === document || target === document.body || target === document.documentElement) &&
 			event instanceof KeyboardEvent &&
 			event.key === "Escape" &&
 			!event.repeat &&
@@ -80,7 +76,7 @@ export function subscribePrimePlayerClose(
 		if (!closeClick && !escape) return;
 		cancel();
 		pending = { event, contentId: readPrimeBinding(video)?.contentId ?? null };
-		// SDK's existing 250ms observation confirms closure. No additional polling.
+		// The selected SDK confirms closure through its Close event or lifecycle update.
 		timer = setTimeout(cancel, PRIME_PLAYER_CLOSE_WINDOW_MS);
 	};
 	const observer = new MutationObserver(check);
@@ -90,8 +86,8 @@ export function subscribePrimePlayerClose(
 	});
 	video.addEventListener("emptied", unloaded);
 	document.addEventListener(PRIME_BINDING_CHANGED, check);
-	document.addEventListener("click", gesture, true);
-	document.addEventListener("keydown", gesture, true);
+	window.addEventListener("click", gesture, true);
+	window.addEventListener("keydown", gesture, true);
 	document.addEventListener(PRIME_NAVIGATING, cancel);
 	window.addEventListener("pagehide", cancel);
 	return () => {
@@ -99,8 +95,8 @@ export function subscribePrimePlayerClose(
 		observer.disconnect();
 		video.removeEventListener("emptied", unloaded);
 		document.removeEventListener(PRIME_BINDING_CHANGED, check);
-		document.removeEventListener("click", gesture, true);
-		document.removeEventListener("keydown", gesture, true);
+		window.removeEventListener("click", gesture, true);
+		window.removeEventListener("keydown", gesture, true);
 		document.removeEventListener(PRIME_NAVIGATING, cancel);
 		window.removeEventListener("pagehide", cancel);
 	};
