@@ -3334,6 +3334,34 @@ ${hostingNoticeStyles}
     overflow: visible;
   }
 
+  .room-rail-edge-intent {
+    position: absolute;
+    inset: 0 0 0 auto;
+  }
+
+  /* Only visible pills take input while idle. An engaged list also covers
+     the gaps between rows and the return path from the widest participant. */
+  .room-rail[data-isolate-player-pointer] .room-rail-panel,
+  .room-rail[data-isolate-player-pointer] .room-rail-list { pointer-events: none; }
+  .room-rail[data-isolate-player-pointer].open .room-rail-more { pointer-events: auto; }
+  .room-rail[data-isolate-player-pointer="idle"] .room-rail-slot:not([data-presentation="hidden"])::before,
+  .room-rail[data-isolate-player-pointer="engaged"] .room-rail-panel::before {
+    content: "";
+    position: absolute;
+    inset: -6px 0 -6px -6px;
+    pointer-events: auto;
+  }
+  .room-rail[data-isolate-player-pointer].open .room-rail-panel::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: calc(100% + 6px);
+    height: max(0px, calc(var(--room-rail-entry-y, 0px) - 100% + 6px));
+    clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 14px) 100%);
+    pointer-events: auto;
+  }
+
   .room-rail.open .room-rail-list {
     box-sizing: border-box;
     width: calc(100% + 30px);
