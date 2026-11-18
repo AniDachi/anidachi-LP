@@ -953,7 +953,6 @@ export async function createRoom(params: {
       ...sourceColumns,
       title: params.title ?? null,
       client_request_id: params.clientRequestId ?? null,
-      host_connected_at: new Date().toISOString(),
       host_plan_code: params.capabilities.hostPlanCode,
       max_participants: params.capabilities.maxParticipants,
       max_media_seats: params.capabilities.maxMediaSeats,

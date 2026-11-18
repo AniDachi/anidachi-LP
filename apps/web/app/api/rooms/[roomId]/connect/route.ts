@@ -223,13 +223,8 @@ export async function POST(
       return NextResponse.json({ code: "ROOM_AUTHORITY_UNAVAILABLE" }, { status: 503 });
     }
   }
-  const touched = isHost
-    ? await updateRoom(roomId, {
-      host_connected_at: now.toISOString(),
-      last_active_at: now.toISOString(),
-      ...(room.status === "lobby" ? { status: "live" as const } : {}),
-    })
-    : await updateRoom(roomId, { last_active_at: now.toISOString() });
+  // A ticket reserves a session. Only a committed host JOIN activates the room.
+  const touched = await updateRoom(roomId, { last_active_at: now.toISOString() });
   if (!touched) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
