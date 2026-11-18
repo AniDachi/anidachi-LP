@@ -7278,6 +7278,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 					{roomRailVisible ? (
 						<RoomRail
+							isolatePlayerPointer={adapter.provider === "primevideo"}
 							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
 							activeParticipantId={participant?.id}
 							getParticipantAudioPreference={getParticipantAudioPreference}
