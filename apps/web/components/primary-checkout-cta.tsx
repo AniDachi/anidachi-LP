@@ -19,6 +19,7 @@ import {
 import { DE_PRICING_FREE20_SUMMARY } from "@/lib/locale/de-copy";
 import { WATCHROOM_CTA, type Watchroom } from "@/lib/watchroom-cta";
 import type { PageLocale } from "@/lib/locale/ui-strings";
+import { StoreRatingLine } from "@/components/store-rating-line";
 
 const COPY = {
   default: {
@@ -155,6 +156,7 @@ export function PrimaryCheckoutCta({
           <p className="mt-0.5 text-sm leading-snug text-ani-muted">
             {room?.body ?? copy.body}
           </p>
+          {!de ? <StoreRatingLine className="mt-2 justify-start" /> : null}
         </div>
 
         <Button

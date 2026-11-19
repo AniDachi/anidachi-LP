@@ -5,6 +5,7 @@ import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstallLink } from "@/components/install-link";
 import { WatchingTogetherCount } from "@/components/watching-together-count";
+import { StoreRatingLine } from "@/components/store-rating-line";
 import { inferPageTemplateFromPath, trackConversion } from "@/lib/conversion-events";
 import { INSTALL_CTA_LABEL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { DE_PLATFORM_HUBS, UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
@@ -20,7 +21,7 @@ const PLATFORM_HUBS: Record<string, string> = {
 
 /**
  * The homepage hero's install pattern for platform hubs (ANI-28): one primary button right under
- * the H1, a "see it" link to the demo, and the joined count. Replaces the hub's above-the-fold
+ * the H1, a "see it" link to the demo, and the store rating (the joined count on German pages). Replaces the hub's above-the-fold
  * install card, so a hub still shows at most two install CTAs (this and the bottom card).
  * Guides reuse it after the short answer (ANI-64) with their own `placement` and no demo link.
  */
@@ -61,6 +62,7 @@ export function HubHero({
   className?: string;
 }) {
   const centered = align === "center";
+  const de = locale === "de";
   const t = UI_STRINGS[locale];
   const hubs = locale === "de" ? DE_PLATFORM_HUBS : PLATFORM_HUBS;
   const pageTemplate = inferPageTemplateFromPath(pagePath);
@@ -87,7 +89,7 @@ export function HubHero({
       </p>
       <div
         className={cn(
-          "mb-4 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center",
+          "mb-5 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center",
           centered && "sm:justify-center",
         )}
       >
@@ -116,6 +118,7 @@ export function HubHero({
           </Button>
         ) : null}
       </div>
+      {!de ? <StoreRatingLine className={cn("mb-3", !centered && "justify-start")} /> : null}
       {worksOn && worksOn.length > 0 ? (
         <p className="mb-2 text-sm text-ani-text">
           {worksOnLabel ?? t.worksOn}{" "}
@@ -139,12 +142,14 @@ export function HubHero({
       {centered ? (
         <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-ani-muted">
           <span>{finePrint}</span>
-          <WatchingTogetherCount locale={locale} className="!m-0 !leading-5 sm:before:mr-3 sm:before:text-ani-muted sm:before:content-['·']" />
+          {de ? (
+            <WatchingTogetherCount locale={locale} className="!m-0 !leading-5 sm:before:mr-3 sm:before:text-ani-muted sm:before:content-['·']" />
+          ) : null}
         </div>
       ) : (
         <>
           <p className="max-w-2xl text-sm leading-relaxed text-ani-muted">{finePrint}</p>
-          <WatchingTogetherCount locale={locale} className="!mb-0 mt-2" />
+          {de ? <WatchingTogetherCount locale={locale} className="!mb-0 mt-2" /> : null}
         </>
       )}
       <p className="mt-2 max-w-md text-sm text-ani-muted md:hidden">
