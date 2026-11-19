@@ -1,0 +1,82 @@
+name: Accept a staged feature
+
+on:
+  push:
+    branches: [staging]
+
+permissions: {}
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      release: ${{ steps.pr.outputs.release }}
+      topic: ${{ steps.pr.outputs.topic }}
+      media: ${{ steps.pr.outputs.media }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 -m unittest discover -s scripts -p 'staging_release_test.py'
+      - id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/staging-release.py select
+
+  isolated-ci:
+    needs: select
+    if: needs.select.outputs.release == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    with:
+      candidate_sha: ${{ needs.select.outputs.topic }}
+      media: ${{ needs.select.outputs.media == 'true' }}
+
+  live:
+    needs: select
+    if: needs.select.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: staging
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
+    outputs:
+      accepted: ${{ steps.smoke.outputs.accepted }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - id: smoke
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STAGING_ACCESS_CODE: ${{ secrets.STAGING_ACCESS_CODE }}
+        run: python3 scripts/staging-release.py live
+
+  publish:
+    needs: [select, isolated-ci, live]
+    if: needs.select.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          ACCEPTED_SHA: ${{ needs.live.outputs.accepted }}
+        run: python3 scripts/staging-release.py publish

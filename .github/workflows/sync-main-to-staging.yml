@@ -1,0 +1,28 @@
+name: Sync released main to staging
+on:
+  push:
+    branches: [main, staging]
+
+permissions: {}
+concurrency:
+  group: sync-released-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Integrate a tested release back into staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/sync-released-main.py
