@@ -22,7 +22,7 @@ human judgment.
 
 | Change type | Required before PR to `staging` | Required before promotion to `main` |
 | --- | --- | --- |
-| Docs/process only | Link/path sanity, no contradiction with `docs/current-development-state.md`, `pnpm dev:check` if repo files changed | Usually safe for auto-promotion if workflow allows it |
+| Docs/process only | Link/path sanity, no contradiction with `docs/current-development-state.md`, `pnpm dev:check` if repo files changed | Live staging acceptance and a manual merge of this topic's release PR |
 | Web/site UI or account dashboard | `pnpm --filter @anidachi/web check`; web tests when logic changes; screenshot/recording for visual behavior | Staging web smoke when user-facing behavior changed |
 | Auth/session/OAuth | Web check/tests; extension auth consumer check when relevant; env/redirect docs reviewed | Staging login/connect flow verified |
 | Billing/subscriptions | Web check/tests; Stripe/env impact documented; pricing docs checked | Staging checkout/webhook smoke or deliberate exception recorded |

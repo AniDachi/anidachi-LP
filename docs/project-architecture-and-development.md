@@ -209,7 +209,7 @@ verification before a future promotion.
 Use this development path:
 
 ```txt
-feature branch -> PR -> staging -> tester build -> PR/promotion -> main -> production build
+origin/main -> topic -> PR to staging -> live tests -> same topic PR to main
 ```
 
 Branch roles:
@@ -222,10 +222,10 @@ Branch roles:
 
 Rules:
 
-- Start normal work from `staging`.
+- Start normal work from `origin/main`. Keep each topic isolated through release.
 - Do not work directly on `main`.
 - Open PRs into `staging` first.
-- Merge/promote to `main` only after staging has been tested.
+- Each topic needs its own accepted staging revision before its manual release PR merge. See [the team handoff](independent-releases.md).
 - Keep each PR scoped enough to review.
 - Update docs in the same PR when behavior, architecture, endpoints, release
   flow, or environment assumptions change.
@@ -237,9 +237,8 @@ Typical start:
 
 ```bash
 cd <repo>
-git switch staging
-git pull origin staging
-git switch -c codex/short-task-name
+git fetch origin
+git switch -c codex/short-task-name origin/main
 ```
 
 Before opening a PR:
@@ -690,7 +689,7 @@ fix the stale documentation.
 
 Example: improving the website.
 
-1. Start from `staging`.
+1. Start from `origin/main`.
 2. Create a feature branch.
 3. Change the relevant `apps/web` files.
 4. Run `pnpm check` and relevant tests.
@@ -701,7 +700,7 @@ Example: improving the website.
 
 Example: adding an extension feature.
 
-1. Start from `staging`.
+1. Start from `origin/main`.
 2. Create a feature branch.
 3. Change `apps/extension` and `packages/protocol` if event contracts change.
 4. Update `apps/api` if the feature needs realtime room support.

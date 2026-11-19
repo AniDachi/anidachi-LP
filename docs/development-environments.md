@@ -44,17 +44,17 @@ In an automated shell that does not source zsh configuration, run commands as
 ## Branch Model
 
 ```txt
-feature/* or codex/* -> staging -> main
+origin/main -> topic -> PR to staging -> staging acceptance -> same topic PR to main
 ```
 
 - `main` is production.
 - `staging` is the shared integration/testing branch.
-- Feature branches should normally branch from `staging`.
+- Create each task branch from current `origin/main`.
 - Open PRs into `staging` first.
-- After staging is tested, open a release PR from `staging` into `main`.
+- After successful staging verification the author can merge that topic's separate release PR.
 - `main` and `staging` are protected. See
   `docs/current-development-state.md` for the current required checks and
-  auto-promotion rules.
+  [independent release procedure](independent-releases.md).
 
 ## Website Environments
 
@@ -279,19 +279,7 @@ not in the extension bundle.
 
 ## Production Release Checklist
 
-Only run after staging acceptance passes.
-
-```txt
-1. Mark the migration PR ready for review.
-2. Get approval.
-3. Merge into main.
-4. Confirm Vercel production deployment succeeds.
-5. Confirm production Worker responds.
-6. Build/download production extension artifact.
-7. Smoke test website sign-in on www.anidachi.app.
-8. Smoke test production extension room creation and join.
-9. Tag the migration release.
-```
+After the topic passes isolated CI and live staging acceptance, its author decides when to merge its release PR. Verify the affected production surfaces after that merge. For site changes, check the Vercel deployment and the changed pages. Worker delivery and Chrome Web Store publication follow their own release procedures. For a database or cross-plane migration, also follow its documented deployment order and rollback plan.
 
 ## P2P Scorecard
 

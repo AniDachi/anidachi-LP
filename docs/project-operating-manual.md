@@ -396,41 +396,12 @@ normal main merge as permission to apply the pending history reset. Staging
 delivery continues normally. Source guards do not prove existing production
 deployments or external Vercel promotion routes are already frozen.
 
-Normal feature flow:
-
-1. Start from `staging`.
-2. Create a feature branch.
-3. Make the smallest coherent change.
-4. Run local checks.
-5. Open a PR into `staging`.
-6. CI must pass.
-7. Merge into `staging`.
-8. Build and upload `Anidachi Staging` if testers need the change.
-9. Test in the staging extension and staging web/API environment.
-10. When accepted, open a release PR from `staging` into `main`.
-11. `main` keeps stricter checks but does not require approval.
-12. After merge to `main`, deploy/build production artifacts.
-
-Branch protection:
-
-- `staging`: requires `check-and-test`, no approval required, faster iteration.
-- `main`: requires `check-and-test`, no approval, up-to-date branch, and
-  conversation resolution.
-- Repository auto-merge is enabled, so eligible PRs can merge after required
-  checks pass.
-
-Site-only auto-promotion:
-
-- Website page/content work should still merge into `staging` first so it can be
-  verified on `staging.anidachi.app` and by the staging extension.
-- After a push to `staging`, `Promote Site Staging to Main` compares the full
-  `main..staging` diff.
-- If the diff contains only safe site/docs paths, it creates or updates the
-  `staging -> main` PR and enables auto-merge.
-- If extension, API, workflow, package, auth, room, checkout, or other sensitive
-  files are present in the diff, auto-promotion is skipped.
-- Workflow changes under `.github/**` are intentionally never auto-promoted; the
-  auto-promotion workflow itself must be installed in `main` manually once.
+Start each task from current `origin/main`. Open a PR from the task branch into
+`staging` and merge it after CI. Staging acceptance checks the actual deployed
+revision and runs CI on the same task independently of other staged changes.
+Automation opens or reuses that task's PR into `main`. Its author decides when
+to merge. Every new revision goes through staging again. See the
+[developer and AI handoff](independent-releases.md).
 
 Code promotion follows PR merge. The October 2 local release guard keeps staging
 Worker delivery automatic and requires manual production Worker dispatch from
@@ -471,7 +442,7 @@ staging        = shared testing branch for founders/testers
 main           = production branch for the public product
 ```
 
-For example, a website improvement starts from `staging`, moves into a feature
+For example, a website improvement starts from `origin/main`, moves into a feature
 branch, gets checked and reviewed through a PR, then lands in `staging` for
 testing. Only after it is accepted does the same code move to `main`.
 
@@ -481,13 +452,11 @@ publication decision.
 
 ## Everyday Development Loop
 
-Start each feature from current `staging`:
+Start each feature from current `origin/main`:
 
 ```bash
 git fetch origin
-git switch staging
-git pull --ff-only origin staging
-git switch -c codex/task-name
+git switch -c codex/task-name origin/main
 pnpm install --frozen-lockfile
 pnpm check
 pnpm test
@@ -529,8 +498,8 @@ Promotion:
 3. Run staging smoke when web/auth/staging-gate behavior changed.
 4. Build/upload `Anidachi Staging` if testers need extension changes.
 5. Test on at least one clean browser profile or new PC when auth changes.
-6. Open PR from `staging` into `main`.
-7. Merge only after checks; request review when the change is risky.
+6. Automation opens or updates the task's release PR after successful staging acceptance.
+7. The author merges after mandatory checks. A teammate can review on request.
 8. Build/upload production extension only from `main`.
 
 For the owner-approved October 2 paid-hosting transition, the Store review

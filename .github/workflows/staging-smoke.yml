@@ -14,9 +14,11 @@ concurrency:
 
 jobs:
   smoke:
-    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    if: github.ref == 'refs/heads/staging' && (github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success')
     runs-on: ubuntu-latest
-    environment: staging
+    environment:
+      name: staging
+      deployment: false
 
     steps:
       - name: Checkout

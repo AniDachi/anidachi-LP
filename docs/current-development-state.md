@@ -2313,54 +2313,12 @@ development.
 
 ## Branches And Protection
 
-`staging` is the fast integration branch for tester builds.
-
-- Required status checks enforced by GitHub: none currently
-- Additional non-required release workflow: `build-extension`
-- Additional non-required deploy workflow: `deploy-api`
-- Required PR reviews enforced by GitHub: none currently
-- CODEOWNERS review requirement: off; CODEOWNERS is advisory on this branch
-- Force pushes: blocked
-- Branch deletion: blocked
-- Admin enforcement: on
-
-The project workflow still requires feature PRs, `check-and-test`, and the
-change-specific quality gates before merging to `staging`; GitHub does not yet
-enforce those checks on this branch. Aligning the live protection with the
-documented workflow is a separate process follow-up, not part of a product or
-release PR.
-
-`main` is the production branch.
-
-- Required status check: `check-and-test`
-- Additional non-required release workflow: `build-extension`
-- Additional non-required deploy workflow: `deploy-api`
-- Required approvals: `0`
-- Dismiss stale approvals: on
-- Strict up-to-date branch requirement: on
-- Conversation resolution requirement: off
-- CODEOWNERS review requirement: off; CODEOWNERS is advisory on this branch
-- Repository auto-merge: enabled
-- Force pushes: blocked
-- Branch deletion: blocked
-- Admin enforcement: on
-
-Normal flow:
-
-```txt
-feature branch -> PR -> staging -> tester build -> PR/promotion -> main -> public build
-```
-
-Site-only auto-promotion:
-
-- Pushes to `staging` run `Promote Site Staging to Main`.
-- The workflow compares the full `main..staging` diff.
-- If the diff contains only safe site/docs paths, it creates or updates a PR
-  from `staging` to `main` and enables auto-merge.
-- If the diff includes extension, API, workflow, package, auth, room, checkout,
-  or other sensitive paths, promotion is skipped and must be handled manually.
-- Workflow changes under `.github/**` are intentionally never auto-promoted; the
-  auto-promotion workflow itself must be installed in `main` manually once.
+`staging` accepts topic PRs through a merge commit after `check-and-test`.
+Each topic branches from current `main`, stays available after integration, and
+gets its own release PR. The protected staging workflow checks the topic in
+isolation and records live staging acceptance for that revision. A new commit
+needs another staging PR. Both developers may merge their own tested releases.
+See [the team handoff](independent-releases.md).
 
 ## Development Quality System
 
