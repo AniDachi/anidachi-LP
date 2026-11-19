@@ -20,6 +20,7 @@ Before changing code, read these files:
 - `docs/project-architecture-and-development.md`
 - `README.md`
 - For SEO/content pages: `apps/web/docs/seo-content-guidelines.md`
+- For marketing page design (homepage, guides, hubs): `apps/web/docs/landing-page-design-guidelines.md`
 
 Historical plans under `docs/superpowers/plans/` can be useful, but they may be
 outdated. Prefer `docs/current-development-state.md` for current branches,
