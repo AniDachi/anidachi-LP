@@ -45,25 +45,24 @@ rule/docs instead of bypassing it silently.
 Normal flow:
 
 ```txt
-feature/codex branch -> PR -> staging -> tested promotion PR -> main
+origin/main -> topic -> PR to staging -> live acceptance -> same topic PR to main
 ```
 
 Rules:
 
-- Branch from latest `staging`.
+- Branch from latest `origin/main`. Keep a separate branch per task through its release.
 - Open PRs into `staging` first.
 - Never push directly to `main`.
 - Never force-push `staging` or `main`.
 - Do not revert unrelated user or collaborator changes.
-- Production promotion happens only after staging acceptance for risky work.
+- Every release needs the current topic revision accepted on staging and checked against main.
+- Authors merge their own release PR. New commits require another staging PR. See [the team handoff](docs/independent-releases.md).
 
 Startup commands:
 
 ```bash
 git fetch origin
-git switch staging
-git pull --ff-only origin staging
-git switch -c codex/task-name
+git switch -c codex/task-name origin/main
 fnm use --install-if-missing
 corepack enable
 corepack prepare pnpm@11.2.2 --activate

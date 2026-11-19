@@ -4,6 +4,14 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
+  workflow_call:
+    inputs:
+      candidate_sha:
+        type: string
+        required: true
+      media:
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -17,7 +25,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ inputs.candidate_sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,6 +35,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha || github.sha }}
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -59,3 +70,11 @@ jobs:
       - name: Check Worker bundle
         working-directory: apps/api
         run: pnpm exec wrangler deploy --env staging --dry-run --outdir /tmp/anidachi-worker-dry-run
+
+      - name: Verify room and two-browser media compatibility
+        if: inputs.media
+        run: |
+          pnpm harness:rooms
+          npm --prefix tests/e2e install
+          npm --prefix tests/e2e exec -- playwright install --with-deps chromium
+          npm --prefix tests/e2e run harness:p2p
