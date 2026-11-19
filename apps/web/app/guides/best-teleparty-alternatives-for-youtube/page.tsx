@@ -101,6 +101,7 @@ export default function BestTelepartyAlternativesForYoutubePage() {
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
+      aboveFoldStyle="hero"
     >
       <SeoGuideTitle>Best Teleparty Alternatives for YouTube (2026)</SeoGuideTitle>
 

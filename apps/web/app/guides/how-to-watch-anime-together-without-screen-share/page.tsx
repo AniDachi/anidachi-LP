@@ -111,6 +111,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta={true}
+        aboveFoldStyle="hero"
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime Together Without Screen Share

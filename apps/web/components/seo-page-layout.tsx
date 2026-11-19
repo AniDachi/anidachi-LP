@@ -27,6 +27,8 @@ export interface SeoPageLayoutProps {
   headings?: TocHeading[];
   itemList?: { name: string; url: string; position: number }[];
   aboveFoldCta?: boolean;
+  /** "hero" shows the hubs' install block after the answer instead of the card (ANI-64). */
+  aboveFoldStyle?: "card" | "hero";
   /** Hide the room CTA when the article concerns an unsupported title. */
   bottomCta?: boolean;
   /** Override autodetected template (from `url`) for conversion analytics + CTA copy */
@@ -146,6 +148,7 @@ export function SeoPageLayout({
   headings,
   itemList,
   aboveFoldCta,
+  aboveFoldStyle = "card",
   bottomCta = true,
   conversionTemplate,
   ctaCopy,
@@ -167,7 +170,13 @@ export function SeoPageLayout({
   const articleBody = (
     <div className="seo-prose">
       {aboveFoldCta ? (
-        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate} ctaCopy={ctaCopy} locale={locale}>
+        <SeoBelowTitleCta
+          pagePath={url}
+          pageTemplate={pageTemplate}
+          ctaCopy={ctaCopy}
+          locale={locale}
+          style={aboveFoldStyle}
+        >
           {children}
         </SeoBelowTitleCta>
       ) : (

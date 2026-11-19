@@ -153,6 +153,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta={true}
+      aboveFoldStyle="hero"
     >
       <SeoGuideTitle>Can You Screen Share Crunchyroll on Discord?</SeoGuideTitle>
 
