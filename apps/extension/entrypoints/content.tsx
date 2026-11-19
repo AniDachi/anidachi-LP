@@ -1,8 +1,11 @@
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
-import { preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
-import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
+import { getLivePrimeRoomSession } from "../src/prime-room-client";
+import type { LivePrimeRoomSession } from "../src/prime-room-contract";
+import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
+import { discardConflictingPrimeLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
+import { PRIME_CONTENT_MATCHES, isPrimeRoomBrowsingPage, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
-import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
+import { PRIME_BINDING_CHANGED, PRIME_PLAYER_STATE } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -45,15 +48,18 @@ import { YOUTUBE_COMPOSER_CHROME_STYLES } from "../src/source-adapters/youtube/c
 
 export interface MountedOverlay {
   readonly adapter: VideoAdapter;
+  hasPrimeRoom?(): boolean;
+  isPrimeDocked?(): boolean;
+  dockPrimeRoom?(): void;
   relocate(): void;
   replaceAdapter(adapter: VideoAdapter): void;
   suspend(): void;
-  dispose(): void;
+  dispose(leavingDocument?: boolean): void;
 }
 
 export interface OverlayRenderer {
-  render(adapter: VideoAdapter, active: boolean): void;
-  unmount(): void;
+  render(adapter: VideoAdapter, active: boolean, browsing?: boolean): void;
+  unmount(leavingDocument?: boolean): void;
 }
 
 interface ResizeObserverBinding {
@@ -62,7 +68,9 @@ interface ResizeObserverBinding {
 }
 
 interface MountOverlayOptions {
-	initialLaunch?: PrimeLaunchHandoff | null;
+  initialLaunch?: PrimeLaunchHandoff | null;
+  initialPrimeRoom?: LivePrimeRoomSession;
+  initiallyDocked?: boolean;
   createResizeObserver?: (
     callback: ResizeObserverCallback,
   ) => ResizeObserverBinding;
@@ -73,7 +81,8 @@ interface ContentLifecycleDependencies {
   detect(current: VideoAdapter | null): AdapterDetectionResult;
   ensureStyles(): void;
   installKeyboardGuard(): () => void;
-  mount(adapter: VideoAdapter, initialLaunch?: PrimeLaunchHandoff | null): MountedOverlay;
+  lookupPrimeRoom(): Promise<LivePrimeRoomSession | null>;
+  mount(adapter: VideoAdapter, initialLaunch?: PrimeLaunchHandoff | null, initialPrimeRoom?: LivePrimeRoomSession, initiallyDocked?: boolean): MountedOverlay;
   startProviderStudy(): (() => void) | null | undefined;
 }
 
@@ -125,9 +134,9 @@ export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
   let disposed = false;
-  let session: ContentLifecycleRuntime | null = startContentLifecycleSession(overrides);
+  let session: ReturnType<typeof startContentLifecycleSession> | null = startContentLifecycleSession(overrides);
   const hide = (event: PageTransitionEvent) => {
-    session?.dispose();
+    session?.dispose(true);
     session = null;
     if (!event.persisted) dispose();
   };
@@ -154,7 +163,7 @@ export function startContentLifecycle(
 function startContentLifecycleSession(
   overrides: Partial<ContentLifecycleDependencies>,
   restoredFromCache = false,
-): ContentLifecycleRuntime {
+): ContentLifecycleRuntime & { dispose(leavingDocument?: boolean): void } {
   const primeLaunch = createPrimeLaunchCapture(location.href);
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
@@ -162,16 +171,24 @@ function startContentLifecycleSession(
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,
     installKeyboardGuard: installMessageComposerKeyboardGuard,
-    mount: (adapter, initialLaunch) => mountOverlay(adapter, { initialLaunch }),
+    lookupPrimeRoom: getLivePrimeRoomSession,
+    mount: (adapter, initialLaunch, initialPrimeRoom, initiallyDocked) =>
+      mountOverlay(adapter, { initialLaunch, initialPrimeRoom, initiallyDocked }),
     startProviderStudy: startCrunchyrollStudyIfEnabled,
     ...overrides,
   };
   let mounted: MountedOverlay | null = null;
+  let checkingLiveRoom = false;
+  let startupRoom: LivePrimeRoomSession | null = null;
+  let catalogAdapter: VideoAdapter | null = null;
+  let lastPrimePlayerRoute: string | undefined;
+  let verifiedPrimePlayerPath: string | undefined;
   let waitingForPrimeLaunch = false;
   let retryPrimeRecovery: VideoAdapter | null = null;
   let mountedRoomIntent: string | undefined;
   let pendingDismissal: Promise<void> | null = null;
   let disposed = false;
+  let leavingDocument = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
@@ -254,7 +271,7 @@ function startContentLifecycleSession(
         fingerprint: previous.getFingerprint(),
         url: location.href,
       });
-      mounted?.dispose();
+      mounted?.dispose(leavingDocument);
       mounted = null;
       mountedRoomIntent = undefined;
     },
@@ -265,10 +282,18 @@ function startContentLifecycleSession(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mountWithLaunch(adapter);
+      if (startupRoom) {
+        mounted = dependencies.mount(adapter, null, startupRoom, adapter === catalogAdapter);
+        startupRoom = null;
+      } else {
+        mountWithLaunch(adapter);
+      }
     },
-    relocated() {
-      mounted?.relocate();
+    relocated(adapter) {
+      // Prime can reopen the very same element before discovery observes its
+      // intervening Close. Re-enable this binding even when the player ID is equal.
+      if (mounted?.isPrimeDocked?.()) mounted.replaceAdapter(adapter);
+      else mounted?.relocate();
     },
     replaced(previous, next) {
       logDebug("content", "replace adapter", {
@@ -280,7 +305,7 @@ function startContentLifecycleSession(
         video: videoDebugSnapshot(next.video),
       });
       mounted?.replaceAdapter(next);
-      mountWithLaunch(next);
+      if (!mounted?.hasPrimeRoom?.()) mountWithLaunch(next);
     },
     suspended(previous) {
       logDebug("content", "suspend adapter", {
@@ -294,7 +319,42 @@ function startContentLifecycleSession(
 
   const reconcile = (retryLaunch = true) => {
     primeLaunch.observe(location.href);
-    const result = manager.reconcile(dependencies.detect(manager.current));
+    if (checkingLiveRoom) return "idle";
+    const detection = dependencies.detect(manager.current);
+    const catalogRoute = isPrimeRoomBrowsingPage(location.href);
+    const path = location.origin + location.pathname;
+    const route = parsePrimePageUrl(location.href)?.token;
+    if (detection.status === "ready" && detection.adapter.provider === "primevideo" &&
+        detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) !== "closed") {
+      lastPrimePlayerRoute = route;
+      if (!catalogRoute && route && verifiedPrimePlayerPath !== path && detection.adapter.getSourceDescriptor()?.provider === "primevideo")
+        verifiedPrimePlayerPath = path;
+    }
+    const allowed = catalogRoute || Boolean(mounted?.hasPrimeRoom?.() && route && verifiedPrimePlayerPath === path);
+    if (startupRoom && allowed && (detection.status !== "ready" ||
+        detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
+      // No page video is needed for room UI. This unbound adapter never receives
+      // player listeners, history, or playback control and cannot select a preview.
+      catalogAdapter = new PrimeVideoAdapter(document.createElement("video"), document.createElement("div"));
+      return manager.reconcile({ status: "ready", adapter: catalogAdapter });
+    }
+    if (mounted?.isPrimeDocked?.() && !mounted.hasPrimeRoom?.()) {
+      manager.reconcile({ status: "blocked", provider: "primevideo" });
+    }
+    const closed = manager.current?.container.getAttribute(PRIME_PLAYER_STATE) === "closed";
+    const samePlayerTransition = route && route === lastPrimePlayerRoute && !closed && !mounted?.isPrimeDocked?.();
+    if (!allowed && !samePlayerTransition && manager.current?.provider === "primevideo" && detection.status !== "ready") {
+      return manager.reconcile({ status: "blocked", provider: "primevideo" });
+    }
+    const primeRoom = manager.current?.provider === "primevideo" && mounted?.hasPrimeRoom?.() && allowed;
+    const otherDetail = route && lastPrimePlayerRoute && route !== lastPrimePlayerRoute &&
+      !manager.current?.container.isConnected && document.getElementById("dv-web-player")?.getAttribute(PRIME_PLAYER_STATE) !== "open";
+    const browsingRoom = primeRoom && (detection.status !== "ready"
+      ? (manager.current === catalogAdapter || closed || !route || otherDetail)
+      : detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed");
+    const result = manager.reconcile((primeRoom && detection.status === "blocked") || browsingRoom
+      ? { status: "waiting", provider: "primevideo" } : detection);
+    if (browsingRoom) mounted?.dockPrimeRoom?.();
     if (retryLaunch && result === "relocated" && retryPrimeRecovery && manager.current === retryPrimeRecovery) {
       mountWithLaunch(retryPrimeRecovery);
     }
@@ -337,7 +397,22 @@ function startContentLifecycleSession(
     }, mountPollDelay);
   };
 
-  reconcile();
+  if (window.top === window && isPrimeRoomBrowsingPage(location.href) &&
+      (overrides.lookupPrimeRoom || (typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"))) {
+    checkingLiveRoom = true;
+    void dependencies.lookupPrimeRoom().catch(() => null).then(record => {
+      if (disposed) return;
+      checkingLiveRoom = false;
+      if (record && isPrimeRoomBrowsingPage(location.href)) {
+        startupRoom = record;
+        primeLaunch.dispose();
+        discardConflictingPrimeLaunch(record.roomId, location.href);
+      }
+      reconcile();
+    });
+  } else {
+    reconcile();
+  }
   scheduleNextMountPoll();
 
   const handleVideoLifecycleEvent = (event: Event) => {
@@ -370,11 +445,12 @@ function startContentLifecycleSession(
   const handleFullscreenChange = () => mounted?.relocate();
   document.addEventListener("fullscreenchange", handleFullscreenChange);
 
-  const dispose = () => {
+  const dispose = (pageHidden = false) => {
     if (disposed) {
       return;
     }
     disposed = true;
+    leavingDocument = pageHidden;
     primeLaunch.dispose();
     if (mountPollTimer !== null) {
       window.clearTimeout(mountPollTimer);
@@ -592,7 +668,24 @@ export function mountOverlay(
   const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
-  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot, options.initialLaunch);
+  let primeRoomId: string | null = null;
+  let restoringRoom = Boolean(options.initialPrimeRoom);
+  let docked = false;
+  const lostPrimeRoom = () => {
+    restoringRoom = false;
+    if (docked) {
+      host.remove();
+      document.dispatchEvent(new Event(PRIME_BINDING_CHANGED));
+    }
+  };
+  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot, options, room => {
+    const previous = primeRoomId;
+    primeRoomId = room;
+    if (room) {
+      restoringRoom = false;
+      if (docked && !host.isConnected) document.documentElement.append(host);
+    } else if (previous) lostPrimeRoom();
+  }, () => dockPrimeRoom(), lostPrimeRoom);
 
   let animationFrame = 0;
   let fullscreenTransitionGeneration = 0;
@@ -758,6 +851,8 @@ export function mountOverlay(
       return;
     }
 
+    docked = false;
+    host.style.position = "absolute";
     adapterBindingActive = true;
     markAdapter(adapter);
     startAdapterDebugProbe();
@@ -768,9 +863,21 @@ export function mountOverlay(
 
   window.addEventListener("resize", scheduleRelocate);
   window.addEventListener("scroll", scheduleRelocate, true);
-  activateAdapterBinding();
+  if (options.initiallyDocked) dockPrimeRoom();
+  else activateAdapterBinding();
 
+  function dockPrimeRoom() {
+    if (disposed || (!primeRoomId && !restoringRoom) || adapter.provider !== "primevideo" || docked) return;
+    deactivateAdapterBinding();
+    docked = true;
+    Object.assign(host.style, { position: "fixed", inset: "0", width: "100%", height: "100%", borderRadius: "0" });
+    if (primeRoomId) document.documentElement.append(host);
+    renderer.render(adapter, false, true);
+  }
   return {
+    hasPrimeRoom: () => primeRoomId !== null || restoringRoom,
+    isPrimeDocked: () => docked,
+    dockPrimeRoom,
     get adapter() {
       return adapter;
     },
@@ -780,7 +887,7 @@ export function mountOverlay(
         return;
       }
       deactivateAdapterBinding();
-      renderOverlay(false);
+      if (!docked) renderOverlay(false);
       adapter = nextAdapter;
       activateAdapterBinding();
     },
@@ -791,7 +898,7 @@ export function mountOverlay(
       deactivateAdapterBinding();
       renderOverlay(false);
     },
-    dispose() {
+    dispose(leavingDocument = false) {
       if (disposed) {
         return;
       }
@@ -799,7 +906,7 @@ export function mountOverlay(
       disposed = true;
       window.removeEventListener("resize", scheduleRelocate);
       window.removeEventListener("scroll", scheduleRelocate, true);
-      renderer.unmount();
+      renderer.unmount(leavingDocument);
       host.remove();
     },
   };
@@ -815,15 +922,22 @@ export function mountOverlay(
   }
 }
 
-function createReactOverlayRenderer(appRoot: HTMLElement, initialLaunch?: PrimeLaunchHandoff | null): OverlayRenderer {
+function createReactOverlayRenderer(appRoot: HTMLElement, options: MountOverlayOptions,
+  onPrimeRoomChange: (room: string | null) => void, onPrimeClose: () => void, onPrimeRestoreLost: () => void): OverlayRenderer {
   const root: Root = createRoot(appRoot);
+  let leavingDocument = false;
+  const preservePrimeRoomOnUnmount = () => leavingDocument;
   return {
-    render(adapter, active) {
+    render(adapter, active, browsing) {
       flushSync(() => {
-        root.render(<OverlayApp adapter={adapter} adapterActive={active} initialPrimeLaunch={initialLaunch} />);
+        root.render(<OverlayApp adapter={adapter} adapterActive={active} primeBrowsing={browsing}
+          onPrimeRoomChange={onPrimeRoomChange} onPrimeClose={onPrimeClose} onPrimeRestoreLost={onPrimeRestoreLost}
+          initialPrimeLaunch={options.initialLaunch} initialPrimeRoom={options.initialPrimeRoom}
+          preservePrimeRoomOnUnmount={preservePrimeRoomOnUnmount} />);
       });
     },
-    unmount() {
+    unmount(pageHidden = false) {
+      leavingDocument = pageHidden;
       root.unmount();
     },
   };

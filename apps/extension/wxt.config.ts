@@ -125,6 +125,7 @@ export default defineConfig({
     minimum_chrome_version: "121",
     permissions: unique([
       "storage",
+      "offscreen",
       "alarms",
       "clipboardWrite",
       "identity",
@@ -143,6 +144,10 @@ export default defineConfig({
       {
         resources: ["Anidachi_logo.png"],
         matches: useBroadHostPermissions ? ["*://*/*"] : STORE_VIDEO_ORIGINS,
+      },
+      {
+        resources: ["prime-media-tile.html"],
+        matches: PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`),
       },
     ],
     action: {

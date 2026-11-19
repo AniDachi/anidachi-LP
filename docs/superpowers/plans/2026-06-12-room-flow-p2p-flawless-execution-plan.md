@@ -1,5 +1,14 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Prime catalog continuity — November 19, 2026
+
+The [Prime catalog task](2026-11-16-prime-video-adapter.md#rooms-in-the-prime-catalog)
+moves the extension's Prime room connection and media owner into an offscreen
+document for the lifetime of a confirmed room. A tab's overlay can detach during
+navigation and return to the same call. Real-browser checks cover media across
+document replacement and stopping capture when the room or account changes.
+The two-account Amazon staging check is a separate acceptance step.
+
 ## Prime Amazon readiness follow-up — 2026-11-18
 
 [Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)

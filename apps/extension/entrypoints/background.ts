@@ -1,3 +1,5 @@
+import { registerPrimeRoomTransport } from "../src/prime-room-background";
+import { installPrimeMediaBackground } from "../src/prime-media-background";
 import { registerPrimeLaunchBridge } from "../src/prime-launch-background";
 import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
@@ -288,6 +290,8 @@ export default defineBackground(() => {
   });
   registerTrialInstallationBridge(installation.trial);
   registerPrimeLaunchBridge();
+  registerPrimeRoomTransport();
+  installPrimeMediaBackground();
   const free20 = createFree20AbuseClient({ baseUrl: WEB_HTTP_BASE, getSession: getStoredAuthTokens, refresh: refreshExtensionSession, sign: installation.free20 });
   const hostingDependencies = { getSession: getStoredAuthTokens, refresh: refreshExtensionSession, request: free20.request };
   registerWebsitePresence();

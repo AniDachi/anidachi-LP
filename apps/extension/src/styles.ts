@@ -95,6 +95,7 @@ ${extensionThemeTokens}
       transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  .anidachi-overlay[data-prime-browsing] .top-bubble,
   .top-bubble-reveal.bubble-visible .top-bubble {
     opacity: 1;
     transform: translateY(0);

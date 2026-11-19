@@ -34,9 +34,13 @@ const amazonVideoMatches = [
   "amazon.in",
   "amazon.com.mx",
 ].flatMap((host) => [
+  `https://*.${host}/Amazon-Video`,
   `https://*.${host}/Amazon-Video/*`,
-  `https://*.${host}/-/*/Amazon-Video/*`,
+  `https://*.${host}/*/Amazon-Video`,
+  `https://*.${host}/*/Amazon-Video/*`,
+  `https://*.${host}/gp/video`,
   `https://*.${host}/gp/video/*`,
+  `https://*.${host}/*/gp/video`,
   `https://*.${host}/*/gp/video/*`,
   `https://*.${host}/dp/*`,
   `https://*.${host}/*/dp/*`,
@@ -388,10 +392,11 @@ describe.sequential("extension release channel builds", () => {
 
   it("rejects a public logo accessible from unrelated sites", () => {
     const manifest = manifestAt("anidachi-extension-public/manifest.json");
-    manifest.web_accessible_resources = [{ resources: ["Anidachi_logo.png"], matches: ["*://*/*"] }];
+    const logo = manifest.web_accessible_resources!.find(entry => entry.resources?.includes("Anidachi_logo.png"))!;
+    logo.matches = ["*://*/*"];
     const result = validateFixture(manifest);
     expect(result.status).not.toBe(0);
-    expect(`${result.stdout}\n${result.stderr}`).toContain("Unexpected public resource match: *://*/*");
+    expect(`${result.stdout}\n${result.stderr}`).toContain("Unexpected logo match: *://*/*");
   });
 
   it("rejects an artifact that calls the unavailable production jsxDEV runtime", () => {

@@ -75,9 +75,13 @@ const amazonVideoMatches = [
   "amazon.in",
   "amazon.com.mx",
 ].flatMap((host) => [
+  `https://*.${host}/Amazon-Video`,
   `https://*.${host}/Amazon-Video/*`,
-  `https://*.${host}/-/*/Amazon-Video/*`,
+  `https://*.${host}/*/Amazon-Video`,
+  `https://*.${host}/*/Amazon-Video/*`,
+  `https://*.${host}/gp/video`,
   `https://*.${host}/gp/video/*`,
+  `https://*.${host}/*/gp/video`,
   `https://*.${host}/*/gp/video/*`,
   `https://*.${host}/dp/*`,
   `https://*.${host}/*/dp/*`,
@@ -195,11 +199,16 @@ if (overlayScripts.length !== 1) throw new Error("Expected one Prime overlay con
 assertExactAllowlist("overlay matches", overlayScripts[0].matches, videoContentMatches);
 
 const publicResources = manifest.web_accessible_resources ?? [];
-if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {
-  throw new Error("Expected one public logo resource entry limited to supported sites");
+if (publicResources.length !== 2 || publicResources.some(entry => entry.extension_ids?.length)) {
+  throw new Error("Expected exactly the provider logo and Prime call tile resource entries");
 }
-assertExactAllowlist("public resource", publicResources[0].resources ?? [], ["Anidachi_logo.png"]);
-assertExactAllowlist("public resource match", publicResources[0].matches ?? [], videoOrigins);
+const logo = publicResources.find(entry => entry.resources?.includes("Anidachi_logo.png"));
+const tile = publicResources.find(entry => entry.resources?.includes("prime-media-tile.html"));
+assertExactAllowlist("logo resource", logo?.resources ?? [], ["Anidachi_logo.png"]);
+assertExactAllowlist("logo match", logo?.matches ?? [], videoOrigins);
+assertExactAllowlist("Prime tile resource", tile?.resources ?? [], ["prime-media-tile.html"]);
+assertExactAllowlist("Prime tile match", tile?.matches ?? [], videoOrigins.filter(origin => origin.includes(".primevideo.com/") || origin.includes(".amazon.")));
+if (!permissions.includes("offscreen")) throw new Error("Missing offscreen permission for persistent Prime calls");
 
 if (manifest.name !== expected.name) {
   throw new Error(`Expected manifest.name ${expected.name}, got ${manifest.name}`);

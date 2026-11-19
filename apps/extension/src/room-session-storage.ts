@@ -1593,7 +1593,7 @@ async function setRoomSessionCameraEnabledForTab(
   return next;
 }
 
-function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
+export function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
   const revision =
     isObject(value) && value.revision === undefined
       ? 0
