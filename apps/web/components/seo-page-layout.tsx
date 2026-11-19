@@ -9,6 +9,7 @@ import {
 } from "@/components/json-ld";
 import { TableOfContents, type TocHeading } from "@/components/table-of-contents";
 import { PrimaryCheckoutCta, type CtaCopyKey } from "@/components/primary-checkout-cta";
+import type { Watchroom } from "@/lib/watchroom-cta";
 import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
@@ -27,6 +28,10 @@ export interface SeoPageLayoutProps {
   headings?: TocHeading[];
   itemList?: { name: string; url: string; position: number }[];
   aboveFoldCta?: boolean;
+  /** Platform watchroom this guide promotes; tailors both install CTAs (ANI-64). */
+  watchroom?: Watchroom;
+  /** "hero" shows the hubs' centered install block after the answer instead of the card (ANI-64). */
+  aboveFoldStyle?: "card" | "hero";
   /** Hide the room CTA when the article concerns an unsupported title. */
   bottomCta?: boolean;
   /** Override autodetected template (from `url`) for conversion analytics + CTA copy */
@@ -146,6 +151,8 @@ export function SeoPageLayout({
   headings,
   itemList,
   aboveFoldCta,
+  watchroom,
+  aboveFoldStyle = "card",
   bottomCta = true,
   conversionTemplate,
   ctaCopy,
@@ -167,7 +174,14 @@ export function SeoPageLayout({
   const articleBody = (
     <div className="seo-prose">
       {aboveFoldCta ? (
-        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate} ctaCopy={ctaCopy} locale={locale}>
+        <SeoBelowTitleCta
+          pagePath={url}
+          pageTemplate={pageTemplate}
+          ctaCopy={ctaCopy}
+          locale={locale}
+          watchroom={watchroom}
+          style={aboveFoldStyle}
+        >
           {children}
         </SeoBelowTitleCta>
       ) : (
@@ -182,6 +196,7 @@ export function SeoPageLayout({
           placement="content_bottom"
           variant={ctaCopy}
           locale={locale}
+          watchroom={watchroom}
         />
       </div>}
     </div>

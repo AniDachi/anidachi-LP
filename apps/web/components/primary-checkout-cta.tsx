@@ -17,6 +17,7 @@ import {
   INSTALL_HUB_PATH,
 } from "@/lib/install-cta";
 import { DE_PRICING_FREE20_SUMMARY } from "@/lib/locale/de-copy";
+import { WATCHROOM_CTA, type Watchroom } from "@/lib/watchroom-cta";
 import type { PageLocale } from "@/lib/locale/ui-strings";
 
 const COPY = {
@@ -48,6 +49,7 @@ const COPY = {
 
 export type CtaCopyKey = keyof typeof COPY;
 
+
 /** German card text for /de guide-layout pages. Install goes straight to the store listing. */
 const COPY_DE: Record<CtaCopyKey, { body: string }> = {
   default: { body: "Installiere die Chrome-Erweiterung in etwa 2 Minuten: Räume für Crunchyroll, YouTube und Netflix." },
@@ -77,6 +79,8 @@ export interface PrimaryCheckoutCtaProps {
   ctaVariant?: string;
   /** Page language; German cards link straight to the store listing. */
   locale?: PageLocale;
+  /** English guides that promote one watchroom get its button and line. */
+  watchroom?: Watchroom;
 }
 
 export function PrimaryCheckoutCta({
@@ -85,11 +89,14 @@ export function PrimaryCheckoutCta({
   variant: variantProp,
   placement,
   className = "",
-  ctaVariant = "primary_install",
+  ctaVariant: ctaVariantProp,
   locale = "en",
+  watchroom,
 }: PrimaryCheckoutCtaProps) {
   const de = locale === "de";
-  const label = de ? DE_INSTALL_CTA_LABEL : INSTALL_CTA_LABEL;
+  const room = !de && watchroom ? WATCHROOM_CTA[watchroom] : undefined;
+  const label = room?.label ?? (de ? DE_INSTALL_CTA_LABEL : INSTALL_CTA_LABEL);
+  const ctaVariant = ctaVariantProp ?? (room ? `${watchroom}_watchroom_install` : "primary_install");
   const rootRef = useRef<HTMLDivElement>(null);
   const impressionFired = useRef(false);
   const key =
@@ -146,7 +153,7 @@ export function PrimaryCheckoutCta({
             {label}
           </p>
           <p className="mt-0.5 text-sm leading-snug text-ani-muted">
-            {copy.body}
+            {room?.body ?? copy.body}
           </p>
         </div>
 
