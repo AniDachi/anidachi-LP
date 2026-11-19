@@ -145,6 +145,8 @@ export default function HowToWatchWithFriendsPage() {
 				faq={faq}
 				headings={tocHeadings}
 				aboveFoldCta
+				aboveFoldStyle="hero"
+				watchroom="crunchyroll"
 			>
 				<SeoGuideTitle>
 					How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide
