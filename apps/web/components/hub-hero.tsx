@@ -139,12 +139,12 @@ export function HubHero({
       {centered ? (
         <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-ani-muted">
           <span>{finePrint}</span>
-          <WatchingTogetherCount locale={locale} className="sm:before:mr-3 sm:before:text-ani-muted sm:before:content-['·']" />
+          <WatchingTogetherCount locale={locale} className="!m-0 !leading-5 sm:before:mr-3 sm:before:text-ani-muted sm:before:content-['·']" />
         </div>
       ) : (
         <>
           <p className="max-w-2xl text-sm leading-relaxed text-ani-muted">{finePrint}</p>
-          <WatchingTogetherCount locale={locale} className="mt-2" />
+          <WatchingTogetherCount locale={locale} className="!mb-0 mt-2" />
         </>
       )}
       <p className="mt-2 max-w-md text-sm text-ani-muted md:hidden">
