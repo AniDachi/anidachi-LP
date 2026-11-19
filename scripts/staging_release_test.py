@@ -8,6 +8,11 @@ spec.loader.exec_module(gate)
 
 
 class StagingAcceptance(TestCase):
+    def test_migration_runner_and_tls_changes_require_a_live_database_run(self):
+        for path in ("scripts/deploy_db_migrations.py", ".github/supabase-db-ca.crt"):
+            with self.subTest(path=path):
+                self.assertTrue(gate.profile({path})["db"])
+
     def test_seo_is_independent_from_prime_checks(self):
         self.assertFalse(any(gate.profile({"apps/web/app/robots.ts"}).values()))
         prime = gate.profile({"apps/extension/entrypoints/primevideo.content.ts", "packages/protocol/src/prime.ts",

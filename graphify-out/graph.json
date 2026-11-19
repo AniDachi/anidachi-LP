@@ -152462,8 +152462,9 @@
       "file_type": "document",
       "norm_label": "deploy migrations to production",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": null,
-      "source_url": null
+      "source_location": "L1-L6",
+      "source_url": null,
+      "rationale": "The production workflow can run after a push to main or a manual dispatch. Its job is further restricted to the full main branch ref."
     },
     {
       "id": "github_workflows_db_production_main_only_production_migration",
@@ -152477,8 +152478,9 @@
       "file_type": "rationale",
       "norm_label": "main-only production migration",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": null,
-      "source_url": null
+      "source_location": "L17-L23",
+      "source_url": null,
+      "rationale": "Only the full refs/heads/main can run the production job. The job uses the Production environment and creates no GitHub deployment record, leaving the website deployment record to Vercel."
     },
     {
       "id": "github_workflows_deploy_api_branch_scoped_worker_delivery",
@@ -152591,9 +152593,9 @@
       "evidence_excerpt": "concurrency:\n  group: db-migrate-production\n  cancel-in-progress: false",
       "file_type": "rationale",
       "norm_label": "noncanceling production migration operation",
-      "rationale": "The production migration workflow uses concurrency group db-migrate-production with cancel-in-progress false.",
+      "rationale": "Production database migration runs share a concurrency group with cancellation disabled. This defines concurrency, not a reported deployment.",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L15-L17: with no new migration is a no-op.",
+      "source_location": "L11-L13",
       "source_url": null
     },
     {
@@ -184908,7 +184910,7 @@
       "label": "Deploy migrations to staging",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
+      "source_location": "L1-L26",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -184918,20 +184920,20 @@
         "workflow_dispatch"
       ],
       "concurrency": "db-migrate-staging; cancel-in-progress false",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "rationale": "The staging job accepts staging pushes or dispatches on the full staging ref. It uses a noncanceling queue, 15-minute timeout, read-only checkout without persisted credentials and the staging-database environment without a GitHub deployment record."
     },
     {
       "id": "_github_workflows_db_staging_verify_staging_project_target",
-      "label": "Exact staging project target guard",
+      "label": "Staging branch and database environment selection",
       "file_type": "rationale",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
+      "source_location": "L17-L22",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Guard runs before supabase link and rejects empty or wrong project refs, preventing accidentally targeting another database.",
-      "project_ref": "cyppqpprkygjloyfvvvj",
+      "rationale": "The job selects staging-database only on refs/heads/staging. Project and pooler selection are delegated to the shared migration runner.",
       "_origin": "semantic"
     },
     {
@@ -184939,52 +184941,39 @@
       "label": "Pinned Supabase CLI 2.111.0",
       "file_type": "rationale",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
+      "source_location": "L27-L29",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "Last staging-verified CLI is pinned because 2.112.0 changed the API-key response schema and broke supabase link on 2026-08-07.",
-      "evidence_status": "historical incident and current workflow pin",
-      "_origin": "semantic"
-    },
-    {
-      "id": "_github_workflows_db_staging_supabase_link",
-      "label": "Link guarded staging project",
-      "file_type": "concept",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "workdir": "apps/web",
+      "rationale": "The staging workflow uses a commit-pinned CLI setup action and an explicit Supabase CLI release.",
+      "evidence_status": "workflow-defined CLI pin",
       "_origin": "semantic"
     },
     {
       "id": "_github_workflows_db_staging_pending_migrations_dry_run",
-      "label": "Pending migration dry run",
+      "label": "Preview staging migrations through the shared runner",
       "file_type": "concept",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
+      "source_location": "L30-L33",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "command": "supabase --workdir apps/web db push --dry-run",
-      "_origin": "semantic"
+      "_origin": "semantic",
+      "rationale": "The staging step invokes the shared Python runner for its preview and apply sequence and supplies its environment token to that step."
     },
     {
       "id": "_github_workflows_db_staging_apply_migrations",
-      "label": "Apply unapplied staging migrations",
+      "label": "Apply staging migrations through the shared runner",
       "file_type": "concept",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
+      "source_location": "L30-L33",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "rationale": "db push applies only migrations absent from remote history; pushes without new migrations are no-ops.",
+      "rationale": "The staging workflow delegates application of its pending migrations to the same runner as the preview.",
       "_origin": "semantic"
     },
     {
@@ -196122,35 +196111,11 @@
       "_origin": "ast"
     },
     {
-      "id": "github_workflows_db_production_true",
-      "label": "True",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_production_true_push",
-      "label": "push",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
       "id": "github_workflows_db_production_push_branches",
       "label": "branches",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_production_true_workflow_dispatch",
-      "label": "workflow_dispatch",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L5",
       "_origin": "ast"
     },
     {
@@ -196158,7 +196123,7 @@
       "label": "permissions",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L8",
       "_origin": "ast"
     },
     {
@@ -196166,7 +196131,7 @@
       "label": "contents",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L9",
       "_origin": "ast"
     },
     {
@@ -196174,7 +196139,7 @@
       "label": "concurrency",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -196182,7 +196147,7 @@
       "label": "group",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -196190,7 +196155,7 @@
       "label": "cancel-in-progress",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L13",
       "_origin": "ast"
     },
     {
@@ -196198,7 +196163,7 @@
       "label": "jobs",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -196206,7 +196171,7 @@
       "label": "deploy",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -196214,7 +196179,7 @@
       "label": "if",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -196222,7 +196187,7 @@
       "label": "runs-on",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -196230,39 +196195,7 @@
       "label": "timeout-minutes",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_production_deploy_env",
-      "label": "env",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_production_env_supabase_access_token",
-      "label": "SUPABASE_ACCESS_TOKEN",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_production_env_supabase_db_password",
-      "label": "SUPABASE_DB_PASSWORD",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_production_env_supabase_project_id",
-      "label": "SUPABASE_PROJECT_ID",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -196270,7 +196203,7 @@
       "label": "steps",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -196278,7 +196211,7 @@
       "label": "uses",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -196286,7 +196219,7 @@
       "label": "with",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -196294,7 +196227,7 @@
       "label": "version",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -196302,7 +196235,7 @@
       "label": "name",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L31",
       "_origin": "ast"
     },
     {
@@ -196310,7 +196243,7 @@
       "label": "run",
       "file_type": "code",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -196330,35 +196263,11 @@
       "_origin": "ast"
     },
     {
-      "id": "github_workflows_db_staging_true",
-      "label": "True",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_staging_true_push",
-      "label": "push",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
       "id": "github_workflows_db_staging_push_branches",
       "label": "branches",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_staging_true_workflow_dispatch",
-      "label": "workflow_dispatch",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L5",
       "_origin": "ast"
     },
     {
@@ -196366,7 +196275,7 @@
       "label": "concurrency",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -196374,7 +196283,7 @@
       "label": "group",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -196382,7 +196291,7 @@
       "label": "cancel-in-progress",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L13",
       "_origin": "ast"
     },
     {
@@ -196390,7 +196299,7 @@
       "label": "jobs",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -196398,7 +196307,7 @@
       "label": "deploy",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -196406,39 +196315,7 @@
       "label": "runs-on",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_staging_deploy_env",
-      "label": "env",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_staging_env_supabase_access_token",
-      "label": "SUPABASE_ACCESS_TOKEN",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_staging_env_supabase_db_password",
-      "label": "SUPABASE_DB_PASSWORD",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "github_workflows_db_staging_env_supabase_project_id",
-      "label": "SUPABASE_PROJECT_ID",
-      "file_type": "code",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -196446,7 +196323,7 @@
       "label": "steps",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -196454,7 +196331,7 @@
       "label": "uses",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -196462,7 +196339,7 @@
       "label": "with",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -196470,7 +196347,7 @@
       "label": "version",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -196478,7 +196355,7 @@
       "label": "name",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -196486,7 +196363,7 @@
       "label": "run",
       "file_type": "code",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L33",
       "_origin": "ast"
     },
     {
@@ -224064,7 +223941,7 @@
       "label": "Application maintenance preparation",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:88",
+      "source_location": "docs/environment-and-secrets-matrix.md:91",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -224079,12 +223956,12 @@
       "label": "GitHub Actions",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:103",
+      "source_location": "docs/environment-and-secrets-matrix.md:106",
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "description": "GitHub repository AniDachi/anidachi-LP owns CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN secrets. Staging WXT_WEB_HTTP_BASE, WXT_API_HTTP_BASE and WXT_API_WS_BASE select extension channel endpoints; STAGING_ACCESS_CODE authorizes staging smoke. The account-scoped deploy token requires Workers Scripts Edit, Account Settings Read and Account Analytics Read. Error 10089 calls for checking Analytics Engine enablement and token scopes.",
+      "description": "GitHub repository AniDachi/anidachi-LP owns CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN secrets. Staging WXT_WEB_HTTP_BASE, WXT_API_HTTP_BASE and WXT_API_WS_BASE select extension channel endpoints; STAGING_ACCESS_CODE authorizes staging smoke. The account-scoped deploy token requires Workers Scripts Edit, Account Settings Read and Account Analytics Read. Error 10089 calls for checking Analytics Engine enablement and token scopes. Database migrations use separately scoped database passwords and fixed project-specific connections with a dry run, followed by application. Verified production TLS, the main-only Production environment, and the post-cutover check of remaining consumers are documented configuration requirements.",
       "status": "dated source section; not independent live verification",
       "_origin": "semantic",
       "evidence_scope": "Source extraction only; dated local, hosted, owner and production evidence retain the distinct scope stated in the document.",
@@ -224095,7 +223972,7 @@
       "label": "Cloudflare",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:126",
+      "source_location": "docs/environment-and-secrets-matrix.md:135",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -224110,7 +223987,7 @@
       "label": "OAuth Redirect Allowlists",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:159",
+      "source_location": "docs/environment-and-secrets-matrix.md:168",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -224125,7 +224002,7 @@
       "label": "Supabase",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:173",
+      "source_location": "docs/environment-and-secrets-matrix.md:182",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -224140,7 +224017,7 @@
       "label": "Change Checklist",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:199",
+      "source_location": "docs/environment-and-secrets-matrix.md:208",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -224156,7 +224033,7 @@
       "label": "Cardless trial candidate: staging rollout",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:210",
+      "source_location": "docs/environment-and-secrets-matrix.md:219",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226444,7 +226321,7 @@
       "label": "Exact production staging extension callback identity",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:23",
+      "source_location": "docs/environment-and-secrets-matrix.md:26",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226460,7 +226337,7 @@
       "label": "Independent production and staging Free20 accounting gates",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:32",
+      "source_location": "docs/environment-and-secrets-matrix.md:35",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226476,7 +226353,7 @@
       "label": "Independent production and staging Free20 abuse gates",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:33",
+      "source_location": "docs/environment-and-secrets-matrix.md:36",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226492,7 +226369,7 @@
       "label": "Purpose-separated room notification trial cutover credentials",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:34",
+      "source_location": "docs/environment-and-secrets-matrix.md:37",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226508,7 +226385,7 @@
       "label": "Per-environment VAPID private signing public registration",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:37",
+      "source_location": "docs/environment-and-secrets-matrix.md:40",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226524,7 +226401,7 @@
       "label": "Narrow CRM-specific Blob versus shared integration boundary",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:40",
+      "source_location": "docs/environment-and-secrets-matrix.md:43",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226540,7 +226417,7 @@
       "label": "Explicit TEST LIVE key price webhook mode separation",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:44",
+      "source_location": "docs/environment-and-secrets-matrix.md:47",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226556,7 +226433,7 @@
       "label": "ANIHUNT40 TEST-only bound three-month campaign",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:54",
+      "source_location": "docs/environment-and-secrets-matrix.md:57",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226572,7 +226449,7 @@
       "label": "Mode-isolated uninstall first-month issuance gates",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226588,7 +226465,7 @@
       "label": "Mode-isolated monthly renewal issuance and retained fulfillment",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:56",
+      "source_location": "docs/environment-and-secrets-matrix.md:59",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226604,7 +226481,7 @@
       "label": "Existing HTTP publisher AniDachi project813335",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:60",
+      "source_location": "docs/environment-and-secrets-matrix.md:63",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226620,7 +226497,7 @@
       "label": "Four validated immutable public HTTPS archive fields",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:67",
+      "source_location": "docs/environment-and-secrets-matrix.md:70",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226636,7 +226513,7 @@
       "label": "Fail-closed deployment admission maintenance setting",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:88",
+      "source_location": "docs/environment-and-secrets-matrix.md:91",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226652,7 +226529,7 @@
       "label": "Distinct Worker analytics and environment CI bindings",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:126",
+      "source_location": "docs/environment-and-secrets-matrix.md:135",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226668,7 +226545,7 @@
       "label": "Supabase invitation recovery distinct Free20 Worker cron",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:139",
+      "source_location": "docs/environment-and-secrets-matrix.md:148",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226684,7 +226561,7 @@
       "label": "Private scheduler Vault pg_net effective client ACL boundary",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:173",
+      "source_location": "docs/environment-and-secrets-matrix.md:182",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226700,7 +226577,7 @@
       "label": "Outer cron statement timeout and distinct completion evidence",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:193",
+      "source_location": "docs/environment-and-secrets-matrix.md:202",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -226716,7 +226593,7 @@
       "label": "Exact Vercel target plus branch trial analytics scheduler",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:210",
+      "source_location": "docs/environment-and-secrets-matrix.md:219",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -228817,7 +228694,7 @@
       "label": "Recognition only legacy annual price aliases",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:52",
+      "source_location": "docs/environment-and-secrets-matrix.md:55",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -228832,7 +228709,7 @@
       "label": "Mode-isolated native cancellation retention gate",
       "file_type": "concept",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:57",
+      "source_location": "docs/environment-and-secrets-matrix.md:60",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -229378,7 +229255,7 @@
       "label": "Maintenance admission contract reference",
       "file_type": "document",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:99",
+      "source_location": "docs/environment-and-secrets-matrix.md:102",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -234535,7 +234412,7 @@
       "label": "Independent TEST and LIVE retention configuration",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -236538,7 +236415,7 @@
       "label": "Production Worker accounting preparation and deployed receipt",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:135",
+      "source_location": "docs/environment-and-secrets-matrix.md:144",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -236784,7 +236661,7 @@
       "label": "Production canonical origin scope",
       "file_type": "rationale",
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:21",
+      "source_location": "docs/environment-and-secrets-matrix.md:24",
       "source_url": null,
       "captured_at": null,
       "author": null,
@@ -237407,6 +237284,1040 @@
       "source_section": "Free20 production launch: November 7, 2026",
       "referenced_path": "docs/releases/free20/production-preparation-2026-11-06.md#production-launch-receipt-november-7-2026",
       "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_staging_email_code_auth_configuration",
+      "label": "Staging email-code sign-in configuration",
+      "file_type": "concept",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L21-L23",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The exact staging branch uses an opt-in email-code feature after an additive migration, a server-only sending credential restricted to the domain, and a separate HMAC secret. Rollback disables the gate and redeploys. Credential rotation invalidates pending challenges. The matrix lists staging scope and separate approval for production.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_production_database_migration_scope",
+      "label": "Production environment scoped Supabase migration token",
+      "file_type": "concept",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L119",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Production on main uses a separate SUPABASE_MIGRATIONS_TOKEN for anidachi-prod to invoke the shared migration runner against production. The row records the required scope.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_staging_database_migration_scope",
+      "label": "Staging-database environment scoped Supabase migration token",
+      "file_type": "concept",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The staging-database environment on staging holds a token for the staging project anidachi. The workflow previews and applies pending migrations over verified TLS.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_database_migration_cutover",
+      "label": "Migration credential transition and verified successor",
+      "file_type": "concept",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Keep the old repository secrets until their last consumer has been replaced and the succeeding workflow has passed on its own branch. Vercel keeps the web deployment records.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "github_workflows_db_production_read_only_checkout_and_pinned_cli",
+      "label": "Read-only checkout and pinned migration CLI",
+      "file_type": "concept",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L25-L30",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The workflow requests contents:read, checks out without persisting credentials and sets up a pinned Supabase CLI release using a commit-addressed setup action.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "github_workflows_db_production_production_pooler_dry_run_and_apply",
+      "label": "Preview and apply production migrations through the shared runner",
+      "file_type": "concept",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L31-L34",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The named production step passes the selected environment's SUPABASE_MIGRATIONS_TOKEN to scripts/deploy_db_migrations.py for preview and apply.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "label": "Supabase CLI public CA bundle for database migrations",
+      "file_type": "concept",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The pinned CLI uses the temporary password through PGPASSWORD; the migration runner verifies the project session pooler with the official Supabase CLI CA certificates cited in the environment matrix.",
+      "citation_url": "https://github.com/supabase/cli/tree/v2.111.0/apps/cli-go/internal/gen/types/templates",
+      "_origin": "semantic"
+    },
+    {
+      "id": "github_workflows_db_production_on",
+      "label": "on",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_on_push",
+      "label": "push",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_on_workflow_dispatch",
+      "label": "workflow_dispatch",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_deploy_environment",
+      "label": "environment",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L20",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_environment_name",
+      "label": "name",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_environment_deployment",
+      "label": "deployment",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_with_persist_credentials",
+      "label": "persist-credentials",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_production_steps_env",
+      "label": "env",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L32",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_on",
+      "label": "on",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_on_push",
+      "label": "push",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_on_workflow_dispatch",
+      "label": "workflow_dispatch",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_permissions",
+      "label": "permissions",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_permissions_contents",
+      "label": "contents",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_deploy_if",
+      "label": "if",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_deploy_timeout_minutes",
+      "label": "timeout-minutes",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_with_persist_credentials",
+      "label": "persist-credentials",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_steps_env",
+      "label": "env",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_per_project_database_write_token",
+      "label": "Per-project Database Read-write token",
+      "file_type": "rationale",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118-L121",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Each migration token belongs to one Supabase project with Database Read-write permission and is stored only in its corresponding GitHub environment.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_migration_token_rotation",
+      "label": "Environment-specific migration token rotation",
+      "file_type": "rationale",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L121",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Install a replacement before dashboard expiry, verify the next migration workflow, then revoke the previous token.",
+      "citation_url": "https://supabase.com/dashboard/account/tokens",
+      "_origin": "semantic"
+    },
+    {
+      "id": "docs_environment_and_secrets_matrix_short_lived_supabase_cli_login",
+      "label": "Short-lived Supabase CLI login",
+      "file_type": "rationale",
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The runner exchanges the scoped token for a temporary database login. Only the short-lived password is supplied to the pinned CLI in PGPASSWORD.",
+      "citation_url": "https://supabase.com/docs/reference/api/v1-create-login-role",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_repository_and_branch_project_mapping",
+      "label": "AniDachi repository and full branch-to-project mapping",
+      "file_type": "concept",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L11-L15, L32-L36",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The runner fixes one project and regional session pooler for each exact main or staging ref; deploy checks the AniDachi repository and allowed ref before requesting temporary access.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_project_token_handoff",
+      "label": "Environment-scoped project token handoff",
+      "file_type": "rationale",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L32-L41",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The selected GitHub environment must provide SUPABASE_MIGRATIONS_TOKEN. Deployment removes this bearer from the child process environment before exchanging it for temporary credentials.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_temporary_write_login",
+      "label": "Supabase temporary write-capable CLI login",
+      "file_type": "concept",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L18-L29",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The fixed HTTPS login-role endpoint receives the selected project and bearer. Only HTTP 201 and a nonempty role and password allow deployment to proceed.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_temporary_password_and_tls",
+      "label": "Password masking and verified session-pooler TLS",
+      "file_type": "rationale",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L42-L47",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The GitHub Actions mask escapes control characters before emission. The CLI receives the temporary password via PGPASSWORD, uses PGSSLROOTCERT from the tracked CA bundle and verify-full mode, and uses a URL-quoted role in the fixed project pooler URL.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "label": "Checked migration preview followed by apply",
+      "file_type": "rationale",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L47-L49",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Both CLI subprocesses use the same apps/web workdir and fixed database URL. An unsuccessful preview raises before the apply call.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_db_release_test_mocked_project_and_cli_isolation",
+      "label": "Mocked staging and production credential isolation",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L17-L44",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Both exact refs select the expected project in the mock login request and pooler in the command. The test checks the dry-run pair, TLS trust path, password-only subprocess handoff and absence of the original token and command-line password.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_db_release_test_unapproved_ref_rejection",
+      "label": "Topic, tag and pull-request ref rejection",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L46-L52",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "These mocked refs cause exit before requesting temporary database access.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_db_release_test_missing_project_token_rejection",
+      "label": "Missing environment token rejects legacy fallback",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L54-L60",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Setting the old personal token and production password cannot replace an absent environment token; no temporary login is requested.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_db_release_test_login_and_preview_failures",
+      "label": "Denied login and failed preview prevent apply",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L62-L74",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "A simulated HTTP denial prevents all CLI calls and a failing simulated preview is the only CLI call.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_independent_topic_eligibility",
+      "label": "Independent topic eligibility on protected staging",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L55-L83",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "For the exact repository and staging ref the merged PR must identify its original head as the second parent. A topic must include current main, contain no pending staging merge history, and have an independent nonempty diff; main reconciliation is omitted.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_staging_tree_topic_containment",
+      "label": "Topic content retained by the staging tree",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L36-L42",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Reapplying the topic using main as merge base must reproduce the tested staging tree exactly, including if later changes reverted topic content.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_path_based_acceptance_profile",
+      "label": "Path-based staging acceptance profile",
+      "file_type": "concept",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L45-L52",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Shared dependencies activate Worker, extension and media verification. Independent paths select relevant checks, so a site-only topic can advance without extension or media work.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_migration_paths_require_staging_database",
+      "label": "Live staging DB verification for migration runner, CA or schema changes",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L49-L52",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The DB category covers apps/web/supabase, database workflows, the shared migration runner, and its public CA file. Live verification requires a successful db-staging.yml run when this category is set.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_successful_staging_workflow_revision",
+      "label": "Successful staging workflow and extension ZIP evidence",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L113-L134",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Only the latest eligible staging push/dispatch at the requested revision counts. Incomplete or superseded cancelled runs wait; other non-success states fail. Extension verification also requires the unexpired named staging ZIP. Requested dispatches are deduplicated.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_served_revision_and_tree_equivalence",
+      "label": "Deployed staging revision and identical-tree equivalence",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L105-L110, L136-L144",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The fixed staging robots endpoint provides the commit header. A recorded revision may also qualify as a known ancestor with the identical Git tree.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_verified_live_staging_acceptance",
+      "label": "Live staging CI, smoke and topic continuity",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L147-L184",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Polling verifies the current topic head, integration ancestry and content. It checks CI and the selected DB, Worker and extension workflows, runs web and optional Worker smoke, and rechecks the served revision and staging head before recording acceptance.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_topic_release_pull_request",
+      "label": "Create or reuse the topic release PR",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L187-L210",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The publisher rechecks the topic head and accepted revision, creates or reuses a PR for the topic into main, and only migrates an exact historical bot-generated body. The author controls merging.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_per_topic_staging_deployment_receipt",
+      "label": "Per-topic staging deployment receipt and statuses",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L211-L229",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "A staging-acceptance deployment links the tested topic to the accepted staging merge and workflow run. Identical payloads are reused, other deployments remain active, and tested-on-staging plus isolated-release-ci statuses are posted to the verified topic.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_test_database_profile_regression",
+      "label": "Migration runner and CA activate the DB category",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L11-L14",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The unit test independently checks that each of these two paths requires a live database run.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_test_seo_and_prime_profile_regression",
+      "label": "Independent SEO and Prime check selection",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L16-L20",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "A robots.ts change enables none of the optional profiles; the combined extension, protocol and migration sample enables all four.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_test_staging_publisher_ownership_regression",
+      "label": "Protected branch and merged topic receipt tests",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L22-L37",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Mocked inputs verify rejection of a feature-branch publisher, an unmerged topic, and a PR head that differs from its merged revision.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_test_staging_build_evidence_regression",
+      "label": "Branch, job conclusion, ZIP and deployment evidence tests",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L39-L53",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The tests reject wrong-branch, skipped, incomplete and artifactless extension runs and verify that a missing staging deployment revision cannot pass.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "scripts_staging_release_test_reverted_or_cancelled_staging_regression",
+      "label": "Reverted topics and superseded staging builds",
+      "file_type": "rationale",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L55-L66",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Reapplying missing topic content triggers rejection. A superseded cancelled staging run waits for fresh verification.",
+      "_origin": "semantic"
+    },
+    {
+      "id": "github_workflows_db_production_env_supabase_migrations_token",
+      "label": "SUPABASE_MIGRATIONS_TOKEN",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_deploy_environment",
+      "label": "environment",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L20",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_environment_name",
+      "label": "name",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_environment_deployment",
+      "label": "deployment",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "github_workflows_db_staging_env_supabase_migrations_token",
+      "label": "SUPABASE_MIGRATIONS_TOKEN",
+      "file_type": "code",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L32",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_deploy_db_migrations",
+      "label": "deploy_db_migrations.py",
+      "file_type": "code",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_temporary_login",
+      "label": "temporary_login()",
+      "file_type": "code",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L18",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_deploy",
+      "label": "deploy()",
+      "file_type": "code",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L32",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_deploy_db_migrations_rationale_1",
+      "label": "Apply pending migrations to the Supabase project assigned to this GitHub branch.",
+      "file_type": "rationale",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release",
+      "label": "staging-release.py",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_run",
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_api",
+      "label": "api()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L20",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_paths_between",
+      "label": "paths_between()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L24",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_ancestor",
+      "label": "ancestor()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L29",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_require_topic_content",
+      "label": "require_topic_content()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L36",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_profile",
+      "label": "profile()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L45",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_feature_at",
+      "label": "feature_at()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L55",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_branch_tip",
+      "label": "branch_tip()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L86",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_output",
+      "label": "output()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L90",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_select",
+      "label": "select()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L96",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_stage_header",
+      "label": "stage_header()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L105",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_successful_run",
+      "label": "successful_run()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L113",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_serve_same_content",
+      "label": "serve_same_content()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L136",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_verify_live",
+      "label": "verify_live()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L147",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_publish",
+      "label": "publish()",
+      "file_type": "code",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L187",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_rationale_1",
+      "label": "Promote one verified topic. Only the publish job receives write permissions.",
+      "file_type": "rationale",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test",
+      "label": "staging_db_release_test.py",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_migrationrelease",
+      "label": "MigrationRelease",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L9",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_py_testcase",
+      "label": "TestCase",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_migrationrelease_environment",
+      "label": ".environment()",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L10",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_migrationrelease_test_temporary_access_and_cli_stay_with_the_selected_project",
+      "label": ".test_temporary_access_and_cli_stay_with_the_selected_project()",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L17",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_migrationrelease_test_topic_and_tag_cannot_request_database_access",
+      "label": ".test_topic_and_tag_cannot_request_database_access()",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L46",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_migrationrelease_test_old_repository_secrets_cannot_replace_a_missing_environment_token",
+      "label": ".test_old_repository_secrets_cannot_replace_a_missing_environment_token()",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L54",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_db_release_test_migrationrelease_test_denied_login_and_failed_preview_stop_before_apply",
+      "label": ".test_denied_login_and_failed_preview_stop_before_apply()",
+      "file_type": "code",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L62",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test",
+      "label": "staging_release_test.py",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance",
+      "label": "StagingAcceptance",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L10",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_py_testcase",
+      "label": "TestCase",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_migration_runner_and_tls_changes_require_a_live_database_run",
+      "label": ".test_migration_runner_and_tls_changes_require_a_live_database_run()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L11",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_seo_is_independent_from_prime_checks",
+      "label": ".test_seo_is_independent_from_prime_checks()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_a_feature_workflow_cannot_enter_the_publisher",
+      "label": ".test_a_feature_workflow_cannot_enter_the_publisher()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L22",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_unmerged_or_different_topic_cannot_receive_a_receipt",
+      "label": ".test_unmerged_or_different_topic_cannot_receive_a_receipt()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L27",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_wrong_branch_skipped_build_and_missing_zip_are_never_green",
+      "label": ".test_wrong_branch_skipped_build_and_missing_zip_are_never_green()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L39",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_missing_deployment_revision_cannot_pass",
+      "label": ".test_missing_deployment_revision_cannot_pass()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L52",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_a_reverted_topic_is_rejected_even_when_its_commit_is_an_ancestor",
+      "label": ".test_a_reverted_topic_is_rejected_even_when_its_commit_is_an_ancestor()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L55",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_staging_release_test_stagingacceptance_test_cancelled_superseded_stage_waits_for_fresh_verification",
+      "label": ".test_cancelled_superseded_stage_waits_for_fresh_verification()",
+      "file_type": "code",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L61",
+      "_callable": true,
+      "_origin": "ast"
+    },
+    {
+      "id": "subprocess",
+      "label": "subprocess",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "contextlib",
+      "label": "contextlib",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "http_client",
+      "label": "http_client",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "urllib_parse",
+      "label": "urllib_parse",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "sys",
+      "label": "sys",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "time",
+      "label": "time",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "io",
+      "label": "io",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "importlib_util",
+      "label": "importlib_util",
+      "file_type": "concept",
+      "type": "external",
+      "external": true,
+      "source_file": "",
+      "_origin": "ast"
     }
   ],
   "links": [
@@ -606204,17 +607115,6 @@
     },
     {
       "source": "_github_workflows_db_staging_deploy",
-      "target": "_github_workflows_db_staging_supabase_link",
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "_github_workflows_db_staging_deploy",
       "target": "_github_workflows_db_staging_pending_migrations_dry_run",
       "relation": "implements",
       "confidence": "EXTRACTED",
@@ -606228,28 +607128,6 @@
       "source": "_github_workflows_db_staging_deploy",
       "target": "_github_workflows_db_staging_apply_migrations",
       "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "_github_workflows_db_staging_verify_staging_project_target",
-      "target": "_github_workflows_db_staging_supabase_link",
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": null,
-      "weight": 1.0,
-      "_origin": "semantic"
-    },
-    {
-      "source": "_github_workflows_db_staging_supabase_link",
-      "target": "_github_workflows_db_staging_pending_migrations_dry_run",
-      "relation": "conceptually_related_to",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": ".github/workflows/db-staging.yml",
@@ -636248,51 +637126,11 @@
     },
     {
       "source": "github_workflows_db_production",
-      "target": "github_workflows_db_production_true",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_true",
-      "target": "github_workflows_db_production_true_push",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_true_push",
-      "target": "github_workflows_db_production_push_branches",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_true",
-      "target": "github_workflows_db_production_true_workflow_dispatch",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production",
       "target": "github_workflows_db_production_permissions",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636302,7 +637140,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636312,7 +637150,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636322,7 +637160,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636332,7 +637170,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636342,7 +637180,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636352,7 +637190,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636362,7 +637200,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636372,7 +637210,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636382,47 +637220,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_jobs_deploy",
-      "target": "github_workflows_db_production_deploy_env",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_deploy_env",
-      "target": "github_workflows_db_production_env_supabase_access_token",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_deploy_env",
-      "target": "github_workflows_db_production_env_supabase_db_password",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_production_deploy_env",
-      "target": "github_workflows_db_production_env_supabase_project_id",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636432,7 +637230,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636442,7 +637240,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636452,7 +637250,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636462,7 +637260,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636472,7 +637270,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636482,7 +637280,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-production.yml",
-      "source_location": "L1",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636498,51 +637296,11 @@
     },
     {
       "source": "github_workflows_db_staging",
-      "target": "github_workflows_db_staging_true",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_true",
-      "target": "github_workflows_db_staging_true_push",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_true_push",
-      "target": "github_workflows_db_staging_push_branches",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_true",
-      "target": "github_workflows_db_staging_true_workflow_dispatch",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging",
       "target": "github_workflows_db_staging_concurrency",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636552,7 +637310,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636562,7 +637320,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636572,7 +637330,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636582,7 +637340,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636592,47 +637350,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_jobs_deploy",
-      "target": "github_workflows_db_staging_deploy_env",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_deploy_env",
-      "target": "github_workflows_db_staging_env_supabase_access_token",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_deploy_env",
-      "target": "github_workflows_db_staging_env_supabase_db_password",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "github_workflows_db_staging_deploy_env",
-      "target": "github_workflows_db_staging_env_supabase_project_id",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636642,7 +637360,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636652,7 +637370,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636662,7 +637380,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636672,7 +637390,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636682,7 +637400,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -636692,7 +637410,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".github/workflows/db-staging.yml",
-      "source_location": "L1",
+      "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -722846,7 +723564,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:88",
+      "source_location": "docs/environment-and-secrets-matrix.md:91",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -722857,7 +723575,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:103",
+      "source_location": "docs/environment-and-secrets-matrix.md:106",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -722868,7 +723586,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:126",
+      "source_location": "docs/environment-and-secrets-matrix.md:135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -722879,7 +723597,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:159",
+      "source_location": "docs/environment-and-secrets-matrix.md:168",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -722890,7 +723608,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:173",
+      "source_location": "docs/environment-and-secrets-matrix.md:182",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -722901,7 +723619,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:199",
+      "source_location": "docs/environment-and-secrets-matrix.md:208",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -722912,7 +723630,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:210",
+      "source_location": "docs/environment-and-secrets-matrix.md:219",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724441,7 +725159,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:23",
+      "source_location": "docs/environment-and-secrets-matrix.md:26",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724452,7 +725170,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:32",
+      "source_location": "docs/environment-and-secrets-matrix.md:35",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724463,7 +725181,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:33",
+      "source_location": "docs/environment-and-secrets-matrix.md:36",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724474,7 +725192,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:34",
+      "source_location": "docs/environment-and-secrets-matrix.md:37",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724485,7 +725203,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:37",
+      "source_location": "docs/environment-and-secrets-matrix.md:40",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724496,7 +725214,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:40",
+      "source_location": "docs/environment-and-secrets-matrix.md:43",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724507,7 +725225,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:44",
+      "source_location": "docs/environment-and-secrets-matrix.md:47",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724518,7 +725236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:54",
+      "source_location": "docs/environment-and-secrets-matrix.md:57",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724529,7 +725247,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724540,7 +725258,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:56",
+      "source_location": "docs/environment-and-secrets-matrix.md:59",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724551,7 +725269,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:60",
+      "source_location": "docs/environment-and-secrets-matrix.md:63",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724562,7 +725280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:67",
+      "source_location": "docs/environment-and-secrets-matrix.md:70",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724573,7 +725291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:88",
+      "source_location": "docs/environment-and-secrets-matrix.md:91",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724584,7 +725302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:126",
+      "source_location": "docs/environment-and-secrets-matrix.md:135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724595,7 +725313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:139",
+      "source_location": "docs/environment-and-secrets-matrix.md:148",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724606,7 +725324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:173",
+      "source_location": "docs/environment-and-secrets-matrix.md:182",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724617,7 +725335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:193",
+      "source_location": "docs/environment-and-secrets-matrix.md:202",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -724628,7 +725346,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:210",
+      "source_location": "docs/environment-and-secrets-matrix.md:219",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -725134,7 +725852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:56",
+      "source_location": "docs/environment-and-secrets-matrix.md:59",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -725684,7 +726402,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:60",
+      "source_location": "docs/environment-and-secrets-matrix.md:63",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -725695,7 +726413,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:34",
+      "source_location": "docs/environment-and-secrets-matrix.md:37",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -725706,7 +726424,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:34",
+      "source_location": "docs/environment-and-secrets-matrix.md:37",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -732960,7 +733678,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:159",
+      "source_location": "docs/environment-and-secrets-matrix.md:168",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -732971,7 +733689,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:173",
+      "source_location": "docs/environment-and-secrets-matrix.md:182",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -732982,7 +733700,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:199",
+      "source_location": "docs/environment-and-secrets-matrix.md:208",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733004,7 +733722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:103",
+      "source_location": "docs/environment-and-secrets-matrix.md:106",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733026,7 +733744,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:126",
+      "source_location": "docs/environment-and-secrets-matrix.md:135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733136,7 +733854,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:52",
+      "source_location": "docs/environment-and-secrets-matrix.md:55",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733147,7 +733865,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:52",
+      "source_location": "docs/environment-and-secrets-matrix.md:55",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733158,7 +733876,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:57",
+      "source_location": "docs/environment-and-secrets-matrix.md:60",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733169,7 +733887,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:57",
+      "source_location": "docs/environment-and-secrets-matrix.md:60",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -733961,7 +734679,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:99",
+      "source_location": "docs/environment-and-secrets-matrix.md:102",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -747853,7 +748571,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -747864,7 +748582,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -747875,7 +748593,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:56",
+      "source_location": "docs/environment-and-secrets-matrix.md:59",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -747886,7 +748604,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:57",
+      "source_location": "docs/environment-and-secrets-matrix.md:60",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -748216,7 +748934,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751155,7 +751873,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:139",
+      "source_location": "docs/environment-and-secrets-matrix.md:148",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751166,7 +751884,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:67",
+      "source_location": "docs/environment-and-secrets-matrix.md:70",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751177,7 +751895,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:57",
+      "source_location": "docs/environment-and-secrets-matrix.md:60",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751188,7 +751906,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:135",
+      "source_location": "docs/environment-and-secrets-matrix.md:144",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751199,7 +751917,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:135",
+      "source_location": "docs/environment-and-secrets-matrix.md:144",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751210,7 +751928,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:126",
+      "source_location": "docs/environment-and-secrets-matrix.md:135",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751716,7 +752434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:21",
+      "source_location": "docs/environment-and-secrets-matrix.md:24",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751936,7 +752654,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:32",
+      "source_location": "docs/environment-and-secrets-matrix.md:35",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751947,7 +752665,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:55",
+      "source_location": "docs/environment-and-secrets-matrix.md:58",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -751958,7 +752676,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.75,
       "source_file": "docs/environment-and-secrets-matrix.md",
-      "source_location": "docs/environment-and-secrets-matrix.md:96",
+      "source_location": "docs/environment-and-secrets-matrix.md:99",
       "weight": 1.0,
       "_origin": "semantic"
     },
@@ -752918,6 +753636,2171 @@
       "source_location": "lines 20-21, 244-250",
       "weight": 1.0,
       "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_section_vercel",
+      "target": "docs_environment_and_secrets_matrix_staging_email_code_auth_configuration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L21-L23",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_section_github_actions",
+      "target": "docs_environment_and_secrets_matrix_production_database_migration_scope",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L119",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_section_github_actions",
+      "target": "docs_environment_and_secrets_matrix_staging_database_migration_scope",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_section_github_actions",
+      "target": "docs_environment_and_secrets_matrix_database_migration_cutover",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_database_migration_cutover",
+      "target": "docs_environment_and_secrets_matrix_production_database_migration_scope",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_database_migration_cutover",
+      "target": "docs_environment_and_secrets_matrix_staging_database_migration_scope",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_migrations_to_production",
+      "target": "_github_workflows_db_production_noncanceling_production_history_transition_operation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L11-L13",
+      "_origin": "semantic"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_migrations_to_production",
+      "target": "github_workflows_db_production_read_only_checkout_and_pinned_cli",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L25-L30",
+      "_origin": "semantic"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_migrations_to_production",
+      "target": "github_workflows_db_production_production_pooler_dry_run_and_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L31-L34",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_production_database_migration_scope",
+      "target": "github_workflows_db_production_main_only_production_migration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L119",
+      "_origin": "semantic"
+    },
+    {
+      "source": "_github_workflows_db_staging_verify_staging_project_target",
+      "target": "_github_workflows_db_staging_pending_migrations_dry_run",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L30-L33",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_staging_database_migration_scope",
+      "target": "_github_workflows_db_staging_verify_staging_project_target",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_section_github_actions",
+      "target": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_database_migration_cutover",
+      "target": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "target": "github_workflows_db_production_production_pooler_dry_run_and_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "target": "_github_workflows_db_staging_verify_staging_project_target",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "github_workflows_db_production",
+      "target": "github_workflows_db_production_on",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_on",
+      "target": "github_workflows_db_production_on_push",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_on_push",
+      "target": "github_workflows_db_production_push_branches",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_on",
+      "target": "github_workflows_db_production_on_workflow_dispatch",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_jobs_deploy",
+      "target": "github_workflows_db_production_deploy_environment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_environment",
+      "target": "github_workflows_db_production_environment_name",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_environment",
+      "target": "github_workflows_db_production_environment_deployment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_steps",
+      "target": "github_workflows_db_production_steps_uses",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_steps",
+      "target": "github_workflows_db_production_steps_with",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_steps_with",
+      "target": "github_workflows_db_production_with_persist_credentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_production_deploy_steps",
+      "target": "github_workflows_db_production_steps_env",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging",
+      "target": "github_workflows_db_staging_on",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_on",
+      "target": "github_workflows_db_staging_on_push",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_on_push",
+      "target": "github_workflows_db_staging_push_branches",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_on",
+      "target": "github_workflows_db_staging_on_workflow_dispatch",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging",
+      "target": "github_workflows_db_staging_permissions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_permissions",
+      "target": "github_workflows_db_staging_permissions_contents",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_jobs_deploy",
+      "target": "github_workflows_db_staging_deploy_if",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_jobs_deploy",
+      "target": "github_workflows_db_staging_deploy_timeout_minutes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_deploy_steps",
+      "target": "github_workflows_db_staging_steps_uses",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_deploy_steps",
+      "target": "github_workflows_db_staging_steps_with",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_steps_with",
+      "target": "github_workflows_db_staging_with_persist_credentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_deploy_steps",
+      "target": "github_workflows_db_staging_steps_env",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_section_github_actions",
+      "target": "docs_environment_and_secrets_matrix_per_project_database_write_token",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118-L121",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_per_project_database_write_token",
+      "target": "docs_environment_and_secrets_matrix_staging_database_migration_scope",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118-L121",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_per_project_database_write_token",
+      "target": "docs_environment_and_secrets_matrix_production_database_migration_scope",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L119-L121",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_per_project_database_write_token",
+      "target": "docs_environment_and_secrets_matrix_migration_token_rotation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L121",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_database_migration_cutover",
+      "target": "docs_environment_and_secrets_matrix_short_lived_supabase_cli_login",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_short_lived_supabase_cli_login",
+      "target": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_project_token_handoff",
+      "target": "scripts_deploy_db_migrations_repository_and_branch_project_mapping",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L32-L41",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_project_token_handoff",
+      "target": "scripts_deploy_db_migrations_temporary_write_login",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L37-L41",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_temporary_write_login",
+      "target": "scripts_deploy_db_migrations_temporary_password_and_tls",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L41-L46",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "target": "scripts_deploy_db_migrations_temporary_password_and_tls",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L45-L49",
+      "_origin": "semantic"
+    },
+    {
+      "source": "_github_workflows_db_staging_verify_staging_project_target",
+      "target": "scripts_deploy_db_migrations_project_token_handoff",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L17-L33",
+      "_origin": "semantic"
+    },
+    {
+      "source": "_github_workflows_db_staging_pending_migrations_dry_run",
+      "target": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L30-L33",
+      "_origin": "semantic"
+    },
+    {
+      "source": "_github_workflows_db_staging_apply_migrations",
+      "target": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L30-L33",
+      "_origin": "semantic"
+    },
+    {
+      "source": "github_workflows_db_production_production_pooler_dry_run_and_apply",
+      "target": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L31-L34",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_short_lived_supabase_cli_login",
+      "target": "scripts_deploy_db_migrations_temporary_write_login",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_supabase_cli_public_ca_bundle",
+      "target": "scripts_deploy_db_migrations_temporary_password_and_tls",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_production_database_migration_scope",
+      "target": "scripts_deploy_db_migrations_project_token_handoff",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L119-L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "docs_environment_and_secrets_matrix_staging_database_migration_scope",
+      "target": "scripts_deploy_db_migrations_project_token_handoff",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "docs/environment-and-secrets-matrix.md",
+      "source_location": "L118-L123",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_mocked_project_and_cli_isolation",
+      "target": "scripts_deploy_db_migrations_repository_and_branch_project_mapping",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L17-L37",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_mocked_project_and_cli_isolation",
+      "target": "scripts_deploy_db_migrations_temporary_write_login",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L23-L33",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_mocked_project_and_cli_isolation",
+      "target": "scripts_deploy_db_migrations_temporary_password_and_tls",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L34-L44",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_mocked_project_and_cli_isolation",
+      "target": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L34-L40",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_unapproved_ref_rejection",
+      "target": "scripts_deploy_db_migrations_repository_and_branch_project_mapping",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L46-L52",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_missing_project_token_rejection",
+      "target": "scripts_deploy_db_migrations_project_token_handoff",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L54-L60",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_login_and_preview_failures",
+      "target": "scripts_deploy_db_migrations_temporary_write_login",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L62-L68",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_db_release_test_login_and_preview_failures",
+      "target": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L69-L74",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_independent_topic_eligibility",
+      "target": "scripts_staging_release_staging_tree_topic_containment",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L72-L83",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_path_based_acceptance_profile",
+      "target": "scripts_staging_release_migration_paths_require_staging_database",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L45-L52",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_migration_paths_require_staging_database",
+      "target": "_github_workflows_db_staging_deploy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L163-L165",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_migration_paths_require_staging_database",
+      "target": "scripts_deploy_db_migrations_checked_preview_then_apply",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L49-L52",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_independent_topic_eligibility",
+      "target": "scripts_staging_release_path_based_acceptance_profile",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L95-L102",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_verified_live_staging_acceptance",
+      "target": "scripts_staging_release_staging_tree_topic_containment",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L155-L162",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_verified_live_staging_acceptance",
+      "target": "scripts_staging_release_path_based_acceptance_profile",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L147-L150",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_verified_live_staging_acceptance",
+      "target": "scripts_staging_release_successful_staging_workflow_revision",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L163-L170",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_verified_live_staging_acceptance",
+      "target": "scripts_staging_release_served_revision_and_tree_equivalence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L170-L181",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_verified_live_staging_acceptance",
+      "target": "scripts_staging_release_migration_paths_require_staging_database",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L163-L165",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_topic_release_pull_request",
+      "target": "scripts_staging_release_independent_topic_eligibility",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L187-L192",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_topic_release_pull_request",
+      "target": "scripts_staging_release_per_topic_staging_deployment_receipt",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L209-L229",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_database_profile_regression",
+      "target": "scripts_staging_release_migration_paths_require_staging_database",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L11-L14",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_seo_and_prime_profile_regression",
+      "target": "scripts_staging_release_path_based_acceptance_profile",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L16-L20",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_staging_publisher_ownership_regression",
+      "target": "scripts_staging_release_independent_topic_eligibility",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L22-L37",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_staging_build_evidence_regression",
+      "target": "scripts_staging_release_successful_staging_workflow_revision",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L39-L50",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_staging_build_evidence_regression",
+      "target": "scripts_staging_release_served_revision_and_tree_equivalence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L52-L53",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_reverted_or_cancelled_staging_regression",
+      "target": "scripts_staging_release_staging_tree_topic_containment",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L55-L59",
+      "_origin": "semantic"
+    },
+    {
+      "source": "scripts_staging_release_test_reverted_or_cancelled_staging_regression",
+      "target": "scripts_staging_release_successful_staging_workflow_revision",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "weight": 1.0,
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L61-L66",
+      "_origin": "semantic"
+    },
+    {
+      "source": "github_workflows_db_production_steps_env",
+      "target": "github_workflows_db_production_env_supabase_migrations_token",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-production.yml",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_jobs_deploy",
+      "target": "github_workflows_db_staging_deploy_environment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_deploy_environment",
+      "target": "github_workflows_db_staging_environment_name",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_deploy_environment",
+      "target": "github_workflows_db_staging_environment_deployment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "github_workflows_db_staging_steps_env",
+      "target": "github_workflows_db_staging_env_supabase_migrations_token",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".github/workflows/db-staging.yml",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "subprocess",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "contextlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "http_client",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "urllib_parse",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "scripts_deploy_db_migrations_temporary_login",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations",
+      "target": "scripts_deploy_db_migrations_deploy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_deploy",
+      "target": "scripts_deploy_db_migrations_temporary_login",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_rationale_1",
+      "target": "scripts_deploy_db_migrations",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "re",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "subprocess",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "sys",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "time",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "urllib_parse",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_run",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_api",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_paths_between",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_ancestor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_require_topic_content",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_profile",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_feature_at",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_branch_tip",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L86",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_output",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_select",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L96",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_stage_header",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_successful_run",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_serve_same_content",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_verify_live",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_publish",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L187",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_api",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_require_topic_content",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_feature_at",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_feature_at",
+      "target": "scripts_staging_release_api",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_feature_at",
+      "target": "scripts_staging_release_ancestor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_feature_at",
+      "target": "scripts_staging_release_paths_between",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_feature_at",
+      "target": "scripts_staging_release_require_topic_content",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L82",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_branch_tip",
+      "target": "scripts_staging_release_api",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L87",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_select",
+      "target": "scripts_staging_release_feature_at",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_select",
+      "target": "scripts_staging_release_output",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L99",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_select",
+      "target": "scripts_staging_release_profile",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_stage_header",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_successful_run",
+      "target": "scripts_staging_release_api",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_successful_run",
+      "target": "scripts_staging_release_branch_tip",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L121",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_serve_same_content",
+      "target": "scripts_staging_release_ancestor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_serve_same_content",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_feature_at",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L149",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_profile",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L150",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_branch_tip",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L151",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L159",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_ancestor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L160",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_require_topic_content",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L162",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_successful_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L170",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_stage_header",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L171",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_serve_same_content",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L172",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "scripts_staging_release_output",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L181",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_publish",
+      "target": "scripts_staging_release_feature_at",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L189",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_publish",
+      "target": "scripts_staging_release_branch_tip",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L191",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_publish",
+      "target": "scripts_staging_release_api",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_publish",
+      "target": "scripts_staging_release_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L220",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_select",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_verify_live",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release",
+      "target": "scripts_staging_release_publish",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_rationale_1",
+      "target": "scripts_staging_release",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test",
+      "target": "subprocess",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test",
+      "target": "io",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test",
+      "target": "unittest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test",
+      "target": "scripts_deploy_db_migrations",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test",
+      "target": "scripts_staging_db_release_test_migrationrelease",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease",
+      "target": "scripts_staging_db_release_test_py_testcase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease",
+      "target": "scripts_staging_db_release_test_migrationrelease_environment",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease",
+      "target": "scripts_staging_db_release_test_migrationrelease_test_temporary_access_and_cli_stay_with_the_selected_project",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease",
+      "target": "scripts_staging_db_release_test_migrationrelease_test_topic_and_tag_cannot_request_database_access",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease",
+      "target": "scripts_staging_db_release_test_migrationrelease_test_old_repository_secrets_cannot_replace_a_missing_environment_token",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease",
+      "target": "scripts_staging_db_release_test_migrationrelease_test_denied_login_and_failed_preview_stop_before_apply",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_temporary_access_and_cli_stay_with_the_selected_project",
+      "target": "scripts_staging_db_release_test_migrationrelease_environment",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_topic_and_tag_cannot_request_database_access",
+      "target": "scripts_staging_db_release_test_migrationrelease_environment",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_old_repository_secrets_cannot_replace_a_missing_environment_token",
+      "target": "scripts_staging_db_release_test_migrationrelease_environment",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_denied_login_and_failed_preview_stop_before_apply",
+      "target": "scripts_staging_db_release_test_migrationrelease_environment",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test",
+      "target": "importlib_util",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test",
+      "target": "unittest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test",
+      "target": "scripts_staging_release_test_stagingacceptance",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_py_testcase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_migration_runner_and_tls_changes_require_a_live_database_run",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_seo_is_independent_from_prime_checks",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_a_feature_workflow_cannot_enter_the_publisher",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_unmerged_or_different_topic_cannot_receive_a_receipt",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_wrong_branch_skipped_build_and_missing_zip_are_never_green",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_missing_deployment_revision_cannot_pass",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_a_reverted_topic_is_rejected_even_when_its_commit_is_an_ancestor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_test_stagingacceptance",
+      "target": "scripts_staging_release_test_stagingacceptance_test_cancelled_superseded_stage_waits_for_fresh_verification",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/staging_release_test.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_deploy_db_migrations_deploy",
+      "target": "subprocess",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/deploy_db_migrations.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_run",
+      "target": "subprocess",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_paths_between",
+      "target": "subprocess",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L25",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_ancestor",
+      "target": "subprocess",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_require_topic_content",
+      "target": "subprocess",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_stage_header",
+      "target": "time",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_stage_header",
+      "target": "re",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_serve_same_content",
+      "target": "re",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_serve_same_content",
+      "target": "subprocess",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_verify_live",
+      "target": "time",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L183",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_release_publish",
+      "target": "re",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging-release.py",
+      "source_location": "L191",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_temporary_access_and_cli_stay_with_the_selected_project",
+      "target": "scripts_deploy_db_migrations_deploy",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_topic_and_tag_cannot_request_database_access",
+      "target": "scripts_deploy_db_migrations_deploy",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_old_repository_secrets_cannot_replace_a_missing_environment_token",
+      "target": "scripts_deploy_db_migrations_deploy",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "scripts_staging_db_release_test_migrationrelease_test_denied_login_and_failed_preview_stop_before_apply",
+      "target": "scripts_deploy_db_migrations_deploy",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scripts/staging_db_release_test.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
     }
   ],
   "hyperedges": [
