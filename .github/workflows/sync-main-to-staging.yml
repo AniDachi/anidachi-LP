@@ -1,7 +1,11 @@
 name: Sync released main to staging
 on:
   push:
-    branches: [main, staging]
+    branches: [staging]
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
 
 permissions: {}
 concurrency:
@@ -10,8 +14,14 @@ concurrency:
 
 jobs:
   plan:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       pull-requests: write
     outputs:
