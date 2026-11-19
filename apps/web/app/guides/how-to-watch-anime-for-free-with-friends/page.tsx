@@ -168,6 +168,8 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
+        aboveFoldStyle="hero"
+        watchroom="anime"
       >
         <SeoGuideTitle>How to Watch Anime Free With Friends (Legally)</SeoGuideTitle>
 
