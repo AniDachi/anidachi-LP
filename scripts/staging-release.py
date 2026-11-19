@@ -189,15 +189,22 @@ def publish():
     accepted = os.environ["ACCEPTED_SHA"]
     if not re.fullmatch("[a-f0-9]{40}", accepted) or branch_tip(branch) != topic:
         raise ValueError("The tested revision is no longer the topic head")
-    body = (f"Staging PR #{number} tested this branch at `{topic}`. "
-            f"The accepted shared staging build was `{accepted}`.\n\n[Checks and live smoke]({RUN}). "
-            "The author decides when to merge.")
+    body = ("The required **tested-on-staging** and **isolated-release-ci** checks below link to "
+            "the live staging and standalone CI evidence for the current commit. "
+            "The author decides when to merge. New revisions require fresh staging acceptance.")
     open_prs = api("pulls?state=open&base=main&head=" + quote(REPO.split("/")[0] + ":" + branch, safe=""))
     if not open_prs:
         pr = api("pulls", "--method", "POST", "-f", "base=main", "-f", "head=" + branch,
                  "-f", f"title=Release {branch}", "-f", "body=" + body)
     else:
         pr = open_prs[0]
+        # Migrate only our original generated description. Human-authored text
+        # stays untouched, and the new description is accurate on every revision.
+        if (pr["user"]["login"] == "github-actions[bot]" and
+                re.fullmatch(r"Staging PR #\d+ tested this branch at `[a-f0-9]{40}`. The accepted shared staging build was `[a-f0-9]{40}`.\n\n"
+                             r"\[Checks and live smoke\]\(https://github\.com/AniDachi/anidachi-LP/actions/runs/\d+\)\. The author decides when to merge\.",
+                             pr.get("body") or "")):
+            pr = api(f"pulls/{pr['number']}", "--method", "PATCH", "-f", "body=" + body)
     if pr["head"]["sha"] != topic or pr["base"]["ref"] != "main":
         raise ValueError("Release PR moved during acceptance")
     # Record the tested topic on GitHub's deployment timeline. Other topics can
