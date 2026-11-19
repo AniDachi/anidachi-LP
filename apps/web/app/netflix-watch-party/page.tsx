@@ -456,6 +456,10 @@ export default function NetflixWatchPartyPage() {
           <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
             is Teleparty free
           </Link>
+          , and for its permissions and privacy policy, read{" "}
+          <Link href="/guides/is-teleparty-safe" className="text-brand-orange hover:underline">
+            is Teleparty safe
+          </Link>
           .
         </p>
 

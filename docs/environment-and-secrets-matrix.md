@@ -115,6 +115,12 @@ Repository: `AniDachi/anidachi-LP`.
 | `WXT_API_HTTP_BASE` | `staging` env variable | Staging extension API base | Extension connects to staging Worker |
 | `WXT_API_WS_BASE` | `staging` env variable | Staging extension WS base | Extension WebSocket connects to staging Worker |
 | `STAGING_ACCESS_CODE` | `staging` env secret | Staging smoke gate access | `Staging Smoke` passes |
+| `SUPABASE_MIGRATIONS_TOKEN` | `staging-database` environment, branch `staging` | Scoped Supabase token for the staging project `anidachi` | The staging migration job previews and applies pending migrations over verified TLS |
+| `SUPABASE_MIGRATIONS_TOKEN` | `Production` environment, branch `main` | Separate scoped token for `anidachi-prod` | The production job uses the same migration runner on the production project |
+
+Create each token for one project with the **Database → Read-write** permission. Store it only in the corresponding GitHub environment. To rotate, create its replacement, update that environment secret, verify the next migration workflow, then revoke the superseded token. Rotate before the expiry shown in the [Supabase token dashboard](https://supabase.com/dashboard/account/tokens).
+
+The migration runner exchanges the scoped token for a short-lived [Supabase CLI login](https://supabase.com/docs/reference/api/v1-create-login-role). The pinned CLI receives only the temporary password via `PGPASSWORD` and verifies the project’s session pooler against the [official CA certificates](https://github.com/supabase/cli/tree/v2.111.0/apps/cli-go/internal/gen/types/templates). Vercel owns the web deployment records. During the transition, keep the old repository secrets until the last workflow using them has been replaced and its successor has passed on the corresponding branch.
 
 Cloudflare deploy token must be scoped to the Anidachi account and include at
 least:
