@@ -1,9 +1,5 @@
 # Current Development State
 
-## Independent feature releases
-
-The shared staging environment integrates topic branches through PRs. Each task branches from production and has its own release PR after CI and live staging verification. See [the team handoff](independent-releases.md).
-
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of
