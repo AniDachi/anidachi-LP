@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	PlaybackStateSchema,
 	canonicalizeRoomSourceUrl,
 	RoomSourceDescriptorSchema,
 	WatchSourceDescriptorSchema,
@@ -40,6 +41,13 @@ import {
 } from "../src";
 
 const NOW = "2026-11-16T00:00:00.000Z";
+it("preserves the optional host player visit without requiring it from existing clients", () => {
+	const state = { videoFingerprint: "primevideo|detail/0CCCCCCCCCCCCCCCCCCCCCCCCC", hostTime: 30, updatedAt: 1, playing: true, playbackRate: 1 };
+	expect(PlaybackStateSchema.parse(state)).toEqual(state);
+	const visit = { ...state, primePlayerVisit: crypto.randomUUID() };
+	expect(PlaybackStateSchema.parse(visit)).toEqual(visit);
+	expect(PlaybackStateSchema.safeParse({ ...state, primePlayerVisit: "invalid" }).success).toBe(false);
+});
 const ID = "11111111-1111-4111-8111-111111111111";
 const ANCHOR = "0AAAAAAAAAAAAAAAAAAAAAAAAA";
 const SEASON = "0BBBBBBBBBBBBBBBBBBBBBBBBB";

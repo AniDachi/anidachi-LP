@@ -55,6 +55,35 @@ export async function startPrimeResume(
 	if (!["ready", "choice-required"].includes(result?.status))
 		throw new Error("Launch expired");
 }
+export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: string, visit: string | undefined,
+	signal: AbortSignal): Promise<boolean> {
+	if (signal.aborted || source.provider !== "primevideo") return false;
+	const reply = await chrome.runtime.sendMessage({
+		type: "ANIDACHI_PRIME_LAUNCH", action: "follow", roomId, visit,
+		contentId: source.sourceUrl.split("/").at(-1),
+	});
+	return reply?.status === "ready";
+}
+
+/** Keep an occupied tab in its live room. An older launch must not replay after Leave. */
+export function discardConflictingPrimeLaunch(activeRoomId: string, href: string) {
+	const url = new URL(href);
+	const params = new URLSearchParams(url.hash.slice(1));
+	const invited = params.get("anidachiRoom");
+	const resume = params.get("anidachiResume");
+	if (!resume && (!params.has("anidachiRoom") ||
+		(invited === activeRoomId && params.getAll("anidachiRoom").length === 1))) return;
+	let resumeIntentId: string | undefined;
+	try { if (resume) resumeIntentId = JSON.parse(resume)?.intentId; } catch { /* discard malformed fragment */ }
+	params.delete("anidachiRoom");
+	params.delete("anidachiResume");
+	url.hash = params.toString();
+	history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+	if ((invited || resumeIntentId) && typeof chrome !== "undefined" && chrome.runtime?.sendMessage)
+		void chrome.runtime.sendMessage({ type: "ANIDACHI_PRIME_LAUNCH", action: "discard-conflict",
+			activeRoomId, invited: invited ?? undefined, resumeIntentId }).catch(() => undefined);
+}
+
 export async function startPrimeRoom(
 	source: WatchSourceDescriptor,
 	roomId: string | null,

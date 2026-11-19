@@ -1,5 +1,15 @@
 # Current Development State
 
+## Prime rooms in the catalog — November 19, 2026
+
+The current Prime candidate keeps a confirmed room open when its player closes,
+including at the end of a title. The room pill moves to the catalog. Participants
+can browse independently, keep talking and return to synchronized playback when
+the host plays a title. This supersedes the November 18 close-as-departure rule
+for confirmed Prime rooms. The explicit room controls still end or leave the room.
+See the [provider behavior](prime-video-adapter-notes.md#rooms-in-the-prime-catalog)
+and [acceptance scenarios](superpowers/plans/2026-11-16-prime-video-adapter.md#rooms-in-the-prime-catalog).
+
 ## Prime definitive natural close — November 18, 2026
 
 Loaded `8876fbf4` confirmed the reported Amazon ASIN, exact room invite launch,

@@ -1,5 +1,22 @@
 # Prime Video adapter notes
 
+## Rooms in the Prime catalog
+
+After the server confirms membership, closing the player moves the existing pill
+to the side of the catalog. Participants retain chat, enabled camera and open mic.
+Push-to-talk releases when its document goes away. Participants can open different
+cards or searches. The host starting playback supplies the exact episode or film
+and a player visit identifier. A browsing guest can follow a new visit even when
+the host starts the same episode again. Catalog browsing does not record viewing
+progress. Returning to the player resumes the usual playback controls and history.
+
+The extension's offscreen document owns the Prime room socket and call. A new
+document in the same tab reattaches to the same account and participant session.
+Only enabling a device can initiate its first Chrome permission prompt. Explicit
+End or Leave, account replacement, tab closure and leaving supported Prime pages
+release the call. A failed admission does not create a persistent catalog room.
+The November 18 close-as-departure behavior below describes the preceding build.
+
 ## Amazon SPA identity and intro recovery
 
 Task 21 reproduces Love in Disguise after native navigation from the Amazon

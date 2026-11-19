@@ -948,6 +948,28 @@ describe("authenticated room client", () => {
     expect(acknowledgeAdmissionHandoff).toHaveBeenCalledOnce();
   });
 
+  it("acknowledges a newer admission on the same live socket even while the previous ACK is in flight", async () => {
+    installControlledWebSocket();
+    let finish!: (value: boolean) => void;
+    const acknowledge = vi.fn().mockImplementationOnce(() => new Promise<boolean>(resolve => { finish = resolve; }))
+      .mockResolvedValue(true);
+    const first = {tabId: 12, roomId: "room-1", ownerUserId: roomParticipant.id, participantSessionId: "s1", generation: 7};
+    const client = new RoomClient();
+    client.connect({roomId: first.roomId, roomToken: "token", participant: roomParticipant, participantSessionId: first.participantSessionId,
+      videoFingerprint: "video-1", admissionHandoff: first, acknowledgeAdmissionHandoff: acknowledge, onEvent: vi.fn(), onStatus: vi.fn()});
+    const socket = ControlledWebSocket.instances[0]!;
+    socket.open();
+    socket.message(roomSnapshot());
+    const next = {...first, generation: 8};
+    client.rebindAdmissionHandoff({...next, participantSessionId: "other"});
+    client.rebindAdmissionHandoff(next);
+    finish(true);
+    await Promise.resolve();
+    expect(acknowledge.mock.calls.map(([handoff]) => handoff)).toEqual([first, next]);
+    expect(ControlledWebSocket.instances).toHaveLength(1);
+    client.close();
+  });
+
   it.each(["history", "event", "transport"] as const)(
     "starts the exact handoff acknowledgement even when the %s consumer throws",
     async (throwingConsumer) => {

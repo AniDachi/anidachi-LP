@@ -20,7 +20,10 @@ vi.mock("../src/watch-history-storage", () => ({
 vi.mock("../src/constants", () => ({
 	WEB_HTTP_BASE: "https://staging.anidachi.app",
 }));
+vi.mock("../src/prime-room-background", () => ({ isAttachedPrimePlayerDocument: vi.fn() }));
 import { registerPrimeLaunchBridge } from "../src/prime-launch-background";
+import * as sessions from "../src/room-session-storage";
+import * as primeTransport from "../src/prime-room-background";
 const id = "0IUGS56V361WRU60PCC5XH5D8Z",
 	ext = "a".repeat(32);
 let listeners: Function[],
@@ -117,6 +120,52 @@ it("rejects a stale detail after navigation away and mismatched document origins
 		{ ...sender, origin: "null" },
 		{ ...sender, frameId: 1 },
 	]) expect(await send(recover, invalid)).toEqual({ status: "cancelled" });
+});
+it("follows the exact live guest session without generating an invitation or writing history", async () => {
+	const url = "https://www.primevideo.com/region/na/storefront";
+	const tab = { id: ext, url, origin: new URL(url).origin, frameId: 0, documentId: "guest-document", tab: { id: 7, url } };
+	const visit = crypto.randomUUID();
+	const request = { type: "ANIDACHI_PRIME_LAUNCH", action: "follow", contentId: id, roomId: "watch", visit };
+	const record = {version:1 as const, revision:1, roomId:"watch", ownerUserId:state.owner, participantSessionId:"mine", cameraEnabled:false, voiceMode:"push-to-talk" as const};
+	const sessionForTab = vi.spyOn(sessions, "loadRoomSessionForTab").mockResolvedValue(null);
+	const claim = vi.fn().mockResolvedValue(null);
+	const update = vi.fn();
+	Object.assign(chrome.runtime, {sendMessage: claim});
+	Object.assign(chrome.tabs, {get: async () => tab.tab, update});
+	try {
+		expect(await send(request, tab)).toMatchObject({status:"cancelled"});
+		sessionForTab.mockResolvedValue(record);
+		expect(await send({...request,roomId:"other"},tab)).toMatchObject({status:"cancelled"});
+		expect(await send(request,{...tab,frameId:1})).toMatchObject({status:"cancelled"});
+		expect(claim).not.toHaveBeenCalled();
+		expect(await send(request,tab)).toMatchObject({status:"cancelled"});
+		expect(update).not.toHaveBeenCalled();
+		claim.mockResolvedValue({source: {provider:"primevideo"}, receipt:"claim"});
+		expect(await send(request,tab)).toMatchObject({status:"ready"});
+		expect(claim).toHaveBeenLastCalledWith(expect.objectContaining({action:"follow",tabId:7,identity:{
+			roomId:"watch", ownerUserId:state.owner, participantSessionId:"mine"},documentId:"guest-document",contentId:id,visit}));
+		expect(update).toHaveBeenCalledExactlyOnceWith(7,{url:`https://www.primevideo.com/detail/${id}?autoplay=1`});
+		expect(session).toEqual({});
+		claim.mockResolvedValue({ source: {provider: "primevideo", primeNavigation: {contentId: id, routes: [{
+			url: "https://www.amazon.de/-/en/dp/B0HCJ112J8", observedAt: new Date().toISOString(),
+		}]}}, receipt: "claim" });
+		expect(await send(request,tab)).toMatchObject({status: "ready"});
+		expect(update).toHaveBeenLastCalledWith(7,{url:"https://www.amazon.de/-/en/gp/video/detail/B0HCJ112J8?autoplay=1"});
+		const dp = "https://www.amazon.de/dp/B0HCJ112J8";
+		const dpSender = { ...tab, origin: new URL(dp).origin, url: dp, tab: {id: 7, url: dp} };
+		Object.assign(chrome.tabs, { get: async () => dpSender.tab });
+		const proof = vi.spyOn(primeTransport, "isAttachedPrimePlayerDocument").mockResolvedValue(false);
+		try {
+			expect(await send(request, dpSender)).toMatchObject({status: "cancelled"});
+			proof.mockResolvedValue(true);
+			expect(await send(request, dpSender)).toMatchObject({status: "ready"});
+			expect(proof).toHaveBeenCalledWith(dpSender.tab, expect.objectContaining({roomId:"watch"}), dpSender.documentId);
+		} finally { proof.mockRestore(); }
+		Object.assign(chrome.tabs, { get: async () => tab.tab });
+		update.mockRejectedValueOnce(new Error("navigation failed"));
+		expect(await send(request,tab)).toMatchObject({status:"retryable"});
+		expect(claim).toHaveBeenLastCalledWith(expect.objectContaining({action:"cancel-follow",receipt:"claim"}));
+	} finally { sessionForTab.mockRestore(); }
 });
 it("distinguishes a temporary recovery storage failure from a refused launch", async () => {
 	const provider = { id: ext, frameId: 0, url: "https://www.primevideo.com/detail/" + id, tab: { id: 7 } };

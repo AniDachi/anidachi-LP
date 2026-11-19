@@ -1095,6 +1095,13 @@ it("round trips observed Prime routes through durable/restarted state without ge
  const first=room.updateHostState('host',playbackState(source.videoFingerprint,url),source);
  expect(first.accepted&&first.sourceChanged&&first.durableSource.primeNavigation).toEqual(primeNavigation);
  const generation=room.toSnapshot().sourceGeneration;
+ const secondVisit = crypto.randomUUID();
+ const resumed = { ...playbackState(source.videoFingerprint,url), primePlayerVisit: secondVisit };
+ expect(room.updateHostState('viewer',resumed,source).accepted).toBe(false);
+ expect(room.updateHostState('host',resumed,source).sourceChanged).toBe(false);
+ expect(new RoomState("prime-routes",undefined,room.toSnapshot()).snapshot).toMatchObject({
+   sourceGeneration:generation, hostState:{primePlayerVisit:secondVisit}
+ });
  expect(new RoomState("prime-routes",undefined,room.toSnapshot()).currentDurableSource?.primeNavigation).toEqual(primeNavigation);
  expect(room.currentDurableSource?.primeNavigation).toEqual(primeNavigation);
  const {primeNavigation:_,...legacy}=source;

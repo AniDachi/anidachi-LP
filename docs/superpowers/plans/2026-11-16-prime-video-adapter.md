@@ -1,5 +1,19 @@
 # Prime Video adapter
 
+## Rooms in the Prime catalog
+
+November 19 changes the product decision recorded in Task 24. A confirmed Prime
+room persists while the host or guest browses the video catalog in that tab.
+The Chrome offscreen document owns room transport, media and membership.
+The visible overlay docks or binds to the primary player. An optional host
+player visit distinguishes a new playback from the previous title's heartbeat.
+
+Acceptance includes host and guest closing independently, chat across full page
+navigation, active camera and open mic throughout navigation, releasing push-to-talk,
+same-title relaunch, different episode and movie, and rejection of previews.
+End, Leave, logout, tab closure, and navigation to ordinary Amazon retail must
+retire the correct session. Cross-market availability depends on both accounts.
+
 ## Task 24: Definitive natural close leaves the room
 
 Owner reaffirmed close-as-departure and delegated the natural-end decision.

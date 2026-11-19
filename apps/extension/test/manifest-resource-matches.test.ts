@@ -17,9 +17,13 @@ const amazonHosts = [
 const primeRoutes = [
 	"https://*.primevideo.com/*",
 	...amazonHosts.flatMap((host) => [
+		`https://${host}/Amazon-Video`,
 		`https://${host}/Amazon-Video/*`,
-		`https://${host}/-/*/Amazon-Video/*`,
+		`https://${host}/*/Amazon-Video`,
+		`https://${host}/*/Amazon-Video/*`,
+		`https://${host}/gp/video`,
 		`https://${host}/gp/video/*`,
+		`https://${host}/*/gp/video`,
 		`https://${host}/*/gp/video/*`,
 		`https://${host}/dp/*`,
 		`https://${host}/*/dp/*`,
@@ -45,7 +49,7 @@ function manifest() {
 		name: "AniDachi Staging",
 		key: getExtensionManifestKey("staging"),
 		minimum_chrome_version: "121",
-		permissions: ["alarms", "notifications"],
+		permissions: ["alarms", "notifications", "offscreen"],
 		icons: { 16: "icon.png", 32: "icon.png", 48: "icon.png", 128: "icon.png" },
 		host_permissions: [
 			...origins,
@@ -59,6 +63,7 @@ function manifest() {
 		background: { service_worker: "background.js" },
 		web_accessible_resources: [
 			{ resources: ["Anidachi_logo.png"], matches: [...origins] },
+			{ resources: ["prime-media-tile.html"], matches: ["https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
 		],
 		content_scripts: [
 			{ matches: contentMatches, js: ["content.js"] },

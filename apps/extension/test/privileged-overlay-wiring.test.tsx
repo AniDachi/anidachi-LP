@@ -32,6 +32,7 @@ import {
 	REACTIONS_ENABLED_STORAGE_KEY,
 } from "../src/reaction-shortcuts";
 import { RoomClient, handleRoomHttpMessage } from "../src/room-client";
+import { PrimeRoomClient } from "../src/prime-room-client";
 import { RoomMediaSession } from "../src/room-media-session";
 import { cameraEnabledPreferenceStorageKeyForUser, roomJoinDefaultsStorageKeyForUser } from "../src/room-media-defaults";
 import { voiceModePreferenceStorageKeyForUser } from "../src/voice-mode-preference";
@@ -100,6 +101,100 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+	it.each(["account changed", "room ended before attachment"])("does not resurrect a Prime catalog room when the %s", async situation => {
+		installActiveHostRoomRuntime({getSession: () => sessionFor(situation === "account changed" ? "other-user" : "user-a")});
+		vi.stubGlobal("location", new URL("https://www.primevideo.com/storefront/home"));
+		const record = { ...confirmedRoomSession(), browsingBaseline: null };
+		const background = vi.mocked(chrome.runtime.sendMessage);
+		const original = background.getMockImplementation()!;
+		let lookups = 0;
+		background.mockImplementation(async (...args: any[]) => args[0].action === "lookup" ? (++lookups === 1 ? record : null) : (original as any)(...args));
+		const connect = vi.spyOn(PrimeRoomClient.prototype, "connect");
+		let runtime!: ReturnType<typeof startContentLifecycle>;
+		await act(async () => { runtime = startContentLifecycle({ensureStyles() {}, startProviderStudy: () => null}); });
+		try {
+			await flushMountedWork();
+			await act(async () => { runtime.reconcile(); });
+			expect(lookups).toBe(situation === "account changed" ? 1 : 2);
+			expect(connect).not.toHaveBeenCalled();
+			expect(document.querySelector("anidachi-overlay-root")).toBeNull();
+			expect(background.mock.calls.some(([message]: any) => message.type === "ANIDACHI_ROOM_HTTP")).toBe(false);
+		} finally { await act(async () => runtime.dispose()); }
+	});
+
+	it("reattaches the confirmed Prime actor in a fresh catalog document and rebinds the player without admission", async () => {
+		installActiveHostRoomRuntime();
+		vi.stubGlobal("location", new URL("https://www.primevideo.com/storefront/home"));
+		const preview = document.createElement("video");
+		document.body.append(preview);
+		const record = { ...confirmedRoomSession(), browsingBaseline: { fingerprint: "old-title" }, privilegedRoomAuthority: roomAuthority() };
+		const background = vi.mocked(chrome.runtime.sendMessage);
+		const original = background.getMockImplementation()!;
+		background.mockImplementation(async (...args: any[]) => args[0].action === "lookup" ? record : (original as any)(...args));
+		Object.defineProperty(chrome.runtime, "connect", {value: vi.fn(), configurable: true});
+		let session!: Parameters<RoomClient["connect"]>[0];
+		const connect = vi.spyOn(PrimeRoomClient.prototype, "connect").mockImplementation(options => {
+			session = options;
+			options.onStatus("connected");
+			options.onEvent({type: "ROOM_SNAPSHOT", roomId: record.roomId, roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+				participants: [{...hostParticipant(), participantSessionId: record.participantSessionId}]});
+		});
+		const detach = vi.spyOn(PrimeRoomClient.prototype, "detach");
+		const close = vi.spyOn(PrimeRoomClient.prototype, "close");
+		let runtime!: ReturnType<typeof startContentLifecycle>;
+		let detected: VideoAdapter | null = null;
+		const loadDocument = async () => act(async () => { runtime = startContentLifecycle({
+			ensureStyles() {}, startProviderStudy: () => null,
+			detect: () => detected ? { status: "ready", adapter: detected } : { status: "none" },
+		}); });
+		await loadDocument();
+		try {
+			await flushMountedWork();
+			expect(connect).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+				roomId: record.roomId, participantSessionId: record.participantSessionId, roomToken: "",
+			}));
+			const firstShell = document.querySelector<HTMLElement>("anidachi-overlay-root");
+			expect(firstShell?.parentElement).toBe(document.documentElement);
+			expect(preview.dataset.anidachiVideo).toBeUndefined();
+			expect(location.hash).toBe("");
+			await act(async () => { window.dispatchEvent(new Event("pagehide")); });
+			expect(firstShell?.isConnected).toBe(false);
+			expect(detach).toHaveBeenCalled();
+			expect(close).not.toHaveBeenCalled();
+			vi.stubGlobal("location", new URL("https://www.primevideo.com/search"));
+			await loadDocument();
+			await flushMountedWork();
+			const shell = document.querySelector<HTMLElement>("anidachi-overlay-root");
+			expect(shell?.parentElement).toBe(document.documentElement);
+			expect(shell).not.toBe(firstShell);
+			expect(connect.mock.calls[1]?.[0]).toMatchObject({roomId: record.roomId, participantSessionId: record.participantSessionId, roomToken: ""});
+			expect(background.mock.calls.some(([message]: any) => message.type === "ANIDACHI_WATCH_HISTORY_V3")).toBe(false);
+			for (const id of [primeCloseIds.first, primeCloseIds.second]) {
+				const container = document.createElement("div");
+				const video = document.createElement("video");
+				container.append(video);
+				document.body.append(container);
+				const sourceUrl = `https://www.primevideo.com/detail/${id}`;
+				detected = Object.assign(createAdapter(container, video), {
+					provider: "primevideo" as const, getFingerprint: () => `primevideo|detail/${id}`,
+					getSourceDescriptor: () => ({provider: "primevideo" as const, title: "Episode", canonicalUrl: sourceUrl, sourceUrl, videoFingerprint: `primevideo|detail/${id}`}),
+				});
+				vi.stubGlobal("location", new URL(sourceUrl));
+				await act(async () => { runtime.reconcile(); });
+				expect(container.querySelector("anidachi-overlay-root")).toBe(shell);
+				expect(connect).toHaveBeenCalledTimes(2);
+			}
+			detected!.container.remove();
+			detected = null;
+			// The SPA can remove its player root when browsing another title's detail.
+			vi.stubGlobal("location", new URL(`https://www.primevideo.com/detail/${primeCloseIds.first}`));
+			await act(async () => { runtime.reconcile(); });
+			expect(shell?.parentElement).toBe(document.documentElement);
+			await act(async () => session.onEvent({type: "ROOM_ENDED", roomId: record.roomId, reason: "host_ended", endedAt: Date.now()}));
+			expect(shell?.isConnected).toBe(false);
+			expect(background.mock.calls.some(([message]: any) => message.command === "connect-room" || message.command === "create-room")).toBe(false);
+		} finally { await act(async () => runtime.dispose()); }
+	});
 
 	it("isolates pointer movement around the open Prime panel and releases the player on close", async () => {
 		installActiveHostRoomRuntime();
@@ -130,14 +225,16 @@ describe("privileged overlay wiring", () => {
 
   it.each([
     ["host", "end"], ["viewer", "end"], ["host", "manual"], ["viewer", "manual"],
-  ] as const)("retires the exact %s room after a %s Prime close", async (role, mode) => {
+  ] as const)("keeps the confirmed %s room after a %s Prime close and on return", async (role, mode) => {
     const originalLocation = Object.getOwnPropertyDescriptor(window, "location")!;
     const prime = primeCloseFixture();
     const stopBridge = startPrimeBridge();
     installActiveHostRoomRuntime();
     vi.mocked(RoomClient.prototype.connect).mockImplementation(options => {
       options.onStatus("connected");
-      options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1, participants: [{ ...hostParticipant(), role }] });
+      options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
+        source: {provider:"primevideo", title:"Episode", sourceUrl, canonicalUrl:sourceUrl, videoFingerprint:`primevideo|detail/${primeCloseIds.first}`},
+        participants: [{ ...hostParticipant(), role }] });
     });
     const depart = vi.spyOn(playerDeparture, "requestPlayerRoomDeparture").mockResolvedValue();
     const sourceUrl = `https://www.primevideo.com/detail/${primeCloseIds.first}`;
@@ -170,8 +267,7 @@ describe("privileged overlay wiring", () => {
         }
       });
       await flushRoomActionWork();
-      expect(depart).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ roomId: "room-a", ownerUserId: "user-a", participantSessionId: confirmedRoomSession().participantSessionId }));
-      expect(location.hash).not.toContain("anidachiRoom");
+      expect(depart).not.toHaveBeenCalled();
       await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false}/>));
       if (mode === "manual") {
         prime.next();
@@ -183,7 +279,7 @@ describe("privileged overlay wiring", () => {
       expect(RoomClient.prototype.connect).toHaveBeenCalledTimes(connections);
       if (!view.container.querySelector(".mini-panel"))
         await click(button(view.container, "Open Anidachi controls"));
-      expect(button(view.container, "Create room")).toBeDefined();
+      expect(button(view.container, role === "host" ? "End room" : "Leave room")).toBeDefined();
     } finally { await unmount(view.root); stopBridge(); Object.defineProperty(window, "location", originalLocation); }
   });
 

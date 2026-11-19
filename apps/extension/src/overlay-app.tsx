@@ -2,6 +2,10 @@ import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./curre
 import { readHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
 import type { PrimeLaunchHandoff } from "./prime-launch-capture";
+import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
+import type { LivePrimeRoomSession } from "./prime-room-contract";
+import { followPrimeRoom } from "./prime-launch-client";
+import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import type {
 	ClientEvent,
 	P2PSignal,
@@ -73,7 +77,9 @@ import {
 	HOLD_FIRE_SUPER_REACTION_EXPERIMENT,
 	normalizeExperimentFlag,
 } from "./experiments";
-import { type GhostVideo, useGhostCam } from "./ghost-cam";
+import { type CameraBubbleVideo, useGhostCam } from "./ghost-cam";
+import { PrimeCameraTile } from "./prime-media-session";
+import { primeMediaBridge } from "./prime-room-media-types";
 import {
 	getHotkeyAction,
 	isFireReactionReleaseEvent,
@@ -325,6 +331,12 @@ import {
 interface OverlayAppProps {
 	adapter: VideoAdapter;
 	adapterActive?: boolean;
+	primeBrowsing?: boolean;
+	onPrimeRoomChange?: (roomId: string | null) => void;
+	onPrimeRestoreLost?: () => void;
+	initialPrimeRoom?: LivePrimeRoomSession;
+	preservePrimeRoomOnUnmount?: () => boolean;
+	onPrimeClose?: () => void;
 	initialPrimeLaunch?: PrimeLaunchHandoff | null;
 }
 
@@ -525,8 +537,9 @@ export async function runOverlayPrivilegedAction(
 	await afterApproval();
 }
 
-export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }: OverlayAppProps) {
+export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
+	const primeRestoreAttempted = useRef(false);
 	const activePlayer = useRef<VideoAdapter | null>(adapter);
 	activePlayer.current = adapter;
 	const capturedPrimeRestoreOwnerRef = useRef<string | null>(null);
@@ -536,9 +549,31 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const playerRoomClosedRef = useRef(false);
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
-	const clientRef = useRef(new RoomClient());
+	const [roomClient] = useState(() => adapter.provider === "primevideo" &&
+		typeof chrome !== "undefined" && typeof chrome.runtime?.connect === "function"
+		? new PrimeRoomClient() : new RoomClient());
+	const clientRef = useRef(roomClient);
 	const adapterActiveRef = useRef(adapterActive);
 	adapterActiveRef.current = adapterActive;
+	const [catalogFollow] = useState(() => new PrimeBrowsingRoom());
+	const restoringBaseline = useRef(initialPrimeRoom);
+	const [primeVisit] = useState(() => new PrimeHostVisit());
+	const browseMode = useRef(primeBrowsing);
+	browseMode.current = primeBrowsing;
+	useLayoutEffect(() => {
+		if (adapter.provider !== "primevideo") return;
+		const currentRoom = roomIdRef.current;
+		if (!currentRoom) return;
+		catalogFollow.setRoom(currentRoom);
+		if (primeBrowsing) {
+			const pause = primeVisit.close(currentRoom);
+			if (pause) clientRef.current.send(pause);
+		}
+		catalogFollow.setBrowsing(primeBrowsing);
+		if (roomClient instanceof PrimeRoomClient)
+			roomClient.setBrowsingBaseline(primeBrowsing ? catalogFollow.getBaseline() : null);
+	}, [adapter.provider, primeBrowsing, catalogFollow, primeVisit, roomClient]);
+	useEffect(() => () => catalogFollow.setRoom(null), [catalogFollow]);
 	const flameTimersRef = useRef<Record<string, number | undefined>>({});
 	const fireHoldRef = useRef<FireHoldState | null>(null);
 	const liveChatTimersRef = useRef<Record<string, number | undefined>>({});
@@ -777,6 +812,15 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const [roomSourceProvider, setRoomSourceProvider] =
 		useState<SourceProvider | null>(null);
 	const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
+	const confirmedPrimeRoom = useRef<string | null>(null);
+	useLayoutEffect(() => {
+		if (adapter.provider !== "primevideo" || roomId !== confirmedPrimeRoom.current)
+			confirmedPrimeRoom.current = null;
+		if (adapter.provider === "primevideo" && roomId && roomSnapshotReady && roomSourceProvider === "primevideo")
+			confirmedPrimeRoom.current = roomId;
+		onPrimeRoomChange?.(confirmedPrimeRoom.current);
+		if (!roomId) catalogFollow.setRoom(null);
+	}, [adapter.provider, roomId, roomSnapshotReady, roomSourceProvider, onPrimeRoomChange, catalogFollow]);
 	const [signalingTransportReady, setSignalingTransportReady] =
 		useState<SignalingTransportReady | null>(null);
 	const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
@@ -824,7 +868,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				}
 			},
 			transport: {
-				send: (event) => clientRef.current.send(event),
+				send: (event) => {
+					if (event.type === "HOST_STATE" && browseMode.current) return "dropped";
+					const outgoing = event.type === "HOST_STATE" ? primeVisit.playback(event) : event;
+					return outgoing ? clientRef.current.send(outgoing) : "dropped";
+				},
 			},
 		});
 	}
@@ -957,6 +1005,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const settingsRailSuppressClickRef = useRef(false);
 	const authAccessTokenRef = useRef<string | null>(null);
 	const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
+	const hasNavigablePrimeSession = () => Boolean(confirmedPrimeRoom.current ||
+		(initialPrimeRoom && storedRoomSessionRef.current && roomIdRef.current === initialPrimeRoom.roomId &&
+			roomSessionIdentityMatches(storedRoomSessionRef.current, initialPrimeRoom)));
 	const hydratedVoiceParticipantSessionRef = useRef<string | null>(null);
 	const appliedMediaDefaultsSessionRef = useRef<string | null>(null);
 	const selfSeatDefaultsRef = useRef<{
@@ -1599,7 +1650,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		const currentUserId = participant?.id ?? null;
 		setRoomSessionLoadError(null);
 		const closeEpoch = playerCloseEpochRef.current;
-		void migrateLegacyRoomSession(currentUserId)
+		const recordForOwner = initialPrimeRoom
+			? Promise.resolve(initialPrimeRoom.ownerUserId === currentUserId ? initialPrimeRoom : null)
+			: migrateLegacyRoomSession(currentUserId);
+		void recordForOwner
 			.then((record) => {
 				if (cancelled) {
 					return;
@@ -1631,7 +1685,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		return () => {
 			cancelled = true;
 		};
-	}, [identityLoaded, participant?.id]);
+	}, [identityLoaded, participant?.id, initialPrimeRoom]);
 
 	useEffect(() => {
 		if (!identityLoaded) {
@@ -2282,11 +2336,16 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			hydratedVoiceParticipantSessionRef.current = sessionId;
 			// A host grant/regrant must not launch devices, including after this
 			// document missed a revoke while disconnected. A fresh room starts at 0.
+			// A live Prime attachment already owns any active device intent.
+			// Reuse it across documents without restarting capture or advancing its sequence.
+			const attachedMedia = primeMediaBridge(clientRef.current) ? clientRef.current.media : null;
 			const initialSeat = localHasMediaSeat && (!("seatRevision" in state) || state.seatRevision === 0);
 			const microphoneOn = initialSeat && state.microphoneRevocationEpoch === 0 && mode === "open-mic";
 			const cameraOn = initialSeat && state.cameraRevocationEpoch === 0 && activeVoiceRoomSession.cameraEnabled && (!camerasFull || state.cameraGranted);
-			mode = microphoneOn && clientRef.current.setMediaIntent("microphone", true) !== "dropped" ? "open-mic" : "push-to-talk";
-			const cameraEnabled = cameraOn && clientRef.current.setMediaIntent("camera", true) !== "dropped";
+			mode = mode === "open-mic" && (attachedMedia?.wants("microphone") ||
+				(microphoneOn && clientRef.current.setMediaIntent("microphone", true) !== "dropped")) ? "open-mic" : "push-to-talk";
+			const cameraEnabled = attachedMedia?.wants("camera") ||
+				(cameraOn && clientRef.current.setMediaIntent("camera", true) !== "dropped");
 			setCamsEnabled(cameraEnabled);
 			setMediaRevision(n => n + 1);
 			// Admission limits affect this room only, never the saved Last used choice.
@@ -3184,6 +3243,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	const handleGhostCamToggle = useCallback(() => {
 		selfSeatDefaultsRef.current = null;
 		const nextEnabled = !camsEnabled;
+		if (nextEnabled) primeMediaBridge(clientRef.current)?.sendMediaCommand({type: "gesture", device: "camera"});
 		if (versionedMedia) {
 			if (mediaV3 && nextEnabled && (!localHasMediaSeat || camerasFull)) {
 				showTransientPanelNotice(!localHasMediaSeat ? "Media seat required" : "All 4 cameras are in use");
@@ -3230,6 +3290,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	]);
 
 	const ghostCamSession = useGhostCam({
+		primeBridge: primeMediaBridge(clientRef.current),
 		captureIntents: versionedMedia ? {
 			camera: clientRef.current.media?.captureIntent("camera"),
 			microphone: clientRef.current.media?.captureIntent("microphone"),
@@ -3282,6 +3343,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				);
 				return;
 			}
+			if (mode === "open-mic") primeMediaBridge(clientRef.current)?.sendMediaCommand({type: "gesture", device: "microphone"});
 			if (versionedMedia && mode === "open-mic" && !clientRef.current.media?.wants("microphone")) {
 				if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
 				setMediaRevision(n => n + 1);
@@ -3511,9 +3573,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		"--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
 		"--mini-panel-bottom-reserve": `${overlayChromePlacement.miniPanelBottomReservePx}px`,
 		"--mini-panel-right": `${overlayChromePlacement.miniPanelRightPx}px`,
-		"--mini-panel-top": `${overlayChromePlacement.miniPanelTopPx}px`,
+		"--mini-panel-top": primeBrowsing ? "calc(clamp(12px, 10vh, 80px) + 40px)" : `${overlayChromePlacement.miniPanelTopPx}px`,
 		"--top-bubble-right": `${overlayChromePlacement.topBubbleRightPx}px`,
-		"--top-bubble-top": `${overlayChromePlacement.topBubbleTopPx}px`,
+		"--top-bubble-top": primeBrowsing ? "clamp(12px, 10vh, 80px)" : `${overlayChromePlacement.topBubbleTopPx}px`,
 		"--room-rail-bottom": `${roomRailBottomPx}px`,
 	} as CSSProperties;
 	const overlayClassName = [
@@ -3600,12 +3662,20 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 	const applyHostState = useCallback(
 		async (state: PlaybackState, source?: WatchSourceDescriptor) => {
+			if (roomSourceProviderRef.current === "primevideo" && roomIdRef.current) {
+				catalogFollow.setRoom(roomIdRef.current);
+				catalogFollow.setBrowsing(browseMode.current);
+				catalogFollow.receive(state, source, (target, room, signal) =>
+					followPrimeRoom(target, room, state.primePlayerVisit, signal));
+				if (browseMode.current && roomClient instanceof PrimeRoomClient)
+					roomClient.setBrowsingBaseline(catalogFollow.getBaseline());
+			}
 			if (!adapterActiveRef.current) {
 				return;
 			}
 			await playbackSyncController.handleHostState(state, source);
 		},
-		[playbackSyncController],
+		[playbackSyncController, catalogFollow, roomClient],
 	);
 
 	// Terminally end the local room session without a reconnect loop: used for
@@ -3787,6 +3857,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 						);
 					}
 					roomSourceProviderRef.current = snapshotProvider;
+					if (snapshotProvider === "primevideo") confirmedPrimeRoom.current = event.roomId;
 					setRoomGeneration(event.roomGeneration);
 					setSourceGeneration(event.sourceGeneration);
 					setRoomSourceProvider(snapshotProvider);
@@ -4119,6 +4190,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
       const eventOwner = {};
       roomEventOwnerRef.current = eventOwner;
 			if (!sameRoomReconnect) {
+				setChatHistoryMessages([]);
+				setLiveChatMessages([]);
 				roomSourceProviderRef.current = createdRoomProvider;
 				setRoomSourceProvider(createdRoomProvider);
 				handledP2PSignalIdsRef.current.clear();
@@ -4158,14 +4231,23 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			setRoomSessionLoadError(null);
 			roomReconnectSuppressedRef.current = false;
 			roomIdRef.current = nextRoomId;
+			if (createdRoomProvider === "primevideo") {
+				const restore = restoringBaseline.current;
+				catalogFollow.setRoom(nextRoomId);
+				catalogFollow.setBrowsing(browseMode.current,
+					restore && roomSessionIdentityMatches(restore, nextStoredRoomSession) ? restore.browsingBaseline ?? undefined : undefined);
+				restoringBaseline.current = undefined;
+			}
 			setRoomId(nextRoomId);
-			await rememberRoomSessionRecoveryHint(
-				nextRoomId,
-				activeParticipant.id,
-				{ canWrite: isCurrentJoin },
-			);
+			if (nextRoomToken) {
+				await rememberRoomSessionRecoveryHint(
+					nextRoomId,
+					activeParticipant.id,
+					{ canWrite: isCurrentJoin },
+				);
+			}
 			if (!isCurrentJoin()) return false;
-			ensureRoomHash(nextRoomId);
+			if (nextRoomToken) ensureRoomHash(nextRoomId);
 			logDebug("overlay.room", "connect requested", {
 				roomId: nextRoomId,
 				authenticated: true,
@@ -4174,6 +4256,12 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				video: videoDebugSnapshot(adapter.video),
 			});
 			const timeAuthSessionKey = roomAuthSessionKeyRef.current;
+			const isCurrentAttachment = () => {
+				const current = storedRoomSessionRef.current;
+				return roomEventOwnerRef.current === eventOwner && !!current &&
+					roomSessionIdentityMatches(current, nextStoredRoomSession) &&
+					roomIdRef.current === nextRoomId && participantRef.current?.id === activeParticipant.id;
+			};
 			clientRef.current.connect({
 				...(admissionHandoff ? { admissionHandoff } : {}),
 				lastSeenP2PServerSeq: sameRoomReconnect
@@ -4186,13 +4274,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 				participant: activeParticipant,
 				videoFingerprint: adapter.getFingerprint(),
         onEvent: (event) => {
-          const current = storedRoomSessionRef.current;
-          if (roomEventOwnerRef.current !== eventOwner || !current || !roomSessionIdentityMatches(current, nextStoredRoomSession) ||
-              roomIdRef.current !== nextRoomId || participantRef.current?.id !== activeParticipant.id ||
-              ("roomId" in event && event.roomId !== nextRoomId)) return;
+          if (!isCurrentAttachment() || ("roomId" in event && event.roomId !== nextRoomId)) return;
           if (event.type === "HOSTING_TIME" && roomAuthSessionKeyRef.current !== timeAuthSessionKey) return;
           handleServerEventRef.current(event);
         },
+				onRestoredChat: reaction => {
+					if (isCurrentAttachment()) recordChatHistoryMessage(reaction);
+				},
 				onStatus: setRoomStatus,
 				onHistoryAuthority: (authority) => {
 					void watchHistoryControllerRef.current
@@ -4200,14 +4288,20 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 						.catch(() => undefined);
 				},
 				onTerminalClose: (code) => {
+					if (roomEventOwnerRef.current !== eventOwner) return;
+					if (!nextRoomToken && !confirmedPrimeRoom.current) onPrimeRestoreLost?.();
 					if (code === ROOM_ENDED_CLOSE_CODE) terminateRoomSession("", "room-closed");
 					else terminateRoomSession(roomTerminalCloseMessage(code));
 				},
-				onTransportReady: setSignalingTransportReady,
+				onTransportReady: ready => {
+					setSignalingTransportReady(ready);
+					if (roomClient instanceof PrimeRoomClient)
+						roomClient.setBrowsingBaseline(browseMode.current ? catalogFollow.getBaseline() : null);
+				},
 			});
 			return true;
 		},
-		[adapter, setRoomStatus, terminateRoomSession],
+		[adapter, onPrimeRestoreLost, setRoomStatus, terminateRoomSession, catalogFollow, roomClient, recordChatHistoryMessage],
 	);
 
 	const connectToExistingWebsiteRoom = useCallback(
@@ -4409,6 +4503,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 	const handleNativePlayerClose = useCallback((event: Event) => {
 		if (!event.isTrusted) return;
+		if (confirmedPrimeRoom.current && confirmedPrimeRoom.current === roomIdRef.current) {
+			onPrimeClose?.();
+			return;
+		}
 		const record = storedRoomSessionRef.current;
 		const login = roomAuthSessionKeyRef.current;
 		const pending = playerDepartureRef.current;
@@ -4455,7 +4553,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			if (roomAuthSessionKeyRef.current !== login) return;
 			setRoomLeavePending(false);
 		});
-	}, [cancelPendingRoomJoin, resetLocalRoomSession]);
+	}, [cancelPendingRoomJoin, resetLocalRoomSession, onPrimeClose]);
 
 	// Deliberately survives adapterActive=false: a confirmed close arrives during
 	// suspension. Replacing the adapter unsubscribes; a missing player alone exits nothing.
@@ -4544,7 +4642,27 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 					lastSeenP2PServerSeq: lastSeenP2PServerSeqRef.current,
 				});
 
-				void connectToExistingWebsiteRoom(reconnectRoomId, `auto:${reason}`)
+				const reconnect = async () => {
+					if (!browseMode.current) return connectToExistingWebsiteRoom(reconnectRoomId, `auto:${reason}`);
+					const record = storedRoomSessionRef.current;
+					const participant = participantRef.current;
+					const login = roomAuthSessionKeyRef.current;
+					if (!record || !participant || record.ownerUserId !== participant.id || record.roomId !== reconnectRoomId) return;
+					const current = () => Boolean(activePlayer.current && !roomReconnectSuppressedRef.current &&
+						roomAuthSessionKeyRef.current === login && roomIdRef.current === reconnectRoomId &&
+						storedRoomSessionRef.current && roomSessionIdentityMatches(storedRoomSessionRef.current, record));
+					const live = await hasLivePrimeRoomSession(record);
+					if (!current()) return;
+					if (live) {
+						await connectToRoomAsParticipant(reconnectRoomId, participant, "", record, null, current, "primevideo");
+					} else {
+						await retireUnattachedPrimeRoom(record);
+						if (!current()) return;
+						onPrimeRestoreLost?.();
+						resetLocalRoomSession(undefined, false, record);
+					}
+				};
+				void reconnect()
 					.then(() => {
 						roomReconnectAttemptRef.current = 0;
 					})
@@ -4614,6 +4732,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		[
 			accountHostingTime.refresh,
 			connectToExistingWebsiteRoom,
+			connectToRoomAsParticipant,
+			onPrimeRestoreLost,
+			resetLocalRoomSession,
 			isCurrentHost,
 			showActiveRoomConflict,
 			showFreeQuotaNotice,
@@ -4647,7 +4768,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		function handlePageHide(): void {
 			setRoomStartTime(null);
 			if (roomIdRef.current) {
-				clientRef.current.close();
+				const client = clientRef.current;
+				if (client instanceof PrimeRoomClient && hasNavigablePrimeSession()) client.detach();
+				else client.close();
 			}
 		}
 
@@ -4669,7 +4792,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			window.removeEventListener("pagehide", handlePageHide);
 			window.removeEventListener("pageshow", handlePageShow);
 		};
-	}, [scheduleRoomReconnect]);
+	}, [initialPrimeRoom, scheduleRoomReconnect]);
 
 	useEffect(() => {
 		return () => {
@@ -4912,7 +5035,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 
 	const createAndConnectRoom = useCallback(
 		async (reason: string) => {
-			if (initialPrimeLaunchRef.current?.waiting) return null;
+			if (browseMode.current || initialPrimeLaunchRef.current?.waiting) return null;
 			if (roomIdRef.current) {
 				logDebug("overlay.room", "create skipped while room is active", {
 					reason,
@@ -5117,13 +5240,48 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			cancelled = true;
 			activePlayer.current = null;
 			roomJoinInFlightRef.current = null;
-			clientRef.current.close();
+			const client = clientRef.current;
+			if (client instanceof PrimeRoomClient && preservePrimeRoomOnUnmount?.() && hasNavigablePrimeSession()) client.detach();
+			else client.close();
 			releaseRoomTabLock();
 		};
 	}, []);
 
 	useEffect(() => {
 		const currentUserId = participant?.id ?? null;
+		if (initialPrimeRoom) {
+			// A live lookup allows attachment only. Never route this path to HTTP
+			// admission, even if the session ended while the document was loading.
+			if (primeRestoreAttempted.current || !identityLoaded || roomSessionLoadedForUserId !== currentUserId) return;
+			primeRestoreAttempted.current = true;
+			const retireFailedRestore = () => {
+				void retireUnattachedPrimeRoom(initialPrimeRoom).catch(() => undefined);
+				onPrimeRestoreLost?.();
+			};
+			if (!authAuthenticated || !participant || !storedRoomSession || !roomSessionIdentityMatches(storedRoomSession, initialPrimeRoom)) {
+				retireFailedRestore();
+				return;
+			}
+			const login = roomAuthSessionKeyRef.current;
+			const generation = authGenerationRef.current;
+			const current = () => Boolean(activePlayer.current && !playerRoomClosedRef.current &&
+				authGenerationRef.current === generation && roomAuthSessionKeyRef.current === login &&
+				participantRef.current?.id === initialPrimeRoom.ownerUserId && storedRoomSessionRef.current &&
+				roomSessionIdentityMatches(storedRoomSessionRef.current, initialPrimeRoom));
+			void (async () => {
+				if (!await hasLivePrimeRoomSession(initialPrimeRoom) || !current()) return false;
+				if (!await acquireRoomTabLock()) return false;
+				if (!current()) {
+					if (!roomIdRef.current) releaseRoomTabLock();
+					return false;
+				}
+				setPrivilegedRoomAuthority(initialPrimeRoom.privilegedRoomAuthority ?? null);
+				return connectToRoomAsParticipant(initialPrimeRoom.roomId, participant, "", storedRoomSession, null, current, "primevideo");
+			})().catch(() => false).then(attached => {
+				if (!attached && activePlayer.current) retireFailedRestore();
+			});
+			return;
+		}
 		if (
 			playerRoomClosedRef.current ||
 			!identityLoaded ||
@@ -5238,6 +5396,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		failedPrimeInvite,
 		clearStoredRoomSession,
 		connectToExistingWebsiteRoom,
+		connectToRoomAsParticipant,
+		initialPrimeRoom,
+		onPrimeRestoreLost,
+		authAuthenticated,
 		identityLoaded,
 		participant,
 		roomId,
@@ -5253,7 +5415,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	});
 
 	const handleCreateRoom = async () => {
-		if (roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
+		if (browseMode.current || roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
 			return;
 		}
 
@@ -6108,6 +6270,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 			setPanelOpen(true);
 			return;
 		}
+		primeMediaBridge(clientRef.current)?.sendMediaCommand({type: "gesture", device: "microphone"});
 		if (versionedMedia && !clientRef.current.media?.wants("microphone")) {
 			if (clientRef.current.setMediaIntent("microphone", true) === "dropped") return;
 			setMediaRevision(n => n + 1);
@@ -6137,6 +6300,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	}, [ghostCamSession.setMicrophonePublishing]);
 
 	useEffect(() => {
+		if (primeMediaBridge(clientRef.current) && (!p2pSessionActive || !participantAudioPreferencesReady ||
+			!activeVoiceRoomSession || hydratedVoiceParticipantSessionRef.current !== activeVoiceRoomSession.participantSessionId ||
+			(hydratingVoiceModeRef.current !== null && hydratingVoiceModeRef.current !== voiceSession.mode))) return;
 		const publicationKey = `${microphonePublishingWanted}:${voiceSession.mode}:${microphoneAuthorized}:${clientRef.current.media?.captureIntent("microphone")?.requestId ?? "legacy"}`;
 		if (microphonePublicationRef.current === publicationKey) {
 			return;
@@ -6150,6 +6316,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 		);
 	}, [
 		ghostCamSession.setMicrophonePublishing,
+		p2pSessionActive,
+		participantAudioPreferencesReady,
+		activeVoiceRoomSession,
 		microphonePublishingWanted,
 		microphoneAuthorized,
 		clientRef.current.media?.captureIntent("microphone")?.requestId,
@@ -6648,6 +6817,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 	return (
 		<div
 			className={overlayClassName}
+			data-prime-browsing={primeBrowsing || undefined}
 			data-introduction-active={introductionActive || undefined}
 			onPointerDownCapture={
 				introductionActive ? undefined : unlockLiveVoicePlayback
@@ -6909,6 +7079,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch }
 							seatControls={clientRef.current.media?.seatControls}
 							microphoneReady={microphoneAuthorized && versionedMedia}
 							onMicrophoneReadyChange={(enabled) => {
+								if (enabled) primeMediaBridge(clientRef.current)?.sendMediaCommand({type: "gesture", device: "microphone"});
 								clientRef.current.setMediaIntent("microphone", enabled);
 								if (!enabled) {
 									ghostCamSession.reconcileMediaAuthority(cameraAuthorized, false);
@@ -7353,7 +7524,7 @@ function CameraBubble({
 	speaking,
 }: {
 	participant: Participant;
-	video: GhostVideo;
+	video: CameraBubbleVideo;
 	audioPreference: ParticipantAudioPreference | null;
 	fireChargePhase: FireChargePhase | null;
 	flaming: boolean;
@@ -7363,7 +7534,7 @@ function CameraBubble({
 	const ref = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
-		if (!ref.current) {
+		if (!ref.current || "persistent" in video) {
 			return;
 		}
 
@@ -7389,7 +7560,7 @@ function CameraBubble({
 			{...overlayHotkeyBoundaryProps}
 			{...overlayInteractionBoundaryProps}
 		>
-			<div className="cam-media" ref={ref} />
+			<div className="cam-media" ref={ref}>{"persistent" in video && <PrimeCameraTile key={video.revision} participantId={video.participantId} />}</div>
 			{flaming ? (
 				<svg
 					aria-hidden="true"

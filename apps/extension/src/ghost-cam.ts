@@ -20,7 +20,11 @@ import {
 } from "./p2p-media";
 import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 
+import {usePrimeGhostCam, type PrimeGhostVideo} from "./prime-media-session";
+import type {PrimeMediaBridge} from "./prime-room-media-types";
+
 export type { GhostVideo, MicrophoneStatus } from "./media-types";
+export type CameraBubbleVideo = GhostVideo | PrimeGhostVideo;
 
 export interface GhostCamSession {
   reconcileMediaAuthority: (camera: boolean, microphone: boolean, latestSnapshot?: RoomMediaSnapshot) => void;
@@ -39,11 +43,12 @@ export interface GhostCamSession {
     preference: ParticipantAudioPreference,
   ) => void;
   unlockAudio: () => Promise<void>;
-  videos: GhostVideo[];
+  videos: CameraBubbleVideo[];
   voiceMessage: string | null;
 }
 
-interface GhostCamOptions {
+export interface GhostCamOptions {
+  primeBridge?: PrimeMediaBridge | null;
   mediaSnapshot?: RoomMediaSnapshot | null;
   captureIntents?: MediaCaptureIntents;
   onMediaTerminalFailure?: (failure: MediaCaptureTerminalFailure) => void;
@@ -75,7 +80,9 @@ type IncomingP2PSignalSender = (
 ) => RoomSendDisposition;
 
 export function useGhostCam(options: GhostCamOptions): GhostCamSession {
-  return useP2PGhostCam(options);
+  const prime = usePrimeGhostCam(options.primeBridge ?? null, options);
+  const page = useP2PGhostCam(options.primeBridge ? {...options, connected: false} : options);
+  return options.primeBridge ? prime : page;
 }
 
 function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {

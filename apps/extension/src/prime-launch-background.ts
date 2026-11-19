@@ -6,8 +6,12 @@ import {
 	primeVideoSourceUrl,
 	PrimeVideoProviderIdSchema,
 	resolvePrimeLaunch,
+	type WatchSourceDescriptor,
 } from "@anidachi/protocol";
-import { isPrimePlayerPageSender } from "./source-adapters/primevideo/url";
+import { isPrimeBrowsingSender, isPrimePlayerPageSender, isPrimeRoomBrowsingPage, parsePrimePageUrl } from "./source-adapters/primevideo/url";
+import { loadRoomSessionForTab } from "./room-session-storage";
+import { PRIME_ROOM_INTERNAL, samePrimeRoom } from "./prime-room-contract";
+import { isAttachedPrimePlayerDocument } from "./prime-room-background";
 import { getStoredAuthTokens } from "./auth-tokens";
 import { createWatchHistoryStorage } from "./watch-history-storage";
 import {
@@ -18,6 +22,13 @@ import {
 import { isTrialWebsiteSender } from "./trial-installation";
 import { WEB_HTTP_BASE } from "./constants";
 const KEY = "anidachi.primePending.v1";
+const FollowSchema = z.strictObject({
+	type: z.literal("ANIDACHI_PRIME_LAUNCH"),
+	action: z.literal("follow"),
+	roomId: z.string().min(1).max(128),
+	contentId: PrimeVideoProviderIdSchema,
+	visit: z.uuid().optional(),
+});
 const StartSchema = z
 	.strictObject({
 		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
@@ -43,6 +54,8 @@ const CommitSchema = z.strictObject({
 	currentVerifiedOrigin: z.string().max(256).optional(),
 });
 const CommandSchema = z.discriminatedUnion("action", [
+	z.strictObject({ type: z.literal("ANIDACHI_PRIME_LAUNCH"), action: z.literal("discard-conflict"),
+		activeRoomId: z.string().min(1).max(128), invited: z.string().min(1).max(128).optional(), resumeIntentId: z.uuid().optional() }),
 	z.strictObject({ type: z.literal("ANIDACHI_PRIME_LAUNCH"), action: z.literal("pending-room") }),
 	z.strictObject({
 		type: z.literal("ANIDACHI_PRIME_LAUNCH"),
@@ -121,6 +134,48 @@ async function handle(
 		sender.url?.split(/[?#]/)[0] ===
 		chrome.runtime.getURL("/prime-launch.html");
 	const provider = isPrimePlayerPageSender(sender);
+	const follow = FollowSchema.safeParse(message);
+	if (follow.success) {
+		const tabId = sender.tab?.id;
+		if (external || tabId === undefined || !sender.documentId || (!isPrimeBrowsingSender(sender) && !provider))
+			return { status: "cancelled" };
+		const [record, auth] = await Promise.all([loadRoomSessionForTab(tabId), getStoredAuthTokens()]);
+		if (!record || record.roomId !== follow.data.roomId || record.ownerUserId !== auth?.user.id)
+			return { status: "cancelled" };
+		const identity = { roomId: record.roomId, ownerUserId: record.ownerUserId, participantSessionId: record.participantSessionId };
+		const eligible = (tab: chrome.tabs.Tab) => isPrimeBrowsingSender({ ...sender, tab }) ||
+			(isPrimePlayerPageSender({ ...sender, tab }) && isAttachedPrimePlayerDocument(tab, identity, sender.documentId));
+		if (!await eligible(sender.tab!)) return { status: "cancelled" };
+		const claim: { source: WatchSourceDescriptor; receipt: string } | null = await chrome.runtime.sendMessage({
+			type: PRIME_ROOM_INTERNAL, action: "follow", tabId, identity, documentId: sender.documentId,
+			contentId: follow.data.contentId, visit: follow.data.visit,
+		});
+		if (!claim) return { status: "cancelled" };
+		let navigated = false;
+		try {
+			const [tab, current, currentAuth] = await Promise.all([chrome.tabs.get(tabId), loadRoomSessionForTab(tabId), getStoredAuthTokens()]);
+			if (currentAuth?.user.id !== identity.ownerUserId || !samePrimeRoom(current, identity) ||
+				!await eligible(tab)) return { status: "cancelled" };
+			const route = resolvePrimeLaunch({ contentId: follow.data.contentId, navigation: claim.source.primeNavigation });
+			const target = new URL(route.url);
+			// Keep the supplied marketplace and episode on Amazon's video surface. /dp/
+			// also serves retail products, where the tab must release the active call.
+			if (!isPrimeRoomBrowsingPage(target.href)) {
+				const parsed = parsePrimePageUrl(target.href);
+				if (!parsed) return { status: "cancelled" };
+				const prefix = target.pathname.match(/^(?:\/region\/[a-z0-9-]+)?(?:\/-\/[a-z]{2,3}(?:[_-][a-z]{2})?|\/[a-z]{2,3}[_-][a-z]{2})?(?=\/)/i)?.[0] ?? "";
+				target.pathname = prefix + "/gp/video/detail/" + parsed.token;
+			}
+			target.searchParams.set("autoplay", "1");
+			await chrome.tabs.update(tabId, { url: target.href });
+			navigated = true;
+			return { status: "ready" };
+		} finally {
+			if (!navigated) await chrome.runtime.sendMessage({
+				type: PRIME_ROOM_INTERNAL, action: "cancel-follow", tabId, identity, receipt: claim.receipt,
+			}).catch(() => undefined);
+		}
+	}
 	const command = CommandSchema.safeParse(message);
 	let current = await owner();
 	if (!current && command.success && command.data.action === "pending-room") return { status: "empty" };
@@ -229,6 +284,17 @@ async function handle(
 	const tab = sender.tab?.id;
 	if (!command.success || external || tab === undefined)
 		return { status: "cancelled" };
+	if (command.data.action === "discard-conflict") {
+		if (!isPrimeBrowsingSender(sender)) return { status: "cancelled" };
+		const record = await loadRoomSessionForTab(tab);
+		const pending = await store().peek(tab, current);
+		const { activeRoomId, invited, resumeIntentId } = command.data;
+		if (record?.roomId !== activeRoomId || record.ownerUserId !== current.userId || !pending ||
+			!(invited && invited !== activeRoomId && pending.roomId === invited ||
+				resumeIntentId && pending.resume?.intentId === resumeIntentId)) return { status: "cancelled" };
+		await store().take(tab, current, pending.contentId, Date.now(), pending.intentId);
+		return { status: "ready" };
+	}
 	if (command.data.action === "pending-room") {
 		if (!provider) return { status: "cancelled" };
 		const pending = await store().peek(tab, current);
