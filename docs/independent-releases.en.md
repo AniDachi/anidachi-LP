@@ -32,6 +32,8 @@ On a new machine, follow the Node and pnpm setup in the [repository contributor 
 
 After staging passes, GitHub opens or updates one PR from **your branch to `main`**. Check **Files changed** and the required `tested-on-staging` and `isolated-release-ci` results. You can leave this PR open while you work. When you're ready, click **Merge** yourself. Your teammate can release their own PR independently.
 
+After release, GitHub checks what merging `main` into `staging` would change. If staging already has the released changes, the next task based on the latest `main` carries the release commit into staging. GitHub opens a separate PR into `staging` only when files would change or a conflict needs attention.
+
 If you push another commit, open a fresh PR from the same branch into `staging`. GitHub requires staging to pass again for the new commit. If `main` has moved, run `git fetch origin` and `git merge origin/main` on your branch, then push and stage it again. Always bring shared updates into your branch from `origin/main`. If staging acceptance fails, open **Actions → Accept a staged feature** and read the failed step.
 
 ## Prompt for your AI assistant

@@ -12322,5 +12322,35 @@
     "seen": 1795085563.362582,
     "ast_hash": "65581c96a5daa69562cd49f3af41a89c",
     "semantic_hash": "65581c96a5daa69562cd49f3af41a89c"
+  },
+  ".github/workflows/sync-main-to-staging.yml": {
+    "mtime": 1795097885.3220546,
+    "seen": 1795098311.92374,
+    "ast_hash": "b34961d56ca98a7db456e329c6481f9f",
+    "semantic_hash": ""
+  },
+  "scripts/staging_sync_release_test.py": {
+    "mtime": 1795098049.6484773,
+    "seen": 1795098311.923743,
+    "ast_hash": "41018d23a8430f497175abeb41b46017",
+    "semantic_hash": ""
+  },
+  "scripts/sync-released-main.py": {
+    "mtime": 1795097977.3183086,
+    "seen": 1795098311.923745,
+    "ast_hash": "200716c077b5c30c0105b3e7879e1d70",
+    "semantic_hash": ""
+  },
+  "docs/independent-releases.en.md": {
+    "mtime": 1795097773.9022946,
+    "seen": 1795098311.9244459,
+    "ast_hash": "",
+    "semantic_hash": "8678babc7eb451211e1c915aaf936034"
+  },
+  "docs/independent-releases.md": {
+    "mtime": 1795097793.0005462,
+    "seen": 1795098311.924448,
+    "ast_hash": "",
+    "semantic_hash": "e0be0f220b7f2cfd855f4e90c3194fa2"
   }
 }
