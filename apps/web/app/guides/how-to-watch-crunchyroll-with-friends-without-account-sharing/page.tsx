@@ -193,6 +193,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta
+        aboveFoldStyle="hero"
         watchroom="crunchyroll"
       >
         <SeoGuideTitle>

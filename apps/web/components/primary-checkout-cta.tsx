@@ -17,6 +17,7 @@ import {
   INSTALL_HUB_PATH,
 } from "@/lib/install-cta";
 import { DE_PRICING_FREE20_SUMMARY } from "@/lib/locale/de-copy";
+import { WATCHROOM_CTA, type Watchroom } from "@/lib/watchroom-cta";
 import type { PageLocale } from "@/lib/locale/ui-strings";
 
 const COPY = {
@@ -48,30 +49,6 @@ const COPY = {
 
 export type CtaCopyKey = keyof typeof COPY;
 
-/**
- * Card heading, button and line for guides that promote one watchroom (ANI-64).
- * Button labels match the platform hubs' hero buttons.
- */
-export const WATCHROOM_CTA = {
-  crunchyroll: {
-    label: "Start a Crunchyroll Watch Party",
-    body: `Add AniDachi to Chrome, open the episode on Crunchyroll and send the invite. ${PRICING_FREE20_SUMMARY}`,
-  },
-  anime: {
-    label: "Start an Anime Watch Party",
-    body: `Add AniDachi to Chrome, then open the episode on Crunchyroll or YouTube and send the invite. ${PRICING_FREE20_SUMMARY}`,
-  },
-  youtube: {
-    label: "Start a YouTube Watch Party",
-    body: `Add AniDachi to Chrome, open the video on youtube.com and send the invite. ${PRICING_FREE20_SUMMARY}`,
-  },
-  netflix: {
-    label: "Start a Netflix Watch Party",
-    body: `Add AniDachi to Chrome, open the title on Netflix and send the invite. Everyone needs their own Netflix access. ${PRICING_FREE20_SUMMARY}`,
-  },
-} as const;
-
-export type Watchroom = keyof typeof WATCHROOM_CTA;
 
 /** German card text for /de guide-layout pages. Install goes straight to the store listing. */
 const COPY_DE: Record<CtaCopyKey, { body: string }> = {

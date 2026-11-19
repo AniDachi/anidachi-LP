@@ -145,6 +145,7 @@ export default function HowToWatchWithFriendsPage() {
 				faq={faq}
 				headings={tocHeadings}
 				aboveFoldCta
+				aboveFoldStyle="hero"
 				watchroom="crunchyroll"
 			>
 				<SeoGuideTitle>

@@ -150,6 +150,7 @@ export default function IsTelepartyFreePage() {
       headings={tocHeadings}
       articleImage={articleImage}
       aboveFoldCta
+      aboveFoldStyle="hero"
     >
       <SeoGuideTitle>Is Teleparty Free? Premium Price, Trial and How to Use It</SeoGuideTitle>
       <h2 id="answer" className="scroll-mt-24">
