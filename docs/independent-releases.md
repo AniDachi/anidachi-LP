@@ -1,5 +1,7 @@
 # Выпуск одной задачи
 
+[English guide for the website developer and their AI assistant](independent-releases.en.md)
+
 У каждой задачи своя ветка и свой выпуск. Общий тестовый сайт находится на staging.anidachi.app.
 
 1. Получи последние изменения командой `git fetch origin`. Создай ветку от опубликованного кода командой `git switch -c codex/seo-task origin/main`.
