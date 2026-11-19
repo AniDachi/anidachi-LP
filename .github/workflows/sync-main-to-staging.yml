@@ -9,20 +9,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  sync:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
-      checks: read
-      statuses: read
+    outputs:
+      needed: ${{ steps.sync.outputs.needed }}
+      number: ${{ steps.sync.outputs.number }}
+      merge: ${{ steps.sync.outputs.merge }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Integrate a tested release back into staging
+      - id: sync
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/sync-released-main.py
+        run: python3 scripts/sync-released-main.py plan
+
+  verify:
+    needs: plan
+    if: needs.plan.outputs.needed == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    with:
+      candidate_sha: ${{ needs.plan.outputs.merge }}
+
+  merge-staging:
+    needs: [plan, verify]
+    if: needs.plan.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          SYNC_PR: ${{ needs.plan.outputs.number }}
+          TESTED_MERGE: ${{ needs.plan.outputs.merge }}
+        run: python3 scripts/sync-released-main.py finish

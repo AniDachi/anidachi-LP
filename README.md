@@ -108,9 +108,9 @@ See `apps/web/.env.example` for website variables. Key ones:
 
 - `main` is production.
 - `staging` is the shared test environment.
-- Create feature branches from `staging`.
+- Create one branch per task from current `origin/main`.
 - Open PRs into `staging` first.
-- After testing staging, open a release PR from `staging` into `main`.
+- After live staging acceptance, automation opens or updates that task's release PR into `main`. Each author chooses when to merge. See [the developer and AI handoff](docs/independent-releases.md).
 - Do not commit generated extension folders.
 - Build extension artifacts through CI or `pnpm build:extension:public`.
 
@@ -118,9 +118,7 @@ Feature startup:
 
 ```bash
 git fetch origin
-git switch staging
-git pull --ff-only origin staging
-git switch -c codex/task-name
+git switch -c codex/task-name origin/main
 pnpm install --frozen-lockfile
 pnpm check
 pnpm test

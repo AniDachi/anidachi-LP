@@ -33,12 +33,21 @@ def ancestor(old, new):
     return result.returncode == 0
 
 
+def require_topic_content(main, staged, topic):
+    # Reapplying the independent topic from its production base must add
+    # nothing to what actually ran on staging, even after a revert or another PR.
+    checked = subprocess.run(["git", "merge-tree", "--write-tree", "--merge-base=" + main, staged, topic],
+                             capture_output=True, text=True)
+    if checked.returncode or checked.stdout.strip() != run("git", "rev-parse", staged + "^{tree}"):
+        raise ValueError("Staging does not contain the complete topic changes; reconcile and stage again")
+
+
 def profile(paths):
     shared = any(p.startswith("packages/") or p in {"pnpm-lock.yaml", "package.json", "pnpm-workspace.yaml"} for p in paths)
     worker = shared or any(p.startswith(("apps/api/", "scripts/worker-deploy-gate", ".github/workflows/deploy-api")) for p in paths)
     extension = shared or any(p.startswith(("apps/extension/", "scripts/validate-extension", "scripts/build-extension", ".github/workflows/build-extension")) for p in paths)
     return {"worker": worker, "extension": extension,
-            "media": worker or any(p.startswith(("tests/e2e/", "apps/extension/src/p2p", "apps/extension/src/room-client")) for p in paths),
+            "media": worker or any(p.startswith(("tests/e2e/", "apps/extension/src/p2p", "apps/extension/src/room-client", "scripts/room-signaling-harness", ".github/workflows/e2e-")) for p in paths),
             "db": any(p.startswith(("apps/web/supabase/", ".github/workflows/db-")) for p in paths)}
 
 
@@ -69,6 +78,7 @@ def feature_at(staged):
     paths = paths_between(main, topic)
     if not paths:
         raise ValueError("The feature has no independent changes")
+    require_topic_content(main, staged, topic)
     return pr["number"], branch, topic, paths
 
 
@@ -107,6 +117,8 @@ def successful_run(workflow, sha, dispatch, requested):
         if latest["status"] != "completed":
             return False
         if latest["conclusion"] != "success":
+            if latest["conclusion"] == "cancelled" and branch_tip("staging") != sha:
+                return False
             raise ValueError(f"{workflow} {latest['html_url']}: {latest['conclusion']}")
         if workflow == "build-extension.yml":
             artifacts = api(f"actions/runs/{latest['id']}/artifacts")["artifacts"]
@@ -135,6 +147,7 @@ def verify_live():
     staged = os.environ["GITHUB_SHA"]
     _, branch, topic, paths = feature_at(staged)
     required = profile(paths)
+    main = branch_tip("main")
     if not os.environ.get("STAGING_ACCESS_CODE"):
         raise ValueError("The staging smoke needs its environment credential")
     requested = set()
@@ -143,8 +156,9 @@ def verify_live():
             raise ValueError("A newer topic revision needs staging acceptance")
         current = branch_tip("staging")
         run("git", "fetch", "--quiet", "origin", current)
-        if not ancestor(staged, current) or paths.intersection(paths_between(staged, current)):
-            raise ValueError("Another staging change modified the same files; stage the current topic again")
+        if not ancestor(staged, current):
+            raise ValueError("The original staging merge is no longer on the shared branch")
+        require_topic_content(main, current, topic)
         workflows = [("ci.yml", False)]
         if required["db"]:
             workflows.append(("db-staging.yml", False))

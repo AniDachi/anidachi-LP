@@ -18,7 +18,6 @@ on:
       - staging
   pull_request:
     branches:
-      - main
       - staging
 
 permissions:
@@ -38,6 +37,10 @@ jobs:
         with:
           ref: ${{ inputs.candidate_sha || github.sha }}
           persist-credentials: false
+
+      - name: Verify release policy
+        if: hashFiles('scripts/staging_release_test.py') != ''
+        run: python3 -m unittest discover -s scripts -p 'staging*release_test.py'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

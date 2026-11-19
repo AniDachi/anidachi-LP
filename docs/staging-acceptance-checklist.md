@@ -1,6 +1,6 @@
 # Staging Acceptance Checklist
 
-Use this before promoting high-risk work from `staging` to `main`.
+Use this to test a high-risk task on the shared staging environment before merging its own release PR into `main`.
 
 `staging.anidachi.app` is internal tester infrastructure. It must stay
 password-gated and noindex.
@@ -78,5 +78,4 @@ Preferred media profile:
 ## Promotion Rule
 
 Do not promote high-risk room/auth/API/extension work to `main` until the
-relevant sections above are checked or a deliberate exception is recorded in the
-PR.
+relevant sections above are checked. Record residual risks in the PR. All tasks require automated staging acceptance for the current revision.
