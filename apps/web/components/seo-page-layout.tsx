@@ -8,7 +8,7 @@ import {
   ItemListJsonLd,
 } from "@/components/json-ld";
 import { TableOfContents, type TocHeading } from "@/components/table-of-contents";
-import { PrimaryCheckoutCta, type CtaCopyKey } from "@/components/primary-checkout-cta";
+import { PrimaryCheckoutCta, type CtaCopyKey, type Watchroom } from "@/components/primary-checkout-cta";
 import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
@@ -27,8 +27,8 @@ export interface SeoPageLayoutProps {
   headings?: TocHeading[];
   itemList?: { name: string; url: string; position: number }[];
   aboveFoldCta?: boolean;
-  /** "hero" shows the hubs' install block after the answer instead of the card (ANI-64). */
-  aboveFoldStyle?: "card" | "hero";
+  /** Platform watchroom this guide promotes; tailors both install cards (ANI-64). */
+  watchroom?: Watchroom;
   /** Hide the room CTA when the article concerns an unsupported title. */
   bottomCta?: boolean;
   /** Override autodetected template (from `url`) for conversion analytics + CTA copy */
@@ -148,7 +148,7 @@ export function SeoPageLayout({
   headings,
   itemList,
   aboveFoldCta,
-  aboveFoldStyle = "card",
+  watchroom,
   bottomCta = true,
   conversionTemplate,
   ctaCopy,
@@ -175,7 +175,7 @@ export function SeoPageLayout({
           pageTemplate={pageTemplate}
           ctaCopy={ctaCopy}
           locale={locale}
-          style={aboveFoldStyle}
+          watchroom={watchroom}
         >
           {children}
         </SeoBelowTitleCta>
@@ -191,6 +191,7 @@ export function SeoPageLayout({
           placement="content_bottom"
           variant={ctaCopy}
           locale={locale}
+          watchroom={watchroom}
         />
       </div>}
     </div>

@@ -48,6 +48,31 @@ const COPY = {
 
 export type CtaCopyKey = keyof typeof COPY;
 
+/**
+ * Card heading, button and line for guides that promote one watchroom (ANI-64).
+ * Button labels match the platform hubs' hero buttons.
+ */
+export const WATCHROOM_CTA = {
+  crunchyroll: {
+    label: "Start a Crunchyroll Watch Party",
+    body: `Add AniDachi to Chrome, open the episode on Crunchyroll and send the invite. ${PRICING_FREE20_SUMMARY}`,
+  },
+  anime: {
+    label: "Start an Anime Watch Party",
+    body: `Add AniDachi to Chrome, then open the episode on Crunchyroll or YouTube and send the invite. ${PRICING_FREE20_SUMMARY}`,
+  },
+  youtube: {
+    label: "Start a YouTube Watch Party",
+    body: `Add AniDachi to Chrome, open the video on youtube.com and send the invite. ${PRICING_FREE20_SUMMARY}`,
+  },
+  netflix: {
+    label: "Start a Netflix Watch Party",
+    body: `Add AniDachi to Chrome, open the title on Netflix and send the invite. Everyone needs their own Netflix access. ${PRICING_FREE20_SUMMARY}`,
+  },
+} as const;
+
+export type Watchroom = keyof typeof WATCHROOM_CTA;
+
 /** German card text for /de guide-layout pages. Install goes straight to the store listing. */
 const COPY_DE: Record<CtaCopyKey, { body: string }> = {
   default: { body: "Installiere die Chrome-Erweiterung in etwa 2 Minuten: Räume für Crunchyroll, YouTube und Netflix." },
@@ -77,6 +102,8 @@ export interface PrimaryCheckoutCtaProps {
   ctaVariant?: string;
   /** Page language; German cards link straight to the store listing. */
   locale?: PageLocale;
+  /** English guides that promote one watchroom get its button and line. */
+  watchroom?: Watchroom;
 }
 
 export function PrimaryCheckoutCta({
@@ -85,11 +112,14 @@ export function PrimaryCheckoutCta({
   variant: variantProp,
   placement,
   className = "",
-  ctaVariant = "primary_install",
+  ctaVariant: ctaVariantProp,
   locale = "en",
+  watchroom,
 }: PrimaryCheckoutCtaProps) {
   const de = locale === "de";
-  const label = de ? DE_INSTALL_CTA_LABEL : INSTALL_CTA_LABEL;
+  const room = !de && watchroom ? WATCHROOM_CTA[watchroom] : undefined;
+  const label = room?.label ?? (de ? DE_INSTALL_CTA_LABEL : INSTALL_CTA_LABEL);
+  const ctaVariant = ctaVariantProp ?? (room ? `${watchroom}_watchroom_install` : "primary_install");
   const rootRef = useRef<HTMLDivElement>(null);
   const impressionFired = useRef(false);
   const key =
@@ -146,7 +176,7 @@ export function PrimaryCheckoutCta({
             {label}
           </p>
           <p className="mt-0.5 text-sm leading-snug text-ani-muted">
-            {copy.body}
+            {room?.body ?? copy.body}
           </p>
         </div>
 

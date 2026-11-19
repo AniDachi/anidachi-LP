@@ -156,7 +156,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
         headings={tocHeadings}
         articleImage={articleImage}
         aboveFoldCta
-        aboveFoldStyle="hero"
+        watchroom="netflix"
       >
         <SeoGuideTitle>How to Stream Netflix on Discord (and Fix the Black Screen)</SeoGuideTitle>
         <h2 id="answer" className="scroll-mt-24">

@@ -99,7 +99,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta={true}
-      aboveFoldStyle="hero"
+      watchroom="anime"
     >
       <SeoGuideTitle>Best Teleparty Alternatives for Anime (2026)</SeoGuideTitle>
 

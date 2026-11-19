@@ -193,7 +193,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta
-        aboveFoldStyle="hero"
+        watchroom="crunchyroll"
       >
         <SeoGuideTitle>
           Crunchyroll Account Sharing: Rules and a Better Way

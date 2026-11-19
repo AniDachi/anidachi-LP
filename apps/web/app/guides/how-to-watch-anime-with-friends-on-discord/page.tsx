@@ -144,7 +144,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 				faq={faq}
 				headings={tocHeadings}
 				aboveFoldCta
-				aboveFoldStyle="hero"
+				watchroom="anime"
 			>
 				<h1 className="text-4xl font-bold text-foreground mb-6">
 					How to Stream Anime on Discord &amp; Run an Anime Watch Party (2026)

@@ -78,7 +78,6 @@ export default function ChromeWatchPartyPage() {
 			headings={tocHeadings}
 			articleImage={articleImage}
 			aboveFoldCta
-			aboveFoldStyle="hero"
 		>
 			<SeoGuideTitle>Chrome watch party</SeoGuideTitle>
 			<h2 id="answer" className="scroll-mt-24">

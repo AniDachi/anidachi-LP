@@ -156,7 +156,6 @@ export default function IsTelepartySafePage() {
         headings={tocHeadings}
         articleImage={articleImage}
         aboveFoldCta
-        aboveFoldStyle="hero"
       >
         <SeoGuideTitle>Is Teleparty Safe? Permissions, Privacy and Your Data</SeoGuideTitle>
         <h2 id="answer" className="scroll-mt-24">
