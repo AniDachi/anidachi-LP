@@ -34,7 +34,7 @@ const PROFILE_COMMANDS = {
 
 const args = process.argv.slice(2);
 const profile = readFlag("--profile");
-const base = readFlag("--base") ?? "origin/staging";
+const base = readFlag("--base") ?? "origin/main";
 
 if (args.includes("--help") || args.includes("-h")) {
 	printHelp();
@@ -103,15 +103,15 @@ function changedFiles(baseRef) {
 	const tracked = runGit([
 		"diff",
 		"--name-only",
-		"--diff-filter=ACMRTUXB",
+		"--diff-filter=ACDMRTUXB",
 		`${baseRef}...HEAD`,
 	]);
-	const unstaged = runGit(["diff", "--name-only", "--diff-filter=ACMRTUXB"]);
+	const unstaged = runGit(["diff", "--name-only", "--diff-filter=ACDMRTUXB"]);
 	const staged = runGit([
 		"diff",
 		"--cached",
 		"--name-only",
-		"--diff-filter=ACMRTUXB",
+		"--diff-filter=ACDMRTUXB",
 	]);
 	const untracked = runGit(["ls-files", "--others", "--exclude-standard"]);
 	return dedupe(
@@ -203,7 +203,7 @@ function printCommands(commands) {
 
 function printHelp() {
 	console.log(`Usage:
-  node scripts/dev-check.mjs [--base origin/staging]
+  node scripts/dev-check.mjs [--base origin/main]
   node scripts/dev-check.mjs --profile web|api|extension|rooms|workflows|docs|all
 
 The command prints recommended checks for the files changed relative to the base ref.

@@ -6,6 +6,8 @@
 > dashboard change in the Progress Log. Do not treat this plan as permission to
 > bypass the existing `feature branch -> staging -> main` workflow.
 
+Current branch and release instructions are in the [team handoff](../../independent-releases.md). Dates and completed checklist items below retain their historical context.
+
 **Goal:** Turn Anidachi development into a repeatable quality system for human
 and AI contributors: every worker can understand the project quickly, every PR
 has the right context and review rules, staging remains safe, releases are
@@ -66,8 +68,8 @@ predictable.
 ### Contributor Workflow
 
 ```txt
-sync staging
-  -> create feature/codex branch
+fetch current main
+  -> create one task branch from origin/main
   -> read AGENTS.md + current state + relevant plan
   -> make scoped changes
   -> run local verification
@@ -75,7 +77,7 @@ sync staging
   -> CI + CodeRabbit + focused human/agent review
   -> merge to staging
   -> staging deploy + staging/manual acceptance when needed
-  -> promotion PR to main
+  -> automated release PR from the same topic to main, merged by its author
   -> production deploy + rollback-ready verification
 ```
 
@@ -83,7 +85,7 @@ sync staging
 
 | Change Type | Required Before Merge To `staging` | Required Before Promotion To `main` |
 | --- | --- | --- |
-| Docs only | spelling/link sanity, docs map still accurate | allowed auto-promotion if safe-path workflow accepts it |
+| Docs only | spelling/link sanity, docs map still accurate | automated staging acceptance and manual merge of this topic's release PR |
 | Site UI/content | `pnpm check`, relevant web tests, Vercel preview visual check | staging URL smoke and noindex/gate check if staging-affecting |
 | Auth/payments/API | `pnpm check`, unit tests, API tests, CodeRabbit review, secret/env check | staging auth/API smoke, rollback path known |
 | Extension | extension typecheck/tests, staging build validation, permissions audit | real Chrome profile test with staging artifact |

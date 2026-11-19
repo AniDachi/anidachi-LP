@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   // Dynamic routes (e.g. /extension) stream metadata into <body> for unlisted user agents.
   // Add Googlebot to Next's default list so it gets <title> and description in <head>.
   htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|Googlebot`, "i"),
+  async headers() {
+    const sha = process.env.VERCEL_GIT_COMMIT_SHA;
+    if (process.env.VERCEL_GIT_COMMIT_REF !== "staging" || !sha || !/^[a-f0-9]{40}$/.test(sha)) return [];
+    return [{
+      source: "/robots.txt",
+      headers: [{ key: "X-AniDachi-Staging-Commit", value: sha }],
+    }];
+  },
   async redirects() {
     return [
       // Canonicalize non-www → www to consolidate PageRank
