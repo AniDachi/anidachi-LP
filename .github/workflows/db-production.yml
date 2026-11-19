@@ -30,10 +30,5 @@ jobs:
           version: 2.111.0
       - name: Preview and apply production migrations
         env:
-          PGSSLROOTCERT: ${{ github.workspace }}/.github/supabase-db-ca.crt
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          DB_URL: postgresql://postgres.bynsjjxzatxndzjkogim@aws-1-us-west-1.pooler.supabase.com:5432/postgres?sslmode=verify-full
-        run: |
-          : "${PGPASSWORD:?Set SUPABASE_DB_PASSWORD in the Production environment}"
-          supabase --workdir apps/web db push --db-url "$DB_URL" --dry-run
-          supabase --workdir apps/web db push --db-url "$DB_URL"
+          SUPABASE_MIGRATIONS_TOKEN: ${{ secrets.SUPABASE_MIGRATIONS_TOKEN }}
+        run: python3 scripts/deploy_db_migrations.py
