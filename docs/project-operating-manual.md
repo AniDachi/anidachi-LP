@@ -498,8 +498,8 @@ Promotion:
 3. Run staging smoke when web/auth/staging-gate behavior changed.
 4. Build/upload `Anidachi Staging` if testers need extension changes.
 5. Test on at least one clean browser profile or new PC when auth changes.
-6. Open the task's release PR into `main` after staging acceptance.
-7. Merge only after checks; request review when the change is risky.
+6. Automation opens or updates the task's release PR after successful staging acceptance.
+7. The author merges after mandatory checks. A teammate can review on request.
 8. Build/upload production extension only from `main`.
 
 For the owner-approved October 2 paid-hosting transition, the Store review

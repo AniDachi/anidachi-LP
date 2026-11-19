@@ -237,8 +237,7 @@ Typical start:
 
 ```bash
 cd <repo>
-git switch staging
-git pull origin staging
+git fetch origin
 git switch -c codex/short-task-name origin/main
 ```
 
