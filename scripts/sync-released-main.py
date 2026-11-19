@@ -39,7 +39,16 @@ def validate(pr):
 
 
 def plan():
-    if not api("compare/main...staging")["behind_by"]:
+    comparison = api("compare/main...staging")
+    if not comparison["behind_by"]:
+        outputs(needed="false")
+        return
+    # A concurrent push to staging can arrive before CI on the released main.
+    # Its successful workflow_run will trigger another sync without a manual retry.
+    main = comparison["base_commit"]["sha"]
+    runs = api(f"actions/workflows/ci.yml/runs?branch=main&event=push&head_sha={main}&per_page=1")["workflow_runs"]
+    if not runs or runs[0]["conclusion"] != "success":
+        print(f"Waiting for push CI on main {main} before syncing staging.")
         outputs(needed="false")
         return
     prs = api("pulls?state=open&base=staging&head=AniDachi:main")
@@ -48,7 +57,7 @@ def plan():
                                 "-f", "body=This PR brings published commits back into the shared test branch after CI.")
     for _ in range(25):
         pr = api(f"pulls/{pr['number']}")
-        if pr["merged"] or pr["state"] != "open":
+        if pr["merged"] or pr["state"] != "open" or pr["head"]["sha"] != main:
             outputs(needed="false")
             return
         if pr["mergeable"] is not None:

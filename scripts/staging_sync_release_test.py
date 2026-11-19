@@ -48,6 +48,31 @@ class StagingSync(unittest.TestCase):
             api.assert_called_once_with("compare/main...staging")
             out.assert_called_once_with(needed="false")
 
+    def test_staging_push_defers_to_the_matching_main_ci_completion(self):
+        comparison = {"behind_by": 1, "base_commit": {"sha": "released"}}
+        expected = "actions/workflows/ci.yml/runs?branch=main&event=push&head_sha=released&per_page=1"
+        for runs in ([], [{"conclusion": None}], [{"conclusion": "failure"}]):
+            with self.subTest(runs=runs), \
+                 mock.patch.object(sync, "api", side_effect=[comparison, {"workflow_runs": runs}]) as api, \
+                 mock.patch.object(sync, "outputs") as out:
+                sync.plan()
+                self.assertEqual(api.call_args_list, [mock.call("compare/main...staging"), mock.call(expected)])
+                out.assert_called_once_with(needed="false")
+
+        pr = {"number": 7, "merged": False, "state": "open", "head": {"sha": "released"}, "mergeable": True}
+        for current, needed in ((pr, True), (dict(pr, head={"sha": "newer"}), False)):
+            with self.subTest(head=current["head"]), \
+                 mock.patch.object(sync, "api", side_effect=[comparison, {"workflow_runs": [{"conclusion": "success"}]}, [pr], current]), \
+                 mock.patch.object(sync, "validate", return_value="tested-merge") as validate, \
+                 mock.patch.object(sync, "outputs") as out:
+                sync.plan()
+                if needed:
+                    validate.assert_called_once_with(current)
+                    out.assert_called_once_with(needed="true", number=7, merge="tested-merge")
+                else:
+                    validate.assert_not_called()
+                    out.assert_called_once_with(needed="false")
+
     def test_closed_or_changed_sync_cannot_merge(self):
         with mock.patch.dict(os.environ, {"SYNC_PR":"7", "TESTED_MERGE":"old"}), \
              mock.patch.object(sync, "api", return_value={"merged": False, "state": "closed"}) as api:
