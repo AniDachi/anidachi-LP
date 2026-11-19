@@ -115,6 +115,10 @@ Repository: `AniDachi/anidachi-LP`.
 | `WXT_API_HTTP_BASE` | `staging` env variable | Staging extension API base | Extension connects to staging Worker |
 | `WXT_API_WS_BASE` | `staging` env variable | Staging extension WS base | Extension WebSocket connects to staging Worker |
 | `STAGING_ACCESS_CODE` | `staging` env secret | Staging smoke gate access | `Staging Smoke` passes |
+| `SUPABASE_DB_PASSWORD` | GitHub `Production` environment secret | Password used by the production migration step | Only `refs/heads/main` may use this environment. The migration dry run uses the production session pooler over verified TLS before applying changes |
+| `STAGING_DB_PASSWORD` | Repository secret for staging | Password for the separate staging migration target | The staging workflow uses its own project’s session pooler and records a dry run before applying changes |
+
+Both migration workflows use their pinned Supabase CLI and project-specific Postgres connection. The tracked public CA bundle comes from the [official Supabase CLI certificates](https://github.com/supabase/cli/tree/v2.111.0/apps/cli-go/internal/gen/types/templates). The CLI receives the password in `PGPASSWORD` only during the migration step. Neither workflow needs a Supabase Management API token. After a successful production cutover, remove the former repository-wide production password and management token after checking their remaining consumers. Vercel continues to record the web deployments for `Production`.
 
 Cloudflare deploy token must be scoped to the Anidachi account and include at
 least:
