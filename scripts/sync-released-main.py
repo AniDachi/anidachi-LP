@@ -33,7 +33,7 @@ def sync():
         merged_tree = run("git", "merge-tree", "--write-tree", stage, main)
         if merged_tree != run("git", "rev-parse", stage + "^{tree}"):
             raise ValueError("Sync changes staging content; resolve the open sync PR")
-        if pr["mergeable_state"] == "clean":
+        if pr["mergeable_state"] in {"clean", "unstable"}:
             result = gh(f"pulls/{pr['number']}/merge", "--method", "PUT", "-f", "merge_method=merge", "-f", "sha=" + main)
             if not result.get("merged"):
                 raise RuntimeError("GitHub did not merge the staging sync")

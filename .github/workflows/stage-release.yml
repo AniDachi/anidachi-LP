@@ -42,7 +42,9 @@ jobs:
     if: needs.select.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    environment: staging
+    environment:
+      name: staging
+      deployment: false
     permissions:
       actions: write
       contents: read
@@ -67,7 +69,9 @@ jobs:
     needs: [select, isolated-ci, live]
     if: needs.select.outputs.release == 'true'
     runs-on: ubuntu-latest
-    environment: staging-acceptance
+    environment:
+      name: staging-acceptance
+      deployment: false
     permissions:
       contents: read
       deployments: write
