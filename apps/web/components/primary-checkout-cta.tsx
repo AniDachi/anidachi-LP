@@ -156,7 +156,7 @@ export function PrimaryCheckoutCta({
           <p className="mt-0.5 text-sm leading-snug text-ani-muted">
             {room?.body ?? copy.body}
           </p>
-          {!de ? <StoreRatingLine className="mt-2 justify-start" /> : null}
+          <StoreRatingLine locale={de ? "de" : "en"} className="mt-2 justify-start" />
         </div>
 
         <Button

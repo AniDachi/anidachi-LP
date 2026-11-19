@@ -1,6 +1,12 @@
 import { Star } from "lucide-react";
 import { CHROME_STORE_RATING, shouldShowStoreRating } from "@/lib/extension-store";
 import { cn } from "@/lib/utils";
+import type { PageLocale } from "@/lib/locale/ui-strings";
+
+const SUFFIX: Record<PageLocale, string> = {
+  en: "on the Chrome Web Store",
+  de: "im Chrome Web Store",
+};
 
 function RatingStars({ value }: { value: number }) {
   const stars = Array.from({ length: 5 }, (_, i) => (
@@ -20,19 +26,29 @@ function RatingStars({ value }: { value: number }) {
 }
 
 /**
- * "★★★★½ 4.6 on the Chrome Web Store", shown under install buttons (English only).
+ * "★★★★½ 4.6 on the Chrome Web Store" ("4,6 im Chrome Web Store" in German), shown under install buttons.
  * Renders nothing when the rating is below the threshold in lib/extension-store.ts.
  */
-export function StoreRatingLine({ className }: { className?: string }) {
+export function StoreRatingLine({
+  className,
+  locale = "en",
+}: {
+  className?: string;
+  locale?: PageLocale;
+}) {
   if (!shouldShowStoreRating()) return null;
+  const value = CHROME_STORE_RATING.value.toLocaleString(locale === "de" ? "de-DE" : "en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
   return (
     <p className={cn("m-0 flex items-center justify-center gap-2 text-sm text-ani-muted", className)}>
       <RatingStars value={CHROME_STORE_RATING.value} />
       <span>
         <span className="font-semibold tabular-nums text-ani-text">
-          {CHROME_STORE_RATING.value.toFixed(1)}
+          {value}
         </span>{" "}
-        on the Chrome Web Store
+        {SUFFIX[locale]}
       </span>
     </p>
   );

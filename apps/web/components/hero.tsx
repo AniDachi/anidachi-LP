@@ -14,7 +14,6 @@ import {
   INSTALL_HUB_PATH,
 } from "@/lib/install-cta";
 import { UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
-import { WatchingTogetherCount } from "@/components/watching-together-count";
 import { InstallLink } from "@/components/install-link";
 import { StoreRatingLine } from "@/components/store-rating-line";
 import { EXTENSION_BROWSER_LABEL } from "@/lib/extension-store";
@@ -116,11 +115,7 @@ export function Hero({ locale = "en" }: { locale?: PageLocale } = {}) {
             </Button>
           </div>
 
-          {de ? (
-            <WatchingTogetherCount className="mb-3" locale={locale} />
-          ) : (
-            <StoreRatingLine className="mb-3" />
-          )}
+          <StoreRatingLine className="mb-3" locale={locale} />
           <p className="mb-4 max-w-md text-sm text-ani-muted md:hidden">
             {de
               ? UI_STRINGS.de.mobileInstallNote
