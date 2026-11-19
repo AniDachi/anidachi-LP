@@ -28,6 +28,7 @@ for (const scenario of [
       const robotsOutput = robots();
       if (scenario.noindex) {
         assert.equal(robotsOutput.sitemap, undefined);
+        assert.deepEqual(robotsOutput.rules, [{ userAgent: "*", disallow: ["/"] }]);
       } else {
         assert.deepEqual(robotsOutput.sitemap, [`${scenario.seo}/sitemap.xml`]);
       }
