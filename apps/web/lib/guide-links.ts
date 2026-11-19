@@ -343,6 +343,11 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "watch-party", "compare", "online"],
 	},
 	{
+		href: "/guides/is-teleparty-safe",
+		label: "Is Teleparty Safe?",
+		tags: ["template-c", "watch-party", "compare", "online"],
+	},
+	{
 		href: "/guides/best-teleparty-alternatives-for-anime",
 		label: "Best Teleparty Alternatives for Anime",
 		tags: [

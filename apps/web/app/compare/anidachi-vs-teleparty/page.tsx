@@ -187,7 +187,11 @@ export default function AniDachiVsTelepartyPage() {
         <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
           Is Teleparty free?
         </Link>{" "}
-        Its basic tier is free on services like Netflix and YouTube, but Crunchyroll parties and voice or video chat need Premium.
+        Its basic tier is free on services like Netflix and YouTube, but Crunchyroll parties and voice or video chat need Premium.{" "}
+        <Link href="/guides/is-teleparty-safe" className="text-brand-orange hover:underline">
+          Is Teleparty safe?
+        </Link>{" "}
+        Its current version asks for four basic permissions, with no request for access to all websites (per Chrome-Stats), and it collects usage data and your IP address.
       </p>
 
       <h2
