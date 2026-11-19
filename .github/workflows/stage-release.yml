@@ -67,8 +67,10 @@ jobs:
     needs: [select, isolated-ci, live]
     if: needs.select.outputs.release == 'true'
     runs-on: ubuntu-latest
+    environment: staging-acceptance
     permissions:
       contents: read
+      deployments: write
       pull-requests: write
       statuses: write
     steps:

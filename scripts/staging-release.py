@@ -186,6 +186,21 @@ def publish():
         pr = open_prs[0]
     if pr["head"]["sha"] != topic or pr["base"]["ref"] != "main":
         raise ValueError("Release PR moved during acceptance")
+    # Record the tested topic on GitHub's deployment timeline. Other topics can
+    # keep their own successful deployment in this same staging environment.
+    receipt = {"ref": topic, "task": "deploy", "environment": "staging-acceptance",
+               "description": f"Accepted staging PR #{number} at {accepted[:12]}",
+               "auto_merge": False, "required_contexts": [], "production_environment": False,
+               "payload": {"staging_merge": staged, "accepted_staging": accepted, "run": RUN}}
+    prior = api(f"deployments?sha={topic}&environment=staging-acceptance&per_page=100")
+    deployment = next((d for d in prior if d.get("task") == "deploy" and d.get("payload") == receipt["payload"]), None)
+    if not deployment:
+        deployment = json.loads(run("gh", "api", f"repos/{REPO}/deployments", "--method", "POST",
+                                    "--input", "-", input=json.dumps(receipt)))
+    if deployment["sha"] != topic:
+        raise ValueError("Deployment does not identify the tested topic")
+    api(f"deployments/{deployment['id']}/statuses", "--method", "POST", "-f", "state=success",
+        "-f", "environment_url=" + STAGE, "-f", "log_url=" + RUN, "-F", "auto_inactive=false")
     for context in ("isolated-release-ci", "tested-on-staging"):
         api("statuses/" + topic, "--method", "POST", "-f", "state=success", "-f", "context=" + context,
             "-f", "description=" + f"PR #{number}, staging {accepted[:12]}, topic {topic[:12]}", "-f", "target_url=" + RUN)
