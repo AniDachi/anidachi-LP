@@ -21,14 +21,18 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const PAGE_PATH = "/guides/is-teleparty-free";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 
-/** Competitor facts below were checked on 20 Oct 2026; the support FAQ and privacy policy were re-checked on 8 Nov 2026. Re-check on each review date. */
+/** Competitor facts below were checked on 20 Oct 2026; the support FAQ, privacy policy, Premium page and extension version were re-checked on 19 Nov 2026. Re-check on each review date. */
 const SOURCES = [
   { href: "https://www.teleparty.com/support", label: "Teleparty support FAQ" },
   { href: "https://www.teleparty.com/premium", label: "Teleparty Premium page" },
   { href: "https://www.teleparty.com/privacy", label: "Teleparty privacy policy (effective June 30, 2026)" },
   {
     href: "https://chromewebstore.google.com/detail/netflix-party-is-now-tele/oocalimimngaihdkbihfgmpkcpnmlaoa",
-    label: "Teleparty Chrome Web Store listing (version 5.8.5)",
+    label: "Teleparty Chrome Web Store listing",
+  },
+  {
+    href: "https://chrome-stats.com/d/oocalimimngaihdkbihfgmpkcpnmlaoa",
+    label: "Chrome-Stats record for Teleparty (version 5.8.9 and permissions)",
   },
   { href: "https://apps.apple.com/us/app/id1620026075", label: "Teleparty iPhone and iPad App Store listing" },
   { href: "https://apps.apple.com/us/app/id6471985961", label: "Teleparty Mac App Store listing" },
@@ -54,21 +58,21 @@ const telepartySteps = [
 ];
 
 export const metadata: Metadata = {
-  title: "Is Teleparty Free? Premium, Safety and Setup",
+  title: "Is Teleparty Free? Premium Price, Trial and Setup",
   description:
-    "Teleparty is free on Netflix, YouTube, Disney+ and more; Crunchyroll and video chat need Premium. Prices, permissions, privacy and setup, checked Oct 2026.",
+    "Teleparty is free on Netflix, YouTube, Disney+ and more; Crunchyroll and video chat need Premium. Prices, trial, ads and setup, checked Nov 2026.",
   alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "Is Teleparty Free? Premium, Safety and Setup",
+    title: "Is Teleparty Free? Premium Price, Trial and Setup",
     description:
-      "What Teleparty's free version covers, what Premium costs, what the extension can access, and how to start a party.",
+      "What Teleparty's free version covers, what Premium costs, how the trial works, and how to start a party.",
     url: PAGE_PATH,
     images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Is Teleparty Free? Premium, Safety and Setup",
-    description: "Teleparty's free tier, Premium prices, safety and setup, from its own pages.",
+    title: "Is Teleparty Free? Premium Price, Trial and Setup",
+    description: "Teleparty's free tier, Premium prices, trial and setup, from its own pages.",
     images: ["/opengraph-image.png"],
   },
 };
@@ -80,14 +84,14 @@ const faq = [
       "Yes, for the free services. Teleparty's support FAQ says the free version lets you start parties on services such as Netflix, Disney+, Hulu, Amazon, YouTube and HBO Max, with video sync and text chat. Crunchyroll, Paramount+, ESPN+ and voice or video chat need Teleparty Premium.",
   },
   {
-    question: "Is Teleparty safe?",
+    question: "Does Teleparty Premium have a free trial?",
     answer:
-      "Teleparty says it is safe and used by over 10 million people, and that it does not store your streaming service password. Its privacy policy (effective June 30, 2026) says it does not sell personal information. It does assign you a unique ID, collect usage data and your IP address, and use Google Analytics. The publisher is WP Interactive Media.",
+      "Only on the annual plan. Teleparty's support FAQ (checked 19 Nov 2026) says the annual plan comes with a 7-day free trial and the monthly plan has none. You can cancel any time and keep Premium until the end of the billing period, but Teleparty doesn't refund unused time.",
   },
   {
     question: "How much is Teleparty Premium?",
     answer:
-      "On 20 Oct 2026 Teleparty's support FAQ listed $6.59 a month, or $47.88 a year ($3.99 a month billed annually), with a 7-day free trial on the annual plan only. Its iPhone App Store listing showed $6.95 a month or $49.95 a year, so check the price where you subscribe.",
+      "On 19 Nov 2026 Teleparty's support FAQ listed $6.59 a month, or $47.88 a year ($3.99 a month billed annually), with a 7-day free trial on the annual plan only. Its iPhone App Store listing showed $6.95 a month or $49.95 a year on 20 Oct 2026, so check the price where you subscribe.",
   },
   {
     question: "Does Teleparty work with Crunchyroll for free?",
@@ -122,7 +126,7 @@ const tocHeadings: TocHeading[] = [
   { id: "price", label: "Premium price and trial", level: 2 },
   { id: "ads", label: "Ads", level: 2 },
   { id: "platforms", label: "Supported services and devices", level: 2 },
-  { id: "safe", label: "Is Teleparty safe?", level: 2 },
+  { id: "safe", label: "Is it safe?", level: 2 },
   { id: "how-to-use", label: "How to use Teleparty", level: 2 },
   { id: "verdict", label: "Teleparty or AniDachi?", level: 2 },
   { id: "sources", label: "Sources and review dates", level: 2 },
@@ -138,16 +142,16 @@ export default function IsTelepartyFreePage() {
         { name: "Is Teleparty free?", url: PAGE_PATH },
       ]}
       title="Is Teleparty free?"
-      description="Teleparty's free tier, Premium prices, safety and setup, checked against Teleparty's own pages."
+      description="Teleparty's free tier, Premium prices, trial and setup, checked against Teleparty's own pages."
       url={PAGE_PATH}
       datePublished="2026-10-20"
-      dateModified="2026-11-08"
+      dateModified="2026-11-19"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImage}
       aboveFoldCta
     >
-      <SeoGuideTitle>Is Teleparty Free? Premium, Safety and How to Use It</SeoGuideTitle>
+      <SeoGuideTitle>Is Teleparty Free? Premium Price, Trial and How to Use It</SeoGuideTitle>
       <h2 id="answer" className="scroll-mt-24">
         Short answer
       </h2>
@@ -159,17 +163,15 @@ export default function IsTelepartyFreePage() {
             text chat. Crunchyroll, Paramount+, ESPN+ and other premium
             services, plus voice and video chat, need Teleparty Premium:
             $6.59 a month or $47.88 a year on its website when we checked on
-            20 Oct 2026.
+            19 Nov 2026.
           </strong>{" "}
           Guests can join a Premium host&apos;s party for free.
         </p>
         <p>
-          <strong>Is Teleparty safe?</strong> It is a long-running extension
-          from WP Interactive Media that says it has over 10 million users and
-          does not store your streaming password or sell personal information.
-          It does assign you a unique ID and collect usage data and your IP
-          address, according to its privacy policy (effective June 30, 2026).{" "}
-          <a href="#safe">Safety details below</a>.
+          The 7-day free trial is on the annual plan only. Wondering whether
+          it&apos;s safe to install? See{" "}
+          <Link href="/guides/is-teleparty-safe">is Teleparty safe</Link> for its
+          permissions and privacy policy.
         </p>
       </SeoGuideAnswer>
 
@@ -297,47 +299,22 @@ export default function IsTelepartyFreePage() {
       />
 
       <h2 id="safe" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
-        Is Teleparty safe?
+        Is the free version safe to install?
       </h2>
       <p className="mb-4 leading-relaxed text-ani-muted">
-        &quot;Safe&quot; usually means three things: is it a real extension,
-        what can it access in your browser, and what does the company do with
-        your data. Here is what Teleparty&apos;s own pages and its Chrome Web
-        Store listing say.
+        The free and Premium versions are the same extension, so the safety
+        answer doesn&apos;t depend on whether you pay. Teleparty comes from WP
+        Interactive Media, has about 10 million Chrome users, and its current
+        version (5.8.9) asks for four basic permissions: activeTab, storage,
+        scripting and alarms. Its support FAQ says it doesn&apos;t store your
+        streaming password, and its privacy policy says it doesn&apos;t sell
+        personal information. It does assign you a unique ID and collect usage
+        data and your IP address.
       </p>
-      <SeoGuideBulletList
-        items={[
-          {
-            title: "Who makes it",
-            body: "WP Interactive Media, Inc. The Chrome Web Store listing shows about 10 million users, a 4.0 rating from about 17,500 ratings, and says the publisher has a good record with no history of violations.",
-          },
-          {
-            title: "Browser permissions",
-            body: "The current Chrome version (5.8.5) requests activeTab, storage, scripting and alarms. It can also ask for optional access to all websites, which you approve or decline in Chrome. In plain terms: it can run on the tab you use it on and save its own settings.",
-          },
-          {
-            title: "Your streaming password",
-            body: "Teleparty's FAQ says it does not store your streaming service account details or password. You sign in to Netflix or Crunchyroll on their own sites.",
-          },
-          {
-            title: "Data it collects",
-            body: "Its privacy policy (effective June 30, 2026) says installing the extension assigns a unique identifier, and it collects usage statistics, IP address and cookie data, and uses Google Analytics. The Chrome Web Store disclosure lists personal communications, location and user activity.",
-          },
-          {
-            title: "Chat",
-            body: "The privacy policy says Teleparty does not currently store messages or chat history from watch parties.",
-          },
-          {
-            title: "Selling data",
-            body: "The privacy policy says Teleparty does not sell personal information, and the Chrome Web Store disclosure says data is not sold outside approved use cases. Payments go through Stripe, which also receives your IP address and device details for fraud checks.",
-          },
-        ]}
-      />
       <SeoGuideNote>
-        Our read: Teleparty is a mainstream, long-running extension and nothing
-        in its permissions or policy is unusual for a watch-party tool. As with
-        any extension, install it only from the official store listing, and
-        read the access request before you approve it.
+        What it collects, how to ask for your data and how to install it
+        safely are covered in{" "}
+        <Link href="/guides/is-teleparty-safe">is Teleparty safe</Link>.
       </SeoGuideNote>
 
       <h2 id="how-to-use" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -406,11 +383,14 @@ export default function IsTelepartyFreePage() {
         Sources and review dates
       </h2>
       <p className="mb-4 leading-relaxed text-ani-muted">
-        Every Teleparty detail on this page comes from Teleparty&apos;s own pages
-        and store listings. The support FAQ (prices, free trial, free and
-        premium services, password) and the privacy policy were re-checked on 8
-        Nov 2026 and still match. The Premium page, the Chrome Web Store
-        listing and the App Store listings were last checked on 20 Oct 2026:{" "}
+        Every Teleparty detail on this page comes from Teleparty&apos;s own pages,
+        store listings and Chrome-Stats. The support FAQ (prices, free trial, free and
+        premium services, password), the privacy policy and the Premium
+        page&apos;s service list were re-checked on 19 Nov 2026 and still
+        match. The extension&apos;s version and permission list (via
+        Chrome-Stats) were updated the same day: version 5.8.9 lists no
+        optional access to all websites, so we removed that line. The App Store
+        listings were last checked on 20 Oct 2026:{" "}
         {SOURCES.map((source, index) => (
           <span key={source.href}>
             {index > 0 ? ", " : null}
@@ -424,12 +404,13 @@ export default function IsTelepartyFreePage() {
         say which page a number came from.
       </p>
       <p className="mb-8 leading-relaxed text-ani-muted">
-        We re-check the rest on 19 Nov 2026, 19 Dec 2026 and 18 Jan 2027, and
+        We re-check these sources on 19 Dec 2026, 18 Jan 2027 and 17 Feb 2027, and
         update the date at the bottom of this page when something changes. AniDachi is not affiliated with Teleparty.
       </p>
 
       <SeoGuideRelated
         links={[
+          { href: "/guides/is-teleparty-safe", label: "Is Teleparty safe?" },
           { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
           { href: "/watch-crunchyroll-together",
             label: "Crunchyroll watch party" },
