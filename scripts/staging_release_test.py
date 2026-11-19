@@ -47,6 +47,19 @@ class StagingAcceptance(TestCase):
     def test_missing_deployment_revision_cannot_pass(self):
         self.assertFalse(gate.serve_same_content(None, "a" * 40))
 
+    def test_a_reverted_topic_is_rejected_even_when_its_commit_is_an_ancestor(self):
+        with mock.patch.object(gate.subprocess, "run", return_value=mock.Mock(returncode=0, stdout="would-reintroduce-topic\n")), \
+             mock.patch.object(gate, "run", return_value="actual-staging"):
+            with self.assertRaisesRegex(ValueError, "complete topic"):
+                gate.require_topic_content("main", "staged", "topic")
+
+    def test_cancelled_superseded_stage_waits_for_fresh_verification(self):
+        old = {"head_branch": "staging", "event": "push", "run_number": 1, "run_attempt": 1,
+               "status": "completed", "conclusion": "cancelled", "html_url": "run"}
+        with mock.patch.object(gate, "api", return_value={"workflow_runs": [old]}), \
+             mock.patch.object(gate, "branch_tip", return_value="new-stage"):
+            self.assertFalse(gate.successful_run("ci.yml", "old-stage", False, set()))
+
 
 if __name__ == "__main__":
     main()
