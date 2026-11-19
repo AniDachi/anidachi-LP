@@ -48,7 +48,8 @@ def profile(paths):
     extension = shared or any(p.startswith(("apps/extension/", "scripts/validate-extension", "scripts/build-extension", ".github/workflows/build-extension")) for p in paths)
     return {"worker": worker, "extension": extension,
             "media": worker or any(p.startswith(("tests/e2e/", "apps/extension/src/p2p", "apps/extension/src/room-client", "scripts/room-signaling-harness", ".github/workflows/e2e-")) for p in paths),
-            "db": any(p.startswith(("apps/web/supabase/", ".github/workflows/db-")) for p in paths)}
+            "db": any(p.startswith(("apps/web/supabase/", ".github/workflows/db-")) or
+                      p in {"scripts/deploy_db_migrations.py", ".github/supabase-db-ca.crt"} for p in paths)}
 
 
 def feature_at(staged):

@@ -3360,16 +3360,16 @@
     "semantic_hash": ""
   },
   ".github/workflows/db-production.yml": {
-    "mtime": 1795081201.1284165,
-    "seen": 1795081350.8048918,
-    "ast_hash": "fc2e34374eb1b54e21fdf8e8e189985c",
-    "semantic_hash": "fc2e34374eb1b54e21fdf8e8e189985c"
+    "mtime": 1795085057.489193,
+    "seen": 1795085563.3625758,
+    "ast_hash": "8dfaf0b8ef1e031bc8ee8e53258a3aa6",
+    "semantic_hash": "8dfaf0b8ef1e031bc8ee8e53258a3aa6"
   },
   ".github/workflows/db-staging.yml": {
-    "mtime": 1795081201.1285398,
-    "seen": 1795081350.804894,
-    "ast_hash": "19a9c720cc7c55c24d64bf5df576645c",
-    "semantic_hash": "19a9c720cc7c55c24d64bf5df576645c"
+    "mtime": 1795085057.510202,
+    "seen": 1795085563.362577,
+    "ast_hash": "542e6bf226caa7ce5ee0afd5db51b482",
+    "semantic_hash": "542e6bf226caa7ce5ee0afd5db51b482"
   },
   ".github/workflows/deploy-api.yml": {
     "mtime": 1793355774.3776717,
@@ -3510,10 +3510,10 @@
     "semantic_hash": "b0979d5c3588dbbfd34ff46d5274f5d2"
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1795081111.7767577,
-    "seen": 1795081350.804895,
+    "mtime": 1795085057.565834,
+    "seen": 1795085563.3625789,
     "ast_hash": "05f5620e79ae61a5a1287c4fbb207054",
-    "semantic_hash": "00499fa601f1fce38a86653dd86af14d"
+    "semantic_hash": "0f58f992b11e4d1e7196059d2754b5c9"
   },
   "docs/experimental-features.md": {
     "mtime": 1789490459.005333,
@@ -12298,5 +12298,29 @@
     "seen": 1794051942.481243,
     "ast_hash": "",
     "semantic_hash": "f8f3b6794b31686fa3435890025eda8f"
+  },
+  "scripts/deploy_db_migrations.py": {
+    "mtime": 1795085102.3635309,
+    "seen": 1795085563.3625789,
+    "ast_hash": "d77414cdb461c1af49ece56eed155c73",
+    "semantic_hash": "d77414cdb461c1af49ece56eed155c73"
+  },
+  "scripts/staging-release.py": {
+    "mtime": 1795085057.528245,
+    "seen": 1795085563.36258,
+    "ast_hash": "e62c959adabcca29c45513ef99f6be37",
+    "semantic_hash": "e62c959adabcca29c45513ef99f6be37"
+  },
+  "scripts/staging_db_release_test.py": {
+    "mtime": 1795085120.6672084,
+    "seen": 1795085563.362581,
+    "ast_hash": "d8509950ae8c2e11e485f86dd55b1a73",
+    "semantic_hash": "d8509950ae8c2e11e485f86dd55b1a73"
+  },
+  "scripts/staging_release_test.py": {
+    "mtime": 1795085057.54754,
+    "seen": 1795085563.362582,
+    "ast_hash": "65581c96a5daa69562cd49f3af41a89c",
+    "semantic_hash": "65581c96a5daa69562cd49f3af41a89c"
   }
 }
