@@ -42,8 +42,8 @@ const weekLabel = weekRangeLabel(week, true, t.intl);
 const shortWeekLabel = weekRangeLabel(week, false, t.intl);
 
 // The layout appends " | AniDachi" (11 characters).
-const pageTitle = "Crunchyroll Kalender: Simulcasts diese Woche";
-const pageDescription = `Crunchyroll Kalender für ${shortWeekLabel}: ${showCount} Simulcast-Folgen mit Uhrzeit in deutscher Zeit (MEZ), oder in deiner eigenen Zeitzone.`;
+const pageTitle = "Crunchyroll Kalender: Release & Simulcasts";
+const pageDescription = `Crunchyroll Release-Kalender und Wochenplan für ${shortWeekLabel}: ${showCount} neue Simulcast-Folgen mit Uhrzeit in deutscher Zeit (MEZ).`;
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -96,8 +96,8 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
-  { id: "kalender", label: `Diese Woche: ${shortWeekLabel}`, level: 2 },
-  { id: "synchro", label: "Deutsche Synchro", level: 2 },
+  { id: "kalender", label: `Neue Folgen: ${shortWeekLabel}`, level: 2 },
+  { id: "synchro", label: "Crunchyroll deutsche Synchro", level: 2 },
   { id: "uhrzeiten", label: "So funktionieren die Uhrzeiten", level: 2 },
   { id: "one-piece", label: "One Piece", level: 2 },
   { id: "woechentlich", label: "Jede Woche zusammen schauen", level: 2 },
@@ -122,11 +122,11 @@ export default function GermanCrunchyrollCalendarPage() {
           { name: "Startseite", url: "/de" },
           { name: "Crunchyroll Kalender", url },
         ]}
-        title="Crunchyroll Kalender: Simulcasts diese Woche"
+        title={pageTitle}
         description={`Crunchyroll-Simulcasts für ${weekLabel}, in deutscher Zeit.`}
         url={url}
         datePublished="2026-11-12"
-        dateModified="2026-11-15"
+        dateModified="2026-11-20"
         faq={faq}
         headings={headings}
         itemList={itemList}
@@ -147,7 +147,7 @@ export default function GermanCrunchyrollCalendarPage() {
         </SeoGuideAnswer>
 
         <h2 id="kalender" className={headingClass}>
-          Crunchyroll Simulcasts: {weekLabel}
+          Neue Crunchyroll-Folgen: Simulcasts vom {weekLabel}
         </h2>
         <p className="mb-6 leading-relaxed text-ani-muted">
           Dieser Kalender wird von Hand gepflegt und ist kein Live-Feed. Er zeigt nur Folgen mit
@@ -160,7 +160,7 @@ export default function GermanCrunchyrollCalendarPage() {
         </div>
 
         <h2 id="synchro" className={headingClass}>
-          Deutsche Synchro
+          Crunchyroll deutsche Synchro
         </h2>
         <SeoGuideNote>
           Dieser Kalender zeigt die Simulcasts mit Untertiteln. Deutsche Synchronfassungen erscheinen

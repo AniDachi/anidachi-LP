@@ -119,6 +119,7 @@ const faq = [
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Kurz gesagt", level: 2 },
   { id: "why-black", label: "Warum Netflix schwarz bleibt", level: 2 },
+  { id: "hardware", label: "Hardwarebeschleunigung ausschalten?", level: 2 },
   { id: "what-people-try", label: "Was viele versuchen", level: 2 },
   { id: "watch-in-sync", label: "Stattdessen synchron schauen", level: 2 },
   { id: "compare", label: "Bildschirm teilen vs. AniDachi", level: 2 },
@@ -147,7 +148,7 @@ export default function GermanNetflixDiscordPage() {
         description="Warum Netflix auf Discord ein schwarzes Bild zeigt, was viele versuchen und wie ihr synchron schaut, mit Discord für die Stimmen."
         url={PAGE_PATH}
         datePublished="2026-11-12"
-        dateModified="2026-11-12"
+        dateModified="2026-11-20"
         faq={faq}
         headings={tocHeadings}
         articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
@@ -198,6 +199,27 @@ export default function GermanNetflixDiscordPage() {
           Streamingdienst schützt sein Video, und das funktioniert wie vorgesehen.
         </p>
 
+        <h2 id="hardware" className={h2Class}>
+          Hardwarebeschleunigung in Discord ausschalten: hilft das?
+        </h2>
+        <p className="mb-4 leading-relaxed text-ani-muted">
+          Der häufigste Tipp gegen das schwarze Bild lautet, die Hardwarebeschleunigung auszuschalten.
+          Gemeint sind zwei Schalter: in Discord unter Einstellungen &gt; Erweitert, und im Browser,
+          in Chrome unter Einstellungen &gt; System. Danach rechnet der Computer das Video ohne die
+          Grafikkarte.
+        </p>
+        <p className="mb-4 leading-relaxed text-ani-muted">
+          Manche sehen danach ein Bild, viele nicht. Ob es klappt, hängt davon ab, wie eine bestimmte
+          Browserversion geschütztes Video verarbeitet, und ein Update kann es wieder ändern. Ohne
+          Grafikkarte ruckelt das Video außerdem leichter, und der Computer wird lauter und wärmer.
+        </p>
+        <p className="mb-6 leading-relaxed text-ani-muted">
+          Wichtiger noch: Das schwarze Bild ist der Kopierschutz von Netflix, und ihn zu umgehen
+          widerspricht den Netflix-Nutzungsbedingungen. Deshalb empfehlen wir den Schalter nicht. Wie
+          ihr Netflix stattdessen zusammen schaut und Discord trotzdem für die Stimmen nutzt, steht
+          weiter unten.
+        </p>
+
         <h2 id="what-people-try" className={h2Class}>
           Was viele versuchen, und wo die Grenzen liegen
         </h2>
@@ -207,10 +229,6 @@ export default function GermanNetflixDiscordPage() {
         </p>
         <SeoGuideBulletList
           items={[
-            {
-              title: "Hardwarebeschleunigung ausschalten",
-              body: "Manche berichten, dass das Bild danach erscheint. Das hängt davon ab, wie eine bestimmte Browserversion geschütztes Video verarbeitet, kann nach einem Update wieder aufhören und bedeutet, den Schutz zu umgehen, den Netflix vorgesehen hat.",
-            },
             {
               title: "Den ganzen Bildschirm statt des Fensters teilen",
               body: "Ändert nichts daran, wie geschütztes Video behandelt wird. Meist ist das Ergebnis dasselbe schwarze Rechteck, nur mit deinem Desktop drumherum.",

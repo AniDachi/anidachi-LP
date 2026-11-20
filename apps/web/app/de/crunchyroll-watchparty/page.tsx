@@ -18,9 +18,9 @@ import {
 import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/de/crunchyroll-watchparty";
-const PAGE_TITLE = "Crunchyroll Watchparty: Anime zusammen schauen";
+const PAGE_TITLE = "Crunchyroll Watchparty & Watch Together";
 const PAGE_DESCRIPTION =
-  "Crunchyroll hat keine Watchparty. Mit AniDachi schaut ihr Anime auf Crunchyroll zusammen und synchron in Chrome, jeder im eigenen Konto, mit Chat und Sprache.";
+  "Crunchyroll hat keine Watchparty. Mit AniDachi schaut ihr Crunchyroll zusammen und synchron in Chrome, jeder im eigenen Konto, mit Chat und Sprache.";
 const CTA_LABEL = "Crunchyroll Watchparty starten";
 
 export const metadata: Metadata = {
@@ -125,11 +125,11 @@ export default function GermanCrunchyrollWatchPartyPage() {
         description={PAGE_DESCRIPTION}
         url={PAGE_PATH}
         datePublished="2026-11-12"
-        dateModified="2026-11-12"
+        dateModified="2026-11-20"
         faq={faq}
         headings={tocHeadings}
         articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
-        h1="Crunchyroll Watchparty: Anime zusammen schauen"
+        h1="Crunchyroll Watchparty: Crunchyroll zusammen schauen"
         heroLead="Die neue Folge zusammen schauen, auch wenn ihr in verschiedenen Städten wohnt."
         heroCtaLabel={CTA_LABEL}
         heroWorksOn={["Crunchyroll", "Netflix", "YouTube"]}
