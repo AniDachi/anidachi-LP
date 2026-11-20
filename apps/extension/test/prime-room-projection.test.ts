@@ -134,6 +134,18 @@ describe("Prime room document rebind", () => {
 		expect(room.cancelFollow(retry.receipt)).toBe(false);
 	});
 
+	it("reserves the YouTube video ID from the canonical watch query exactly once", () => {
+		const room = new PrimeRoomProjection();
+		const initial = snapshot();
+		const id = "a_-23456789", sourceUrl = "https://www.youtube.com/watch?v=" + id;
+		const source = { provider: "youtube" as const, title: "Video", sourceUrl, canonicalUrl: sourceUrl, videoFingerprint: "youtube|" + id };
+		room.consume({ ...initial, source, hostState: { ...initial.hostState!, sourceUrl, videoFingerprint: source.videoFingerprint } });
+		room.setBaseline({ fingerprint: "youtube|previous" });
+		expect(room.reserveFollow("guest", "watch?v=" + id, visit)).toBeNull();
+		expect(room.reserveFollow("guest", id, visit)?.source).toEqual(source);
+		expect(room.reserveFollow("guest", id, visit)).toBeNull();
+	});
+
 	it("rejects host, paused, and mismatched-source follow requests", () => {
 		const room = new PrimeRoomProjection();
 		const initial = snapshot();

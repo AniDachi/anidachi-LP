@@ -7,7 +7,7 @@ import {
 } from "@anidachi/protocol";
 import type { BrowseBaseline } from "./prime-room-contract";
 
-import { supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
+import { catalogContentId, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 
 type Snapshot = Extract<ServerEvent, { type: "ROOM_SNAPSHOT" }>;
 type Chat = Extract<ServerEvent, { type: "REACTION" }>;
@@ -31,7 +31,7 @@ export class PrimeRoomProjection {
 		const self = snapshot?.participants.find((p) => p.id === ownerUserId);
 		if (!source || !supportsCatalogRoom(source.provider)) return null;
 		const result = canonicalizeRoomSourceUrl(source.sourceUrl, source.provider);
-		if (!result.ok || result.source.sourceUrl.split("/").at(-1) !== contentId) return null;
+		if (!result.ok || catalogContentId(result.source.sourceUrl) !== contentId) return null;
 		const { videoFingerprint: fingerprint, sourceUrl: url } = result.source;
 		if (
 			!self ||

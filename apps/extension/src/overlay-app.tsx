@@ -552,7 +552,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
 	const [roomClient] = useState(() => supportsCatalogRoom(adapter.provider) &&
-		(adapter.provider !== "crunchyroll" || (window.top === window && catalogRoomProvider(location.href) === "crunchyroll")) &&
+		((adapter.provider !== "crunchyroll" && adapter.provider !== "youtube") ||
+			(window.top === window && catalogRoomProvider(location.href) === adapter.provider)) &&
 		typeof chrome !== "undefined" && typeof chrome.runtime?.connect === "function"
 		? new PrimeRoomClient() : new RoomClient());
 	const clientRef = useRef(roomClient);
@@ -818,14 +819,17 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		useState<SourceProvider | null>(null);
 	const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
 	const confirmedPrimeRoom = useRef<string | null>(null);
+	// A normal in-page client cannot keep a YouTube room alive across documents.
+	const catalogSessionEligible = supportsCatalogRoom(adapter.provider) &&
+		(adapter.provider !== "youtube" || roomClient instanceof PrimeRoomClient);
 	useLayoutEffect(() => {
-		if (!supportsCatalogRoom(adapter.provider) || roomId !== confirmedPrimeRoom.current ||
+		if (!catalogSessionEligible || roomId !== confirmedPrimeRoom.current ||
 			(roomSourceProvider && roomSourceProvider !== adapter.provider))
 			confirmedPrimeRoom.current = null;
-		if (supportsCatalogRoom(adapter.provider) && roomId && roomSnapshotReady && roomSourceProvider === adapter.provider)
+		if (catalogSessionEligible && roomId && roomSnapshotReady && roomSourceProvider === adapter.provider)
 			confirmedPrimeRoom.current = roomId;
 		// A catalog guest can be admitted before the host publishes a playback source.
-		if (supportsCatalogReturn(adapter.provider) && !roomSourceProvider && roomSnapshotReady) {
+		if (catalogSessionEligible && supportsCatalogReturn(adapter.provider) && !roomSourceProvider && roomSnapshotReady) {
 			const admitted = storedRoomSession && storedRoomSession.roomId === roomId && participants.some(p =>
 				p.id === storedRoomSession.ownerUserId && p.participantSessionId === storedRoomSession.participantSessionId &&
 				p.connected !== false);
@@ -833,7 +837,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		}
 		onPrimeRoomChange?.(confirmedPrimeRoom.current);
 		if (!roomId) catalogFollow.setRoom(null);
-	}, [adapter.provider, roomId, roomSnapshotReady, roomSourceProvider, storedRoomSession, participants, onPrimeRoomChange, catalogFollow]);
+	}, [adapter.provider, catalogSessionEligible, roomId, roomSnapshotReady, roomSourceProvider, storedRoomSession, participants, onPrimeRoomChange, catalogFollow]);
 	const [signalingTransportReady, setSignalingTransportReady] =
 		useState<SignalingTransportReady | null>(null);
 	const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
@@ -3884,7 +3888,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						);
 					}
 					roomSourceProviderRef.current = snapshotProvider;
-					if (supportsCatalogRoom(snapshotProvider) && snapshotProvider === adapter.provider) confirmedPrimeRoom.current = event.roomId;
+					if (catalogSessionEligible && snapshotProvider === adapter.provider) confirmedPrimeRoom.current = event.roomId;
 					setRoomGeneration(event.roomGeneration);
 					setSourceGeneration(event.sourceGeneration);
 					setRoomSourceProvider(snapshotProvider);

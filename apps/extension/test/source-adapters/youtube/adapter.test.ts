@@ -60,6 +60,20 @@ describe("YouTube source adapter", () => {
     });
   });
 
+  it("suspends the previous content clock as soon as the watch owner changes", () => {
+    mockLocation("https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=" + "x".repeat(2400));
+    document.body.innerHTML = '<ytd-watch-flexy video-id="dQw4w9WgXcQ"><div id="movie_player"><video></video></div></ytd-watch-flexy>';
+    const video = document.querySelector("video")!;
+    Object.defineProperties(video, { duration: {value: 120}, readyState: {value: 4} });
+    video.currentTime = 45;
+    const adapter = youtubeDefinition.detect(video)!;
+    expect(adapter.getPlaybackSnapshot()).toMatchObject({phase: "content", contentTime: 45});
+    expect(adapter.getSourceDescriptor()?.sourceUrl).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    document.querySelector("ytd-watch-flexy")!.setAttribute("video-id", "another_id0");
+    video.currentTime = 0;
+    expect(adapter.getPlaybackSnapshot()).toMatchObject({phase: "transition", contentTime: 45});
+  });
+
   it.each([
     ["https://youtu.be/dQw4w9WgXcQ", "youtube|/dQw4w9WgXcQ"],
     ["https://youtu.be/embed/dQw4w9WgXcQ", "youtube|dQw4w9WgXcQ"],
