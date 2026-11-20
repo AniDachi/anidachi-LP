@@ -27,7 +27,7 @@ export function HomeClient({ locale = "en" }: { locale?: PageLocale } = {}) {
 			className={`${styles.page} min-h-screen bg-ani-canvas`}
 		>
 			<Hero locale={locale} />
-			<ChromeExtensionDemo />
+			<ChromeExtensionDemo title={de ? "So sieht es aus" : undefined} />
 			<HowItWorks locale={locale} />
 			<UpcomingPlatforms locale={locale} />
 			<CompareTable locale={locale} />

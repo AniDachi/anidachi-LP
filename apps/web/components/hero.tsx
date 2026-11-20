@@ -34,9 +34,22 @@ const COPY = {
     howItWorks: "See How It Works",
   },
   de: {
-    h1: "Deine Freunde schauen ohne dich.",
-    h1Accent: "Starte eine Watchparty.",
-    lead: "Watch Together für Netflix, YouTube und Crunchyroll: synchron, mit Chat, über Zeitzonen hinweg.",
+    // From md up the lines are fixed so each is shorter than the one above (the owner's
+    // upside-down pyramid). On phones the breaks are hidden and text-balance wraps the H1.
+    h1: (
+      <>
+        Filme, Serien und Anime <br className="hidden md:inline" />
+        zusammen schauen,
+        <br className="hidden md:inline" />
+      </>
+    ),
+    h1Accent: "synchron",
+    lead: (
+      <>
+        Watch Together für Netflix, Crunchyroll und YouTube, egal wo ihr seid.
+        <br className="hidden md:inline" /> Einmal Play drücken, und alle schauen mit. Freunde sind gratis dabei.
+      </>
+    ),
     howItWorks: "So funktioniert es",
   },
 } as const;

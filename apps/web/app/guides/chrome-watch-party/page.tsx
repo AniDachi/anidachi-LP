@@ -66,7 +66,7 @@ export default function ChromeWatchPartyPage() {
 		<SeoPageLayout
 			breadcrumbs={[
 				{ name: "Home", url: "/" },
-				{ name: "Watch party app", url: "/watch-party-app" },
+				{ name: "Supported streaming services", url: "/watch-party-app" },
 				{ name: "Chrome watch party", url: PAGE_PATH },
 			]}
 			title="Chrome watch party"
@@ -100,13 +100,13 @@ export default function ChromeWatchPartyPage() {
 			</h2>
 			<p className="mb-8 leading-relaxed text-ani-muted">
 				Desktop Chrome is the browser that loads the extension on the player.
-				The YouTube mobile app, Shorts, and embeds are outside the room. The
-				broader app page is{" "}
+				The YouTube mobile app, Shorts, and embeds are outside the room. Every
+				streaming service it works with is listed on{" "}
 				<Link
 					href="/watch-party-app"
 					className="text-brand-orange hover:underline"
 				>
-					watch party app
+					supported streaming services
 				</Link>
 				. Platform comparisons live on{" "}
 				<Link
@@ -144,7 +144,7 @@ export default function ChromeWatchPartyPage() {
 			</p>
 			<SeoGuideRelated
 				links={[
-					{ href: "/watch-party-app", label: "Watch party app" },
+					{ href: "/watch-party-app", label: "Supported streaming services" },
 					{ href: "/extension", label: "Install AniDachi" },
 					{ href: "/watch-crunchyroll-together",
 						label: "Crunchyroll watch party" },
