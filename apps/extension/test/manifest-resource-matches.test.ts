@@ -63,7 +63,7 @@ function manifest() {
 		background: { service_worker: "background.js" },
 		web_accessible_resources: [
 			{ resources: ["Anidachi_logo.png"], matches: [...origins] },
-			{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: ["https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
+			{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: ["https://www.netflix.com/*", "https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
 		],
 		content_scripts: [
 			{ matches: contentMatches, js: ["content.js"] },

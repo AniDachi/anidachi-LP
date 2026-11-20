@@ -5,7 +5,7 @@ import {
 import {getStoredAuthTokens} from "./auth-tokens";
 import { loadRoomSessionForTab } from "./room-session-storage";
 import {isAttachedPrimePlayerDocument} from "./prime-room-background";
-import { isPrimeBrowsingSender, isPrimePlayerPageSender, isPrimeRoomBrowsingPage, parsePrimePageUrl } from "./source-adapters/primevideo/url";
+import { catalogRoomProvider, catalogPlayerProvider, isCatalogRoomSender, isCatalogPlayerSender } from "./catalog-room-routes";
 
 export function installPrimeMediaBackground() {
   chrome.runtime.onMessage.addListener((message, sender, reply) => {
@@ -23,9 +23,10 @@ function owner(scope: PrimeMediaScope, request: OwnerAccess) {
 async function confirmed(tabId: number, documentId?: string): Promise<PrimeMediaScope | null> {
   const [room, tab, auth] = await Promise.all([loadRoomSessionForTab(tabId), chrome.tabs.get(tabId), getStoredAuthTokens()]);
   if (!room || room.ownerUserId !== auth?.user.id || !tab.url) return null;
-  if (!isPrimeRoomBrowsingPage(tab.url) &&
-      (!parsePrimePageUrl(tab.url) || !await isAttachedPrimePlayerDocument(tab, room, documentId))) return null;
-  return {tabId, roomId: room.roomId, participantSessionId: room.participantSessionId};
+  const catalog = catalogRoomProvider(tab.url);
+  const provider = catalog ?? catalogPlayerProvider(tab.url);
+  if (!provider || (!catalog && !await isAttachedPrimePlayerDocument(tab, room, documentId))) return null;
+  return {tabId, provider, roomId: room.roomId, participantSessionId: room.participantSessionId};
 }
 
 interface AccessRequest {
@@ -39,7 +40,7 @@ async function handle(request: AccessRequest, sender: chrome.runtime.MessageSend
   const tabId = sender.tab?.id;
   const senderPage = sender.url?.split(/[?#]/)[0];
   if (request.action === "ticket") {
-    if (tabId === undefined || !sender.documentId || (!isPrimeBrowsingSender(sender) && !isPrimePlayerPageSender(sender)) ||
+    if (tabId === undefined || !sender.documentId || (!isCatalogRoomSender(sender) && !isCatalogPlayerSender(sender)) ||
         typeof request.participantId !== "string") return null;
     const scope = await confirmed(tabId, sender.documentId);
     return scope && owner(scope, {action: "ticket", participantId: request.participantId});

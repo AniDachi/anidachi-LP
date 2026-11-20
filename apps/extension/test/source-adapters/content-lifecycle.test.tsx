@@ -65,6 +65,8 @@ describe("content adapter lifecycle", () => {
 		["https://www.amazon.com/gp/video/storefront", true],
 		["https://www.amazon.com/dp/B000000000", false],
 		["https://www.amazon.com/cart", false],
+		["https://www.netflix.com/browse?jbv=123", true],
+		["https://www.netflix.com/account", false],
 	])("does not mount a browsing shell without a confirmed live session on %s", async (href, eligible) => {
 		vi.stubGlobal("location", new URL(String(href)));
 		const lookupPrimeRoom = vi.fn(async () => null);
@@ -91,8 +93,8 @@ describe("content adapter lifecycle", () => {
 		runtime.dispose();
 	});
 
-	it.each(["anidachiRoom=other-room", "anidachiResume=%7B%7D"])("keeps the active room controls when a catalog document has a conflicting %s", async hash => {
-		vi.stubGlobal("location", new URL("https://www.primevideo.com/search#" + hash));
+	it.each(["https://www.primevideo.com/search#anidachiRoom=other-room", "https://www.primevideo.com/search#anidachiResume=%7B%7D","https://www.netflix.com/browse#anidachiRoom=other-room","https://www.netflix.com/browse#anidachiResume=%7B%7D"])("keeps the active room controls when a catalog document has a conflicting %s", async href => {
+		vi.stubGlobal("location", new URL(href));
 		const record = {version: 1 as const, revision: 1, roomId: "room", ownerUserId: "owner", participantSessionId: "actor",
 			cameraEnabled: true, voiceMode: "open-mic" as const, browsingBaseline: null};
 		const mount = vi.fn((adapter: VideoAdapter): MountedOverlay => ({ adapter, dispose: vi.fn(), suspend: vi.fn(), relocate: vi.fn(), replaceAdapter: vi.fn() }));
@@ -168,6 +170,28 @@ describe("content adapter lifecycle", () => {
 		docked = true;
 		expect(runtime.reconcile()).toBe("relocated");
 		expect(mounted.replaceAdapter).toHaveBeenCalledWith(adapter);
+		expect(mounted.dispose).not.toHaveBeenCalled();
+		runtime.dispose();
+	});
+
+	it("docks an admitted Netflix room in the catalog and binds its next player without remounting", () => {
+		const url = "https://www.netflix.com";
+		vi.stubGlobal("location", new URL(url + "/watch/123"));
+		const adapter = Object.assign(createAdapter(), {provider: "netflix" as const});
+		const next = Object.assign(createAdapter(), {provider: "netflix" as const});
+		const mounted = {...createMountedOverlayStub(adapter), hasPrimeRoom: () => true, dockPrimeRoom: vi.fn()};
+		const mount = vi.fn(() => mounted);
+		let detection: AdapterDetectionResult = {status: "ready", adapter};
+		const runtime = startContentLifecycle({detect: () => detection, mount, ensureStyles() {}, installKeyboardGuard: () => vi.fn(), startProviderStudy: () => null});
+		vi.stubGlobal("location", new URL(url + "/browse"));
+		detection = {status:"blocked", provider:"netflix"};
+		runtime.reconcile();
+		expect(mounted.dockPrimeRoom).toHaveBeenCalledOnce();
+		vi.stubGlobal("location", new URL(url + "/watch/456"));
+		detection = {status:"ready", adapter:next};
+		runtime.reconcile();
+		expect(mounted.replaceAdapter).toHaveBeenCalledWith(next);
+		expect(mount).toHaveBeenCalledOnce();
 		expect(mounted.dispose).not.toHaveBeenCalled();
 		runtime.dispose();
 	});

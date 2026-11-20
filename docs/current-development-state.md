@@ -1,5 +1,12 @@
 # Current Development State
 
+## Netflix rooms in the catalog — November 20, 2026
+
+The Netflix staging candidate keeps a confirmed room and its call when a participant
+returns to the catalog. Participants browse independently until the host starts
+playback. The guest then opens the host's exact watch ID. Device consent is requested
+in the current tab. Live two-profile acceptance is required before release.
+
 ## Prime rooms in the catalog — November 19, 2026
 
 The current Prime candidate keeps a confirmed room open when its player closes,

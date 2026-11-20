@@ -15,7 +15,7 @@ vi.mock("../src/p2p-ice", () => ({loadP2PIceServers: async () => [], refreshP2PI
 vi.mock("../src/prime-media-owner-access", () => ({PrimeMediaOwnerAccess: class {constructor() {return mocks.access;}}}));
 import {createPrimeRoomMedia} from "../src/prime-room-media";
 
-const room = {tabId: 5, roomId: "room", roomToken: "test", participantSessionId: "self"};
+const room = {provider:"primevideo" as const, tabId: 5, roomId: "room", roomToken: "test", participantSessionId: "self"};
 const local: Participant = {id:"u", participantSessionId:"self", role:"host",displayName:"Host",
   cameraEnabled:false, mediaSeat:"none", syncStatus:"synced", lastSeenAt:1, connected:true};
 const first: RoomMediaV2Snapshot = {type:"ROOM_MEDIA_SNAPSHOT",roomId:"room",roomGeneration:1,snapshotSequence:1,

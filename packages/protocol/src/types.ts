@@ -119,7 +119,7 @@ export const RoomCapabilitiesSchema = z.object({
 
 export const PlaybackStateSchema = z.object({
   videoFingerprint: VideoFingerprintSchema,
-  /** Identifies a visit to the Prime player, including reopening the same title. */
+  /** Player visit for catalog rooms, including reopening the same title. Wire name retained for existing clients. */
   primePlayerVisit: z.uuid().optional(),
   sourceUrl: UrlSchema.optional(),
   playing: z.boolean(),

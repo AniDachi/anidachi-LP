@@ -8,6 +8,9 @@ import {
 } from "@anidachi/protocol";
 import type { BrowseBaseline } from "./prime-room-contract";
 
+import { supportsCatalogRoom } from "./catalog-room-routes";
+import { netflixWatchId } from "./source-adapters/netflix/contract";
+
 type Snapshot = Extract<ServerEvent, { type: "ROOM_SNAPSHOT" }>;
 type Chat = Extract<ServerEvent, { type: "REACTION" }>;
 
@@ -28,14 +31,17 @@ export class PrimeRoomProjection {
 		const state = snapshot?.hostState;
 		const source = snapshot?.source;
 		const self = snapshot?.participants.find((p) => p.id === ownerUserId);
-		const fingerprint = primeVideoFingerprint(contentId);
+		if (!source || !supportsCatalogRoom(source.provider)) return null;
+		const netflix = source.provider === "netflix";
+		if (netflix && netflixWatchId(source.sourceUrl) !== contentId) return null;
+		const fingerprint = netflix ? 'netflix|watch/' + contentId : primeVideoFingerprint(contentId);
+		const url = netflix ? 'https://www.netflix.com/watch/' + contentId : primeVideoSourceUrl(contentId);
 		if (
 			!self ||
 			self.role === "host" ||
 			self.connected === false ||
 			!state?.playing ||
-			source?.provider !== "primevideo" ||
-			source.sourceUrl !== primeVideoSourceUrl(contentId) ||
+			source.sourceUrl !== url ||
 			source.videoFingerprint !== fingerprint ||
 			state.videoFingerprint !== fingerprint ||
 			state.primePlayerVisit !== visit ||
@@ -88,7 +94,7 @@ export class PrimeRoomProjection {
 		// updates only to guests. Retain our last sent position on a verified source.
 		const snapshot = this.snapshot;
 		if (
-			snapshot?.source?.provider === "primevideo" &&
+			snapshot?.source && supportsCatalogRoom(snapshot.source.provider) &&
 			snapshot.source.videoFingerprint === state.videoFingerprint &&
 			snapshot.participants.some(
 				(p) =>
@@ -109,7 +115,7 @@ export class PrimeRoomProjection {
 		if (
 			!snapshot ||
 			!state?.playing ||
-			source?.provider !== "primevideo" ||
+			!source || !supportsCatalogRoom(source.provider) ||
 			source.videoFingerprint !== state.videoFingerprint ||
 			!snapshot.participants.some(
 				(p) =>

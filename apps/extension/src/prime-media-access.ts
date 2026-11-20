@@ -1,6 +1,7 @@
 import type { RoomMediaKind } from "@anidachi/protocol";
 
 export interface PrimeMediaScope {
+  provider: import("./catalog-room-routes").CatalogRoomProvider;
   tabId: number;
   roomId: string;
   participantSessionId: string;
@@ -31,5 +32,5 @@ export function deviceConstraints(device: RoomMediaKind): MediaStreamConstraints
 }
 
 export function sameMediaScope(a: PrimeMediaScope, b: PrimeMediaScope) {
-  return a.tabId === b.tabId && a.roomId === b.roomId && a.participantSessionId === b.participantSessionId;
+  return a.provider === b.provider && a.tabId === b.tabId && a.roomId === b.roomId && a.participantSessionId === b.participantSessionId;
 }

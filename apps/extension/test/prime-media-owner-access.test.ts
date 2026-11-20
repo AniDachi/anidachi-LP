@@ -3,7 +3,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {PrimeMediaOwnerAccess} from "../src/prime-media-owner-access";
 const send = vi.fn();
 const prompts = vi.fn();
-const scope = {tabId:3,roomId:"room",participantSessionId:"me"};
+const scope = {provider:"primevideo" as const, tabId:3,roomId:"room",participantSessionId:"me"};
 let owner: PrimeMediaOwnerAccess;
 beforeEach(() => {
   send.mockReset();

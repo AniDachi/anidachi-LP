@@ -4,6 +4,7 @@ import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-h
 import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
 import type { LivePrimeRoomSession } from "./prime-room-contract";
+import { supportsCatalogRoom } from "./catalog-room-routes";
 import { followPrimeRoom } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import type {
@@ -549,7 +550,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const playerRoomClosedRef = useRef(false);
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
-	const [roomClient] = useState(() => adapter.provider === "primevideo" &&
+	const [roomClient] = useState(() => supportsCatalogRoom(adapter.provider) &&
 		typeof chrome !== "undefined" && typeof chrome.runtime?.connect === "function"
 		? new PrimeRoomClient() : new RoomClient());
 	const clientRef = useRef(roomClient);
@@ -557,11 +558,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	adapterActiveRef.current = adapterActive;
 	const [catalogFollow] = useState(() => new PrimeBrowsingRoom());
 	const restoringBaseline = useRef(initialPrimeRoom);
-	const [primeVisit] = useState(() => new PrimeHostVisit());
+	const [primeVisit] = useState(() => new PrimeHostVisit(Boolean(initialPrimeRoom)));
 	const browseMode = useRef(primeBrowsing);
 	browseMode.current = primeBrowsing;
 	useLayoutEffect(() => {
-		if (adapter.provider !== "primevideo") return;
+		if (!supportsCatalogRoom(adapter.provider)) return;
 		const currentRoom = roomIdRef.current;
 		if (!currentRoom) return;
 		catalogFollow.setRoom(currentRoom);
@@ -814,9 +815,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
 	const confirmedPrimeRoom = useRef<string | null>(null);
 	useLayoutEffect(() => {
-		if (adapter.provider !== "primevideo" || roomId !== confirmedPrimeRoom.current)
+		if (!supportsCatalogRoom(adapter.provider) || roomId !== confirmedPrimeRoom.current)
 			confirmedPrimeRoom.current = null;
-		if (adapter.provider === "primevideo" && roomId && roomSnapshotReady && roomSourceProvider === "primevideo")
+		if (supportsCatalogRoom(adapter.provider) && roomId && roomSnapshotReady && roomSourceProvider === adapter.provider)
 			confirmedPrimeRoom.current = roomId;
 		onPrimeRoomChange?.(confirmedPrimeRoom.current);
 		if (!roomId) catalogFollow.setRoom(null);
@@ -3663,7 +3664,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	const applyHostState = useCallback(
 		async (state: PlaybackState, source?: WatchSourceDescriptor) => {
-			if (roomSourceProviderRef.current === "primevideo" && roomIdRef.current) {
+			if (supportsCatalogRoom(roomSourceProviderRef.current) && roomIdRef.current) {
 				catalogFollow.setRoom(roomIdRef.current);
 				catalogFollow.setBrowsing(browseMode.current);
 				catalogFollow.receive(state, source, (target, room, signal) =>
@@ -3858,7 +3859,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						);
 					}
 					roomSourceProviderRef.current = snapshotProvider;
-					if (snapshotProvider === "primevideo") confirmedPrimeRoom.current = event.roomId;
+					if (supportsCatalogRoom(snapshotProvider) && snapshotProvider === adapter.provider) confirmedPrimeRoom.current = event.roomId;
 					setRoomGeneration(event.roomGeneration);
 					setSourceGeneration(event.sourceGeneration);
 					setRoomSourceProvider(snapshotProvider);
@@ -4232,7 +4233,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			setRoomSessionLoadError(null);
 			roomReconnectSuppressedRef.current = false;
 			roomIdRef.current = nextRoomId;
-			if (createdRoomProvider === "primevideo") {
+			if (supportsCatalogRoom(createdRoomProvider)) {
 				const restore = restoringBaseline.current;
 				catalogFollow.setRoom(nextRoomId);
 				catalogFollow.setBrowsing(browseMode.current,
@@ -4655,7 +4656,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					const live = await hasLivePrimeRoomSession(record);
 					if (!current()) return;
 					if (live) {
-						await connectToRoomAsParticipant(reconnectRoomId, participant, "", record, null, current, "primevideo");
+						await connectToRoomAsParticipant(reconnectRoomId, participant, "", record, null, current, adapter.provider);
 					} else {
 						await retireUnattachedPrimeRoom(record);
 						if (!current()) return;
@@ -5277,7 +5278,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					return false;
 				}
 				setPrivilegedRoomAuthority(initialPrimeRoom.privilegedRoomAuthority ?? null);
-				return connectToRoomAsParticipant(initialPrimeRoom.roomId, participant, "", storedRoomSession, null, current, "primevideo");
+				return connectToRoomAsParticipant(initialPrimeRoom.roomId, participant, "", storedRoomSession, null, current, adapter.provider);
 			})().catch(() => false).then(attached => {
 				if (!attached && activePlayer.current) retireFailedRestore();
 			});

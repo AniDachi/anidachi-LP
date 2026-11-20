@@ -34,7 +34,7 @@ describe("Prime-only media on ambiguous Amazon product routes",() => {
     data.player.mockResolvedValue(true); send.mockResolvedValue("ticket");
     expect(await request({action:"ticket",participantId:"other"},sender)).toBe("ticket");
     expect(send).toHaveBeenCalledWith(expect.objectContaining({channel:mediaOwnerChannel,
-      scope:{tabId:42,roomId:"room",participantSessionId:"session"}}));
+      scope:{provider:"primevideo",tabId:42,roomId:"room",participantSessionId:"session"}}));
   });
   it("checks the room tab and the extension child document before routing device consent", async () => {
     data.player.mockResolvedValue(true);
@@ -46,7 +46,7 @@ describe("Prime-only media on ambiguous Amazon product routes",() => {
     expect(send).not.toHaveBeenCalled();
     expect(await request({action:"permission",ticket}, sender)).toBe("microphone");
     expect(send).toHaveBeenCalledWith({channel:mediaOwnerChannel,
-      scope:{tabId:42,roomId:"room",participantSessionId:"session"},
+      scope:{provider:"primevideo",tabId:42,roomId:"room",participantSessionId:"session"},
       request:{action:"permission",ticket,documentId:"document"}});
     data.player.mockResolvedValue(false);
     expect(await request({action:"settle",ticket,allowed:true},sender)).toBeNull();

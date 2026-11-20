@@ -13,8 +13,13 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { WebSocketServer } from "ws";
 
-const provider = "https://www.primevideo.com";
-const detail = provider + "/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA";
+const netflix = process.argv.includes("--netflix");
+const service = netflix ? "netflix" : "primevideo";
+const provider = netflix ? "https://www.netflix.com" : "https://www.primevideo.com";
+const path = netflix ? "/watch/123" : "/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA";
+const detail = provider + path;
+const catalog = provider + (netflix ? "/browse" : "/storefront");
+const fingerprint = service + "|" + path.slice(1);
 const account = {
 	id: "user1",
 	displayName: "Host",
@@ -48,14 +53,14 @@ const snapshot = {
 	sourceGeneration: 1,
 	serverSeq: 1,
 	source: {
-		provider: "primevideo",
-		videoFingerprint: "primevideo|detail/0AAAAAAAAAAAAAAAAAAAAAAAAA",
+		provider: service,
+		videoFingerprint: fingerprint,
 		title: "Fixture",
 		canonicalUrl: detail,
 		sourceUrl: detail,
 	},
 	hostState: {
-		videoFingerprint: "primevideo|detail/0AAAAAAAAAAAAAAAAAAAAAAAAA",
+		videoFingerprint: fingerprint,
 		playing: true,
 		hostTime: 22,
 		updatedAt: 100,
@@ -182,7 +187,7 @@ try {
 				client.connect({
 					roomId: "room1", roomToken: action === "start" ? "local-test" : "",
 					participant: ${JSON.stringify(participant)}, participantSessionId: "exact-tab-session",
-					videoFingerprint: "primevideo|detail/0AAAAAAAAAAAAAAAAAAAAAAAAA", onEvent() {}, onStatus() {},
+					videoFingerprint: ${JSON.stringify(fingerprint)}, onEvent() {}, onStatus() {},
 					onTransportReady(ready) { document.body.dataset.ready = ready.senderConnectionId; }
 				});
 				if (action === "cancel-pending") client.close();
@@ -320,7 +325,7 @@ try {
 	await expectMovingCamera();
 	assert.equal(extraPages, 0);
 	assert.equal(closed, 0);
-	await navigate(provider + "/region/na/mystuff/watchlist");
+	await navigate(provider + (netflix ? "/browse/my-list" : "/region/na/mystuff/watchlist"));
 	await act("probe");
 	await page.waitForFunction(
 		() => document.body.dataset.probe && document.body.dataset.probe !== "null",
@@ -344,7 +349,7 @@ try {
 	);
 	assert.deepEqual([opened, joined, closed, pauses], [1, 1, 0, 1]);
 
-	for (const url of [provider + "/region/na/", provider + "/region/na/", provider + "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB"]) {
+	for (const url of [catalog, catalog, provider + (netflix ? "/watch/456" : "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB")]) {
 		await navigate(url);
 		await act("resume");
 		await ready();
@@ -360,7 +365,7 @@ try {
 	await act("leave");
 	await expectClosed(2);
 	await start();
-	await navigate(provider + "/storefront");
+	await navigate(catalog);
 	await act("cancel-pending");
 	await expectClosed(3);
 	await start();
@@ -389,11 +394,11 @@ try {
 		{ record, provider },
 	);
 	assert.equal(staleRetirement, false);
-	await navigate(provider + "/storefront");
+	await navigate(catalog);
 	await act("retire");
 	await expectClosed(5);
 	await start();
-	await navigate(provider + "/storefront");
+	await navigate(catalog);
 	for (const socket of server.clients)
 		socket.send(
 			JSON.stringify({
@@ -420,7 +425,7 @@ try {
 		account,
 	);
 	await start();
-	await navigate(provider + "/storefront");
+	await navigate(catalog);
 	// A page that never mounts the UI must not preserve a detached call indefinitely.
 	await expectClosed(8, 40_000);
 	const confirmedRecord = () =>
@@ -435,7 +440,7 @@ try {
 	for (let i = 0; (await confirmedRecord()) && i < 100; i++) await delay(50);
 	assert.equal(await confirmedRecord(), null);
 	await start();
-	await navigate(provider + "/storefront");
+	await navigate(catalog);
 	await act("resume");
 	await ready();
 	for (const socket of server.clients) socket.terminate();
@@ -447,7 +452,7 @@ try {
 	await page.close();
 	await expectClosed(10);
 	assert.deepEqual([opened, joined, closed], [10, 10, 10]);
-	console.log("Passed Prime camera rendering, socket continuity and teardown in Chromium.");
+	console.log("Passed", service, "camera rendering, socket continuity and teardown in Chromium.");
 } finally {
 	await context?.close();
 	for (const socket of server.clients) socket.terminate();
