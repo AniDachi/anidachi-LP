@@ -9,6 +9,13 @@ navigation and return to the same call. Real-browser checks cover media across
 document replacement and stopping capture when the room or account changes.
 The two-account Amazon staging check is a separate acceptance step.
 
+November 20 regression coverage follows a guest from the player through Home and
+My Stuff → Watchlist, including a full document load. The catalog overlay
+measures its own bounds when there is no player. A camera tile requests a fresh
+binding during handoff and reveals the image after its first video frame.
+Check both room membership and advancing, visible frames before accepting the
+loaded staging build.
+
 ## Prime Amazon readiness follow-up — 2026-11-18
 
 [Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)

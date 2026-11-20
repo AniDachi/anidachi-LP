@@ -668,6 +668,17 @@ export function mountOverlay(
   const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
+  function placeHost(target: HTMLElement) {
+    if (adapter.provider === "primevideo" && target.moveBefore && target.isConnected && host.isConnected) {
+      target.moveBefore(host, null);
+      return;
+    }
+    // append() reloads child documents. Keep the participant fallback visible until the new frame paints.
+    for (const frame of shadow.querySelectorAll("iframe[data-prime-camera-playing]"))
+      frame.removeAttribute("data-prime-camera-playing");
+    target.append(host);
+  }
+
   let primeRoomId: string | null = null;
   let restoringRoom = Boolean(options.initialPrimeRoom);
   let docked = false;
@@ -683,7 +694,7 @@ export function mountOverlay(
     primeRoomId = room;
     if (room) {
       restoringRoom = false;
-      if (docked && !host.isConnected) document.documentElement.append(host);
+      if (docked && !host.isConnected) placeHost(document.documentElement);
     } else if (previous) lostPrimeRoom();
   }, () => dockPrimeRoom(), lostPrimeRoom);
 
@@ -802,7 +813,7 @@ export function mountOverlay(
     const target = overlayBinding.mountTarget;
     prepareOverlayContainer(target);
     if (host.parentElement !== target) {
-      target.append(host);
+      placeHost(target);
     }
     syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget);
     if (observedTarget !== target) {
@@ -871,7 +882,7 @@ export function mountOverlay(
     deactivateAdapterBinding();
     docked = true;
     Object.assign(host.style, { position: "fixed", inset: "0", width: "100%", height: "100%", borderRadius: "0" });
-    if (primeRoomId) document.documentElement.append(host);
+    if (primeRoomId) placeHost(document.documentElement);
     renderer.render(adapter, false, true);
   }
   return {
