@@ -230,7 +230,7 @@ export default function AniDachiVsRavePage() {
         links={[
           { href: "/guides/does-rave-work-with-youtube", label: "Does Rave work with YouTube?" },
                     { href: "/guides/rave-alternatives-for-anime", label: "Rave alternatives for anime" },
-                    { href: "/best-apps-watch-anime-together-long-distance", label: "Best Apps for Watching Anime Together Long Distance" },
+                    { href: "/best-apps-watch-anime-together-long-distance", label: "Best long-distance anime apps" },
                     { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
                     { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether" },
                     { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },

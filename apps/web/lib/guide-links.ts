@@ -39,7 +39,7 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/guides/how-to-watch-anime-together-without-screen-share",
-		label: "How to Watch Anime Together Without Screen Share",
+		label: "Anime without screen share",
 		tags: ["template-c", "how-to-core", "online", "crunchyroll", "watch-party"],
 	},
 	{
@@ -477,7 +477,7 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/best-apps-watch-anime-together-long-distance",
-		label: "Best Apps to Watch Anime Together Long Distance",
+		label: "Best long-distance anime apps",
 		tags: ["listicle", "long-distance", "crunchyroll", "pillar-watch-anime"],
 	},
 	{

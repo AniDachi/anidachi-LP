@@ -10,14 +10,14 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Watch Anime Together Without Screen Share",
+  title: "Skip Screen Share: Sync Anime With Friends Instead",
   description:
-    "How to watch anime together without screen share: use synced Crunchyroll watchrooms so everyone streams locally in better quality.",
+    "Discord screen share often gives friends a blurry or black anime feed. Sync playback instead, so everyone plays the episode on their own account.",
   alternates: {
     canonical: "/guides/how-to-watch-anime-together-without-screen-share",
   },
   openGraph: {
-    title: "Watch Anime Together Without Screen Share",
+    title: "Skip Screen Share: Sync Anime With Friends Instead",
     description:
       "Skip low-quality screen share and watch anime together with synced local Crunchyroll playback.",
     url: "/guides/how-to-watch-anime-together-without-screen-share",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Watch Anime Together Without Screen Share",
+    title: "Skip Screen Share: Sync Anime With Friends Instead",
     description:
       "Skip low-quality screen share and watch anime together with synced local Crunchyroll playback.",
     images: [BRAND_OG_PATH],
@@ -98,12 +98,12 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
           { name: "Home", url: "/" },
           { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
-            name: "Watch anime together without screen share",
+            name: "Anime without screen share",
             url: "/guides/how-to-watch-anime-together-without-screen-share",
           },
         ]}
-        title="How to Watch Anime Together Without Screen Share"
-        description="How to watch anime together without screen share: use synced Crunchyroll watchrooms so everyone streams locally in better quality."
+        title="How to Watch Anime With Friends Without Screen Share"
+        description="Discord screen share often gives friends a blurry or black anime feed. Sync playback instead, so everyone plays the episode on their own account."
         url="/guides/how-to-watch-anime-together-without-screen-share"
         datePublished="2026-07-12"
         dateModified="2026-10-01"
@@ -115,7 +115,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
         watchroom="anime"
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
-          How to Watch Anime Together Without Screen Share
+          How to Watch Anime With Friends Without Screen Share
         </h1>
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
