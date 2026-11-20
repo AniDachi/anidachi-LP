@@ -7,11 +7,14 @@ import { DE_OG_LOCALE } from "@/lib/locale/de-copy";
 import { deHomeFAQ } from "@/lib/locale/de-home-faq";
 
 const PAGE_PATH = "/de";
-// Keyword Planner, German, DE/AT/CH (12 Nov 2026): "watch together" 18,100, "watchparty" 3,600,
-// "zusammen schauen" phrases about 300 in total. Platform searches go to the German platform pages.
-const PAGE_TITLE = "Watch Together & Watchparty: zusammen schauen";
+// Same positioning as the English homepage (ANI-36): movies, shows and anime together, in sync.
+// Keyword Planner, German, DE/AT/CH (20 Nov 2026): "watch together" 18,100 and "watchparty" 3,600
+// carry the demand; "filme zusammen schauen" and close variants add up to about 250, "serien
+// zusammen schauen" 10. So the title keeps "Watchparty" and the films-and-shows phrase, and
+// "Watch Together" moves to the description and the hero subhead. The layout adds " | AniDachi".
+const PAGE_TITLE = "Watchparty: Filme, Serien, Anime zusammen schauen";
 const PAGE_DESCRIPTION =
-  "Watchparty und Watch Together mit Freunden: Netflix, YouTube und Crunchyroll synchron zusammen schauen, jeder im eigenen Konto. Mit Chat und Videoanruf.";
+  "Watch Together und Watchparty: Filme, Serien und Anime auf Netflix, Crunchyroll und YouTube synchron mit Freunden schauen. Freunde machen kostenlos mit.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
