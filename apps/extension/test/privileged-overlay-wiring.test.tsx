@@ -101,7 +101,11 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
-	it("keeps an admitted Netflix guest in the catalog before the first playback source arrives", async () => {
+	it.each(["netflix", "crunchyroll"] as const)("keeps an admitted %s guest in the catalog and restores the host position", async provider => {
+		const origin = "https://www." + provider + ".com";
+		const page = provider === "crunchyroll" ? "/de/watch/80025313/episode" : "/watch/80025313";
+		const navigate = vi.fn();
+		vi.stubGlobal("location", Object.assign(new URL(origin + page + "#anidachiRoom=room-a"), { assign: navigate }));
 		installActiveHostRoomRuntime();
 		const record = confirmedRoomSession();
 		const send = vi.mocked(chrome.runtime.sendMessage);
@@ -115,10 +119,9 @@ describe("privileged overlay wiring", () => {
 		});
 		Object.defineProperty(chrome.runtime, "connect", { value: vi.fn(), configurable: true });
 		const connect = vi.spyOn(PrimeRoomClient.prototype, "connect").mockImplementation(options => options.onStatus("connected"));
-		history.replaceState(null, "", "#anidachiRoom=room-a");
 		const onRoom = vi.fn();
 		const view = await renderOverlay(adapter => Object.assign(adapter, {
-			id: "netflix", provider: "netflix", getFingerprint: () => "netflix|watch/80025313",
+			id: provider, provider, getFingerprint: () => provider + "|watch/80025313",
 			playbackPolicy: {},
 			getSourceDescriptor: () => null,
 		}), undefined, onRoom);
@@ -137,12 +140,12 @@ describe("privileged overlay wiring", () => {
 			expect(onRoom).not.toHaveBeenCalledWith(record.roomId);
 			await snapshot(record.participantSessionId, true, 3);
 			expect(onRoom).toHaveBeenLastCalledWith(record.roomId);
-			const sourceUrl = "https://www.netflix.com/watch/80025313";
-			const source = {provider: "netflix" as const, sourceUrl, canonicalUrl: sourceUrl, videoFingerprint: view.adapter.getFingerprint(), title: "Episode"};
+			const sourceUrl = origin + "/watch/80025313";
+			const source = {provider, sourceUrl, canonicalUrl: sourceUrl, videoFingerprint: view.adapter.getFingerprint(), title: "Episode"};
 			const state = {sourceUrl, videoFingerprint: source.videoFingerprint, hostTime: 47, updatedAt: Date.now(), playbackRate: 1, playing: true, hostSurface: "player" as const};
 			const update = (next: typeof state | Omit<typeof state, "hostSurface"> & {hostSurface?: "catalog"}) =>
 				act(async () => options.onEvent({type: "HOST_STATE", state: next}));
-			const action = () => view.container.querySelector<HTMLButtonElement>(".netflix-return-to-video");
+			const action = () => view.container.querySelector<HTMLButtonElement>(".catalog-return-to-video");
 			await act(async () => options.onEvent({type: "ROOM_SNAPSHOT", roomId: record.roomId, roomGeneration: 1,
 				sourceGeneration: 1, serverSeq: 4, source, hostState: state, participants: [
 					{...guestParticipant(), role: "host"}, {...hostParticipant(), role: "viewer", participantSessionId: record.participantSessionId},
@@ -151,15 +154,14 @@ describe("privileged overlay wiring", () => {
 			vi.spyOn(document.documentElement, "lang", "get").mockReturnValue("ru");
 			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false} primeBrowsing onPrimeRoomChange={onRoom} />));
 			expect(action()?.textContent).toBe("Back to video");
-			const navigate = vi.spyOn(window.location, "assign").mockImplementation(() => {});
 			await update({...state, playing: false});
 			await click(action()!);
-			expect(navigate).toHaveBeenCalledExactlyOnceWith(sourceUrl);
+			expect(navigate).toHaveBeenCalledExactlyOnceWith(provider === "crunchyroll" ? origin + "/de/watch/80025313" : sourceUrl);
 			await update({...state, playing: false, hostSurface: "catalog"});
 			expect(action()).toBeNull();
 			await update({...state, hostSurface: undefined});
 			expect(action()).toBeNull();
-			await update({...state, sourceUrl: "https://www.netflix.com/watch/99"});
+			await update({...state, sourceUrl: origin + "/watch/99"});
 			expect(action()).toBeNull();
 			const seek = vi.spyOn(view.adapter, "seek");
 			await update({...state, hostTime: 83, playing: false});
@@ -194,11 +196,12 @@ describe("privileged overlay wiring", () => {
 		} finally { await act(async () => runtime.dispose()); }
 	});
 
-	it.each(["primevideo", "netflix"] as const)("reattaches the confirmed %s actor in a fresh catalog document and rebinds the player without admission", async provider => {
-		const netflix = provider === "netflix";
-		const origin = netflix ? "https://www.netflix.com" : "https://www.primevideo.com";
+	it.each(["primevideo", "netflix", "crunchyroll"] as const)("reattaches the confirmed %s actor in a fresh catalog document and rebinds the player without admission", async provider => {
+		const prime = provider === "primevideo";
+		const origin = "https://www." + provider + ".com";
+		const catalog = { primevideo: "/storefront/home", netflix: "/browse", crunchyroll: "/fr/videos/popular" }[provider];
 		installActiveHostRoomRuntime();
-		vi.stubGlobal("location", new URL(origin + (netflix ? "/browse" : "/storefront/home")));
+		vi.stubGlobal("location", new URL(origin + catalog));
 		const preview = document.createElement("video");
 		document.body.append(preview);
 		const record = { ...confirmedRoomSession(), browsingBaseline: { fingerprint: "old-title" }, privilegedRoomAuthority: roomAuthority() };
@@ -247,7 +250,7 @@ describe("privileged overlay wiring", () => {
 			expect(firstShell?.isConnected).toBe(false);
 			expect(detach).toHaveBeenCalled();
 			expect(close).not.toHaveBeenCalled();
-			vi.stubGlobal("location", new URL(origin + (netflix ? "/browse/my-list" : "/region/na/mystuff/watchlist")));
+			vi.stubGlobal("location", new URL(origin + ({ primevideo: "/region/na/mystuff/watchlist", netflix: "/browse/my-list", crunchyroll: "/fr/watchlist" }[provider])));
 			await loadDocument();
 			await flushMountedWork();
 			const shell = document.querySelector<HTMLElement>("anidachi-overlay-root");
@@ -255,12 +258,12 @@ describe("privileged overlay wiring", () => {
 			expect(shell).not.toBe(firstShell);
 			expect(connect.mock.calls[1]?.[0]).toMatchObject({roomId: record.roomId, participantSessionId: record.participantSessionId, roomToken: ""});
 			expect(background.mock.calls.some(([message]: any) => message.type === "ANIDACHI_WATCH_HISTORY_V3")).toBe(false);
-			for (const id of netflix ? ["123", "456"] : [primeCloseIds.first, primeCloseIds.second]) {
+			for (const id of prime ? [primeCloseIds.first, primeCloseIds.second] : ["123", "456"]) {
 				const container = document.createElement("div");
 				const video = document.createElement("video");
 				container.append(video);
 				document.body.append(container);
-				const path = (netflix ? "watch/" : "detail/") + id;
+				const path = (prime ? "detail/" : "watch/") + id;
 				const sourceUrl = origin + "/" + path;
 				const videoFingerprint = provider + "|" + path;
 				detected = Object.assign(createAdapter(container, video), {
@@ -275,7 +278,7 @@ describe("privileged overlay wiring", () => {
 			detected!.container.remove();
 			detected = null;
 			// The SPA can remove its player root when browsing another title's detail.
-			vi.stubGlobal("location", new URL(origin + (netflix ? "/title/123" : "/detail/" + primeCloseIds.first)));
+			vi.stubGlobal("location", new URL(origin + ({ primevideo: "/detail/" + primeCloseIds.first, netflix: "/title/123", crunchyroll: "/fr/series/GABC/test" }[provider])));
 			await act(async () => { runtime.reconcile(); });
 			expect(shell?.parentElement).toBe(document.documentElement);
 			await act(async () => session.onEvent({type: "ROOM_ENDED", roomId: record.roomId, reason: "host_ended", endedAt: Date.now()}));

@@ -51,12 +51,12 @@ function snapshot(
 }
 
 describe("Prime room document rebind", () => {
-	it("publishes a Netflix host leaving an already paused episode exactly once", () => {
+	it.each(["netflix", "crunchyroll"] as const)("publishes a %s host leaving an already paused episode exactly once", provider => {
 		const room = new PrimeRoomProjection();
 		const initial = snapshot();
-		const url = "https://www.netflix.com/watch/123", videoFingerprint = "netflix|watch/123";
+		const url = "https://www." + provider + ".com/watch/123", videoFingerprint = provider + "|watch/123";
 		room.consume({ ...initial, participants: initial.participants.map(p => ({...p, role: "host" as const})),
-			source: {provider: "netflix", title: "Episode", sourceUrl: url, canonicalUrl: url, videoFingerprint},
+			source: {provider, title: "Episode", sourceUrl: url, canonicalUrl: url, videoFingerprint},
 			hostState: {...initial.hostState!, hostSurface: "player", videoFingerprint, playing: false, hostTime: 17} });
 		expect(room.pauseForCatalog("guest")?.state).toMatchObject({hostSurface: "catalog", playing: false, hostTime: 17});
 		expect(room.pauseForCatalog("guest")).toBeNull();

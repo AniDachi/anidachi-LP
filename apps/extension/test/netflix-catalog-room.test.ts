@@ -30,6 +30,20 @@ it.each([
 ])("rejects %s", (href) => {
 	expect(catalogRoomProvider(href)).toBeNull();
 });
+it.each([
+	"/", "/es-ES", "/de/videos/alphabetical", "/watchlist", "/history", "/de/search?q=anime",
+	"/fr/series/GSERIES/title", "/simulcast", "/releasecalendar", "/pt-br/watch/G_EP-2/nome",
+])("recognizes a Crunchyroll catalog or player route on %s", path => {
+	expect(catalogRoomProvider("https://www.crunchyroll.com" + path)).toBe("crunchyroll");
+});
+it.each([
+	"https://www.crunchyroll.com/account", "https://www.crunchyroll.com/fr/login",
+	"https://store.crunchyroll.com/", "https://www.crunchyroll.com.evil.test/watch/ABC",
+	"https://user@www.crunchyroll.com/search", "https://www.crunchyroll.com:9999/videos",
+	"https://www.crunchyroll.com/fr/watch/EP/unsupported/nested", "http://www.crunchyroll.com/",
+])("keeps a Crunchyroll room off unsupported pages such as %s", href => {
+	expect(catalogRoomProvider(href)).toBeNull();
+});
 it("accepts only the same-origin main document during SPA navigation", () => {
 	const tab = { id: 7, url: url + "/browse" } as chrome.tabs.Tab;
 	expect(isCatalogRoomSender({ tab, frameId: 0, url: url + "/watch/12" })).toBe(
@@ -44,13 +58,14 @@ it("accepts only the same-origin main document during SPA navigation", () => {
 		}),
 	).toBe(false);
 });
-it("follows a new Netflix play once even for the same episode, while ignoring an old heartbeat", () => {
+it.each(["netflix", "crunchyroll"] as const)("follows a new %s play once even for the same episode, while ignoring an old heartbeat", provider => {
+	const url = "https://www." + provider + ".com";
 	const source = {
-		provider: "netflix" as const,
+		provider,
 		sourceUrl: url + "/watch/123",
 		canonicalUrl: url + "/watch/123",
 		title: "Show",
-		videoFingerprint: "netflix|watch/123",
+		videoFingerprint: provider + "|watch/123",
 	};
 	const host = new PrimeHostVisit(),
 		guest = new PrimeBrowsingRoom(),

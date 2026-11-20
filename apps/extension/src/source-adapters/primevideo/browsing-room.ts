@@ -1,6 +1,6 @@
 import { getExpectedHostTime, type ClientEvent, type PlaybackState, type WatchSourceDescriptor } from "@anidachi/protocol";
 
-import { supportsCatalogRoom } from "../../catalog-room-routes";
+import { supportsCatalogReturn, supportsCatalogRoom } from "../../catalog-room-routes";
 
 type Launch = (source: WatchSourceDescriptor, roomId: string, signal: AbortSignal) => Promise<boolean>;
 export type PrimeBrowsingBaseline = { fingerprint?: string; visit?: string };
@@ -18,7 +18,7 @@ export class PrimeHostVisit {
     this.waitingForPlay = false;
     this.visit ??= crypto.randomUUID();
     this.last = { ...event, state: { ...event.state, primePlayerVisit: this.visit,
-      ...(event.source?.provider === "netflix" && { hostSurface: "player" as const }) } };
+      ...(supportsCatalogReturn(event.source?.provider) && { hostSurface: "player" as const }) } };
     return this.last;
   }
 
@@ -31,7 +31,7 @@ export class PrimeHostVisit {
     const updatedAt = Date.now();
     const hostTime = Math.min(last.source?.duration ?? Infinity, getExpectedHostTime(last.state, updatedAt));
     return { ...last, state: { ...last.state, hostTime, playing: false, updatedAt,
-      ...(last.source?.provider === "netflix" && { hostSurface: "catalog" as const }) } };
+      ...(supportsCatalogReturn(last.source?.provider) && { hostSurface: "catalog" as const }) } };
   }
 }
 

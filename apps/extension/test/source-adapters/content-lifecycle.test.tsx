@@ -67,6 +67,8 @@ describe("content adapter lifecycle", () => {
 		["https://www.amazon.com/cart", false],
 		["https://www.netflix.com/browse?jbv=123", true],
 		["https://www.netflix.com/account", false],
+		["https://www.crunchyroll.com/fr/series/GABC/test", true],
+		["https://www.crunchyroll.com/account", false],
 	])("does not mount a browsing shell without a confirmed live session on %s", async (href, eligible) => {
 		vi.stubGlobal("location", new URL(String(href)));
 		const lookupPrimeRoom = vi.fn(async () => null);
@@ -174,17 +176,19 @@ describe("content adapter lifecycle", () => {
 		runtime.dispose();
 	});
 
-	it("docks an admitted Netflix room in the catalog and binds its next player without remounting", () => {
-		const url = "https://www.netflix.com";
+	it.each([
+		["netflix", "https://www.netflix.com", "/browse"],
+		["crunchyroll", "https://www.crunchyroll.com", "/de/videos/popular"],
+	] as const)("docks an admitted %s room in the catalog and binds its next player without remounting", (provider, url, catalog) => {
 		vi.stubGlobal("location", new URL(url + "/watch/123"));
-		const adapter = Object.assign(createAdapter(), {provider: "netflix" as const});
-		const next = Object.assign(createAdapter(), {provider: "netflix" as const});
+		const adapter = Object.assign(createAdapter(), {provider});
+		const next = Object.assign(createAdapter(), {provider});
 		const mounted = {...createMountedOverlayStub(adapter), hasPrimeRoom: () => true, dockPrimeRoom: vi.fn()};
 		const mount = vi.fn(() => mounted);
 		let detection: AdapterDetectionResult = {status: "ready", adapter};
 		const runtime = startContentLifecycle({detect: () => detection, mount, ensureStyles() {}, installKeyboardGuard: () => vi.fn(), startProviderStudy: () => null});
-		vi.stubGlobal("location", new URL(url + "/browse"));
-		detection = {status:"blocked", provider:"netflix"};
+		vi.stubGlobal("location", new URL(url + catalog));
+		detection = {status:"blocked", provider};
 		runtime.reconcile();
 		expect(mounted.dockPrimeRoom).toHaveBeenCalledOnce();
 		vi.stubGlobal("location", new URL(url + "/watch/456"));

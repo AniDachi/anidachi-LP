@@ -1,5 +1,15 @@
 # Current Development State
 
+## Crunchyroll rooms in the catalog — November 20, 2026
+
+On staging, a confirmed Crunchyroll room keeps its chat and call when a
+participant browses the streaming catalog. Starting another episode brings
+browsing guests to that episode. Guests can also select **Back to video** from
+the Play tab on the capsule while the host's player is open. Both paths keep
+the guest's site language. The room uses the existing Crunchyroll playback and
+watch-history adapters. Two signed-in Crunchyroll profiles remain the live
+acceptance step before release.
+
 ## Netflix rooms in the catalog — November 20, 2026
 
 The Netflix staging candidate keeps a confirmed room and its call when a participant

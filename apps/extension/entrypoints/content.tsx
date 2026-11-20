@@ -1,9 +1,9 @@
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
 import type { LivePrimeRoomSession } from "../src/prime-room-contract";
-import { catalogRoomProvider, supportsCatalogRoom } from "../src/catalog-room-routes";
+import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogReturn, supportsCatalogRoom } from "../src/catalog-room-routes";
 import { NetflixVideoAdapter } from "../src/source-adapters/netflix/adapter";
-import { netflixWatchId } from "../src/source-adapters/netflix/contract";
+import { CrunchyrollVideoAdapter } from "../src/source-adapters/crunchyroll/adapter";
 import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
 import { discardConflictingRoomLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
 import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
@@ -338,16 +338,16 @@ function startContentLifecycleSession(
         detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
-      const Adapter = catalogRoute === "netflix" ? NetflixVideoAdapter : PrimeVideoAdapter;
+      const Adapter = { netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter }[catalogRoute ?? "primevideo"];
       catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
       return manager.reconcile({ status: "ready", adapter: catalogAdapter });
     }
     if (mounted?.isPrimeDocked?.() && !mounted.hasPrimeRoom?.()) {
       manager.reconcile({ status: "blocked", provider: manager.current?.provider ?? "primevideo" });
     }
-    if (manager.current?.provider === "netflix" && mounted?.hasPrimeRoom?.() && catalogRoute === "netflix" && detection.status !== "ready") {
-      const result = manager.reconcile({ status: "waiting", provider: "netflix" });
-      if (!netflixWatchId(location.href) || manager.current === catalogAdapter) mounted.dockPrimeRoom?.();
+    if (supportsCatalogReturn(catalogRoute) && manager.current?.provider === catalogRoute && mounted?.hasPrimeRoom?.() && detection.status !== "ready") {
+      const result = manager.reconcile({ status: "waiting", provider: catalogRoute });
+      if (!catalogPlayerProvider(location.href) || manager.current === catalogAdapter) mounted.dockPrimeRoom?.();
       return result;
     }
     const closed = manager.current?.container.getAttribute(PRIME_PLAYER_STATE) === "closed";

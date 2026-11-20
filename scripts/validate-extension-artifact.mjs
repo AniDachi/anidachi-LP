@@ -207,7 +207,7 @@ const tile = publicResources.find(entry => entry.resources?.includes("prime-medi
 assertExactAllowlist("logo resource", logo?.resources ?? [], ["Anidachi_logo.png"]);
 assertExactAllowlist("logo match", logo?.matches ?? [], videoOrigins);
 assertExactAllowlist("Prime tile resource", tile?.resources ?? [], ["prime-media-tile.html", "prime-media-permission.html"]);
-assertExactAllowlist("Prime tile match", tile?.matches ?? [], videoOrigins.filter(origin => origin === "https://www.netflix.com/*" || origin.includes(".primevideo.com/") || origin.includes(".amazon.")));
+assertExactAllowlist("Prime tile match", tile?.matches ?? [], ["https://crunchyroll.com/*", "https://www.crunchyroll.com/*", ...videoOrigins.filter(origin => origin === "https://www.netflix.com/*" || origin.includes(".primevideo.com/") || origin.includes(".amazon."))]);
 if (!permissions.includes("offscreen")) throw new Error("Missing offscreen permission for persistent Prime calls");
 
 if (manifest.name !== expected.name) {

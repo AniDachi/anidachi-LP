@@ -7,6 +7,7 @@ import type {
 	EnsureSourceResult,
 	SourceNavigationContext,
 } from "../core/types";
+import { localizedWatchUrl } from "./url";
 import { runCrunchyrollMainCommand } from "./bridge-client";
 
 interface CrunchyrollNavigationResult {
@@ -39,9 +40,10 @@ export function createCrunchyrollSourceNavigator(
 			return { status: "failed", reason: "navigation-failed" };
 		}
 
+		const currentHref = environment.currentHref();
 		const navigation = resolveCanonicalSourceNavigation(
 			source,
-			environment.currentHref(),
+			currentHref,
 			"crunchyroll",
 		);
 		if (!navigation.ok) {
@@ -50,7 +52,7 @@ export function createCrunchyrollSourceNavigator(
 		if (navigation.alreadyCurrent) {
 			return { status: "already-current" };
 		}
-		const targetUrl = withRoomHash(navigation.target, context.roomId);
+		const targetUrl = withRoomHash(localizedWatchUrl(navigation.target, currentHref), context.roomId);
 
 		const result = await environment.navigate(targetUrl);
 		if (context.signal.aborted) {

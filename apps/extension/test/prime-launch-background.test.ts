@@ -167,22 +167,25 @@ it("follows the exact live guest session without generating an invitation or wri
 		expect(claim).toHaveBeenLastCalledWith(expect.objectContaining({action:"cancel-follow",receipt:"claim"}));
 	} finally { sessionForTab.mockRestore(); }
 });
-it("follows a Netflix catalog guest to the verified episode and cancels after the guest opens a player or leaves Netflix", async () => {
-	const origin = "https://www.netflix.com";
-	const url = origin + "/browse";
+it.each([
+	["netflix", "/browse", "456", "/watch/456"],
+	["crunchyroll", "/es-ES/videos/popular", "G_EP-456", "/es-ES/watch/G_EP-456"],
+])("follows a %s catalog guest to the verified episode only while still browsing", async (provider, catalog, id, destination) => {
+	const origin = "https://www." + provider + ".com";
+	const url = origin + catalog;
 	const sender = {id: ext, url, origin, frameId: 0, documentId:"guest-doc", tab:{id:7, url}};
-	const request = {type:"ANIDACHI_PRIME_LAUNCH", action:"follow", contentId:"456", roomId:"room", visit:crypto.randomUUID()};
+	const request = {type:"ANIDACHI_PRIME_LAUNCH", action:"follow", contentId:id, roomId:"room", visit:crypto.randomUUID()};
 	const record = {version:1 as const, revision:1, roomId:"room", ownerUserId:state.owner, participantSessionId:"mine", cameraEnabled:false, voiceMode:"push-to-talk" as const};
 	const sessionForTab = vi.spyOn(sessions, "loadRoomSessionForTab").mockResolvedValue(record);
-	const target = origin + "/watch/456";
-	const claim = vi.fn().mockResolvedValue({source:{provider:"netflix",sourceUrl:target},receipt:"receipt"});
+	const target = origin + "/watch/" + id;
+	const claim = vi.fn().mockResolvedValue({source:{provider,sourceUrl:target},receipt:"receipt"});
 	const update = vi.fn();
 	const get = vi.fn().mockResolvedValue(sender.tab);
 	Object.assign(chrome.runtime, {sendMessage:claim});
 	Object.assign(chrome.tabs, {get, update});
 	try {
 		expect(await send(request,sender)).toMatchObject({status:"ready"});
-		expect(update).toHaveBeenCalledExactlyOnceWith(7,{url:target});
+		expect(update).toHaveBeenCalledExactlyOnceWith(7,{url:origin + destination});
 		for (const next of [origin + "/watch/789", origin + "/account", "https://www.primevideo.com/storefront"]) {
 			get.mockResolvedValue({id:7,url:next});
 			expect(await send(request,sender)).toMatchObject({status:"cancelled"});

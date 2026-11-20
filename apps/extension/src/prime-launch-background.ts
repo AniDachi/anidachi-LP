@@ -5,7 +5,7 @@ import {
 	personalHistoryResumeOwnerBinding,
 	primeVideoSourceUrl,
 	PrimeVideoProviderIdSchema,
-	NetflixProviderIdSchema,
+	MAX_VIDEO_FINGERPRINT_CHARS,
 	resolvePrimeLaunch,
 	type WatchSourceDescriptor,
 } from "@anidachi/protocol";
@@ -23,13 +23,12 @@ import {
 import { isTrialWebsiteSender } from "./trial-installation";
 import { WEB_HTTP_BASE } from "./constants";
 const KEY = "anidachi.primePending.v1";
-import { catalogRoomProvider, isCatalogRoomSender } from "./catalog-room-routes";
-import { netflixWatchId } from "./source-adapters/netflix/contract";
+import { catalogRoomProvider, catalogPlayerProvider, catalogWatchDestination, catalogWatchSource, isCatalogRoomSender, supportsCatalogReturn } from "./catalog-room-routes";
 const FollowSchema = z.strictObject({
 	type: z.literal("ANIDACHI_PRIME_LAUNCH"),
 	action: z.literal("follow"),
 	roomId: z.string().min(1).max(128),
-	contentId: z.union([PrimeVideoProviderIdSchema, NetflixProviderIdSchema]),
+	contentId: z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS).regex(/^[A-Za-z0-9_-]+$/),
 	visit: z.uuid().optional(),
 });
 const StartSchema = z
@@ -159,15 +158,16 @@ async function handle(
 			const [tab, current, currentAuth] = await Promise.all([chrome.tabs.get(tabId), loadRoomSessionForTab(tabId), getStoredAuthTokens()]);
 			if (currentAuth?.user.id !== identity.ownerUserId || !samePrimeRoom(current, identity) ||
 				!await eligible(tab)) return { status: "cancelled" };
-			if (claim.source.provider === "netflix") {
-				if (catalogRoomProvider(tab.url ?? "") !== "netflix" || netflixWatchId(tab.url ?? "") ||
-					netflixWatchId(claim.source.sourceUrl) !== follow.data.contentId)
+			if (supportsCatalogReturn(claim.source.provider)) {
+				const source = catalogWatchSource(claim.source.provider, claim.source.sourceUrl);
+				if (!tab.url || catalogRoomProvider(tab.url) !== claim.source.provider || catalogPlayerProvider(tab.url) ||
+					!source || source.sourceUrl.split("/").at(-1) !== follow.data.contentId)
 					return { status: "cancelled" };
-				await chrome.tabs.update(tabId, { url: claim.source.sourceUrl });
+				await chrome.tabs.update(tabId, { url: catalogWatchDestination(source.sourceUrl, tab.url) });
 				navigated = true;
 				return { status: "ready" };
 			}
-			if (claim.source.provider !== "primevideo" || !tab.url || catalogRoomProvider(tab.url) === "netflix")
+			if (claim.source.provider !== "primevideo" || !tab.url || supportsCatalogReturn(catalogRoomProvider(tab.url)))
 				return { status: "cancelled" };
 			const route = resolvePrimeLaunch({ contentId: follow.data.contentId, navigation: claim.source.primeNavigation });
 			const target = new URL(route.url);

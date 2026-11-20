@@ -128,7 +128,7 @@ ${extensionThemeTokens}
     outline-offset: 2px;
   }
 
-  .netflix-return-to-video {
+  .catalog-return-to-video {
     position: absolute;
     top: calc(var(--top-bubble-top, 10px) + 2px);
     right: calc(var(--top-bubble-right, 10px) + var(--capsule-width, 78px) - 12px);
@@ -147,22 +147,22 @@ ${extensionThemeTokens}
     pointer-events: auto;
     cursor: pointer;
   }
-  .netflix-return-to-video:hover { background: #242426; }
-  .netflix-return-to-video:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-  .netflix-return-label {
+  .catalog-return-to-video:hover { background: #242426; }
+  .catalog-return-to-video:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .catalog-return-label {
     max-width: 0;
     overflow: hidden;
     opacity: 0;
     transition: max-width 160ms ease, margin-right 160ms ease, opacity 120ms ease;
   }
-  .netflix-return-to-video:is(:hover, :focus-visible) .netflix-return-label,
-  .top-bubble-reveal:has(.top-bubble:hover) .netflix-return-label {
+  .catalog-return-to-video:is(:hover, :focus-visible) .catalog-return-label,
+  .top-bubble-reveal:has(.top-bubble:hover) .catalog-return-label {
     max-width: 8em;
     margin-right: 5px;
     opacity: 1;
   }
   @media (prefers-reduced-motion: reduce) {
-    .netflix-return-label { transition: none; }
+    .catalog-return-label { transition: none; }
   }
 
   .anidachi-overlay.player-controls-visible .top-bubble {
