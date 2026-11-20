@@ -18,9 +18,9 @@ import {
 import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/de/youtube-watchparty";
-const PAGE_TITLE = "YouTube Watchparty: YouTube zusammen schauen";
+const PAGE_TITLE = "YouTube Watch Together & Watchparty";
 const PAGE_DESCRIPTION =
-  "YouTube Watchparty in Chrome: YouTube-Videos zusammen und synchron schauen, jeder im eigenen Tab, mit Chat und Videoanruf. Freunde treten kostenlos bei.";
+  "YouTube Watch Together und Watchparty in Chrome: Videos synchron zusammen schauen, jeder im eigenen Tab, mit Chat und Videoanruf. Freunde treten kostenlos bei.";
 const CTA_LABEL = "YouTube Watchparty starten";
 
 export const metadata: Metadata = {
@@ -120,11 +120,11 @@ export default function GermanYouTubeWatchPartyPage() {
         description={PAGE_DESCRIPTION}
         url={PAGE_PATH}
         datePublished="2026-11-12"
-        dateModified="2026-11-12"
+        dateModified="2026-11-20"
         faq={faq}
         headings={tocHeadings}
         articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
-        h1="YouTube Watchparty: YouTube zusammen schauen"
+        h1="YouTube Watch Together: YouTube zusammen schauen"
         heroLead="Videos gemeinsam schauen und darüber reden, als würdet ihr nebeneinander sitzen."
         heroCtaLabel={CTA_LABEL}
         heroWorksOn={["YouTube", "Netflix", "Crunchyroll"]}
@@ -223,6 +223,8 @@ locale="de"
             { href: "/de/netflix-watchparty", label: "Netflix Watchparty" },
             { href: "/de/crunchyroll-watchparty", label: "Crunchyroll Watchparty" },
             { href: "/de/watch2gether-alternative", label: "Watch2Gether Alternative" },
+            { href: "/de/netflix-auf-discord-streamen", label: "Netflix auf Discord streamen" },
+            { href: "/de/tools/crunchyroll-kalender", label: "Crunchyroll Kalender: neue Folgen" },
           ]} />
       </HubLandingLayout>
     </>
