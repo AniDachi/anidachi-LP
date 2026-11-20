@@ -388,6 +388,9 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   A regression test now covers the guest receiving a membership snapshot before
   the first playback source. Only a connected participant in the admitted tab
   session can keep the room in that case. Host playback still drives navigation.
+  The Netflix guest return action uses the host's optional playback surface to
+  distinguish a paused episode from the catalog. Check manual return in both
+  playback states, catalog exit after pause and automatic next-episode follow.
 
 - 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
   create/rejoin/renewal candidate pins a daily room mode and reuses account locks,

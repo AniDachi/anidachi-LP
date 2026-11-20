@@ -114,7 +114,8 @@ export class PrimeRoomProjection {
 			state = snapshot?.hostState;
 		if (
 			!snapshot ||
-			!state?.playing ||
+			!state ||
+			(!state.playing && !(source?.provider === "netflix" && state.hostSurface === "player")) ||
 			!source || !supportsCatalogRoom(source.provider) ||
 			source.videoFingerprint !== state.videoFingerprint ||
 			!snapshot.participants.some(
@@ -127,7 +128,8 @@ export class PrimeRoomProjection {
 			source.duration ?? Infinity,
 			getExpectedHostTime(state, this.detachedAt ?? now),
 		);
-		const paused = { ...state, hostTime, playing: false, updatedAt: now };
+		const paused: PlaybackState = { ...state, hostTime, playing: false, updatedAt: now };
+		if (source.provider === "netflix") paused.hostSurface = "catalog";
 		this.snapshot = { ...snapshot, hostState: paused };
 		return {
 			type: "HOST_STATE",

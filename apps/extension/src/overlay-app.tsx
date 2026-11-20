@@ -5,6 +5,7 @@ import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
 import type { LivePrimeRoomSession } from "./prime-room-contract";
 import { supportsCatalogRoom } from "./catalog-room-routes";
+import { netflixWatchId } from "./source-adapters/netflix/contract";
 import { followPrimeRoom } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import type {
@@ -24,6 +25,7 @@ import {
 	ArrowUpRight,
 	CircleHelp,
 	Mic,
+	Play,
 	RefreshCw,
 	SendHorizontal,
 	Settings2,
@@ -557,6 +559,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const adapterActiveRef = useRef(adapterActive);
 	adapterActiveRef.current = adapterActive;
 	const [catalogFollow] = useState(() => new PrimeBrowsingRoom());
+	const [netflixReturnUrl, setNetflixReturnUrl] = useState<string | null>(null);
+	const pendingNetflixPlayback = useRef<{ roomId: string; state: PlaybackState; source?: WatchSourceDescriptor } | null>(null);
 	const restoringBaseline = useRef(initialPrimeRoom);
 	const [primeVisit] = useState(() => new PrimeHostVisit(Boolean(initialPrimeRoom)));
 	const browseMode = useRef(primeBrowsing);
@@ -1553,6 +1557,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			setRoomSourceProvider(roomSourceProviderRef.current);
 		}
 		setRoomSnapshotReady(false);
+		setNetflixReturnUrl(null);
+		pendingNetflixPlayback.current = null;
 		setSignalingTransportReady(null);
 		setIncomingP2PSignals([]);
 	}, [clearInviteNotice, roomId]);
@@ -2538,7 +2544,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			if (nextStatus === "connected" && previousStatus !== "connected") {
 				connectionGenerationRef.current += 1;
 			}
-			if (nextStatus !== "connected") selfSeatDefaultsRef.current = null;
+			if (nextStatus !== "connected") {
+				selfSeatDefaultsRef.current = null;
+				setNetflixReturnUrl(null);
+				pendingNetflixPlayback.current = null;
+			}
 			if (nextStatus !== "connected" && previousStatus === "connected") setRoomStartTime(null);
 			if (nextStatus !== "connected") hostingTimeClock.beginTransport();
 			statusRef.current = nextStatus;
@@ -3672,6 +3682,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	const applyHostState = useCallback(
 		async (state: PlaybackState, source?: WatchSourceDescriptor) => {
+			if (roomSourceProviderRef.current === "netflix" && roomIdRef.current) {
+				const id = netflixWatchId(state.sourceUrl ?? source?.sourceUrl ?? "");
+				const inPlayer = state.hostSurface === "player" && id && state.videoFingerprint === `netflix|watch/${id}`;
+				setNetflixReturnUrl(inPlayer ? `https://www.netflix.com/watch/${id}` : null);
+				pendingNetflixPlayback.current = inPlayer && !adapterActiveRef.current
+					? { roomId: roomIdRef.current, state, source } : null;
+			}
 			if (supportsCatalogRoom(roomSourceProviderRef.current) && roomIdRef.current) {
 				catalogFollow.setRoom(roomIdRef.current);
 				catalogFollow.setBrowsing(browseMode.current);
@@ -3917,6 +3934,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					});
 					if (event.hostState && !isCurrentHost(event.participants)) {
 						void applyHostState(event.hostState, event.source);
+					} else {
+						setNetflixReturnUrl(null);
+						pendingNetflixPlayback.current = null;
 					}
 					return;
 				}
@@ -5423,6 +5443,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		adapter,
 		controller: playbackSyncController,
 	});
+	useEffect(() => {
+		const pending = pendingNetflixPlayback.current;
+		if (adapter.provider !== "netflix" || !adapterActive || !pending || !roomSnapshotReady || !isConnected || isHost) return;
+		pendingNetflixPlayback.current = null;
+		if (pending.roomId === roomId && pending.state.videoFingerprint === adapter.getFingerprint())
+			void playbackSyncController.handleHostState(pending.state, pending.source);
+	}, [adapter, adapterActive, roomId, roomSnapshotReady, isConnected, isHost, playbackSyncController]);
 
 	const handleCreateRoom = async () => {
 		if (browseMode.current || roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
@@ -6871,6 +6898,17 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				{...(primePanelOpen ? overlayPointerBoundaryProps : {})}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
+				{primeBrowsing && adapter.provider === "netflix" && roomId && roomSnapshotReady && isConnected &&
+					currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
+					storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
+					participants.some(p => p.role === "host" && p.connected !== false) &&
+					netflixReturnUrl && !capsuleNotice.open && (
+					<button type="button" className="netflix-return-to-video"
+						onClick={() => window.location.assign(netflixReturnUrl)}>
+						<Play size={14} aria-hidden="true" />
+						{/^ru(?:-|$)/i.test(document.documentElement.lang || navigator.language) ? "К просмотру" : "Back to video"}
+					</button>
+				)}
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
 					kind={capsuleNoticeKind} remainingSeconds={capsuleNoticeKind === "warning" ? liveHostingTime?.remainingSeconds ?? null : null}
 					open={capsuleNotice.open} onDismiss={capsuleNotice.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}

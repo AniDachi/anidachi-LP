@@ -6,6 +6,9 @@ The Netflix staging candidate keeps a confirmed room and its call when a partici
 returns to the catalog. Participants browse independently until the host starts
 playback. The guest then opens the host's exact watch ID. Device consent is requested
 in the current tab. Live two-profile acceptance is required before release.
+A guest browsing Netflix can also select **Back to video** beside the room pill
+when the host has a player open, including while paused. It returns to the same
+room and episode. The action disappears when the host returns to the catalog.
 
 ## Prime rooms in the catalog — November 19, 2026
 

@@ -121,6 +121,8 @@ export const PlaybackStateSchema = z.object({
   videoFingerprint: VideoFingerprintSchema,
   /** Player visit for catalog rooms, including reopening the same title. Wire name retained for existing clients. */
   primePlayerVisit: z.uuid().optional(),
+  /** Distinguishes a paused player from a host browsing the Netflix catalog. */
+  hostSurface: z.enum(["player", "catalog"]).optional(),
   sourceUrl: UrlSchema.optional(),
   playing: z.boolean(),
   hostTime: z.number().nonnegative(),
