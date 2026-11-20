@@ -20,9 +20,9 @@ import {
 import { getSeoSiteOrigin } from "@/lib/site-url";
 
 const PAGE_PATH = "/de/netflix-watchparty";
-const PAGE_TITLE = "Netflix Watchparty: Netflix zusammen schauen";
+const PAGE_TITLE = "Netflix Party & Watchparty: zusammen schauen";
 const PAGE_DESCRIPTION =
-  "Netflix hat keine Watchparty-Funktion. Mit AniDachi schaut ihr Netflix zusammen und synchron in Chrome, jeder mit eigenem Konto, mit Chat, Sprache und Video.";
+  "Netflix Party heißt heute Teleparty, und Netflix selbst hat keine Watchparty. Mit AniDachi schaut ihr Netflix synchron zusammen, jeder im eigenen Konto.";
 const CTA_LABEL = "Netflix Watchparty starten";
 
 export const metadata: Metadata = {
@@ -79,6 +79,11 @@ const faq = [
       "Installiere AniDachi in Chrome auf dem Computer, öffne den Film in deinem Netflix-Konto, erstelle über die AniDachi-Kapsel einen Raum und schick den Link. Deine Freunde öffnen denselben Titel in ihrem Konto, und alle schauen synchron.",
   },
   {
+    question: "Gibt es Netflix Party noch?",
+    answer:
+      "Unter diesem Namen nicht. Netflix Party war eine Chrome-Erweiterung eines anderen Anbieters und heißt seit 2020 Teleparty. Eine Netflix Party startest du heute mit Teleparty oder mit AniDachi: Jeder schaut im eigenen Netflix-Konto, und die Wiedergabe läuft synchron.",
+  },
+  {
     question: "Braucht jeder ein eigenes Netflix-Konto?",
     answer:
       "Ja. Jeder spielt den Titel über ein Netflix-Konto ab, das er nutzen darf. AniDachi und Teleparty synchronisieren getrennte Player, sie übertragen kein Netflix-Bild an andere. Laut Netflix darf ein Konto nicht außerhalb des eigenen Haushalts geteilt werden.",
@@ -112,6 +117,7 @@ const tocHeadings: TocHeading[] = [
   { id: "what-works", label: "Was geht, was nicht", level: 2 },
   { id: "account", label: "Braucht jeder Netflix?", level: 2 },
   { id: "not-working", label: "Wenn es nicht klappt", level: 2 },
+  { id: "netflix-party", label: "Was ist Netflix Party?", level: 2 },
   { id: "vs-teleparty", label: "AniDachi vs. Teleparty", level: 2 },
   { id: "faq", label: "Häufige Fragen", level: 2 },
 ];
@@ -134,7 +140,7 @@ export default function GermanNetflixWatchPartyPage() {
         description={PAGE_DESCRIPTION}
         url={PAGE_PATH}
         datePublished="2026-11-12"
-        dateModified="2026-11-12"
+        dateModified="2026-11-20"
         faq={faq}
         headings={tocHeadings}
         articleImage={`${getSeoSiteOrigin()}/opengraph-image.png`}
@@ -143,7 +149,7 @@ export default function GermanNetflixWatchPartyPage() {
           { name: "Watch2Gether Alternative", url: "/de/watch2gether-alternative", position: 2 },
           { name: "YouTube Watchparty", url: "/de/youtube-watchparty", position: 3 },
         ]}
-        h1="Netflix Watchparty: Netflix zusammen schauen"
+        h1="Netflix Party & Watchparty: Netflix zusammen schauen"
         heroLead="Netflix hat keinen Watchparty-Knopf. AniDachi bringt ihn mit."
         heroCtaLabel={CTA_LABEL}
         heroWorksOn={["Netflix", "YouTube", "Crunchyroll"]}
@@ -273,6 +279,21 @@ locale="de"
           <Link href="/de/netflix-auf-discord-streamen">Netflix auf Discord streamen</Link>.
         </p>
 
+        <h2 id="netflix-party" className="scroll-mt-24">
+          Was ist Netflix Party?
+        </h2>
+        <p className="mb-4 leading-relaxed text-ani-muted">
+          Netflix Party war nie eine Funktion von Netflix selbst, sondern eine Chrome-Erweiterung von
+          einem anderen Anbieter. Sie wurde 2020 in Teleparty umbenannt. Wer heute nach „Netflix
+          Party“ oder „Netflixparty“ sucht, meint also meistens Teleparty oder allgemein eine
+          Möglichkeit, Netflix mit Freunden synchron zu schauen.
+        </p>
+        <p className="mb-6 leading-relaxed text-ani-muted">
+          Eine Netflix Party funktioniert heute so: Jeder öffnet denselben Titel im eigenen
+          Netflix-Konto, und eine Erweiterung hält alle Player auf derselben Stelle. Das geht mit
+          Teleparty oder mit AniDachi. Der Vergleich unten zeigt die Unterschiede.
+        </p>
+
         <h2 id="vs-teleparty" className="scroll-mt-24">
           AniDachi oder Teleparty für Netflix?
         </h2>
@@ -339,6 +360,7 @@ locale="de"
             { href: "/de/youtube-watchparty", label: "YouTube Watchparty" },
             { href: "/de/crunchyroll-watchparty", label: "Crunchyroll Watchparty" },
             { href: "/de/watch2gether-alternative", label: "Watch2Gether Alternative" },
+            { href: "/de/tools/crunchyroll-kalender", label: "Crunchyroll Kalender: neue Folgen" },
           ]}
         />
         <p className="mt-6 text-sm leading-relaxed text-ani-muted">
