@@ -729,7 +729,7 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/guides/watch-movies-together-online",
-		label: "Watch Movies Together Online",
+		label: "How to Watch Movies Together Online",
 		tags: ["template-c", "watch-party", "pillar-watch-party-app"],
 	},
 	{

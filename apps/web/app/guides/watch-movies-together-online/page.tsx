@@ -18,27 +18,37 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 const PAGE_PATH = "/guides/watch-movies-together-online";
 
+const PAGE_TITLE = "How to Watch Movies Together Online: 4 Ways";
+const PAGE_DESCRIPTION =
+	"How to watch movies together online with friends: four ways compared, from a sync extension to Discord, FaceTime SharePlay and a call with a countdown.";
+
 const SOURCES = [
 	{ href: "https://www.teleparty.com/", label: "Teleparty home page" },
 	{ href: "https://www.teleparty.com/support", label: "Teleparty support FAQ" },
+	{
+		href: "https://support.apple.com/en-us/HT212823",
+		label: "Apple support: SharePlay in FaceTime",
+	},
+	{
+		href: "https://support.apple.com/en-us/109364",
+		label: "Apple support: joining FaceTime from Android or Windows",
+	},
 ];
 
 export const metadata: Metadata = {
-	title: "Watch Movies Together Online: Netflix & YouTube",
-	description:
-		"Watch movies together online with friends: sync a Netflix film, a full YouTube movie or an anime film in desktop Chrome, with voice and video. Apps compared.",
+	title: PAGE_TITLE,
+	description: PAGE_DESCRIPTION,
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
-		title: "Watch Movies Together Online: Netflix, YouTube and Anime Films",
-		description:
-			"A movie-night flow and the apps and websites that sync a film for friends in different homes.",
+		title: PAGE_TITLE,
+		description: PAGE_DESCRIPTION,
 		url: PAGE_PATH,
 		images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Watch Movies Together Online",
-		description: "Netflix, YouTube and anime films, synced for a group.",
+		title: PAGE_TITLE,
+		description: PAGE_DESCRIPTION,
 		images: ["/opengraph-image.png"],
 	},
 };
@@ -50,9 +60,14 @@ const faq = [
 			"Pick a film everyone can play on their own account, then use a sync tool so the players stay together. With AniDachi in desktop Chrome, the host opens the Netflix, YouTube or Crunchyroll movie, creates a room and shares the link; friends join free and the host's play and pause apply to everyone.",
 	},
 	{
-		question: "What is the best app to watch movies together?",
+		question: "What is the best way to watch movies together online?",
 		answer:
-			"It depends on where the movie is. AniDachi covers Netflix, full YouTube watch pages and Crunchyroll in desktop Chrome, with voice and video in the room. Teleparty lists more services, including Disney+, Hulu and HBO Max; its support FAQ says voice and video chat need Teleparty Premium. For any service, a voice call plus a countdown works with no extra app.",
+			"For one film with friends in different homes, a sync extension: everyone plays the film on their own account and the players stay together, so the picture stays sharp. Which one depends on where the movie is. AniDachi covers Netflix, full YouTube watch pages and Crunchyroll in desktop Chrome, with voice and video in the room. Teleparty lists more services, including Disney+, Hulu and HBO Max; its support FAQ says voice and video chat need Teleparty Premium. For any service, a voice call plus a countdown works with no extra app.",
+	},
+	{
+		question: "Can we watch a movie together on FaceTime?",
+		answer:
+			"Yes, with SharePlay, if everyone joins the FaceTime call from an Apple device and the streaming app supports SharePlay. Each person needs their own access to the film. Check the app before the night: not every streaming app supports it. Friends on Android or Windows join FaceTime on the web, where SharePlay isn't available.",
 	},
 	{
 		question: "Is there a watch party website for movies?",
@@ -78,7 +93,7 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
 	{ id: "answer", label: "Short answer", level: 2 },
-	{ id: "options", label: "Apps and websites compared", level: 2 },
+	{ id: "options", label: "4 ways, compared", level: 2 },
 	{ id: "flow", label: "Movie-night flow", level: 2 },
 	{ id: "where", label: "Netflix, YouTube or anime films", level: 2 },
 	{ id: "picks", label: "Picking the film", level: 2 },
@@ -113,14 +128,14 @@ const flowSteps = [
 
 const optionRows = [
 	{
-		option: "AniDachi",
+		option: "Sync extension: AniDachi",
 		services: "Netflix, full YouTube watch pages, Crunchyroll",
 		devices: "Desktop Chrome or Chromium Edge",
 		talk: "On-player chat, voice and video",
 		cost: "Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
 	},
 	{
-		option: "Teleparty",
+		option: "Sync extension: Teleparty",
 		services: "Lists Netflix, YouTube, Disney+, HBO Max, Hulu, Amazon and more",
 		devices: "Desktop and mobile, per its site",
 		talk: "Chat; voice and video chat need Premium",
@@ -132,6 +147,13 @@ const optionRows = [
 		devices: "Desktop and mobile apps",
 		talk: "Discord voice",
 		cost: "Free; protected films often show black",
+	},
+	{
+		option: "FaceTime with SharePlay",
+		services: "Streaming apps that support SharePlay",
+		devices: "Apple devices only (not FaceTime on the web)",
+		talk: "FaceTime voice and video",
+		cost: "Free with FaceTime",
 	},
 	{
 		option: "Call plus countdown",
@@ -153,44 +175,46 @@ export default function WatchMoviesTogetherOnlinePage() {
 			<SeoPageLayout
 				breadcrumbs={[
 					{ name: "Home", url: "/" },
-					{ name: "Supported streaming services", url: "/watch-party-app" },
+					{ name: "Guides", url: "/guides" },
 					{
-						name: "Watch movies together online",
+						name: "How to watch movies together online",
 						url: PAGE_PATH,
 					},
 				]}
-				title="Watch movies together online: Netflix, YouTube and anime films"
-				description="A movie-night flow and the apps that sync a film for friends in different homes."
+				title="How to watch movies together online with friends"
+				description={PAGE_DESCRIPTION}
 				url={PAGE_PATH}
 				datePublished="2026-09-26"
-				dateModified="2026-11-11"
+				dateModified="2026-11-20"
 				faq={faq}
 				headings={tocHeadings}
 				articleImage={articleImage}
 				aboveFoldCta
 			>
-				<SeoGuideTitle>
-					Watch Movies Together Online: Netflix, YouTube and Anime Films
-				</SeoGuideTitle>
+				<SeoGuideTitle>How to Watch Movies Together Online with Friends</SeoGuideTitle>
 
 				<h2 id="answer" className="scroll-mt-24">
 					Short answer
 				</h2>
 				<SeoGuideAnswer>
 					<strong>
-						To watch movies together online, everyone opens the same film on
-						their own account and a sync app keeps the players together.
-						AniDachi does this in desktop Chrome for Netflix films, full YouTube
-						movies and anime films on Crunchyroll, with chat, voice and video in
-						the room. Friends join free; {PRICING_FREE20_SUMMARY}
+						There are four ways to watch a movie or film together online: a
+						sync extension, Discord screen share, FaceTime with SharePlay, or a
+						call with a countdown. The smoothest is a sync extension: everyone
+						opens the same film on their own account and the extension keeps
+						the players together. AniDachi does this in desktop Chrome for
+						Netflix films, full YouTube movies and anime films on Crunchyroll,
+						with chat, voice and video in the room. Friends join free;{" "}
+						{PRICING_FREE20_SUMMARY}
 					</strong>
 				</SeoGuideAnswer>
 
 				<p className="mb-6 leading-relaxed text-ani-muted">
 					This guide is for one film with friends who are not in the same
-					room. It compares the apps and websites people use, then gives a
-					movie-night flow you can copy. If you already know you want AniDachi,
-					the <Link href="/watch-party-app">supported streaming services</Link> page lists
+					room. It compares the four ways, then gives a movie-night flow you
+					can copy. If you already know you want an app, AniDachi lets you{" "}
+					<Link href="/">watch movies together online</Link> in sync, the{" "}
+					<Link href="/watch-party-app">supported streaming services</Link> page lists
 					where it works, and the{" "}
 					<Link href="/netflix-watch-party">Netflix watch party guide</Link>{" "}
 					covers Netflix in detail.
@@ -200,13 +224,12 @@ export default function WatchMoviesTogetherOnlinePage() {
 					id="options"
 					className="mt-10 mb-4 scroll-mt-24 text-2xl font-bold text-ani-text"
 				>
-					Apps and websites to watch movies together
+					4 ways to watch movies together online, compared
 				</h2>
 				<p className="mb-4 leading-relaxed text-ani-muted">
-					Searches for a watch party website, an app to watch movies together,
-					or a way to watch movies with friends online all land on the same
-					few options. They differ mainly in which services they support and
-					whether you can hear each other.
+					Whether you call it a movie night or a film night, the options are
+					the same. They differ in which streaming services they work with,
+					which devices everyone needs, and whether you can hear each other.
 				</p>
 				<ResponsiveDataTable
 					titleKey="option"
@@ -223,7 +246,9 @@ export default function WatchMoviesTogetherOnlinePage() {
 					Use AniDachi when your film is on Netflix, YouTube or Crunchyroll and
 					you want faces and voices on the player. Use Teleparty when the film
 					is on Disney+, Hulu or another service AniDachi does not support. Use
-					a countdown when someone only has a phone.{" "}
+					FaceTime with SharePlay when everyone has an Apple device and the
+					streaming app supports it. Use a countdown when someone only has a
+					phone.{" "}
 					<InstallLink href="/extension" className="text-brand-orange hover:underline">
 						Add AniDachi to Chrome
 					</InstallLink>{" "}
@@ -373,7 +398,8 @@ export default function WatchMoviesTogetherOnlinePage() {
 					Sources
 				</h2>
 				<p className="mb-8 leading-relaxed text-ani-muted">
-					Competitor details checked 20 Oct 2026:{" "}
+					Teleparty details checked 20 Oct 2026; Apple SharePlay details
+					checked 20 Nov 2026:{" "}
 					{SOURCES.map((source, index) => (
 						<span key={source.href}>
 							{index > 0 ? ", " : null}
@@ -387,8 +413,8 @@ export default function WatchMoviesTogetherOnlinePage() {
 							</a>
 						</span>
 					))}
-					. AniDachi is not affiliated with Netflix, YouTube, Crunchyroll or
-					Teleparty.
+					. AniDachi is not affiliated with Netflix, YouTube, Crunchyroll,
+					Teleparty or Apple.
 				</p>
 
 				<h2

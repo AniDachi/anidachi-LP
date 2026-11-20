@@ -167,6 +167,12 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-11-20, movies guide becomes the how-to page; Netflix hub title (owner in chat, ANI-47, ANI-67):** the homepage owns "watch movies together online" (ANI-36), so `/guides/watch-movies-together-online` (same URL, not indexed yet) moves to the how-to searches.
+  - **Movies guide:** title "How to Watch Movies Together Online: 4 Ways", H1 "How to Watch Movies Together Online with Friends". It targets "how to watch movies together online", "how to watch movies with friends online", "best way" and "ways to watch movies together online".
+  - **Movies guide content:** the comparison gains a FaceTime/SharePlay row, from Apple's SharePlay and FaceTime-on-the-web support pages, checked 20 Nov 2026; it names no app as supported. There's a new FaceTime FAQ, and "film" is used alongside "movie". The breadcrumb parent is now `/guides`. It links once to `/` with the anchor "watch movies together online".
+  - **Netflix hub:** the title gains the exact phrase "Watch Netflix Together" ("Netflix Watch Party: Watch Netflix Together in Sync"). The H1, URL and content are unchanged.
+  - **Review** on 18 Dec 2026 (movies guide indexed? the Netflix hub's long-tail positions in ANI-68). Rollback: revert the commit.
+
 - **2026-11-19, `/watch-party-app` becomes the platform directory (owner in chat, ANI-40):** the homepage title changed the same day (ANI-36) to "Watch Party App: Watch Movies, Shows & Anime Together Online", so `/` now owns "watch party app" and "watch party website". This page kept the URL (not merged into `/`) because it is indexed, is SyncUp's and Kosmi's parent hub, and is where `llms.txt` points for "every platform AniDachi works with".
   - **Title and H1:** "Streaming Services That Work with AniDachi" (absolute title, no brand suffix). It no longer starts with "Watch Party App".
   - **Content:** cards for the supported platforms, from `SUPPORTED_PLATFORMS` in `lib/product-facts.ts`, which gains a `scope` sentence per platform; `lib/platforms.ts` holds only glyphs and logos. The planned platforms (`PLANNED_PLATFORMS`) are listed as coming soon. A "same on every platform" list, links by occasion, and an FAQ.

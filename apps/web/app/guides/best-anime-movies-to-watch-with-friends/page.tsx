@@ -157,14 +157,14 @@ export default function BestAnimeMoviesWithFriendsPage() {
 				>
 					virtual movie night
 				</Link>
-				. For other ways to{" "}
+				. For other ways to watch a film together, start with{" "}
 				<Link
 					href="/guides/watch-movies-together-online"
 					className="text-brand-orange hover:underline"
 				>
-					watch movies together online
+					how to watch movies together online
 				</Link>
-				, start with the general guide.
+				.
 			</p>
 			<ul className="space-y-4 text-foreground/80 mb-10">
 				<li>

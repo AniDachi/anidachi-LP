@@ -34,7 +34,7 @@ export function buildLlmsTxt(origin: string): string {
     `- [Is Teleparty safe?](${url("/guides/is-teleparty-safe")}): Teleparty's permissions, data collection and privacy policy.`,
     `- [Does Netflix have a watch party?](${url("/guides/does-netflix-have-a-watch-party")}): Netflix's own features.`,
     `- [Prime Video watch party](${url("/prime-video-watch-party")}): Prime Video removed its Watch Party in 2024; what works today. AniDachi does not support Prime Video yet.`,
-    `- [Watch movies together online](${url("/guides/watch-movies-together-online")}): the ways to watch films with friends far away.`,
+    `- [How to watch movies together online](${url("/guides/watch-movies-together-online")}): four ways to watch films with friends far away, compared.`,
     `- [Virtual movie night](${url("/virtual-movie-night")}): planning a movie night online.`,
     `- [Watch anime together](${url("/watch-anime-together")}): anime watch parties.`,
     "",
