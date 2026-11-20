@@ -24,7 +24,7 @@ export function buildLlmsTxt(origin: string): string {
     `- [AniDachi](${url("/")}): what AniDachi is and how a watch party works.`,
     `- [Install AniDachi](${url("/extension")}): the install page; the extension is on the [Chrome Web Store](${CHROME_WEB_STORE_URL}).`,
     `- [Pricing](${url("/pricing")}): Free, Plus and Pro.`,
-    `- [Watch party app](${url("/watch-party-app")}): every platform AniDachi works with.`,
+    `- [Supported streaming services](${url("/watch-party-app")}): every platform AniDachi works with today and what is coming soon.`,
     "",
     "## Guides and comparisons",
     "",
