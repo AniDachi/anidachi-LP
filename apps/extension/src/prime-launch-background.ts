@@ -23,7 +23,7 @@ import {
 import { isTrialWebsiteSender } from "./trial-installation";
 import { WEB_HTTP_BASE } from "./constants";
 const KEY = "anidachi.primePending.v1";
-import { catalogRoomProvider, catalogPlayerProvider, catalogWatchDestination, catalogWatchSource, isCatalogRoomSender, supportsCatalogReturn } from "./catalog-room-routes";
+import { catalogContentId, catalogRoomProvider, catalogPlayerProvider, catalogWatchDestination, catalogWatchSource, isCatalogRoomSender, supportsCatalogReturn } from "./catalog-room-routes";
 const FollowSchema = z.strictObject({
 	type: z.literal("ANIDACHI_PRIME_LAUNCH"),
 	action: z.literal("follow"),
@@ -161,7 +161,7 @@ async function handle(
 			if (supportsCatalogReturn(claim.source.provider)) {
 				const source = catalogWatchSource(claim.source.provider, claim.source.sourceUrl);
 				if (!tab.url || catalogRoomProvider(tab.url) !== claim.source.provider || catalogPlayerProvider(tab.url) ||
-					!source || source.sourceUrl.split("/").at(-1) !== follow.data.contentId)
+					!source || catalogContentId(source.sourceUrl) !== follow.data.contentId)
 					return { status: "cancelled" };
 				await chrome.tabs.update(tabId, { url: catalogWatchDestination(source.sourceUrl, tab.url) });
 				navigated = true;

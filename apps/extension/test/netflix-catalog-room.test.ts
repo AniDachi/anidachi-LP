@@ -1,6 +1,7 @@
 import { expect, it, vi } from "vitest";
 import {
 	catalogRoomProvider,
+	catalogPlayerProvider,
 	isCatalogRoomSender,
 } from "../src/catalog-room-routes";
 import {
@@ -45,6 +46,33 @@ it.each([
 	"https://www.crunchyroll.com/fr/watch/EP/unsupported/nested", "http://www.crunchyroll.com/",
 ])("keeps a Crunchyroll room off unsupported pages such as %s", href => {
 	expect(catalogRoomProvider(href)).toBeNull();
+});
+it.each(["/", "/results?search_query=a", "/feed/subscriptions", "/feed/history", "/playlist?list=WL",
+	"/@Music/videos", "/channel/UCabc/playlists", "/c/Example", "/hashtag/music", "/post/Ugkxsample", "/shorts/abcdefghijk",
+])("keeps a YouTube room on %s without attaching a catalog preview as a player", path => {
+	const href = "https://www.youtube.com" + path;
+	expect(catalogRoomProvider(href)).toBe("youtube");
+	expect(catalogPlayerProvider(href)).toBeNull();
+});
+it.each(["https://www.youtube.com", "https://youtube.com", "https://m.youtube.com"])("recognizes watch and catalog on %s", origin => {
+	const href = origin + "/watch?list=PLtest&v=a_-23456789&t=93";
+	expect(catalogRoomProvider(href)).toBe("youtube");
+	expect(catalogPlayerProvider(href)).toBe("youtube");
+	expect(catalogRoomProvider(origin + "/")).toBe("youtube");
+});
+it("keeps the room when a playlist or search recommendation decorates the watch URL", () => {
+	const href = "https://www.youtube.com/watch?v=a_-23456789&pp=" + "x".repeat(2400);
+	expect(catalogRoomProvider(href)).toBe("youtube");
+	expect(catalogPlayerProvider(href)).toBe("youtube");
+	expect(catalogPlayerProvider(href + "&v=b_-23456789")).toBeNull();
+});
+it.each(["https://www.youtube.com/account", "https://www.youtube.com/embed/abcdefghijk",
+	"https://www.youtube.com/redirect?q=x", "https://www.youtube.com/watch?v=aaaaaa&v=bbbbbb",
+	"https://studio.youtube.com/", "https://music.youtube.com/", "https://www.youtube-nocookie.com/embed/abcdefghijk",
+	"https://www.youtube.com:8080/", "https://user@www.youtube.com/", "http://www.youtube.com/",
+])("does not admit persistent YouTube media on %s", href => {
+	expect(catalogRoomProvider(href)).toBeNull();
+	expect(catalogPlayerProvider(href)).toBeNull();
 });
 it("accepts only the same-origin main document during SPA navigation", () => {
 	const tab = { id: 7, url: url + "/browse" } as chrome.tabs.Tab;

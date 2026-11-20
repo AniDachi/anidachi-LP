@@ -1,5 +1,6 @@
-import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogRoom } from "./catalog-room-routes";
+import { catalogContentId, catalogPlayerProvider, catalogRoomProvider, supportsCatalogRoom } from "./catalog-room-routes";
 import {
+	canonicalizeRoomSourceUrl,
 	parsePersonalHistoryResumeUrl,
 	primeVideoSourceUrl,
 	type PrimeNavigation,
@@ -59,9 +60,11 @@ export async function startPrimeResume(
 export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: string, visit: string | undefined,
 	signal: AbortSignal): Promise<boolean> {
 	if (signal.aborted || !supportsCatalogRoom(source.provider)) return false;
+	const canonical = canonicalizeRoomSourceUrl(source.sourceUrl, source.provider);
+	if (!canonical.ok) return false;
 	const reply = await chrome.runtime.sendMessage({
 		type: "ANIDACHI_PRIME_LAUNCH", action: "follow", roomId, visit,
-		contentId: source.sourceUrl.split("/").at(-1),
+		contentId: catalogContentId(canonical.source.sourceUrl),
 	});
 	return reply?.status === "ready";
 }

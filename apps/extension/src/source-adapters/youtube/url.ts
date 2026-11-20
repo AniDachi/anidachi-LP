@@ -1,4 +1,24 @@
+import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
+
 const YOUTUBE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{6,}$/;
+
+export const YOUTUBE_CATALOG_ORIGINS = ["https://www.youtube.com", "https://youtube.com", "https://m.youtube.com"];
+
+export function isYouTubeCatalogPath(path: string): boolean {
+  return path === "/" || /^\/(?:results|playlist|gaming|podcasts)\/?$/.test(path) ||
+    /^\/(?:feed|hashtag|shorts)(?:\/|$)/.test(path) || /^\/post\/[^/]+\/?$/.test(path) ||
+    /^\/(?:@[^/]+|(?:channel|c|user)\/[^/]+)(?:\/|$)/.test(path);
+}
+
+/** Page decorations can exceed the wire limit. Validate only the actual watch source on the wire. */
+export function youtubePageWatchSource(url: URL) {
+  if (!YOUTUBE_CATALOG_ORIGINS.includes(url.origin) || url.username || url.password ||
+      !/^\/watch\/?$/.test(url.pathname)) return null;
+  const ids = url.searchParams.getAll("v");
+  if (ids.length !== 1) return null;
+  const result = canonicalizeRoomSourceUrl("https://www.youtube.com/watch?v=" + encodeURIComponent(ids[0]!), "youtube");
+  return result.ok ? result.source : null;
+}
 
 export function isYouTubeProviderHost(hostname: string): boolean {
   const normalizedHostname = hostname.toLowerCase();

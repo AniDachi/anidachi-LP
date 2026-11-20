@@ -1,5 +1,9 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## YouTube catalog continuity — November 21, 2026
+
+YouTube reuses the catalog room and offscreen media owner. Its automatic follow reservation uses the canonical watch URL’s `v` parameter. The Chromium transport harness supports `--youtube` for a host leaving the player for Home, loading search, returning to playback and leaving the supported site. The adapter lifecycle test covers a native mini-player remaining in the DOM on Home.
+
 ## Crunchyroll catalog continuity — November 20, 2026
 
 The Crunchyroll staging candidate reuses the catalog room connection and media

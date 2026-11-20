@@ -201,6 +201,61 @@ describe("content adapter lifecycle", () => {
 		runtime.dispose();
 	});
 
+	it.each(["owner first", "media first"])("docks on YouTube Home and waits for the new watch owner and media (%s)", async order => {
+		const origin = "https://www.youtube.com";
+		vi.stubGlobal("location", new URL(origin + "/watch?v=first_id001"));
+		const player = document.createElement("div");
+		player.id = "movie_player";
+		const watch = document.createElement("ytd-watch-flexy");
+		watch.setAttribute("video-id", "first_id001");
+		const video = document.createElement("video");
+		Object.defineProperties(video, {duration: {value: 100}, readyState: {value: 4}});
+		video.currentTime = 45;
+		player.append(video);
+		watch.append(player);
+		document.body.append(watch);
+		vi.spyOn(video, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 800, 440));
+		const mounted = { ...createMountedOverlayStub(createAdapter()), hasPrimeRoom: () => true, dockPrimeRoom: vi.fn() };
+		const mount = vi.fn(() => mounted);
+		const runtime = startContentLifecycle({ mount, ensureStyles() {}, installKeyboardGuard: () => vi.fn(), startProviderStudy: () => null });
+		expect(mount).toHaveBeenCalledTimes(1);
+		vi.stubGlobal("location", new URL(origin + "/"));
+		const mini = document.createElement("ytd-miniplayer");
+		document.body.append(mini);
+		mini.append(player);
+		runtime.reconcile();
+		expect(mounted.dockPrimeRoom).toHaveBeenCalledOnce();
+		expect(mounted.replaceAdapter).not.toHaveBeenCalled();
+		vi.stubGlobal("location", new URL(origin + "/watch?v=second_id02"));
+		const preview = document.createElement("div");
+		preview.id = "inline-preview-player";
+		preview.className = "html5-video-player";
+		const previewVideo = document.createElement("video");
+		vi.spyOn(previewVideo, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 1000, 600));
+		preview.append(previewVideo);
+		document.body.append(preview);
+		runtime.reconcile();
+		expect(mounted.replaceAdapter).not.toHaveBeenCalled();
+		watch.append(player);
+		runtime.reconcile();
+		await vi.advanceTimersByTimeAsync(50);
+		expect(mounted.replaceAdapter).not.toHaveBeenCalled();
+		const announceMedia = () => {
+			video.currentTime = 0;
+			video.dispatchEvent(new Event("loadedmetadata"));
+		};
+		const announceOwner = () => watch.setAttribute("video-id", "second_id02");
+		(order === "owner first" ? announceOwner : announceMedia)();
+		await vi.advanceTimersByTimeAsync(50);
+		expect(mounted.replaceAdapter).not.toHaveBeenCalled();
+		(order === "owner first" ? announceMedia : announceOwner)();
+		await vi.advanceTimersByTimeAsync(50);
+		expect(mounted.replaceAdapter).toHaveBeenCalledOnce();
+		expect(mounted.replaceAdapter).toHaveBeenCalledWith(expect.objectContaining({video}));
+		expect(mounted.dispose).not.toHaveBeenCalled();
+		runtime.dispose();
+	});
+
 	it("docks on the admitted Amazon /dp player document and releases when it becomes another product", () => {
 		const href = "https://www.amazon.com/dp/B0HCJ112J8";
 		const sourceUrl = "https://www.primevideo.com/detail/0TBFWHTQWLSMFW67KBP9IC4UMU";

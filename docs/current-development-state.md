@@ -1,5 +1,9 @@
 # Current Development State
 
+## YouTube rooms in the catalog — November 21, 2026
+
+The YouTube staging candidate keeps admitted participants connected to the same room and call on Home, search, feeds, playlists and channels. Host playback of a new on-demand video brings the guest to that video. A browsing guest can use **Back to video** to return to the current one. See [YouTube adapter notes](youtube-adapter-notes.md) for supported surfaces.
+
 ## Crunchyroll rooms in the catalog — November 20, 2026
 
 On staging, a confirmed Crunchyroll room keeps its chat and call when a

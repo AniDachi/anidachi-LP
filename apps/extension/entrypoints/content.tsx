@@ -2,6 +2,9 @@ import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
 import type { LivePrimeRoomSession } from "../src/prime-room-contract";
 import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogReturn, supportsCatalogRoom } from "../src/catalog-room-routes";
+import { YouTubeVideoAdapter } from "../src/source-adapters/youtube/adapter";
+import { YOUTUBE_CATALOG_ORIGINS } from "../src/source-adapters/youtube/url";
+import { changedWatchOwner } from "../src/source-adapters/youtube/watch-player";
 import { NetflixVideoAdapter } from "../src/source-adapters/netflix/adapter";
 import { CrunchyrollVideoAdapter } from "../src/source-adapters/crunchyroll/adapter";
 import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
@@ -338,7 +341,7 @@ function startContentLifecycleSession(
         detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
-      const Adapter = { netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter }[catalogRoute ?? "primevideo"];
+      const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter }[catalogRoute ?? "primevideo"];
       catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
       return manager.reconcile({ status: "ready", adapter: catalogAdapter });
     }
@@ -434,13 +437,14 @@ function startContentLifecycleSession(
       return;
     }
 
-    if (mutationsAffectVideo(mutations)) {
+    if (mutationsAffectVideo(mutations) || mutations.some(changedWatchOwner)) {
       scheduleMountCheck();
     }
   });
   videoObserver.observe(document.documentElement, {
     childList: true,
     subtree: true,
+    ...(YOUTUBE_CATALOG_ORIGINS.includes(location.origin) && {attributeFilter: ["video-id"]}),
   });
   document.addEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
   document.addEventListener("loadstart", handleVideoLifecycleEvent, true);

@@ -13,8 +13,9 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { WebSocketServer } from "ws";
 
-const service = process.argv.includes("--crunchyroll") ? "crunchyroll" : process.argv.includes("--netflix") ? "netflix" : "primevideo";
+const service = process.argv.includes("--youtube") ? "youtube" : process.argv.includes("--crunchyroll") ? "crunchyroll" : process.argv.includes("--netflix") ? "netflix" : "primevideo";
 const routes = {
+	youtube: ["/watch?v=ABCDEFGHIJK", "/results?search_query=music", "/", "/watch?v=LMNOPQRSTUV"],
 	primevideo: ["/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA", "/storefront", "/region/na/mystuff/watchlist", "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB"],
 	netflix: ["/watch/123", "/browse", "/browse/my-list", "/watch/456"],
 	crunchyroll: ["/watch/GABC123", "/de/watchlist", "/ru/discover", "/de/watch/GDEF456/episode"],
@@ -23,7 +24,7 @@ const [path, catalogPath, firstCatalogPath, nextEpisode] = routes[service];
 const provider = "https://www." + service + ".com";
 const detail = provider + path;
 const catalog = provider + catalogPath;
-const fingerprint = service + "|" + path.slice(1);
+const fingerprint = service + "|" + (service === "youtube" ? new URL(detail).searchParams.get("v") : path.slice(1));
 const account = {
 	id: "user1",
 	displayName: "Host",

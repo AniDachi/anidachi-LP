@@ -1,3 +1,4 @@
+import { YOUTUBE_CATALOG_ORIGINS } from "./src/source-adapters/youtube/url";
 import { PRIME_VIDEO_DOMAIN_ROOTS } from "./src/source-adapters/primevideo/url";
 import { defineConfig } from "wxt";
 import {
@@ -147,7 +148,7 @@ export default defineConfig({
       },
       {
         resources: ["prime-media-tile.html", "prime-media-permission.html"],
-        matches: ["https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
+        matches: [...YOUTUBE_CATALOG_ORIGINS.map(origin => origin + "/*"), "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
       },
     ],
     action: {

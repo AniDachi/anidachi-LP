@@ -169,6 +169,7 @@ it("follows the exact live guest session without generating an invitation or wri
 });
 it.each([
 	["netflix", "/browse", "456", "/watch/456"],
+	["youtube", "/results?search_query=music", "a_-23456789", "/watch?v=a_-23456789"],
 	["crunchyroll", "/es-ES/videos/popular", "G_EP-456", "/es-ES/watch/G_EP-456"],
 ])("follows a %s catalog guest to the verified episode only while still browsing", async (provider, catalog, id, destination) => {
 	const origin = "https://www." + provider + ".com";
@@ -177,7 +178,7 @@ it.each([
 	const request = {type:"ANIDACHI_PRIME_LAUNCH", action:"follow", contentId:id, roomId:"room", visit:crypto.randomUUID()};
 	const record = {version:1 as const, revision:1, roomId:"room", ownerUserId:state.owner, participantSessionId:"mine", cameraEnabled:false, voiceMode:"push-to-talk" as const};
 	const sessionForTab = vi.spyOn(sessions, "loadRoomSessionForTab").mockResolvedValue(record);
-	const target = origin + "/watch/" + id;
+	const target = origin + (provider === "youtube" ? "/watch?v=" : "/watch/") + id;
 	const claim = vi.fn().mockResolvedValue({source:{provider,sourceUrl:target},receipt:"receipt"});
 	const update = vi.fn();
 	const get = vi.fn().mockResolvedValue(sender.tab);
