@@ -744,10 +744,10 @@ describe("watch history query-isolated browsing", () => {
 		).resolves.toEqual({ ok: true, data: optionsResponse() });
 
 		expect(requests).toEqual([
-			`/api/watch-history/v3/browse?providerVersion=2&mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&includeEpisodePreviews=true`,
+			`/api/watch-history/v3/browse?providerVersion=3&mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&includeEpisodePreviews=true`,
 			`/api/watch-history/v3/browse/title-episodes?mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&cursor=episode-page-2&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS`,
-			`/api/watch-history/v3/browse/sessions?providerVersion=2&mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS&episodeKey=crunchyroll%3Aepisode%3AE`,
-			"/api/watch-history/v3/browse/options?providerVersion=2&mode=shared&limit=20&cursor=options-page-2",
+			`/api/watch-history/v3/browse/sessions?providerVersion=3&mode=shared&search=Title&groupId=${GROUP}&participantUserId=${PARTICIPANT}&from=2026-09-01T00%3A00%3A00.000Z&until=2026-10-01T00%3A00%3A00.000Z&limit=20&provider=crunchyroll&titleKey=crunchyroll%3Aseries%3AS&episodeKey=crunchyroll%3Aepisode%3AE`,
+			"/api/watch-history/v3/browse/options?providerVersion=3&mode=shared&limit=20&cursor=options-page-2",
 		]);
 		expect(
 			(await storage.readRoot()).partitions[watchHistoryPartitionKey(OWNER, 4)]
@@ -983,13 +983,14 @@ describe("optional catalog browse command", () => {
 		specialsAggregate: null,
 		nextCursor: null,
 	});
-	it.each(["netflix", "crunchyroll"] as const)("sends %s catalog queries accepted by the real server handler", async provider => {
+	it.each(["netflix", "crunchyroll", "primevideo"] as const)("sends %s catalog queries accepted by the real server handler", async provider => {
     const webRequire = createRequire(resolve(__dirname, "../../web/package.json"));
     const { NextRequest } = webRequire("next/server");
-    const titleKey = provider === "netflix" ? "netflix:series:900" : input.titleKey;
-    const seasonKey = provider === "netflix" ? "netflix:season:800" : input.seasonKey;
+    const titleKey = provider === "primevideo" ? `primevideo:series:${"A".repeat(26)}` : provider === "netflix" ? "netflix:series:900" : input.titleKey;
+    const seasonKey = provider === "primevideo" ? `primevideo:season:${"B".repeat(26)}` : provider === "netflix" ? "netflix:season:800" : input.seasonKey;
+    const partial = provider === "primevideo" ? {includePartial: true} : {};
     const read = vi.fn(async ({ input: query }: { userId: string; input: unknown }) => {
-      expect(query).toEqual({ provider, titleKey, seasonKey, limit: 50 });
+      expect(query).toEqual({ provider, titleKey, seasonKey, limit: 50, ...partial });
       return { ...response(), provider, titleKey, seasonKey, state: "unavailable" as const };
     });
     const handler = createWatchHistoryGridGet({
@@ -1003,7 +1004,7 @@ describe("optional catalog browse command", () => {
       expect(result.status).toBe(200);
       return result;
     } });
-    expect(await setup.client.handle({ ...message, input: { provider, titleKey, seasonKey, limit: 50 } })).toMatchObject({ ok: true, data: { provider, titleKey, seasonKey } });
+    expect(await setup.client.handle({ ...message, input: { provider, titleKey, seasonKey, limit: 50, ...partial } })).toMatchObject({ ok: true, data: { provider, titleKey, seasonKey } });
     expect(new URL(emittedUrl).searchParams.has("providerVersion")).toBe(false);
     expect(read).toHaveBeenCalledTimes(1);
   });

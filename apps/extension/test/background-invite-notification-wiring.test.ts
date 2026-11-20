@@ -47,7 +47,7 @@ beforeEach(() => {
     storage: { onChanged: listener("storage") },
     permissions: { onRemoved: listener("permissions") },
     alarms: { onAlarm: listener("alarm") },
-    tabs: { onRemoved: listener("tabRemoved") },
+    tabs: { onRemoved: listener("tabRemoved"), onUpdated: listener("tabUpdated") },
   });
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });

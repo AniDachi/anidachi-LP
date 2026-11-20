@@ -54,11 +54,13 @@ export async function applyPersonalHistoryResume(
 		intent.intentId,
 	);
 	if (binding !== intent.ownerBinding) return "cancelled";
-	const matches = () =>
+	const ownerIsCurrent = () =>
 		input.isCurrent() &&
 		input.getOwner() === owner &&
 		!input.roomActive() &&
-		now() < intent.expiresAt &&
+		now() < intent.expiresAt;
+	const matches = () =>
+		ownerIsCurrent() &&
 		(() => {
 			const source = canonicalizeRoomSourceUrl(
 				input.adapter.getSourceDescriptor()?.sourceUrl ?? "",
@@ -73,9 +75,26 @@ export async function applyPersonalHistoryResume(
 		Number.isFinite(input.adapter.video.duration) &&
 		input.adapter.video.duration > 0 &&
 		intent.currentTime <= input.adapter.video.duration;
+	// Prime binds the content ID before its first asynchronous SDK snapshot.
+	// Only that exact binding may wait without a descriptor; it cannot seek yet.
+	if (
+		intent.provider === "primevideo" &&
+		input.adapter.provider === "primevideo" &&
+		!input.adapter.getSourceDescriptor() &&
+		input.adapter.getPlaybackSnapshot().phase === "transition"
+	) {
+		const source = canonicalizeRoomSourceUrl(intent.sourceUrl, "primevideo");
+		return ownerIsCurrent() &&
+			now() >= intent.issuedAt &&
+			source.ok &&
+			source.source.sourceUrl === intent.sourceUrl &&
+			input.adapter.getFingerprint() === source.source.videoFingerprint
+			? "waiting"
+			: "cancelled";
+	}
 	if (!matches()) return "cancelled";
 	if (!ready()) return "waiting";
-	if (intent.provider === "crunchyroll" || intent.provider === "netflix") {
+	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo") {
 		if (
 			!input.adapter.getPersonalResumeReadiness ||
 			!input.adapter.seekPersonalResume
