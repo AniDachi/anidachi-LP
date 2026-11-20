@@ -815,13 +815,21 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
 	const confirmedPrimeRoom = useRef<string | null>(null);
 	useLayoutEffect(() => {
-		if (!supportsCatalogRoom(adapter.provider) || roomId !== confirmedPrimeRoom.current)
+		if (!supportsCatalogRoom(adapter.provider) || roomId !== confirmedPrimeRoom.current ||
+			(roomSourceProvider && roomSourceProvider !== adapter.provider))
 			confirmedPrimeRoom.current = null;
 		if (supportsCatalogRoom(adapter.provider) && roomId && roomSnapshotReady && roomSourceProvider === adapter.provider)
 			confirmedPrimeRoom.current = roomId;
+		// A Netflix guest can be admitted before the host publishes a playback source.
+		if (adapter.provider === "netflix" && !roomSourceProvider && roomSnapshotReady) {
+			const admitted = storedRoomSession && storedRoomSession.roomId === roomId && participants.some(p =>
+				p.id === storedRoomSession.ownerUserId && p.participantSessionId === storedRoomSession.participantSessionId &&
+				p.connected !== false);
+			confirmedPrimeRoom.current = admitted ? roomId : null;
+		}
 		onPrimeRoomChange?.(confirmedPrimeRoom.current);
 		if (!roomId) catalogFollow.setRoom(null);
-	}, [adapter.provider, roomId, roomSnapshotReady, roomSourceProvider, onPrimeRoomChange, catalogFollow]);
+	}, [adapter.provider, roomId, roomSnapshotReady, roomSourceProvider, storedRoomSession, participants, onPrimeRoomChange, catalogFollow]);
 	const [signalingTransportReady, setSignalingTransportReady] =
 		useState<SignalingTransportReady | null>(null);
 	const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
