@@ -138,7 +138,12 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
             Discord and synced playback via AniDachi — not Go Live screen share.
           </strong>{" "}
           Everyone streams from their own Crunchyroll tab at full quality while
-          Discord carries reactions in real time.
+          Discord carries reactions in real time. Setup steps without Discord
+          are on the{" "}
+          <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
+            Crunchyroll watch party
+          </Link>{" "}
+          page.
         </p>
 
         <h2

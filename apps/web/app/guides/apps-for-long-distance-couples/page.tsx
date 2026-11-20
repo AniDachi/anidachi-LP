@@ -115,9 +115,9 @@ export default function AppsForLongDistanceCouplesPage() {
             title: "Anime-only nights",
             body: (
               <>
-                If the date is only anime, use{" "}
+                If the date is only anime, see the{" "}
                 <Link href="/best-apps-watch-anime-together-long-distance">
-                  best apps to watch anime together long distance
+                  best long-distance anime apps
                 </Link>
                 .
               </>

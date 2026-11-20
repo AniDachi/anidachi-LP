@@ -167,6 +167,16 @@ Attribution: first-touch `seo_landing_path` is stored in session storage and sen
 
 Owner-approved exceptions to the safety rules above, newest first.
 
+- **2026-11-20, recrawl sitemap and the anime head-term split (owner in chat, ANI-38, ANI-8):**
+  - **Crunchyroll hub, ANI-38 batch 1:** the rollback rule triggered (the hub was below 450 impressions a week for two weeks, and "crunchyroll watch party" fell from 5.8 to 8.6). On 20 Nov, URL Inspection still showed several merged URLs indexed under their own address, last crawled before the redirect. The owner held the rollback until 7 Dec.
+  - **Temporary recrawl sitemap:** `/sitemap-redirects.xml`, listed in robots.txt, carries the 15 batch-1 URLs and `/compare/anidachi-vs-amazon-watch-party` so Google refetches them. The list is `lib/recrawl-redirects.ts`, also used by `next.config.ts`. A test checks every listed URL redirects permanently and none is in `sitemap.xml`. Remove it after 18 Dec 2026.
+  - **New hub links:** `/guides/can-you-screen-share-crunchyroll-on-discord` and `/guides/crunchyroll-watch-party-with-discord` link the hub in their opening answer, with the anchor "Crunchyroll watch party".
+  - **Anime split, ANI-8:** `/watch-anime-together` owns "watch anime together". Same URLs, new titles and H1s that drop the head term:
+    - `/guides/how-to-watch-anime-together-without-screen-share`: title "Skip Screen Share: Sync Anime With Friends Instead", H1 "How to Watch Anime With Friends Without Screen Share". `dateModified` is unchanged (title-only change).
+    - `/best-apps-watch-anime-together-long-distance`: title "Long Distance Anime: 7 Best Apps to Watch Together", with "long distance" in front.
+    - Anchors to both pages no longer say "watch anime together" (14 pages and `guide-links.ts`).
+  - **Review** on 7 Dec and 17 Dec. Rollback: revert the commit.
+
 - **2026-11-20, movies guide becomes the how-to page; Netflix hub title (owner in chat, ANI-47, ANI-67):** the homepage owns "watch movies together online" (ANI-36), so `/guides/watch-movies-together-online` (same URL, not indexed yet) moves to the how-to searches.
   - **Movies guide:** title "How to Watch Movies Together Online: 4 Ways", H1 "How to Watch Movies Together Online with Friends". It targets "how to watch movies together online", "how to watch movies with friends online", "best way" and "ways to watch movies together online".
   - **Movies guide content:** the comparison gains a FaceTime/SharePlay row, from Apple's SharePlay and FaceTime-on-the-web support pages, checked 20 Nov 2026; it names no app as supported. There's a new FaceTime FAQ, and "film" is used alongside "movie". The breadcrumb parent is now `/guides`. It links once to `/` with the anchor "watch movies together online".

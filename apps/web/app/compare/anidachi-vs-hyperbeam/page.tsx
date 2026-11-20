@@ -199,7 +199,7 @@ export default function AniDachiVsHyperbeamPage() {
           href="/guides/how-to-watch-anime-together-without-screen-share"
           className="text-brand-orange hover:underline"
         >
-          how to watch anime together without screen share
+          how to watch anime with friends without screen share
         </Link>
         . See{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
+import { ANI38_BATCH1_SOURCES } from "./lib/recrawl-redirects";
 
 const nextConfig: NextConfig = {
   // Dynamic routes (e.g. /extension) stream metadata into <body> for unlisted user agents.
@@ -129,23 +130,7 @@ const nextConfig: NextConfig = {
       },
       // ANI-38 batch 1 (owner-approved 2026-11-10): Crunchyroll hub-intent,
       // Teleparty and Crunchyroll Party pages fold into the Crunchyroll hub.
-      ...[
-        "/guides/how-to-sync-crunchyroll-with-friends",
-        "/guides/crunchyroll-group-watch",
-        "/guides/how-to-host-a-crunchyroll-watch-party",
-        "/guides/watch-party-app-for-crunchyroll",
-        "/guides/crunchyroll-watch-party-chrome-extension",
-        "/guides/crunchyroll-watch-party-free",
-        "/guides/how-to-watch-crunchyroll-together-without-screen-share",
-        "/guides/does-crunchyroll-have-watch-party",
-        "/guides/does-teleparty-work-with-crunchyroll",
-        "/guides/teleparty-not-working-crunchyroll",
-        "/guides/netflix-party-for-crunchyroll",
-        "/guides/crunchyroll-party-alternative",
-        "/guides/is-crunchyroll-party-worth-it",
-        "/compare/anidachi-vs-crunchyroll-party",
-        "/compare/crunchyroll-party-vs-teleparty-for-anime",
-      ].map((source) => ({
+      ...ANI38_BATCH1_SOURCES.map((source) => ({
         source,
         destination: "/watch-crunchyroll-together",
         permanent: true,
