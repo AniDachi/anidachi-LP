@@ -6,7 +6,7 @@ export function isCrunchyrollCatalogOrigin(origin: string) {
 
 export function crunchyrollCatalogPath(pathname: string) {
 	const path = pathname.replace(localePrefix, "") || "/";
-	return path === "/" || /^\/(?:videos|series|movie|movies|music|artist|search|watchlist|history|simulcast|simulcastcalendar|releasecalendar|discovery|crunchylists)(?:\/|$)/.test(path);
+	return path === "/" || /^\/(?:videos|series|movie|movies|music|artist|search|watchlist|history|simulcast|simulcastcalendar|releasecalendar|discover|discovery|crunchylists)(?:\/|$)/.test(path);
 }
 
 /** Apply the guest's site language to a canonical Crunchyroll episode URL. */

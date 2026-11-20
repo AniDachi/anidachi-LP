@@ -32,12 +32,14 @@ it.each([
 });
 it.each([
 	"/", "/es-ES", "/de/videos/alphabetical", "/watchlist", "/history", "/de/search?q=anime",
+	"/discover", "/ru/discover", "/es-ES/discover/?from=home", "/discovery",
 	"/fr/series/GSERIES/title", "/simulcast", "/releasecalendar", "/pt-br/watch/G_EP-2/nome",
 ])("recognizes a Crunchyroll catalog or player route on %s", path => {
 	expect(catalogRoomProvider("https://www.crunchyroll.com" + path)).toBe("crunchyroll");
 });
 it.each([
 	"https://www.crunchyroll.com/account", "https://www.crunchyroll.com/fr/login",
+	"https://www.crunchyroll.com/ru/discover-account",
 	"https://store.crunchyroll.com/", "https://www.crunchyroll.com.evil.test/watch/ABC",
 	"https://user@www.crunchyroll.com/search", "https://www.crunchyroll.com:9999/videos",
 	"https://www.crunchyroll.com/fr/watch/EP/unsupported/nested", "http://www.crunchyroll.com/",
