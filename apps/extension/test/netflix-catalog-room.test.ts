@@ -68,6 +68,7 @@ it("follows a new Netflix play once even for the same episode, while ignoring an
 		},
 	};
 	const play = host.playback(event)!;
+	expect(play.state.hostSurface).toBe("player");
 	guest.setRoom("room");
 	guest.receive(play.state, source, launch);
 	guest.setBrowsing(true);
@@ -75,6 +76,7 @@ it("follows a new Netflix play once even for the same episode, while ignoring an
 	expect(launch).not.toHaveBeenCalled();
 	const pause = host.close("room")!;
 	expect(pause.state.playing).toBe(false);
+	expect(pause.state.hostSurface).toBe("catalog");
 	guest.receive(pause.state, source, launch);
 	const next = host.playback(event)!;
 	guest.receive(next.state, source, launch);
@@ -137,6 +139,7 @@ it("waits for verified playback when a new player document reattaches an existin
 		host.playback({ ...event, state: { ...event.state, playing: false } }),
 	).toBeNull();
 	expect(host.playback(event)?.state.primePlayerVisit).toBeDefined();
+	expect(host.playback({ ...event, state: { ...event.state, playing: false } })?.state.hostSurface).toBe("player");
 	expect(
 		host.playback({ ...event, state: { ...event.state, playing: false } })
 			?.state.playing,

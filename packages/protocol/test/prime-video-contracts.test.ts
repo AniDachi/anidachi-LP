@@ -46,6 +46,10 @@ it("preserves the optional host player visit without requiring it from existing 
 	expect(PlaybackStateSchema.parse(state)).toEqual(state);
 	const visit = { ...state, primePlayerVisit: crypto.randomUUID() };
 	expect(PlaybackStateSchema.parse(visit)).toEqual(visit);
+	for (const hostSurface of ["player", "catalog"]) {
+		expect(PlaybackStateSchema.parse({ ...state, hostSurface }).hostSurface).toBe(hostSurface);
+	}
+	expect(PlaybackStateSchema.safeParse({ ...state, hostSurface: "unknown" }).success).toBe(false);
 	expect(PlaybackStateSchema.safeParse({ ...state, primePlayerVisit: "invalid" }).success).toBe(false);
 });
 const ID = "11111111-1111-4111-8111-111111111111";

@@ -17,7 +17,8 @@ export class PrimeHostVisit {
     if (!supportsCatalogRoom(event.source?.provider)) return event;
     this.waitingForPlay = false;
     this.visit ??= crypto.randomUUID();
-    this.last = { ...event, state: { ...event.state, primePlayerVisit: this.visit } };
+    this.last = { ...event, state: { ...event.state, primePlayerVisit: this.visit,
+      ...(event.source?.provider === "netflix" && { hostSurface: "player" as const }) } };
     return this.last;
   }
 
@@ -29,7 +30,8 @@ export class PrimeHostVisit {
     if (!last || last.roomId !== roomId) return null;
     const updatedAt = Date.now();
     const hostTime = Math.min(last.source?.duration ?? Infinity, getExpectedHostTime(last.state, updatedAt));
-    return { ...last, state: { ...last.state, hostTime, playing: false, updatedAt } };
+    return { ...last, state: { ...last.state, hostTime, playing: false, updatedAt,
+      ...(last.source?.provider === "netflix" && { hostSurface: "catalog" as const }) } };
   }
 }
 

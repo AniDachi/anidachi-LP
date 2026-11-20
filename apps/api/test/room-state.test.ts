@@ -1060,6 +1060,13 @@ describe("Netflix room source admission", () => {
     const source = (id: string): WatchSourceDescriptor => ({ provider: "netflix", sourceUrl: `https://www.netflix.com/watch/${id}`, canonicalUrl: `https://www.netflix.com/watch/${id}`, videoFingerprint: `netflix|watch/${id}`, title: "Netflix episode" });
     const first = source("70196259");
     expect(room.updateHostState("host", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(true);
+    for (const hostSurface of ["player", "catalog"] as const) {
+      const paused = { ...playbackState(first.videoFingerprint, first.sourceUrl), playing: false, hostTime: 83, hostSurface };
+      expect(room.updateHostState("host", paused, first).sourceChanged).toBe(false);
+      expect(new RoomState("netflix-room", undefined, room.toSnapshot()).snapshot).toMatchObject({
+        hostState: { playing: false, hostTime: 83, hostSurface },
+      });
+    }
     const next = source("70196260");
     expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), next).sourceChanged).toBe(true);
     expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, provider: "crunchyroll" }).accepted).toBe(false);

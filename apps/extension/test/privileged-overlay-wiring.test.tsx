@@ -119,6 +119,7 @@ describe("privileged overlay wiring", () => {
 		const onRoom = vi.fn();
 		const view = await renderOverlay(adapter => Object.assign(adapter, {
 			id: "netflix", provider: "netflix", getFingerprint: () => "netflix|watch/80025313",
+			playbackPolicy: {},
 			getSourceDescriptor: () => null,
 		}), undefined, onRoom);
 		try {
@@ -136,6 +137,34 @@ describe("privileged overlay wiring", () => {
 			expect(onRoom).not.toHaveBeenCalledWith(record.roomId);
 			await snapshot(record.participantSessionId, true, 3);
 			expect(onRoom).toHaveBeenLastCalledWith(record.roomId);
+			const sourceUrl = "https://www.netflix.com/watch/80025313";
+			const source = {provider: "netflix" as const, sourceUrl, canonicalUrl: sourceUrl, videoFingerprint: view.adapter.getFingerprint(), title: "Episode"};
+			const state = {sourceUrl, videoFingerprint: source.videoFingerprint, hostTime: 47, updatedAt: Date.now(), playbackRate: 1, playing: true, hostSurface: "player" as const};
+			const update = (next: typeof state | Omit<typeof state, "hostSurface"> & {hostSurface?: "catalog"}) =>
+				act(async () => options.onEvent({type: "HOST_STATE", state: next}));
+			const action = () => view.container.querySelector<HTMLButtonElement>(".netflix-return-to-video");
+			await act(async () => options.onEvent({type: "ROOM_SNAPSHOT", roomId: record.roomId, roomGeneration: 1,
+				sourceGeneration: 1, serverSeq: 4, source, hostState: state, participants: [
+					{...guestParticipant(), role: "host"}, {...hostParticipant(), role: "viewer", participantSessionId: record.participantSessionId},
+				]}));
+			expect(action()).toBeNull();
+			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false} primeBrowsing onPrimeRoomChange={onRoom} />));
+			expect(action()?.textContent).toBe("Back to video");
+			const navigate = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+			await update({...state, playing: false});
+			await click(action()!);
+			expect(navigate).toHaveBeenCalledExactlyOnceWith(sourceUrl);
+			await update({...state, playing: false, hostSurface: "catalog"});
+			expect(action()).toBeNull();
+			await update({...state, hostSurface: undefined});
+			expect(action()).toBeNull();
+			await update({...state, sourceUrl: "https://www.netflix.com/watch/99"});
+			expect(action()).toBeNull();
+			const seek = vi.spyOn(view.adapter, "seek");
+			await update({...state, hostTime: 83, playing: false});
+			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} onPrimeRoomChange={onRoom} />));
+			expect(action()).toBeNull();
+			expect(seek).toHaveBeenCalledWith(83, {resumeIfPlaying: false});
 			await act(async () => options.onEvent({
 				type: "ROOM_ENDED", roomId: record.roomId, reason: "host_ended", endedAt: Date.now(),
 			}));

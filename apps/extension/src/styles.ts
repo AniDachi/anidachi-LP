@@ -128,6 +128,29 @@ ${extensionThemeTokens}
     outline-offset: 2px;
   }
 
+  .netflix-return-to-video {
+    position: absolute;
+    top: var(--top-bubble-top, 10px);
+    right: calc(var(--top-bubble-right, 10px) + var(--capsule-width, 78px) + 8px);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 11px;
+    border: 1px solid var(--ad-border-strong);
+    border-radius: 999px;
+    background: rgba(9, 9, 11, 0.88);
+    color: inherit;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .netflix-return-to-video:hover { background: #242426; }
+  .netflix-return-to-video:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
   .anidachi-overlay.player-controls-visible .top-bubble {
     background: rgba(9, 9, 11, 0.78);
     border-color: rgba(255, 138, 61, 0.28);
