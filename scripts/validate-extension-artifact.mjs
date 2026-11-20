@@ -206,7 +206,7 @@ const logo = publicResources.find(entry => entry.resources?.includes("Anidachi_l
 const tile = publicResources.find(entry => entry.resources?.includes("prime-media-tile.html"));
 assertExactAllowlist("logo resource", logo?.resources ?? [], ["Anidachi_logo.png"]);
 assertExactAllowlist("logo match", logo?.matches ?? [], videoOrigins);
-assertExactAllowlist("Prime tile resource", tile?.resources ?? [], ["prime-media-tile.html"]);
+assertExactAllowlist("Prime tile resource", tile?.resources ?? [], ["prime-media-tile.html", "prime-media-permission.html"]);
 assertExactAllowlist("Prime tile match", tile?.matches ?? [], videoOrigins.filter(origin => origin.includes(".primevideo.com/") || origin.includes(".amazon.")));
 if (!permissions.includes("offscreen")) throw new Error("Missing offscreen permission for persistent Prime calls");
 

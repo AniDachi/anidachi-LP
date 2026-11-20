@@ -27,6 +27,7 @@ export type HotkeyEventLike = Pick<
   | "altKey"
   | "code"
   | "ctrlKey"
+  | "isTrusted"
   | "isComposing"
   | "key"
   | "metaKey"
@@ -54,7 +55,7 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   }
 
   if (state.voiceMode === "push-to-talk" && !event.shiftKey && isVoiceKey(event)) {
-    if (event.type === "keydown" && !event.repeat) {
+    if (event.type === "keydown" && event.isTrusted && !event.repeat) {
       return { type: "voice-start" };
     }
 

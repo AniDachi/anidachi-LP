@@ -2,7 +2,7 @@ import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from
 import type {VoiceMode} from "@anidachi/protocol";
 import type {GhostCamOptions, GhostCamSession} from "./ghost-cam";
 import type {P2PMediaDiagnostics} from "./p2p-media";
-import {mediaAccessChannel, tilePage} from "./prime-media-access";
+import {mediaAccessChannel, permissionPage, tilePage, type PrimeDevicePrompt} from "./prime-media-access";
 import {emptyPrimeMediaState, type PrimeMediaBridge, type PrimeMediaReply} from "./prime-room-media-types";
 import type {ParticipantAudioPreference} from "./voice-audio-preferences";
 
@@ -11,6 +11,11 @@ export interface PrimeGhostVideo {
   revision: string;
   local: boolean;
   participantId: string;
+}
+
+export function PrimeDevicePermissionPrompt({device, ticket}: PrimeDevicePrompt) {
+  return <iframe hidden tabIndex={-1} title={`AniDachi ${device} permission`} allow={device}
+    src={chrome.runtime.getURL(permissionPage) + "#" + ticket} />;
 }
 
 export function PrimeCameraTile({participantId, fallback}: {participantId: string; fallback: string}) {

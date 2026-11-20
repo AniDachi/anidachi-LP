@@ -1,8 +1,8 @@
 import type { RoomMediaKind } from "@anidachi/protocol";
 import type { GhostVideo } from "./media-types";
 import {
-  mediaAccessChannel, mediaOwnerChannel, sameMediaScope,
-  type OwnerAccess, type PrimeMediaScope, type PrimeTileWindow,
+  mediaOwnerChannel, sameMediaScope,
+  type OwnerAccess, type PrimeDevicePrompt, type PrimeMediaScope, type PrimeTileWindow,
 } from "./prime-media-access";
 
 type Ticket = { id: string; expires: number };
@@ -11,7 +11,7 @@ type Permission = {
   device: RoomMediaKind;
   valid: () => boolean;
   finish: (granted: boolean) => void;
-  permissionTabId?: number;
+  documentId?: string;
 };
 
 const owners = new Set<PrimeMediaOwnerAccess>();
@@ -37,12 +37,13 @@ function installAccess() {
 
 export class PrimeMediaOwnerAccess {
   private attached = true;
+  private attachmentGeneration = 0;
   private tickets = new Map<string, Ticket>();
   private grants = new Map<string, Ticket>();
   private bindings = new Set<Binding>();
   private permissions = new Map<string, Permission>();
   private streams = new Map<string, MediaStream>();
-  constructor(readonly scope: PrimeMediaScope) {
+  constructor(readonly scope: PrimeMediaScope, private publishPrompts: (prompts: PrimeDevicePrompt[]) => void) {
     installAccess();
     owners.add(this);
   }
@@ -85,7 +86,13 @@ export class PrimeMediaOwnerAccess {
     if (request.action === "permission" || request.action === "settle") {
       const pending = this.permissions.get(request.ticket);
       if (!pending?.valid()) return null;
-      if (request.action === "settle") pending.finish(request.allowed);
+      if (request.action === "permission") {
+        if (pending.documentId) return null;
+        pending.documentId = request.documentId;
+      } else {
+        if (pending.documentId !== request.documentId) return null;
+        pending.finish(request.allowed);
+      }
       return pending.device;
     }
     return null;
@@ -107,25 +114,31 @@ export class PrimeMediaOwnerAccess {
 
   detach() {
     this.attached = false;
+    this.attachmentGeneration++;
     this.tickets.clear();
     this.grants.clear();
     for (const binding of this.bindings) binding.target.srcObject = null;
     this.bindings.clear();
+    for (const permission of this.permissions.values()) permission.finish(false);
   }
 
   close() {
     this.detach();
     this.streams.clear();
-    for (const permission of this.permissions.values()) permission.finish(false);
     owners.delete(this);
   }
 
   async capture(device: RoomMediaKind, constraints: MediaStreamConstraints, valid: () => boolean, promptAllowed: () => boolean) {
     if (!valid()) throw new DOMException("Capture expired", "AbortError");
+    const generation = this.attachmentGeneration;
     const status = await navigator.permissions.query({name: device as PermissionName});
     if (!valid()) throw new DOMException("Capture expired", "AbortError");
-    if (status.state === "denied" || (status.state !== "granted" && (!promptAllowed() || !await this.requestPermission(device, promptAllowed)))) {
-      throw new DOMException("Device permission was denied", "NotAllowedError");
+    if (status.state !== "granted") {
+      // Releasing push-to-talk stops publication, but the user can still finish giving microphone consent.
+      const mayAsk = () => this.attached && generation === this.attachmentGeneration && promptAllowed() &&
+        (device === "microphone" || valid());
+      if (status.state !== "prompt" || !mayAsk() || !await this.requestPermission(device, mayAsk))
+        throw new DOMException("Device permission was denied", "NotAllowedError");
     }
     if (!valid()) throw new DOMException("Capture expired", "AbortError");
     return navigator.mediaDevices.getUserMedia(constraints);
@@ -133,26 +146,23 @@ export class PrimeMediaOwnerAccess {
 
   private requestPermission(device: RoomMediaKind, valid: () => boolean): Promise<boolean> {
     const ticket = crypto.randomUUID();
-    const details = {channel: mediaAccessChannel, ticket, roomTabId: this.scope.tabId};
-    const closePage = (permissionTabId: number) => {
-      void chrome.runtime.sendMessage({...details, action: "close", permissionTabId}).catch(() => {});
-    };
+    for (const pending of this.permissions.values()) if (pending.device === device) pending.finish(false);
     return new Promise(resolve => {
       const timer = window.setTimeout(() => pending.finish(false), 120_000);
       const pending: Permission = {
         device, valid, finish: granted => {
           if (!this.permissions.delete(ticket)) return;
           window.clearTimeout(timer);
-          if (pending.permissionTabId !== undefined) closePage(pending.permissionTabId);
+          this.notifyPrompts();
           resolve(granted && valid());
         },
       };
       this.permissions.set(ticket, pending);
-      void chrome.runtime.sendMessage({...details, action: "open"}).then(tabId => {
-        if (typeof tabId !== "number") { pending.finish(false); return; }
-        pending.permissionTabId = tabId;
-        if (!this.permissions.has(ticket)) closePage(tabId);
-      }, () => pending.finish(false));
+      this.notifyPrompts();
     });
+  }
+
+  private notifyPrompts() {
+    this.publishPrompts(Array.from(this.permissions, ([ticket, {device}]) => ({ticket, device})));
   }
 }

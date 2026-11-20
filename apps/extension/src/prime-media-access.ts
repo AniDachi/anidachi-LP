@@ -11,11 +11,16 @@ export const mediaOwnerChannel = "anidachi:prime-media-owner:v1";
 export const tilePage = "prime-media-tile.html";
 export const permissionPage = "prime-media-permission.html";
 
+export interface PrimeDevicePrompt {
+  device: RoomMediaKind;
+  ticket: string;
+}
+
 export type OwnerAccess =
   | { action: "ticket"; participantId: string }
   | { action: "redeem"; ticket: string }
-  | { action: "permission"; ticket: string }
-  | { action: "settle"; ticket: string; allowed: boolean };
+  | { action: "permission"; ticket: string; documentId: string }
+  | { action: "settle"; ticket: string; documentId: string; allowed: boolean };
 
 export interface PrimeTileWindow extends Window {
   bindPrimeRoomTile?: (grant: string, target: HTMLVideoElement) => (() => void) | undefined;

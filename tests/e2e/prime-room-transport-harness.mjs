@@ -103,7 +103,7 @@ try {
 			host_permissions: [provider + "/*", "http://127.0.0.1/*"],
 			background: { service_worker: "background.js" },
 			content_scripts: [{ matches: [provider + "/*"], js: ["page.js"] }],
-			web_accessible_resources: [{ resources: ["prime-media-tile.html"], matches: [provider + "/*"] }],
+			web_accessible_resources: [{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: [provider + "/*"] }],
 		}),
 	);
 	await writeFile(
@@ -112,7 +112,9 @@ try {
 	);
 	await writeFile(join(directory, "prime-media-tile.html"),
 		'<video autoplay muted playsinline></video><script src="tile.js"></script>');
+	await writeFile(join(directory, "prime-media-permission.html"), '<script src="permission.js"></script>');
 	const scripts = {
+		permission: 'import "./entrypoints/prime-media-permission/main";',
 		background:
 			'import {registerPrimeRoomTransport} from "./src/prime-room-background"; import {installPrimeMediaBackground} from "./src/prime-media-background"; registerPrimeRoomTransport(); installPrimeMediaBackground();',
 		tile: 'import "./entrypoints/prime-media-tile/main";',
@@ -122,12 +124,16 @@ try {
 			import {PrimeRoomClient, getLivePrimeRoomSession, retireUnattachedPrimeRoom} from "./src/prime-room-client";
 			import {createElement} from "react";
 			import {createRoot} from "react-dom/client";
-			import {PrimeCameraTile} from "./src/prime-media-session";
+			import {PrimeCameraTile, PrimeDevicePermissionPrompt} from "./src/prime-media-session";
 			import {mediaAccessChannel} from "./src/prime-media-access";
 			import {overlayStyles} from "./src/styles";
 			const client = new PrimeRoomClient();
+			const promptRoot = createRoot(document.body.appendChild(document.createElement("div")));
 			client.subscribeMedia(state => {
-				if (state.type === "prime-media-state") document.body.dataset.media = JSON.stringify({videos: state.videos.length, status: state.voiceMessage});
+				if (state.type !== "prime-media-state") return;
+				promptRoot.render(state.permissionRequests.map(request => createElement(PrimeDevicePermissionPrompt, {...request, key:request.ticket})));
+				if (state.permissionRequests.length) document.body.dataset.requestedDevice = state.permissionRequests[0].device;
+				document.body.dataset.media = JSON.stringify({videos: state.videos.length, status: state.voiceMessage, microphone: state.microphoneStatus});
 			});
 			window.addEventListener("message", event => {
 				if (event.origin === chrome.runtime.getURL("").slice(0,-1) && event.data?.channel === mediaAccessChannel && event.data.action === "request")
@@ -144,7 +150,17 @@ try {
 					createRoot(tile).render(createElement(PrimeCameraTile, {participantId: "user1", fallback: "H"}));
 					return;
 				}
+				if (action === "enable-microphone") {
+					client.sendMediaCommand({type:"gesture", device:"microphone"});
+					client.sendMediaCommand({type:"microphone", enabled:true, mode:"open-mic", release:"immediate"});
+					return;
+				}
+				if (action === "disable-camera") {
+					client.sendMediaCommand({type:"camera", enabled:false});
+					return;
+				}
 				if (action === "enable-camera") {
+					client.sendMediaCommand({type:"gesture", device:"camera"});
 					client.sendMediaCommand({type:"outputs", preferences:{}});
 					client.sendMediaCommand({type:"camera", enabled:true});
 					return;
@@ -206,7 +222,7 @@ try {
 			"--disable-background-networking",
 			"--disable-component-update",
 			"--use-fake-device-for-media-stream",
-			"--use-fake-ui-for-media-stream",
+			"--deny-permission-prompts",
 		],
 	});
 	await context.route(provider + "/**", route =>
@@ -215,7 +231,8 @@ try {
 	const worker =
 		context.serviceWorkers()[0] ??
 		(await context.waitForEvent("serviceworker"));
-	await context.grantPermissions(["camera"]);
+	let extraPages = 0;
+	context.on("page", () => extraPages++);
 	await worker.evaluate(
 		(user) =>
 			chrome.storage.local.set({
@@ -283,7 +300,26 @@ try {
 	assert.equal(await page.locator(".prime-camera-fallback").textContent(), "H");
 	await delay(400);
 	await act("enable-camera");
+	await page.waitForFunction(() => JSON.parse(document.body.dataset.media).status?.includes("blocked"),
+		undefined, {timeout: 10_000});
+	assert.equal(await page.locator("body").getAttribute("data-requested-device"), "camera");
+	assert.equal(await page.locator("iframe[title='AniDachi camera permission']").count(), 0);
+	assert.equal(closed, 0);
+	await act("disable-camera");
+	// Set a saved grant for this extension only, then exercise the normal retry.
+	const session = await context.newCDPSession(page);
+	const extensionOrigin = worker.url().slice(0, worker.url().lastIndexOf("/"));
+	await session.send("Browser.setPermission", {permission: {name: "camera"}, setting: "granted", origin: extensionOrigin});
+	await act("enable-camera");
 	await expectMovingCamera();
+	assert.equal(extraPages, 0);
+	assert.equal(page.url(), detail);
+	await act("enable-microphone");
+	await page.waitForFunction(() => document.body.dataset.requestedDevice === "microphone" &&
+		JSON.parse(document.body.dataset.media).status?.toLowerCase().includes("microphone"));
+	await expectMovingCamera();
+	assert.equal(extraPages, 0);
+	assert.equal(closed, 0);
 	await navigate(provider + "/region/na/mystuff/watchlist");
 	await act("probe");
 	await page.waitForFunction(

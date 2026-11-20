@@ -146,7 +146,7 @@ export default defineConfig({
         matches: useBroadHostPermissions ? ["*://*/*"] : STORE_VIDEO_ORIGINS,
       },
       {
-        resources: ["prime-media-tile.html"],
+        resources: ["prime-media-tile.html", "prime-media-permission.html"],
         matches: PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`),
       },
     ],

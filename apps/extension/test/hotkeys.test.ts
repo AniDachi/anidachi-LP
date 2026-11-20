@@ -19,6 +19,10 @@ const activeState = {
 };
 
 describe("Anidachi hotkeys", () => {
+  it("requires a user key press to start microphone capture", () => {
+    expect(getHotkeyAction(keyEvent({code:"KeyV", key:"v", type:"keydown", isTrusted:false}), activeState)).toBeNull();
+  });
+
   it("starts voice capture on a plain V keydown", () => {
     expect(
       getHotkeyAction(keyEvent({ code: "KeyV", key: "v", type: "keydown" }), activeState),
@@ -347,6 +351,7 @@ describe("Anidachi hotkeys", () => {
 
 function keyEvent(overrides: Partial<KeyboardEvent> = {}) {
   return {
+    isTrusted: true,
     altKey: false,
     code: "",
     ctrlKey: false,

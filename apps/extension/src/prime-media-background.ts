@@ -29,12 +29,10 @@ async function confirmed(tabId: number, documentId?: string): Promise<PrimeMedia
 }
 
 interface AccessRequest {
-  action: "ticket" | "redeem" | "open" | "close" | "permission" | "settle";
+  action: "ticket" | "redeem" | "permission" | "settle";
   participantId?: string;
   ticket?: string;
-  roomTabId?: number;
   allowed?: boolean;
-  permissionTabId?: number;
 }
 
 async function handle(request: AccessRequest, sender: chrome.runtime.MessageSender) {
@@ -53,26 +51,12 @@ async function handle(request: AccessRequest, sender: chrome.runtime.MessageSend
     const scope = await confirmed(tabId);
     return scope && owner(scope, {action: "redeem", ticket});
   }
-  const roomTabId = request.roomTabId;
-  if (typeof roomTabId !== "number" || !Number.isInteger(roomTabId)) return null;
-  const hash = new URLSearchParams({ roomTabId: String(roomTabId), ticket });
-  const url = chrome.runtime.getURL(permissionPage) + "#" + hash;
-  if (request.action === "close") {
-    if (sender.tab || senderPage !== chrome.runtime.getURL("prime-room.html") || typeof request.permissionTabId !== "number") return null;
-    const tab = await chrome.tabs.get(request.permissionTabId);
-    if (tab.url === url || tab.pendingUrl === url) await chrome.tabs.remove(request.permissionTabId);
-    return null;
-  }
-  const scope = await confirmed(roomTabId);
+  const documentId = sender.documentId;
+  if (tabId === undefined || !documentId || (sender.frameId ?? 0) <= 0 ||
+      senderPage !== chrome.runtime.getURL(permissionPage)) return null;
+  const scope = await confirmed(tabId);
   if (!scope) return null;
-  if (request.action === "open") {
-    if (sender.tab || senderPage !== chrome.runtime.getURL("prime-room.html")) return null;
-    if (!await owner(scope, {action: "permission", ticket})) return null;
-    const tab = await chrome.tabs.create({ url, openerTabId: roomTabId, active: true });
-    return tab.id;
-  }
-  if (tabId === undefined || sender.frameId !== 0 || sender.tab?.openerTabId !== roomTabId || sender.url !== url || sender.tab.url !== url) return null;
-  if (request.action === "permission") return owner(scope, {action: "permission", ticket});
-  if (request.action === "settle") return owner(scope, {action: "settle", ticket, allowed: request.allowed === true});
+  if (request.action === "permission") return owner(scope, {action: "permission", ticket, documentId});
+  if (request.action === "settle") return owner(scope, {action: "settle", ticket, documentId, allowed: request.allowed === true});
   return null;
 }
