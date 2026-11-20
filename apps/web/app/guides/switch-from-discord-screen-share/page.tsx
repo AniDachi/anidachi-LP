@@ -231,7 +231,7 @@ export default function SwitchFromDiscordScreenSharePage() {
               href="/guides/how-to-watch-anime-together-without-screen-share"
               className="hover:underline"
             >
-              Watch anime together without screen share
+              Anime without screen share
             </Link>
           </li>
           <li>

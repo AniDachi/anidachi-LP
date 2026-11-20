@@ -215,7 +215,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
         </li>
         <li>
           <Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">
-            Best apps to watch anime together long distance
+            Best long-distance anime apps
           </Link>
         </li>
         <li>

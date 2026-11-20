@@ -5,9 +5,9 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { PRICING_PRICE_TABLE, PRICING_CANCELLATION_NOTE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "7 Best Apps to Watch Anime Together Long Distance",
+  title: "Long Distance Anime: 7 Best Apps to Watch Together",
   description:
-    "Best apps to watch anime together long distance: AniDachi for Crunchyroll and YouTube sync, plus Teleparty, Rave, and Discord voice, compared for couples.",
+    "Long-distance anime apps compared for couples: AniDachi for Crunchyroll and YouTube sync, plus Teleparty, Rave and Discord voice.",
   alternates: { canonical: "/best-apps-watch-anime-together-long-distance" },
   openGraph: {
     images: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "7 Best Apps to Watch Anime Together Long Distance",
+    title: "Long Distance Anime: 7 Best Apps to Watch Together",
     description:
       "Every major watch-together app compared for long-distance couples — Crunchyroll support, async mode, group size, and price.",
     url: "/best-apps-watch-anime-together-long-distance",
@@ -84,9 +84,9 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Best Apps to Watch Anime Together Long Distance", url: "/best-apps-watch-anime-together-long-distance" },
+        { name: "Long-distance anime apps", url: "/best-apps-watch-anime-together-long-distance" },
       ]}
-      title="7 Best Apps to Watch Anime Together Long Distance (2026)"
+      title="Long Distance Anime: 7 Best Apps to Watch Together (2026)"
       description="Every watch-together app compared for long-distance anime couples."
       url="/best-apps-watch-anime-together-long-distance"
       datePublished="2026-06-23"
@@ -97,7 +97,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
-        7 Best Apps to Watch Anime Together Long Distance (2026)
+        Long Distance Anime: 7 Best Apps to Watch Together (2026)
       </h1>
 
       <h2

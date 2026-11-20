@@ -219,7 +219,7 @@ export default function AniDachiVsTwosevenPage() {
           href="/best-apps-watch-anime-together-long-distance"
           className="text-brand-orange hover:underline"
         >
-          best apps to watch anime together long distance
+          best long-distance anime apps
         </Link>
         . See{" "}
         <Link href="/pricing" className="text-brand-orange font-medium hover:underline">

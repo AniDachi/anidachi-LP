@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { INTERNAL_TOOL_ROBOTS_DISALLOW } from "@/lib/internal-tool-routes";
+import { RECRAWL_SITEMAP_PATH } from "@/lib/recrawl-redirects";
 import {
   getSeoSiteOrigin,
   isAiTrainingCrawlerBlockEnabled,
@@ -39,6 +40,7 @@ export default function robots(): MetadataRoute.Robots {
 
   return {
     rules,
-    sitemap: [`${origin}/sitemap.xml`],
+    // The recrawl sitemap is temporary (ANI-38); remove after RECRAWL_SITEMAP_REMOVE_AFTER.
+    sitemap: [`${origin}/sitemap.xml`, `${origin}${RECRAWL_SITEMAP_PATH}`],
   };
 }

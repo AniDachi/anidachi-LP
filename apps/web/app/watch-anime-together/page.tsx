@@ -388,7 +388,7 @@ export default function WatchAnimeTogetherPage() {
           </Link>{" "}
           and the{" "}
           <Link href="/best-apps-watch-anime-together-long-distance">
-            best apps to watch anime together long distance
+            best long-distance anime apps
           </Link>
           .
         </p>

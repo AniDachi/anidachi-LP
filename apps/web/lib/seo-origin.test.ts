@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as site from "./site-url";
 import robots from "../app/robots";
+import { RECRAWL_SITEMAP_PATH } from "./recrawl-redirects";
 
 // Keep callback/runtime origin separate from public search-engine identity.
 const seoOrigin = () => site.getSeoSiteOrigin();
@@ -30,7 +31,8 @@ for (const scenario of [
         assert.equal(robotsOutput.sitemap, undefined);
         assert.deepEqual(robotsOutput.rules, [{ userAgent: "*", disallow: ["/"] }]);
       } else {
-        assert.deepEqual(robotsOutput.sitemap, [`${scenario.seo}/sitemap.xml`]);
+        // The second entry is the temporary recrawl sitemap (ANI-38); drop it with the route.
+        assert.deepEqual(robotsOutput.sitemap, [`${scenario.seo}/sitemap.xml`, `${scenario.seo}${RECRAWL_SITEMAP_PATH}`]);
       }
     } finally {
       for (const key of names) {

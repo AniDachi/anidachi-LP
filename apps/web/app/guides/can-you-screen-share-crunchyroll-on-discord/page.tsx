@@ -171,7 +171,9 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         When it works, everyone watches one compressed feed from your upload
         and can&apos;t pause or pick their own subtitles. To avoid screen sharing,
         keep Discord for voice and have each person play the episode on
-        their own account, kept in sync by a watch-party extension.
+        their own account, kept in sync by a watch-party extension. That
+        setup is a{" "}
+        <Link href="/watch-crunchyroll-together">Crunchyroll watch party</Link>.
       </SeoGuideAnswer>
 
       <h2
@@ -284,7 +286,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
           href="/guides/how-to-watch-anime-together-without-screen-share"
           className="text-brand-orange hover:underline"
         >
-          watch anime together without screen share
+          watching anime with friends without screen share
         </Link>
         . Migration checklist:{" "}
         <Link
@@ -316,7 +318,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       <SeoGuideRelated
         links={[
           { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
-                    { href: "/guides/how-to-watch-anime-together-without-screen-share", label: "How to watch anime together without screen share" },
+                    { href: "/guides/how-to-watch-anime-together-without-screen-share", label: "Anime without screen share" },
                     { href: "/guides/switch-from-discord-screen-share", label: "Switch from Discord screen share" },
                     { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share" },
                     { href: "/pricing", label: "AniDachi pricing" },

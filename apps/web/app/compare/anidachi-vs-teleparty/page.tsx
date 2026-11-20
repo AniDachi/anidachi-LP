@@ -267,7 +267,7 @@ export default function AniDachiVsTelepartyPage() {
         links={[
           { href: "/pricing", label: "See pricing — Free daily hosting; Plus from $7.99/mo" },
                     { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives for anime" },
-                    { href: "/best-apps-watch-anime-together-long-distance", label: "Best Apps for Watching Anime Together Long Distance" },
+                    { href: "/best-apps-watch-anime-together-long-distance", label: "Best long-distance anime apps" },
                     { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together (Complete Guide)" },
                     { href: "/guides/asynchronous-vs-live-watch-party", label: "Async vs Live Watch Parties" },
                     ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
