@@ -16,6 +16,10 @@ binding during handoff and reveals the image after its first video frame.
 Check both room membership and advancing, visible frames before accepting the
 loaded staging build.
 
+The first camera or microphone request now uses the room’s current Prime tab.
+The Chromium transport harness covers a declined first camera request, a retry
+with an existing grant, and frame continuity across catalog navigation.
+
 ## Prime Amazon readiness follow-up — 2026-11-18
 
 [Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)

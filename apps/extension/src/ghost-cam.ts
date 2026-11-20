@@ -21,12 +21,14 @@ import {
 import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 
 import {usePrimeGhostCam, type PrimeGhostVideo} from "./prime-media-session";
+import type {PrimeDevicePrompt} from "./prime-media-access";
 import type {PrimeMediaBridge} from "./prime-room-media-types";
 
 export type { GhostVideo, MicrophoneStatus } from "./media-types";
 export type CameraBubbleVideo = GhostVideo | PrimeGhostVideo;
 
 export interface GhostCamSession {
+  permissionRequests?: PrimeDevicePrompt[];
   reconcileMediaAuthority: (camera: boolean, microphone: boolean, latestSnapshot?: RoomMediaSnapshot) => void;
   stop: () => void;
   activeSpeakerIds: string[];

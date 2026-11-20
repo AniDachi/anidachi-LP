@@ -12,7 +12,9 @@ progress. Returning to the player resumes the usual playback controls and histor
 
 The extension's offscreen document owns the Prime room socket and call. A new
 document in the same tab reattaches to the same account and participant session.
-Only enabling a device can initiate its first Chrome permission prompt. Explicit
+Enabling a camera or microphone can prompt for that device in the current Prime
+tab. Chrome handles the decision for the extension. An existing grant resumes
+capture directly. Replacing the document or ending the room cancels a pending request. Explicit
 End or Leave, account replacement, tab closure and leaving supported Prime pages
 release the call. A failed admission does not create a persistent catalog room.
 The November 18 close-as-departure behavior below describes the preceding build.

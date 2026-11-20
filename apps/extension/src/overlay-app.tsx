@@ -78,7 +78,7 @@ import {
 	normalizeExperimentFlag,
 } from "./experiments";
 import { type CameraBubbleVideo, useGhostCam } from "./ghost-cam";
-import { PrimeCameraTile } from "./prime-media-session";
+import { PrimeCameraTile, PrimeDevicePermissionPrompt } from "./prime-media-session";
 import { primeMediaBridge } from "./prime-room-media-types";
 import {
 	getHotkeyAction,
@@ -6516,6 +6516,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	useEffect(() => {
 		const state = () => ({
+			requireTrustedVoiceKey: Boolean(primeMediaBridge(clientRef.current)),
 			experimentalSuperReactionsEnabled,
 			messageComposerOpen,
 			panelOpen,
@@ -6827,6 +6828,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			style={overlayCssVariables}
 		>
 			<style>{overlayStyles}</style>
+			{ghostCamSession.permissionRequests?.map(request => <PrimeDevicePermissionPrompt key={request.ticket} {...request} />)}
 			<PlayerOnboarding
 				adapter={adapter}
 				ready={adapterActive && identityLoaded && !extensionContextInvalidated}

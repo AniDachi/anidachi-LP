@@ -2,6 +2,8 @@ import {z} from "zod";
 import type {MicrophoneStatus, MicrophoneTerminalFailure} from "./media-types";
 import type {P2PMediaDiagnostics} from "./p2p-media";
 
+import type {PrimeDevicePrompt} from "./prime-media-access";
+
 const preference = z.object({muted: z.boolean(), volume: z.number().min(0).max(1)});
 export const PrimeMediaCommandSchema = z.discriminatedUnion("type", [
   z.object({type: z.literal("reconcile")}),
@@ -17,6 +19,7 @@ export const PrimeMediaCommandSchema = z.discriminatedUnion("type", [
 export type PrimeMediaCommand = z.infer<typeof PrimeMediaCommandSchema>;
 export interface PrimeMediaState {
   type: "prime-media-state";
+  permissionRequests: PrimeDevicePrompt[];
   videos: {participantId: string; local: boolean; revision: string}[];
   activeSpeakerIds: string[];
   microphoneStatus: MicrophoneStatus;
@@ -24,7 +27,7 @@ export interface PrimeMediaState {
   voiceMessage: string | null;
 }
 export const emptyPrimeMediaState: PrimeMediaState = {
-  type: "prime-media-state", videos: [], activeSpeakerIds: [], microphoneStatus: "off",
+  type: "prime-media-state", permissionRequests: [], videos: [], activeSpeakerIds: [], microphoneStatus: "off",
   microphoneTerminalFailure: null, voiceMessage: null,
 };
 export type PrimeMediaReply = PrimeMediaState | {type: "prime-media-stats"; id: string; stats: P2PMediaDiagnostics | null};

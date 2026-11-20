@@ -36,6 +36,21 @@ describe("Prime-only media on ambiguous Amazon product routes",() => {
     expect(send).toHaveBeenCalledWith(expect.objectContaining({channel:mediaOwnerChannel,
       scope:{tabId:42,roomId:"room",participantSessionId:"session"}}));
   });
+  it("checks the room tab and the extension child document before routing device consent", async () => {
+    data.player.mockResolvedValue(true);
+    const ticket = crypto.randomUUID();
+    const sender = {tab, frameId: 3, documentId: "document", url: extension+"prime-media-permission.html#"+ticket};
+    send.mockResolvedValue("microphone");
+    expect(await request({action:"permission",ticket}, {...sender,frameId:0})).toBeNull();
+    expect(await request({action:"permission",ticket}, {...sender,url:player})).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+    expect(await request({action:"permission",ticket}, sender)).toBe("microphone");
+    expect(send).toHaveBeenCalledWith({channel:mediaOwnerChannel,
+      scope:{tabId:42,roomId:"room",participantSessionId:"session"},
+      request:{action:"permission",ticket,documentId:"document"}});
+    data.player.mockResolvedValue(false);
+    expect(await request({action:"settle",ticket,allowed:true},sender)).toBeNull();
+  });
   it("denies ticket redemption after the owning tab stops showing the player",async () => {
     data.player.mockResolvedValue(false);
     const ticket = crypto.randomUUID();

@@ -13,7 +13,6 @@ export function createPrimeRoomMedia(
   client: RoomClient, local: Participant, emit: (value: unknown) => void,
   room: PrimeMediaScope & {roomToken: string},
 ) {
-  const access = new PrimeMediaOwnerAccess(room);
   const gestures = new Map<RoomMediaKind, number>();
   const remoteVoice = new Set<string>();
   let controller: P2PMediaController | null = null;
@@ -35,6 +34,7 @@ export function createPrimeRoomMedia(
 
   const publish = () => { if (!closed && attached) emit(state); };
   const patch = (change: Partial<PrimeMediaState>) => { state = {...state, ...change}; publish(); };
+  const access = new PrimeMediaOwnerAccess(room, permissionRequests => patch({permissionRequests}));
   const snapshot = () => versioned ? client.media?.snapshot ?? null : undefined;
   const authorized = (device: RoomMediaKind) => snapshotReady && !closed && (versioned
     ? Boolean(client.media?.canCapture(device))
@@ -98,9 +98,12 @@ export function createPrimeRoomMedia(
         localParticipant: local, videoOnlyTiles: true, iceServers, refreshIceServers: () => refreshP2PIceServers(room),
         captureDevice: (device, constraints, current) => {
           const requestId = client.media?.captureIntent(device)?.requestId;
-          const permissionCurrent = () => authorized(device) && requestId === client.media?.captureIntent(device)?.requestId;
+          const permissionCurrent = () => authorized(device) && requestId === client.media?.captureIntent(device)?.requestId &&
+            (versioned || device !== "camera" || cameraWanted);
+          const gestureExpires = gestures.get(device) ?? 0;
+          gestures.delete(device);
           return access.capture(device, constraints, () => current() && permissionCurrent(),
-            () => permissionCurrent() && (gestures.get(device) ?? 0) >= Date.now());
+            () => permissionCurrent() && gestureExpires >= Date.now());
         },
         onActiveSpeakerIdsChange: activeSpeakerIds => patch({activeSpeakerIds}),
         onCameraStatus: enabled => {
@@ -219,6 +222,7 @@ export function createPrimeRoomMedia(
     },
     onDetach() {
       attached = false;
+      gestures.clear();
       access.detach();
       if (mode === "push-to-talk") { microphoneWanted = false; release = "immediate"; reconcile(); }
     },
