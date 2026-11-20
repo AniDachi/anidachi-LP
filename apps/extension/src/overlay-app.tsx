@@ -6516,6 +6516,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	useEffect(() => {
 		const state = () => ({
+			requireTrustedVoiceKey: Boolean(primeMediaBridge(clientRef.current)),
 			experimentalSuperReactionsEnabled,
 			messageComposerOpen,
 			panelOpen,

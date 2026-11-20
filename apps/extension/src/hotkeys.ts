@@ -14,6 +14,7 @@ export type HotkeyAction =
 
 export interface HotkeyState {
   roomActive: boolean;
+  requireTrustedVoiceKey?: boolean;
   panelOpen: boolean;
   messageComposerOpen: boolean;
   reactionsEnabled: boolean;
@@ -55,7 +56,7 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   }
 
   if (state.voiceMode === "push-to-talk" && !event.shiftKey && isVoiceKey(event)) {
-    if (event.type === "keydown" && event.isTrusted && !event.repeat) {
+    if (event.type === "keydown" && !event.repeat && (!state.requireTrustedVoiceKey || event.isTrusted)) {
       return { type: "voice-start" };
     }
 

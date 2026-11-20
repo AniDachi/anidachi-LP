@@ -19,8 +19,10 @@ const activeState = {
 };
 
 describe("Anidachi hotkeys", () => {
-  it("requires a user key press to start microphone capture", () => {
-    expect(getHotkeyAction(keyEvent({code:"KeyV", key:"v", type:"keydown", isTrusted:false}), activeState)).toBeNull();
+  it("requires a user key press before starting the Prime device prompt", () => {
+    const prime = {...activeState, requireTrustedVoiceKey:true};
+    expect(getHotkeyAction(keyEvent({code:"KeyV", key:"v", type:"keydown", isTrusted:false}), prime)).toBeNull();
+    expect(getHotkeyAction(keyEvent({code:"KeyV", key:"v", type:"keydown"}), prime)).toEqual({type:"voice-start"});
   });
 
   it("starts voice capture on a plain V keydown", () => {
