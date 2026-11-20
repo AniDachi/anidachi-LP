@@ -179,7 +179,8 @@ describe("content adapter lifecycle", () => {
 	it.each([
 		["netflix", "https://www.netflix.com", "/browse"],
 		["crunchyroll", "https://www.crunchyroll.com", "/de/videos/popular"],
-	] as const)("docks an admitted %s room in the catalog and binds its next player without remounting", (provider, url, catalog) => {
+		["crunchyroll", "https://www.crunchyroll.com", "/ru/discover"],
+	] as const)("docks an admitted %s room on %s%s and binds its next player without remounting", (provider, url, catalog) => {
 		vi.stubGlobal("location", new URL(url + "/watch/123"));
 		const adapter = Object.assign(createAdapter(), {provider});
 		const next = Object.assign(createAdapter(), {provider});

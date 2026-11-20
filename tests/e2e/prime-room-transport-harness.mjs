@@ -17,9 +17,9 @@ const service = process.argv.includes("--crunchyroll") ? "crunchyroll" : process
 const routes = {
 	primevideo: ["/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA", "/storefront", "/region/na/mystuff/watchlist", "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB"],
 	netflix: ["/watch/123", "/browse", "/browse/my-list", "/watch/456"],
-	crunchyroll: ["/watch/GABC123", "/de/videos/popular", "/de/watchlist", "/de/watch/GDEF456/episode"],
+	crunchyroll: ["/watch/GABC123", "/de/watchlist", "/ru/discover", "/de/watch/GDEF456/episode"],
 };
-const [path, catalogPath, watchlist, nextEpisode] = routes[service];
+const [path, catalogPath, firstCatalogPath, nextEpisode] = routes[service];
 const provider = "https://www." + service + ".com";
 const detail = provider + path;
 const catalog = provider + catalogPath;
@@ -329,7 +329,7 @@ try {
 	await expectMovingCamera();
 	assert.equal(extraPages, 0);
 	assert.equal(closed, 0);
-	await navigate(provider + watchlist);
+	await navigate(provider + firstCatalogPath);
 	await act("probe");
 	await page.waitForFunction(
 		() => document.body.dataset.probe && document.body.dataset.probe !== "null",
