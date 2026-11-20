@@ -1,5 +1,14 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Crunchyroll catalog continuity — November 20, 2026
+
+The Crunchyroll staging candidate reuses the catalog room connection and media
+owner for watch pages and localized streaming catalogs. The isolated Chromium
+transport check covers device consent in the current tab, moving camera frames,
+a single room connection across full page loads, and cleanup on leave, room end,
+account change, and navigation outside the catalog. Repeat player → catalog →
+new episode with two signed-in profiles for live provider acceptance.
+
 ## Prime catalog continuity — November 19, 2026
 
 The [Prime catalog task](2026-11-16-prime-video-adapter.md#rooms-in-the-prime-catalog)

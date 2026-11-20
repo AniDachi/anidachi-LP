@@ -1,3 +1,4 @@
+import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogRoom } from "./catalog-room-routes";
 import {
 	parsePersonalHistoryResumeUrl,
 	primeVideoSourceUrl,
@@ -57,7 +58,7 @@ export async function startPrimeResume(
 }
 export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: string, visit: string | undefined,
 	signal: AbortSignal): Promise<boolean> {
-	if (signal.aborted || (source.provider !== "primevideo" && source.provider !== "netflix")) return false;
+	if (signal.aborted || !supportsCatalogRoom(source.provider)) return false;
 	const reply = await chrome.runtime.sendMessage({
 		type: "ANIDACHI_PRIME_LAUNCH", action: "follow", roomId, visit,
 		contentId: source.sourceUrl.split("/").at(-1),
@@ -79,7 +80,7 @@ export function discardConflictingRoomLaunch(activeRoomId: string, href: string)
 	params.delete("anidachiResume");
 	url.hash = params.toString();
 	history.replaceState(history.state, "", url.pathname + url.search + url.hash);
-	if (url.origin !== "https://www.netflix.com" && (invited || resumeIntentId) && typeof chrome !== "undefined" && chrome.runtime?.sendMessage)
+	if ((catalogRoomProvider(href) === "primevideo" || catalogPlayerProvider(href) === "primevideo") && (invited || resumeIntentId) && typeof chrome !== "undefined" && chrome.runtime?.sendMessage)
 		void chrome.runtime.sendMessage({ type: "ANIDACHI_PRIME_LAUNCH", action: "discard-conflict",
 			activeRoomId, invited: invited ?? undefined, resumeIntentId }).catch(() => undefined);
 }

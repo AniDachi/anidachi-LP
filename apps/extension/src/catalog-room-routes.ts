@@ -1,3 +1,5 @@
+import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
+import { isCrunchyrollCatalogOrigin, crunchyrollCatalogPath, localizedWatchUrl } from "./source-adapters/crunchyroll/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
 import {
 	isPrimeRoomBrowsingPage,
@@ -5,23 +7,38 @@ import {
 	parsePrimePageUrl,
 } from "./source-adapters/primevideo/url";
 
-export type CatalogRoomProvider = "netflix" | "primevideo";
+export type CatalogRoomProvider = "netflix" | "primevideo" | "crunchyroll";
+
+export function supportsCatalogReturn(provider: unknown): provider is "netflix" | "crunchyroll" {
+	return provider === "netflix" || provider === "crunchyroll";
+}
+
+export function catalogWatchSource(provider: unknown, href: string) {
+	if (!supportsCatalogReturn(provider)) return null;
+	const result = canonicalizeRoomSourceUrl(href, provider);
+	return result.ok ? result.source : null;
+}
+
+export function catalogWatchDestination(sourceUrl: string, currentHref: string) {
+	const target = new URL(sourceUrl);
+	return isCrunchyrollCatalogOrigin(target.origin) ? localizedWatchUrl(target, currentHref).href : target.href;
+}
+
 export function supportsCatalogRoom(
 	provider: unknown,
 ): provider is CatalogRoomProvider {
-	return provider === "netflix" || provider === "primevideo";
+	return supportsCatalogReturn(provider) || provider === "primevideo";
 }
 
 export function catalogRoomProvider(value: string): CatalogRoomProvider | null {
 	if (isPrimeRoomBrowsingPage(value)) return "primevideo";
 	try {
 		const url = new URL(value);
-		if (
-			url.origin !== "https://www.netflix.com" ||
-			url.username ||
-			url.password
-		)
-			return null;
+		if (url.username || url.password) return null;
+		if (isCrunchyrollCatalogOrigin(url.origin)) {
+			return crunchyrollCatalogPath(url.pathname) || catalogWatchSource("crunchyroll", value) ? "crunchyroll" : null;
+		}
+		if (url.origin !== "https://www.netflix.com") return null;
 		const catalog =
 			/^\/(?:browse(?:\/[^/]+)*|search|latest|title\/[1-9][0-9]{0,19})\/?$/.test(
 				url.pathname,
@@ -36,6 +53,7 @@ export function catalogPlayerProvider(
 	value: string,
 ): CatalogRoomProvider | null {
 	if (netflixWatchId(value)) return "netflix";
+	if (catalogWatchSource("crunchyroll", value)) return "crunchyroll";
 	return parsePrimePageUrl(value) ? "primevideo" : null;
 }
 
@@ -60,6 +78,6 @@ export function isCatalogPlayerSender(sender: chrome.runtime.MessageSender) {
 	return (
 		isPrimePlayerPageSender(sender) ||
 		(isCatalogRoomSender(sender) &&
-			!!netflixWatchId(sender.tab?.url ?? sender.url!))
+			supportsCatalogReturn(catalogPlayerProvider(sender.tab?.url ?? sender.url!)))
 	);
 }

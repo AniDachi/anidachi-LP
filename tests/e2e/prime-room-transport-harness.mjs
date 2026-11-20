@@ -13,12 +13,16 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { WebSocketServer } from "ws";
 
-const netflix = process.argv.includes("--netflix");
-const service = netflix ? "netflix" : "primevideo";
-const provider = netflix ? "https://www.netflix.com" : "https://www.primevideo.com";
-const path = netflix ? "/watch/123" : "/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA";
+const service = process.argv.includes("--crunchyroll") ? "crunchyroll" : process.argv.includes("--netflix") ? "netflix" : "primevideo";
+const routes = {
+	primevideo: ["/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA", "/storefront", "/region/na/mystuff/watchlist", "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB"],
+	netflix: ["/watch/123", "/browse", "/browse/my-list", "/watch/456"],
+	crunchyroll: ["/watch/GABC123", "/de/videos/popular", "/de/watchlist", "/de/watch/GDEF456/episode"],
+};
+const [path, catalogPath, watchlist, nextEpisode] = routes[service];
+const provider = "https://www." + service + ".com";
 const detail = provider + path;
-const catalog = provider + (netflix ? "/browse" : "/storefront");
+const catalog = provider + catalogPath;
 const fingerprint = service + "|" + path.slice(1);
 const account = {
 	id: "user1",
@@ -325,7 +329,7 @@ try {
 	await expectMovingCamera();
 	assert.equal(extraPages, 0);
 	assert.equal(closed, 0);
-	await navigate(provider + (netflix ? "/browse/my-list" : "/region/na/mystuff/watchlist"));
+	await navigate(provider + watchlist);
 	await act("probe");
 	await page.waitForFunction(
 		() => document.body.dataset.probe && document.body.dataset.probe !== "null",
@@ -349,7 +353,7 @@ try {
 	);
 	assert.deepEqual([opened, joined, closed, pauses], [1, 1, 0, 1]);
 
-	for (const url of [catalog, catalog, provider + (netflix ? "/watch/456" : "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB")]) {
+	for (const url of [catalog, catalog, provider + nextEpisode]) {
 		await navigate(url);
 		await act("resume");
 		await ready();

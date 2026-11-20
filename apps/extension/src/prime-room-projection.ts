@@ -1,15 +1,13 @@
 import {
 	getExpectedHostTime,
-	primeVideoFingerprint,
-	primeVideoSourceUrl,
+	canonicalizeRoomSourceUrl,
 	type ClientEvent,
 	type PlaybackState,
 	type ServerEvent,
 } from "@anidachi/protocol";
 import type { BrowseBaseline } from "./prime-room-contract";
 
-import { supportsCatalogRoom } from "./catalog-room-routes";
-import { netflixWatchId } from "./source-adapters/netflix/contract";
+import { supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 
 type Snapshot = Extract<ServerEvent, { type: "ROOM_SNAPSHOT" }>;
 type Chat = Extract<ServerEvent, { type: "REACTION" }>;
@@ -32,10 +30,9 @@ export class PrimeRoomProjection {
 		const source = snapshot?.source;
 		const self = snapshot?.participants.find((p) => p.id === ownerUserId);
 		if (!source || !supportsCatalogRoom(source.provider)) return null;
-		const netflix = source.provider === "netflix";
-		if (netflix && netflixWatchId(source.sourceUrl) !== contentId) return null;
-		const fingerprint = netflix ? 'netflix|watch/' + contentId : primeVideoFingerprint(contentId);
-		const url = netflix ? 'https://www.netflix.com/watch/' + contentId : primeVideoSourceUrl(contentId);
+		const result = canonicalizeRoomSourceUrl(source.sourceUrl, source.provider);
+		if (!result.ok || result.source.sourceUrl.split("/").at(-1) !== contentId) return null;
+		const { videoFingerprint: fingerprint, sourceUrl: url } = result.source;
 		if (
 			!self ||
 			self.role === "host" ||
@@ -115,7 +112,7 @@ export class PrimeRoomProjection {
 		if (
 			!snapshot ||
 			!state ||
-			(!state.playing && !(source?.provider === "netflix" && state.hostSurface === "player")) ||
+			(!state.playing && !(supportsCatalogReturn(source?.provider) && state.hostSurface === "player")) ||
 			!source || !supportsCatalogRoom(source.provider) ||
 			source.videoFingerprint !== state.videoFingerprint ||
 			!snapshot.participants.some(
@@ -129,7 +126,7 @@ export class PrimeRoomProjection {
 			getExpectedHostTime(state, this.detachedAt ?? now),
 		);
 		const paused: PlaybackState = { ...state, hostTime, playing: false, updatedAt: now };
-		if (source.provider === "netflix") paused.hostSurface = "catalog";
+		if (supportsCatalogReturn(source.provider)) paused.hostSurface = "catalog";
 		this.snapshot = { ...snapshot, hostState: paused };
 		return {
 			type: "HOST_STATE",

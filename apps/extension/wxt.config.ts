@@ -147,7 +147,7 @@ export default defineConfig({
       },
       {
         resources: ["prime-media-tile.html", "prime-media-permission.html"],
-        matches: ["https://www.netflix.com/*", ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
+        matches: ["https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
       },
     ],
     action: {
