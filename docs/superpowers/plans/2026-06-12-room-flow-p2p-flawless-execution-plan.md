@@ -384,6 +384,10 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   session on the Prime staging revision. The tab's provider, room and participant
   session bind camera tile and device access. Check independent browsing, guest
   follow, explicit departure and same-tab consent before release.
+  In two Chrome profiles the guest lost the capsule on returning to Browse.
+  A regression test now covers the guest receiving a membership snapshot before
+  the first playback source. Only a connected participant in the admitted tab
+  session can keep the room in that case. Host playback still drives navigation.
 
 - 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
   create/rejoin/renewal candidate pins a daily room mode and reuses account locks,

@@ -101,6 +101,48 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+	it("keeps an admitted Netflix guest in the catalog before the first playback source arrives", async () => {
+		installActiveHostRoomRuntime();
+		const record = confirmedRoomSession();
+		const send = vi.mocked(chrome.runtime.sendMessage);
+		const original = send.getMockImplementation()!;
+		send.mockImplementation(async (...args: any[]) => {
+			if (args[0].command === "prepare")
+				return { ok: true, prepared: { ...preparedRoomSession(), roomId: record.roomId } };
+			if (args[0].command === "connect-room")
+				return { ok: true, connection: { roomToken: "guest-token", roomSession: record } };
+			return (original as any)(...args);
+		});
+		Object.defineProperty(chrome.runtime, "connect", { value: vi.fn(), configurable: true });
+		const connect = vi.spyOn(PrimeRoomClient.prototype, "connect").mockImplementation(options => options.onStatus("connected"));
+		history.replaceState(null, "", "#anidachiRoom=room-a");
+		const onRoom = vi.fn();
+		const view = await renderOverlay(adapter => Object.assign(adapter, {
+			id: "netflix", provider: "netflix", getFingerprint: () => "netflix|watch/80025313",
+			getSourceDescriptor: () => null,
+		}), undefined, onRoom);
+		try {
+			await flushMountedWork();
+			const [options] = connect.mock.calls[0];
+			expect(onRoom).toHaveBeenLastCalledWith(null);
+			const snapshot = async (session: string, connected: boolean, serverSeq: number) => act(async () => options.onEvent({
+				type: "ROOM_SNAPSHOT", roomId: record.roomId, roomGeneration: 1, sourceGeneration: 1, serverSeq,
+				participants: [{ ...guestParticipant(), role: "host" }, {
+					...hostParticipant(), role: "viewer", participantSessionId: session, connected,
+				}],
+			}));
+			await snapshot("another-tab-session", true, 1);
+			await snapshot(record.participantSessionId, false, 2);
+			expect(onRoom).not.toHaveBeenCalledWith(record.roomId);
+			await snapshot(record.participantSessionId, true, 3);
+			expect(onRoom).toHaveBeenLastCalledWith(record.roomId);
+			await act(async () => options.onEvent({
+				type: "ROOM_ENDED", roomId: record.roomId, reason: "host_ended", endedAt: Date.now(),
+			}));
+			expect(onRoom).toHaveBeenLastCalledWith(null);
+		} finally { await unmount(view.root); }
+	});
+
 	it.each(["account changed", "room ended before attachment"])("does not resurrect a Prime catalog room when the %s", async situation => {
 		installActiveHostRoomRuntime({getSession: () => sessionFor(situation === "account changed" ? "other-user" : "user-a")});
 		vi.stubGlobal("location", new URL("https://www.primevideo.com/storefront/home"));
@@ -6205,7 +6247,7 @@ function deferred<T>(): {
 	return { promise, resolve };
 }
 
-async function renderOverlay(prepare?: (adapter: VideoAdapter) => void, initialPrimeLaunch?: PrimeLaunchHandoff): Promise<{
+async function renderOverlay(prepare?: (adapter: VideoAdapter) => void, initialPrimeLaunch?: PrimeLaunchHandoff, onPrimeRoomChange?: (roomId: string | null) => void): Promise<{
 	container: HTMLDivElement;
 	root: Root;
 	adapter: VideoAdapter;
@@ -6226,7 +6268,7 @@ async function renderOverlay(prepare?: (adapter: VideoAdapter) => void, initialP
 	prepare?.(adapter);
 	await act(async () => {
 		root.render(
-			<overlayApp.OverlayApp adapter={adapter} initialPrimeLaunch={initialPrimeLaunch} />,
+			<overlayApp.OverlayApp adapter={adapter} initialPrimeLaunch={initialPrimeLaunch} onPrimeRoomChange={onPrimeRoomChange} />,
 		);
 		await Promise.resolve();
 		await Promise.resolve();
