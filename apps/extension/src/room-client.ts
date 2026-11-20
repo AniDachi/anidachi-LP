@@ -287,6 +287,7 @@ export interface AdmittedRoom extends CreatedRoom {
 
 export interface CreateRoomInput {
   sourceUrl?: string;
+  primeNavigation?: import("@anidachi/protocol").PrimeNavigation;
   videoFingerprint?: string;
   title?: string | null;
   showId?: string;

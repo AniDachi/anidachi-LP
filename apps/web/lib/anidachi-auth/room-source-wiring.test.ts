@@ -52,7 +52,7 @@ test("production persistence calls the exact RPC and shared argument/error/resul
 		"export function roomCapabilitiesFromRoom",
 	);
 
-	assert.match(persist, /\.rpc\(\s*["']persist_room_source_v1["']/);
+	assert.match(persist, /\.rpc\(\s*callback\.source\.primeNavigation/);
 	assert.match(persist, /roomSourcePersistenceRpcArguments\(callback\)/);
 	assert.match(
 		persist,

@@ -33,6 +33,14 @@ export const WatchHistoryCapacityV2Schema = WatchHistoryCapacityV1Schema.extend(
     netflix: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V2.netflix) }),
   }),
 });
-export const WatchHistoryCapacityCompatibleSchema = z.discriminatedUnion("capacityVersion", [WatchHistoryCapacityV1Schema, WatchHistoryCapacityV2Schema]);
+export const WATCH_HISTORY_PROVIDER_LIMITS_V3 = { ...WATCH_HISTORY_PROVIDER_LIMITS_V2, primevideo: 200 } as const;
+export const WatchHistoryCapacityV3Schema = WatchHistoryCapacityV2Schema.extend({
+  capacityVersion: z.literal(3),
+  providers: WatchHistoryCapacityV2Schema.shape.providers.extend({
+    primevideo: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V3.primevideo) }),
+  }),
+});
+export type WatchHistoryCapacityV3 = z.infer<typeof WatchHistoryCapacityV3Schema>;
+export const WatchHistoryCapacityCompatibleSchema = z.discriminatedUnion("capacityVersion", [WatchHistoryCapacityV1Schema, WatchHistoryCapacityV2Schema, WatchHistoryCapacityV3Schema]);
 export type WatchHistoryCapacityV2 = z.infer<typeof WatchHistoryCapacityV2Schema>;
 export type WatchHistoryCapacityCompatible = z.infer<typeof WatchHistoryCapacityCompatibleSchema>;

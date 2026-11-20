@@ -330,6 +330,10 @@ describe("authenticated room client", () => {
   });
 
   it.each([
+    [{
+      sourceUrl: "https://www.primevideo.com/detail/0HAQAA7JM43QWX0H6GUD3IOF70?jic=8%7CEgRzdm9k&ref_=atv_hm_hom_c_lAPtVn_brws_2_1",
+      videoFingerprint: "primevideo|detail/0TBFWHTQWLSMFW67KBP9IC4UMU",
+    }],
     [{ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }],
     [{ videoFingerprint: "youtube|dQw4w9WgXcQ" }],
     [{

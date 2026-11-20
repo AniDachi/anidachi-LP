@@ -25,6 +25,18 @@ const empty = {
 };
 
 describe("episode grid contract", () => {
+	it("admits opted-in observed Prime episodes without inventing catalog totals", () => {
+		const id = "0INEYNSINLQC82ZUIFLK7VNV09";
+		const episode = "0GZG3MEMW58HH47GE4QV0Z1OOR";
+		expect(WatchHistoryGridQuerySchema.safeParse({provider:"primevideo",titleKey:`primevideo:series:${id}`,includePartial:true}).success).toBe(true);
+		const observed = {...empty,provider:"primevideo",titleKey:`primevideo:series:${id}`,state:"partial",revision:"observed-1",seasonKey:`primevideo:season:${id}`,
+			seasons:[{seasonKey:`primevideo:season:${id}`,seasonTitle:"Season 1",seasonNumber:1,order:0,kind:"season",aggregate:null,nextEpisode:null}],
+			episodes:[{episodeKey:`primevideo:episode:${episode}`,episodeTitle:"Episode 1",episodeNumber:1,seasonKey:`primevideo:season:${id}`,order:0,releasedAt:null,available:true,sourceUrl:`https://www.primevideo.com/detail/${episode}`,history:null}]};
+		expect(WatchHistoryGridResponseSchema.safeParse(observed).success).toBe(true);
+		for(const patch of [{revision:null},{state:"unavailable"},{state:"complete"},{mainAggregate:{completedEpisodes:0,availableEpisodes:1,progress:0}},
+			{seasons:[{...observed.seasons[0],aggregate:{completedEpisodes:0,availableEpisodes:1,progress:0}}]}])
+			expect(WatchHistoryGridResponseSchema.safeParse({...observed,...patch}).success).toBe(false);
+	});
 	it("requires bounded owner-free catalog queries", () => {
 		const input = { provider: "crunchyroll", titleKey: "series" };
 		expect(WatchHistoryGridQuerySchema.parse(input).limit).toBe(50);
