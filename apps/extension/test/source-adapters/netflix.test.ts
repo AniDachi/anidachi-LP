@@ -154,6 +154,18 @@ describe("Netflix identity and bounded metadata", () => {
 		).toBe("partial");
 		expect(readNetflixCatalog(show(), "70196260", null)).toBeNull();
 	});
+	it("recognizes the active series episode when Netflix omits autoplay flags", () => {
+		const data = show();
+		for (const episode of data.seasons[0].episodes) Reflect.deleteProperty(episode, "autoplayable");
+		const currentId = String(data.currentEpisode);
+		expect(readNetflixMetadata(data, currentId, context)?.episodeTitle).toBe("Grilled");
+		const catalog = readNetflixCatalog(data, currentId, context);
+		expect(catalog?.completeness).toBe("partial");
+		expect(catalog?.seasons[0].episodes.map(e => [e.providerEpisodeIdentifier, e.available]))
+			.toEqual([[currentId, true]]);
+		data.seasons[0].episodes[1].autoplayable = false;
+		expect(readNetflixMetadata(data, currentId, context)).toBeNull();
+	});
 	it("requires generation and bounded seek values for commands", () => {
 		expect(
 			NetflixRequestSchema.safeParse({
