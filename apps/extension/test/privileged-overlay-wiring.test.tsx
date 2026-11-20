@@ -148,6 +148,7 @@ describe("privileged overlay wiring", () => {
 					{...guestParticipant(), role: "host"}, {...hostParticipant(), role: "viewer", participantSessionId: record.participantSessionId},
 				]}));
 			expect(action()).toBeNull();
+			vi.spyOn(document.documentElement, "lang", "get").mockReturnValue("ru");
 			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false} primeBrowsing onPrimeRoomChange={onRoom} />));
 			expect(action()?.textContent).toBe("Back to video");
 			const navigate = vi.spyOn(window.location, "assign").mockImplementation(() => {});

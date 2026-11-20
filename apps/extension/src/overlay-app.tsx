@@ -6906,7 +6906,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					<button type="button" className="netflix-return-to-video"
 						onClick={() => window.location.assign(netflixReturnUrl)}>
 						<Play size={14} aria-hidden="true" />
-						{/^ru(?:-|$)/i.test(document.documentElement.lang || navigator.language) ? "К просмотру" : "Back to video"}
+						Back to video
 					</button>
 				)}
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
