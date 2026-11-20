@@ -130,13 +130,12 @@ ${extensionThemeTokens}
 
   .netflix-return-to-video {
     position: absolute;
-    top: var(--top-bubble-top, 10px);
-    right: calc(var(--top-bubble-right, 10px) + var(--capsule-width, 78px) + 8px);
+    top: calc(var(--top-bubble-top, 10px) + 2px);
+    right: calc(var(--top-bubble-right, 10px) + var(--capsule-width, 78px) - 12px);
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    height: 32px;
-    padding: 0 11px;
+    height: 28px;
+    padding: 0 17px 0 8px;
     border: 1px solid var(--ad-border-strong);
     border-radius: 999px;
     background: rgba(9, 9, 11, 0.88);
@@ -150,6 +149,21 @@ ${extensionThemeTokens}
   }
   .netflix-return-to-video:hover { background: #242426; }
   .netflix-return-to-video:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .netflix-return-label {
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-width 160ms ease, margin-right 160ms ease, opacity 120ms ease;
+  }
+  .netflix-return-to-video:is(:hover, :focus-visible) .netflix-return-label,
+  .top-bubble-reveal:has(.top-bubble:hover) .netflix-return-label {
+    max-width: 8em;
+    margin-right: 5px;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .netflix-return-label { transition: none; }
+  }
 
   .anidachi-overlay.player-controls-visible .top-bubble {
     background: rgba(9, 9, 11, 0.78);

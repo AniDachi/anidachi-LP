@@ -6820,8 +6820,12 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
 	});
 	const primePanelOpen = panelOpen && adapter.provider === "primevideo";
+	const netflixReturnTarget = primeBrowsing && adapter.provider === "netflix" && roomId && roomSnapshotReady && isConnected &&
+		currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
+		storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
+		participants.some(p => p.role === "host" && p.connected !== false) && !capsuleNotice.open ? netflixReturnUrl : null;
 	useLayoutEffect(() => {
-		if (!capsuleNotice.present && !primePanelOpen) return;
+		if (!capsuleNotice.present && !primePanelOpen && !netflixReturnTarget) return;
 		const bubble = topBubbleRef.current, root = overlayRootRef.current;
 		if (!bubble || !root) return;
 		const panel = primePanelOpen ? miniPanelRef.current : null;
@@ -6839,7 +6843,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			root.style.removeProperty("--capsule-width");
 			root.style.removeProperty("--open-panel-height");
 		};
-	}, [capsuleNotice.present, primePanelOpen]);
+	}, [capsuleNotice.present, primePanelOpen, netflixReturnTarget]);
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6898,15 +6902,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				{...(primePanelOpen ? overlayPointerBoundaryProps : {})}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
-				{primeBrowsing && adapter.provider === "netflix" && roomId && roomSnapshotReady && isConnected &&
-					currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
-					storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
-					participants.some(p => p.role === "host" && p.connected !== false) &&
-					netflixReturnUrl && !capsuleNotice.open && (
+				{netflixReturnTarget && (
 					<button type="button" className="netflix-return-to-video"
-						onClick={() => window.location.assign(netflixReturnUrl)}>
-						<Play size={14} aria-hidden="true" />
-						{/^ru(?:-|$)/i.test(document.documentElement.lang || navigator.language) ? "К просмотру" : "Back to video"}
+						onClick={() => window.location.assign(netflixReturnTarget)}>
+						<span className="netflix-return-label">Back to video</span>
+						<Play size={14} fill="currentColor" aria-hidden="true" />
 					</button>
 				)}
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
