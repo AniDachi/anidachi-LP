@@ -59,7 +59,7 @@ function DemoModeToggle({
   );
 }
 
-export function ChromeExtensionDemo() {
+export function ChromeExtensionDemo({ title = "See it in action" }: { title?: string } = {}) {
   const [mode, setMode] = useState<DemoMode>("live");
 
   return (
@@ -70,7 +70,7 @@ export function ChromeExtensionDemo() {
       <div className="container mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         {mode === "live" ? (
           <ChromeExtensionRoomDemo
-            title="See it in action"
+            title={title}
             controls={<DemoModeToggle mode={mode} onChange={setMode} />}
           />
         ) : mode === "history" ? (

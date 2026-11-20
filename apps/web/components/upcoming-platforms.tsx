@@ -5,6 +5,13 @@ import styles from "./upcoming-platforms.module.css";
 import { PLATFORM_GLYPHS, PLATFORM_LOGOS } from "@/lib/platforms";
 import { PLANNED_PLATFORMS, SUPPORTED_PLATFORMS } from "@/lib/product-facts";
 
+/** More German pages linked under the platform tiles on /de (the calendar had one inbound German link). */
+const DE_MORE_LINKS = [
+  { href: "/de/tools/crunchyroll-kalender", label: "Crunchyroll Kalender" },
+  { href: "/de/netflix-auf-discord-streamen", label: "Netflix auf Discord streamen" },
+  { href: "/de/watch2gether-alternative", label: "Watch2Gether Alternative" },
+];
+
 /** German hub links and labels for /de; keyed by platform name. */
 const DE_SUPPORTED: Record<string, { href: string; label: string }> = {
   Crunchyroll: { href: "/de/crunchyroll-watchparty", label: "Crunchyroll Watchparty" },
@@ -91,7 +98,21 @@ export function UpcomingPlatforms({ locale = "en" }: { locale?: PageLocale } = {
               </li>
             ))}
         </ul>
-        {de ? null : (
+        {de ? (
+          <p className="mt-6 text-center text-sm text-ani-muted">
+            {DE_MORE_LINKS.map((link, i) => (
+              <span key={link.href}>
+                {i > 0 ? <span aria-hidden="true"> · </span> : null}
+                <Link
+                  href={link.href}
+                  className="underline decoration-ani-line underline-offset-4 transition-colors hover:text-ani-text"
+                >
+                  {link.label}
+                </Link>
+              </span>
+            ))}
+          </p>
+        ) : (
           <p className="mt-6 text-center text-sm">
             <Link
               href="/watch-party-app"
