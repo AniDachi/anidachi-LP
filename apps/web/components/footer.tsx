@@ -169,7 +169,7 @@ export function Footer() {
                   href="/watch-party-app"
                   className="hover:text-ani-text transition-colors"
                 >
-                  Watch Party App
+                  Supported Platforms
                 </Link>
               </li>
               <li>

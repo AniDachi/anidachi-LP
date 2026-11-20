@@ -294,7 +294,7 @@ export default function AniDachiVsKosmiPage() {
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-party-app" className="hover:underline">
-            AniDachi watch party app
+            Streaming services AniDachi works with
           </Link>
         </li>
         <li>
