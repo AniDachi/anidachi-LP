@@ -120,12 +120,12 @@ export default function VirtualMovieNightPage() {
 				>
 					best anime movies to watch with friends
 				</Link>
-				. Watching movies online in general is{" "}
+				. For other ways to watch a film online, see{" "}
 				<Link
 					href="/guides/watch-movies-together-online"
 					className="text-brand-orange hover:underline"
 				>
-					watch movies together online
+					how to watch movies together online
 				</Link>
 				.
 			</p>
@@ -165,7 +165,7 @@ export default function VirtualMovieNightPage() {
 					},
 					{
 						href: "/guides/watch-movies-together-online",
-						label: "Watch movies together online",
+						label: "How to watch movies together online",
 					},
 					{
 						href: "/watch-crunchyroll-together",

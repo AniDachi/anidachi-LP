@@ -154,7 +154,7 @@ export default function LongDistanceDateNightIdeasPage() {
             href="/guides/watch-movies-together-online"
             className="text-brand-orange hover:underline"
           >
-            watch movies together online
+            how to watch movies together online
           </Link>
           . Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. See{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">

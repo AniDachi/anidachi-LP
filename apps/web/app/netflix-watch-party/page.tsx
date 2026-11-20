@@ -28,12 +28,12 @@ const FREE_ROOM = getPlanPolicy("free").maxParticipants;
 const PLUS_ROOM = getPlanPolicy("plus").maxParticipants;
 const PRO_ROOM = getPlanPolicy("pro").maxParticipants;
 
-const PAGE_TITLE = "Netflix Watch Party: Watch Together in Sync";
+const PAGE_TITLE = "Netflix Watch Party: Watch Netflix Together in Sync";
 const PAGE_DESCRIPTION =
   "Netflix has no built-in watch party. Sync a Netflix movie or episode in desktop Chrome with AniDachi: own accounts, chat, voice and video, friends join free.";
 
 export const metadata: Metadata = {
-  title: "Netflix Watch Party: Watch Together in Sync",
+  title: { absolute: PAGE_TITLE },
   description: PAGE_DESCRIPTION,
   alternates: languageAlternates({ en: "/netflix-watch-party", de: "/de/netflix-watchparty" }, "en"),
   openGraph: {

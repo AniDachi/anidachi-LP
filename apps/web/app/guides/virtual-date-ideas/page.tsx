@@ -134,7 +134,7 @@ export default function VirtualDateIdeasPage() {
           href="/guides/watch-movies-together-online"
           className="text-brand-orange hover:underline"
         >
-          watch movies together online
+          how to watch movies together online
         </Link>{" "}
         and install AniDachi from{" "}
         <Link href="/extension" className="text-brand-orange hover:underline">

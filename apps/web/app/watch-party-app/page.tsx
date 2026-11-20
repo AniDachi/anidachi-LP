@@ -286,7 +286,7 @@ export default function WatchPartyAppPage() {
 					{ href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi" },
 					{ href: "/compare/anidachi-vs-syncup", label: "AniDachi vs SyncUp" },
 					{ href: "/guides/best-watch-party-apps-for-anime", label: "Best watch party apps for anime" },
-					{ href: "/guides/watch-movies-together-online", label: "Watch movies together online" },
+					{ href: "/guides/watch-movies-together-online", label: "How to watch movies together online" },
 				]}
 			/>
 		</SeoPageLayout>
