@@ -6905,8 +6905,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				{catalogReturnTarget && (
 					<button type="button" className="catalog-return-to-video"
 						onClick={() => window.location.assign(catalogWatchDestination(catalogReturnTarget, location.href))}>
+						<Play size={12} fill="currentColor" aria-hidden="true" />
 						<span className="catalog-return-label">Back to video</span>
-						<Play size={14} fill="currentColor" aria-hidden="true" />
 					</button>
 				)}
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
