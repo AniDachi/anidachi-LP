@@ -1,0 +1,50 @@
+/**
+ * Visual data for platforms, keyed by name. What AniDachi supports (names, hubs,
+ * link text, scope) lives in lib/product-facts.ts; this file only holds glyphs and logos.
+ */
+
+export type PlatformGlyph = {
+  color: string;
+  viewBox: string;
+  paths: string[];
+  playTriangle?: string;
+};
+
+// Glyphs for supported platforms. They match the watch-history platform switch
+// (app/account/watch-library/history-browser.tsx).
+export const PLATFORM_GLYPHS: Record<string, PlatformGlyph> = {
+  "Crunchyroll": {
+    color: "#F47521",
+    viewBox: "0 0 24 24",
+    paths: [
+      "M2.909 13.436C2.914 7.61 7.642 2.893 13.468 2.898c5.576.005 10.137 4.339 10.51 9.819q.021-.351.022-.706C24.007 5.385 18.64.006 12.012 0S.007 5.36 0 11.988 5.36 23.994 11.988 24q.412 0 .815-.027c-5.526-.338-9.9-4.928-9.894-10.538Zm16.284.155a4.1 4.1 0 0 1-4.095-4.103 4.1 4.1 0 0 1 2.712-3.855 8.95 8.95 0 0 0-4.187-1.037 9.007 9.007 0 1 0 8.997 9.016q-.001-.847-.15-1.651a4.1 4.1 0 0 1-3.278 1.63Z",
+    ],
+  },
+  "Netflix": {
+    color: "#E50914",
+    viewBox: "0 0 141 277",
+    paths: [
+      "M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z",
+    ],
+  },
+  "YouTube": {
+    color: "#FF0000",
+    viewBox: "0 0 24 24",
+    paths: [
+      "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.121 2.136c1.872.505 9.377.505 9.377.505s7.505 0 9.376-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814Z",
+    ],
+    playTriangle: "m9.545 15.568 6.273-3.568-6.273-3.568v7.136Z",
+  },
+};
+
+// Brand artwork: Prime Video, Hulu and Disney+ from https://github.com/pheralb/svgl
+// (static/library); Paramount+ from https://commons.wikimedia.org/wiki/File:Paramount%2B_logo.svg.
+// These marks identify planned integrations, not currently supported providers. A planned platform
+// with a published hub (pre-launch page that says support is coming) links to it.
+export const PLATFORM_LOGOS: Record<string, { file: string; width: number; height: number; href?: string }> = {
+  "Prime Video": { file: "primevideo", width: 162, height: 50, href: "/prime-video-watch-party" },
+  "Hulu": { file: "hulu", width: 110, height: 36 },
+  "Disney+": { file: "disneyplus", width: 162, height: 92 },
+  "Paramount+": { file: "paramountplus", width: 190, height: 44 },
+};
+

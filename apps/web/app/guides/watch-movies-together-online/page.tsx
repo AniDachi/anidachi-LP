@@ -153,7 +153,7 @@ export default function WatchMoviesTogetherOnlinePage() {
 			<SeoPageLayout
 				breadcrumbs={[
 					{ name: "Home", url: "/" },
-					{ name: "Watch party app", url: "/watch-party-app" },
+					{ name: "Supported streaming services", url: "/watch-party-app" },
 					{
 						name: "Watch movies together online",
 						url: PAGE_PATH,
@@ -190,8 +190,8 @@ export default function WatchMoviesTogetherOnlinePage() {
 					This guide is for one film with friends who are not in the same
 					room. It compares the apps and websites people use, then gives a
 					movie-night flow you can copy. If you already know you want AniDachi,
-					the <Link href="/watch-party-app">watch party app</Link> page covers
-					the product, and the{" "}
+					the <Link href="/watch-party-app">supported streaming services</Link> page lists
+					where it works, and the{" "}
 					<Link href="/netflix-watch-party">Netflix watch party guide</Link>{" "}
 					covers Netflix in detail.
 				</p>
@@ -405,7 +405,7 @@ export default function WatchMoviesTogetherOnlinePage() {
 							href: "/guides/best-anime-movies-to-watch-with-friends",
 							label: "Best anime movies to watch with friends",
 						},
-						{ href: "/watch-party-app", label: "Watch party app" },
+						{ href: "/watch-party-app", label: "Supported streaming services" },
 						{
 							href: "/watch-movies-together-long-distance",
 							label: "Watch movies long distance",
