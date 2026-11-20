@@ -18,7 +18,10 @@ import {
 	type PrimeConnect,
 } from "./prime-room-contract";
 
+import type { CatalogRoomProvider } from "./catalog-room-routes";
+
 type Ticket = {
+	provider: CatalogRoomProvider;
 	ticket: string;
 	attempt: string;
 	identity: PrimeRoomIdentity;
@@ -28,6 +31,7 @@ type Ticket = {
 	expiresAt: number;
 };
 type Owner = {
+	provider: CatalogRoomProvider;
 	tabId: number;
 	detachTimer: ReturnType<typeof setTimeout> | null;
 	identity: PrimeRoomIdentity;
@@ -110,6 +114,7 @@ export function registerPrimeRoomOffscreen() {
 		const identity = ticket.identity;
 		const client = new RoomClient();
 		const owner: Owner = {
+			provider: ticket.provider,
 			tabId,
 			detachTimer: null,
 			identity,
@@ -126,6 +131,7 @@ export function registerPrimeRoomOffscreen() {
 				(value) => notify(owner, { kind: "media", value }),
 				{
 					tabId,
+					provider: ticket.provider,
 					roomId: identity.roomId,
 					roomToken: options.roomToken,
 					participantSessionId: identity.participantSessionId,
@@ -226,14 +232,16 @@ export function registerPrimeRoomOffscreen() {
 			!!owner &&
 			owner.status === "connected" &&
 			!!owner.ready &&
+			(!message.provider || message.provider === owner.provider) &&
 			samePrimeRoom(owner.identity, message.identity);
 		switch (message.action) {
 			case "lookup":
 				respond(live ? { browsingBaseline: owner.projection.baseline } : null);
 				break;
 			case "authorize":
-				if (!message.resumeOnly || live) {
+				if ((!owner || owner.provider === message.provider) && (!message.resumeOnly || live)) {
 					tickets.set(tabId, {
+						provider: message.provider,
 						identity: message.identity,
 						documentId: message.documentId,
 						ticket: message.ticket,
@@ -303,6 +311,10 @@ export function registerPrimeRoomOffscreen() {
 				break;
 			}
 			case "stop":
+				if (message.keepProvider && (owner?.provider ?? tickets.get(tabId)?.provider) === message.keepProvider) {
+					respond(null);
+					break;
+				}
 				if (
 					!message.identity ||
 					samePrimeRoom(tickets.get(tabId)?.identity ?? null, message.identity)
@@ -362,7 +374,7 @@ export function registerPrimeRoomOffscreen() {
 					return;
 				}
 				tickets.delete(tabId);
-				if (owner && samePrimeRoom(owner.identity, ticket.identity)) {
+				if (owner && owner.provider === ticket.provider && samePrimeRoom(owner.identity, ticket.identity)) {
 					const previous = owner.port;
 					if (previous && previous !== port) detach(owner);
 					if (ticket.browsing && ticket.documentId !== owner.documentId) {

@@ -5,6 +5,7 @@ import {
 	personalHistoryResumeOwnerBinding,
 	primeVideoSourceUrl,
 	PrimeVideoProviderIdSchema,
+	NetflixProviderIdSchema,
 	resolvePrimeLaunch,
 	type WatchSourceDescriptor,
 } from "@anidachi/protocol";
@@ -22,11 +23,13 @@ import {
 import { isTrialWebsiteSender } from "./trial-installation";
 import { WEB_HTTP_BASE } from "./constants";
 const KEY = "anidachi.primePending.v1";
+import { catalogRoomProvider, isCatalogRoomSender } from "./catalog-room-routes";
+import { netflixWatchId } from "./source-adapters/netflix/contract";
 const FollowSchema = z.strictObject({
 	type: z.literal("ANIDACHI_PRIME_LAUNCH"),
 	action: z.literal("follow"),
 	roomId: z.string().min(1).max(128),
-	contentId: PrimeVideoProviderIdSchema,
+	contentId: z.union([PrimeVideoProviderIdSchema, NetflixProviderIdSchema]),
 	visit: z.uuid().optional(),
 });
 const StartSchema = z
@@ -137,13 +140,13 @@ async function handle(
 	const follow = FollowSchema.safeParse(message);
 	if (follow.success) {
 		const tabId = sender.tab?.id;
-		if (external || tabId === undefined || !sender.documentId || (!isPrimeBrowsingSender(sender) && !provider))
+		if (external || tabId === undefined || !sender.documentId || (!isCatalogRoomSender(sender) && !provider))
 			return { status: "cancelled" };
 		const [record, auth] = await Promise.all([loadRoomSessionForTab(tabId), getStoredAuthTokens()]);
 		if (!record || record.roomId !== follow.data.roomId || record.ownerUserId !== auth?.user.id)
 			return { status: "cancelled" };
 		const identity = { roomId: record.roomId, ownerUserId: record.ownerUserId, participantSessionId: record.participantSessionId };
-		const eligible = (tab: chrome.tabs.Tab) => isPrimeBrowsingSender({ ...sender, tab }) ||
+		const eligible = (tab: chrome.tabs.Tab) => isCatalogRoomSender({ ...sender, tab }) ||
 			(isPrimePlayerPageSender({ ...sender, tab }) && isAttachedPrimePlayerDocument(tab, identity, sender.documentId));
 		if (!await eligible(sender.tab!)) return { status: "cancelled" };
 		const claim: { source: WatchSourceDescriptor; receipt: string } | null = await chrome.runtime.sendMessage({
@@ -156,6 +159,16 @@ async function handle(
 			const [tab, current, currentAuth] = await Promise.all([chrome.tabs.get(tabId), loadRoomSessionForTab(tabId), getStoredAuthTokens()]);
 			if (currentAuth?.user.id !== identity.ownerUserId || !samePrimeRoom(current, identity) ||
 				!await eligible(tab)) return { status: "cancelled" };
+			if (claim.source.provider === "netflix") {
+				if (catalogRoomProvider(tab.url ?? "") !== "netflix" || netflixWatchId(tab.url ?? "") ||
+					netflixWatchId(claim.source.sourceUrl) !== follow.data.contentId)
+					return { status: "cancelled" };
+				await chrome.tabs.update(tabId, { url: claim.source.sourceUrl });
+				navigated = true;
+				return { status: "ready" };
+			}
+			if (claim.source.provider !== "primevideo" || !tab.url || catalogRoomProvider(tab.url) === "netflix")
+				return { status: "cancelled" };
 			const route = resolvePrimeLaunch({ contentId: follow.data.contentId, navigation: claim.source.primeNavigation });
 			const target = new URL(route.url);
 			// Keep the supplied marketplace and episode on Amazon's video surface. /dp/

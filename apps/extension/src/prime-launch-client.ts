@@ -57,7 +57,7 @@ export async function startPrimeResume(
 }
 export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: string, visit: string | undefined,
 	signal: AbortSignal): Promise<boolean> {
-	if (signal.aborted || source.provider !== "primevideo") return false;
+	if (signal.aborted || (source.provider !== "primevideo" && source.provider !== "netflix")) return false;
 	const reply = await chrome.runtime.sendMessage({
 		type: "ANIDACHI_PRIME_LAUNCH", action: "follow", roomId, visit,
 		contentId: source.sourceUrl.split("/").at(-1),
@@ -66,7 +66,7 @@ export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: str
 }
 
 /** Keep an occupied tab in its live room. An older launch must not replay after Leave. */
-export function discardConflictingPrimeLaunch(activeRoomId: string, href: string) {
+export function discardConflictingRoomLaunch(activeRoomId: string, href: string) {
 	const url = new URL(href);
 	const params = new URLSearchParams(url.hash.slice(1));
 	const invited = params.get("anidachiRoom");
@@ -79,7 +79,7 @@ export function discardConflictingPrimeLaunch(activeRoomId: string, href: string
 	params.delete("anidachiResume");
 	url.hash = params.toString();
 	history.replaceState(history.state, "", url.pathname + url.search + url.hash);
-	if ((invited || resumeIntentId) && typeof chrome !== "undefined" && chrome.runtime?.sendMessage)
+	if (url.origin !== "https://www.netflix.com" && (invited || resumeIntentId) && typeof chrome !== "undefined" && chrome.runtime?.sendMessage)
 		void chrome.runtime.sendMessage({ type: "ANIDACHI_PRIME_LAUNCH", action: "discard-conflict",
 			activeRoomId, invited: invited ?? undefined, resumeIntentId }).catch(() => undefined);
 }

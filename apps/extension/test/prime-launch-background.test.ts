@@ -167,6 +167,30 @@ it("follows the exact live guest session without generating an invitation or wri
 		expect(claim).toHaveBeenLastCalledWith(expect.objectContaining({action:"cancel-follow",receipt:"claim"}));
 	} finally { sessionForTab.mockRestore(); }
 });
+it("follows a Netflix catalog guest to the verified episode and cancels after the guest opens a player or leaves Netflix", async () => {
+	const origin = "https://www.netflix.com";
+	const url = origin + "/browse";
+	const sender = {id: ext, url, origin, frameId: 0, documentId:"guest-doc", tab:{id:7, url}};
+	const request = {type:"ANIDACHI_PRIME_LAUNCH", action:"follow", contentId:"456", roomId:"room", visit:crypto.randomUUID()};
+	const record = {version:1 as const, revision:1, roomId:"room", ownerUserId:state.owner, participantSessionId:"mine", cameraEnabled:false, voiceMode:"push-to-talk" as const};
+	const sessionForTab = vi.spyOn(sessions, "loadRoomSessionForTab").mockResolvedValue(record);
+	const target = origin + "/watch/456";
+	const claim = vi.fn().mockResolvedValue({source:{provider:"netflix",sourceUrl:target},receipt:"receipt"});
+	const update = vi.fn();
+	const get = vi.fn().mockResolvedValue(sender.tab);
+	Object.assign(chrome.runtime, {sendMessage:claim});
+	Object.assign(chrome.tabs, {get, update});
+	try {
+		expect(await send(request,sender)).toMatchObject({status:"ready"});
+		expect(update).toHaveBeenCalledExactlyOnceWith(7,{url:target});
+		for (const next of [origin + "/watch/789", origin + "/account", "https://www.primevideo.com/storefront"]) {
+			get.mockResolvedValue({id:7,url:next});
+			expect(await send(request,sender)).toMatchObject({status:"cancelled"});
+			expect(claim).toHaveBeenLastCalledWith(expect.objectContaining({action:"cancel-follow", receipt:"receipt"}));
+		}
+		expect(update).toHaveBeenCalledTimes(1);
+	} finally {sessionForTab.mockRestore();}
+});
 it("distinguishes a temporary recovery storage failure from a refused launch", async () => {
 	const provider = { id: ext, frameId: 0, url: "https://www.primevideo.com/detail/" + id, tab: { id: 7 } };
 	const recover = { type: "ANIDACHI_PRIME_LAUNCH", action: "recover", contentId: id };

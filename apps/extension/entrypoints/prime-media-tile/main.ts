@@ -3,7 +3,7 @@ import {mediaAccessChannel, type PrimeTileWindow} from "../../src/prime-media-ac
 import {PRIME_ROOM_DOCUMENT_HANDOFF_MS} from "../../src/prime-room-contract";
 
 const parentOrigin = location.ancestorOrigins[0];
-if (parentOrigin && window.parent !== window && hasPrimeBrowserHost(parentOrigin)) {
+if (parentOrigin && window.parent !== window && (parentOrigin === "https://www.netflix.com" || hasPrimeBrowserHost(parentOrigin))) {
   const video = document.querySelector("video")!;
   let release: (() => void) | undefined;
   let redeeming = false;

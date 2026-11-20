@@ -380,6 +380,11 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 ## Progress Log
 
+- 2026-11-20 — Netflix catalog-room candidate reuses the offscreen socket and media
+  session on the Prime staging revision. The tab's provider, room and participant
+  session bind camera tile and device access. Check independent browsing, guest
+  follow, explicit departure and same-tab consent before release.
+
 - 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
   create/rejoin/renewal candidate pins a daily room mode and reuses account locks,
   active-host assignment, cumulative settlement and pinned media. Actual SQL

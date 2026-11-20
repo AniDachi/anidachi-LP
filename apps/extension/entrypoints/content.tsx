@@ -1,9 +1,12 @@
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
 import type { LivePrimeRoomSession } from "../src/prime-room-contract";
+import { catalogRoomProvider, supportsCatalogRoom } from "../src/catalog-room-routes";
+import { NetflixVideoAdapter } from "../src/source-adapters/netflix/adapter";
+import { netflixWatchId } from "../src/source-adapters/netflix/contract";
 import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
-import { discardConflictingPrimeLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
-import { PRIME_CONTENT_MATCHES, isPrimeRoomBrowsingPage, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
+import { discardConflictingRoomLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
+import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
 import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
 import { PRIME_BINDING_CHANGED, PRIME_PLAYER_STATE } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
@@ -321,7 +324,7 @@ function startContentLifecycleSession(
     primeLaunch.observe(location.href);
     if (checkingLiveRoom) return "idle";
     const detection = dependencies.detect(manager.current);
-    const catalogRoute = isPrimeRoomBrowsingPage(location.href);
+    const catalogRoute = catalogRoomProvider(location.href);
     const path = location.origin + location.pathname;
     const route = parsePrimePageUrl(location.href)?.token;
     if (detection.status === "ready" && detection.adapter.provider === "primevideo" &&
@@ -335,16 +338,22 @@ function startContentLifecycleSession(
         detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
-      catalogAdapter = new PrimeVideoAdapter(document.createElement("video"), document.createElement("div"));
+      const Adapter = catalogRoute === "netflix" ? NetflixVideoAdapter : PrimeVideoAdapter;
+      catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
       return manager.reconcile({ status: "ready", adapter: catalogAdapter });
     }
     if (mounted?.isPrimeDocked?.() && !mounted.hasPrimeRoom?.()) {
-      manager.reconcile({ status: "blocked", provider: "primevideo" });
+      manager.reconcile({ status: "blocked", provider: manager.current?.provider ?? "primevideo" });
+    }
+    if (manager.current?.provider === "netflix" && mounted?.hasPrimeRoom?.() && catalogRoute === "netflix" && detection.status !== "ready") {
+      const result = manager.reconcile({ status: "waiting", provider: "netflix" });
+      if (!netflixWatchId(location.href) || manager.current === catalogAdapter) mounted.dockPrimeRoom?.();
+      return result;
     }
     const closed = manager.current?.container.getAttribute(PRIME_PLAYER_STATE) === "closed";
     const samePlayerTransition = route && route === lastPrimePlayerRoute && !closed && !mounted?.isPrimeDocked?.();
     if (!allowed && !samePlayerTransition && manager.current?.provider === "primevideo" && detection.status !== "ready") {
-      return manager.reconcile({ status: "blocked", provider: "primevideo" });
+      return manager.reconcile({ status: "blocked", provider: manager.current?.provider ?? "primevideo" });
     }
     const primeRoom = manager.current?.provider === "primevideo" && mounted?.hasPrimeRoom?.() && allowed;
     const otherDetail = route && lastPrimePlayerRoute && route !== lastPrimePlayerRoute &&
@@ -397,16 +406,16 @@ function startContentLifecycleSession(
     }, mountPollDelay);
   };
 
-  if (window.top === window && isPrimeRoomBrowsingPage(location.href) &&
+  if (window.top === window && catalogRoomProvider(location.href) &&
       (overrides.lookupPrimeRoom || (typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"))) {
     checkingLiveRoom = true;
     void dependencies.lookupPrimeRoom().catch(() => null).then(record => {
       if (disposed) return;
       checkingLiveRoom = false;
-      if (record && isPrimeRoomBrowsingPage(location.href)) {
+      if (record && catalogRoomProvider(location.href)) {
         startupRoom = record;
         primeLaunch.dispose();
-        discardConflictingPrimeLaunch(record.roomId, location.href);
+        discardConflictingRoomLaunch(record.roomId, location.href);
       }
       reconcile();
     });
@@ -669,7 +678,7 @@ export function mountOverlay(
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
   function placeHost(target: HTMLElement) {
-    if (adapter.provider === "primevideo" && target.moveBefore && target.isConnected && host.isConnected) {
+    if (supportsCatalogRoom(adapter.provider) && target.moveBefore && target.isConnected && host.isConnected) {
       target.moveBefore(host, null);
       return;
     }
@@ -878,7 +887,7 @@ export function mountOverlay(
   else activateAdapterBinding();
 
   function dockPrimeRoom() {
-    if (disposed || (!primeRoomId && !restoringRoom) || adapter.provider !== "primevideo" || docked) return;
+    if (disposed || (!primeRoomId && !restoringRoom) || !supportsCatalogRoom(adapter.provider) || docked) return;
     deactivateAdapterBinding();
     docked = true;
     Object.assign(host.style, { position: "fixed", inset: "0", width: "100%", height: "100%", borderRadius: "0" });

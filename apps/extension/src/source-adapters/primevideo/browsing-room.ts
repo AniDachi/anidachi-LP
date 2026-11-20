@@ -1,5 +1,7 @@
 import { getExpectedHostTime, type ClientEvent, type PlaybackState, type WatchSourceDescriptor } from "@anidachi/protocol";
 
+import { supportsCatalogRoom } from "../../catalog-room-routes";
+
 type Launch = (source: WatchSourceDescriptor, roomId: string, signal: AbortSignal) => Promise<boolean>;
 export type PrimeBrowsingBaseline = { fingerprint?: string; visit?: string };
 
@@ -8,11 +10,11 @@ type HostEvent = Extract<ClientEvent, { type: "HOST_STATE" }>;
 export class PrimeHostVisit {
   private visit: string | undefined;
   private last: HostEvent | null = null;
-  private waitingForPlay = false;
+  constructor(private waitingForPlay = false) {}
 
   playback(event: HostEvent): HostEvent | null {
-    if (event.source?.provider !== "primevideo") return event;
-    if (this.waitingForPlay && !event.state.playing) return null;
+    if (this.waitingForPlay && (!event.state.playing || !event.source)) return null;
+    if (!supportsCatalogRoom(event.source?.provider)) return event;
     this.waitingForPlay = false;
     this.visit ??= crypto.randomUUID();
     this.last = { ...event, state: { ...event.state, primePlayerVisit: this.visit } };
@@ -63,14 +65,16 @@ export class PrimeBrowsingRoom {
 
   receive(state: PlaybackState, source: WatchSourceDescriptor | undefined, launch: Launch) {
     if (!this.roomId) return;
-    if (source?.provider === "primevideo" && source.videoFingerprint === state.videoFingerprint) this.source = source;
+    if (source && supportsCatalogRoom(source.provider) && source.videoFingerprint === state.videoFingerprint) this.source = source;
     if (state.primePlayerVisit) this.visit = state.primePlayerVisit;
     const target = this.source;
     const baseline = this.baseline;
     if (!baseline || !target || target.videoFingerprint !== state.videoFingerprint) return;
     // A first snapshot establishes the baseline even if it arrives late.
-    baseline.fingerprint ??= target.videoFingerprint;
-    baseline.visit ??= state.primePlayerVisit;
+    if (!baseline.fingerprint) {
+      baseline.fingerprint = target.videoFingerprint;
+      baseline.visit = state.primePlayerVisit;
+    }
     const key = target.videoFingerprint + "/" + (state.primePlayerVisit ?? "");
     if (this.pending && this.pending.key !== key) {
       this.pending.abort.abort();

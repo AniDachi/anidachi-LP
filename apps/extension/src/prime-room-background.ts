@@ -17,10 +17,8 @@ import {
 } from "./player-room-departure";
 import { readPrivilegedRoomAuthorityForTab } from "./privileged-overlay-intent";
 import {
-	isPrimeBrowsingSender,
-	isPrimePlayerPageSender,
-	isPrimeRoomBrowsingPage,
-} from "./source-adapters/primevideo/url";
+	isCatalogRoomSender, isCatalogPlayerSender, catalogRoomProvider, catalogPlayerProvider,
+} from "./catalog-room-routes";
 import {
 	PRIME_ROOM_INTERNAL,
 	PRIME_ROOM_PAGE,
@@ -52,7 +50,7 @@ async function ensureOffscreen() {
 				chrome.offscreen.Reason.USER_MEDIA,
 			],
 			justification:
-				"Keep the user's active Prime watch-room call connected while the tab navigates between titles.",
+				"Keep the user's active watch-room call connected while the tab navigates between titles.",
 		})
 		.finally(() => {
 			creating = null;
@@ -75,7 +73,7 @@ async function confirmPlayerDocument(
 	if (
 		tab.id === undefined ||
 		!tab.url ||
-		!isPrimePlayerPageSender({ tab, frameId: 0, url: tab.url })
+		!isCatalogPlayerSender({ tab, frameId: 0, url: tab.url })
 	)
 		return false;
 	return (
@@ -151,10 +149,10 @@ export function registerPrimeRoomTransport() {
 		if (message?.type !== PRIME_ROOM_UI) return false;
 		const tabId = sender.tab?.id;
 		const allowedSender = (candidate: chrome.runtime.MessageSender) =>
-			isPrimeBrowsingSender(candidate) ||
+			isCatalogRoomSender(candidate) ||
 			(((message.action === "prepare" && message.resumeOnly === false) ||
 				message.action === "cancel-attach") &&
-				isPrimePlayerPageSender(candidate));
+				isCatalogPlayerSender(candidate));
 		if (
 			sender.id !== chrome.runtime.id ||
 			tabId === undefined ||
@@ -179,6 +177,8 @@ export function registerPrimeRoomTransport() {
 				!allowedSender({ ...sender, tab })
 			)
 				return null;
+			const provider = catalogRoomProvider(tab.url) ?? catalogPlayerProvider(tab.url);
+			if (!provider) return null;
 			const identity: PrimeRoomIdentity = {
 				roomId: record.roomId,
 				participantSessionId: record.participantSessionId,
@@ -187,7 +187,7 @@ export function registerPrimeRoomTransport() {
 			if (message.action === "lookup") {
 				if (!(await offscreenExists())) return null;
 				const found: { browsingBaseline: BrowseBaseline | null } | null =
-					await internal("lookup", { tabId, identity });
+					await internal("lookup", { tabId, identity, provider });
 				if (!found) return null;
 				const privilegedRoomAuthority = await readPrivilegedRoomAuthorityForTab(
 					tabId,
@@ -242,7 +242,7 @@ export function registerPrimeRoomTransport() {
 			if (message.action !== "prepare") return null;
 			const resumeOnly =
 				message.resumeOnly === true ||
-				!isPrimePlayerPageSender({ ...sender, tab });
+				!isCatalogPlayerSender({ ...sender, tab });
 			if (resumeOnly && !(await offscreenExists())) return null;
 			await ensureOffscreen();
 			const ticket = crypto.randomUUID();
@@ -251,8 +251,9 @@ export function registerPrimeRoomTransport() {
 				documentId,
 				identity,
 				ticket,
+				provider,
 				resumeOnly,
-				browsing: !isPrimePlayerPageSender({ ...sender, tab }),
+				browsing: !isCatalogPlayerSender({ ...sender, tab }),
 				attempt: message.attempt,
 			}))
 				? ticket
@@ -295,10 +296,10 @@ export function registerPrimeRoomTransport() {
 		if (!change.status && !change.url) return;
 		// Chrome hides the URL on hosts outside our narrow host permissions.
 		const url = change.url ?? tab.url;
-		if (url && isPrimeRoomBrowsingPage(url)) return;
+		const nextProvider = url && catalogRoomProvider(url);
 		void schedule(async () => {
 			if (!(await offscreenExists())) return;
-			if (url && isPrimePlayerPageSender({ tab, frameId: 0, url })) {
+			if (!nextProvider && url && isCatalogPlayerSender({ tab, frameId: 0, url })) {
 				const documentId = await internal("document", { tabId });
 				if (
 					typeof documentId === "string" &&
@@ -308,6 +309,7 @@ export function registerPrimeRoomTransport() {
 			}
 			const identity: PrimeRoomIdentity | null = await internal("stop", {
 				tabId,
+				keepProvider: nextProvider || undefined,
 			});
 			if (identity)
 				void handlePlayerRoomDeparture(
