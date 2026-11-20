@@ -23,6 +23,7 @@ import {
   isRobotsIndexingDisabled,
 } from "@/lib/site-url";
 import "./globals.css";
+import { EXTENSION_BROWSER_LABEL } from "@/lib/extension-store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,18 +40,18 @@ const shouldNoindex = isRobotsIndexingDisabled();
 export const metadata: Metadata = {
   title: {
     default:
-      "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
+      "Watch Party App: Watch Movies, Shows & Anime Together Online",
     template: "%s | AniDachi",
   },
   description:
-    "Watch Crunchyroll, YouTube, and Netflix together with friends. AniDachi syncs playback in desktop Chrome with chat and reactions. Friends join free.",
+    `Watch movies, shows and anime together online. AniDachi is a watch party extension for Netflix, Crunchyroll and YouTube in ${EXTENSION_BROWSER_LABEL}. Friends join free.`,
   metadataBase: new URL(getSeoSiteOrigin()),
   // No root canonical: a page without its own `alternates.canonical` must not inherit the homepage URL.
   openGraph: {
     title:
-      "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
+      "Watch Party App: Watch Movies, Shows & Anime Together Online",
     description:
-      "Create watchrooms for Crunchyroll, YouTube, and Netflix, sync playback with friends, and chat in real time.",
+      `Watch movies, shows and anime together online. A watch party extension for Netflix, Crunchyroll and YouTube in ${EXTENSION_BROWSER_LABEL}.`,
     type: "website",
     siteName: "AniDachi",
     images: [

@@ -14,14 +14,23 @@ import {
   INSTALL_HUB_PATH,
 } from "@/lib/install-cta";
 import { UI_STRINGS, type PageLocale } from "@/lib/locale/ui-strings";
-import { WatchingTogetherCount } from "@/components/watching-together-count";
 import { InstallLink } from "@/components/install-link";
+import { StoreRatingLine } from "@/components/store-rating-line";
+import { EXTENSION_BROWSER_LABEL } from "@/lib/extension-store";
 
+// Core positioning (ANI-36): the title and H1 stay fixed. Only the platform list
+// in the lead and meta description grows, and only once a platform is supported.
+// Hub links live in the platform tiles further down the page.
 const COPY = {
   en: {
-    h1: "Your friends are watching without you.",
-    h1Accent: "Fix that.",
-    lead: "Watch together on Crunchyroll, YouTube, and Netflix — synced, in chat, across time zones.",
+    h1: "Watch movies, shows and anime together,",
+    h1Accent: "in sync",
+    lead: (
+      <>
+        Watch Netflix, Crunchyroll and YouTube with friends, wherever they are.
+        <br className="hidden md:inline" /> Press play once and it plays for everyone. Friends join free.
+      </>
+    ),
     howItWorks: "See How It Works",
   },
   de: {
@@ -31,6 +40,7 @@ const COPY = {
     howItWorks: "So funktioniert es",
   },
 } as const;
+
 
 export function Hero({ locale = "en" }: { locale?: PageLocale } = {}) {
   const copy = COPY[locale];
@@ -61,7 +71,7 @@ export function Hero({ locale = "en" }: { locale?: PageLocale } = {}) {
             <span className="text-ani-progress">{copy.h1Accent}</span>
           </h1>
 
-          <p className="mb-8 max-w-xl text-pretty text-lg leading-relaxed text-ani-muted md:text-xl">
+          <p className="mb-8 max-w-xl text-balance text-lg md:max-w-2xl leading-relaxed text-ani-muted md:text-xl">
             {copy.lead}
           </p>
 
@@ -105,11 +115,11 @@ export function Hero({ locale = "en" }: { locale?: PageLocale } = {}) {
             </Button>
           </div>
 
-          <WatchingTogetherCount className="mb-3" locale={locale} />
+          <StoreRatingLine className="mb-3" locale={locale} />
           <p className="mb-4 max-w-md text-sm text-ani-muted md:hidden">
             {de
               ? UI_STRINGS.de.mobileInstallNote
-              : "Watch parties run in desktop Chrome — open the install page on your computer, or copy the link to open it there."}
+              : `Watch parties run in ${EXTENSION_BROWSER_LABEL}. Open the install page on your computer, or copy the link to open it there.`}
           </p>
 
           <JoinDiscordButton
