@@ -1,9 +1,10 @@
 // npm --prefix tests/e2e run harness:prime-transport
 // The Chromium tab uses routed synthetic HTML. Only the loopback WebSocket
-// server sees room traffic. No provider login, credentials or camera required.
+// server sees room traffic. Chromium supplies the virtual camera.
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,14 +64,20 @@ const snapshot = {
 };
 
 const directory = await mkdtemp(join(tmpdir(), "prime-room-transport-"));
-const server = new WebSocketServer({ port: 0, host: "127.0.0.1" });
+const http = createServer((req, res) => {
+	if (req.url !== "/rooms/room1/ice-servers") return res.writeHead(404).end();
+	res.writeHead(200, { "Content-Type": "application/json" });
+	res.end(JSON.stringify({ iceServers: [{ urls: "stun:127.0.0.1:9" }] }));
+});
+const server = new WebSocketServer({ server: http });
 let opened = 0,
 	joined = 0,
 	closed = 0,
 	pauses = 0;
 let context;
 try {
-	await once(server, "listening");
+	http.listen(0, "127.0.0.1");
+	await once(http, "listening");
 	server.on("connection", (socket) => {
 		opened++;
 		socket.on("close", () => {
@@ -96,21 +103,52 @@ try {
 			host_permissions: [provider + "/*", "http://127.0.0.1/*"],
 			background: { service_worker: "background.js" },
 			content_scripts: [{ matches: [provider + "/*"], js: ["page.js"] }],
+			web_accessible_resources: [{ resources: ["prime-media-tile.html"], matches: [provider + "/*"] }],
 		}),
 	);
 	await writeFile(
 		join(directory, "prime-room.html"),
 		'<!doctype html><script src="offscreen.js"></script>',
 	);
+	await writeFile(join(directory, "prime-media-tile.html"),
+		'<video autoplay muted playsinline></video><script src="tile.js"></script>');
 	const scripts = {
 		background:
-			'import {registerPrimeRoomTransport} from "./src/prime-room-background"; registerPrimeRoomTransport();',
+			'import {registerPrimeRoomTransport} from "./src/prime-room-background"; import {installPrimeMediaBackground} from "./src/prime-media-background"; registerPrimeRoomTransport(); installPrimeMediaBackground();',
+		tile: 'import "./entrypoints/prime-media-tile/main";',
 		offscreen:
 			'import {registerPrimeRoomOffscreen} from "./src/prime-room-offscreen"; registerPrimeRoomOffscreen();',
 		page: `
 			import {PrimeRoomClient, getLivePrimeRoomSession, retireUnattachedPrimeRoom} from "./src/prime-room-client";
+			import {createElement} from "react";
+			import {createRoot} from "react-dom/client";
+			import {PrimeCameraTile} from "./src/prime-media-session";
+			import {mediaAccessChannel} from "./src/prime-media-access";
+			import {overlayStyles} from "./src/styles";
 			const client = new PrimeRoomClient();
+			client.subscribeMedia(state => {
+				if (state.type === "prime-media-state") document.body.dataset.media = JSON.stringify({videos: state.videos.length, status: state.voiceMessage});
+			});
+			window.addEventListener("message", event => {
+				if (event.origin === chrome.runtime.getURL("").slice(0,-1) && event.data?.channel === mediaAccessChannel && event.data.action === "request")
+					document.body.dataset.cameraRequested = "true";
+			});
 			window.addEventListener("fixture", async ({detail: action}) => {
+				if (action === "mount-camera") {
+					const tile = document.createElement("div");
+					tile.style.cssText = "position:relative;width:48px;height:48px";
+					const style = document.createElement("style");
+					style.textContent = overlayStyles;
+					document.head.append(style);
+					document.body.append(tile);
+					createRoot(tile).render(createElement(PrimeCameraTile, {participantId: "user1", fallback: "H"}));
+					return;
+				}
+				if (action === "enable-camera") {
+					client.sendMediaCommand({type:"outputs", preferences:{}});
+					client.sendMediaCommand({type:"camera", enabled:true});
+					return;
+				}
 				if (action === "probe") {
 					document.body.dataset.probe = JSON.stringify(await getLivePrimeRoomSession());
 					return;
@@ -147,6 +185,7 @@ try {
 				loader: "ts",
 			},
 			bundle: true,
+			jsx: "automatic",
 			format: "iife",
 			outfile: join(directory, name + ".js"),
 			define: {
@@ -166,15 +205,17 @@ try {
 			"--load-extension=" + directory,
 			"--disable-background-networking",
 			"--disable-component-update",
+			"--use-fake-device-for-media-stream",
+			"--use-fake-ui-for-media-stream",
 		],
 	});
-	await context.route("**/*", (route) =>
-		route.fulfill({ contentType: "text/html", body: "<body>Test room</body>" }),
-	);
+	await context.route(provider + "/**", route =>
+		route.fulfill({ contentType: "text/html", body: "<body>Test room</body>" }));
 	const page = context.pages()[0] ?? (await context.newPage());
 	const worker =
 		context.serviceWorkers()[0] ??
 		(await context.waitForEvent("serviceworker"));
+	await context.grantPermissions(["camera"]);
 	await worker.evaluate(
 		(user) =>
 			chrome.storage.local.set({
@@ -217,9 +258,33 @@ try {
 		for (let i = 0; closed < count && i < timeoutMs / 50; i++) await delay(50);
 		assert.equal(closed, count);
 	}
+	async function expectMovingCamera() {
+		const frame = page.locator("iframe.prime-camera-frame");
+		await page.waitForFunction(() => {
+			const frame = document.querySelector("iframe[data-prime-camera-playing]");
+			return frame && getComputedStyle(frame).opacity === "1";
+		}, undefined, { timeout: 10_000 }).catch(async error => {
+			throw new Error("Missing camera frames: " + await page.locator("body").getAttribute("data-media"), { cause: error });
+		});
+		const camera = frame.contentFrame().locator("video");
+		const first = await camera.evaluate(video => video.getVideoPlaybackQuality().totalVideoFrames);
+		const tileDocument = page.frames().find(frame => frame.url().endsWith("/prime-media-tile.html"));
+		assert.ok(tileDocument);
+		await tileDocument.waitForFunction(previous => {
+			const video = document.querySelector("video");
+			return video.videoWidth > 0 && video.getVideoPlaybackQuality().totalVideoFrames > previous;
+		}, first, { timeout: 5000 });
+	}
 	await start();
 	const connectionId = await page.locator("body").getAttribute("data-ready");
-	await navigate(provider + "/storefront");
+	await act("mount-camera");
+	await page.waitForFunction(() => document.body.dataset.cameraRequested === "true");
+	assert.equal(await page.locator("iframe.prime-camera-frame").evaluate(frame => getComputedStyle(frame).opacity), "0");
+	assert.equal(await page.locator(".prime-camera-fallback").textContent(), "H");
+	await delay(400);
+	await act("enable-camera");
+	await expectMovingCamera();
+	await navigate(provider + "/region/na/mystuff/watchlist");
 	await act("probe");
 	await page.waitForFunction(
 		() => document.body.dataset.probe && document.body.dataset.probe !== "null",
@@ -235,11 +300,23 @@ try {
 	assert.equal("roomToken" in restored, false);
 	await act("resume");
 	await ready();
+	await act("mount-camera");
+	await expectMovingCamera();
 	assert.equal(
 		await page.locator("body").getAttribute("data-ready"),
 		connectionId,
 	);
 	assert.deepEqual([opened, joined, closed, pauses], [1, 1, 0, 1]);
+
+	for (const url of [provider + "/region/na/", provider + "/region/na/", provider + "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB"]) {
+		await navigate(url);
+		await act("resume");
+		await ready();
+		await act("mount-camera");
+		await expectMovingCamera();
+		assert.equal(await page.locator("body").getAttribute("data-ready"), connectionId);
+	}
+	assert.deepEqual([opened, joined, closed], [1, 1, 0]);
 
 	await navigate(provider + "/settings");
 	await expectClosed(1);
@@ -334,10 +411,11 @@ try {
 	await page.close();
 	await expectClosed(10);
 	assert.deepEqual([opened, joined, closed], [10, 10, 10]);
-	console.log("Passed Prime MV3 socket continuity and teardown in Chromium.");
+	console.log("Passed Prime camera rendering, socket continuity and teardown in Chromium.");
 } finally {
 	await context?.close();
 	for (const socket of server.clients) socket.terminate();
 	await new Promise((resolve) => server.close(resolve));
+	await new Promise((resolve) => http.close(resolve));
 	await rm(directory, { recursive: true, force: true });
 }

@@ -13,11 +13,11 @@ export function isPrimeRoomBrowsingPage(value: string): boolean {
       .replace(/^\/region\/[a-z0-9-]{2,16}(?=\/|$)/i, "")
       .replace(/^(?:\/-\/[a-z]{2,3}(?:[_-][a-z]{2})?|\/[a-z]{2,3}[_-][a-z]{2})(?=\/|$)/i, "");
     if (family === "primevideo.com")
-      return !!parsePrimePageUrl(value) || /^(?:\/?$|\/(?:storefront|collection|genre|search|category|watchlist|movie|tv|sports|home|offers|addons)(?:\/|$))/i.test(path);
+      return !!parsePrimePageUrl(value) || /^(?:\/?$|\/(?:storefront|collection|genre|search|category|categories|watchlist|mystuff|browse|prime|movie|tv|sports|home|offers|addons)(?:\/|$))/i.test(path);
     // Retail product pages also use /dp/ASIN. Only the actual player can
     // establish Prime ownership there; the URL cannot authorize a browsing call.
     return /^\/Amazon-Video(?:\/|$)/.test(path) ||
-      /^\/gp\/video(?:\/?$|\/(?:storefront|search|watchlist|genre|collection|category)(?:\/|$))/.test(path) ||
+      /^\/gp\/video(?:\/?$|\/(?:storefront|search|watchlist|mystuff|browse|genre|collection|category|categories)(?:\/|$))/.test(path) ||
       (path.startsWith("/gp/video/detail/") && !!parsePrimePageUrl(value));
   } catch {
     return false;

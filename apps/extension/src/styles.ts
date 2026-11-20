@@ -4419,6 +4419,28 @@ ${hostingNoticeStyles}
     z-index: 1;
   }
 
+  .prime-camera-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: scaleX(-1);
+  }
+
+  .prime-camera-frame[data-prime-camera-playing] { opacity: 1; }
+
+  .prime-camera-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    color: inherit;
+  }
+
   .cam-bubble video {
     object-fit: cover;
     transform: scaleX(-1);

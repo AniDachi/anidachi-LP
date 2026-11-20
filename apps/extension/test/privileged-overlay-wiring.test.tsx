@@ -139,6 +139,14 @@ describe("privileged overlay wiring", () => {
 			options.onEvent({type: "ROOM_SNAPSHOT", roomId: record.roomId, roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
 				participants: [{...hostParticipant(), participantSessionId: record.participantSessionId}]});
 		});
+		let measuredDock: HTMLElement | undefined;
+		let viewportWidth = 1470;
+		const originalRect = HTMLElement.prototype.getBoundingClientRect;
+		const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+			if (!this.matches(".anidachi-overlay[data-prime-browsing]")) return originalRect.call(this);
+			measuredDock = this;
+			return new DOMRect(0, 0, viewportWidth, 779);
+		});
 		const detach = vi.spyOn(PrimeRoomClient.prototype, "detach");
 		const close = vi.spyOn(PrimeRoomClient.prototype, "close");
 		let runtime!: ReturnType<typeof startContentLifecycle>;
@@ -155,13 +163,17 @@ describe("privileged overlay wiring", () => {
 			}));
 			const firstShell = document.querySelector<HTMLElement>("anidachi-overlay-root");
 			expect(firstShell?.parentElement).toBe(document.documentElement);
+			expect(measuredDock?.style.getPropertyValue("--room-rail-avatar-size")).toBe("36px");
+			viewportWidth = 600;
+			await act(async () => { window.dispatchEvent(new Event("resize")); });
+			expect(measuredDock?.style.getPropertyValue("--room-rail-avatar-size")).toBe("28px");
 			expect(preview.dataset.anidachiVideo).toBeUndefined();
 			expect(location.hash).toBe("");
 			await act(async () => { window.dispatchEvent(new Event("pagehide")); });
 			expect(firstShell?.isConnected).toBe(false);
 			expect(detach).toHaveBeenCalled();
 			expect(close).not.toHaveBeenCalled();
-			vi.stubGlobal("location", new URL("https://www.primevideo.com/search"));
+			vi.stubGlobal("location", new URL("https://www.primevideo.com/region/na/mystuff/watchlist"));
 			await loadDocument();
 			await flushMountedWork();
 			const shell = document.querySelector<HTMLElement>("anidachi-overlay-root");
@@ -193,7 +205,7 @@ describe("privileged overlay wiring", () => {
 			await act(async () => session.onEvent({type: "ROOM_ENDED", roomId: record.roomId, reason: "host_ended", endedAt: Date.now()}));
 			expect(shell?.isConnected).toBe(false);
 			expect(background.mock.calls.some(([message]: any) => message.command === "connect-room" || message.command === "create-room")).toBe(false);
-		} finally { await act(async () => runtime.dispose()); }
+		} finally { bounds.mockRestore(); await act(async () => runtime.dispose()); }
 	});
 
 	it("isolates pointer movement around the open Prime panel and releases the player on close", async () => {

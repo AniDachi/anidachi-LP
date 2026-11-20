@@ -2650,7 +2650,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, []);
 
 	useEffect(() => {
-		if (!adapterActive) {
+		const surface = primeBrowsing ? overlayRootRef.current : adapter.container;
+		if (!surface || (!primeBrowsing && !adapterActive)) {
 			return;
 		}
 
@@ -2661,7 +2662,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				return;
 			}
 
-			const rect = adapter.container.getBoundingClientRect();
+			const rect = surface.getBoundingClientRect();
 			const nextSize = {
 				height: normalizeOverlayViewportDimension(rect.height),
 				width: normalizeOverlayViewportDimension(rect.width),
@@ -2678,7 +2679,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			typeof ResizeObserver === "undefined"
 				? null
 				: new ResizeObserver(updateViewportSize);
-		observer?.observe(adapter.container);
+		observer?.observe(surface);
 		window.addEventListener("resize", updateViewportSize);
 		document.addEventListener("fullscreenchange", updateViewportSize, true);
 
@@ -2692,7 +2693,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				true,
 			);
 		};
-	}, [adapter, adapterActive]);
+	}, [adapter, adapterActive, primeBrowsing]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -7560,7 +7561,7 @@ function CameraBubble({
 			{...overlayHotkeyBoundaryProps}
 			{...overlayInteractionBoundaryProps}
 		>
-			<div className="cam-media" ref={ref}>{"persistent" in video && <PrimeCameraTile key={video.revision} participantId={video.participantId} />}</div>
+			<div className="cam-media" ref={ref}>{"persistent" in video && <PrimeCameraTile key={video.revision} participantId={video.participantId} fallback={initials(participant.displayName)} />}</div>
 			{flaming ? (
 				<svg
 					aria-hidden="true"

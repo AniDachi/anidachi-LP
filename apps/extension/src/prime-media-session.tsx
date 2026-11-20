@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import type {VoiceMode} from "@anidachi/protocol";
 import type {GhostCamOptions, GhostCamSession} from "./ghost-cam";
 import type {P2PMediaDiagnostics} from "./p2p-media";
@@ -13,21 +13,38 @@ export interface PrimeGhostVideo {
   participantId: string;
 }
 
-export function PrimeCameraTile({participantId}: {participantId: string}) {
+export function PrimeCameraTile({participantId, fallback}: {participantId: string; fallback: string}) {
   const ref = useRef<HTMLIFrameElement>(null);
-  const authorizeFrame = useCallback(async () => {
-    const frame = ref.current;
-    if (!frame) return;
-    const ticket = await chrome.runtime.sendMessage({channel: mediaAccessChannel, action: "ticket", participantId});
-    if (ref.current === frame && typeof ticket === "string") {
-      // Reparenting the overlay can reload a child browsing context. Each load
-      // gets a fresh single-use ticket outside the provider-readable DOM.
-      frame.contentWindow?.postMessage({channel: mediaAccessChannel, ticket}, chrome.runtime.getURL("").slice(0, -1));
-    }
+
+  useLayoutEffect(() => {
+    const frame = ref.current!;
+    const origin = chrome.runtime.getURL("").slice(0, -1);
+    let active = true;
+    const receive = (event: MessageEvent) => {
+      if (!event.isTrusted || event.origin !== origin || event.source !== frame.contentWindow ||
+          event.data?.channel !== mediaAccessChannel) return;
+      if (event.data.action === "playing") {
+        frame.setAttribute("data-prime-camera-playing", "");
+      } else if (event.data.action === "request") {
+        frame.removeAttribute("data-prime-camera-playing");
+        void chrome.runtime.sendMessage({channel: mediaAccessChannel, action: "ticket", participantId}).then(ticket => {
+          if (active && typeof ticket === "string")
+            frame.contentWindow?.postMessage({channel: mediaAccessChannel, ticket}, origin);
+        }).catch(() => {});
+      }
+    };
+    window.addEventListener("message", receive);
+    return () => {
+      active = false;
+      window.removeEventListener("message", receive);
+    };
   }, [participantId]);
-  return <iframe ref={ref} title="AniDachi camera" src={chrome.runtime.getURL(tilePage)} tabIndex={-1} aria-hidden="true"
-    onLoad={() => { void authorizeFrame().catch(() => {}); }}
-    style={{display:"block", width:"100%", height:"100%", border:0, pointerEvents:"none", transform:"scaleX(-1)"}} />;
+
+  return <>
+    <span className="prime-camera-fallback" aria-hidden="true">{fallback}</span>
+    <iframe ref={ref} className="prime-camera-frame" title="AniDachi camera" src={chrome.runtime.getURL(tilePage)} tabIndex={-1} aria-hidden="true"
+      onLoad={event => event.currentTarget.removeAttribute("data-prime-camera-playing")} />
+  </>;
 }
 
 export function usePrimeGhostCam(bridge: PrimeMediaBridge | null, options: GhostCamOptions): GhostCamSession {
