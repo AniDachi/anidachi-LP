@@ -78,6 +78,18 @@ export interface IssuedRoomAuthorityInput {
   authorityGeneration: number;
 }
 
+/** Reuse only the HTTPS-issued authority belonging to the verified live tab session. */
+export async function readPrivilegedRoomAuthorityForTab(
+  tabId: number,
+  ownerUserId: string,
+  roomId: string,
+  storage: SessionStorageLike = getSessionStorage(),
+): Promise<PrivilegedOverlayContext | null> {
+  const state = await readPrivilegedRoomAuthorityState(storage, authorityStorageKey(tabId));
+  const authority = state.currentAuthority;
+  return authority?.accountUserId === ownerUserId && authority.roomId === roomId ? authority : null;
+}
+
 export function isTrustedOverlayActionEvent(event: {
   nativeEvent?: { isTrusted?: unknown };
 }): boolean {

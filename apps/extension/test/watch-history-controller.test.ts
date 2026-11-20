@@ -2171,3 +2171,16 @@ it("preserves Netflix stable identity in durable personal progress without CR pe
   expect(fixture.enqueued.at(-1)).not.toHaveProperty("identityPending");
   await fixture.controller.dispose();
 });
+
+it("preserves Prime season1 anchor and exact episode identity in durable personal progress", async () => {
+  const identity = { kind: "episode" as const, seriesAnchorSeasonId: "0S1FYJ3LY9KTL9C7WFFAGA9F6F", providerSeasonIdentifier: "0N9BB22P2FZ8UD2BBLNX07RP22", providerEpisodeIdentifier: "0SXKMY213EM2FCKUVVKUW95I2C" };
+  const fixture = createFixture({ getProvider: () => "primevideo", getObservation: (_preferences, observation) => ({ ...observation,
+    provider: "primevideo", providerLabel: "Prime Video", primevideoIdentity: identity,
+    titleKey: `primevideo:series:${identity.seriesAnchorSeasonId}`, episodeKey: `primevideo:episode:${identity.providerEpisodeIdentifier}`,
+    seasonKey: `primevideo:season:${identity.providerSeasonIdentifier}`, seasonNumber: 5, episodeNumber: 1,
+    sourceUrl: `https://www.primevideo.com/detail/${identity.providerEpisodeIdentifier}` }) });
+  await fixture.controller.start(); fixture.setTime(11); await fixture.controller.observe("heartbeat");
+  expect(fixture.enqueued.at(-1)).toMatchObject({ provider: "primevideo", primevideoIdentity: identity, titleKey: `primevideo:series:${identity.seriesAnchorSeasonId}` });
+  expect(fixture.enqueued.at(-1)).not.toHaveProperty("crunchyrollIdentity"); expect(fixture.enqueued.at(-1)).not.toHaveProperty("identityPending");
+  await fixture.controller.dispose();
+});

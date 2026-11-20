@@ -123,11 +123,14 @@ export class PlaybackSyncController {
 	private lastRemoteCommand: { key: string; receivedAt: number } | null = null;
 	private lastRemoteSeekAttempt: RemoteSeekAttempt | null = null;
 	private latestHostState: PlaybackState | null = null;
+	private confirmedHostFingerprint: string | null = null;
 	private pendingLocalSeek: PendingLocalSeek | null = null;
 	private pendingPlayWait = false;
 	private pendingRemoteSeek: PendingRemoteSeek | null = null;
 	private pendingSourceNavigation: PendingSourceNavigation | null = null;
 	private playbackBarrier: AdapterPlaybackPhase | null = null;
+	private interstitialPlayAttempted = false;
+	private interstitialPlayAbort: AbortController | null = null;
 	private hostInterstitialHoldSent = false;
 	private hostBufferingHoldSent = false;
 	private hostBufferingTimeoutId: number | null = null;
@@ -171,9 +174,9 @@ export class PlaybackSyncController {
 		this.suppressLocalEventsUntil = 0;
 		this.lastConfirmedContentState = null;
 		this.lastPlaybackPhase = null;
-		// Replacing the player retires the old ad notice even if the new player
+		// Replacing the player retires the old phase notice even if the new player
 		// already reports content (and therefore has no barrier-exit event).
-		if (this.playbackBarrier === "interstitial") this.onStatus({ kind: "synced" });
+		if (this.playbackBarrier === "interstitial" || this.playbackBarrier === "unsupported") this.onStatus({ kind: "synced" });
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
 		this.hostBufferingHoldSent = false;
@@ -202,11 +205,12 @@ export class PlaybackSyncController {
 		this.lastRemoteCommand = null;
 		this.lastRemoteSeekAttempt = null;
 		this.latestHostState = null;
+		this.confirmedHostFingerprint = null;
 		this.authoritativeRoomSource = null;
 		this.pendingRemoteSeek = null;
 		// Membership/connection refresh resets the barrier too. Re-read the
 		// current phase below instead of retaining feedback from the old session.
-		if (this.playbackBarrier === "interstitial") this.onStatus({ kind: "synced" });
+		if (this.playbackBarrier === "interstitial" || this.playbackBarrier === "unsupported") this.onStatus({ kind: "synced" });
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
 		this.hostBufferingHoldSent = false;
@@ -304,6 +308,7 @@ export class PlaybackSyncController {
 			}
 			this.rememberAuthoritativeRoomSource(adapter, source);
 		}
+		this.confirmedHostFingerprint = state.videoFingerprint;
 		const navigationSource =
 			source ?? this.getRememberedAuthoritativeRoomSource(state);
 		if (navigationSource) {
@@ -454,6 +459,7 @@ export class PlaybackSyncController {
 		}
 		if (this.refreshPlaybackPhase(adapter)) {
 			this.updateLatestHostStateFromCommand(event);
+			this.continueGuestInterstitial(adapter);
 			return;
 		}
 
@@ -540,6 +546,10 @@ export class PlaybackSyncController {
 	resumeFromUserGesture(): void {
 		const adapter = this.getActiveAdapter();
 		const state = this.latestHostState;
+		if (adapter?.getPlaybackSnapshot().phase === "interstitial" && this.resumeRequired && !this.resumeAttemptPending) {
+			this.continueGuestInterstitial(adapter, true);
+			return;
+		}
 		if (
 			!adapter ||
 			!state?.playing ||
@@ -601,6 +611,7 @@ export class PlaybackSyncController {
 		this.clearPendingLocalSeek();
 		this.adapter = null;
 		this.latestHostState = null;
+		this.confirmedHostFingerprint = null;
 		this.authoritativeRoomSource = null;
 		this.lastConfirmedContentState = null;
 		this.lastPlaybackPhase = null;
@@ -646,7 +657,8 @@ export class PlaybackSyncController {
 
 		const latestHostState = pending.latestHostState;
 		this.clearPendingSourceNavigation();
-		void this.applyHostState(latestHostState);
+		// Identity can bind before playback is ready. Retain the state across that barrier.
+		void this.handleHostState(latestHostState);
 	}
 
 	private getRememberedAuthoritativeRoomSource(
@@ -865,14 +877,18 @@ export class PlaybackSyncController {
 			previousPhase,
 		);
 		if (nextBarrier === this.playbackBarrier) {
+			if (nextBarrier === "interstitial") this.continueGuestInterstitial(adapter);
 			return nextBarrier !== null || guestBufferingBlocked;
 		}
 
 		const previousBarrier = this.playbackBarrier;
 		this.playbackBarrier = nextBarrier;
-		// Transition/unsupported is still a playback barrier, but it is no longer
-		// an advertisement. Do not leave the old ad copy attached to that state.
-		if (previousBarrier === "interstitial" && nextBarrier) this.onStatus({ kind: "synced" });
+		this.resetInterstitialPlayback();
+		if (previousBarrier === "interstitial") this.clearResumeRequired();
+		// Retire the previous phase's notice before applying the new one. This
+		// also matters during solo playback, which returns before room sync below.
+		if (previousBarrier === "interstitial" || previousBarrier === "unsupported")
+			this.onStatus({ kind: "synced" });
 		if (nextBarrier) {
 			this.clearHostBufferingTimer();
 			this.hostBufferingHoldSent = false;
@@ -888,6 +904,7 @@ export class PlaybackSyncController {
 					this.onStatus({ kind: "waiting-for-host-ad" });
 				} else {
 					this.onStatus({ kind: "watching-local-ad" });
+					this.continueGuestInterstitial(adapter);
 				}
 			} else if (nextBarrier === "unsupported") {
 				this.onStatus({ kind: "unsupported-media" });
@@ -1075,7 +1092,65 @@ export class PlaybackSyncController {
 
 	private invalidateAsyncWork(): void {
 		this.asyncGeneration += 1;
+		this.resetInterstitialPlayback();
 		this.cancelPendingRemotePlayback();
+	}
+
+	private resetInterstitialPlayback(): void {
+		this.interstitialPlayAbort?.abort();
+		this.interstitialPlayAbort = null;
+		this.interstitialPlayAttempted = false;
+		this.resumeAttemptPending = false;
+	}
+
+	private continueGuestInterstitial(adapter: VideoAdapter, userGesture = false): void {
+		if (!adapter.resumeInterstitial || adapter !== this.getActiveAdapter() ||
+			this.playbackBarrier !== "interstitial" || this.session.isHost || !this.hasActiveRoomSession()) return;
+		const host = this.latestHostState;
+		if (!host?.playing || host.videoFingerprint !== adapter.getFingerprint() ||
+			this.confirmedHostFingerprint !== host.videoFingerprint) {
+			// Cancel pending work without restoring the one automatic attempt.
+			// A host pause must not undo the guest's later native pause.
+			this.interstitialPlayAbort?.abort();
+			this.resumeAttemptPending = false;
+			return;
+		}
+		if (!adapter.video.paused) {
+			this.interstitialPlayAttempted = true;
+			if (this.resumeRequired) {
+				this.clearResumeRequired();
+				this.onStatus({kind: "watching-local-ad"});
+			}
+			return;
+		}
+		if (!userGesture && this.interstitialPlayAbort?.signal.aborted && !this.resumeRequired) {
+			this.resumeRequired = true;
+			this.onStatus({kind: "resume-required", reason: "interstitial-paused"});
+		}
+		if (!userGesture && (this.interstitialPlayAttempted || this.resumeRequired)) return;
+		this.interstitialPlayAttempted = true;
+		this.interstitialPlayAbort?.abort();
+		const abort = new AbortController(), generation = this.asyncGeneration;
+		this.interstitialPlayAbort = abort;
+		this.resumeAttemptPending = true;
+		const current = () => !abort.signal.aborted && this.asyncGeneration === generation &&
+			this.getActiveAdapter() === adapter && this.playbackBarrier === "interstitial" &&
+			this.latestHostState?.playing && this.latestHostState.videoFingerprint === adapter.getFingerprint() &&
+			this.confirmedHostFingerprint === this.latestHostState.videoFingerprint;
+		const failed = (error: unknown) => {
+			if (!current()) return;
+			this.interstitialPlayAbort = null;
+			this.resumeAttemptPending = false;
+			this.handlePlayFailure(error);
+		};
+		try {
+			void adapter.resumeInterstitial(abort.signal).then(() => {
+				if (!current()) return;
+				this.interstitialPlayAbort = null;
+				this.clearResumeRequired();
+				this.onStatus({kind: "watching-local-ad"});
+			}, failed);
+		} catch (error) { failed(error); }
 	}
 
 	private isAsyncEpochCurrent(epoch: AsyncEpoch): boolean {
