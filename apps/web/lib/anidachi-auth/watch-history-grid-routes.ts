@@ -1,3 +1,4 @@
+import { primeNavigationResponse } from "./prime-navigation-response";
 import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
 import {
 	getAccountAccessSession,
@@ -38,7 +39,8 @@ export function createWatchHistoryGridGet(
 						"INVALID_REQUEST",
 						"Duplicate query parameter",
 					);
-				input[key] = key === "limit" ? Number(value) : value;
+				input[key] = key === "limit" ? Number(value) :
+					key === "includePartial" && (value === "true" || value === "false") ? value === "true" : value;
 			}
 			const parsed = WatchHistoryGridQuerySchema.safeParse(input);
 			if (!parsed.success)
@@ -48,7 +50,7 @@ export function createWatchHistoryGridGet(
 					"Invalid catalog query",
 				);
 			return NextResponse.json(
-				await dependencies.read({ userId: session.userId, input: parsed.data }),
+				primeNavigationResponse(request,await dependencies.read({ userId: session.userId, input: parsed.data })),
 				{ headers },
 			);
 		} catch (error) {

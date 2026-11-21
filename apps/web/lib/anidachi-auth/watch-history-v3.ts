@@ -1,6 +1,12 @@
+import {PrimeNavigationSchema,primeNavigationMatches,type PrimeNavigation} from "@anidachi/protocol";
+import { isPrimeVideoArtworkUrl } from "./prime-video-artwork";
 import { isNetflixArtworkUrl } from "./netflix-artwork";
 import { withPersonalHistoryRead, personalHistoryError } from "./personal-history-policy";
 import {
+  disneyPlusPlaybackId,
+  hboMaxPlaybackId,
+  type RoomSourceProvider,
+  RoomSourceProviderSchema,
   WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT,
   WatchCatalogBeginAckSchema,
   WatchCatalogBeginRequestSchema,
@@ -41,7 +47,10 @@ import {
 const MAX_CURSOR_CHARS = 512;
 const POSTGREST_HISTORY_PAGE_SIZE = 1_000;
 const WATCH_HISTORY_QUERY_BATCH_SIZE = 100;
-const MVP_PROVIDERS = new Set(["crunchyroll", "youtube", "netflix"]);
+const MVP_PROVIDERS = new Set<string>(RoomSourceProviderSchema.options);
+function isHistoryProvider(provider: unknown): provider is RoomSourceProvider {
+  return typeof provider === "string" && MVP_PROVIDERS.has(provider);
+}
 const PUBLIC_HANDLE_PATTERN = /^[a-z0-9_]{3,24}$/;
 
 const UUID_PATTERN =
@@ -54,7 +63,7 @@ type WatchHistoryRangePage = {
 
 export type WatchHistoryProgressRow = {
   user_id: string;
-  provider: "crunchyroll" | "youtube" | "netflix";
+  provider: RoomSourceProvider;
   title_key: string;
   episode_key: string;
   item_kind: "series" | "movie";
@@ -66,6 +75,7 @@ export type WatchHistoryProgressRow = {
   season_number: number | null;
   episode_number: number | null;
   source_url: string;
+  prime_navigation?:PrimeNavigation|null;
   current_time_seconds: number;
   duration: number;
   progress: number;
@@ -78,7 +88,7 @@ export type WatchHistoryProgressRow = {
 
 type SessionDatabaseRow = {
   id: string;
-  provider: "crunchyroll" | "youtube" | "netflix";
+  provider: RoomSourceProvider;
   item_key: string;
   episode_key: string;
   client_session_key: string | null;
@@ -96,7 +106,7 @@ type SessionDatabaseRow = {
 
 type WatchHistorySessionRecord = {
   session: WatchHistorySession;
-  provider: "crunchyroll" | "youtube" | "netflix";
+  provider: RoomSourceProvider;
   titleKey: string;
   episodeKey: string;
 };
@@ -119,7 +129,7 @@ export type WatchHistoryCursor = {
 };
 
 export type WatchHistoryTitleSummary = {
-  provider: "crunchyroll" | "youtube" | "netflix";
+  provider: RoomSourceProvider;
   titleKey: string;
   lastWatchedAt: string;
   observedEpisodeCount: number;
@@ -133,7 +143,7 @@ export type WatchHistoryTitleSummary = {
 
 export type WatchHistoryTitleEpisodePage = {
   accountGeneration: number;
-  provider: "crunchyroll" | "youtube" | "netflix";
+  provider: RoomSourceProvider;
   titleKey: string;
   observedEpisodeCount: number;
   completedEpisodeCount: number;
@@ -154,7 +164,7 @@ export type WatchHistoryV3Store = {
   beginCatalog(userId: string, request: WatchCatalogBeginRequest): Promise<unknown>;
   applyCatalog(userId: string, request: WatchCatalogCommitRequest): Promise<unknown>;
   loadHistory(userId: string, page: {
-    providerVersion?: 1 | 2;
+    providerVersion?: 1 | 2 | 3 | 4 | 5;
     limit: number;
     cursor: WatchHistoryCursor | null;
   }): Promise<{
@@ -166,7 +176,7 @@ export type WatchHistoryV3Store = {
     titleSummaries?: unknown[];
   }>;
   loadTitleEpisodes?(userId: string, page: {
-    provider: "crunchyroll" | "youtube" | "netflix";
+    provider: RoomSourceProvider;
     titleKey: string;
     limit: number;
     cursor: string | null;
@@ -286,6 +296,9 @@ export function parseWatchProgressEventV3(input: unknown): WatchProgressEvent {
   if (parsed.data.provider === "netflix" && !isNetflixArtworkUrl(parsed.data.artworkUrl)) {
     throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid Netflix artwork URL");
   }
+  if (parsed.data.provider === "primevideo" && !isPrimeVideoArtworkUrl(parsed.data.artworkUrl)) {
+    throw new WatchHistoryV3ApiError(400, "INVALID_REQUEST", "Invalid Prime Video artwork URL");
+  }
   if (!MVP_PROVIDERS.has(parsed.data.provider)) {
     throw new WatchHistoryV3ApiError(400, "UNSUPPORTED_PROVIDER", "Provider is not supported");
   }
@@ -297,6 +310,10 @@ export function parseWatchProgressEventV3(input: unknown): WatchProgressEvent {
     throw new WatchHistoryV3ApiError(400, "PROVIDER_DOMAIN_MISMATCH", "Provider source is invalid");
   }
   const validOrigin =
+    (parsed.data.provider === "hbomax" && hboMaxPlaybackId(parsed.data.sourceUrl) !== null) ||
+    (parsed.data.provider === "disneyplus" && disneyPlusPlaybackId(parsed.data.sourceUrl) !== null) ||
+    (parsed.data.provider === "primevideo" &&
+      url.origin === "https://www.primevideo.com" && /^\/detail\/[A-Z0-9]{26}$/.test(url.pathname)) ||
     (parsed.data.provider === "netflix" &&
       url.origin === "https://www.netflix.com" && /^\/watch\/[1-9][0-9]{0,19}$/.test(url.pathname)) ||
     (parsed.data.provider === "crunchyroll" &&
@@ -392,7 +409,7 @@ export async function applyWatchProgressV3(params: {
 }
 
 export async function listWatchHistoryV3(params: {
-  providerVersion?: 1 | 2;
+  providerVersion?: 1 | 2 | 3 | 4 | 5;
   userId: string;
   limit?: number;
   cursor?: WatchHistoryCursor | null;
@@ -560,6 +577,7 @@ export function buildWatchHistoryV3Response(params: {
         itemKind: latest.item_kind,
         title: catalog.title ?? latest.title,
         sourceUrl: latest.source_url,
+        ...(latest.prime_navigation?{primeNavigation:latest.prime_navigation}:{}),
         artworkUrl: latest.artwork_url,
         catalogState: catalog.state,
         aggregate: catalog.aggregate ?? {
@@ -663,7 +681,7 @@ export function buildWatchHistoryV3Response(params: {
 
 export async function listWatchHistoryTitleEpisodesV3(params: {
   userId: string;
-  provider: "crunchyroll" | "youtube" | "netflix";
+  provider: RoomSourceProvider;
   titleKey: string;
   limit?: number;
   cursor?: string | null;
@@ -990,11 +1008,15 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
     if (!isRecord(result.data) || result.data.kind !== "progress") {
       throw new Error("watch_history_client_id_conflict");
     }
-    return result.data.acknowledgement;
+    const receipt=WatchProgressAckSchema.safeParse(result.data.acknowledgement);
+    if(!receipt.success || !receipt.data.episode.sourceUrl.startsWith("https://www.primevideo.com/detail/"))return result.data.acknowledgement;
+    const enriched=await db().rpc("prime_navigation_progress_ack_v1",{p_user_id:userId,p_ack:result.data.acknowledgement});
+    if(enriched.error)throw enriched.error;
+    return enriched.data;
   },
 
   async applyProgress(userId, event, authority) {
-    const result = await db().rpc("apply_watch_progress_v3", {
+    const result = await db().rpc(event.provider === "primevideo" ? "apply_watch_progress_prime_navigation_v1" : "apply_watch_progress_v3", {
       p_user_id: userId,
       p_event: event,
       p_room_authority: authority,
@@ -1023,8 +1045,8 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
 
   async loadHistory(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc(page.providerVersion === 2 ? "list_watch_history_v3_provider_page" : "list_watch_history_v3_bounded_page", {
-      ...(page.providerVersion === 2 ? { p_provider_version: 2 } : {}),
+    const result = await db().rpc((page.providerVersion !== undefined && page.providerVersion >= 2) ? "list_watch_history_v3_provider_page_prime_navigation_v1" : "list_watch_history_v3_bounded_page", {
+      ...((page.providerVersion !== undefined && page.providerVersion >= 2) ? { p_provider_version: page.providerVersion } : {}),
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
       p_limit: page.limit,
@@ -1047,7 +1069,7 @@ export const supabaseWatchHistoryV3Store: WatchHistoryV3Store = {
 
   async loadTitleEpisodes(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const result = await db().rpc("list_watch_history_v3_title_episodes_page", {
+    const result = await db().rpc("list_watch_history_v3_title_episodes_page_prime_navigation_v1", {
       p_user_id: userId,
       p_history_generation: preferences.accountGeneration,
       p_provider: page.provider,
@@ -1200,7 +1222,7 @@ export function buildHostAuthoritativeWatchHistoryRoomSource(params: {
       roomId: session.room_id,
       clientSessionKey: session.client_session_key,
     }) ||
-    (session.provider !== "crunchyroll" && session.provider !== "youtube" && session.provider !== "netflix") ||
+    !isHistoryProvider(session.provider) ||
     !isBoundedString(session.item_key, 220) ||
     !isBoundedString(session.episode_key, 220) ||
     !isHttpsUrl(session.source_url, 2048) ||
@@ -1507,7 +1529,7 @@ export function parseWatchHistoryTitleEpisodesPage(value: unknown): Omit<
       "catalog",
     ]) ||
     !isPositiveInteger(value.accountGeneration) ||
-    (value.provider !== "crunchyroll" && value.provider !== "youtube" && value.provider !== "netflix") ||
+    !isHistoryProvider(value.provider) ||
     !isBoundedString(value.titleKey, 220) ||
     !isNonnegativeInteger(value.observedEpisodeCount) ||
     !isNonnegativeInteger(value.completedEpisodeCount) ||
@@ -1547,7 +1569,7 @@ function parseWatchHistoryTitleSummary(value: unknown): WatchHistoryTitleSummary
       "episodePage",
       "catalog",
     ]) ||
-    (value.provider !== "crunchyroll" && value.provider !== "youtube" && value.provider !== "netflix") ||
+    !isHistoryProvider(value.provider) ||
     !isBoundedString(value.titleKey, 220) ||
     !isTimestamp(value.lastWatchedAt) ||
     !isNonnegativeInteger(value.observedEpisodeCount) ||
@@ -1601,6 +1623,7 @@ function mapProgressRowToEpisode(
     seasonNumber: row.season_number,
     episodeNumber: row.episode_number,
     sourceUrl: row.source_url,
+    ...(row.prime_navigation?{primeNavigation:row.prime_navigation}:{}),
     currentTime: row.current_time_seconds,
     duration: row.duration,
     progress: row.progress,
@@ -1648,7 +1671,7 @@ function parseHistorySessionRecord(value: unknown): WatchHistorySessionRecord {
     const session = WatchHistorySessionSchema.safeParse(value.session);
     if (
       !session.success ||
-      (value.provider !== "crunchyroll" && value.provider !== "youtube" && value.provider !== "netflix") ||
+      !isHistoryProvider(value.provider) ||
       !isBoundedString(value.titleKey, 220) ||
       !isBoundedString(value.episodeKey, 220)
     ) {
@@ -1666,7 +1689,7 @@ function parseHistorySessionRecord(value: unknown): WatchHistorySessionRecord {
 
 function parseProgressRow(value: unknown): WatchHistoryProgressRow {
   if (!isRecord(value)) throw invalidDatabaseResponse();
-  const row = value;
+  const row: Record<string, unknown> = {...value,prime_navigation:value.prime_navigation??null};
   if (
     !hasOnlyKeys(row, [
       "user_id",
@@ -1682,6 +1705,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
       "season_number",
       "episode_number",
       "source_url",
+      "prime_navigation",
       "current_time_seconds",
       "duration",
       "progress",
@@ -1692,7 +1716,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
       "history_generation",
     ]) ||
     !isUuid(row.user_id) ||
-    (row.provider !== "crunchyroll" && row.provider !== "youtube" && row.provider !== "netflix") ||
+    !isHistoryProvider(row.provider) ||
     !isBoundedString(row.title_key, 220) ||
     !isBoundedString(row.episode_key, 220) ||
     (row.item_kind !== "series" && row.item_kind !== "movie") ||
@@ -1718,6 +1742,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
   ) {
     throw invalidDatabaseResponse();
   }
+  if(row.prime_navigation!==null && row.prime_navigation!==undefined){const parsed=PrimeNavigationSchema.safeParse(row.prime_navigation);if(!parsed.success||!primeNavigationMatches(parsed.data,String(row.source_url),String(row.provider)))throw invalidDatabaseResponse();}
   return row as WatchHistoryProgressRow;
 }
 
@@ -1743,7 +1768,7 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
       "last_checkpoint_at",
     ]) ||
     !isUuid(row.id) ||
-    (row.provider !== "crunchyroll" && row.provider !== "youtube" && row.provider !== "netflix") ||
+    !isHistoryProvider(row.provider) ||
     !isBoundedString(row.item_key, 220) ||
     !isBoundedString(row.episode_key, 220) ||
     !(row.client_session_key === null ||
@@ -1811,7 +1836,7 @@ function parseWatchHistoryCursor(value: unknown): WatchHistoryCursor {
     !isTimestamp(value.lastWatchedAt) ||
     stableId.length < 3 ||
     stableId.length > 260 ||
-    !/^(crunchyroll|netflix|youtube|amazon):[^\s:][^\s]*$/.test(stableId)
+    !/^(crunchyroll|netflix|primevideo|disneyplus|hbomax|youtube|amazon):[^\s:][^\s]*$/.test(stableId)
   ) {
     throw new WatchHistoryV3ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
   }

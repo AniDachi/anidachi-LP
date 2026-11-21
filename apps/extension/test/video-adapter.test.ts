@@ -167,8 +167,8 @@ describe("generic video adapter detection", () => {
     expect(firstFingerprint).toBe("youtube|abc123");
   });
 
-  it("changes the YouTube fingerprint when SPA navigation reuses the video element", () => {
-    mockHost("www.youtube.com", "/watch?v=first-video");
+  it.each(["www.youtube.com", "m.youtube.com"])("waits for a reused video to change media on %s", (host) => {
+    mockHost(host, "/watch?v=first-video", "https:");
     document.body.innerHTML = `
       <div id="movie_player" class="html5-video-player">
         <video style="width: 640px; height: 360px;"></video>
@@ -180,7 +180,9 @@ describe("generic video adapter detection", () => {
     const firstAdapter = detectSourceAdapter();
     const firstFingerprint = firstAdapter?.getFingerprint();
 
-    mockHost("www.youtube.com", "/watch?v=second-video");
+    mockHost(host, "/watch?v=second-video");
+    expect(detectSourceAdapter()).toBeNull();
+    video.dispatchEvent(new Event("loadedmetadata"));
     const secondAdapter = detectSourceAdapter();
 
     expect(secondAdapter?.video).toBe(firstAdapter?.video);
@@ -838,10 +840,11 @@ function mockRect(element: Element | null, width: number, height: number) {
 function mockHost(
   host: string,
   path = `${window.location.pathname}${window.location.search}${window.location.hash}`,
+  protocol = window.location.protocol,
 ) {
   Object.defineProperty(window, "location", {
     configurable: true,
-    value: new URL(`${window.location.protocol}//${host}${path}`),
+    value: new URL(`${protocol}//${host}${path}`),
   });
 }
 

@@ -18,7 +18,7 @@ export interface PlayerOverlayGeometry {
   };
   safeInsets: PlayerOverlayInsets;
   launcher: PlayerOverlayAnchor;
-  panel: PlayerOverlayAnchor;
+  panel: PlayerOverlayAnchor & { maxWidthPx?: number; maxHeightPx?: number };
 }
 
 export type PlayerOverlayGeometryListener = (geometry: PlayerOverlayGeometry) => void;
@@ -93,6 +93,12 @@ export function normalizePlayerOverlayGeometry(
       ),
     },
     panel: {
+      ...(geometry?.panel?.maxWidthPx != null && {
+        maxWidthPx: normalizeBoundedValue(geometry.panel.maxWidthPx, 0, viewport.widthPx, hasUsableViewport),
+      }),
+      ...(geometry?.panel?.maxHeightPx != null && {
+        maxHeightPx: normalizeBoundedValue(geometry.panel.maxHeightPx, 0, viewport.heightPx, hasUsableViewport),
+      }),
       topPx: normalizeBoundedValue(
         geometry?.panel?.topPx,
         DEFAULT_PLAYER_OVERLAY_GEOMETRY.panel.topPx,
@@ -127,6 +133,8 @@ export function arePlayerOverlayGeometriesEqual(
     normalizedLeft.launcher.topPx === normalizedRight.launcher.topPx &&
     normalizedLeft.launcher.rightPx === normalizedRight.launcher.rightPx &&
     normalizedLeft.panel.topPx === normalizedRight.panel.topPx &&
+    normalizedLeft.panel.maxWidthPx === normalizedRight.panel.maxWidthPx &&
+    normalizedLeft.panel.maxHeightPx === normalizedRight.panel.maxHeightPx &&
     normalizedLeft.panel.rightPx === normalizedRight.panel.rightPx
   );
 }

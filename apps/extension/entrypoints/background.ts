@@ -1,7 +1,12 @@
+import { handleHboMaxSavedMetadata } from "../src/source-adapters/hbomax/history-metadata";
+import { registerPrimeRoomTransport } from "../src/prime-room-background";
+import { installPrimeMediaBackground } from "../src/prime-media-background";
+import { registerPrimeLaunchBridge } from "../src/prime-launch-background";
 import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
 import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
 import { WEB_HTTP_BASE } from "../src/constants";
+import { handleDisneyPlusCatalogHandoff, forgetDisneyPlusCatalogTab, isDisneyPlusProfileBoundary } from "../src/source-adapters/disneyplus/catalog-handoff";
 import { registerUninstallUrl, UNINSTALL_URL_REFRESH_ALARM } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
@@ -88,11 +93,13 @@ import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-clie
 import {
   flushWatchHistoryInBackground,
   cancelWatchHistoryCatalogForTab,
+  forgetWatchHistoryTab,
   handleWatchHistoryAuthSessionChange,
   handleWatchHistoryHttpMessage,
   isWatchHistoryMessage,
   reconcileWatchHistoryThenDrain,
 } from "../src/watch-history-client";
+import { handlePlayerRoomDeparture, isPlayerRoomDeparture } from "../src/player-room-departure";
 
 export interface PrivilegedRoomRuntimeDependencies {
   admissionDepartureTimeoutMs?: number;
@@ -150,6 +157,7 @@ export function dispatchPrivilegedRoomRuntimeMessage(
   sender: { tab?: { id?: number } },
   dependencies: PrivilegedRoomRuntimeDependencies = {},
 ): Promise<unknown> | null {
+  if (isPlayerRoomDeparture(message)) return handlePlayerRoomDeparture(message, sender);
   if (isRoomAdmissionHandoffMessage(message)) {
     return handleRoomAdmissionHandoffMessage(
       message,
@@ -283,12 +291,23 @@ export default defineBackground(() => {
     set: value => storage.setItem(TRIAL_INSTALLATION_STORAGE_KEY, value),
   });
   registerTrialInstallationBridge(installation.trial);
+  registerPrimeLaunchBridge();
+  registerPrimeRoomTransport();
+  installPrimeMediaBackground();
   const free20 = createFree20AbuseClient({ baseUrl: WEB_HTTP_BASE, getSession: getStoredAuthTokens, refresh: refreshExtensionSession, sign: installation.free20 });
   const hostingDependencies = { getSession: getStoredAuthTokens, refresh: refreshExtensionSession, request: free20.request };
   registerWebsitePresence();
   registerOnboardingCheckoutBridge();
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type === "ANIDACHI_HBOMAX_SAVED_METADATA") {
+      void handleHboMaxSavedMetadata(sender).then(sendResponse, () => sendResponse(null));
+      return true;
+    }
+    if (message?.type === "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF") {
+      void handleDisneyPlusCatalogHandoff(message, sender).then(sendResponse, () => sendResponse(null));
+      return true;
+    }
     if (message?.type === PLAYER_INTRODUCTION_MESSAGE) {
       // Every release channel shares the same installation-local claim.
       if (
@@ -455,10 +474,14 @@ export default defineBackground(() => {
   void drainRoomDepartureRetries().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
-    cancelWatchHistoryCatalogForTab(tabId);
+    void forgetDisneyPlusCatalogTab(tabId).catch(() => undefined);
+    forgetWatchHistoryTab(tabId);
     void handleRemovedRoomTab(tabId).catch(() => undefined);
   });
   chrome.tabs.onUpdated?.addListener((tabId, changeInfo) => {
+    if (changeInfo.url && isDisneyPlusProfileBoundary(changeInfo.url)) {
+      void forgetDisneyPlusCatalogTab(tabId).catch(() => undefined);
+    }
     if (changeInfo.status === "loading") cancelWatchHistoryCatalogForTab(tabId);
   });
 });

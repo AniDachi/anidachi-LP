@@ -1,0 +1,696 @@
+{
+  "canonical": "https://www.primevideo.com/detail/0GS9E1N0I97ENRMJPEH38ZYO1J",
+  "hydration": {
+    "init": {
+      "preparations": {
+        "body": {
+          "atf": {
+            "state": {
+              "action": {
+                "btf": {}
+              },
+              "detail": {
+                "detail": {},
+                "headerDetail": {
+                  "amzn1.dv.gti.1b84eac9-1c94-4322-bb8a-3b64b5304137": {
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/1b960d4a89869a9d79fd7b13e83630c38e19484b25fb69cdd7f1cea6a48d5996.png",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png",
+                      "titleshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "parentTitle": "SOR",
+                    "seasonNumber": 1,
+                    "title": "SOR - Sezon 1",
+                    "titleType": "season"
+                  }
+                }
+              },
+              "episodeList": {},
+              "pageTitleId": "amzn1.dv.gti.1b84eac9-1c94-4322-bb8a-3b64b5304137",
+              "seasons": {},
+              "self": {
+                "amzn1.dv.gti.1b84eac9-1c94-4322-bb8a-3b64b5304137": {
+                  "compactGTI": "0GS9E1N0I97ENRMJPEH38ZYO1J",
+                  "gti": "amzn1.dv.gti.1b84eac9-1c94-4322-bb8a-3b64b5304137",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J",
+                  "sequenceNumber": 1,
+                  "titleType": "season"
+                },
+                "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48": {
+                  "compactGTI": "0T3GCJX165LY69GGRPABT1WJ7S",
+                  "gti": "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0T3GCJX165LY69GGRPABT1WJ7S",
+                  "sequenceNumber": 1,
+                  "titleType": "episode"
+                }
+              }
+            }
+          },
+          "btf": {
+            "state": {
+              "action": {
+                "btf": {
+                  "amzn1.dv.gti.0822bb06-7f9c-453d-b9f6-806cf895217c": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.0822bb06-7f9c-453d-b9f6-806cf895217c",
+                            "playbackURL": "/region/na/detail/0FMY5U08IL4ND7HQ26W4QEAF7G?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.1c95c6ea-5e18-4075-8e3b-4b37751aa3d4": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.1c95c6ea-5e18-4075-8e3b-4b37751aa3d4",
+                            "playbackURL": "/region/na/detail/0GUJ63T14CKQHMNE2YDWRAUML0?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.21c23686-ee86-4015-a902-631896175c5b": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.21c23686-ee86-4015-a902-631896175c5b",
+                            "playbackURL": "/region/na/detail/0H5K4ALU7DV1AQMTQ2N1B2K09N?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.3daa9aea-6255-4703-b58c-6328d43b8d3a": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.3daa9aea-6255-4703-b58c-6328d43b8d3a",
+                            "playbackURL": "/region/na/detail/0IT1DPZ83AKP2EXJHFJ8FAOG1M?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.59750d4b-361f-4814-8326-cc9c316c2a42": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.59750d4b-361f-4814-8326-cc9c316c2a42",
+                            "playbackURL": "/region/na/detail/0KG9O1RIQX9GKTH92M1GNADW76?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.8770945e-5c4c-4c7d-997d-0477408a8150": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.8770945e-5c4c-4c7d-997d-0477408a8150",
+                            "playbackURL": "/region/na/detail/0N69QLUZB03ZIKWRKT86847PLC?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.99183a56-8bf9-4cd8-b2e2-2ecccfa17a25": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.99183a56-8bf9-4cd8-b2e2-2ecccfa17a25",
+                            "playbackURL": "/region/na/detail/0O7WBZNLD7TVFROA9K32XGAE5H?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.bf166cf8-9f42-40d3-8ba4-f0bbdeadc761": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.bf166cf8-9f42-40d3-8ba4-f0bbdeadc761",
+                            "playbackURL": "/region/na/detail/0QGVE692HNID7RIOU1284KSZMP?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.c300f96f-f6ce-4e52-8ddb-7627c5b40f11": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.c300f96f-f6ce-4e52-8ddb-7627c5b40f11",
+                            "playbackURL": "/region/na/detail/0QP7VBBADNOQSPMW8UQ3JLP9U9?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48",
+                            "playbackURL": "/region/na/detail/0T3GCJX165LY69GGRPABT1WJ7S?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.ecfa8c84-8cda-4dbd-b72c-6a98a724fb7f": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.ecfa8c84-8cda-4dbd-b72c-6a98a724fb7f",
+                            "playbackURL": "/region/na/detail/0T6OG7FXK1A2XEGEL0YZM3VCE7?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "amzn1.dv.gti.f2a7431f-79f1-4937-b33a-c5d6e42996c2": {
+                    "messages": {
+                      "entitlementType": "Entitled"
+                    },
+                    "primaryActions": [
+                      {
+                        "actionType": "PLAY",
+                        "payload": {
+                          "payloadType": "PLAYBACK",
+                          "playback": {
+                            "isTrailer": false,
+                            "playbackID": "amzn1.dv.gti.f2a7431f-79f1-4937-b33a-c5d6e42996c2",
+                            "playbackURL": "/region/na/detail/0TIRUGMKM38YZ5QWOUC6YMC2PU?autoplay=1",
+                            "videoMaterialType": "Feature"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "detail": {
+                "detail": {
+                  "amzn1.dv.gti.0822bb06-7f9c-453d-b9f6-806cf895217c": {
+                    "episodeNumber": 10,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/579e43efb6a42d344515912e6e57fa8180020098e6e2a92117ec1b5b75428beb.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 10",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.1b84eac9-1c94-4322-bb8a-3b64b5304137": {
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/1b960d4a89869a9d79fd7b13e83630c38e19484b25fb69cdd7f1cea6a48d5996.png",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "parentTitle": "SOR",
+                    "seasonNumber": 1,
+                    "title": "SOR - Sezon 1",
+                    "titleType": "season"
+                  },
+                  "amzn1.dv.gti.1c95c6ea-5e18-4075-8e3b-4b37751aa3d4": {
+                    "episodeNumber": 4,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/7b124f5a3c807a77fd56c5e437e5bfee6241e32aab735092946e6d718d648bea.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 4",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.21c23686-ee86-4015-a902-631896175c5b": {
+                    "episodeNumber": 3,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/5894967e3e983de05d8d0e7037a0de1c8bcd75caffddfacccbeaf6e2ee4ff5f0.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 3",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.3daa9aea-6255-4703-b58c-6328d43b8d3a": {
+                    "episodeNumber": 6,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/e523ba485f6b7c42aef136548bd7cdec9873475a5baf39f269244dfb725814e3.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 6",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.59750d4b-361f-4814-8326-cc9c316c2a42": {
+                    "episodeNumber": 11,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/ef6c8cdd11b55e30f25d3ece07c34a2d1aff388abc3ef040b7ea087df4cd43af.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 11",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.8770945e-5c4c-4c7d-997d-0477408a8150": {
+                    "episodeNumber": 9,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/44f6938376add7dd5031051dd3e64619fba36f45c2072c76e40f9a72791ecef8.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 9",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.99183a56-8bf9-4cd8-b2e2-2ecccfa17a25": {
+                    "episodeNumber": 8,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/54b48e5280a9829fd9622598f7513fece5fe07e53f6e91801c09639e96fbd79d.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 8",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.bf166cf8-9f42-40d3-8ba4-f0bbdeadc761": {
+                    "episodeNumber": 2,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/4cc9cebec1ed2ee1e5c48f6894839767a4cee29b2842eaeaa918a4815389e20a.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 2",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.c300f96f-f6ce-4e52-8ddb-7627c5b40f11": {
+                    "episodeNumber": 12,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/b480fa3cf9a0a68745f6744988da213ba63a16e57a4edc4b08b030c7aee7193c.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 12",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48": {
+                    "episodeNumber": 1,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/5023a61879bb0188fdc8a866308ec2a95578d966ea0d950bc4c08a4914db42c2.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 1",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.ecfa8c84-8cda-4dbd-b72c-6a98a724fb7f": {
+                    "episodeNumber": 7,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/217a94f15d3d532d86feca455307dc8900e18b34f3b165aba46f62ad1fed60e6.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 7",
+                    "titleType": "episode"
+                  },
+                  "amzn1.dv.gti.f2a7431f-79f1-4937-b33a-c5d6e42996c2": {
+                    "episodeNumber": 5,
+                    "images": {
+                      "covershot": "https://images-na.ssl-images-amazon.com/images/S/pv-target-images/004a4de6c3f0d1da1d1dedf3e4f1a4281eef10464365010a46c8473df7e58662.jpg",
+                      "packshot": "https://m.media-amazon.com/images/S/pv-target-images/c867507e87b51a080d123e40b63dc6811500c43786bdf2e4888cca052861f4b0.png"
+                    },
+                    "title": "Odcinek 5",
+                    "titleType": "episode"
+                  }
+                },
+                "headerDetail": {}
+              },
+              "episodeList": {
+                "actions": {
+                  "episodePages": [
+                    {
+                      "isSelected": true
+                    }
+                  ],
+                  "pagination": []
+                },
+                "cardTitleIds": [
+                  "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48",
+                  "amzn1.dv.gti.bf166cf8-9f42-40d3-8ba4-f0bbdeadc761",
+                  "amzn1.dv.gti.21c23686-ee86-4015-a902-631896175c5b",
+                  "amzn1.dv.gti.1c95c6ea-5e18-4075-8e3b-4b37751aa3d4",
+                  "amzn1.dv.gti.f2a7431f-79f1-4937-b33a-c5d6e42996c2",
+                  "amzn1.dv.gti.3daa9aea-6255-4703-b58c-6328d43b8d3a",
+                  "amzn1.dv.gti.ecfa8c84-8cda-4dbd-b72c-6a98a724fb7f",
+                  "amzn1.dv.gti.99183a56-8bf9-4cd8-b2e2-2ecccfa17a25",
+                  "amzn1.dv.gti.8770945e-5c4c-4c7d-997d-0477408a8150",
+                  "amzn1.dv.gti.0822bb06-7f9c-453d-b9f6-806cf895217c",
+                  "amzn1.dv.gti.59750d4b-361f-4814-8326-cc9c316c2a42",
+                  "amzn1.dv.gti.c300f96f-f6ce-4e52-8ddb-7627c5b40f11"
+                ],
+                "totalCardSize": 12
+              },
+              "pageTitleId": "amzn1.dv.gti.1b84eac9-1c94-4322-bb8a-3b64b5304137",
+              "seasons": {},
+              "self": {
+                "amzn1.dv.gti.0822bb06-7f9c-453d-b9f6-806cf895217c": {
+                  "compactGTI": "0FMY5U08IL4ND7HQ26W4QEAF7G",
+                  "gti": "amzn1.dv.gti.0822bb06-7f9c-453d-b9f6-806cf895217c",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0FMY5U08IL4ND7HQ26W4QEAF7G",
+                  "sequenceNumber": 10,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.1c95c6ea-5e18-4075-8e3b-4b37751aa3d4": {
+                  "compactGTI": "0GUJ63T14CKQHMNE2YDWRAUML0",
+                  "gti": "amzn1.dv.gti.1c95c6ea-5e18-4075-8e3b-4b37751aa3d4",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0GUJ63T14CKQHMNE2YDWRAUML0",
+                  "sequenceNumber": 4,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.21c23686-ee86-4015-a902-631896175c5b": {
+                  "compactGTI": "0H5K4ALU7DV1AQMTQ2N1B2K09N",
+                  "gti": "amzn1.dv.gti.21c23686-ee86-4015-a902-631896175c5b",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0H5K4ALU7DV1AQMTQ2N1B2K09N",
+                  "sequenceNumber": 3,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.3daa9aea-6255-4703-b58c-6328d43b8d3a": {
+                  "compactGTI": "0IT1DPZ83AKP2EXJHFJ8FAOG1M",
+                  "gti": "amzn1.dv.gti.3daa9aea-6255-4703-b58c-6328d43b8d3a",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0IT1DPZ83AKP2EXJHFJ8FAOG1M",
+                  "sequenceNumber": 6,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.59750d4b-361f-4814-8326-cc9c316c2a42": {
+                  "compactGTI": "0KG9O1RIQX9GKTH92M1GNADW76",
+                  "gti": "amzn1.dv.gti.59750d4b-361f-4814-8326-cc9c316c2a42",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0KG9O1RIQX9GKTH92M1GNADW76",
+                  "sequenceNumber": 11,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.8770945e-5c4c-4c7d-997d-0477408a8150": {
+                  "compactGTI": "0N69QLUZB03ZIKWRKT86847PLC",
+                  "gti": "amzn1.dv.gti.8770945e-5c4c-4c7d-997d-0477408a8150",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0N69QLUZB03ZIKWRKT86847PLC",
+                  "sequenceNumber": 9,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.99183a56-8bf9-4cd8-b2e2-2ecccfa17a25": {
+                  "compactGTI": "0O7WBZNLD7TVFROA9K32XGAE5H",
+                  "gti": "amzn1.dv.gti.99183a56-8bf9-4cd8-b2e2-2ecccfa17a25",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0O7WBZNLD7TVFROA9K32XGAE5H",
+                  "sequenceNumber": 8,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.bf166cf8-9f42-40d3-8ba4-f0bbdeadc761": {
+                  "compactGTI": "0QGVE692HNID7RIOU1284KSZMP",
+                  "gti": "amzn1.dv.gti.bf166cf8-9f42-40d3-8ba4-f0bbdeadc761",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0QGVE692HNID7RIOU1284KSZMP",
+                  "sequenceNumber": 2,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.c300f96f-f6ce-4e52-8ddb-7627c5b40f11": {
+                  "compactGTI": "0QP7VBBADNOQSPMW8UQ3JLP9U9",
+                  "gti": "amzn1.dv.gti.c300f96f-f6ce-4e52-8ddb-7627c5b40f11",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0QP7VBBADNOQSPMW8UQ3JLP9U9",
+                  "sequenceNumber": 12,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48": {
+                  "compactGTI": "0T3GCJX165LY69GGRPABT1WJ7S",
+                  "gti": "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0T3GCJX165LY69GGRPABT1WJ7S",
+                  "sequenceNumber": 1,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.ecfa8c84-8cda-4dbd-b72c-6a98a724fb7f": {
+                  "compactGTI": "0T6OG7FXK1A2XEGEL0YZM3VCE7",
+                  "gti": "amzn1.dv.gti.ecfa8c84-8cda-4dbd-b72c-6a98a724fb7f",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0T6OG7FXK1A2XEGEL0YZM3VCE7",
+                  "sequenceNumber": 7,
+                  "titleType": "episode"
+                },
+                "amzn1.dv.gti.f2a7431f-79f1-4937-b33a-c5d6e42996c2": {
+                  "compactGTI": "0TIRUGMKM38YZ5QWOUC6YMC2PU",
+                  "gti": "amzn1.dv.gti.f2a7431f-79f1-4937-b33a-c5d6e42996c2",
+                  "isLaunched": true,
+                  "link": "/region/na/detail/0TIRUGMKM38YZ5QWOUC6YMC2PU",
+                  "sequenceNumber": 5,
+                  "titleType": "episode"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "locale": "en_US",
+  "playLinks": [
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0T3GCJX165LY69GGRPABT1WJ7S?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0T3GCJX165LY69GGRPABT1WJ7S?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0QGVE692HNID7RIOU1284KSZMP?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0QGVE692HNID7RIOU1284KSZMP?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0H5K4ALU7DV1AQMTQ2N1B2K09N?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0H5K4ALU7DV1AQMTQ2N1B2K09N?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0GUJ63T14CKQHMNE2YDWRAUML0?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0GUJ63T14CKQHMNE2YDWRAUML0?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0TIRUGMKM38YZ5QWOUC6YMC2PU?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0TIRUGMKM38YZ5QWOUC6YMC2PU?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0IT1DPZ83AKP2EXJHFJ8FAOG1M?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0IT1DPZ83AKP2EXJHFJ8FAOG1M?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0T6OG7FXK1A2XEGEL0YZM3VCE7?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0T6OG7FXK1A2XEGEL0YZM3VCE7?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0O7WBZNLD7TVFROA9K32XGAE5H?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0O7WBZNLD7TVFROA9K32XGAE5H?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0N69QLUZB03ZIKWRKT86847PLC?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0N69QLUZB03ZIKWRKT86847PLC?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0FMY5U08IL4ND7HQ26W4QEAF7G?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0FMY5U08IL4ND7HQ26W4QEAF7G?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0KG9O1RIQX9GKTH92M1GNADW76?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0KG9O1RIQX9GKTH92M1GNADW76?autoplay=1",
+      "role": "button"
+    },
+    {
+      "ariaDisabled": null,
+      "disabled": false,
+      "href": "/region/na/detail/0QP7VBBADNOQSPMW8UQ3JLP9U9?autoplay=1",
+      "role": null
+    },
+    {
+      "ariaDisabled": "false",
+      "disabled": false,
+      "href": "/region/na/detail/0QP7VBBADNOQSPMW8UQ3JLP9U9?autoplay=1",
+      "role": "button"
+    }
+  ],
+  "territory": "PL",
+  "titleInfo": {
+    "episodeNumber": 1,
+    "seasonNumber": 1,
+    "seriesTitle": "SOR",
+    "title": "Odcinek 1",
+    "titleId": "amzn1.dv.gti.eb772c21-cf6b-41a6-8a03-110cd6be8e48",
+    "type": "EPISODE"
+  },
+  "url": "https://www.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J"
+}

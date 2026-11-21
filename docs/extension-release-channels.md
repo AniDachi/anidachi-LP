@@ -97,6 +97,7 @@ watch surfaces and Anidachi infrastructure:
 - YouTube embeds / `youtube-nocookie`
 - Crunchyroll
 - Netflix at exactly `https://www.netflix.com/*` (October 8 candidate)
+- Prime Video at exactly `https://www.primevideo.com/*` (November 16 candidate)
 - the channel web app host
 - the configured Cloudflare Workers API host for the channel
 
@@ -122,6 +123,15 @@ Store publication or loaded-artifact acceptance. See
 [Netflix adapter notes](netflix-adapter-notes.md) and
 [staging verification](netflix-staging-verification.md) for the source/artifact
 identity and acceptance gates.
+
+The Prime Video candidate uses only this exact Prime host, including its
+top-frame MAIN bridge; Amazon regional domains and wildcard Amazon permissions
+are not included. Runtime admission requires a verified primary movie/episode
+on a canonical `/detail/<compactGTI>` source. Staging delivery is authorized,
+but the permission entry and successful build do not establish loaded-artifact
+acceptance or authorize production publication. Complete the remaining staging
+checks in the [Prime Video plan](superpowers/plans/2026-11-16-prime-video-adapter.md)
+before claiming accepted support.
 
 Every extension entrypoint imports `src/zod-csp.ts` before shared protocol
 schemas. It sets Zod's `jitless` option to avoid dynamic compilation and even the
