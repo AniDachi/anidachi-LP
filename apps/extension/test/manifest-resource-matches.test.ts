@@ -30,7 +30,7 @@ const primeRoutes = [
 	]),
 ];
 const origins = [
-	"https://www.disneyplus.com/*",
+	"https://www.disneyplus.com/*", "https://www.hbomax.com/*",
 	"https://youtube.com/*",
 	"https://*.youtube.com/*",
 	"https://youtu.be/*",
@@ -64,7 +64,7 @@ function manifest() {
 		background: { service_worker: "background.js" },
 		web_accessible_resources: [
 			{ resources: ["Anidachi_logo.png"], matches: [...origins] },
-			{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: ["https://www.disneyplus.com/*", "https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", "https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
+			{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: ["https://www.disneyplus.com/*", "https://www.hbomax.com/*", "https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", "https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
 		],
 		content_scripts: [
 			{ matches: contentMatches, js: ["content.js"] },

@@ -120,7 +120,7 @@ test("browse provider capability is optional and explicit on titles and options"
     assert.equal((await (await handler(new NextRequest(base + "&providerVersion=2"))).json()).providerVersion, 2);
     assert.equal((await (await handler(new NextRequest(base + "&providerVersion=3"))).json()).providerVersion, 3);
     assert.equal((await (await handler(new NextRequest(base + "&providerVersion=4"))).json()).providerVersion, 4);
-    for (const version of ["0", "5", "02", "2.0", "", "2&providerVersion=2"])
+    for (const version of ["0", "6", "02", "2.0", "", "2&providerVersion=2"])
       assert.equal((await handler(new NextRequest(base + "&providerVersion=" + version))).status, 400);
   }
 });

@@ -235,7 +235,7 @@ function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof g
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
 			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
-            if (url.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo", "disneyplus"].includes(url.searchParams.get("provider") ?? "")) {
+            if (url.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo", "disneyplus", "hbomax"].includes(url.searchParams.get("provider") ?? "")) {
               const empty = browse(); empty.history.items = []; empty.matches = []; empty.history.totalTitleCount = 0;
               empty.history.meta.accountGeneration = stored.activeGenerations?.[OWNER] ?? 1;
               return Response.json(empty);
@@ -368,7 +368,7 @@ async function change(label: string, value: string) {
 describe("production watch browsing", () => {
   function providerLibrary(netflixSize = 0, primeSize = 0) {
     const requests: WatchHistoryBrowseQuery[] = [];
-    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize, primevideo: primeSize, disneyplus: 0 };
+    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize, primevideo: primeSize, disneyplus: 0, hbomax: 0 };
     const client = clientFixture(async message => {
       if (message.command !== "browse") return { ok: true };
       const query = message.input as WatchHistoryBrowseQuery;
@@ -397,6 +397,18 @@ describe("production watch browsing", () => {
     });
     return { client, requests };
   }
+
+  it("requests all six provider streams with the v5 contract in staging", async () => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
+    try {
+      const { client, requests } = providerLibrary();
+      await mount(client, false);
+      expect(requests.map(query => query.provider).sort()).toEqual(["crunchyroll", "disneyplus", "hbomax", "netflix", "primevideo", "youtube"]);
+      expect(requests.every(query => query.providerVersion === 5)).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 
   it("pages each provider by 20 with full counts and no load-more button outside the provider", async () => {
     const { client, requests } = providerLibrary();

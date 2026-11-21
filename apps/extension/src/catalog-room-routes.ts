@@ -1,4 +1,4 @@
-import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
+import { HBO_MAX_ORIGIN, hboMaxPlaybackId, hboMaxDetail, canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import { isCrunchyrollCatalogOrigin, crunchyrollCatalogPath, localizedWatchUrl } from "./source-adapters/crunchyroll/url";
 import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, youtubePageWatchSource } from "./source-adapters/youtube/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
@@ -9,10 +9,10 @@ import {
 	parsePrimePageUrl,
 } from "./source-adapters/primevideo/url";
 
-export type CatalogRoomProvider = "netflix" | "primevideo" | "crunchyroll" | "youtube" | "disneyplus";
+export type CatalogRoomProvider = "netflix" | "primevideo" | "crunchyroll" | "youtube" | "disneyplus" | "hbomax";
 
 export function supportsCatalogReturn(provider: unknown): provider is Exclude<CatalogRoomProvider, "primevideo"> {
-	return provider === "netflix" || provider === "crunchyroll" || provider === "youtube" || provider === "disneyplus";
+	return provider === "netflix" || provider === "crunchyroll" || provider === "youtube" || provider === "disneyplus" || provider === "hbomax";
 }
 
 export function catalogWatchSource(provider: unknown, href: string) {
@@ -44,6 +44,10 @@ export function catalogRoomProvider(value: string): CatalogRoomProvider | null {
 	try {
 		const url = new URL(value);
 		if (url.username || url.password) return null;
+		if (url.origin === HBO_MAX_ORIGIN) {
+			const catalog = /^\/(?:home|series|movies|categories|audio-description|search|my-stuff|channel\/[a-f0-9-]{36}|browse(?:\/[a-z0-9_-]+)*|genre\/[a-z0-9_-]+)?\/?$/.test(url.pathname);
+			return catalog || hboMaxDetail(value) || hboMaxPlaybackId(value) ? "hbomax" : null;
+		}
 		if (isDisneyPlusOrigin(value)) {
 			const path = url.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/|$)/i, "") || "/";
 			const catalog = path === "/" || /^\/(?:home|search|watchlist|browse(?:\/[a-z0-9_-]+)*)\/?$/i.test(path);
@@ -74,6 +78,7 @@ export function catalogPlayerProvider(
 	} catch {
 		return null;
 	}
+	if (hboMaxPlaybackId(value)) return "hbomax";
 	if (netflixWatchId(value)) return "netflix";
 	if (disneyPlusWatchId(value)) return "disneyplus";
 	if (catalogWatchSource("crunchyroll", value)) return "crunchyroll";

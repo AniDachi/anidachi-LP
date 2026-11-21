@@ -1964,7 +1964,7 @@ it("Netflix movies and shows retain their own provider, editor identity and resu
     try {
       await click(buttonByLabel(view.container, "Netflix"));
       await waitFor(() => assert.ok(view.container.querySelector(`button[aria-label="Manage ${history.items[0].title}"]`)));
-      assert.ok(server.calls.some(call => call.path.includes("provider=netflix") && call.path.includes("providerVersion=4")));
+      assert.ok(server.calls.some(call => call.path.includes("provider=netflix") && call.path.includes("providerVersion=5")));
       assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Netflix 200 \/ 200 titles.*Netflix history is full/);
       await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
       await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
@@ -1986,7 +1986,7 @@ it("legacy capacity shows Netflix unavailable rather than manufacturing zero usa
     await waitFor(() => assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Netflix storage unavailable/));
     await click(buttonByLabel(view.container, "Netflix"));
     assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /^Netflix storage unavailable$/);
-    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=4"));
+    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=5"));
   } finally { await unmount(view.root); }
 });
 
@@ -2063,7 +2063,7 @@ it("Prime movies and partial series keep provider identity in filters, editor an
     try {
       await click(buttonByLabel(view.container, "Prime Video"));
       await waitFor(() => assert.ok(view.container.querySelector(`button[aria-label="Manage ${history.items[0].title}"]`)));
-      assert.ok(server.calls.some(call => call.path.includes("provider=primevideo") && call.path.includes("providerVersion=4")));
+      assert.ok(server.calls.some(call => call.path.includes("provider=primevideo") && call.path.includes("providerVersion=5")));
       assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", /Prime Video 200 \/ 200 titles.*Prime Video history is full/);
       await click(buttonByLabel(view.container, `Manage ${history.items[0].title}`));
       await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
@@ -2128,7 +2128,7 @@ for (const version of [1, 2, 3]) it(`capacity v${version} preserves Prime availa
     await click(buttonByLabel(view.container, "Prime Video"));
     assert.match(view.container.querySelector('[aria-label="History storage"]')?.textContent ?? "", version === 3 ? /^Prime Video 23 \/ 200 titles$/ : /^Prime Video storage unavailable$/);
     assert.doesNotMatch(view.container.textContent ?? "", /Prime Video 0 \/ 200|Prime Video history is full/);
-    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=4"));
+    assert.ok(server.calls.some(call => call.path === "/api/watch-history/v3/capacity?capacityVersion=5"));
   } finally { await unmount(view.root); }
 });
 
@@ -2172,8 +2172,37 @@ it("filters Disney+ titles and resumes the selected playback UUID from the accou
   try {
     await click(buttonByLabel(view.container, "Disney+"));
     await waitFor(() => assert.ok(view.container.querySelector('[aria-label="Manage Disney+ movie"]')));
-    assert.ok(server.calls.some(call => call.path.includes("provider=disneyplus") && call.path.includes("providerVersion=4")));
+    assert.ok(server.calls.some(call => call.path.includes("provider=disneyplus") && call.path.includes("providerVersion=5")));
     await click(buttonByLabel(view.container, "Manage Disney+ movie"));
+    await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
+    await click(buttonByText(view.container, "Resume"));
+    await waitFor(() => assert.equal(parsePersonalHistoryResumeUrl(testWindow.location.href)?.sourceUrl, url));
+  } finally {
+    await unmount(view.root);
+  }
+});
+
+it("filters HBO Max titles and resumes the selected playback UUID from the account library", async () => {
+  const { history, editor } = netflixFixture(true);
+  const title = history.items[0];
+  const id = "07323549-c382-4363-a3fe-97a365e81331";
+  const url = `https://www.hbomax.com/video/watch/${id}`;
+  title.provider = editor.provider = "hbomax";
+  title.title = "HBO Max movie";
+  title.artworkUrl = null;
+  title.titleKey = editor.titleKey = "hbomax:movie:e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7";
+  title.latestActivity.episodeKey = editor.episodes[0].episodeKey = `hbomax:movie:${id}`;
+  title.sourceUrl = editor.episodes[0].sourceUrl = url;
+  const server = installServer({ intercept(path) {
+    if (path.includes("/browse?")) return Response.json({ history, matches: [] });
+    if (path.includes("/editor?")) return Response.json(editor);
+  } });
+  const view = await renderClient(history);
+  try {
+    await click(buttonByLabel(view.container, "HBO Max"));
+    await waitFor(() => assert.ok(view.container.querySelector('[aria-label="Manage HBO Max movie"]')));
+    assert.ok(server.calls.some(call => call.path.includes("provider=hbomax") && call.path.includes("providerVersion=5")));
+    await click(buttonByLabel(view.container, "Manage HBO Max movie"));
     await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));
     await click(buttonByText(view.container, "Resume"));
     await waitFor(() => assert.equal(parsePersonalHistoryResumeUrl(testWindow.location.href)?.sourceUrl, url));

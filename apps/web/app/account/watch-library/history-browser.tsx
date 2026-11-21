@@ -22,7 +22,7 @@ type Props = {
   onResume(provider: WatchHistoryItem["provider"], url: string, time: number, navigation?:PrimeNavigation): void;
   onDelete(target: WatchHistoryDeleteScope): void;
 };
-const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", disneyplus: "Disney+", primevideo: "Prime Video", amazon: "Prime Video" })[provider];
+const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", disneyplus: "Disney+", hbomax: "HBO Max", primevideo: "Prime Video", amazon: "Prime Video" })[provider];
 const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
   useAccountScrollRestoration(`${props.owner}:library:scroll`);
@@ -97,6 +97,7 @@ const historyPlatforms = [
   { value: "netflix", label: "Netflix", name: "Netflix" },
   { value: "primevideo", label: "Prime Video", name: "Prime Video" },
   { value: "disneyplus", label: "Disney+", name: "Disney+" },
+  { value: "hbomax", label: "HBO Max", name: "HBO Max" },
 ] as const;
 
 function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; onChange(value: HistoryPlatform): void }) {
@@ -121,6 +122,7 @@ function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; on
         <path d="m9.545 15.568 6.273-3.568-6.273-3.568v7.136Z" fill="#fff" />
       </svg>}
       {platform.value === "netflix" && <svg viewBox="0 0 141 277" className="wh-platform-logo wh-platform-netflix" aria-hidden="true"><path fill="currentColor" d="M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z" /></svg>}
+      {platform.value === "hbomax" && <img src="/platforms/hbomax.png" alt="" className="wh-platform-logo wh-platform-hbomax" aria-hidden="true" />}
       {platform.value === "disneyplus" && <img src="/platforms/disneyplus.svg" alt="" className="wh-platform-logo wh-platform-disneyplus" aria-hidden="true" />}
       {platform.value === "primevideo" && <img src="/platforms/primevideo.svg" alt="" className="wh-platform-logo wh-platform-primevideo" aria-hidden="true" />}
       <span>{platform.label}</span>
@@ -341,7 +343,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
-        {!data.catalogComplete && !single && <p className="wh-hint">{(item.provider === "primevideo" || item.provider === "disneyplus") && item.catalogState === "partial"
+        {!data.catalogComplete && !single && <p className="wh-hint">{(item.provider === "primevideo" || item.provider === "disneyplus" || item.provider === "hbomax") && item.catalogState === "partial"
           ? `Showing known episodes. ${providerName(item.provider)} may have additional seasons or episodes.`
           : <>Showing known episodes; the full catalog is unavailable. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</>}</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>

@@ -842,7 +842,7 @@ it("adds exact capacity v3 while preserving the v1/v2 shapes and omitted provide
 	expect(
 		WatchHistoryBrowseQuerySchema.parse({ mode: "personal" }),
 	).not.toHaveProperty("providerVersion");
-	for (const providerVersion of [0, 5, "3", null])
+	for (const providerVersion of [0, 6, "3", null])
 		expect(
 			WatchHistoryBrowseQuerySchema.safeParse({
 				mode: "personal",

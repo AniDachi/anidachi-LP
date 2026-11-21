@@ -31,7 +31,7 @@ export type WatchHistoryControllerDependencies = {
 		options: { refreshCatalog: boolean },
 	) => Promise<void> | void;
 	isOwnerCurrent?: (owner: string) => boolean;
-	getProvider?: () => "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
+	getProvider?: () => "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus" | "hbomax";
 	getObservation: (
 		preferences: WatchHistoryPreferences | null,
 	) => HistoryObservationResult;
@@ -639,6 +639,7 @@ function toEvent(
 			: {}),
 		...(observation.primeNavigation ? {primeNavigation:observation.primeNavigation} : {}),
 		...(observation.primevideoIdentity ? { primevideoIdentity: observation.primevideoIdentity } : {}),
+		...(observation.hbomaxIdentity ? { hbomaxIdentity: observation.hbomaxIdentity } : {}),
 		...(observation.disneyplusIdentity ? { disneyplusIdentity: observation.disneyplusIdentity } : {}),
 		...(observation.netflixIdentity ? { netflixIdentity: observation.netflixIdentity } : {}),
 		...(observation.crunchyrollIdentity

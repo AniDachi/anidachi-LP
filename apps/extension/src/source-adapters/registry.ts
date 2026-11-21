@@ -1,3 +1,5 @@
+import { HBO_MAX_ORIGIN } from "@anidachi/protocol";
+import { detectHboMaxAdapter, hbomaxDefinition } from "./hbomax/definition";
 import { hasPrimeBrowserHost } from "./primevideo/url";
 import { primeVideoDefinition } from "./primevideo/definition";
 import type {
@@ -20,12 +22,14 @@ const sourceAdapterDefinitions = [
 	netflixDefinition,
 	primeVideoDefinition,
 	disneyPlusDefinition,
+	hbomaxDefinition,
 	genericDefinition,
 ] as const satisfies readonly SourceAdapterDefinition[];
 
 export function detectSourceAdapter(
 	documentValue: Document = document,
 ): VideoAdapter | null {
+	if (location.origin === HBO_MAX_ORIGIN) return detectHboMaxAdapter(documentValue);
 	if (isDisneyPlusOrigin(location.href)) return detectDisneyPlusAdapter(documentValue);
 	if (hasPrimeBrowserHost(location.href)) {
 		const videos = documentValue.querySelectorAll<HTMLVideoElement>("#dv-web-player video");

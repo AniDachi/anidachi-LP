@@ -76,13 +76,14 @@ export async function applyPersonalHistoryResume(
 			input.adapter.video.readyState >= 1 && duration !== undefined && duration !== null &&
 			Number.isFinite(duration) && duration > 0 && intent.currentTime <= duration;
 	};
+	const phase = input.adapter.getPlaybackSnapshot().phase;
 	// These adapters bind the content ID before their first confirmed timeline.
 	// Only that exact binding may wait without a descriptor; it cannot seek yet.
 	if (
-		(intent.provider === "primevideo" || intent.provider === "disneyplus") &&
+		(intent.provider === "primevideo" || intent.provider === "disneyplus" || intent.provider === "hbomax") &&
 		input.adapter.provider === intent.provider &&
 		!input.adapter.getSourceDescriptor() &&
-		input.adapter.getPlaybackSnapshot().phase === "transition"
+		(phase === "transition" || (intent.provider === "hbomax" && (phase === "interstitial" || phase === "buffering")))
 	) {
 		const source = canonicalizeRoomSourceUrl(intent.sourceUrl, intent.provider);
 		return ownerIsCurrent() &&
@@ -95,7 +96,7 @@ export async function applyPersonalHistoryResume(
 	}
 	if (!matches()) return "cancelled";
 	if (!ready()) return "waiting";
-	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo" || intent.provider === "disneyplus") {
+	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo" || intent.provider === "disneyplus" || intent.provider === "hbomax") {
 		if (
 			!input.adapter.getPersonalResumeReadiness ||
 			!input.adapter.seekPersonalResume

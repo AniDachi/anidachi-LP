@@ -14,7 +14,7 @@ const Key = z.string().trim().min(1).max(220);
 export const WATCH_HISTORY_GRID_PAGE_SIZE = 50;
 
 export const WatchHistoryGridQuerySchema = z.strictObject({
-	provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus"]),
+	provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus", "hbomax"]),
 	titleKey: Key,
 	seasonKey: Key.optional(),
 	includePartial: z.boolean().optional(),
@@ -58,7 +58,7 @@ export const WatchHistoryGridEpisodeSchema = z.strictObject({
 	sourceUrl: z
 		.string()
 		.max(2048)
-		.regex(/^https:\/\/www\.(?:crunchyroll\.com\/watch\/[A-Za-z0-9_-]+|netflix\.com\/watch\/[1-9][0-9]{0,19}|primevideo\.com\/detail\/[A-Z0-9]{26}|disneyplus\.com\/play\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/),
+		.regex(/^https:\/\/www\.(?:crunchyroll\.com\/watch\/[A-Za-z0-9_-]+|netflix\.com\/watch\/[1-9][0-9]{0,19}|primevideo\.com\/detail\/[A-Z0-9]{26}|(?:disneyplus\.com\/play\/|hbomax\.com\/video\/watch\/)[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/),
 	history: WatchHistoryEpisodeSchema.extend({
 		sessions: WatchHistoryEpisodeSchema.shape.sessions.max(0),
 	}).nullable(),
@@ -67,7 +67,7 @@ export const WatchHistoryGridEpisodeSchema = z.strictObject({
 export const WatchHistoryGridResponseSchema = z
 	.strictObject({
 		meta: WatchHistoryResponseMetaSchema,
-		provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus"]),
+		provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus", "hbomax"]),
 		titleKey: Key,
 		state: WatchCatalogStateSchema,
 		revision: z.string().min(1).max(64).nullable(),
@@ -95,7 +95,7 @@ export const WatchHistoryGridResponseSchema = z
 		    (episode.history && !historyEpisodeSourceMatches(value.provider, episode.history)))
 		    context.addIssue({ code: "custom", message: "Grid episode source must match provider" });
 		}
-		const observed = (value.provider === "primevideo" || value.provider === "disneyplus") && value.state === "partial" && value.revision !== null;
+		const observed = (value.provider === "primevideo" || value.provider === "disneyplus" || value.provider === "hbomax") && value.state === "partial" && value.revision !== null;
 		if (observed && (!value.seasons.length || value.mainAggregate || value.specialsAggregate ||
 			value.seasons.some(season => season.aggregate !== null || season.nextEpisode !== null))) {
 			context.addIssue({code: "custom", message: "Observed grids cannot claim exact totals or next episodes"});

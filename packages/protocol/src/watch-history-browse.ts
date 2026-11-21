@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { historyReadKeyMatchesProvider, historyReadReferencesMatchProvider } from "./history-provider-validation";
+import { historyMovieEpisodeMatchesTitle, historyReadKeyMatchesProvider, historyReadReferencesMatchProvider } from "./history-provider-validation";
 import {
 	WatchHistoryOpaqueCursorSchema,
 	WatchHistoryResponseMetaSchema,
@@ -10,11 +10,11 @@ import {
 } from "./watch-history";
 
 const Timestamp = z.iso.datetime({ offset: true });
-const Provider = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]);
+const Provider = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus", "hbomax"]);
 const Key = z.string().trim().min(1).max(220);
 const filters = {
 	// Omission preserves legacy cursor bindings and CR/YT-only reads.
-	providerVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+	providerVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
 	mode: z.enum(["personal", "solo", "shared"]),
 	search: z.string().trim().min(1).max(200).optional(),
 	groupId: z.uuid().optional(),
@@ -72,8 +72,8 @@ export const WatchHistoryBrowseSessionsQuerySchema = z
     validateFilters(value, ctx);
     if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]) ||
       !historyReadKeyMatchesProvider(value.provider, value.episodeKey, ["episode", "movie", "video"]) ||
-      ((value.provider === "primevideo" || value.provider === "disneyplus") && (value.titleKey.startsWith(`${value.provider}:movie:`)
-        ? value.episodeKey !== value.titleKey : !value.episodeKey.startsWith(`${value.provider}:episode:`))))
+      ((value.provider === "primevideo" || value.provider === "disneyplus" || value.provider === "hbomax") && (value.titleKey.startsWith(`${value.provider}:movie:`)
+        ? !historyMovieEpisodeMatchesTitle(value.provider, value.titleKey, value.episodeKey) : !value.episodeKey.startsWith(`${value.provider}:episode:`))))
       ctx.addIssue({ code: "custom", message: "Browse episode must match provider and title" });
   });
 export const WatchHistoryBrowseOptionsQuerySchema = z.strictObject({
@@ -125,8 +125,8 @@ export const WatchHistoryBrowseTitleEpisodesResponseSchema = z.strictObject({
     if (!(value.detail.provider === "amazon"
       ? historyReadReferencesMatchProvider(value.detail.provider, [match.episodeKey], [])
       : historyReadKeyMatchesProvider(value.detail.provider, match.episodeKey, ["episode", "movie", "video"])) ||
-      ((value.detail.provider === "primevideo" || value.detail.provider === "disneyplus") && (value.detail.titleKey.startsWith(`${value.detail.provider}:movie:`)
-        ? match.episodeKey !== value.detail.titleKey : !match.episodeKey.startsWith(`${value.detail.provider}:episode:`))))
+      ((value.detail.provider === "primevideo" || value.detail.provider === "disneyplus" || value.detail.provider === "hbomax") && (value.detail.titleKey.startsWith(`${value.detail.provider}:movie:`)
+        ? !historyMovieEpisodeMatchesTitle(value.detail.provider, value.detail.titleKey, match.episodeKey) : !match.episodeKey.startsWith(`${value.detail.provider}:episode:`))))
       ctx.addIssue({ code: "custom", message: "Browse episode match must match detail provider and title" });
   }
 });

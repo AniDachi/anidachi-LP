@@ -48,7 +48,15 @@ export const WatchHistoryCapacityV4Schema = WatchHistoryCapacityV3Schema.extend(
   }),
 });
 export type WatchHistoryCapacityV4 = z.infer<typeof WatchHistoryCapacityV4Schema>;
+export const WATCH_HISTORY_PROVIDER_LIMITS_V5 = { ...WATCH_HISTORY_PROVIDER_LIMITS_V4, hbomax: 200 } as const;
+export const WatchHistoryCapacityV5Schema = WatchHistoryCapacityV4Schema.extend({
+  capacityVersion: z.literal(5),
+  providers: WatchHistoryCapacityV4Schema.shape.providers.extend({
+    hbomax: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V5.hbomax) }),
+  }),
+});
+export type WatchHistoryCapacityV5 = z.infer<typeof WatchHistoryCapacityV5Schema>;
 export type WatchHistoryCapacityV3 = z.infer<typeof WatchHistoryCapacityV3Schema>;
-export const WatchHistoryCapacityCompatibleSchema = z.discriminatedUnion("capacityVersion", [WatchHistoryCapacityV1Schema, WatchHistoryCapacityV2Schema, WatchHistoryCapacityV3Schema, WatchHistoryCapacityV4Schema]);
+export const WatchHistoryCapacityCompatibleSchema = z.discriminatedUnion("capacityVersion", [WatchHistoryCapacityV1Schema, WatchHistoryCapacityV2Schema, WatchHistoryCapacityV3Schema, WatchHistoryCapacityV4Schema, WatchHistoryCapacityV5Schema]);
 export type WatchHistoryCapacityV2 = z.infer<typeof WatchHistoryCapacityV2Schema>;
 export type WatchHistoryCapacityCompatible = z.infer<typeof WatchHistoryCapacityCompatibleSchema>;

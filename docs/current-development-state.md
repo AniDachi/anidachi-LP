@@ -1,5 +1,9 @@
 # Current Development State
 
+## HBO Max staging candidate — November 21, 2026
+
+The HBO Max candidate adds on-demand movies and episodes to rooms, catalog browsing and watch history. Movie catalog and playable IDs are distinct. The staging acceptance uses two signed-in profiles. See the [HBO Max adapter notes](hbomax-adapter.md).
+
 ## YouTube rooms in the catalog — November 21, 2026
 
 The YouTube staging candidate keeps admitted participants connected to the same room and call on Home, search, feeds, playlists and channels. Host playback of a new on-demand video brings the guest to that video. A browsing guest can use **Back to video** to return to the current one. See [YouTube adapter notes](youtube-adapter-notes.md) for supported surfaces.

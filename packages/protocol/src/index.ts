@@ -41,3 +41,4 @@ export * from "./free20-abuse";
 export * from "./extension-uninstall";
 
 export * from "./prime-video-navigation";
+export * from "./hbomax-identity";

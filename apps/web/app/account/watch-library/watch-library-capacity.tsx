@@ -25,7 +25,7 @@ export function WatchLibraryCapacity({
 	const [capacity, setCapacity] = useState<WatchHistoryCapacityCompatible | null>(null);
 	useEffect(() => {
 		let disposed = false;
-		void api<unknown>("/api/watch-history/v3/capacity?capacityVersion=4", {
+		void api<unknown>("/api/watch-history/v3/capacity?capacityVersion=5", {
 			headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
 		})
 			.then((value) => {
@@ -52,17 +52,18 @@ export function WatchLibraryCapacity({
 		capacity.accountGeneration !== accountGeneration
 	)
 		return null;
-	const providers = (["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"] as const).filter(
+	const providers = (["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus", "hbomax"] as const).filter(
 		key => provider === "all" || key === provider,
 	);
 	const usage = (key: typeof providers[number]) => {
-		if (key === "disneyplus") return capacity.capacityVersion === 4 ? capacity.providers.disneyplus : null;
-		if (key === "primevideo") return (capacity.capacityVersion === 3 || capacity.capacityVersion === 4) ? capacity.providers.primevideo : null;
+		if (key === "hbomax") return "hbomax" in capacity.providers ? capacity.providers.hbomax : null;
+		if (key === "disneyplus") return "disneyplus" in capacity.providers ? capacity.providers.disneyplus : null;
+		if (key === "primevideo") return "primevideo" in capacity.providers ? capacity.providers.primevideo : null;
 		if (key === "netflix") return capacity.capacityVersion !== 1 ? capacity.providers.netflix : null;
 		return capacity.providers[key];
 	};
 	const full = providers.filter(key => { const value = usage(key); return value && value.used >= value.limit; });
-	const name = (key: typeof providers[number]) => ({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", disneyplus: "Disney+", primevideo: "Prime Video" })[key];
+	const name = (key: typeof providers[number]) => ({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", disneyplus: "Disney+", hbomax: "HBO Max", primevideo: "Prime Video" })[key];
 	return (
 		<section
 			aria-label="History storage"

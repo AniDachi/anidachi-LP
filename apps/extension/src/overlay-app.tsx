@@ -1,3 +1,4 @@
+import { observeHboMaxRoomSource, clearHboMaxRoomSource } from "./source-adapters/hbomax/metadata";
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
 import { readHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
@@ -556,7 +557,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
 	const [roomClient] = useState(() => supportsCatalogRoom(adapter.provider) &&
-		((adapter.provider !== "crunchyroll" && adapter.provider !== "youtube" && adapter.provider !== "disneyplus") ||
+		((adapter.provider !== "crunchyroll" && adapter.provider !== "youtube" && adapter.provider !== "disneyplus" && adapter.provider !== "hbomax") ||
 			(window.top === window && catalogRoomProvider(location.href) === adapter.provider)) &&
 		typeof chrome !== "undefined" && typeof chrome.runtime?.connect === "function"
 		? new PrimeRoomClient() : new RoomClient());
@@ -823,7 +824,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const confirmedPrimeRoom = useRef<string | null>(null);
 	// A normal in-page client cannot keep a YouTube room alive across documents.
 	const catalogSessionEligible = supportsCatalogRoom(adapter.provider) &&
-		((adapter.provider !== "youtube" && adapter.provider !== "disneyplus") || roomClient instanceof PrimeRoomClient);
+		((adapter.provider !== "youtube" && adapter.provider !== "disneyplus" && adapter.provider !== "hbomax") || roomClient instanceof PrimeRoomClient);
 	useLayoutEffect(() => {
 		if (!catalogSessionEligible || roomId !== confirmedPrimeRoom.current ||
 			(roomSourceProvider && roomSourceProvider !== adapter.provider))
@@ -3696,6 +3697,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				source?.provider === "disneyplus" && source.videoFingerprint === state.videoFingerprint) {
 				observeDisneyPlusRoomSource(document, source);
 			}
+			if (roomIdRef.current && roomSourceProviderRef.current === "hbomax" &&
+				source?.provider === "hbomax" && source.videoFingerprint === state.videoFingerprint) {
+				observeHboMaxRoomSource(document, source);
+			}
 			if (supportsCatalogReturn(roomSourceProviderRef.current) && roomIdRef.current) {
 				const episode = catalogWatchSource(roomSourceProviderRef.current, state.sourceUrl ?? source?.sourceUrl ?? "");
 				const inPlayer = state.hostSurface === "player" && episode && state.videoFingerprint === episode.videoFingerprint;
@@ -5457,7 +5462,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		adapter,
 		controller: playbackSyncController,
 	});
-	useEffect(() => () => clearDisneyPlusRoomSource(document), [roomId]);
+	useEffect(() => () => {
+		clearDisneyPlusRoomSource(document);
+		clearHboMaxRoomSource(document);
+	}, [roomId]);
 	useEffect(() => {
 		const pending = pendingCatalogPlayback.current;
 		if (!supportsCatalogReturn(adapter.provider) || !adapterActive || !pending || !roomSnapshotReady || !isConnected || isHost) return;
@@ -5465,6 +5473,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		if (pending.roomId === roomId && pending.state.videoFingerprint === adapter.getFingerprint()) {
 			if (pending.source?.provider === "disneyplus" && pending.source.videoFingerprint === pending.state.videoFingerprint) {
 				observeDisneyPlusRoomSource(document, pending.source);
+			}
+			if (pending.source?.provider === "hbomax" && pending.source.videoFingerprint === pending.state.videoFingerprint) {
+				observeHboMaxRoomSource(document, pending.source);
 			}
 			void playbackSyncController.handleHostState(pending.state, pending.source);
 		}
@@ -6838,7 +6849,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		noticeKey: capsuleNoticeKey, bubbleVisible: topBubbleReveal.bubbleVisible || panelOpen,
 		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
 	});
-	const isolatePlayerPointer = adapter.provider === "primevideo" || disneyPlayer;
+	const isolatePlayerPointer = adapter.provider === "primevideo" || (adapter.provider === "hbomax" && !primeBrowsing) || disneyPlayer;
 	const guardedPanelOpen = panelOpen && isolatePlayerPointer;
 	const catalogReturnTarget = primeBrowsing && supportsCatalogReturn(adapter.provider) && roomId && roomSnapshotReady && isConnected &&
 		currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&

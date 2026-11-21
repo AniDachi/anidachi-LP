@@ -1,3 +1,4 @@
+import { HboMaxHistoryIdentitySchema, hboMaxFingerprint, hboMaxSourceUrl } from "./hbomax-identity";
 import { DisneyPlusHistoryIdentitySchema, disneyPlusFingerprint, disneyPlusSourceUrl } from "./disneyplus-identity";
 import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
@@ -23,7 +24,7 @@ import {
   MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
 } from "./limits";
-import { hasDisneyPlusHostname, hasPrimeVideoHostname, hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
+import { hasHboMaxHostname, hasDisneyPlusHostname, hasPrimeVideoHostname, hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
 
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
@@ -138,10 +139,12 @@ export const WatchSourceProviderSchema = z.enum([
 	"netflix",
 	"primevideo",
   "disneyplus",
+  "hbomax",
 ]);
 
 export const WatchSourceDescriptorSchema = z.object({
   provider: WatchSourceProviderSchema,
+  hbomaxIdentity: HboMaxHistoryIdentitySchema.optional(),
   disneyplusIdentity: DisneyPlusHistoryIdentitySchema.optional(),
   primeNavigation: PrimeNavigationSchema.optional(),
   sourceUrl: UrlSchema,
@@ -155,6 +158,14 @@ export const WatchSourceDescriptorSchema = z.object({
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
 }).superRefine((source, context) => {
+  if (source.hbomaxIdentity) {
+    const identity = source.hbomaxIdentity;
+    const playId = identity.kind === "movie" ? identity.providerPlaybackId : identity.providerEpisodeIdentifier;
+    if (source.provider !== "hbomax" || source.sourceUrl !== hboMaxSourceUrl(playId) ||
+      source.videoFingerprint !== hboMaxFingerprint(playId)) {
+      context.addIssue({ code: "custom", message: "HBO Max identity must match the active playback", path: ["hbomaxIdentity"] });
+    }
+  }
   if (source.disneyplusIdentity) {
     const identity = source.disneyplusIdentity;
     const playId = identity.kind === "movie" ? identity.providerMovieId : identity.providerEpisodeIdentifier;
@@ -164,13 +175,15 @@ export const WatchSourceDescriptorSchema = z.object({
     }
   }
   if (!primeNavigationMatches(source.primeNavigation,source.sourceUrl,source.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
+  const hasHboSource = hasHboMaxHostname(source.sourceUrl) ||
+    hasHboMaxHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("hbomax|");
   const hasDisneySource = hasDisneyPlusHostname(source.sourceUrl) ||
     hasDisneyPlusHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("disneyplus|");
   const hasNetflixSource = hasNetflixHostname(source.sourceUrl) ||
     hasNetflixHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("netflix|");
   const hasPrimeSource = hasPrimeVideoHostname(source.sourceUrl) ||
     hasPrimeVideoHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("primevideo|");
-  if ((source.provider === "disneyplus" || hasDisneySource || source.provider === "netflix" || hasNetflixSource || source.provider === "primevideo" || hasPrimeSource) && !RoomSourceDescriptorSchema.safeParse({
+  if ((source.provider === "disneyplus" || hasDisneySource || source.provider === "hbomax" || hasHboSource || source.provider === "netflix" || hasNetflixSource || source.provider === "primevideo" || hasPrimeSource) && !RoomSourceDescriptorSchema.safeParse({
     provider: source.provider, sourceUrl: source.sourceUrl,
     canonicalUrl: source.canonicalUrl, videoFingerprint: source.videoFingerprint,
   }).success) context.addIssue({ code: "custom", message: "Invalid provider room source", path: ["sourceUrl"] });

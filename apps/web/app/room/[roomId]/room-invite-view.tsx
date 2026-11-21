@@ -44,7 +44,7 @@ export function RoomInviteView({
 	initialMobile,
 }: RoomInviteViewProps) {
 	const platformNames: Partial<Record<RoomSourceProvider, string>> = {
-		crunchyroll: "Crunchyroll", youtube: "YouTube", disneyplus: "Disney+",
+		crunchyroll: "Crunchyroll", youtube: "YouTube", disneyplus: "Disney+", hbomax: "HBO Max",
 	};
 	const platform = sourceProvider && platformNames[sourceProvider];
 	const ctaLabel =

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { canonicalizeRoomSourceUrl, hasDisneyPlusHostname, hasPrimeVideoHostname } from "./source-url";
+import { canonicalizeRoomSourceUrl, hasHboMaxHostname, hasDisneyPlusHostname, hasPrimeVideoHostname } from "./source-url";
 import { isPrimeVideoHistoryKey, primeVideoSourceUrl } from "./prime-video-identity";
 
 export const ACCOUNT_RESPONSE_SCHEMA_VERSION = 1 as const;
@@ -62,6 +62,7 @@ export const WatchProviderSchema = z.enum([
   "amazon",
   "primevideo",
   "disneyplus",
+  "hbomax",
 ]);
 export const WatchItemKindSchema = z.enum(["series", "movie"]);
 export const AccountPlanCodeSchema = z.enum(["free", "plus", "pro"]);
@@ -346,6 +347,11 @@ export const WatchLibraryItemSchema = z.strictObject({
 }).superRefine((item, context) => {
   // Legacy seasonId has no Prime mapping. Only v3 history defines season keys.
   const urls = [item.sourceUrl, ...item.episodes.map(episode => episode.sourceUrl)];
+  if (item.provider === "hbomax" || urls.some(hasHboMaxHostname) ||
+    [item.itemKey, ...item.episodes.map(episode => episode.episodeKey)].some(key => key.startsWith("hbomax:"))) {
+    context.addIssue({ code: "custom", message: "HBO Max history requires the versioned history API" });
+    return;
+  }
   if (item.provider === "disneyplus" || urls.some(hasDisneyPlusHostname) ||
     [item.itemKey, ...item.episodes.map(episode => episode.episodeKey)].some(key => key.startsWith("disneyplus:"))) {
     context.addIssue({ code: "custom", message: "Disney+ history requires the versioned history API" });
