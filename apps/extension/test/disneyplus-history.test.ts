@@ -83,6 +83,37 @@ describe("Disney+ history from rendered catalog and playable content", () => {
 		stop();
 		expect(readDisneyPlusPlaybackMetadata(document, first)).toBeNull();
 	});
+	it.each([
+		["Temporada 1", "Temporada 1 Episódio 1", "O Livro dos Mórmons?"],
+		["Sezonul 1", "Sezonul 1 Episodul 1", "Pilot"],
+	])("reads the provider's single-season caption %s and exact playback membership", (caption, accessibleNumber, title) => {
+		document.querySelector("img")!.alt = "A Vida Secreta das Esposas Mórmons: Orange County";
+		document.querySelector("#episodes")!.innerHTML = `<div><p>${caption}</p></div><div><section data-testid="set-section"><div data-testid="set-grid">${card(first, 1, 1, title).replace("Temporada 1 Episódio 1", accessibleNumber)}</div></section></div>`;
+		captureDisneyPlusDetails(document);
+		const observation = disneyPlusHistoryPolicy.observe({ adapter: playback(), preferences: null });
+		expect(observation).toMatchObject({ title: "A Vida Secreta das Esposas Mórmons: Orange County",
+			seasonNumber: 1, seasonTitle: caption, episodeNumber: 1, episodeTitle: title });
+		expect(readDisneyPlusCatalog(document, series, first)?.seasons[0]?.title).toBe(caption);
+	});
+	it("waits for overlapping grids to settle and rejects inconsistent unlabelled season ordinals", () => {
+		const panel = document.querySelector("#episodes")!;
+		const oldCard = card(first, 1, 1, "O Livro dos Mórmons?");
+		const nextCard = card(seasonTwo, 2, 1, "Graceland");
+		panel.innerHTML = `<p>Temporada 2</p><div data-testid="set-grid">${oldCard}</div><div data-testid="set-grid">${nextCard}</div>`;
+		captureDisneyPlusDetails(document);
+		route("/pt-br/play/" + seasonTwo);
+		expect(readDisneyPlusPlaybackMetadata(document, seasonTwo)).toBeNull();
+		route("/pt-br/browse/entity-" + series);
+		panel.innerHTML = `<div data-testid="set-grid">${oldCard}${nextCard}</div>`;
+		captureDisneyPlusDetails(document);
+		route("/pt-br/play/" + first);
+		expect(readDisneyPlusPlaybackMetadata(document, first)).toBeNull();
+		route("/pt-br/browse/entity-" + series);
+		panel.innerHTML = `<p>Temporada 2</p><div data-testid="set-grid">${nextCard}</div>`;
+		captureDisneyPlusDetails(document);
+		playback(seasonTwo);
+		expect(readDisneyPlusPlaybackMetadata(document, seasonTwo)).toMatchObject({ seasonTitle: "Temporada 2", episodeTitle: "Graceland" });
+	});
 	it("records films only from their own primary play action with a movie runtime", () => {
 		route("/en/browse/entity-" + movie);
 		document.body.innerHTML = `<span data-testid="details-title-treatment"><img alt="Deadpool &amp; Wolverine"></span>

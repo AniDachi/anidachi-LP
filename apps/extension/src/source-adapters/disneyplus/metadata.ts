@@ -68,10 +68,31 @@ function localeFor(doc: Document): string | null {
 	try { return Intl.getCanonicalLocales(locale)[0] ?? null; } catch { return null; }
 }
 
+function seasonHeadingBeforeGrid(panel: Element, grid: Element): string | null {
+	// The single-season page places its caption alongside the grid. Only accept
+	// a standalone heading/paragraph, never text from a card or an adjacent grid.
+	const labelSelector = "p, h1, h2, h3, h4, h5, h6, [role=heading]";
+	for (let node: Element | null = grid; node && node !== panel; node = node.parentElement) {
+		const before = node.previousElementSibling;
+		if (!before) continue;
+		const captions = before.matches(labelSelector) ? [before] : before.querySelectorAll(labelSelector);
+		if (captions.length !== 1 || before.matches('[data-testid="set-grid"]') ||
+			before.querySelector('[data-testid="set-grid"]')) return null;
+		const caption = displayText(captions[0]?.textContent);
+		return caption && caption === displayText(before.textContent) ? caption : null;
+	}
+	return null;
+}
+
 function readSeason(panel: Element): DisneyPlusSeason | null {
-	let seasonTitle = displayText(panel.querySelector('[data-testid="dropdown-button"]')?.textContent);
-	let seasonNumber = ordinal(seasonTitle?.match(/\d+/g)?.[0]);
-	const links = panel.querySelectorAll<HTMLAnchorElement>('[data-testid="set-grid"] a[data-testid="set-item"][href]');
+	const grids = Array.from(panel.querySelectorAll('[data-testid="set-grid"]')).filter(grid => !grid.closest('[hidden], [aria-hidden="true"]'));
+	if (grids.length !== 1) return null;
+	const grid = grids[0]!;
+	const caption = displayText(panel.querySelector('[data-testid="dropdown-button"]')?.textContent) ?? seasonHeadingBeforeGrid(panel, grid);
+	const captionNumbers = caption?.match(/\d+/gu);
+	let seasonNumber = captionNumbers?.length === 1 ? ordinal(captionNumbers[0]) : null;
+	if (caption && !seasonNumber) return null;
+	const links = grid.querySelectorAll<HTMLAnchorElement>('a[data-testid="set-item"][href]');
 	if (!links.length || links.length > 2000) return null;
 	const episodes = new Map<string, DisneyPlusEpisode>();
 	const positions = new Map<number, string>();
@@ -91,21 +112,19 @@ function readSeason(panel: Element): DisneyPlusSeason | null {
 		const numbers = prefix.match(/\d+/gu);
 		const labelSeason = ordinal(numbers?.at(-2));
 		if (!labelSeason || ordinal(numbers?.at(-1)) !== number) continue;
-		if (!seasonTitle) {
-			// A single-season detail can omit the picker. Preserve its localized
-			// season label only where the card exposes that label explicitly.
-			const labelMatch = /((?:season|temporada|saison|staffel|stagione|seizoen|säsong|sesong|kausi|sæson)\s+\d+)/iu.exec(prefix);
-			if (!labelMatch || ordinal(labelMatch[1]?.match(/\d+/u)?.[0]) !== labelSeason) continue;
-			seasonTitle = displayText(labelMatch[1]);
-			seasonNumber = labelSeason;
+		// Without a separate caption, the roster can establish its common
+		// season ordinal. Avoid extracting translated words from accessibility copy.
+		if (!seasonNumber) seasonNumber = labelSeason;
+		if (seasonNumber !== labelSeason) {
+			if (!caption) return null;
+			continue;
 		}
-		if (seasonNumber !== labelSeason) continue;
 		if ((episodes.has(id) && episodes.get(id)?.number !== number) ||
 			(positions.has(number) && positions.get(number) !== id)) return null;
 		positions.set(number, id);
 		episodes.set(id, { playbackId: id, title, number });
 	}
-	return episodes.size && seasonNumber && seasonTitle ? { number: seasonNumber, title: seasonTitle, episodes } : null;
+	return episodes.size && seasonNumber ? { number: seasonNumber, title: caption ?? String(seasonNumber), episodes } : null;
 }
 
 export function captureDisneyPlusDetails(doc: Document): void {
