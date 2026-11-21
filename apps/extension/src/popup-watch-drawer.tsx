@@ -593,9 +593,10 @@ function WatchDrawer({
 		youtube: 20 * Math.max(1, browsing.providers.youtube.pages.length) - known.filter(item => item.provider === "youtube").length,
 		netflix: 20 * Math.max(1, browsing.providers.netflix.pages.length) - known.filter(item => item.provider === "netflix").length,
 		primevideo: 20 * Math.max(1, browsing.providers.primevideo.pages.length) - known.filter(item => item.provider === "primevideo").length,
+		disneyplus: 20 * Math.max(1, browsing.providers.disneyplus.pages.length) - known.filter(item => item.provider === "disneyplus").length,
 		crunchyroll: 20 * Math.max(1, browsing.providers.crunchyroll.pages.length) - known.filter(item => item.provider === "crunchyroll").length,
 	};
-	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix" || item.provider === "primevideo")
+	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix" || item.provider === "primevideo" || item.provider === "disneyplus")
 		&& (knownKeys.has(pendingTitleKey(item.provider, item.titleKey)) || remaining[item.provider]-- > 0)).map((item) => {
 		const durable = known.find(
 			(value) =>
@@ -661,7 +662,7 @@ function WatchDrawer({
 				return;
 			}
 			if (url.startsWith("https://www.primevideo.com/detail/")) provider = "primevideo";
-   if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix" && provider !== "primevideo") return;
+   if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix" && provider !== "primevideo" && provider !== "disneyplus") return;
 			const bootstrapped = await requestPopupWatchHistory(client, {
 				type: "ANIDACHI_WATCH_HISTORY_V3",
 				command: "bootstrap",
@@ -896,7 +897,7 @@ function WatchDrawer({
 			{items.length ? (
 				<div className="popup-resource-list">
 					{groupWatchHistoryItems(items).map((group) => {
-						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix" && group.provider !== "primevideo") return null;
+						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix" && group.provider !== "primevideo" && group.provider !== "disneyplus") return null;
 						const stream = browsing.providers[group.provider];
 						const count = stream.pages[0]?.history.totalTitleCount;
 						const branch = JSON.stringify([group.provider]);
@@ -1152,7 +1153,7 @@ function PopupWatchHistoryItem({
 			input: {
 				provider: item.provider,
 				titleKey: item.titleKey,
-				...(item.provider === "primevideo" ? { includePartial: true } : {}),
+				...(item.provider === "primevideo" || item.provider === "disneyplus" ? { includePartial: true } : {}),
 				...(requestedSeason && requestedSeason !== "__unseasoned__"
 					? { seasonKey: requestedSeason }
 					: {}),
@@ -1199,7 +1200,7 @@ function PopupWatchHistoryItem({
 		catalog?.state === "complete" && item.catalogState === "complete"
 			? catalog
 			: undefined;
-	const knownCatalog = exactCatalog ?? (catalog?.provider === "primevideo" &&
+	const knownCatalog = exactCatalog ?? ((catalog?.provider === "primevideo" || catalog?.provider === "disneyplus") &&
 		catalog.state === "partial" && catalog.revision ? catalog : undefined);
 	const seasonMetadata =
 		knownCatalog?.seasons ??

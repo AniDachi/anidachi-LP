@@ -6,10 +6,11 @@ export type HistoryObservation = {
   identityPending?: WatchHistoryLocalEvent["identityPending"];
   primeNavigation?: WatchHistoryLocalEvent["primeNavigation"];
   primevideoIdentity?: WatchHistoryLocalEvent["primevideoIdentity"];
+  disneyplusIdentity?: WatchHistoryLocalEvent["disneyplusIdentity"];
   netflixIdentity?: WatchHistoryLocalEvent["netflixIdentity"];
   crunchyrollIdentity?: WatchHistoryLocalEvent["crunchyrollIdentity"];
   youtubeVideoId?: string;
-  provider: "crunchyroll" | "youtube" | "netflix" | "primevideo";
+  provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
   providerLabel: string;
   titleKey: string;
   itemKind: "movie" | "series";
@@ -38,7 +39,7 @@ export type HistoryObservationResult =
   | null;
 
 export type ProviderPlaybackMetadata = {
-  provider: "crunchyroll" | "youtube" | "netflix" | "primevideo";
+  provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
   kind: "movie" | "episode";
   itemId: string;
   itemTitle: string;

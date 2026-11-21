@@ -6,6 +6,9 @@ import { YouTubeVideoAdapter } from "../src/source-adapters/youtube/adapter";
 import { YOUTUBE_CATALOG_ORIGINS } from "../src/source-adapters/youtube/url";
 import { changedWatchOwner } from "../src/source-adapters/youtube/watch-player";
 import { NetflixVideoAdapter } from "../src/source-adapters/netflix/adapter";
+import { DisneyPlusVideoAdapter } from "../src/source-adapters/disneyplus/adapter";
+import { startDisneyPlusCatalogCapture } from "../src/source-adapters/disneyplus/catalog";
+import { isDisneyPlusOrigin } from "../src/source-adapters/disneyplus/url";
 import { CrunchyrollVideoAdapter } from "../src/source-adapters/crunchyroll/adapter";
 import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
 import { discardConflictingRoomLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
@@ -112,6 +115,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  ...(import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ? ["https://www.disneyplus.com/*"] : []),
   ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
@@ -131,6 +135,7 @@ export default defineContentScript({
   allFrames: true,
   runAt: "document_start",
   main(context) {
+    if (isDisneyPlusOrigin(location.href) && window.top !== window) return;
     const runtime = startContentLifecycle();
     context.onInvalidated(runtime.dispose);
   },
@@ -197,6 +202,8 @@ function startContentLifecycleSession(
   let leavingDocument = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
+  const stopDisneyCatalog = window.top === window && isDisneyPlusOrigin(location.href)
+    ? startDisneyPlusCatalogCapture(document) : undefined;
   dependencies.ensureStyles();
 
   let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;
@@ -341,7 +348,7 @@ function startContentLifecycleSession(
         detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
-      const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter }[catalogRoute ?? "primevideo"];
+      const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter, disneyplus: DisneyPlusVideoAdapter }[catalogRoute ?? "primevideo"];
       catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
       return manager.reconcile({ status: "ready", adapter: catalogAdapter });
     }
@@ -488,6 +495,7 @@ function startContentLifecycleSession(
     window.removeEventListener("hashchange", scheduleMountCheck);
     stopKeyboardGuard();
     stopProviderStudy?.();
+    stopDisneyCatalog?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
     // playback while pagehide still reports a visible document.
     mounted?.suspend();
@@ -538,6 +546,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
+    if (isDisneyPlusOrigin(pageUrl)) return "disneyplus";
     if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
@@ -1000,6 +1009,7 @@ function ensurePageStyles(): void {
     [data-anidachi-adapter="youtube"] anidachi-overlay-root,
     [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root,
     [data-anidachi-adapter="netflix"] anidachi-overlay-root,
+    [data-anidachi-adapter="disneyplus"] anidachi-overlay-root,
     [data-anidachi-adapter="primevideo"] anidachi-overlay-root {
       position: absolute !important;
       inset: 0 !important;

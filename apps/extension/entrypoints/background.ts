@@ -5,6 +5,7 @@ import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
 import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
 import { WEB_HTTP_BASE } from "../src/constants";
+import { handleDisneyPlusCatalogHandoff, forgetDisneyPlusCatalogTab, isDisneyPlusProfileBoundary } from "../src/source-adapters/disneyplus/catalog-handoff";
 import { registerUninstallUrl, UNINSTALL_URL_REFRESH_ALARM } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
@@ -298,6 +299,10 @@ export default defineBackground(() => {
   registerOnboardingCheckoutBridge();
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type === "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF") {
+      void handleDisneyPlusCatalogHandoff(message, sender).then(sendResponse, () => sendResponse(null));
+      return true;
+    }
     if (message?.type === PLAYER_INTRODUCTION_MESSAGE) {
       // Every release channel shares the same installation-local claim.
       if (
@@ -464,10 +469,14 @@ export default defineBackground(() => {
   void drainRoomDepartureRetries().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
+    void forgetDisneyPlusCatalogTab(tabId).catch(() => undefined);
     forgetWatchHistoryTab(tabId);
     void handleRemovedRoomTab(tabId).catch(() => undefined);
   });
   chrome.tabs.onUpdated?.addListener((tabId, changeInfo) => {
+    if (changeInfo.url && isDisneyPlusProfileBoundary(changeInfo.url)) {
+      void forgetDisneyPlusCatalogTab(tabId).catch(() => undefined);
+    }
     if (changeInfo.status === "loading") cancelWatchHistoryCatalogForTab(tabId);
   });
 });

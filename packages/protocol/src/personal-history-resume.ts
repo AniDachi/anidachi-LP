@@ -9,7 +9,7 @@ export const PersonalHistoryResumeSchema = z
 		intentId: z.uuid(),
 		ownerBinding: z.string().regex(/^[a-f0-9]{64}$/),
 		accountGeneration: z.number().int().positive(),
-		provider: z.enum(["crunchyroll", "youtube", "netflix", "primevideo"]),
+		provider: z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]),
 		sourceUrl: z.string().url().max(2048),
 		currentTime: z.number().finite().nonnegative().max(604800),
 		issuedAt: z.number().int().nonnegative(),
@@ -47,19 +47,19 @@ export async function personalHistoryResumeOwnerBinding(
 export async function buildPersonalHistoryResumeUrl(input: {
 	ownerUserId: string;
 	accountGeneration: number;
-	provider: "crunchyroll" | "youtube" | "netflix" | "primevideo";
+	provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
 	sourceUrl: string;
 	currentTime: number;
 	now?: number;
 	intentId?: string;
 }): Promise<string> {
 	// Validate Prime before URL parsing can normalize forbidden ports or dot segments.
-	const primeSource =
-		input.provider === "primevideo"
-			? canonicalizeRoomSourceUrl(input.sourceUrl, "primevideo")
+	const strictSource =
+		(input.provider === "primevideo" || input.provider === "disneyplus")
+			? canonicalizeRoomSourceUrl(input.sourceUrl, input.provider)
 			: null;
-	if (primeSource && !primeSource.ok)
-		throw new Error("Invalid Prime resume source");
+	if (strictSource && !strictSource.ok)
+		throw new Error("Invalid provider resume source");
 	const url = new URL(input.sourceUrl);
 	const params = new URLSearchParams(url.hash.slice(1));
 	url.hash = "";
@@ -74,7 +74,7 @@ export async function buildPersonalHistoryResumeUrl(input: {
 		),
 		accountGeneration: input.accountGeneration,
 		provider: input.provider,
-		sourceUrl: primeSource?.ok ? primeSource.source.sourceUrl : url.toString(),
+		sourceUrl: strictSource?.ok ? strictSource.source.sourceUrl : url.toString(),
 		currentTime: input.currentTime,
 		issuedAt: now,
 		expiresAt: now + PERSONAL_HISTORY_RESUME_TTL_MS,

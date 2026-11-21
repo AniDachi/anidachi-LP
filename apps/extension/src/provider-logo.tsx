@@ -1,5 +1,6 @@
 // Shared official brand artwork from the website asset bundle.
 const primeVideoLogo = new URL("../../web/public/platforms/primevideo.svg", import.meta.url).href;
+const disneyPlusLogo = new URL("../../web/public/platforms/disneyplus.svg", import.meta.url).href;
 
 export function ProviderLogo({
 	label,
@@ -31,9 +32,9 @@ export function ProviderLogo({
 			</span>
 		);
 	}
-	if (provider === "primevideo") {
-		return <span aria-hidden="true" className="resource-provider-logo primevideo">
-			<img src={primeVideoLogo} alt="" />
+	if (provider === "primevideo" || provider === "disneyplus") {
+		return <span aria-hidden="true" className={`resource-provider-logo ${provider}`}>
+			<img src={provider === "disneyplus" ? disneyPlusLogo : primeVideoLogo} alt="" />
 		</span>;
 	}
 	if (provider === "youtube") {

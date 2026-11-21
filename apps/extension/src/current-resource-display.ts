@@ -19,7 +19,7 @@ export function readCurrentResourceDisplay(
 	if (playback.phase !== "content") return null;
 	const source = adapter.getSourceDescriptor();
 	// Provider content time must use its matching duration, excluding inserted ads.
-	const duration = source?.duration ?? adapter.video.duration;
+	const duration = source?.duration ?? (adapter.provider === "disneyplus" ? NaN : adapter.video.duration);
 	if (
 		!source ||
 		!Number.isFinite(duration) ||

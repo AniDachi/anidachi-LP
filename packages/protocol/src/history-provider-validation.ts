@@ -1,9 +1,11 @@
-import { canonicalizeRoomSourceUrl, hasNetflixHostname, hasPrimeVideoHostname } from "./source-url";
+import { isDisneyPlusHistoryKey, disneyPlusSourceUrl } from "./disneyplus-identity";
+import { canonicalizeRoomSourceUrl, hasDisneyPlusHostname, hasNetflixHostname, hasPrimeVideoHostname } from "./source-url";
 import { isNetflixHistoryKey } from "./netflix-identity";
 import { isPrimeVideoHistoryKey, primeVideoSourceUrl } from "./prime-video-identity";
 
-export type HistoryProvider = "crunchyroll" | "youtube" | "netflix" | "primevideo";
+export type HistoryProvider = import("./source-url").RoomSourceProvider;
 export function historyKeyMatchesProvider(provider: HistoryProvider, key: string, kinds: readonly ("series" | "season" | "episode" | "movie" | "video")[]): boolean {
+  if (provider === "disneyplus") return kinds.some(kind => isDisneyPlusHistoryKey(key, kind));
   if (provider === "primevideo") return kinds.some(kind => kind !== "video" && isPrimeVideoHistoryKey(key, kind));
   if (provider === "netflix") return kinds.some(kind => kind !== "video" && isNetflixHistoryKey(key, kind));
   // Older read fixtures used bare keys. Qualified keys must stay provider-bound.
@@ -11,14 +13,19 @@ export function historyKeyMatchesProvider(provider: HistoryProvider, key: string
 }
 /** Read-only compatibility for old namespaces. Writer/catalog admission stays strict. */
 export function historyReadKeyMatchesProvider(provider: HistoryProvider, key: string, kinds: readonly ("series" | "season" | "episode" | "movie" | "video")[]): boolean {
-  if (provider === "netflix" || provider === "primevideo") return historyKeyMatchesProvider(provider, key, kinds);
-  return !/^(?:crunchyroll|youtube|netflix|primevideo):/.test(key) || key.startsWith(`${provider}:`);
+  if (provider === "disneyplus" || provider === "netflix" || provider === "primevideo") return historyKeyMatchesProvider(provider, key, kinds);
+  return !/^(?:crunchyroll|youtube|netflix|primevideo|disneyplus):/.test(key) || key.startsWith(`${provider}:`);
 }
 export function historyEpisodeSourceMatches(provider: HistoryProvider, episode: { episodeKey: string; seasonKey: string | null; sourceUrl: string; seasonTitle?: string | null; seasonNumber?: number | null; episodeNumber?: number | null }): boolean {
   if (!historyReadKeyMatchesProvider(provider, episode.episodeKey, ["episode", "movie", "video"]) ||
     (episode.seasonKey !== null && !historyReadKeyMatchesProvider(provider, episode.seasonKey, ["season"]))) return false;
   const source = canonicalizeRoomSourceUrl(episode.sourceUrl, provider);
   if (!source.ok || (provider !== "youtube" && source.source.sourceUrl !== episode.sourceUrl)) return false;
+  if (provider === "disneyplus") {
+    const movie = isDisneyPlusHistoryKey(episode.episodeKey, "movie");
+    return episode.sourceUrl === disneyPlusSourceUrl(episode.episodeKey.split(":")[2]!) &&
+      (!movie || [episode.seasonKey, episode.seasonTitle, episode.seasonNumber, episode.episodeNumber].every(value => value == null));
+  }
   if (provider === "primevideo") {
     const movie = isPrimeVideoHistoryKey(episode.episodeKey, "movie");
     return (movie ? episode.seasonKey === null &&
@@ -38,7 +45,7 @@ export function historyEpisodeSourceMatches(provider: HistoryProvider, episode: 
 export function historyReadReferencesMatchProvider(
   provider: string, keys: readonly (string | null)[], sourceUrls: readonly string[],
 ): boolean {
-  if (keys.some(key => key !== null && /^(?:crunchyroll|youtube|netflix|primevideo):/.test(key) && !key.startsWith(`${provider}:`))) return false;
-  return sourceUrls.every(value => (!hasNetflixHostname(value) || provider === "netflix") &&
+  if (keys.some(key => key !== null && /^(?:crunchyroll|youtube|netflix|primevideo|disneyplus):/.test(key) && !key.startsWith(`${provider}:`))) return false;
+  return sourceUrls.every(value => (!hasDisneyPlusHostname(value) || provider === "disneyplus") && (!hasNetflixHostname(value) || provider === "netflix") &&
     (!hasPrimeVideoHostname(value) || provider === "primevideo"));
 }

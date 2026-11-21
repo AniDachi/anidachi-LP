@@ -1,9 +1,10 @@
+import { disneyPlusPlaybackId, disneyPlusSourceUrl, disneyPlusFingerprint } from "./disneyplus-identity";
 import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import { primeVideoFingerprint, primeVideoSourceUrl } from "./prime-video-identity";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "./limits";
 
-export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix", "primevideo"]);
+export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]);
 
 export type RoomSourceProvider = z.infer<typeof RoomSourceProviderSchema>;
 
@@ -78,6 +79,13 @@ export function canonicalizeRoomSourceUrl(
     !/^https:\/\/www\.primevideo\.com\/detail\/[A-Z0-9]{26}\/?(?:[?#]|$)/i.test(value)) {
     return { ok: false, code: "UNSUPPORTED_ROUTE" };
   }
+  if (providerForHostname(url.hostname) === "disneyplus") {
+    const id = disneyPlusPlaybackId(value);
+    if (!id) return { ok: false, code: "UNSUPPORTED_ROUTE" };
+    if (pinnedProvider && pinnedProvider !== "disneyplus") return { ok: false, code: "PROVIDER_MISMATCH" };
+    const canonicalUrl = disneyPlusSourceUrl(id);
+    return { ok: true, source: { provider: "disneyplus", sourceUrl: canonicalUrl, canonicalUrl, videoFingerprint: disneyPlusFingerprint(id) } };
+  }
   const source = canonicalizeProviderUrl(url);
   if (!source) {
     return { ok: false, code: providerForHostname(url.hostname) ? "UNSUPPORTED_ROUTE" : "UNSUPPORTED_PROVIDER" };
@@ -86,6 +94,15 @@ export function canonicalizeRoomSourceUrl(
     return { ok: false, code: "PROVIDER_MISMATCH" };
   }
   return { ok: true, source };
+}
+
+export function hasDisneyPlusHostname(value: string): boolean {
+  try {
+    const host = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
+    return host === "disneyplus.com" || host.endsWith(".disneyplus.com");
+  } catch {
+    return false;
+  }
 }
 
 /** Host recognition is independent of route, transport, credentials and port.
@@ -241,6 +258,7 @@ function providerForHostname(hostname: string): RoomSourceProvider | null {
   if (normalized === "crunchyroll.com" || normalized === "www.crunchyroll.com") {
     return "crunchyroll";
   }
+  if (normalized === "www.disneyplus.com") return "disneyplus";
   if (normalized === "www.netflix.com") return "netflix";
   if (normalized === "www.primevideo.com") return "primevideo";
   return null;

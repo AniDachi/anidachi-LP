@@ -201,10 +201,10 @@ export async function readWatchHistoryGrid(params: {
 		typeof accepted.region === "string" &&
 		context?.region === accepted.region
 	);
-	const observed = query.includePartial === true && query.provider === "primevideo" &&
+	const observed = query.includePartial === true && (query.provider === "primevideo" || query.provider === "disneyplus") &&
 		row?.attempt_status === "partial" && !complete &&
 		(row.snapshot as RecordValue | null)?.completeness === "partial" &&
-		typeof context?.region === "string" &&
+		(typeof context?.region === "string" || (query.provider === "disneyplus" && context?.region === null)) &&
 		isDeepStrictEqual((row.snapshot as RecordValue).context, context);
 	if (row && (complete || observed)) {
 		const snapshot = WatchCatalogSnapshotInputSchema.safeParse(row.snapshot);

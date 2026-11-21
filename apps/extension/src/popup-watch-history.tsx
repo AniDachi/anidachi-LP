@@ -367,6 +367,7 @@ export function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProvider
 function providerLabel(provider: WatchHistoryItem["provider"]): string {
   if (provider === "crunchyroll") return "Crunchyroll";
   if (provider === "youtube") return "YouTube";
+  if (provider === "disneyplus") return "Disney+";
   if (provider === "netflix") return "Netflix";
   if (provider === "primevideo") return "Prime Video";
   return provider;

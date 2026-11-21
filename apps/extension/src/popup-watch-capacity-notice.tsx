@@ -60,12 +60,14 @@ export function PopupWatchCapacityNotice({
 		return null;
 	const full = (
 		Object.entries(result.data.providers) as Array<
-			["youtube" | "crunchyroll" | "netflix" | "primevideo", { used: number; limit: number }]
+			["youtube" | "crunchyroll" | "netflix" | "primevideo" | "disneyplus", { used: number; limit: number }]
 		>
 	).filter(([, value]) => value.used >= value.limit);
-	const unavailable = result.data.capacityVersion === 1
-		? ["Netflix storage unavailable", "Prime Video storage unavailable"]
-		: result.data.capacityVersion === 2 ? ["Prime Video storage unavailable"] : [];
+	const unavailable = [
+		...(result.data.capacityVersion < 2 ? ["Netflix storage unavailable"] : []),
+		...(result.data.capacityVersion < 3 ? ["Prime Video storage unavailable"] : []),
+		...(result.data.capacityVersion < 4 ? ["Disney+ storage unavailable"] : []),
+	];
 	if (!full.length && !unavailable.length) return null;
 	return (
 		<aside className="popup-watch-plan-notice" role="status">
@@ -74,7 +76,7 @@ export function PopupWatchCapacityNotice({
 					{full
 						.map(
 							([provider, value]) =>
-								`${({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", primevideo: "Prime Video" })[provider]} ${value.used}/${value.limit}`,
+								`${({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", primevideo: "Prime Video", disneyplus: "Disney+" })[provider]} ${value.used}/${value.limit}`,
 						)
 						.join(" · ")}{" "}
 					{full.length ? "— history full" : unavailable.join(" · ")}

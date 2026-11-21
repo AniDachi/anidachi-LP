@@ -276,11 +276,12 @@ describe.sequential("extension release channel builds", () => {
     expect(deriveId(manifest.key ?? "")).toBe(stagingId);
     expectExact(manifest.host_permissions, [
       ...videoOrigins,
+      "https://www.disneyplus.com/*",
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
-    expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
+    expectExact(contentMatches(manifest), [...videoHosts, "https://www.disneyplus.com/*"]);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, [...videoOrigins, "https://www.disneyplus.com/*"]);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
       web: "https://staging.anidachi.app",

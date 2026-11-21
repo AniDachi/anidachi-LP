@@ -235,7 +235,7 @@ function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof g
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
 			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
-            if (url.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo"].includes(url.searchParams.get("provider") ?? "")) {
+            if (url.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo", "disneyplus"].includes(url.searchParams.get("provider") ?? "")) {
               const empty = browse(); empty.history.items = []; empty.matches = []; empty.history.totalTitleCount = 0;
               empty.history.meta.accountGeneration = stored.activeGenerations?.[OWNER] ?? 1;
               return Response.json(empty);
@@ -368,7 +368,7 @@ async function change(label: string, value: string) {
 describe("production watch browsing", () => {
   function providerLibrary(netflixSize = 0, primeSize = 0) {
     const requests: WatchHistoryBrowseQuery[] = [];
-    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize, primevideo: primeSize };
+    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize, primevideo: primeSize, disneyplus: 0 };
     const client = clientFixture(async message => {
       if (message.command !== "browse") return { ok: true };
       const query = message.input as WatchHistoryBrowseQuery;
@@ -408,8 +408,8 @@ describe("production watch browsing", () => {
       expect(section.querySelector(".popup-watch-load-more")).not.toBeNull();
     }
     expect(container.querySelector(".popup-watch-screen > .popup-watch-load-more")).toBeNull();
-    expect(requests).toHaveLength(4);
-    expect(requests.every(query => query.limit === 20 && query.providerVersion === 3 && query.provider && !query.cursor)).toBe(true);
+    expect(requests).toHaveLength(5);
+    expect(requests.every(query => query.limit === 20 && query.providerVersion === 4 && query.provider && !query.cursor)).toBe(true);
     await click("Load more YouTube titles");
     expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
     expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
@@ -462,10 +462,10 @@ describe("production watch browsing", () => {
     await click("Load more Netflix titles");
     expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(40);
     expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
-    expect(requests.at(-1)).toMatchObject({ provider: "netflix", providerVersion: 3, limit: 20, cursor: "20" });
+    expect(requests.at(-1)).toMatchObject({ provider: "netflix", providerVersion: 4, limit: 20, cursor: "20" });
     await change("Search watch history", "needle");
     expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(1);
-    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "netflix", search: "needle", providerVersion: 3, limit: 20 })]));
+    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "netflix", search: "needle", providerVersion: 4, limit: 20 })]));
     expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
   });
 
@@ -475,13 +475,13 @@ describe("production watch browsing", () => {
     expect(container.querySelector('[data-provider="primevideo"] .popup-provider-name')?.textContent).toBe("Prime Video");
     expect(container.querySelector('[data-provider="primevideo"] .resource-provider-logo.primevideo img')).not.toBeNull();
     await click("Load more Prime Video titles");
-    expect(requests.at(-1)).toMatchObject({ provider: "primevideo", providerVersion: 3, limit: 20, cursor: "20" });
+    expect(requests.at(-1)).toMatchObject({ provider: "primevideo", providerVersion: 4, limit: 20, cursor: "20" });
     expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
     for (const provider of ["youtube", "crunchyroll", "netflix"])
       expect(container.querySelectorAll(`[data-provider="${provider}"] .popup-watch-item`)).toHaveLength(20);
     await change("Search watch history", "needle");
     expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(1);
-    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "primevideo", providerVersion: 3, search: "needle", limit: 20 })]));
+    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "primevideo", providerVersion: 4, search: "needle", limit: 20 })]));
     await click("Clear watch history search");
     expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
     expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
@@ -1057,8 +1057,8 @@ describe("production watch browsing", () => {
     expect(reads).toBe(2);
   });
   it.each([
-    ["superseded", 8],
-    ["retryable", 4],
+    ["superseded", 10],
+    ["retryable", 5],
   ] as const)("bounds automatic browse recovery for %s and keeps manual Retry", async (status, expectedReads) => {
     let reads = 0;
     const fallback = clientFixture();
@@ -1701,7 +1701,7 @@ describe("production watch browsing", () => {
 			vi
 				.mocked(client.request)
 				.mock.calls.filter(([message]) => message.command === "browse"),
-		).toHaveLength(8);
+		).toHaveLength(10);
 		expect(
 			vi
 				.mocked(client.request)
@@ -1792,7 +1792,7 @@ describe("production watch browsing", () => {
 		).toHaveLength(1);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "browse"),
-		).toHaveLength(8);
+		).toHaveLength(10);
 		expect(container.querySelector('[role="alert"]')).toBeNull();
 	});
 	it("bounds failed generation recovery and manual Retry replays the current filtered query", async () => {
@@ -2017,7 +2017,7 @@ describe("production watch browsing", () => {
 			.mocked(client.request)
 			.mock.calls.map(([m]) => m)
 			.filter((m) => m.command === "browse");
-		expect(calls).toHaveLength(4);
+		expect(calls).toHaveLength(5);
 		expect(calls[0]).toMatchObject({
 			expectedOwnerUserId: OWNER,
 			input: { mode: "personal", limit: 20 },
@@ -2125,7 +2125,7 @@ describe("production watch browsing", () => {
 		expect(client.request).toHaveBeenCalledWith(
 			expect.objectContaining({
 				command: "browse",
-				input: { mode: "personal", limit: 20, providerVersion: 3, provider: "crunchyroll", cursor: "title-next" },
+				input: { mode: "personal", limit: 20, providerVersion: 4, provider: "crunchyroll", cursor: "title-next" },
 			}),
 		);
 		expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(1);

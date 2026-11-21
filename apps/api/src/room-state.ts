@@ -21,6 +21,7 @@ import type {
 } from "@anidachi/protocol";
 import {
   RoomSourceDescriptorSchema,
+  WatchSourceDescriptorSchema,
   canonicalizeRoomSourceUrl,
   isLegacyRoomSourceFingerprintAlias,
 } from "@anidachi/protocol";
@@ -328,6 +329,10 @@ export class RoomState {
       return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
     }
     const nextSource = normalized.source;
+    if (nextSource?.provider === "disneyplus" && nextSource.disneyplusIdentity === undefined &&
+      previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.disneyplusIdentity) {
+      nextSource.disneyplusIdentity = previousSource.disneyplusIdentity;
+    }
     if (nextSource?.provider === "primevideo" && !nextSource.primeNavigation &&
         previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.primeNavigation) {
       nextSource.primeNavigation = previousSource.primeNavigation;
@@ -957,6 +962,7 @@ function normalizeRoomSourceUpdate(
 		candidate.provider !== "crunchyroll" &&
 		candidate.provider !== "youtube" &&
 		candidate.provider !== "netflix" &&
+		candidate.provider !== "disneyplus" &&
 		candidate.provider !== "primevideo"
 	) {
     return null;
@@ -979,6 +985,7 @@ function normalizeWatchSourceDescriptor(
 		candidate.provider !== "crunchyroll" &&
 		candidate.provider !== "youtube" &&
 		candidate.provider !== "netflix" &&
+		candidate.provider !== "disneyplus" &&
 		candidate.provider !== "primevideo"
 	) {
     return null;
@@ -1034,6 +1041,10 @@ function normalizeWatchSourceDescriptor(
     return null;
   }
 
+  // A live identity can arrive from a host event or a hibernated room snapshot.
+  if (candidate.disneyplusIdentity !== undefined && !WatchSourceDescriptorSchema.safeParse(candidate).success) {
+    return null;
+  }
   const durableSource: RoomSourceDescriptor = {
     provider: sourceUrl.source.provider,
     sourceUrl: sourceUrl.source.sourceUrl,

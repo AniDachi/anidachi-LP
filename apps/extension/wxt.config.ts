@@ -17,7 +17,10 @@ const LOCAL_HOST_PERMISSIONS = [
 
 // WAR requires /* paths; host permissions are also origin-level in Chrome.
 // Route-scoped content-script matches are declared separately by each entrypoint.
+const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANNEL);
+const disneyPlusOrigins = extensionChannel === "production" ? [] : ["https://www.disneyplus.com/*"];
 const STORE_VIDEO_ORIGINS = [
+  ...disneyPlusOrigins,
   "https://youtube.com/*",
   "https://*.youtube.com/*",
   "https://youtu.be/*",
@@ -52,7 +55,6 @@ function unique(values: Array<string | null>): string[] {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
 
-const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANNEL);
 const extensionManifestKey = getExtensionManifestKey(extensionChannel);
 const extensionName =
   extensionChannel === "production"
@@ -148,7 +150,7 @@ export default defineConfig({
       },
       {
         resources: ["prime-media-tile.html", "prime-media-permission.html"],
-        matches: [...YOUTUBE_CATALOG_ORIGINS.map(origin => origin + "/*"), "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
+        matches: [...YOUTUBE_CATALOG_ORIGINS.map(origin => origin + "/*"), "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", ...disneyPlusOrigins, ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
       },
     ],
     action: {

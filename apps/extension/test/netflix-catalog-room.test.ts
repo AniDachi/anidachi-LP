@@ -3,6 +3,7 @@ import {
 	catalogRoomProvider,
 	catalogPlayerProvider,
 	isCatalogRoomSender,
+	catalogWatchDestination,
 } from "../src/catalog-room-routes";
 import {
 	PrimeHostVisit,
@@ -88,14 +89,30 @@ it("accepts only the same-origin main document during SPA navigation", () => {
 		}),
 	).toBe(false);
 });
-it.each(["netflix", "crunchyroll"] as const)("follows a new %s play once even for the same episode, while ignoring an old heartbeat", provider => {
+it("keeps Disney+ and the Hulu hub in the same room and opens the guest's localized player", () => {
+	const origin = "https://www.disneyplus.com";
+	const title = "/play/120ae1e6-2240-4924-a4ce-f8de6e28b0b1";
+	for (const path of ["/", "/pt-br", "/de/", "/home", "/pt-br/browse/hulu", "/en-gb/search", "/fr/watchlist"]) {
+		expect(catalogRoomProvider(origin + path)).toBe("disneyplus");
+		expect(catalogPlayerProvider(origin + path)).toBeNull();
+	}
+	expect(catalogPlayerProvider(origin + "/en-gb" + title)).toBe("disneyplus");
+	expect(catalogWatchDestination(origin + title, origin + "/pt-br/browse/hulu")).toBe(origin + "/pt-br" + title);
+	for (const path of ["/pt-br/account", "/login", "/profiles", "/play/broken", "/browse/%2faccount"]) {
+		expect(catalogRoomProvider(origin + path)).toBeNull();
+	}
+	expect(catalogRoomProvider("https://www.hulu.com" + title)).toBeNull();
+});
+
+it.each(["netflix", "crunchyroll", "disneyplus"] as const)("follows a new %s play once even for the same episode, while ignoring an old heartbeat", provider => {
 	const url = "https://www." + provider + ".com";
+	const path = provider === "disneyplus" ? "/play/120ae1e6-2240-4924-a4ce-f8de6e28b0b1" : "/watch/123";
 	const source = {
 		provider,
-		sourceUrl: url + "/watch/123",
-		canonicalUrl: url + "/watch/123",
+		sourceUrl: url + path,
+		canonicalUrl: url + path,
 		title: "Show",
-		videoFingerprint: provider + "|watch/123",
+		videoFingerprint: provider + "|" + path.slice(1),
 	};
 	const host = new PrimeHostVisit(),
 		guest = new PrimeBrowsingRoom(),
