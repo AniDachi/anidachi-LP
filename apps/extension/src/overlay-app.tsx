@@ -542,6 +542,10 @@ export async function runOverlayPrivilegedAction(
 	await afterApproval();
 }
 
+function requiresPlayableRoomSource(provider: VideoAdapter["provider"]) {
+	return provider === "primevideo" || provider === "hbomax";
+}
+
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
 	const disneyPlayer = adapter.provider === "disneyplus" && !primeBrowsing;
 	const disneyCatalog = adapter.provider === "disneyplus" && primeBrowsing;
@@ -1005,8 +1009,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
 	const [currentResourceEntry, setCurrentResourceEntry] =
 		useState<CurrentResourceDisplay | null>(null);
-	const [primeSourcePending, setPrimeSourcePending] = useState(
-		() => adapter.provider === "primevideo" && !adapter.getSourceDescriptor(),
+	const [playerSourcePending, setPlayerSourcePending] = useState(
+		() => requiresPlayableRoomSource(adapter.provider) && !adapter.getSourceDescriptor(),
 	);
 	const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
 	const watchHistoryRoomSuppressedRef = useRef(true);
@@ -2937,7 +2941,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
         if (!adapterActive) { setCurrentResourceEntry(null); return; }
         const update = () => {
           setCurrentResourceEntry(readCurrentResourceDisplay(adapter));
-          setPrimeSourcePending(adapter.provider === "primevideo" && !adapter.getSourceDescriptor());
+          setPlayerSourcePending(requiresPlayableRoomSource(adapter.provider) && !adapter.getSourceDescriptor());
         };
         update(); const timer = window.setInterval(update, 1000);
         return () => { window.clearInterval(timer); setCurrentResourceEntry(null); };
@@ -4355,7 +4359,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	const connectToExistingWebsiteRoom = useCallback(
 		async (nextRoomId: string, reason: string, invitation?: PrimeLaunchHandoff) => {
-			const sourceReady = () => adapter.provider !== "primevideo" || !!adapter.getSourceDescriptor();
+			const sourceReady = () => !requiresPlayableRoomSource(adapter.provider) || !!adapter.getSourceDescriptor();
 			if (!sourceReady()) return;
 			const targetFingerprint = adapter.getFingerprint();
 			const sameInviteSource = () => !invitation || (activePlayer.current !== null && !invitation.hasDifferentRoomSource?.(activePlayer.current));
@@ -4465,6 +4469,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					if (skipStaleJoin("session-prepared") || skipActiveConnection() || !sameInviteSource()) {
 						await discardPreparedRoomSession(preparedRoomSession);
 						if (isCurrentJoin() && !sameInviteSource()) invitation?.consumeRoom();
+						return;
+					}
+					if (adapter.provider === "hbomax" && !sourceReady()) {
+						setPlayerSourcePending(true);
+						await discardPreparedRoomSession(preparedRoomSession);
 						return;
 					}
 					connected = await connectWebsiteRoom(
@@ -5146,8 +5155,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				// Read one coherent playing source after async identity/session work.
 				// Prime can replace the episode without changing the address bar.
 				const source = adapter.getSourceDescriptor();
-				if (!source && adapter.provider === "primevideo") {
-					throw new Error("Prime Video is loading. Try again in a moment.");
+				if (!source && requiresPlayableRoomSource(adapter.provider)) {
+					setPlayerSourcePending(true);
+					const provider = adapter.provider === "hbomax" ? "HBO Max" : "Prime Video";
+					throw new Error(provider + " is loading. Try again in a moment.");
 				}
 				created = await createRoom(activeAccessToken, preparedRoomSession, {
 					sourceUrl: source?.sourceUrl ?? buildCurrentSourceUrlForInvite(),
@@ -5334,7 +5345,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		if (
 			playerRoomClosedRef.current ||
 			!identityLoaded ||
-			(adapter.provider === "primevideo" && !adapter.getSourceDescriptor()) ||
+			(requiresPlayableRoomSource(adapter.provider) && !adapter.getSourceDescriptor()) ||
 			roomSessionLoadedForUserId !== currentUserId ||
 			roomId ||
 			roomIdRef.current
@@ -5439,7 +5450,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [
 		accountHostingTime.refresh,
 		adapter,
-		primeSourcePending,
+		playerSourcePending,
 		primeRoomRestoreSuppressed,
 		capturedPrimeRoomId,
 		failedPrimeInvite,
@@ -7078,7 +7089,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
 							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}
 						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}
-						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending || (!roomId && primeSourcePending)}
+						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending || (!roomId && playerSourcePending)}
 						busy={roomCreatePending || roomEndPending || roomLeavePending} confirming={roomEndConfirmationPending}
 						remainingSeconds={roomId ? (isConnected && isHost ? (hostingTimeClock.observed ? liveHostingTime?.remainingSeconds ?? null : quotaRemainingSeconds) : null) : (accountHostingTime.mode === "legacy" ? freeQuotaNotice.availableSeconds : accountHostingTime.remainingSeconds)}
 						awaitingHostingTime={isHost && !legacyQuotaEnabled && hasFreeTimePresentation && (!liveHostingTime || liveHostingTime.snapshot.access.kind === "unknown")}
@@ -7086,7 +7097,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : handleCreateRoom}
 						onCopyInvite={copyInvite} onSync={() => playbackSyncController.broadcastHostState()}
 						onToggleInvite={toggleInvitePanel} inviteOpen={invitePanelOpen} inviteDisabled={!authAuthenticated}
-						syncDisabled={!isConnected || !roomSnapshotReady || extensionContextInvalidated || primeSourcePending}
+						syncDisabled={!isConnected || !roomSnapshotReady || extensionContextInvalidated || playerSourcePending}
 					/>}
 					{transientPanelNotice ? (
 						<div
@@ -7125,9 +7136,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
             onSendFriend={sendDirectInvite} onSendGroup={sendGroupInvite} onCreateLink={createCapsuleFriendLink}
           /> : null}
 
-					{primeSourcePending && adapterActive ? (
+					{playerSourcePending && adapterActive ? (
 						<div className="playback-sync-notice" role="status">
-							<span>Waiting for Prime Video title information…</span>
+							<span>{adapter.provider === "hbomax" ? "Waiting for HBO Max playback…" : "Waiting for Prime Video title information…"}</span>
 						</div>
 					) : null}
 					{currentResourceEntry ? (
