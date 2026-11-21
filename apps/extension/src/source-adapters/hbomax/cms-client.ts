@@ -1,9 +1,10 @@
-import { HboMaxProviderIdSchema, WATCH_CATALOG_MAX_EPISODES, hboMaxPlaybackId } from "@anidachi/protocol";
+import { HboMaxProviderIdSchema, WATCH_CATALOG_MAX_EPISODES, hboMaxPlaybackId, isHboMaxArtworkUrl } from "@anidachi/protocol";
 import { z } from "zod";
 import { HboCmsEpisodeSchema, HboCmsPlaybackSchema, HboCmsShowSchema } from "./cms-catalog";
 
 const packetSchema = z.strictObject({
 	playbackId: HboMaxProviderIdSchema, metadata: HboCmsPlaybackSchema.nullable(), show: HboCmsShowSchema.nullable(),
+	poster: z.strictObject({ titleId: HboMaxProviderIdSchema, url: z.string().refine(isHboMaxArtworkUrl) }).optional(),
 	episodes: z.array(HboCmsEpisodeSchema).max(WATCH_CATALOG_MAX_EPISODES * 2), locale: z.string().trim().min(2).max(35).nullable(),
 });
 type Packet = z.infer<typeof packetSchema>;

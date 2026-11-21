@@ -1,6 +1,6 @@
 import {
 	HBO_MAX_ORIGIN, HboMaxHistoryIdentitySchema, HboMaxProviderIdSchema, WATCH_CATALOG_MAX_EPISODES,
-	WatchCatalogSnapshotInputSchema, hboMaxDetail, hboMaxPlaybackId, hboMaxSeasonIdentifier, hboMaxSourceUrl,
+	WatchCatalogSnapshotInputSchema, hboMaxArtworkUrl, hboMaxDetail, hboMaxPlaybackId, hboMaxSeasonIdentifier, hboMaxSourceUrl,
 	type WatchCatalogLocaleContext, type WatchCatalogSnapshotInput,
 } from "@anidachi/protocol";
 import { z } from "zod";
@@ -56,7 +56,7 @@ function documentResources(value: unknown) {
 	const byType = new Map<string, Map<string, Resource | null>>();
 	for (const item of doc.included) {
 		const row = resource(item);
-		if (!row || !["video", "show", "season", "collection", "collectionItem"].includes(row.type)) continue;
+		if (!row || !["video", "show", "season", "collection", "collectionItem", "image"].includes(row.type)) continue;
 		let group = byType.get(row.type);
 		if (!group) { group = new Map(); byType.set(row.type, group); }
 		// Ambiguous included resources cannot establish an identity.
@@ -79,6 +79,21 @@ function episodeData(video: Resource, seriesId: string, seasonId: string): HboCm
 }
 
 type CmsDocument = NonNullable<ReturnType<typeof documentResources>>;
+
+function titlePoster(doc: CmsDocument, titleId: string) {
+	const title = doc.get("show", titleId); // HBO also represents a movie's catalog title as a show.
+	const images = title && related(title, "images");
+	if (!Array.isArray(images)) return null;
+	for (const image of images) {
+		const id = refId(image, "image");
+		const attrs = id && record(doc.get("image", id)?.attributes);
+		if (!attrs || attrs.kind !== "poster-with-logo" || typeof attrs.src !== "string" ||
+			typeof attrs.width !== "number" || typeof attrs.height !== "number" || !(attrs.height > attrs.width && attrs.width > 0)) continue;
+		const url = hboMaxArtworkUrl(attrs.src);
+		if (url) return { titleId, url };
+	}
+	return null;
+}
 
 function playbackMetadata(doc: CmsDocument, playbackId: string): HboCmsPlayback | null {
 	const video = doc.get("video", playbackId);
@@ -208,15 +223,28 @@ export function parseHboNativePage(value: unknown, url: string) {
 	const doc = documentResources(value);
 	if (!doc) return null;
 	const bound = routeUrl(doc.root) ?? "";
-	const playbackId = hboMaxPlaybackId(url);
+	let playbackId = hboMaxPlaybackId(url);
 	const detail = hboMaxDetail(url);
 	let metadata: HboCmsPlayback | null = null;
 	let seriesId: string;
 	if (playbackId && hboMaxPlaybackId(bound) === playbackId) {
+		const video = doc.get("video", playbackId);
+		if (video && record(video.attributes)?.videoType === "MOVIE") {
+			const titleId = refId(related(video, "show"), "show");
+			const poster = titleId && titlePoster(doc, titleId);
+			return poster ? { playbackId, poster, metadata: null, show: null, episodes: [] } : null;
+		}
 		metadata = playbackMetadata(doc, playbackId);
 		if (metadata?.identity.kind !== "episode") return null;
 		seriesId = metadata.identity.providerSeriesId;
-	} else if (detail?.kind === "series" && hboMaxDetail(bound)?.id === detail.id && hboMaxDetail(bound)?.kind === "series") {
+	} else if (detail && hboMaxDetail(bound)?.id === detail.id && hboMaxDetail(bound)?.kind === detail.kind) {
+		if (detail.kind === "movie") {
+			const poster = titlePoster(doc, detail.id);
+			const movies = [...doc.byType.get("video")?.values() ?? []].filter(video => video &&
+				record(video.attributes)?.videoType === "MOVIE" && refId(related(video, "show"), "show") === detail.id);
+			playbackId = movies.length === 1 ? movies[0]!.id : null;
+			return poster && playbackId ? { playbackId, poster, metadata: null, show: null, episodes: [] } : null;
+		}
 		seriesId = detail.id;
 	} else return null;
 	const show = showPlan(doc, seriesId);
@@ -228,7 +256,8 @@ export function parseHboNativePage(value: unknown, url: string) {
 		const current = metadata?.seasonNumber ?? (Array.isArray(selected) && selected.length === 1 ? Number(selected[0]) : null);
 		if (current) episodes = seasonEpisodes(doc, show, current) ?? [];
 	}
-	return metadata || episodes.length ? { playbackId, metadata, show, episodes } : null;
+	const poster = titlePoster(doc, seriesId);
+	return metadata || episodes.length || poster ? { playbackId, metadata, show, episodes, poster } : null;
 }
 
 export function buildHboCmsCatalog(show: HboCmsShow, episodes: HboCmsEpisode[], playbackId: string,

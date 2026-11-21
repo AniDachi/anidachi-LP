@@ -322,9 +322,17 @@ function corroborateHboCmsPlayback(doc: Document, playbackId: string, cms: HboCm
 
 export function readHboMaxPlaybackMetadata(doc: Document, playbackId: string): HboMaxPlaybackMetadata | null {
 	if (hboMaxPlaybackId(doc.location.href) !== playbackId) return null;
-	const details = detailsByDocument.get(doc);
-	const cms = getHboCmsPacket(doc, playbackId)?.metadata;
+	const packet = getHboCmsPacket(doc, playbackId);
+	const metadata = resolvePlayback(doc, playbackId, packet?.metadata);
+	if (!metadata || !packet?.poster) return metadata;
+	const identity = metadata.identity;
+	const titleId = identity.kind === "episode" ? identity.providerSeriesId : identity.providerMovieId;
+	return packet.poster.titleId === titleId ? { ...metadata, artworkUrl: packet.poster.url } : metadata;
+}
+
+function resolvePlayback(doc: Document, playbackId: string, cms: HboCmsPlayback | null | undefined): HboMaxPlaybackMetadata | null {
 	if (cms) return corroborateHboCmsPlayback(doc, playbackId, cms);
+	const details = detailsByDocument.get(doc);
 	const labels = playerLabels(doc);
 	if (!labels) return null;
 	const { title, ordinalLabel, subtitle } = labels;

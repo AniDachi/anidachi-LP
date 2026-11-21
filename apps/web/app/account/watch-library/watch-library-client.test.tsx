@@ -2189,7 +2189,7 @@ it("filters HBO Max titles and resumes the selected playback UUID from the accou
   const url = `https://www.hbomax.com/video/watch/${id}`;
   title.provider = editor.provider = "hbomax";
   title.title = "HBO Max movie";
-  title.artworkUrl = null;
+  title.artworkUrl = "https://images.cdn.prd.api.discomax.com/group/poster.jpeg";
   title.titleKey = editor.titleKey = "hbomax:movie:e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7";
   title.latestActivity.episodeKey = editor.episodes[0].episodeKey = `hbomax:movie:${id}`;
   title.sourceUrl = editor.episodes[0].sourceUrl = url;
@@ -2201,6 +2201,7 @@ it("filters HBO Max titles and resumes the selected playback UUID from the accou
   try {
     await click(buttonByLabel(view.container, "HBO Max"));
     await waitFor(() => assert.ok(view.container.querySelector('[aria-label="Manage HBO Max movie"]')));
+    assert.equal(view.container.querySelector(".wh-cover img")?.getAttribute("src"), title.artworkUrl + "?w=500&f=webp");
     assert.ok(server.calls.some(call => call.path.includes("provider=hbomax") && call.path.includes("providerVersion=5")));
     await click(buttonByLabel(view.container, "Manage HBO Max movie"));
     await waitFor(() => assert.ok(buttonByText(view.container, "Resume")));

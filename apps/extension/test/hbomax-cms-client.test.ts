@@ -44,6 +44,16 @@ beforeEach(() => {
 afterEach(() => { stop?.(); stop = undefined; document.body.innerHTML = ""; document.title = ""; vi.restoreAllMocks(); });
 
 describe("HBO catalog data in the content script", () => {
+	it("uses a canonical title poster only after corroborating the playing title", () => {
+		stop = startHboMaxCatalogCapture(document);
+		const url = "https://images.cdn.prd.api.discomax.com/group/poster.jpeg";
+		emit({ ...packet, poster: { titleId: nextId, url } });
+		expect(readHboMaxPlaybackMetadata(document, playbackId)?.artworkUrl).toBeNull();
+		emit({ ...packet, poster: { titleId: seriesId, url } });
+		expect(readHboMaxPlaybackMetadata(document, playbackId)?.artworkUrl).toBe(url);
+		route(nextId);
+		expect(readHboMaxPlaybackMetadata(document, nextId)?.artworkUrl).toBeUndefined();
+	});
 	it("recovers the native response on late mount and admits an exact playing episode without a previously opened season", async () => {
 		document.addEventListener("anidachi:hbo-cms-read", () => emit(packet), { once: true });
 		stop = startHboMaxCatalogCapture(document);
