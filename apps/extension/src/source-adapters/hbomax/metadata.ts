@@ -56,6 +56,17 @@ function playerOrdinals(value: string | null) {
 	const season = ordinal(match?.[1]), episode = ordinal(match?.[2]);
 	return season && episode ? { season, episode } : null;
 }
+function cardCoordinates(label: string | null) {
+	// HBO isolates the coordinates inside a translated action such as "Watch".
+	// Only accept a complete season and episode pair before the title separator.
+	const prefix = label?.split(/[:：]/u, 1)[0];
+	if (!prefix) return null;
+	for (const part of prefix.split(/[\u2066-\u2068]/u).reverse()) {
+		const pair = playerOrdinals(clean(part));
+		if (pair) return pair;
+	}
+	return playerOrdinals(clean(prefix));
+}
 function seasonOrdinal(label: string) {
 	const value = numericText(label);
 	const match = /^(?:season|saison|temporada|staffel|stagione|sezon|série|シーズン)\s*([0-9]+)$/iu.exec(value)
@@ -77,11 +88,16 @@ function ordinal(value: string | undefined) {
 
 export function getHboMaxDetails(doc: Document) { return detailsByDocument.get(doc); }
 
-function catalogArtwork(doc: Document, title: string): string | null {
-	for (const img of doc.querySelectorAll<HTMLImageElement>("img[alt]")) {
+function catalogArtwork(root: ParentNode, title: string): string | null {
+	for (const img of root.querySelectorAll<HTMLImageElement>("img[alt]")) {
 		if (clean(img.alt) !== title) continue;
-		const url = hboMaxArtworkUrl(img.currentSrc || img.src);
-		if (url) return url;
+		const picture = img.closest("picture");
+		const sets = [img.srcset, ...Array.from(picture?.querySelectorAll("source[srcset]") ?? [], source => source.getAttribute("srcset") ?? "")];
+		const candidates = [img.currentSrc, img.src, ...sets.flatMap(set => set.split(",").map(entry => entry.trim().split(/\s+/u)[0]))];
+		for (const candidate of candidates) {
+			const url = candidate && hboMaxArtworkUrl(candidate);
+			if (url) return url;
+		}
 	}
 	return null;
 }
@@ -89,9 +105,13 @@ function catalogArtwork(doc: Document, title: string): string | null {
 function captureDetails(doc: Document) {
 	const entity = hboMaxDetail(doc.location.href);
 	if (!entity) return;
-	const heading = doc.querySelector("h1");
-	const title = clean(heading?.textContent);
-	if (!heading || !title) return;
+	const main = doc.querySelector("main");
+	const root = main ?? doc;
+	const heading = root.querySelector('[role="heading"][aria-level="1"]:not([aria-hidden="true"])') ??
+		root.querySelector('h1:not([role="presentation"]):not([aria-hidden="true"])');
+	const title = clean(heading?.getAttribute("aria-label")) ?? clean(heading?.textContent);
+	const mainTitle = clean(main?.getAttribute("aria-label"));
+	if (!heading || !title || (mainTitle && !sameTitle(mainTitle, title))) return;
 	const previous = priorDetail.get(doc);
 	if (previous && previous.id !== entity.id && previous.heading === heading && previous.title === title) return;
 	let details = detailsByDocument.get(doc);
@@ -105,10 +125,11 @@ function captureDetails(doc: Document) {
 		detailsByDocument.set(doc, details);
 		movieClicks.delete(doc);
 	}
-	details.artworkUrl = catalogArtwork(doc, title) ?? details.artworkUrl;
+	details.artworkUrl = catalogArtwork(root, title) ?? details.artworkUrl;
 	if (details.kind !== "series") return;
-	for (const panel of doc.querySelectorAll('[role="tabpanel"]:not([hidden]):not([aria-hidden="true"])')) {
-		const seasonMenu = panel.querySelector('button[aria-haspopup="true"][aria-expanded]');
+	for (const panel of root.querySelectorAll('[role="tabpanel"]:not([hidden]):not([aria-hidden="true"])')) {
+		const seasonMenu = Array.from(panel.querySelectorAll('button[aria-haspopup="true"][aria-expanded]:not([data-tile-action-menu])'))
+			.find(button => !button.closest('a[data-testid$="_tile"]') && seasonOrdinal(clean(button.textContent) ?? "") !== null);
 		const seasonTitle = clean(seasonMenu?.textContent ?? panel.querySelector("h2")?.textContent);
 		const seasonNumber = seasonTitle && seasonOrdinal(seasonTitle);
 		if (!seasonTitle || !seasonNumber) continue;
@@ -122,7 +143,7 @@ function captureDetails(doc: Document) {
 			const episode = cardEpisode(label);
 			if (!episode) continue;
 			const accessible = link.getAttribute("aria-label");
-			const coordinates = playerOrdinals(clean(accessible?.split(/[:：]/u, 1)[0]));
+			const coordinates = cardCoordinates(accessible);
 			// On multi-season pages the menu label can update before the old grid is replaced.
 			if (seasonMenu && !coordinates) continue;
 			if (coordinates && (coordinates.season !== seasonNumber || coordinates.episode !== episode.number)) continue;
@@ -201,7 +222,7 @@ export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promi
 		observer.disconnect();
 		if (hboMaxDetail(doc.location.href)) {
 			observer.observe(doc, { subtree: true, childList: true, characterData: true, attributes: true,
-				attributeFilter: ["href", "aria-hidden", "hidden", "src", "srcset", "aria-selected"] });
+				attributeFilter: ["href", "aria-hidden", "hidden", "src", "srcset", "aria-selected", "aria-label"] });
 		} else if (!navigation) {
 			// Chromium provides navigation events. Other environments need only detect a route change.
 			observer.observe(doc, { subtree: true, childList: true });
@@ -229,11 +250,14 @@ function isPrimaryMovieControl(target: Element): boolean {
 	if (!info || !button) return false;
 	const primary = info.querySelector('[data-testid="play_button"]');
 	return button === primary || (button.getAttribute("data-testid") === "restart_button" &&
-		button.parentElement?.contains(info.querySelector('[data-testid="myList_button"]')) === true);
+		Boolean(primary) && button.parentElement === primary?.parentElement);
 }
 
 function playerInfo(doc: Document) {
-	return doc.querySelector('[data-testid="playerContainer"] [data-testid="content-metadata"]');
+	const selector = '[data-testid="playerContainer"] [data-testid="content-metadata"]';
+	// Responsive catch-up controls can repeat the series title without episode details.
+	return (doc.querySelector(selector + ' [data-testid="player-ux-season-episode"]') ??
+		doc.querySelector(selector + ' [data-testid="player-ux-asset-title"]'))?.closest('[data-testid="content-metadata"]') ?? null;
 }
 
 function playerLabels(doc: Document): PlayerLabels | null {

@@ -1,3 +1,4 @@
+import { bindHboMaxGuestExit } from "./source-adapters/hbomax/navigation";
 import { observeHboMaxRoomSource, clearHboMaxRoomSource } from "./source-adapters/hbomax/metadata";
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
 import { readHistoryRecordingEnabled } from "./history-recording-choice";
@@ -2050,6 +2051,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			: "No media seats";
 	const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
 	const isHost = currentParticipant?.role === "host";
+	useEffect(() => {
+		if (roomId && adapterActive && adapter.provider === "hbomax" && currentParticipant?.role === "viewer")
+			return bindHboMaxGuestExit(document);
+	}, [roomId, adapterActive, adapter.provider, currentParticipant?.role]);
 	const accountPrivilegedContext = useMemo<PrivilegedOverlayContext>(() => {
 		const accountUserId = accountUser?.id ?? "";
 		return {

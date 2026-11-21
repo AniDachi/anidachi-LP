@@ -80,6 +80,29 @@ describe("content adapter lifecycle", () => {
 		runtime.dispose();
 	});
 
+	it.each([false, true])("retains only a matching HBO invitation after the native player removes the fragment (changed source %s)", async changed => {
+		const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+		const next = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+		const entry = "https://www.hbomax.com/video/watch/" + id;
+		vi.stubGlobal("location", new URL(entry + "#anidachiRoom=invited"));
+		const target = changed ? next : id;
+		const adapter: VideoAdapter = { ...createAdapter(), provider: "hbomax", getFingerprint: () => "hbomax|video/watch/" + target };
+		const mount = vi.fn<NonNullable<NonNullable<Parameters<typeof startContentLifecycle>[0]>["mount"]>>(() => createMountedOverlayStub(adapter));
+		let ready = false;
+		const runtime = startContentLifecycle({ lookupPrimeRoom: async () => null,
+			detect: () => ready ? { status: "ready", adapter } : { status: "waiting", provider: "hbomax" },
+			mount, ensureStyles() {}, startProviderStudy: () => null });
+		vi.stubGlobal("location", new URL("https://www.hbomax.com/video/watch/" + target));
+		await vi.advanceTimersByTimeAsync(10);
+		ready = true;
+		runtime.reconcile();
+		const handoff = mount.mock.calls[0]?.[1];
+		expect(handoff?.readRoom(location.href, adapter.getFingerprint(), "owner") ?? null).toBe(changed ? null : "invited");
+		handoff?.consumeRoom();
+		expect(handoff?.readRoom(location.href, adapter.getFingerprint(), "owner") ?? null).toBeNull();
+		runtime.dispose();
+	});
+
 	it("drops a late catalog restore after pagehide", async () => {
 		vi.stubGlobal("location", new URL("https://www.primevideo.com/storefront/home"));
 		const record = {version: 1 as const, revision: 1, roomId: "room", ownerUserId: "owner", participantSessionId: "actor",
