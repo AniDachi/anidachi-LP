@@ -1,3 +1,4 @@
+import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import { HostingTimeEventSchema, LegacyHostingTimeEventSchema } from "./hosting-time";
 import {
@@ -21,7 +22,7 @@ import {
   MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
 } from "./limits";
-import { hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
+import { hasPrimeVideoHostname, hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
 
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
@@ -118,6 +119,10 @@ export const RoomCapabilitiesSchema = z.object({
 
 export const PlaybackStateSchema = z.object({
   videoFingerprint: VideoFingerprintSchema,
+  /** Player visit for catalog rooms, including reopening the same title. Wire name retained for existing clients. */
+  primePlayerVisit: z.uuid().optional(),
+  /** Distinguishes a paused player from a host browsing the Netflix catalog. */
+  hostSurface: z.enum(["player", "catalog"]).optional(),
   sourceUrl: UrlSchema.optional(),
   playing: z.boolean(),
   hostTime: z.number().nonnegative(),
@@ -130,10 +135,12 @@ export const WatchSourceProviderSchema = z.enum([
 	"youtube",
 	"generic",
 	"netflix",
+	"primevideo",
 ]);
 
 export const WatchSourceDescriptorSchema = z.object({
   provider: WatchSourceProviderSchema,
+  primeNavigation: PrimeNavigationSchema.optional(),
   sourceUrl: UrlSchema,
   canonicalUrl: UrlSchema,
   videoFingerprint: VideoFingerprintSchema,
@@ -145,12 +152,15 @@ export const WatchSourceDescriptorSchema = z.object({
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
 }).superRefine((source, context) => {
+  if (!primeNavigationMatches(source.primeNavigation,source.sourceUrl,source.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
   const hasNetflixSource = hasNetflixHostname(source.sourceUrl) ||
     hasNetflixHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("netflix|");
-  if ((source.provider === "netflix" || hasNetflixSource) && !RoomSourceDescriptorSchema.safeParse({
+  const hasPrimeSource = hasPrimeVideoHostname(source.sourceUrl) ||
+    hasPrimeVideoHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("primevideo|");
+  if ((source.provider === "netflix" || hasNetflixSource || source.provider === "primevideo" || hasPrimeSource) && !RoomSourceDescriptorSchema.safeParse({
     provider: source.provider, sourceUrl: source.sourceUrl,
     canonicalUrl: source.canonicalUrl, videoFingerprint: source.videoFingerprint,
-  }).success) context.addIssue({ code: "custom", message: "Invalid Netflix room source", path: ["sourceUrl"] });
+  }).success) context.addIssue({ code: "custom", message: "Invalid provider room source", path: ["sourceUrl"] });
 });
 
 export const RoomSourcePersistenceCallbackSchema = z.strictObject({

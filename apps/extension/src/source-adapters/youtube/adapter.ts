@@ -14,7 +14,8 @@ import {
   getYouTubePlayerOverlayGeometry,
   subscribeYouTubePlayerOverlayGeometry,
 } from "./player-chrome";
-import { getYouTubeFingerprintKey, parseYouTubeVideoId } from "./url";
+import { getYouTubeFingerprintKey, parseYouTubeVideoId, YOUTUBE_CATALOG_ORIGINS } from "./url";
+import { matchesWatchPlayer } from "./watch-player";
 
 interface YouTubeVolumePlayer extends HTMLElement {
   getVolume?: () => number;
@@ -30,15 +31,24 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
   override readonly name = "YouTube";
   readonly enforcesAuthoritativeRoomSource = true;
   private readonly playbackPhaseTracker: YouTubePlaybackPhaseTracker;
+  private readonly fingerprint: string;
 
   constructor(video: HTMLVideoElement, container: HTMLElement) {
     super(video, container);
-    const expectedVideoId = parseYouTubeVideoId(new URL(location.href));
+    const initialUrl = new URL(location.href);
+    const expectedVideoId = parseYouTubeVideoId(initialUrl);
+    this.fingerprint = normalizeVideoFingerprint(`youtube|${getYouTubeFingerprintKey(initialUrl)}`);
+    const watchPage = YOUTUBE_CATALOG_ORIGINS.includes(initialUrl.origin) && /^\/watch\/?$/.test(initialUrl.pathname);
     this.playbackPhaseTracker = new YouTubePlaybackPhaseTracker({
       video,
       player: container,
       expectedVideoId,
-      getCurrentVideoId: () => parseYouTubeVideoId(new URL(location.href)),
+      getCurrentVideoId: () => {
+        const url = new URL(location.href);
+        const id = parseYouTubeVideoId(url);
+        if (watchPage && (!/^\/watch\/?$/.test(url.pathname) || !matchesWatchPlayer(container, id))) return null;
+        return id;
+      },
     });
   }
 
@@ -51,7 +61,7 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
   }
 
   override getFingerprint(): string {
-    return normalizeVideoFingerprint(`youtube|${getYouTubeFingerprintKey(new URL(location.href))}`);
+    return this.fingerprint;
   }
 
   override getCurrentTime(): number {

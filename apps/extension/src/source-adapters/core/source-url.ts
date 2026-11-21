@@ -1,3 +1,5 @@
+import { hasPrimeBrowserHost, parsePrimePageUrl } from "../primevideo/url";
+import { youtubePageWatchSource } from "../youtube/url";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "@anidachi/protocol";
 import type { SourceProvider } from "./types";
 
@@ -24,12 +26,9 @@ function stableFingerprintHash(value: string): string {
 }
 
 export function canonicalWatchSourceUrl(value: string): string | null {
-  if (value.length > MAX_URL_CHARS) {
-    return null;
-  }
-
   try {
     const url = new URL(value, location.href);
+    if (value.length > MAX_URL_CHARS) return youtubePageWatchSource(url)?.sourceUrl ?? null;
     const params = new URLSearchParams(url.hash.replace(/^#/, ""));
     params.delete("anidachiRoom");
     url.hash = params.toString();
@@ -41,6 +40,7 @@ export function canonicalWatchSourceUrl(value: string): string | null {
 }
 
 export function sourceProviderFromUrl(value: string): SourceProvider | null {
+  if (hasPrimeBrowserHost(value)) return parsePrimePageUrl(value) ? "primevideo" : null;
   try {
     const hostname = new URL(value, location.href).hostname.toLowerCase();
     if (

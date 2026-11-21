@@ -1,3 +1,5 @@
+import { YOUTUBE_CATALOG_ORIGINS } from "./src/source-adapters/youtube/url";
+import { PRIME_VIDEO_DOMAIN_ROOTS } from "./src/source-adapters/primevideo/url";
 import { defineConfig } from "wxt";
 import {
   getExtensionManifestKey,
@@ -13,13 +15,16 @@ const LOCAL_HOST_PERMISSIONS = [
   "file:///*",
 ];
 
-const STORE_VIDEO_HOST_PERMISSIONS = [
+// WAR requires /* paths; host permissions are also origin-level in Chrome.
+// Route-scoped content-script matches are declared separately by each entrypoint.
+const STORE_VIDEO_ORIGINS = [
   "https://youtube.com/*",
   "https://*.youtube.com/*",
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  ...PRIME_VIDEO_DOMAIN_ROOTS.map((host) => `https://*.${host}/*`),
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -84,7 +89,7 @@ const hostPermissions =
   useBroadHostPermissions
     ? LOCAL_HOST_PERMISSIONS
     : unique([
-        ...STORE_VIDEO_HOST_PERMISSIONS,
+        ...STORE_VIDEO_ORIGINS,
         ...channelWebHostPermissions,
         apiHttpHostPermission,
         apiWsHostPermission,
@@ -121,6 +126,7 @@ export default defineConfig({
     minimum_chrome_version: "121",
     permissions: unique([
       "storage",
+      "offscreen",
       "alarms",
       "clipboardWrite",
       "identity",
@@ -138,7 +144,11 @@ export default defineConfig({
     web_accessible_resources: [
       {
         resources: ["Anidachi_logo.png"],
-        matches: useBroadHostPermissions ? ["*://*/*"] : STORE_VIDEO_HOST_PERMISSIONS,
+        matches: useBroadHostPermissions ? ["*://*/*"] : STORE_VIDEO_ORIGINS,
+      },
+      {
+        resources: ["prime-media-tile.html", "prime-media-permission.html"],
+        matches: [...YOUTUBE_CATALOG_ORIGINS.map(origin => origin + "/*"), "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", ...PRIME_VIDEO_DOMAIN_ROOTS.map(host => `https://*.${host}/*`)],
       },
     ],
     action: {
