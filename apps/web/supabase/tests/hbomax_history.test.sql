@@ -93,6 +93,68 @@ select is(get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'
 select is(jsonb_array_length(get_watch_history_editor_v1_prime_navigation_v1('e1111111-1111-4111-8111-111111111111',1,'hbomax','hbomax:series:01234567-1234-4321-9234-000070143836')->'episodes'),2,'navigation editor exposes the same observed episodes');
 select is(apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',(select jsonb_set(value,'{snapshot,seasons,0,episodes}','[]') from p_calls where name='commit'))->>'outcome','applied','partial duplicate remains idempotent');
 select is((select jsonb_array_length(snapshot#>'{seasons,0,episodes}') from watch_catalog_snapshots where provider='hbomax'),2,'a duplicate partial attempt cannot overwrite its first inventory');
+
+-- Each begin goes through the paid public RPC and creates a new immutable revision.
+create function pg_temp.refresh_hbo(reg text default null, loc text default 'en-US') returns jsonb language plpgsql as $$
+declare req jsonb := pg_temp.p_request(); ack jsonb;
+begin
+  req:=jsonb_set(req,'{context}',req->'context'||jsonb_build_object('region',reg,'requestedLocale',loc));
+  ack:=public.begin_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',req);
+  return req||jsonb_build_object('revision',ack->'revision');
+end $$;
+create function pg_temp.commit_hbo(req jsonb, ids integer[], unavailable integer default null, state text default 'partial', season integer default 2)
+returns text language plpgsql as $$
+declare snap jsonb:=pg_temp.p_snapshot(req->'context'); base jsonb:=snap#>'{seasons,0,episodes,0}'; rows jsonb;
+begin
+  select coalesce(jsonb_agg(base||jsonb_build_object('episodeKey','hbomax:episode:'||pg_temp.p_id(i),
+    'providerEpisodeIdentifier',pg_temp.p_id(i),'episodeNumber',i-70196258,'order',i-70196259,
+    'available',i is distinct from unavailable,'watchVariants',jsonb_build_array(base#>'{watchVariants,0}'||
+      jsonb_build_object('providerContentId',pg_temp.p_id(i),'sourceUrl','https://www.hbomax.com/video/watch/'||pg_temp.p_id(i))))),'[]'::jsonb)
+    into rows from unnest(ids) i;
+  snap:=jsonb_set(snap,'{seasons,0}',snap#>'{seasons,0}'||jsonb_build_object('episodes',rows,'seasonNumber',season,
+    'title','Season '||season,'order',season-1,'seasonKey','hbomax:season:'||(req->>'providerSeriesId')||':'||season,
+    'providerSeasonIdentifier',(req->>'providerSeriesId')||':'||season))||jsonb_build_object('completeness',state);
+  return public.apply_watch_catalog_v3('e1111111-1111-4111-8111-111111111111',req||jsonb_build_object('snapshot',snap))->>'outcome';
+end $$;
+create function pg_temp.hbo_editor() returns jsonb language sql as $$
+  select get_watch_history_editor_v1('e1111111-1111-4111-8111-111111111111',1,'hbomax','hbomax:series:01234567-1234-4321-9234-000070143836');
+$$;
+insert into p_calls values('subset',pg_temp.refresh_hbo());
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),2,'same-context pending refresh retains the published editor inventory');
+select is(pg_temp.commit_hbo((select value from p_calls where name='subset'),array[70196259]),'applied','a short native-season refresh is acknowledged');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),2,'a shorter partial cannot remove another previously observed episode');
+select is(pg_temp.hbo_editor()#>>'{episodes,0,currentTime}','300','an inventory refresh preserves the viewer resume position');
+select is(pg_temp.commit_hbo(pg_temp.refresh_hbo(),array[70196259,70196260,70196261]),'applied','a superset publishes additional episode IDs');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),3,'the expanded roster reaches the editor');
+select is(pg_temp.commit_hbo(pg_temp.refresh_hbo(),array[70196260],70196260),'applied','a subset can withdraw a specific prior episode');
+select is(pg_temp.hbo_editor()#>>'{episodes,1,available}','false','a withdrawn episode cannot retain its former availability');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),3,'a withdrawal updates only the observed episode');
+select is(pg_temp.commit_hbo(pg_temp.refresh_hbo(),array[70196261,70196262]),'applied','incomparable partial membership is handled');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),3,'incomparable partials are never unioned into a synthetic roster');
+select is(pg_temp.hbo_editor()#>>'{episodes,1,available}','false','an unobserved episode cannot regain its withdrawn availability');
+insert into p_calls values('region',pg_temp.refresh_hbo('CA'));
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),1,'new territory hides prior inventory immediately, retaining only personal history');
+select is(pg_temp.commit_hbo((select value from p_calls where name='region'),array[70196259,70196262]),'applied','new territory may publish its own smaller inventory');
+select is(pg_temp.hbo_editor()#>>'{episodes,1,episodeKey}','hbomax:episode:'||pg_temp.p_id(70196262),'new territory does not inherit another territory episode');
+select is(pg_temp.commit_hbo((select value from p_calls where name='subset'),array[70196259,70196260]),'superseded','delayed partial cannot restore a previous context');
+insert into p_calls values('locale',pg_temp.refresh_hbo('CA','fr-CA'));
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),1,'new locale hides prior partial labels during collection');
+-- A directly watched episode is durable even when an unrelated partial cannot
+-- prove that the other season's *unplayed* catalog belongs to this market.
+select is(pg_temp.commit_hbo(pg_temp.refresh_hbo(),array[70196259,70196260],null,'partial',1),'applied','restore only a confirmed season 1 in unknown territory');
+select is(pg_temp.commit_hbo(pg_temp.refresh_hbo(),array[70196270,70196271],null,'partial',2),'applied','a disjoint season 2 fallback cannot establish same market');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),2,'unplayed episodes from disjoint observations are not synthesized across unknown markets');
+select lives_ok($$select apply_personal_watch_progress_v1('e1111111-1111-4111-8111-111111111111',
+  pg_temp.p_input(pg_temp.p_event(false,pg_temp.p_id(70196270))||'{"episodeNumber":1,"currentTime":450,"progress":0.25}'))$$,
+  'newly watched season 2 episode records its own position despite an inconclusive catalog refresh');
+select is((select e->>'currentTime' from jsonb_array_elements(pg_temp.hbo_editor()->'episodes') e
+  where e->>'episodeKey'='hbomax:episode:'||pg_temp.p_id(70196270)),'450','editor combines saved season 1 with real season 2 personal progress');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),3,'personal season 2 joins exactly once without dropping season 1');
+update p_calls set value=pg_temp.refresh_hbo('CA','fr-CA') where name='locale';
+select is(pg_temp.commit_hbo((select value from p_calls where name='locale'),array[70196259],null,'complete'),'applied','authoritative complete replaces partial membership');
+select is(pg_temp.hbo_editor()->>'catalogComplete','true','a verified regional catalog retains complete semantics');
+select is(jsonb_array_length(pg_temp.hbo_editor()->'episodes'),2,'authoritative replacement removes old unplayed IDs and retains cross-season personal progress');
+select ok(not has_function_privilege('service_role','anidachi_history_private.hbomax_partial_catalog(jsonb,jsonb)','EXECUTE'),'private partial resolver stays behind the guarded public writer');
 select ok(not has_function_privilege('anon','public.get_watch_history_capacity_v5(uuid,bigint)','EXECUTE'),'anonymous capacity denied');
 select ok(has_function_privilege('service_role','public.get_watch_history_capacity_v5(uuid,bigint)','EXECUTE'),'server capacity role retained');
 select ok(not has_function_privilege('service_role','anidachi_history_private.apply_watch_progress_v3_canonical(uuid,jsonb,jsonb,timestamptz)','EXECUTE'),'private writer remains inaccessible to service role');

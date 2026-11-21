@@ -319,6 +319,7 @@ describe.sequential("extension release channel builds", () => {
     expectExact(manifest.host_permissions, localHostPermissions);
     expectExact(contentMatches(manifest), [
       ...localHostPermissions,
+      ...hboOrigins,
       "https://www.netflix.com/*",
       "https://*.primevideo.com/*",
       ...amazonVideoMatches,

@@ -10,7 +10,11 @@ Participants can browse independently on Home, Search, My Stuff, Series, Movies,
 
 A movie has a catalog UUID and a separate playback UUID. A series has one show UUID and individual playable episode UUIDs. History groups progress by the catalog identity and resumes the exact playable video. Capture requires confirmed content time. A trailer, loading screen or recognized ad cannot create progress.
 
-The adapter reads the episode links HBO Max renders in each selected season. Localized season and episode labels supply display text and corroborate the series and episode coordinates. Ambiguous labels cannot assign a watch to an unrelated series or season. Observations add to a partial catalog and preserve prior progress. On a fresh watch link the room descriptor or a previously verified history row can provide the catalog identity. An unidentified watch link can support a room without writing an unverified personal history entry.
+On a direct watch link or room invitation the adapter reads the current episode UUID and its series and season relationships from the catalog response HBO delivers to the player. These UUIDs connect the viewing position to the same history entry across both paths. The bridge exposes only title metadata. Loading a season list never creates watch progress for its episodes.
+
+After the history service requests a catalog refresh, the extension fills missing seasons from HBO's public show and season pages in the background. It checks the series UUID, season UUIDs, per-season counts and canonical episode links against the player's catalog. These requests omit credentials and leave the user's season selection in place. If a page is unavailable or the catalogs disagree, history can use the verified episodes. A catalog with an unknown territory is marked partial even if every expected episode was found.
+
+Public episode links can open an episode from history. The signed-in player's own episode list confirms availability for manual progress edits. Opening a different episode in the player records its actual playback independently of catalog refresh.
 
 The history API uses provider and capacity version 5 for the HBO Max cohort. Older readers retain the providers negotiated by their existing version. Public extension manifests have no HBO Max site access.
 

@@ -87,9 +87,11 @@ const amazonVideoMatches = [
   `https://*.${host}/*/dp/*`,
 ]);
 
+const hboOrigins = ["www.hbomax.com", "play.hbomax.com", "hbomax.com", "play.max.com", "www.max.com", "max.com"]
+  .map(host => `https://${host}/*`);
 const stagingVideoOrigins = channel === "staging" ? [
   "https://www.disneyplus.com/*",
-  ...["www.hbomax.com", "play.hbomax.com", "hbomax.com", "play.max.com", "www.max.com", "max.com"].map(host => `https://${host}/*`),
+  ...hboOrigins,
 ] : [];
 const videoContentMatches = [
   ...stagingVideoOrigins,
@@ -199,6 +201,14 @@ if (primeMainScripts.length !== 1 || primeMainScripts[0].all_frames === true ||
 }
 
 assertExactAllowlist("Prime MAIN matches", primeMainScripts[0].matches, expectedPrimeMatches);
+const hboMain = (manifest.content_scripts ?? []).filter(script =>
+  script.world === "MAIN" && script.matches?.some(match => hboOrigins.includes(match)));
+if (channel === "staging") {
+  if (hboMain.length !== 1 || hboMain[0].run_at !== "document_start" || hboMain[0].all_frames === true ||
+      !hboMain[0].js?.includes("content-scripts/hbomax.js"))
+    throw new Error("Staging HBO Max requires one top-frame catalog bridge at document_start");
+  assertExactAllowlist("HBO MAIN matches", hboMain[0].matches, hboOrigins);
+}
 const overlayScripts = (manifest.content_scripts ?? []).filter((script) =>
   script.world !== "MAIN" && (script.matches ?? []).includes("https://*.primevideo.com/*"));
 if (overlayScripts.length !== 1) throw new Error("Expected one Prime overlay content script");
