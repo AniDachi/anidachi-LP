@@ -1,9 +1,11 @@
+import { HBO_MAX_BROWSER_HOSTS } from "@anidachi/protocol";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { expect, it, vi } from "vitest";
 import { getExtensionManifestKey } from "../src/extension-channel-identity";
+const hboOrigins = HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`);
 const root = resolve(process.cwd(), "../..");
 const amazonHosts = [
 	"*.amazon.com",
@@ -30,7 +32,7 @@ const primeRoutes = [
 	]),
 ];
 const origins = [
-	"https://www.disneyplus.com/*", "https://www.hbomax.com/*",
+	"https://www.disneyplus.com/*", ...hboOrigins,
 	"https://youtube.com/*",
 	"https://*.youtube.com/*",
 	"https://youtu.be/*",
@@ -64,7 +66,7 @@ function manifest() {
 		background: { service_worker: "background.js" },
 		web_accessible_resources: [
 			{ resources: ["Anidachi_logo.png"], matches: [...origins] },
-			{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: ["https://www.disneyplus.com/*", "https://www.hbomax.com/*", "https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", "https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
+			{ resources: ["prime-media-tile.html", "prime-media-permission.html"], matches: ["https://www.disneyplus.com/*", ...hboOrigins, "https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", "https://www.netflix.com/*", "https://*.primevideo.com/*", ...amazonHosts.map(host => `https://${host}/*`)] },
 		],
 		content_scripts: [
 			{ matches: contentMatches, js: ["content.js"] },

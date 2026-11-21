@@ -6,7 +6,7 @@ import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-h
 import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
 import type { LivePrimeRoomSession } from "./prime-room-contract";
-import { catalogRoomProvider, catalogWatchDestination, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
+import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 import { followPrimeRoom } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import { observeDisneyPlusRoomSource, clearDisneyPlusRoomSource } from "./source-adapters/disneyplus/metadata";
@@ -6952,7 +6952,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
 				{catalogReturnTarget && (
 					<button type="button" className="catalog-return-to-video"
-						onClick={() => window.location.assign(catalogWatchDestination(catalogReturnTarget, location.href))}>
+						onClick={() => window.location.assign(catalogWatchDestination(catalogReturnTarget, location.href, renderedHboMaxWatchUrl(document, catalogReturnTarget)))}>
 						<Play size={12} fill="currentColor" aria-hidden="true" />
 						<span className="catalog-return-label">Back to video</span>
 					</button>

@@ -1,5 +1,6 @@
+import { catalogEpisode, episodeCoordinates, seasonOrdinal } from "./episode-labels";
 import type { ExtensionAuthTokens } from "../../auth-tokens";
-import { hboMaxArtworkUrl, hboMaxDetail, hboMaxPlaybackId, hboMaxSourceUrl, hboMaxFingerprint, WatchSourceDescriptorSchema, type WatchSourceDescriptor, type HboMaxHistoryIdentity } from "@anidachi/protocol";
+import { isHboMaxOrigin, hboMaxArtworkUrl, hboMaxDetail, hboMaxPlaybackId, hboMaxSourceUrl, hboMaxFingerprint, WatchSourceDescriptorSchema, type WatchSourceDescriptor, type HboMaxHistoryIdentity } from "@anidachi/protocol";
 
 type Episode = { playbackId: string; number: number; title: string };
 type Season = { number: number; title: string; episodes: Map<string, Episode> };
@@ -32,58 +33,12 @@ export function observeHboMaxRoomSource(doc: Document, descriptor: WatchSourceDe
 export function clearHboMaxRoomSource(doc: Document) { roomSource.delete(doc); }
 
 function clean(value: string | null | undefined) {
-	const text = value?.replace(/[\u2066-\u2069]/gu, "").replace(/\s+/gu, " ").trim();
+	const text = value?.replace(/\p{Bidi_Control}/gu, "").replace(/\s+/gu, " ").trim();
 	return text && text.length <= 300 ? text : null;
-}
-// Normalize only ordinal labels. The UI keeps the original title and season text.
-function numericText(value: string) {
-	return value.normalize("NFKC")
-		.replace(/[٠-٩]/gu, digit => String(digit.charCodeAt(0) - 0x660))
-		.replace(/[۰-۹]/gu, digit => String(digit.charCodeAt(0) - 0x6f0));
 }
 function sameTitle(a: string | null | undefined, b: string | null | undefined) {
 	const comparable = (value?: string | null) => value?.normalize("NFC").replace(/[‘’]/gu, "'");
 	return comparable(a) === comparable(b);
-}
-
-function playerOrdinals(value: string | null) {
-	if (!value) return null;
-	const label = numericText(value);
-	// These two coordinates belong to the dedicated player season/episode node.
-	// Reject reversed markers, unrelated numbers and ambiguous presentations.
-	const match = /^(?:s|season|saison|staffel|stagione|sezon|t|temporada|シーズン)\.?\s*([0-9]+)\s*[,·:–—-]?\s*(?:e|ep|episode|épisode|episodio|episódio|folge|odcinek|第)\.?\s*([0-9]+)(?:話)?\s*:?$/iu.exec(label)
-		?? /^第?([0-9]+)季\s*第([0-9]+)[集話]\s*:?$/u.exec(label);
-	const season = ordinal(match?.[1]), episode = ordinal(match?.[2]);
-	return season && episode ? { season, episode } : null;
-}
-function cardCoordinates(label: string | null) {
-	// HBO isolates the coordinates inside a translated action such as "Watch".
-	// Only accept a complete season and episode pair before the title separator.
-	const prefix = label?.split(/[:：]/u, 1)[0];
-	if (!prefix) return null;
-	for (const part of prefix.split(/[\u2066-\u2068]/u).reverse()) {
-		const pair = playerOrdinals(clean(part));
-		if (pair) return pair;
-	}
-	return playerOrdinals(clean(prefix));
-}
-function seasonOrdinal(label: string) {
-	const value = numericText(label);
-	const match = /^(?:season|saison|temporada|staffel|stagione|sezon|série|シーズン)\s*([0-9]+)$/iu.exec(value)
-		?? /^第?([0-9]+)(?:季|シーズン)$/u.exec(value);
-	return ordinal(match?.[1]);
-}
-function cardEpisode(value: string | null) {
-	if (!value) return null;
-	// Normalize the numeric prefix separately to preserve the provider's title.
-	const match = /^([\p{Nd}]+)[.．、]\s*(.+)$/u.exec(value)
-		?? /^第([\p{Nd}]+)[話集]\s*[：:、.．-]?\s*(.+)$/u.exec(value);
-	const number = match && ordinal(numericText(match[1]));
-	return number && match ? { number, title: match[2] } : null;
-}
-function ordinal(value: string | undefined) {
-	const n = Number(value);
-	return Number.isInteger(n) && n > 0 && n <= 1000 ? n : null;
 }
 
 export function getHboMaxDetails(doc: Document) { return detailsByDocument.get(doc); }
@@ -115,7 +70,7 @@ function captureDetails(doc: Document) {
 	const previous = priorDetail.get(doc);
 	if (previous && previous.id !== entity.id && previous.heading === heading && previous.title === title) return;
 	let details = detailsByDocument.get(doc);
-	if (details?.id !== entity.id || details.kind !== entity.kind || details.title !== title) {
+	if (details?.id !== entity.id || details.kind !== entity.kind || details.title !== title || details.locale !== doc.documentElement.lang) {
 		const excluded = new Set<string>();
 		if (details && details.id !== entity.id) {
 			for (const season of details.seasons.values()) for (const id of season.episodes.keys()) excluded.add(id);
@@ -140,13 +95,8 @@ function captureDetails(doc: Document) {
 				(link.dataset.sonicId && link.dataset.sonicId !== id) || (link.dataset.sonicType && link.dataset.sonicType !== "video")) continue;
 			if ([...details.seasons.values()].some(other => other.number !== seasonNumber && other.episodes.has(id))) continue;
 			const label = clean(link.querySelector('[class*="StyledPrimaryTitle"]')?.textContent ?? link.querySelector("p")?.textContent);
-			const episode = cardEpisode(label);
+			const episode = catalogEpisode(label, link.getAttribute("aria-label"), seasonTitle, seasonNumber, Boolean(seasonMenu));
 			if (!episode) continue;
-			const accessible = link.getAttribute("aria-label");
-			const coordinates = cardCoordinates(accessible);
-			// On multi-season pages the menu label can update before the old grid is replaced.
-			if (seasonMenu && !coordinates) continue;
-			if (coordinates && (coordinates.season !== seasonNumber || coordinates.episode !== episode.number)) continue;
 			season.episodes.set(id, { playbackId: id, ...episode });
 		}
 		if (season.episodes.size) details.seasons.set(seasonNumber, season);
@@ -156,7 +106,7 @@ function captureDetails(doc: Document) {
 export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promise<HboMaxPlaybackMetadata | null>) | undefined =
 	typeof chrome !== "undefined" && chrome.runtime?.sendMessage ?
 		() => chrome.runtime.sendMessage({ type: "ANIDACHI_HBOMAX_SAVED_METADATA" }) : undefined): () => void {
-	if (doc.location.origin !== "https://www.hbomax.com") return () => {};
+	if (!isHboMaxOrigin(doc.location.origin)) return () => {};
 	let requested: string | null = null;
 	let generation = 0;
 	const forget = () => {
@@ -222,7 +172,7 @@ export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promi
 		observer.disconnect();
 		if (hboMaxDetail(doc.location.href)) {
 			observer.observe(doc, { subtree: true, childList: true, characterData: true, attributes: true,
-				attributeFilter: ["href", "aria-hidden", "hidden", "src", "srcset", "aria-selected", "aria-label"] });
+				attributeFilter: ["href", "aria-hidden", "hidden", "src", "srcset", "aria-selected", "aria-label", "lang"] });
 		} else if (!navigation) {
 			// Chromium provides navigation events. Other environments need only detect a route change.
 			observer.observe(doc, { subtree: true, childList: true });
@@ -295,7 +245,8 @@ export function readHboMaxPlaybackMetadata(doc: Document, playbackId: string): H
 				episodeTitle, seasonNumber: source.seasonNumber ?? null, episodeNumber: source.episodeNumber ?? null,
 				seasonTitle: null, artworkUrl: source.posterUrl ? hboMaxArtworkUrl(source.posterUrl) : null };
 	}
-	const coordinates = playerOrdinals(ordinalLabel);
+	const season = details?.kind === "series" ? [...details.seasons.values()].find(item => item.episodes.has(playbackId)) : undefined;
+	const coordinates = episodeCoordinates(ordinalLabel, season?.title ?? fallback?.seasonTitle);
 	let verified: HboMaxPlaybackMetadata | null = null;
 	if (fallback?.identity.kind === "movie" && fallback.identity.providerPlaybackId === playbackId && !ordinalLabel && !subtitle) {
 		verified = { ...fallback, title, displayTitle: title, episodeTitle: title };
@@ -316,9 +267,8 @@ export function readHboMaxPlaybackMetadata(doc: Document, playbackId: string): H
 		return { title, displayTitle: title, artworkUrl: details.artworkUrl, episodeTitle: title, episodeNumber: null, seasonNumber: null,
 			seasonTitle: null, identity: { kind: "movie", providerMovieId: details.id, providerPlaybackId: playbackId } };
 	}
-	const season = coordinates && details.seasons.get(coordinates.season);
 	const episode = season?.episodes.get(playbackId);
-	if (!season || !episode || episode.number !== coordinates?.episode || !sameTitle(episode.title, subtitle)) return verified;
+	if (!season || !episode || season.number !== coordinates?.season || episode.number !== coordinates.episode || !sameTitle(episode.title, subtitle)) return verified;
 	return { title, displayTitle: title + " — " + episode.title, artworkUrl: details.artworkUrl, episodeTitle: episode.title,
 		episodeNumber: episode.number, seasonNumber: season.number, seasonTitle: season.title,
 		identity: { kind: "episode", providerSeriesId: details.id, providerEpisodeIdentifier: playbackId } };

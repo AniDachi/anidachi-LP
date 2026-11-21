@@ -54,14 +54,17 @@ export async function readSavedHboMaxMetadata(owner: string, playbackId: string)
 }
 
 export async function handleHboMaxSavedMetadata(sender: chrome.runtime.MessageSender): Promise<HboMaxPlaybackMetadata | null> {
-	const id = hboMaxPlaybackId(sender.url ?? "");
-	if (!id || sender.id !== chrome.runtime.id || sender.frameId !== 0 || sender.tab?.id === undefined ||
-		(sender.origin !== undefined && sender.origin !== "https://www.hbomax.com")) return null;
+	if (!sender.url) return null;
+	const id = hboMaxPlaybackId(sender.url);
+	if (!id || sender.id !== chrome.runtime.id || sender.frameId !== 0 || sender.tab?.id === undefined) return null;
+	const origin = new URL(sender.url).origin;
+	if ((sender.origin !== undefined && sender.origin !== origin) || (sender.tab.url && !sender.tab.url.startsWith(origin + "/"))) return null;
 	const session = await getStoredAuthTokens();
 	if (!session?.authSessionId || !session.user.id) return null;
 	const metadata = await readSavedHboMaxMetadata(session.user.id, id);
 	if (!metadata) return null;
+	const tabUrl = (await chrome.tabs.get(sender.tab.id)).url;
+	if (!tabUrl?.startsWith(origin + "/") || hboMaxPlaybackId(tabUrl) !== id) return null;
 	const current = await getStoredAuthTokens();
-	return current?.user.id === session.user.id && current.authSessionId === session.authSessionId &&
-		hboMaxPlaybackId((await chrome.tabs.get(sender.tab.id)).url ?? "") === id ? metadata : null;
+	return current?.user.id === session.user.id && current.authSessionId === session.authSessionId ? metadata : null;
 }

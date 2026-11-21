@@ -1,3 +1,6 @@
+import { detectSourceAdapter } from "../../src/source-adapters/registry";
+import { sourceProviderFromUrl } from "../../src/source-adapters/core/source-url";
+import { isOverlayAllowedOnPage } from "../../src/overlay-mount";
 import * as metadata from "../../src/source-adapters/hbomax/metadata";
 import { afterEach, expect, it, vi } from "vitest";
 import { detectHboMaxAdapter, hbomaxDefinition } from "../../src/source-adapters/hbomax/definition";
@@ -140,3 +143,14 @@ it("uses the visible footer when HBO mounts desktop and compact controls togethe
   vi.spyOn(activeFooter, "getBoundingClientRect").mockReturnValue(new DOMRect(20, 600, 1240, 120));
   expect(adapter.getOverlayGeometry().safeInsets.bottomPx).toBe(120);
 });
+
+it.each(["https://www.hbomax.com:8443", "https://play.max.com:8443", "https://help.hbomax.com"])(
+  "keeps unsupported HBO surfaces out of the generic adapter on %s", origin => {
+    fixture();
+    const href = origin + "/video/watch/" + id;
+    go(href);
+    expect(isOverlayAllowedOnPage(href)).toBe(false);
+    expect(sourceProviderFromUrl(href)).toBeNull();
+    expect(detectSourceAdapter(document)).toBeNull();
+  },
+);

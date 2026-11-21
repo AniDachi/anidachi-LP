@@ -1,4 +1,4 @@
-import { hboMaxPlaybackId } from "@anidachi/protocol";
+import { hboMaxPlaybackId, hasHboMaxHostname } from "@anidachi/protocol";
 import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import { hasPrimeBrowserHost, parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
@@ -28,7 +28,7 @@ export function isOverlayAllowedOnPage(pageUrl: string): boolean {
     const url = new URL(pageUrl);
     const hostname = url.hostname.toLowerCase();
     if (hostname === "www.netflix.com") return netflixWatchId(pageUrl) !== null;
-    if (hostname === "www.hbomax.com") return hboMaxPlaybackId(pageUrl) !== null;
+    if (hasHboMaxHostname(pageUrl)) return hboMaxPlaybackId(pageUrl) !== null;
     if (hostname === "www.disneyplus.com") return disneyPlusWatchId(pageUrl) !== null;
     if (hostname === "crunchyroll.com" || hostname === "www.crunchyroll.com")
       return canonicalizeRoomSourceUrl(pageUrl, "crunchyroll").ok;

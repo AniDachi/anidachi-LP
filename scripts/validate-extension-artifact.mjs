@@ -87,7 +87,10 @@ const amazonVideoMatches = [
   `https://*.${host}/*/dp/*`,
 ]);
 
-const stagingVideoOrigins = channel === "staging" ? ["https://www.disneyplus.com/*", "https://www.hbomax.com/*"] : [];
+const stagingVideoOrigins = channel === "staging" ? [
+  "https://www.disneyplus.com/*",
+  ...["www.hbomax.com", "play.hbomax.com", "hbomax.com", "play.max.com", "www.max.com", "max.com"].map(host => `https://${host}/*`),
+] : [];
 const videoContentMatches = [
   ...stagingVideoOrigins,
   "https://youtube.com/*",

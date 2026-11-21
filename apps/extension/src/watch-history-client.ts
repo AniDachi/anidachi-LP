@@ -4,6 +4,7 @@ import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, p
 import {
   WatchHistoryCapacityCompatibleSchema,
   canonicalizeRoomSourceUrl,
+  isHboMaxOrigin,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -2098,7 +2099,7 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (url.protocol !== "https:") return false;
   if (!["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command)) return false;
   if (hasPrimeBrowserHost(sender.url)) return isPrimePlayerPageSender(sender);
-  if (url.hostname === "www.disneyplus.com" || url.hostname === "www.hbomax.com")
+  if (url.hostname === "www.disneyplus.com" || isHboMaxOrigin(url.origin))
     return url.origin === "https://" + url.hostname && !url.username && !url.password &&
       (sender.origin === undefined || sender.origin === url.origin) &&
       (sender.tab.url === undefined || sender.tab.url.startsWith(url.origin + "/"));
