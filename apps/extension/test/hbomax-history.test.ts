@@ -50,11 +50,11 @@ describe("HBO Max public catalog and personal history", () => {
 		player(first, "Other", "It's Done");
 		expect(readHboMaxPlaybackMetadata(document, first)).toBeNull();
 	});
-	it.each([["primary", true], ["trailer", false]])("binds movie detail on %s click", (control, recorded) => {
+	it.each([["primary", true], ["restart", true], ["trailer", false]])("binds movie detail on %s click", (control, recorded) => {
 		route("/movie/" + movie);
-		document.body.innerHTML = `<h1>Dune</h1><div data-testid="infoBlockFullContent">
-			<div><button id="primary" data-testid="play_button"></button><button data-testid="myList_button"></button></div>
-			<div><button id="trailer" data-testid="play_button"></button></div></div>`;
+		document.body.innerHTML = `<nav><h1 role="presentation"><img alt=""></h1></nav><main aria-label="Dune"><div role="heading" aria-level="1" aria-label="Dune"><img alt=""></div><div data-testid="infoBlockFullContent">
+			<div><button id="primary" data-testid="play_button">Resume</button><button id="restart" data-testid="restart_button">Restart</button></div>
+			<div><button id="trailer" data-testid="play_button">Trailer</button><button data-testid="myList_button"></button></div></div></main>`;
 		stop = startHboMaxCatalogCapture(document);
 		document.querySelector<HTMLButtonElement>("#" + control)!.click();
 		player(film, "Dune");
@@ -204,5 +204,24 @@ describe("HBO Max public catalog and personal history", () => {
 			'<div data-testid="content-metadata">Quick Catch-Up<span data-testid="player-ux-asset-title">War</span></div>');
 		expect(readHboMaxPlaybackMetadata(document, first)?.episodeTitle).toBe("It's Done");
 		expect(readHboMaxCatalog(document, series, first)?.seasons[0]?.episodes[0]?.providerEpisodeIdentifier).toBe(first);
+	});
+	it.each([
+		["War", "It's Done", false], ["Game of Thrones", "Winter Is Coming", true],
+	] as const)("reads %s from its labelled main heading beside the navigation logo", (title, episodeTitle, hasMenu) => {
+		route("/show/" + series);
+		document.documentElement.lang = "en";
+		const artwork = "https://images.cdn.prd.api.discomax.com/YJfqK/AZSMHD71Ag5vb-HrQ.jpeg";
+		document.body.innerHTML = `<nav><h1 role="presentation"><img alt=""></h1></nav><main aria-label="${title}">
+			<div role="heading" aria-level="1" aria-label="${title}"><div aria-hidden="true"><img alt=""></div></div>
+			<picture><source srcset="${artwork}?w=450&f=jpeg 450w"><img alt="${title}"></picture>
+			<div data-testid="infoBlockFullContent"><button data-testid="play_button"></button><button data-testid="myList_button"></button></div>
+			<div role="tabpanel">${hasMenu ? '<button aria-expanded="false" aria-haspopup="true"><span>Season 1</span></button>' : '<h2>Season 1</h2>'}
+			<button data-tile-action-menu="true" data-testid="dropdownToggleButton" aria-haspopup="true" aria-expanded="false"></button>
+			<a data-sonic-id="${first}" data-sonic-type="video" data-testid="${first}_tile" href="/video/watch/${first}"
+				aria-label="⁦⁨Watch ⁨Season 1, Episode 1: ⁨${episodeTitle}⁩⁩⁩. ⁨1 of 10⁩."><p><span class="StyledPrimaryTitle">1. ⁨${episodeTitle}⁩</span></p></a></div></main>`;
+		stop = startHboMaxCatalogCapture(document);
+		player(first, title, episodeTitle);
+		expect(readHboMaxPlaybackMetadata(document, first)).toMatchObject({ title, episodeTitle, artworkUrl: artwork });
+		expect(readHboMaxCatalog(document, series, first)?.seasons[0]?.episodes[0]?.title).toBe(episodeTitle);
 	});
 });
