@@ -1,4 +1,5 @@
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
+import { DISNEY_REDIRECT_TTL_MS, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
 import type { LivePrimeRoomSession } from "../src/prime-room-contract";
 import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogReturn, supportsCatalogRoom } from "../src/catalog-room-routes";
@@ -176,6 +177,10 @@ function startContentLifecycleSession(
   restoredFromCache = false,
 ): ContentLifecycleRuntime & { dispose(leavingDocument?: boolean): void } {
   const primeLaunch = createPrimeLaunchCapture(location.href);
+  const entryHref = location.href;
+  const disneyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLaunchRedirect(entryHref, document.referrer) : null;
+  const disneyRedirectDeadline = disneyRedirect ? Date.now() + DISNEY_REDIRECT_TTL_MS : 0;
+  let disneyFragment: string | null = null;
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
@@ -208,6 +213,10 @@ function startContentLifecycleSession(
 
   let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;
   const mountWithLaunch = (adapter: VideoAdapter) => {
+    if (disneyFragment && adapter.provider === "disneyplus") {
+      if (Date.now() < disneyRedirectDeadline) restoreDisneyLaunchFragment(entryHref, disneyFragment);
+      disneyFragment = null;
+    }
     const href = location.href;
     retryPrimeRecovery = null;
     const mountWaiting = () => {
@@ -419,8 +428,9 @@ function startContentLifecycleSession(
   if (window.top === window && catalogRoomProvider(location.href) &&
       (overrides.lookupPrimeRoom || (typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"))) {
     checkingLiveRoom = true;
-    void dependencies.lookupPrimeRoom().catch(() => null).then(record => {
+    void Promise.all([dependencies.lookupPrimeRoom().catch(() => null), disneyRedirect]).then(([record, fragment]) => {
       if (disposed) return;
+      disneyFragment = fragment;
       checkingLiveRoom = false;
       if (record && catalogRoomProvider(location.href)) {
         startupRoom = record;

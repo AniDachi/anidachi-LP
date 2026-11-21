@@ -10,6 +10,7 @@ import type { WatchHistoryLocalEvent } from "../src/watch-history-outbox";
 import type { WatchHistoryMessage } from "../src/watch-history-client";
 import { handleDisneyPlusCatalogHandoff, forgetDisneyPlusCatalogTab, isDisneyPlusProfileBoundary } from "../src/source-adapters/disneyplus/catalog-handoff";
 import { disneyPlusMetadataFromHistory } from "../src/source-adapters/disneyplus/history-metadata";
+import { disneyLaunchFragment, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
 import { getStoredAuthTokens, type ExtensionAuthTokens } from "../src/auth-tokens";
 import { historyOwner, paidHistoryLease } from "./watch-history-personal-fixtures";
 
@@ -186,6 +187,46 @@ describe("Disney+ history from rendered catalog and playable content", () => {
 });
 
 describe("Disney+ tab-scoped metadata across documents", () => {
+	it("carries an invitation once across the neutral link's locale redirect, scoped to the title, tab and login", async () => {
+		const store: Record<string, unknown> = {};
+		let tabId = 10;
+		const neutral = `${origin}/play/${first}`;
+		const localized = `${origin}/pt-br/play/${first}`;
+		const message = vi.fn(async (input: Parameters<typeof handleDisneyPlusCatalogHandoff>[0]) =>
+			handleDisneyPlusCatalogHandoff(input, { id: "extension", frameId: 0, url: location.href, origin, tab: { id: tabId } } as chrome.runtime.MessageSender));
+		vi.stubGlobal("chrome", { runtime: { id: "extension", sendMessage: message }, storage: { session: {
+			get: async () => store, set: async (update: Record<string, unknown>) => Object.assign(store, update),
+			remove: async (key: string) => { delete store[key]; },
+		} } });
+		const auth = (session: string) => ({ user: { id: historyOwner }, authSessionId: session }) as ExtensionAuthTokens;
+		vi.mocked(getStoredAuthTokens).mockResolvedValue(auth("first"));
+		const enter = async () => {
+			route(`/play/${first}#anidachiRoom=room-123`);
+			await prepareDisneyLaunchRedirect(location.href, "");
+			route(`/pt-br/play/${first}`);
+		};
+		await enter();
+		expect(prepareDisneyLaunchRedirect(localized, "")).toBeNull();
+		expect(prepareDisneyLaunchRedirect(localized, neutral.replace(first, second))).toBeNull();
+		tabId++;
+		expect(await prepareDisneyLaunchRedirect(localized, neutral)).toBeNull();
+		tabId--;
+		const fragment = await prepareDisneyLaunchRedirect(localized, neutral);
+		expect(fragment).toBe("anidachiRoom=room-123");
+		expect(await prepareDisneyLaunchRedirect(localized, neutral)).toBeNull();
+		restoreDisneyLaunchFragment(localized, fragment);
+		expect(location.hash).toBe("#anidachiRoom=room-123");
+		route(`/pt-br/play/${second}`);
+		restoreDisneyLaunchFragment(localized, fragment);
+		expect(location.hash).toBe("");
+		await enter();
+		vi.mocked(getStoredAuthTokens).mockResolvedValue(auth("changed"));
+		expect(await prepareDisneyLaunchRedirect(localized, neutral)).toBeNull();
+		await enter();
+		for (const value of Object.values(store)) (value as { expires: number }).expires = 0;
+		expect(await prepareDisneyLaunchRedirect(localized, neutral)).toBeNull();
+		expect(disneyLaunchFragment(neutral + "#anidachiRoom=first&anidachiRoom=second")).toBeNull();
+	});
 	it("recovers a roster only for the same tab, content, AniDachi login and lifetime", async () => {
 		const store: Record<string, unknown> = {};
 		const origin = "https://www.disneyplus.com";
