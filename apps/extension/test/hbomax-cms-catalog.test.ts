@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	buildHboCmsCatalog, HboCmsEpisodeSchema, HboCmsPlaybackSchema, HboCmsShowSchema,
-	parseHboCmsPlayback, parseHboCmsSeason, parseHboCmsShow,
+	parseHboCmsPlayback, parseHboCmsSeason, parseHboCmsShow, parseHboNativePage,
 } from "../src/source-adapters/hbomax/cms-catalog";
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -41,6 +41,28 @@ const watchPage = { data: route("/video/watch/" + first), included: [video(first
 const context = { region: "VN", requestedLocale: "vi", subtitleLocales: [], audioLocale: null, observedAt: "2026-11-21T00:00:00.000Z" };
 
 describe("HBO Max catalog resources", () => {
+	it("selects only the linked title's portrait poster for a series or movie, including direct playback", () => {
+		const url = "https://images.cdn.prd.api.discomax.com/group/poster.jpeg";
+		const image = (id: string, kind: string, width: number, src = url) => ({
+			...ref("image", id), attributes: { kind, width, height: 1200, src },
+		});
+		const images = [image("banner", "default", 2200), image("foreign", "poster-with-logo", 800, "https://example.com/x.jpeg"),
+			image("wide", "poster-with-logo", 1800), image("cover", "poster-with-logo", 800, url + "?w=800")];
+		const linked = { ...show, relationships: { ...show.relationships, images: { data: images.map(i => ref("image", i.id)) } } };
+		const poster = { titleId: series, url };
+		const parse = (page: typeof watchPage | typeof showPage, extras: unknown[]) =>
+			parseHboNativePage({ ...page, included: [...page.included.filter(row => row !== show), ...extras] },
+				"https://www.hbomax.com" + page.data.attributes.url);
+		expect(parse(watchPage, [linked, ...images])?.poster).toEqual(poster);
+		expect(parse(showPage, [linked, ...images])?.poster).toEqual(poster);
+		expect(parse(watchPage, [linked, ...images, images[3]])?.poster).toBeNull();
+		expect(parse(watchPage, [show, ...images])?.poster).toBeNull();
+		const film = { ...ref("video", first), attributes: { videoType: "MOVIE" }, relationships: { show: relation("show", series) } };
+		for (const path of ["/movie/" + series, "/video/watch/" + first]) {
+			const result = parseHboNativePage({ data: route(path), included: [film, linked, ...images] }, "https://www.hbomax.com" + path);
+			expect(result).toMatchObject({ playbackId: first, poster, metadata: null });
+		}
+	});
 	it("binds direct playback to the exact watch route and linked show, rejecting ambiguous resources and trailers", () => {
 		const metadata = parseHboCmsPlayback(watchPage, first);
 		expect(metadata).toMatchObject({ identity: { kind: "episode", providerSeriesId: series, providerEpisodeIdentifier: first },

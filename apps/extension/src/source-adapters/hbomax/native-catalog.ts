@@ -14,7 +14,7 @@ export function hboCatalogRoute(raw: string): string | null {
 		!/(?:^|\.)prd\.api\.(?:hbomax|max|discomax)\.com$/u.test(url.hostname) ||
 		!url.pathname.startsWith("/cms/routes/")) return null;
 	const route = HBO_MAX_ORIGIN + url.pathname.slice("/cms/routes".length);
-	return hboMaxPlaybackId(route) || hboMaxDetail(route)?.kind === "series" ? route : null;
+	return hboMaxPlaybackId(route) || hboMaxDetail(route) ? route : null;
 }
 
 async function readCatalogBody(response: Response, signal: AbortSignal): Promise<unknown> {
@@ -72,9 +72,13 @@ export function startHboNativeCatalog(win: Window): () => void {
 					seasonTitle: show.seasons.find(season => season.number === item.seasonNumber)?.title ?? null, artworkUrl: null,
 				};
 			}
-			if (!current) continue;
+			const titleId = current?.identity.providerSeriesId ?? (playbackId === id ? page.native.poster?.titleId : null);
+			if (!current && !titleId) continue;
+			const poster = page.native.poster ?? pages.find(other => other.native.poster?.titleId === titleId &&
+				other.locale && page.locale && resolveHboLocale(other.locale, page.locale))?.native.poster;
 			doc.dispatchEvent(new CustomEvent("anidachi:hbo-cms", {
-				detail: JSON.stringify({ playbackId: id, metadata: current, show, episodes, locale: page.locale }),
+				detail: JSON.stringify({ playbackId: id, metadata: current, show, episodes, locale: page.locale,
+					...(poster && { poster }) }),
 			}));
 			return;
 		}
