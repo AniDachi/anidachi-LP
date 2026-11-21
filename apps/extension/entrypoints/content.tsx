@@ -1,3 +1,6 @@
+import { HBO_MAX_ORIGIN } from "@anidachi/protocol";
+import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
+import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
 import { DISNEY_REDIRECT_TTL_MS, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
@@ -116,7 +119,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  ...(import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ? ["https://www.disneyplus.com/*"] : []),
+  ...(import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ? ["https://www.disneyplus.com/*", "https://www.hbomax.com/*"] : []),
   ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
@@ -136,7 +139,7 @@ export default defineContentScript({
   allFrames: true,
   runAt: "document_start",
   main(context) {
-    if (isDisneyPlusOrigin(location.href) && window.top !== window) return;
+    if ((isDisneyPlusOrigin(location.href) || location.origin === HBO_MAX_ORIGIN) && window.top !== window) return;
     const runtime = startContentLifecycle();
     context.onInvalidated(runtime.dispose);
   },
@@ -207,6 +210,8 @@ function startContentLifecycleSession(
   let leavingDocument = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
+  const stopHboCatalog = window.top === window && location.origin === HBO_MAX_ORIGIN
+    ? startHboMaxCatalogCapture(document) : undefined;
   const stopDisneyCatalog = window.top === window && isDisneyPlusOrigin(location.href)
     ? startDisneyPlusCatalogCapture(document) : undefined;
   dependencies.ensureStyles();
@@ -357,7 +362,7 @@ function startContentLifecycleSession(
         detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
-      const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter, disneyplus: DisneyPlusVideoAdapter }[catalogRoute ?? "primevideo"];
+      const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter, disneyplus: DisneyPlusVideoAdapter, hbomax: HboMaxVideoAdapter }[catalogRoute ?? "primevideo"];
       catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
       return manager.reconcile({ status: "ready", adapter: catalogAdapter });
     }
@@ -506,6 +511,7 @@ function startContentLifecycleSession(
     stopKeyboardGuard();
     stopProviderStudy?.();
     stopDisneyCatalog?.();
+    stopHboCatalog?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
     // playback while pagehide still reports a visible document.
     mounted?.suspend();
@@ -557,6 +563,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
     }
     if (hostname === "www.netflix.com") return "netflix";
     if (isDisneyPlusOrigin(pageUrl)) return "disneyplus";
+    if (new URL(pageUrl).origin === HBO_MAX_ORIGIN) return "hbomax";
     if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
@@ -1020,6 +1027,7 @@ function ensurePageStyles(): void {
     [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root,
     [data-anidachi-adapter="netflix"] anidachi-overlay-root,
     [data-anidachi-adapter="disneyplus"] anidachi-overlay-root,
+    [data-anidachi-adapter="hbomax"] anidachi-overlay-root,
     [data-anidachi-adapter="primevideo"] anidachi-overlay-root {
       position: absolute !important;
       inset: 0 !important;

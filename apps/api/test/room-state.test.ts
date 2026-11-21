@@ -1147,3 +1147,31 @@ it("retains Disney+ host authority and restores the latest confirmed episode aft
   expect(restored.toSnapshot().source?.disneyplusIdentity).toBeUndefined();
   expect(restored.currentDurableSource?.videoFingerprint).toBe(next.videoFingerprint);
 });
+
+it("retains HBO Max host authority and restores the latest confirmed episode after a restart", () => {
+  const room = new RoomState("hbo-room");
+  room.join(participant("host", "host"));
+  room.join(participant("viewer", "viewer"));
+  const source = (id: string): WatchSourceDescriptor => ({
+    provider: "hbomax", sourceUrl: `https://www.hbomax.com/video/watch/${id}`,
+    canonicalUrl: `https://www.hbomax.com/video/watch/${id}`, videoFingerprint: `hbomax|video/watch/${id}`, title: "Episode",
+  });
+  const first = source("2e6c6ae8-47b0-4382-a7ae-df89950eece3");
+  const next = source("12bf1f69-af36-4a39-86ee-21eef7ddd67c");
+  const seriesId = "8cb36cc2-3175-4f2a-aa72-8287cdb1150c";
+  const firstWithIdentity = { ...first, hbomaxIdentity: {
+    kind: "episode" as const, providerSeriesId: seriesId, providerEpisodeIdentifier: first.sourceUrl.split("/").at(-1)!,
+  } };
+  const state = playbackState(first.videoFingerprint, first.sourceUrl);
+  expect(room.updateHostState("viewer", state, firstWithIdentity).accepted).toBe(false);
+  expect(room.updateHostState("host", state, firstWithIdentity).sourceChanged).toBe(true);
+  expect(room.currentDurableSource).not.toHaveProperty("hbomaxIdentity");
+  expect(room.updateHostState("host", state, first).sourceChanged).toBe(false);
+  const restored = new RoomState("hbo-room", undefined, room.toSnapshot());
+  expect(restored.toSnapshot().source?.hbomaxIdentity).toEqual(firstWithIdentity.hbomaxIdentity);
+  const nextState = playbackState(next.videoFingerprint, next.sourceUrl);
+  expect(restored.updateHostState("host", nextState, { ...next, hbomaxIdentity: firstWithIdentity.hbomaxIdentity }).accepted).toBe(false);
+  expect(restored.updateHostState("host", nextState, next).sourceChanged).toBe(true);
+  expect(restored.toSnapshot().source?.hbomaxIdentity).toBeUndefined();
+  expect(restored.currentDurableSource?.videoFingerprint).toBe(next.videoFingerprint);
+});

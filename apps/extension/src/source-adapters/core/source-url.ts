@@ -1,3 +1,4 @@
+import { hboMaxPlaybackId } from "@anidachi/protocol";
 import { hasPrimeBrowserHost, parsePrimePageUrl } from "../primevideo/url";
 import { youtubePageWatchSource } from "../youtube/url";
 import { disneyPlusWatchId } from "../disneyplus/url";
@@ -55,6 +56,7 @@ export function sourceProviderFromUrl(value: string): SourceProvider | null {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
+    if (hostname === "www.hbomax.com") return hboMaxPlaybackId(value) ? "hbomax" : null;
     if (hostname === "www.disneyplus.com") return disneyPlusWatchId(value) ? "disneyplus" : null;
     if (
       hostname === "crunchyroll.com" ||

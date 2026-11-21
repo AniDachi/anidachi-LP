@@ -3,6 +3,7 @@ import {
 	WatchHistoryCapacityV2Schema,
 	WatchHistoryCapacityV3Schema,
 	WatchHistoryCapacityV4Schema,
+	WatchHistoryCapacityV5Schema,
 	type WatchHistoryCapacityCompatible,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
@@ -14,7 +15,7 @@ import { publicDatabaseError, WatchHistoryV3ApiError } from "./watch-history-v3"
 
 const capacitySchemas = {
   1: WatchHistoryCapacitySchema, 2: WatchHistoryCapacityV2Schema,
-  3: WatchHistoryCapacityV3Schema, 4: WatchHistoryCapacityV4Schema,
+  3: WatchHistoryCapacityV3Schema, 4: WatchHistoryCapacityV4Schema, 5: WatchHistoryCapacityV5Schema,
 };
 type CapacityVersion = keyof typeof capacitySchemas;
 
@@ -72,7 +73,7 @@ export function createWatchHistoryCapacityHandler(deps: {
 			if (raw !== null && !/^[1-9][0-9]*$/.test(raw))
 				throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid history generation");
 			const version = request.nextUrl.searchParams.get("capacityVersion");
-			if (version !== null && version !== "1" && version !== "2" && version !== "3" && version !== "4")
+			if (version !== null && version !== "1" && version !== "2" && version !== "3" && version !== "4" && version !== "5")
 				throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid capacity version");
 			const result = await getWatchHistoryCapacity({
 				capacityVersion: Number(version ?? 1) as CapacityVersion,

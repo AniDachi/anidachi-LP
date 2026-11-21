@@ -308,3 +308,21 @@ it.each([
   expect(seekPersonalResume).not.toHaveBeenCalled();
   expect(seek).not.toHaveBeenCalled();
 });
+
+it.each(["interstitial", "buffering"])("holds a matching HBO Max resume during %s before its descriptor exists", async phase => {
+  const id = "4d269596-6871-4419-892a-ca2b801d447d";
+  const sourceUrl = "https://www.hbomax.com/video/watch/" + id;
+  const launch = parsePersonalHistoryResumeUrl(await buildPersonalHistoryResumeUrl({
+    ownerUserId: historyOwner, accountGeneration: 1, provider: "hbomax", sourceUrl, currentTime: 42, now,
+  }), now)!;
+  const adapter = {
+    provider: "hbomax", getPlaybackSnapshot: () => ({ phase }),
+    getFingerprint: () => "hbomax|video/watch/" + id, getSourceDescriptor: () => undefined,
+  } as unknown as VideoAdapter;
+  const claim = vi.fn();
+  const input = { adapter, getOwner: () => historyOwner, roomActive: () => false, isCurrent: () => true,
+    getLease: async () => paidHistoryLease(historyOwner, now), claim, now: () => now };
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("waiting");
+  expect(await applyPersonalHistoryResume(launch, { ...input, adapter: { ...adapter, getFingerprint: () => "other" } })).toBe("cancelled");
+  expect(claim).not.toHaveBeenCalled();
+});

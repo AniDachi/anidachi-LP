@@ -1,10 +1,11 @@
+import { hboMaxPlaybackId, hboMaxSourceUrl, hboMaxFingerprint } from "./hbomax-identity";
 import { disneyPlusPlaybackId, disneyPlusSourceUrl, disneyPlusFingerprint } from "./disneyplus-identity";
 import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import { primeVideoFingerprint, primeVideoSourceUrl } from "./prime-video-identity";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "./limits";
 
-export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]);
+export const RoomSourceProviderSchema = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus", "hbomax"]);
 
 export type RoomSourceProvider = z.infer<typeof RoomSourceProviderSchema>;
 
@@ -79,6 +80,13 @@ export function canonicalizeRoomSourceUrl(
     !/^https:\/\/www\.primevideo\.com\/detail\/[A-Z0-9]{26}\/?(?:[?#]|$)/i.test(value)) {
     return { ok: false, code: "UNSUPPORTED_ROUTE" };
   }
+  if (providerForHostname(url.hostname) === "hbomax") {
+    const id = hboMaxPlaybackId(value);
+    if (!id) return { ok: false, code: "UNSUPPORTED_ROUTE" };
+    if (pinnedProvider && pinnedProvider !== "hbomax") return { ok: false, code: "PROVIDER_MISMATCH" };
+    const canonicalUrl = hboMaxSourceUrl(id);
+    return { ok: true, source: { provider: "hbomax", sourceUrl: canonicalUrl, canonicalUrl, videoFingerprint: hboMaxFingerprint(id) } };
+  }
   if (providerForHostname(url.hostname) === "disneyplus") {
     const id = disneyPlusPlaybackId(value);
     if (!id) return { ok: false, code: "UNSUPPORTED_ROUTE" };
@@ -94,6 +102,15 @@ export function canonicalizeRoomSourceUrl(
     return { ok: false, code: "PROVIDER_MISMATCH" };
   }
   return { ok: true, source };
+}
+
+export function hasHboMaxHostname(value: string): boolean {
+  try {
+    const host = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
+    return host === "hbomax.com" || host.endsWith(".hbomax.com");
+  } catch {
+    return false;
+  }
 }
 
 export function hasDisneyPlusHostname(value: string): boolean {
@@ -258,6 +275,7 @@ function providerForHostname(hostname: string): RoomSourceProvider | null {
   if (normalized === "crunchyroll.com" || normalized === "www.crunchyroll.com") {
     return "crunchyroll";
   }
+  if (normalized === "www.hbomax.com") return "hbomax";
   if (normalized === "www.disneyplus.com") return "disneyplus";
   if (normalized === "www.netflix.com") return "netflix";
   if (normalized === "www.primevideo.com") return "primevideo";

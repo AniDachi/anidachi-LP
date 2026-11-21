@@ -104,9 +104,9 @@ it("keeps Disney+ and the Hulu hub in the same room and opens the guest's locali
 	expect(catalogRoomProvider("https://www.hulu.com" + title)).toBeNull();
 });
 
-it.each(["netflix", "crunchyroll", "disneyplus"] as const)("follows a new %s play once even for the same episode, while ignoring an old heartbeat", provider => {
+it.each(["netflix", "crunchyroll", "disneyplus", "hbomax"] as const)("follows a new %s play once even for the same episode, while ignoring an old heartbeat", provider => {
 	const url = "https://www." + provider + ".com";
-	const path = provider === "disneyplus" ? "/play/120ae1e6-2240-4924-a4ce-f8de6e28b0b1" : "/watch/123";
+	const path = provider === "hbomax" ? "/video/watch/4d269596-6871-4419-892a-ca2b801d447d" : provider === "disneyplus" ? "/play/120ae1e6-2240-4924-a4ce-f8de6e28b0b1" : "/watch/123";
 	const source = {
 		provider,
 		sourceUrl: url + path,
@@ -206,4 +206,17 @@ it("waits for verified playback when a new player document reattaches an existin
 		host.playback({ ...event, state: { ...event.state, playing: false } })
 			?.state.playing,
 	).toBe(false);
+});
+
+it("keeps an HBO room across the browse menu and attaches a player only on exact watch routes", () => {
+  const origin = "https://www.hbomax.com";
+  const id = "4d269596-6871-4419-892a-ca2b801d447d";
+  for (const path of ["/", "/home", "/movies", "/series", "/categories", "/audio-description", "/genre/action", "/channel/" + id, "/search", "/my-stuff", "/show/" + id, "/movie/" + id]) {
+    expect(catalogRoomProvider(origin + path)).toBe("hbomax");
+    expect(catalogPlayerProvider(origin + path)).toBeNull();
+  }
+  expect(catalogPlayerProvider(origin + "/video/watch/" + id)).toBe("hbomax");
+  for (const path of ["/account", "/profiles", "/signin", "/video/watch/unknown"]) {
+    expect(catalogRoomProvider(origin + path)).toBeNull();
+  }
 });

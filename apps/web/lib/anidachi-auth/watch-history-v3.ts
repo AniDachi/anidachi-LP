@@ -4,6 +4,7 @@ import { isNetflixArtworkUrl } from "./netflix-artwork";
 import { withPersonalHistoryRead, personalHistoryError } from "./personal-history-policy";
 import {
   disneyPlusPlaybackId,
+  hboMaxPlaybackId,
   type RoomSourceProvider,
   RoomSourceProviderSchema,
   WATCH_HISTORY_TITLE_EPISODE_PAGE_LIMIT,
@@ -163,7 +164,7 @@ export type WatchHistoryV3Store = {
   beginCatalog(userId: string, request: WatchCatalogBeginRequest): Promise<unknown>;
   applyCatalog(userId: string, request: WatchCatalogCommitRequest): Promise<unknown>;
   loadHistory(userId: string, page: {
-    providerVersion?: 1 | 2 | 3 | 4;
+    providerVersion?: 1 | 2 | 3 | 4 | 5;
     limit: number;
     cursor: WatchHistoryCursor | null;
   }): Promise<{
@@ -309,6 +310,7 @@ export function parseWatchProgressEventV3(input: unknown): WatchProgressEvent {
     throw new WatchHistoryV3ApiError(400, "PROVIDER_DOMAIN_MISMATCH", "Provider source is invalid");
   }
   const validOrigin =
+    (parsed.data.provider === "hbomax" && hboMaxPlaybackId(parsed.data.sourceUrl) !== null) ||
     (parsed.data.provider === "disneyplus" && disneyPlusPlaybackId(parsed.data.sourceUrl) !== null) ||
     (parsed.data.provider === "primevideo" &&
       url.origin === "https://www.primevideo.com" && /^\/detail\/[A-Z0-9]{26}$/.test(url.pathname)) ||
@@ -407,7 +409,7 @@ export async function applyWatchProgressV3(params: {
 }
 
 export async function listWatchHistoryV3(params: {
-  providerVersion?: 1 | 2 | 3 | 4;
+  providerVersion?: 1 | 2 | 3 | 4 | 5;
   userId: string;
   limit?: number;
   cursor?: WatchHistoryCursor | null;
@@ -1834,7 +1836,7 @@ function parseWatchHistoryCursor(value: unknown): WatchHistoryCursor {
     !isTimestamp(value.lastWatchedAt) ||
     stableId.length < 3 ||
     stableId.length > 260 ||
-    !/^(crunchyroll|netflix|primevideo|disneyplus|youtube|amazon):[^\s:][^\s]*$/.test(stableId)
+    !/^(crunchyroll|netflix|primevideo|disneyplus|hbomax|youtube|amazon):[^\s:][^\s]*$/.test(stableId)
   ) {
     throw new WatchHistoryV3ApiError(400, "INVALID_CURSOR", "History cursor is invalid");
   }

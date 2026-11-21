@@ -9,7 +9,7 @@ export const PersonalHistoryResumeSchema = z
 		intentId: z.uuid(),
 		ownerBinding: z.string().regex(/^[a-f0-9]{64}$/),
 		accountGeneration: z.number().int().positive(),
-		provider: z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]),
+		provider: z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus", "hbomax"]),
 		sourceUrl: z.string().url().max(2048),
 		currentTime: z.number().finite().nonnegative().max(604800),
 		issuedAt: z.number().int().nonnegative(),
@@ -47,7 +47,7 @@ export async function personalHistoryResumeOwnerBinding(
 export async function buildPersonalHistoryResumeUrl(input: {
 	ownerUserId: string;
 	accountGeneration: number;
-	provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
+	provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus" | "hbomax";
 	sourceUrl: string;
 	currentTime: number;
 	now?: number;
@@ -55,7 +55,7 @@ export async function buildPersonalHistoryResumeUrl(input: {
 }): Promise<string> {
 	// Validate Prime before URL parsing can normalize forbidden ports or dot segments.
 	const strictSource =
-		(input.provider === "primevideo" || input.provider === "disneyplus")
+		(input.provider === "primevideo" || input.provider === "disneyplus" || input.provider === "hbomax")
 			? canonicalizeRoomSourceUrl(input.sourceUrl, input.provider)
 			: null;
 	if (strictSource && !strictSource.ok)

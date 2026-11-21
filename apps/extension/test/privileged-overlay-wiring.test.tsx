@@ -628,10 +628,10 @@ describe("privileged overlay wiring", () => {
 		}
 	});
 
-	it.each(["primevideo", "youtube"] as const)("handles a descriptor-less %s adapter safely at room creation", async provider => {
+	it.each(["primevideo", "hbomax", "youtube"] as const)("handles a descriptor-less %s adapter safely at room creation", async provider => {
 		vi.stubGlobal("location", new URL(provider === "primevideo"
 			? "https://www.primevideo.com/detail/0HAQAA7JM43QWX0H6GUD3IOF70"
-			: "https://www.youtube.com/watch?v=test#keep=1"));
+			: provider === "hbomax" ? "https://www.hbomax.com/video/watch/4d269596-6871-4419-892a-ca2b801d447d" : "https://www.youtube.com/watch?v=test#keep=1"));
 		const requests: unknown[] = [];
 		const sendMessage = vi.fn(async (message: { type?: string; command?: string; input?: unknown }) => {
 			if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
@@ -653,10 +653,10 @@ describe("privileged overlay wiring", () => {
 			await click(button(view.container, "Open Anidachi controls"));
 			await click(button(view.container, "Create room"));
 			await flushRoomActionWork();
-			if (provider === "primevideo") {
+			if (provider !== "youtube") {
 				expect(requests).toHaveLength(0);
 				expect(button(view.container, "Create room").disabled).toBe(true);
-				expect(view.container.textContent).toContain("Waiting for Prime Video title information");
+				expect(view.container.textContent).toContain(provider === "hbomax" ? "Waiting for HBO Max playback" : "Waiting for Prime Video title information");
 				expect(sendMessage.mock.calls.some(([message]) => message.command === "prepare")).toBe(false);
 			} else {
 				expect(requests).toHaveLength(1);
@@ -665,6 +665,56 @@ describe("privileged overlay wiring", () => {
 		} finally {
 			await unmount(view.root);
 		}
+	});
+
+	it.each(["create-room", "connect-room"] as const)("waits for HBO content before %s and retries after an interrupted preparation", async command => {
+		const id = "4d269596-6871-4419-892a-ca2b801d447d";
+		const url = "https://www.hbomax.com/video/watch/" + id;
+		vi.stubGlobal("location", new URL(url + (command === "connect-room" ? "#anidachiRoom=room-a" : "")));
+		vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+		let ready = false;
+		const gate = deferred<ReturnType<typeof roomSessionStorageResponse>>();
+		let firstPrepare = true;
+		const send = vi.fn(async (message: { type?: string; command?: string; roomId?: string }) => {
+			if (message.type === "ANIDACHI_AUTH") return { ok: true, tokens: sessionFor("user-a") };
+			if (message.type === "ANIDACHI_ROOM_SESSION_STORAGE") {
+				if (message.command === "prepare" && firstPrepare) { firstPrepare = false; return gate.promise; }
+				return roomSessionStorageResponse(message.command);
+			}
+			if (message.command === "connect-room") return new Promise(() => {});
+			return { ok: false, error: "Offline; retry" };
+		});
+		installOverlayRuntime(send);
+		const view = await renderOverlay(adapter => {
+			adapter.provider = "hbomax";
+			adapter.getFingerprint = () => "hbomax|video/watch/" + id;
+			adapter.getSourceDescriptor = () => ready ? { provider: "hbomax", sourceUrl: url, canonicalUrl: url,
+				videoFingerprint: adapter.getFingerprint(), title: "War", duration: 1200 } : undefined;
+		});
+		const advance = async () => { await act(async () => { await vi.advanceTimersByTimeAsync(1050); }); await flushRoomActionWork(); };
+		try {
+			await flushRoomActionWork();
+			expect(send.mock.calls.some(([m]) => m.command === "prepare")).toBe(false);
+			if (command === "create-room") await click(button(view.container, "Open Anidachi controls"));
+			ready = true;
+			await advance();
+			if (command === "create-room") await click(button(view.container, "Create room"));
+			await flushRoomActionWork();
+			expect(firstPrepare).toBe(false);
+			ready = false;
+			await act(async () => gate.resolve(roomSessionStorageResponse("prepare")));
+			await flushRoomActionWork();
+			expect(send.mock.calls.some(([m]) => m.command === command)).toBe(false);
+			expect(send.mock.calls.some(([m]) => m.command === "discard-prepared")).toBe(true);
+			ready = true;
+			await advance();
+			if (command === "create-room") {
+				expect(button(view.container, "Create room").disabled).toBe(false);
+				await click(button(view.container, "Create room"));
+			}
+			await flushRoomActionWork();
+			expect(send.mock.calls.filter(([m]) => m.command === command)).toHaveLength(1);
+		} finally { await unmount(view.root); vi.useRealTimers(); }
 	});
 
 	it("shows the first-run tour in the production overlay without creating a room or capturing media", async () => {

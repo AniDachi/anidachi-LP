@@ -329,6 +329,10 @@ export class RoomState {
       return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
     }
     const nextSource = normalized.source;
+    if (nextSource?.provider === "hbomax" && nextSource.hbomaxIdentity === undefined &&
+      previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.hbomaxIdentity) {
+      nextSource.hbomaxIdentity = previousSource.hbomaxIdentity;
+    }
     if (nextSource?.provider === "disneyplus" && nextSource.disneyplusIdentity === undefined &&
       previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.disneyplusIdentity) {
       nextSource.disneyplusIdentity = previousSource.disneyplusIdentity;
@@ -963,6 +967,7 @@ function normalizeRoomSourceUpdate(
 		candidate.provider !== "youtube" &&
 		candidate.provider !== "netflix" &&
 		candidate.provider !== "disneyplus" &&
+		candidate.provider !== "hbomax" &&
 		candidate.provider !== "primevideo"
 	) {
     return null;
@@ -986,6 +991,7 @@ function normalizeWatchSourceDescriptor(
 		candidate.provider !== "youtube" &&
 		candidate.provider !== "netflix" &&
 		candidate.provider !== "disneyplus" &&
+		candidate.provider !== "hbomax" &&
 		candidate.provider !== "primevideo"
 	) {
     return null;
@@ -1042,7 +1048,7 @@ function normalizeWatchSourceDescriptor(
   }
 
   // A live identity can arrive from a host event or a hibernated room snapshot.
-  if (candidate.disneyplusIdentity !== undefined && !WatchSourceDescriptorSchema.safeParse(candidate).success) {
+  if ((candidate.disneyplusIdentity !== undefined || candidate.hbomaxIdentity !== undefined) && !WatchSourceDescriptorSchema.safeParse(candidate).success) {
     return null;
   }
   const durableSource: RoomSourceDescriptor = {

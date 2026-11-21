@@ -6,6 +6,7 @@ import {
   RoomSessionAdmissionInputSchema,
   isNetflixHistoryKey,
   isDisneyPlusHistoryKey,
+  isHboMaxHistoryKey,
   isPrimeVideoHistoryKey,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesUpdateSchema,
@@ -68,14 +69,14 @@ export type WatchHistoryV3RouteDependencies = {
   checkLegacyRoomOperation(userId: string): Promise<unknown>;
   getSession(request: NextRequest): Promise<ApiSession | null>;
   listHistory(params: {
-    providerVersion?: 1 | 2 | 3 | 4;
+    providerVersion?: 1 | 2 | 3 | 4 | 5;
     userId: string;
     limit: number;
     cursor: WatchHistoryCursor | null;
   }): Promise<WatchHistoryResponse>;
   listTitleEpisodes(params: {
     userId: string;
-    provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
+    provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus" | "hbomax";
     titleKey: string;
     limit: number;
     cursor: string | null;
@@ -135,7 +136,7 @@ export function createWatchHistoryV3RouteHandlers(
         const cursor = rawCursor ? decodeWatchHistoryCursor(rawCursor) : null;
         return NextResponse.json(
           await dependencies.listHistory({ userId: session.userId, limit, cursor,
-            ...(request.nextUrl.searchParams.has("providerVersion") ? { providerVersion: Number(request.nextUrl.searchParams.get("providerVersion")) as 1 | 2 | 3 | 4 } : {}),
+            ...(request.nextUrl.searchParams.has("providerVersion") ? { providerVersion: Number(request.nextUrl.searchParams.get("providerVersion")) as 1 | 2 | 3 | 4 | 5 } : {}),
           }),
         );
       } catch (error) {
@@ -511,7 +512,7 @@ function validateEmptyQuery(searchParams: URLSearchParams): void {
 function validateHistoryQuery(searchParams: URLSearchParams): void {
   const allowed = new Set(["limit", "cursor", "providerVersion"]);
   const version = searchParams.get("providerVersion");
-  if (version !== null && version !== "1" && version !== "2" && version !== "3" && version !== "4")
+  if (version !== null && version !== "1" && version !== "2" && version !== "3" && version !== "4" && version !== "5")
     throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid provider version");
   for (const key of searchParams.keys()) {
     if (!allowed.has(key) || searchParams.getAll(key).length > 1) {
@@ -525,7 +526,7 @@ function validateHistoryQuery(searchParams: URLSearchParams): void {
 }
 
 function parseTitleEpisodesQuery(searchParams: URLSearchParams): {
-  provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus";
+  provider: "crunchyroll" | "youtube" | "netflix" | "primevideo" | "disneyplus" | "hbomax";
   titleKey: string;
   limit: number;
   cursor: string | null;
@@ -541,11 +542,13 @@ function parseTitleEpisodesQuery(searchParams: URLSearchParams): {
   const rawLimit = searchParams.get("limit");
   const cursor = searchParams.get("cursor");
   if (
-    (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix" && provider !== "primevideo" && provider !== "disneyplus") ||
+    (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix" && provider !== "primevideo" && provider !== "disneyplus" && provider !== "hbomax") ||
     titleKey === null ||
     titleKey !== titleKey.trim() ||
     titleKey.length < 1 ||
     titleKey.length > 220 ||
+    (provider !== "hbomax" && titleKey.startsWith("hbomax:")) ||
+    (provider === "hbomax" && !isHboMaxHistoryKey(titleKey, "series") && !isHboMaxHistoryKey(titleKey, "movie")) ||
     (provider !== "disneyplus" && titleKey.startsWith("disneyplus:")) ||
     (provider === "disneyplus" && !isDisneyPlusHistoryKey(titleKey, "series") && !isDisneyPlusHistoryKey(titleKey, "movie")) ||
     (provider !== "primevideo" && titleKey.startsWith("primevideo:")) ||

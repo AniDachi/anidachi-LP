@@ -87,9 +87,9 @@ const amazonVideoMatches = [
   `https://*.${host}/*/dp/*`,
 ]);
 
-const disneyPlusOrigins = channel === "staging" ? ["https://www.disneyplus.com/*"] : [];
+const stagingVideoOrigins = channel === "staging" ? ["https://www.disneyplus.com/*", "https://www.hbomax.com/*"] : [];
 const videoContentMatches = [
-  ...disneyPlusOrigins,
+  ...stagingVideoOrigins,
   "https://youtube.com/*",
   "https://*.youtube.com/*",
   "https://youtu.be/*",
@@ -103,7 +103,7 @@ const videoContentMatches = [
 ];
 
 const videoOrigins = [
-  ...disneyPlusOrigins,
+  ...stagingVideoOrigins,
   "https://youtube.com/*",
   "https://*.youtube.com/*",
   "https://youtu.be/*",
@@ -210,7 +210,7 @@ const tile = publicResources.find(entry => entry.resources?.includes("prime-medi
 assertExactAllowlist("logo resource", logo?.resources ?? [], ["Anidachi_logo.png"]);
 assertExactAllowlist("logo match", logo?.matches ?? [], videoOrigins);
 assertExactAllowlist("Prime tile resource", tile?.resources ?? [], ["prime-media-tile.html", "prime-media-permission.html"]);
-assertExactAllowlist("Prime tile match", tile?.matches ?? [], ["https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", ...disneyPlusOrigins, ...videoOrigins.filter(origin => origin === "https://www.netflix.com/*" || origin.includes(".primevideo.com/") || origin.includes(".amazon."))]);
+assertExactAllowlist("Prime tile match", tile?.matches ?? [], ["https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", ...stagingVideoOrigins, ...videoOrigins.filter(origin => origin === "https://www.netflix.com/*" || origin.includes(".primevideo.com/") || origin.includes(".amazon."))]);
 if (!permissions.includes("offscreen")) throw new Error("Missing offscreen permission for persistent Prime calls");
 
 if (manifest.name !== expected.name) {

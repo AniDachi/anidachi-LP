@@ -242,6 +242,33 @@ describe("watch history v2 client", () => {
     expect(stored.partitions[key]!.accessLease?.access.state).toBe("allowed");
   });
 
+  it("negotiates v5 for staging list, capacity, browse and social options requests", async () => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
+    try {
+      const owner = session.user.id;
+      const key = watchHistoryPartitionKey(owner, 1);
+      let root: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: readyPartition(owner, false) } };
+      const urls: URL[] = [];
+      const client = createWatchHistoryClient({
+        getCurrentSession: async () => session,
+        storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(root), setValue: async value => { root = structuredClone(value); } },
+          getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+        fetch: async input => { urls.push(new URL(String(input))); return new Response("offline", { status: 503 }); },
+      });
+      const common = { type: "ANIDACHI_WATCH_HISTORY_V3" as const, expectedOwnerUserId: owner };
+      await client.handle(createListWatchHistoryMessage({ limit: 20 }));
+      await client.handle({ ...common, command: "capacity" });
+      await client.handle({ ...common, command: "browse", input: { mode: "personal", provider: "hbomax" } });
+      await client.handle({ ...common, command: "browse-options", input: { mode: "shared" } });
+      expect(urls.map(url => [url.pathname, url.searchParams.get("capacityVersion") ?? url.searchParams.get("providerVersion")])).toEqual([
+        ["/api/watch-history/v3", "5"], ["/api/watch-history/v3/capacity", "5"], ["/api/watch-history/v3/browse", "5"],
+        ["/api/watch-history/v3/browse/options", "5"],
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("retries a canonical read retired by a new Free recording epoch", async () => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);

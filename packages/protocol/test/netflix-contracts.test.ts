@@ -331,7 +331,7 @@ describe("provider capability negotiation", () => {
   it("preserves omitted query shape while accepting only explicit numeric versions", () => {
     expect(WatchHistoryBrowseQuerySchema.parse({ mode: "personal" })).not.toHaveProperty("providerVersion");
     expect(WatchHistoryBrowseQuerySchema.parse({ mode: "personal", providerVersion: 2 }).providerVersion).toBe(2);
-    for (const providerVersion of [0, 5, "2", null])
+    for (const providerVersion of [0, 6, "2", null])
       expect(WatchHistoryBrowseQuerySchema.safeParse({ mode: "personal", providerVersion }).success).toBe(false);
   });
 });

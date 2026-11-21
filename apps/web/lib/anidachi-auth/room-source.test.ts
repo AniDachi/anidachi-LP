@@ -576,3 +576,14 @@ test("Disney+ invite redirects use current canonical playback and the exact room
   assert.equal(buildRoomSourceLaunchUrl(source, "room-123"), `https://www.disneyplus.com/play/${id}#anidachiRoom=room-123`);
   assert.throws(() => roomSourceCreationColumns({ sourceUrl: `https://www.disneyplus.com/browse/entity-${id}` }));
 });
+
+test("HBO Max invite redirects use current canonical playback and the exact room hash", () => {
+  const id = "c6a0a3b3-587e-4bc2-964b-d01700582d91";
+  const columns = roomSourceCreationColumns({
+    sourceUrl: `https://www.hbomax.com/video/watch/${id.toUpperCase()}?tracking=1`,
+  });
+  assert.equal(columns.source_provider, "hbomax");
+  const source = deriveDurableRoomSource(columns)?.source;
+  assert.equal(buildRoomSourceLaunchUrl(source, "room-123"), `https://www.hbomax.com/video/watch/${id}#anidachiRoom=room-123`);
+  assert.throws(() => roomSourceCreationColumns({ sourceUrl: `https://www.hbomax.com/show/${id}` }));
+});

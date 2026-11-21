@@ -1,3 +1,4 @@
+import { handleHboMaxSavedMetadata } from "../src/source-adapters/hbomax/history-metadata";
 import { registerPrimeRoomTransport } from "../src/prime-room-background";
 import { installPrimeMediaBackground } from "../src/prime-media-background";
 import { registerPrimeLaunchBridge } from "../src/prime-launch-background";
@@ -299,6 +300,10 @@ export default defineBackground(() => {
   registerOnboardingCheckoutBridge();
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type === "ANIDACHI_HBOMAX_SAVED_METADATA") {
+      void handleHboMaxSavedMetadata(sender).then(sendResponse, () => sendResponse(null));
+      return true;
+    }
     if (message?.type === "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF") {
       void handleDisneyPlusCatalogHandoff(message, sender).then(sendResponse, () => sendResponse(null));
       return true;

@@ -929,7 +929,7 @@ test("all-provider history list explicitly negotiates Netflix without changing l
   assert.equal(Object.hasOwn(seen[0] as object, "providerVersion"), false);
   assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=2"))).status, 200);
   assert.equal((seen[1] as { providerVersion: number }).providerVersion, 2);
-  for (const version of ["0", "5", "02", "", "2&providerVersion=2"])
+  for (const version of ["0", "6", "02", "", "2&providerVersion=2"])
     assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=" + version))).status, 400);
   assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=3"))).status, 200);
   assert.equal((seen[2] as { providerVersion: number }).providerVersion, 3);

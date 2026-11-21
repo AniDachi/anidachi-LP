@@ -32,6 +32,7 @@ import {
 import { scheduled } from "./recovery-scheduler";
 import {
   disneyPlusHistoryKeys,
+  hboMaxHistoryKeys,
   parseMaintenanceMode,
   maintenanceHttpResponse,
   ClientEventSchema,
@@ -3136,6 +3137,12 @@ export class RoomDurableObject {
     const previousIdentity = result.previousSource?.disneyplusIdentity;
     if (!result.sourceChanged && identity &&
       (!previousIdentity || disneyPlusHistoryKeys(identity).titleKey !== disneyPlusHistoryKeys(previousIdentity).titleKey)) {
+      this.broadcast(this.currentRoomSnapshot(), socket);
+    }
+    const hboIdentity = event.source?.hbomaxIdentity;
+    const previousHboIdentity = result.previousSource?.hbomaxIdentity;
+    if (!result.sourceChanged && hboIdentity &&
+      (!previousHboIdentity || hboMaxHistoryKeys(hboIdentity).titleKey !== hboMaxHistoryKeys(previousHboIdentity).titleKey)) {
       this.broadcast(this.currentRoomSnapshot(), socket);
     }
     this.broadcast({ type: "HOST_STATE", state: normalizedState }, socket);

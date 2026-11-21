@@ -60,7 +60,7 @@ test("capacity v2 is explicit, provider-complete and version-bound", async () =>
   });
   assert.deepEqual(await (await handle(request())).json(), capacity);
   assert.deepEqual(await (await handle(request("?capacityVersion=2"))).json(), v2);
-  for (const version of ["0", "5", "02", "", "abc"])
+  for (const version of ["0", "6", "02", "", "abc"])
     assert.equal((await handle(request(`?capacityVersion=${version}`))).status, 400);
   const mismatch = createWatchHistoryCapacityHandler({ getSession: async () => session, store: { load: async () => v2 } });
   assert.equal((await mismatch(request())).status, 502);
@@ -70,13 +70,14 @@ test("capacity v3 selects only explicit Prime negotiation and preserves v1/v2", 
   const v2 = { ...capacity, capacityVersion: 2, providers: { ...capacity.providers, netflix: { used: 2, limit: 200 } } };
   const v3 = { ...v2, capacityVersion: 3, providers: { ...v2.providers, primevideo: { used: 200, limit: 200 } } };
   const v4 = { ...v3, capacityVersion: 4, providers: { ...v3.providers, disneyplus: { used: 3, limit: 200 } } };
+  const v5 = { ...v4, capacityVersion: 5, providers: { ...v4.providers, hbomax: { used: 1, limit: 200 } } };
   const calls: number[] = [];
   const handle = createWatchHistoryCapacityHandler({ getSession: async () => session,
-    store: { load: async (_owner, _generation, version) => { calls.push(version); return version === 4 ? v4 : version === 3 ? v3 : version === 2 ? v2 : capacity; } },
+    store: { load: async (_owner, _generation, version) => { calls.push(version); return version === 5 ? v5 : version === 4 ? v4 : version === 3 ? v3 : version === 2 ? v2 : capacity; } },
   });
-  for (const [query, expected] of [["", capacity], ["?capacityVersion=2", v2], ["?capacityVersion=3", v3], ["?capacityVersion=4", v4]] as const)
+  for (const [query, expected] of [["", capacity], ["?capacityVersion=2", v2], ["?capacityVersion=3", v3], ["?capacityVersion=4", v4], ["?capacityVersion=5", v5]] as const)
     assert.deepEqual(await (await handle(request(query))).json(), expected);
-  assert.deepEqual(calls, [1, 2, 3, 4]);
+  assert.deepEqual(calls, [1, 2, 3, 4, 5]);
   const mismatch = createWatchHistoryCapacityHandler({ getSession: async () => session, store: { load: async () => v2 } });
   assert.equal((await mismatch(request("?capacityVersion=3"))).status, 502);
 });

@@ -1,3 +1,4 @@
+import { watchHistoryProviderVersion } from "./watch-history-provider-version";
 import {
 	WatchHistoryCapacityCompatibleSchema,
 	type WatchHistoryCapacityCompatible,
@@ -60,13 +61,14 @@ export function PopupWatchCapacityNotice({
 		return null;
 	const full = (
 		Object.entries(result.data.providers) as Array<
-			["youtube" | "crunchyroll" | "netflix" | "primevideo" | "disneyplus", { used: number; limit: number }]
+			["youtube" | "crunchyroll" | "netflix" | "primevideo" | "disneyplus" | "hbomax", { used: number; limit: number }]
 		>
 	).filter(([, value]) => value.used >= value.limit);
 	const unavailable = [
 		...(result.data.capacityVersion < 2 ? ["Netflix storage unavailable"] : []),
 		...(result.data.capacityVersion < 3 ? ["Prime Video storage unavailable"] : []),
 		...(result.data.capacityVersion < 4 ? ["Disney+ storage unavailable"] : []),
+		...(watchHistoryProviderVersion() === 5 && result.data.capacityVersion < 5 ? ["HBO Max storage unavailable"] : []),
 	];
 	if (!full.length && !unavailable.length) return null;
 	return (
@@ -76,7 +78,7 @@ export function PopupWatchCapacityNotice({
 					{full
 						.map(
 							([provider, value]) =>
-								`${({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", primevideo: "Prime Video", disneyplus: "Disney+" })[provider]} ${value.used}/${value.limit}`,
+								`${({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", primevideo: "Prime Video", disneyplus: "Disney+", hbomax: "HBO Max" })[provider]} ${value.used}/${value.limit}`,
 						)
 						.join(" · ")}{" "}
 					{full.length ? "— history full" : unavailable.join(" · ")}
