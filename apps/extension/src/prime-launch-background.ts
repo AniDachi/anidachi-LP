@@ -6,6 +6,7 @@ import {
 	primeVideoSourceUrl,
 	PrimeVideoProviderIdSchema,
 	MAX_VIDEO_FINGERPRINT_CHARS,
+	MAX_URL_CHARS,
 	resolvePrimeLaunch,
 	type WatchSourceDescriptor,
 } from "@anidachi/protocol";
@@ -30,6 +31,7 @@ const FollowSchema = z.strictObject({
 	roomId: z.string().min(1).max(128),
 	contentId: z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS).regex(/^[A-Za-z0-9_-]+$/),
 	visit: z.uuid().optional(),
+	renderedWatchUrl: z.string().max(MAX_URL_CHARS).optional(),
 });
 const StartSchema = z
 	.strictObject({
@@ -163,7 +165,7 @@ async function handle(
 				if (!tab.url || catalogRoomProvider(tab.url) !== claim.source.provider || catalogPlayerProvider(tab.url) ||
 					!source || catalogContentId(source.sourceUrl) !== follow.data.contentId)
 					return { status: "cancelled" };
-				await chrome.tabs.update(tabId, { url: catalogWatchDestination(source.sourceUrl, tab.url) });
+				await chrome.tabs.update(tabId, { url: catalogWatchDestination(source.sourceUrl, tab.url, follow.data.renderedWatchUrl) });
 				navigated = true;
 				return { status: "ready" };
 			}

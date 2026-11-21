@@ -1,4 +1,4 @@
-import { hboMaxPlaybackId, hboMaxSourceUrl, hboMaxFingerprint } from "./hbomax-identity";
+import { hboMaxPlaybackId, hboMaxSourceUrl, hboMaxFingerprint, isHboMaxOrigin } from "./hbomax-identity";
 import { disneyPlusPlaybackId, disneyPlusSourceUrl, disneyPlusFingerprint } from "./disneyplus-identity";
 import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
@@ -107,7 +107,7 @@ export function canonicalizeRoomSourceUrl(
 export function hasHboMaxHostname(value: string): boolean {
   try {
     const host = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
-    return host === "hbomax.com" || host.endsWith(".hbomax.com");
+    return host === "hbomax.com" || host.endsWith(".hbomax.com") || host === "max.com" || host.endsWith(".max.com");
   } catch {
     return false;
   }
@@ -275,7 +275,7 @@ function providerForHostname(hostname: string): RoomSourceProvider | null {
   if (normalized === "crunchyroll.com" || normalized === "www.crunchyroll.com") {
     return "crunchyroll";
   }
-  if (normalized === "www.hbomax.com") return "hbomax";
+  if (isHboMaxOrigin(`https://${normalized}`)) return "hbomax";
   if (normalized === "www.disneyplus.com") return "disneyplus";
   if (normalized === "www.netflix.com") return "netflix";
   if (normalized === "www.primevideo.com") return "primevideo";

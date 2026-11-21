@@ -1,4 +1,4 @@
-import { HBO_MAX_ORIGIN } from "@anidachi/protocol";
+import { HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
 import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
 import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
@@ -119,7 +119,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
-  ...(import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ? ["https://www.disneyplus.com/*", "https://www.hbomax.com/*"] : []),
+  ...(import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ? ["https://www.disneyplus.com/*", ...HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`)] : []),
   ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
@@ -139,7 +139,7 @@ export default defineContentScript({
   allFrames: true,
   runAt: "document_start",
   main(context) {
-    if ((isDisneyPlusOrigin(location.href) || location.origin === HBO_MAX_ORIGIN) && window.top !== window) return;
+    if ((isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin)) && window.top !== window) return;
     const runtime = startContentLifecycle();
     context.onInvalidated(runtime.dispose);
   },
@@ -210,7 +210,7 @@ function startContentLifecycleSession(
   let leavingDocument = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
-  const stopHboCatalog = window.top === window && location.origin === HBO_MAX_ORIGIN
+  const stopHboCatalog = window.top === window && isHboMaxOrigin(location.origin)
     ? startHboMaxCatalogCapture(document) : undefined;
   const stopDisneyCatalog = window.top === window && isDisneyPlusOrigin(location.href)
     ? startDisneyPlusCatalogCapture(document) : undefined;
@@ -563,7 +563,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
     }
     if (hostname === "www.netflix.com") return "netflix";
     if (isDisneyPlusOrigin(pageUrl)) return "disneyplus";
-    if (new URL(pageUrl).origin === HBO_MAX_ORIGIN) return "hbomax";
+    if (isHboMaxOrigin(new URL(pageUrl).origin)) return "hbomax";
     if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||

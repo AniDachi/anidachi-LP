@@ -1,3 +1,4 @@
+import { HBO_MAX_BROWSER_HOSTS } from "@anidachi/protocol";
 import { YOUTUBE_CATALOG_ORIGINS } from "./src/source-adapters/youtube/url";
 import { PRIME_VIDEO_DOMAIN_ROOTS } from "./src/source-adapters/primevideo/url";
 import { defineConfig } from "wxt";
@@ -18,7 +19,7 @@ const LOCAL_HOST_PERMISSIONS = [
 // WAR requires /* paths; host permissions are also origin-level in Chrome.
 // Route-scoped content-script matches are declared separately by each entrypoint.
 const extensionChannel = resolveExtensionChannel(process.env.WXT_EXTENSION_CHANNEL);
-const stagingVideoOrigins = extensionChannel === "production" ? [] : ["https://www.disneyplus.com/*", "https://www.hbomax.com/*"];
+const stagingVideoOrigins = extensionChannel === "production" ? [] : ["https://www.disneyplus.com/*", ...HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`)];
 const STORE_VIDEO_ORIGINS = [
   ...stagingVideoOrigins,
   "https://youtube.com/*",

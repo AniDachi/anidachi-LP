@@ -4,6 +4,7 @@ import {
 	catalogPlayerProvider,
 	isCatalogRoomSender,
 	catalogWatchDestination,
+	renderedHboMaxWatchUrl,
 } from "../src/catalog-room-routes";
 import {
 	PrimeHostVisit,
@@ -219,4 +220,37 @@ it("keeps an HBO room across the browse menu and attaches a player only on exact
   for (const path of ["/account", "/profiles", "/signin", "/video/watch/unknown"]) {
     expect(catalogRoomProvider(origin + path)).toBeNull();
   }
+});
+
+it("uses the guest's rendered HBO edition only for the exact episode and origin", () => {
+	const current = "https://play.hbomax.com/br/pt/home";
+	const id = "bf44a7dc-e340-4207-ae67-3736179c47c6";
+	const source = "https://www.hbomax.com/video/watch/" + id;
+	const edition = "8f3a759a-7464-438c-956d-a2e65bf3184f";
+	const local = "https://play.hbomax.com/video/watch/" + id;
+	const card = local + "/" + edition;
+	const doc = new DOMParser().parseFromString("<html><body></body></html>", "text/html");
+	Object.defineProperty(doc, "location", { value: new URL(current) });
+	const add = (href: string) => { const link = doc.createElement("a"); link.href = href; doc.body.append(link); };
+	add(source);
+	add(local);
+	add(card + "?from=home#anidachiRoom=old");
+	add(card + "/");
+	add(card.replace("/video/watch/", "/br/pt/video/watch/"));
+	expect(renderedHboMaxWatchUrl(doc, source)).toBe(card);
+	expect(catalogWatchDestination(source, current, card + "#anidachiRoom=old")).toBe(card);
+	expect(catalogWatchDestination(source, current, card.replace(id, edition))).toBe(local);
+	expect(catalogWatchDestination(source, current, source + "/" + edition)).toBe(local);
+	add(local + "/" + id);
+	expect(renderedHboMaxWatchUrl(doc, source)).toBe(local);
+	expect(catalogWatchDestination(source, current)).toBe(local);
+});
+
+it("keeps regional HBO room messages bound to the current top-level origin", () => {
+	const tab = { id: 3, url: "https://play.hbomax.com/br/pt/home" } as chrome.tabs.Tab;
+	const sender = { tab, frameId: 0, url: tab.url, origin: "https://play.hbomax.com" };
+	expect(isCatalogRoomSender(sender)).toBe(true);
+	expect(isCatalogRoomSender({ ...sender, frameId: 1 })).toBe(false);
+	expect(isCatalogRoomSender({ ...sender, url: "https://www.hbomax.com/br/pt/home" })).toBe(false);
+	expect(isCatalogRoomSender({ ...sender, origin: "https://play.max.com" })).toBe(false);
 });

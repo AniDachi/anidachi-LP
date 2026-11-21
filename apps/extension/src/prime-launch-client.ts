@@ -1,4 +1,4 @@
-import { catalogContentId, catalogPlayerProvider, catalogRoomProvider, supportsCatalogRoom } from "./catalog-room-routes";
+import { catalogContentId, renderedHboMaxWatchUrl, catalogPlayerProvider, catalogRoomProvider, supportsCatalogRoom } from "./catalog-room-routes";
 import {
 	canonicalizeRoomSourceUrl,
 	parsePersonalHistoryResumeUrl,
@@ -62,7 +62,9 @@ export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: str
 	if (signal.aborted || !supportsCatalogRoom(source.provider)) return false;
 	const canonical = canonicalizeRoomSourceUrl(source.sourceUrl, source.provider);
 	if (!canonical.ok) return false;
+	const renderedWatchUrl = source.provider === "hbomax" ? renderedHboMaxWatchUrl(document, canonical.source.sourceUrl) : undefined;
 	const reply = await chrome.runtime.sendMessage({
+		...(renderedWatchUrl && { renderedWatchUrl }),
 		type: "ANIDACHI_PRIME_LAUNCH", action: "follow", roomId, visit,
 		contentId: catalogContentId(canonical.source.sourceUrl),
 	});

@@ -1,4 +1,4 @@
-import { HBO_MAX_ORIGIN, hboMaxPlaybackId, hboMaxDetail, canonicalizeRoomSourceUrl } from "@anidachi/protocol";
+import { isHboMaxOrigin, hboMaxCatalogPath, hboMaxPlaybackId, localizeHboMaxUrl, canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import { isCrunchyrollCatalogOrigin, crunchyrollCatalogPath, localizedWatchUrl } from "./source-adapters/crunchyroll/url";
 import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, youtubePageWatchSource } from "./source-adapters/youtube/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
@@ -27,8 +27,36 @@ export function catalogContentId(canonicalUrl: string) {
 	return url.searchParams.get("v") ?? url.pathname.split("/").at(-1);
 }
 
-export function catalogWatchDestination(sourceUrl: string, currentHref: string) {
+/** A rendered episode card may carry the edition HBO serves in this browser. */
+export function renderedHboMaxWatchUrl(doc: Document, sourceUrl: string) {
+	const id = hboMaxPlaybackId(sourceUrl);
+	if (!id || !isHboMaxOrigin(doc.location.origin)) return undefined;
+	const editionLinks = new Map<string, string>();
+	let contentLink: string | undefined;
+	for (const link of doc.querySelectorAll<HTMLAnchorElement>('a[href*="/video/watch/"]')) {
+		if (link.origin !== doc.location.origin || hboMaxPlaybackId(link.href) !== id) continue;
+		const path = link.pathname.replace(/\/$/, "");
+		const edition = path.split("/video/watch/")[1]?.split("/")[1]?.toLowerCase();
+		const href = link.origin + path;
+		if (edition) {
+			if (!editionLinks.has(edition)) editionLinks.set(edition, href);
+		} else {
+			contentLink ??= href;
+		}
+	}
+	return editionLinks.size === 1 ? editionLinks.values().next().value : contentLink;
+}
+
+export function catalogWatchDestination(sourceUrl: string, currentHref: string, renderedUrl?: string) {
 	const target = new URL(sourceUrl);
+	const id = hboMaxPlaybackId(sourceUrl);
+	if (id) {
+		if (renderedUrl && hboMaxPlaybackId(renderedUrl) === id) {
+			const rendered = new URL(renderedUrl);
+			if (rendered.origin === new URL(currentHref).origin) return rendered.origin + rendered.pathname;
+		}
+		return localizeHboMaxUrl(sourceUrl, currentHref);
+	}
 	if (disneyPlusWatchId(sourceUrl)) return localizeDisneyPlusWatchUrl(target, currentHref).href;
 	return isCrunchyrollCatalogOrigin(target.origin) ? localizedWatchUrl(target, currentHref).href : target.href;
 }
@@ -44,9 +72,8 @@ export function catalogRoomProvider(value: string): CatalogRoomProvider | null {
 	try {
 		const url = new URL(value);
 		if (url.username || url.password) return null;
-		if (url.origin === HBO_MAX_ORIGIN) {
-			const catalog = /^\/(?:home|series|movies|categories|audio-description|search|my-stuff|channel\/[a-f0-9-]{36}|browse(?:\/[a-z0-9_-]+)*|genre\/[a-z0-9_-]+)?\/?$/.test(url.pathname);
-			return catalog || hboMaxDetail(value) || hboMaxPlaybackId(value) ? "hbomax" : null;
+		if (isHboMaxOrigin(url.origin)) {
+			return hboMaxCatalogPath(value) || hboMaxPlaybackId(value) ? "hbomax" : null;
 		}
 		if (isDisneyPlusOrigin(value)) {
 			const path = url.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/|$)/i, "") || "/";

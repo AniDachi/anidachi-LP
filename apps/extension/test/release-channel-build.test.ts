@@ -1,3 +1,4 @@
+import { HBO_MAX_BROWSER_HOSTS } from "@anidachi/protocol";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
@@ -13,6 +14,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
+const hboOrigins = HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`);
 const repoRoot = resolve(process.cwd(), "../..");
 const BUILD_TEST_TIMEOUT_MS = 30_000;
 const stagingId = "ndkfphbchhfephdodcpehdcoclojagje";
@@ -276,12 +278,12 @@ describe.sequential("extension release channel builds", () => {
     expect(deriveId(manifest.key ?? "")).toBe(stagingId);
     expectExact(manifest.host_permissions, [
       ...videoOrigins,
-      "https://www.disneyplus.com/*", "https://www.hbomax.com/*",
+      "https://www.disneyplus.com/*", ...hboOrigins,
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
-    expectExact(contentMatches(manifest), [...videoHosts, "https://www.disneyplus.com/*", "https://www.hbomax.com/*"]);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, [...videoOrigins, "https://www.disneyplus.com/*", "https://www.hbomax.com/*"]);
+    expectExact(contentMatches(manifest), [...videoHosts, "https://www.disneyplus.com/*", ...hboOrigins]);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, [...videoOrigins, "https://www.disneyplus.com/*", ...hboOrigins]);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
       web: "https://staging.anidachi.app",

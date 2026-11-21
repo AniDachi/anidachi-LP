@@ -120,17 +120,69 @@ describe("HBO Max public catalog and personal history", () => {
 	it.each([
 		["fr", "Saison ２", "Saison ２, Épisode ３", "３. L’été", "S2 E3", "L'été"],
 		["ja", "シーズン２", "シーズン２ 第３話", "第３話：旅立ち", "シーズン２ 第３話", "旅立ち"],
+		["pl", "Sezon 2", "Oglądaj Sezon 2, Odcinek 3", "3. Noc 1944", "S2, odc. 3", "Noc 1944"],
+		["nl", "Seizoen 2", "Aflevering 3, seizoen 2", "3. Kamer 101", "Afl. 3, S2", "Kamer 101"],
+		["da", "2. sæson", "2. sæson, 3. afsnit", "3. København", "Afsnit 3 · Sæson 2", "København"],
+		["sv", "Säsong 2", "Säsong 2 · Avsnitt 3", "3. Resan", "Säsong 2 · Avsnitt 3", "Resan"],
+		["uk", "2 сезон", "3 серія, 2 сезон", "3. Дім 24", "Сезон 2, серія 3", "Дім 24"],
+		["th", "ซีซันที่ ๒", "ซีซันที่ ๒ ตอนที่ ๓", "ตอนที่ ๓: ห้อง ๒๑", "ตอนที่ ๓ ซีซันที่ ๒", "ห้อง ๒๑"],
+		["zh-Hant", "第二季", "第二季第三集", "第３集：2046：夜", "第三集 第二季", "2046：夜"],
+		["ja-JP", "シーズン２", "シーズン２ 第３話", "第３話旅立ち", "シーズン２ 第３話", "旅立ち"],
+		["ko", "시즌 2", "시즌 2 3화", "제3화: 1997년", "3화 · 시즌 2", "1997년"],
+		["ar", "الموسم ٢", "‏الموسم ٢، الحلقة ٣", "٣. الطريق ١٩", "‏الحلقة ٣، الموسم ٢", "الطريق ١٩"],
+		// The selected season anchors the roles even when neither label is in the player's terminology.
+		["et", "2. hooaeg", "Vaata 3. jagu, 2. hooaeg", "3. jagu: Reis 42", "3. jagu, 2. hooaeg", "Reis 42"],
+		["fi", "Kausi 2", "Kausi 2, jakso 3", "2001: Avaruusseikkailu", "Kausi 2, jakso 3", "2001: Avaruusseikkailu"],
 	])("uses localized ordinals from the selected menu and public card (%s)", (_locale, season, coordinates, cardTitle, playerLabel, subtitle) => {
 		route("/show/" + series);
+		document.documentElement.lang = _locale;
 		document.body.innerHTML = `<h1>War</h1><div role="tabpanel"><button aria-haspopup="true" aria-expanded="false">${season}</button>
-			<a data-sonic-type="video" data-sonic-id="${first}" data-testid="${first}_tile" href="/video/watch/${first}" aria-label="⁦⁨${coordinates}: Title⁩⁩. 1 of 10.">
+			<a data-sonic-type="video" data-sonic-id="${first}" data-testid="${first}_tile" href="/video/watch/${first}" aria-label="⁦⁨${coordinates}: ${subtitle}⁩⁩. 1 of 10.">
 				<p><span class="StyledPrimaryTitle">${cardTitle}</span></p></a></div>`;
 		stop = startHboMaxCatalogCapture(document);
 		player(first, "War", subtitle);
 		document.querySelector('[data-testid="player-ux-season-episode"]')!.textContent = playerLabel;
 		expect(readHboMaxPlaybackMetadata(document, first)).toMatchObject({ seasonNumber: 2, episodeNumber: 3 });
+		expect(readHboMaxCatalog(document, series, first)?.seasons[0]?.episodes[0]).toMatchObject({ episodeNumber: 3, providerEpisodeIdentifier: first });
 		document.querySelector('[data-testid="player-ux-season-episode"]')!.textContent = "E2 S3";
 		expect(readHboMaxPlaybackMetadata(document, first)).toBeNull();
+	});
+	it.each([
+		["Ścieżka 2, tom 3", "Season 2, Episode 3"],
+		["Season 2, Episode 3, 2024", "Season 2, Episode 3"],
+		["Watch Season 3, Season 2", "Season 2, Episode 3"],
+		["Episode 2, Season 3", "Season 2, Episode 3"],
+		["Episode 3, Season 2", "2:03"],
+		["Episode 3, Season 2", "S2 E3 2024"],
+		["Episode 3, Season 2", "Episode 2, Season 3"],
+	])("rejects unconfirmed coordinates on the tile (%s) or player (%s)", (tileLabel, playerLabel) => {
+		route("/show/" + series);
+		document.body.innerHTML = `<h1>War</h1><div role="tabpanel"><button aria-haspopup="true" aria-expanded="false">Season 2</button>
+			<a data-testid="${first}_tile" href="/video/watch/${first}" aria-label="${tileLabel}: Room 2024. 1 of 10."><p>3. Room 2024</p></a></div>`;
+		stop = startHboMaxCatalogCapture(document);
+		player(first, "War", "Room 2024");
+		document.querySelector('[data-testid="player-ux-season-episode"]')!.textContent = playerLabel;
+		expect(readHboMaxPlaybackMetadata(document, first)).toBeNull();
+	});
+	it("records the same episode keys and local titles on Dutch host and Thai guest players", () => {
+		route("/show/" + series);
+		document.documentElement.lang = "nl";
+		document.body.innerHTML = `<h1>Oorlog</h1><section role="tabpanel"><h2>Seizoen 2</h2>
+			<a data-testid="${first}_tile" href="/video/watch/${first}" aria-label="Aflevering 3, seizoen 2: Kamer 42"><p>3. Kamer 42</p></a></section>`;
+		stop = startHboMaxCatalogCapture(document);
+		player(first, "Oorlog", "Kamer 42");
+		document.querySelector('[data-testid="player-ux-season-episode"]')!.textContent = "Afl. 3, S2";
+		const keys = { titleKey: "hbomax:series:" + series, episodeKey: "hbomax:episode:" + first, seasonNumber: 2, episodeNumber: 3 };
+		expect(observation(first)).toMatchObject({ ...keys, title: "Oorlog", episodeTitle: "Kamer 42" });
+		stop();
+		document.documentElement.lang = "th";
+		player(first, "สงคราม", "ห้อง ๔๒");
+		document.querySelector('[data-testid="player-ux-season-episode"]')!.textContent = "ซีซันที่ ๒ ตอนที่ ๓";
+		stop = startHboMaxCatalogCapture(document);
+		observeHboMaxRoomSource(document, { provider: "hbomax", sourceUrl: hboMaxSourceUrl(first), canonicalUrl: hboMaxSourceUrl(first),
+			videoFingerprint: hboMaxFingerprint(first), title: "Oorlog", seriesTitle: "Oorlog", episodeTitle: "Kamer 42", seasonNumber: 2, episodeNumber: 3,
+			hbomaxIdentity: { kind: "episode", providerSeriesId: series, providerEpisodeIdentifier: first } });
+		expect(observation(first)).toMatchObject({ ...keys, title: "สงคราม", episodeTitle: "ห้อง ๔๒" });
 	});
 	it("rejects stale rows while the provider is loading another season", () => {
 		route("/show/" + series);
