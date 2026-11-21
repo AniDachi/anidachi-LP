@@ -2968,7 +2968,14 @@ describe("privileged overlay wiring", () => {
         expect(location.hash).toBe(new URL(explicit).hash);
         await act(async () => f.runtime.reconcile());
       }
-      for(let i=0;i<8;i++)await flushMountedWork();
+      if (newer) {
+        for (let i=0;i<8;i++) await flushMountedWork();
+      } else {
+        await vi.waitFor(async () => {
+          await flushMountedWork();
+          expect(f.seek).toHaveBeenCalled();
+        }, { timeout: 5000 });
+      }
       const claims=f.send.mock.calls.map(([m]:any)=>m).filter(m=>m.command==="resume-claim");
       expect(claims.map(m=>m.input.currentTime)).toEqual(newer?[]:[321]);
       expect(f.seek.mock.calls.map(([time])=>time)).toEqual(newer?[]:[321]);

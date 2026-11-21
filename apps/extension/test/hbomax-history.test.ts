@@ -1,3 +1,4 @@
+import { bindHboMaxGuestExit } from "../src/source-adapters/hbomax/navigation";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WatchCatalogCommitRequestSchema, type WatchHistoryResponse, hboMaxFingerprint, hboMaxSourceUrl } from "@anidachi/protocol";
 import { readHboMaxCatalog, startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/catalog";
@@ -223,5 +224,28 @@ describe("HBO Max public catalog and personal history", () => {
 		player(first, title, episodeTitle);
 		expect(readHboMaxPlaybackMetadata(document, first)).toMatchObject({ title, episodeTitle, artworkUrl: artwork });
 		expect(readHboMaxCatalog(document, series, first)?.seasons[0]?.episodes[0]?.title).toBe(episodeTitle);
+	});
+	it.each(["invite", "player", "catalog"] as const)("handles guest exit with a previous %s entry", previous => {
+		route("/show/" + series);
+		document.body.innerHTML = "<h1>War</h1>" + panel(1, first, "It's Done");
+		stop = startHboMaxCatalogCapture(document);
+		player(first, "War", "It's Done");
+		const back = document.createElement("button");
+		back.dataset.testid = "player-ux-back-button";
+		document.querySelector('[data-testid="playerContainer"]')!.append(back);
+		const before = previous === "catalog" ? "https://www.hbomax.com/show/" + series :
+			previous === "player" ? hboMaxSourceUrl(second) : undefined;
+		vi.stubGlobal("navigation", {
+			currentEntry: { index: 1 }, entries: () => [{ url: before }, { url: hboMaxSourceUrl(first) }]
+		});
+		const navigate = vi.fn();
+		const unbind = bindHboMaxGuestExit(document, navigate);
+		try {
+			back.click();
+			expect(navigate.mock.calls).toEqual(previous === "catalog" ? [] : [["https://www.hbomax.com/show/" + series]]);
+			unbind();
+			back.click();
+			expect(navigate).toHaveBeenCalledTimes(previous === "catalog" ? 0 : 1);
+		} finally { unbind(); vi.unstubAllGlobals(); }
 	});
 });
