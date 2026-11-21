@@ -2,6 +2,7 @@ import {
 	HBO_MAX_ORIGIN, WATCH_CATALOG_MAX_EPISODES, hboMaxCatalogPath, hboMaxDetail, hboMaxPlaybackId, localizeHboMaxUrl,
 } from "@anidachi/protocol";
 import { HboCmsEpisodeSchema, HboCmsShowSchema, type HboCmsEpisode, type HboCmsShow } from "./cms-catalog";
+import { resolveHboLocale } from "./locale";
 
 const pageBytes = 6_000_000;
 const pageTimeout = 10_000;
@@ -10,13 +11,6 @@ const missingPage = Symbol("missing HBO season page");
 
 function object(value: unknown): Record<string, unknown> | null {
 	return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
-function sameLocale(expected: string, actual: string) {
-	try {
-		const a = new Intl.Locale(expected), b = new Intl.Locale(actual);
-		return a.language === b.language && a.maximize().script === b.maximize().script &&
-			(!a.region || !b.region || a.region === b.region);
-	} catch { return false; }
 }
 function sameMarketAlternate(href: string | undefined, source: URL, seriesId: string) {
 	const currentMarket = /^\/([a-z]{2})\/[a-z]{2}(?:-[a-zA-Z]{2,4})?\/show\//u.exec(source.pathname)?.[1];
@@ -57,7 +51,7 @@ function mappedGroup(html: string, url: string, locale: string, seriesId: string
 				if (canonical !== undefined) return null;
 				canonical = attrs.get("href") ?? "";
 			}
-			if (roles?.includes("alternate") && sameLocale(locale, attrs.get("hreflang") ?? "")) {
+			if (roles?.includes("alternate") && resolveHboLocale(locale, attrs.get("hreflang") ?? "")) {
 				const candidate = sameMarketAlternate(attrs.get("href"), source, seriesId);
 				if (candidate) alternatives.add(candidate);
 			}
@@ -83,7 +77,7 @@ function mappedGroup(html: string, url: string, locale: string, seriesId: string
 		if (group) return null;
 		group = row;
 	}
-	const alternate = !sameLocale(locale, lang) && alternatives.size === 1 ? [...alternatives][0]! : null;
+	const alternate = !resolveHboLocale(locale, lang) && alternatives.size === 1 ? [...alternatives][0]! : null;
 	return group && { group, alternate, language: lang };
 }
 

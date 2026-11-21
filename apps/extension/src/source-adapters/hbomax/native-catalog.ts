@@ -1,5 +1,6 @@
 import { HBO_MAX_ORIGIN, hboMaxDetail, hboMaxPlaybackId, isHboMaxOrigin } from "@anidachi/protocol";
 import { parseHboNativePage } from "./cms-catalog";
+import { resolveHboLocale } from "./locale";
 
 const maxBodyBytes = 12 * 1024 * 1024;
 type NativePage = NonNullable<ReturnType<typeof parseHboNativePage>>;
@@ -53,8 +54,13 @@ export function startHboNativeCatalog(win: Window): () => void {
 	const publish = () => {
 		const id = hboMaxPlaybackId(doc.location.href);
 		if (!id) return;
+		const language = locale();
 		for (const page of pages) {
-			if (page.locale && locale() && page.locale !== locale()) continue;
+			if (page.locale && language) {
+				const resolved = resolveHboLocale(page.locale, language);
+				if (!resolved) continue;
+				page.locale = resolved;
+			} else if (language) page.locale = language;
 			const { metadata, show, episodes, playbackId } = page.native;
 			const item = episodes.find(episode => episode.id === id);
 			let current = playbackId === id ? metadata : null;
@@ -68,7 +74,7 @@ export function startHboNativeCatalog(win: Window): () => void {
 			}
 			if (!current) continue;
 			doc.dispatchEvent(new CustomEvent("anidachi:hbo-cms", {
-				detail: JSON.stringify({ playbackId: id, metadata: current, show, episodes, locale: page.locale || locale() }),
+				detail: JSON.stringify({ playbackId: id, metadata: current, show, episodes, locale: page.locale }),
 			}));
 			return;
 		}

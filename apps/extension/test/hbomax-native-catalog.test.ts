@@ -24,7 +24,7 @@ it("observes only HBO catalog routes", () => {
 });
 
 it("leaves the native response intact and replays the exact episode to a late content script", async () => {
-	const document = Object.assign(new EventTarget(), { location: new URL(origin + path), documentElement: { lang: "en-US" } });
+	const document = Object.assign(new EventTarget(), { location: new URL(origin + path), documentElement: { lang: "en" } });
 	const response = new Response(JSON.stringify(body), { headers: { "content-type": "application/json" } });
 	Object.defineProperty(response, "url", { value: cms });
 	const original = vi.fn<typeof fetch>().mockResolvedValue(response);
@@ -36,8 +36,15 @@ it("leaves the native response intact and replays the exact episode to a late co
 	try {
 		expect(await (await window.fetch(cms)).json()).toEqual(body);
 		await vi.waitFor(() => expect(packets).toHaveLength(1));
+		document.documentElement.lang = "en-US";
 		document.dispatchEvent(new Event("anidachi:hbo-cms-read"));
-		expect(packets[1]).toMatchObject({ playbackId: id, metadata: { episodeTitle: "Serious Mothering" } });
+		expect(packets[1]).toMatchObject({ playbackId: id, locale: "en-US", metadata: { episodeTitle: "Serious Mothering" } });
+		for (const language of ["en-GB", "es-MX"]) {
+			document.documentElement.lang = language;
+			document.dispatchEvent(new Event("anidachi:hbo-cms-read"));
+			expect(packets).toHaveLength(2);
+		}
+		document.documentElement.lang = "en-US";
 		document.location = new URL(origin + "/video/watch/" + season);
 		document.dispatchEvent(new Event("anidachi:hbo-cms-read"));
 		expect(packets).toHaveLength(2);
