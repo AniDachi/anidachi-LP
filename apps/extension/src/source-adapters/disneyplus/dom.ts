@@ -1,5 +1,11 @@
 import { isUsableVideo } from "../core/video-discovery";
 
+export function disneyControlsPortal(doc: Document): HTMLElement | null {
+  const portals = doc.getElementsByTagName("disney-web-player-ui");
+  const portal = portals.length === 1 ? portals.item(0) : null;
+  return portal instanceof HTMLElement ? portal : null;
+}
+
 /** Search the player's light DOM and open web-component roots, including the root host itself. */
 export function findDisneyPlusElement<T extends Element>(container: ParentNode, selector: string): T | null {
   const direct = container.querySelector<T>(selector);

@@ -1,4 +1,4 @@
-import { composedClosest, findDisneyPlusElement, isDisneyPlusMainVideo } from "./dom";
+import { composedClosest, disneyControlsPortal, findDisneyPlusElement, isDisneyPlusMainVideo } from "./dom";
 import { disneyPlusWatchId } from "./url";
 
 const SLIDER = ".progress-bar__seekable-range[role='slider']";
@@ -41,10 +41,7 @@ export class DisneyPlusTimeline {
   }
 
   private controlsRoot(): HTMLElement | null {
-    // Disney renders the controls in a separate portal under body.
-    const portals = this.video.ownerDocument.getElementsByTagName("disney-web-player-ui");
-    const portal = portals.length === 1 ? portals.item(0) : null;
-    return portal instanceof HTMLElement ? portal : null;
+    return disneyControlsPortal(this.video.ownerDocument);
   }
 
   hasAdUI(): boolean {

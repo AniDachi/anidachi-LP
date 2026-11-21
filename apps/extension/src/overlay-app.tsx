@@ -541,6 +541,7 @@ export async function runOverlayPrivilegedAction(
 }
 
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
+	const disneyPlayer = adapter.provider === "disneyplus" && !primeBrowsing;
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
 	const primeRestoreAttempted = useRef(false);
 	const activePlayer = useRef<VideoAdapter | null>(adapter);
@@ -2888,18 +2889,26 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				return;
 			}
 
-			event.preventDefault();
-			event.stopImmediatePropagation();
+			if (!disneyPlayer) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+			}
 			closeComposer();
 		};
 		const root = form.getRootNode();
+		const closeFromPlayer = (event: Event) => {
+			const host = (root as ShadowRoot).host;
+			if (host && !event.composedPath().includes(host)) closeComposer();
+		};
+		if (disneyPlayer) document.addEventListener("pointerdown", closeFromPlayer, true);
 
 		root.addEventListener("pointerdown", handleRootPointerDown, true);
 
 		return () => {
 			root.removeEventListener("pointerdown", handleRootPointerDown, true);
+			if (disneyPlayer) document.removeEventListener("pointerdown", closeFromPlayer, true);
 		};
-	}, [deactivateMessageComposerGuard, messageComposerOpen]);
+	}, [deactivateMessageComposerGuard, disneyPlayer, messageComposerOpen]);
 
 	useEffect(() => {
 		if (!roomId) {
@@ -3597,6 +3606,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		"--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
 		"--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
 		"--mini-panel-bottom-reserve": `${overlayChromePlacement.miniPanelBottomReservePx}px`,
+		"--panel-available-width": playerOverlayGeometry.panel.maxWidthPx == null ? undefined : `${playerOverlayGeometry.panel.maxWidthPx}px`,
+		"--panel-available-height": playerOverlayGeometry.panel.maxHeightPx == null ? undefined : `${playerOverlayGeometry.panel.maxHeightPx}px`,
 		"--mini-panel-right": `${overlayChromePlacement.miniPanelRightPx}px`,
 		"--mini-panel-top": primeBrowsing ? "calc(clamp(12px, 10vh, 80px) + 40px)" : `${overlayChromePlacement.miniPanelTopPx}px`,
 		"--top-bubble-right": `${overlayChromePlacement.topBubbleRightPx}px`,
@@ -6833,16 +6844,17 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		noticeKey: capsuleNoticeKey, bubbleVisible: topBubbleReveal.bubbleVisible || panelOpen,
 		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
 	});
-	const primePanelOpen = panelOpen && adapter.provider === "primevideo";
+	const isolatePlayerPointer = adapter.provider === "primevideo" || disneyPlayer;
+	const guardedPanelOpen = panelOpen && isolatePlayerPointer;
 	const catalogReturnTarget = primeBrowsing && supportsCatalogReturn(adapter.provider) && roomId && roomSnapshotReady && isConnected &&
 		currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
 		storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
 		participants.some(p => p.role === "host" && p.connected !== false) && !capsuleNotice.open ? catalogReturnUrl : null;
 	useLayoutEffect(() => {
-		if (!capsuleNotice.present && !primePanelOpen && !catalogReturnTarget) return;
+		if (!capsuleNotice.present && !guardedPanelOpen && !catalogReturnTarget) return;
 		const bubble = topBubbleRef.current, root = overlayRootRef.current;
 		if (!bubble || !root) return;
-		const panel = primePanelOpen ? miniPanelRef.current : null;
+		const panel = guardedPanelOpen ? miniPanelRef.current : null;
 		const measure = () => {
 			const width = bubble.offsetWidth;
 			if (width > 0) root.style.setProperty("--capsule-width", `${width}px`);
@@ -6857,7 +6869,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			root.style.removeProperty("--capsule-width");
 			root.style.removeProperty("--open-panel-height");
 		};
-	}, [capsuleNotice.present, primePanelOpen, catalogReturnTarget]);
+	}, [capsuleNotice.present, guardedPanelOpen, catalogReturnTarget]);
 	const accountDisplayName =
 		accountUser?.displayName ??
 		participant?.displayName ??
@@ -6913,7 +6925,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				]
 					.filter(Boolean)
 					.join(" ")}
-				{...(primePanelOpen ? overlayPointerBoundaryProps : {})}
+				{...(guardedPanelOpen ? overlayPointerBoundaryProps : {})}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
 				{catalogReturnTarget && (
@@ -6954,13 +6966,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				</button>
 			</div>
 
-			{primePanelOpen && (
-				<div aria-hidden="true" className="prime-panel-pointer-guard" {...overlayPointerBoundaryProps} />
+			{guardedPanelOpen && (
+				<div aria-hidden="true" className="panel-pointer-guard" {...overlayPointerBoundaryProps} />
 			)}
 			{panelOpen ? (
 				<section
 					className="mini-panel"
-					data-prime-panel={primePanelOpen || undefined}
+					data-guarded-panel={guardedPanelOpen || undefined}
 					id="anidachi-mini-panel"
 					aria-label="Anidachi controls"
 					ref={miniPanelRef}
@@ -7396,7 +7408,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				/>
 			) : null}
 
-			{messageComposerOpen && roomId ? (
+			{messageComposerOpen && roomId && !disneyPlayer ? (
 				<div
 					aria-hidden="true"
 					className="message-composer-shield"
@@ -7407,6 +7419,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			{messageComposerOpen && roomId ? (
 				<form
 					className="message-composer"
+					data-player-toolbar={disneyPlayer || undefined}
 					{...overlayInteractionBoundaryProps}
 					onFocus={stopNativeEvent}
 					onBlur={stopNativeEvent}
@@ -7513,7 +7526,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 					{roomRailVisible ? (
 						<RoomRail
-							isolatePlayerPointer={adapter.provider === "primevideo"}
+							isolatePlayerPointer={isolatePlayerPointer}
 							mediaSnapshot={versionedMedia ? currentMediaSnapshot : undefined}
 							activeParticipantId={participant?.id}
 							getParticipantAudioPreference={getParticipantAudioPreference}

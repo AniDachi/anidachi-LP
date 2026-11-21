@@ -288,17 +288,17 @@ describe("privileged overlay wiring", () => {
 		} finally { bounds.mockRestore(); await act(async () => runtime.dispose()); }
 	});
 
-	it("isolates pointer movement around the open Prime panel and releases the player on close", async () => {
+	it.each(["primevideo", "disneyplus"] as const)("isolates pointer movement around the open %s panel and releases the player on close", async (provider) => {
 		installActiveHostRoomRuntime();
-		const view = await renderOverlay(adapter => { adapter.provider = "primevideo"; });
+		const view = await renderOverlay(adapter => { adapter.provider = provider; });
 		const playerMove = vi.fn();
 		view.container.addEventListener("pointermove", playerMove);
 		const move = (target: Element) => target.dispatchEvent(new PointerEvent("pointermove", { bubbles: true }));
 		try {
 			const launcher = button(view.container, "Open Anidachi controls");
-			expect(view.container.querySelector(".prime-panel-pointer-guard")).toBeNull();
+			expect(view.container.querySelector(".panel-pointer-guard")).toBeNull();
 			await click(launcher);
-			const guard = view.container.querySelector(".prime-panel-pointer-guard");
+			const guard = view.container.querySelector(".panel-pointer-guard");
 			expect(guard).not.toBeNull();
 			move(guard!);
 			move(launcher);
@@ -306,7 +306,7 @@ describe("privileged overlay wiring", () => {
 			move(view.container);
 			expect(playerMove).toHaveBeenCalledTimes(1);
 			await click(launcher);
-			expect(view.container.querySelector(".prime-panel-pointer-guard")).toBeNull();
+			expect(view.container.querySelector(".panel-pointer-guard")).toBeNull();
 			move(view.container);
 			expect(playerMove).toHaveBeenCalledTimes(2);
 		} finally {
@@ -1453,7 +1453,7 @@ describe("privileged overlay wiring", () => {
 		}
 	});
 
-	it("opens the emoji picker and inserts an emoji inside a closed overlay", async () => {
+	it.each([false, true])("opens the emoji picker in a closed overlay (Disney native pointer = %s)", async (disney) => {
 		const sendMessage = vi.fn(
 			async (message: { type?: string; command?: string }) => {
 				if (message.type === "ANIDACHI_AUTH")
@@ -1494,7 +1494,7 @@ describe("privileged overlay wiring", () => {
 				participants: [hostParticipant()],
 			});
 		});
-		const view = await renderOverlayInClosedShadow();
+		const view = await renderOverlayInClosedShadow(disney);
 
 		await click(button(view.container, "Open Anidachi controls"));
 		await click(button(view.container, "Create room"));
@@ -1561,16 +1561,17 @@ describe("privileged overlay wiring", () => {
 		expect(input?.value).toContain(emoji.textContent);
 
 		const shield = view.container.querySelector(".message-composer-shield");
-		if (!(shield instanceof HTMLDivElement))
-			throw new Error("Missing composer shield");
+		expect(Boolean(shield)).toBe(!disney);
+		const outside = shield ?? document.body;
 		await act(async () => {
-			shield.dispatchEvent(
+			const allowed = outside.dispatchEvent(
 				new PointerEvent("pointerdown", {
 					bubbles: true,
 					cancelable: true,
 					composed: true,
 				}),
 			);
+			expect(allowed).toBe(disney);
 			await Promise.resolve();
 		});
 		expect(
@@ -6310,7 +6311,7 @@ async function renderOverlay(prepare?: (adapter: VideoAdapter) => void, initialP
 	return { container, root, adapter };
 }
 
-async function renderOverlayInClosedShadow(): Promise<{
+async function renderOverlayInClosedShadow(disney = false): Promise<{
 	container: HTMLDivElement;
 	root: Root;
 }> {
@@ -6330,10 +6331,12 @@ async function renderOverlayInClosedShadow(): Promise<{
 	adapterContainer.append(video, overlayHost);
 	document.body.append(adapterContainer);
 	const root = createRoot(container);
+	const adapter = createAdapter(adapterContainer, video);
+	if (disney) adapter.provider = "disneyplus";
 	await act(async () => {
 		root.render(
 			<overlayApp.OverlayApp
-				adapter={createAdapter(adapterContainer, video)}
+				adapter={adapter}
 			/>,
 		);
 		await Promise.resolve();

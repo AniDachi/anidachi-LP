@@ -51,8 +51,50 @@ describe("Disney+ player", () => {
       provider: "disneyplus", sourceUrl: url(id), videoFingerprint: `disneyplus|play/${id}`, duration: 3016,
     });
     expect(adapter.getPlaybackSnapshot()).toMatchObject({ phase: "content", contentTime: expect.closeTo(69) });
-    expect(adapter.getOverlayBinding().mountTarget).toBe(document.querySelector(".pbx-player-surface"));
+    expect(adapter.getOverlayBinding().mountTarget).toBe(document.body);
     expect(adapter.getState().hostTime).toBeCloseTo(69);
+  });
+
+  it("mounts alongside the native portal and stays within the active fullscreen tree", () => {
+    const { adapter } = fixture();
+    const surface = document.querySelector<HTMLElement>(".pbx-player-surface")!;
+    const portal = document.querySelector("disney-web-player-ui")!;
+    const player = document.createElement("div");
+    const nativeLayer = document.createElement("div");
+    document.body.append(player);
+    player.append(surface, nativeLayer);
+    nativeLayer.append(portal);
+    expect(adapter.getOverlayBinding()).toMatchObject({ mountTarget: player, boundsElement: surface });
+    Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => surface });
+    try {
+      expect(adapter.getOverlayBinding().mountTarget).toBe(surface);
+    } finally {
+      Reflect.deleteProperty(document, "fullscreenElement");
+    }
+    portal.remove();
+    expect(adapter.getOverlayBinding().mountTarget).toBe(surface);
+  });
+
+  it("reserves the visible native footer in a narrow player and releases it on hide", () => {
+    const { adapter } = fixture();
+    const surface = document.querySelector(".pbx-player-surface")!;
+    const controls = document.createElement("main-app-controls-overlay");
+    document.querySelector("disney-web-player-ui")!.append(controls);
+    const root = controls.attachShadow({ mode: "open" });
+    const footer = root.appendChild(document.createElement("div"));
+    footer.className = "controls-footer";
+    vi.spyOn(surface, "getBoundingClientRect").mockReturnValue(new DOMRect(20, 10, 640, 480));
+    vi.spyOn(footer, "getBoundingClientRect").mockReturnValue(new DOMRect(44, 353, 592, 93));
+    expect(adapter.getOverlayGeometry()).toMatchObject({ controlsVisible: true, safeInsets: { bottomPx: 145 } });
+    const transport = root.appendChild(document.createElement("div"));
+    transport.className = "playback-controls-narrow";
+    const size = vi.spyOn(transport, "getBoundingClientRect");
+    size.mockReturnValue(new DOMRect(240, 216, 200, 68));
+    expect(adapter.getOverlayGeometry().panel.maxWidthPx).toBe(202);
+    size.mockReturnValue(new DOMRect(240, 216, 250, 68));
+    expect(adapter.getOverlayGeometry().panel.maxHeightPx).toBe(150);
+    footer.remove();
+    expect(adapter.getOverlayGeometry()).toMatchObject({ controlsVisible: false, safeInsets: { bottomPx: 0 } });
   });
 
   it("continues from the Disney+ clock while controls are hidden and waits for calibration after a discontinuity", () => {

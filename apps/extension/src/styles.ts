@@ -16,7 +16,7 @@ ${free20WarningStyles}
   }
 
   .anidachi-overlay {
-    --mini-panel-width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
+    --mini-panel-width: min(324px, var(--panel-available-width, 100%), calc(100% - var(--mini-panel-right, 10px) - 10px));
     position: absolute;
     inset: 0;
     z-index: 2147483647;
@@ -208,9 +208,9 @@ ${extensionThemeTokens}
     font-weight: 650;
   }
 
-  /* Prime aligns the launcher and panel on their right edge. Connect their padded
+  /* The player aligns the launcher and panel on their right edge. Connect their padded
      outlines so a diagonal pointer path stays inside without covering the toolbar. */
-  .prime-panel-pointer-guard {
+  .panel-pointer-guard {
     --pad: 6px;
     --rise: calc(var(--mini-panel-top) - var(--top-bubble-top));
     position: absolute;
@@ -232,9 +232,9 @@ ${extensionThemeTokens}
     width: var(--mini-panel-width);
     max-height: max(
       0px,
-      calc(
+      min(var(--panel-available-height, 100%), calc(
         100% - var(--mini-panel-top, 48px) - var(--mini-panel-bottom-reserve, 10px)
-      )
+      ))
     );
     overflow: auto;
     overscroll-behavior: contain;
@@ -273,7 +273,7 @@ ${extensionThemeTokens}
     display: none;
   }
 
-  .mini-panel[data-prime-panel] { container: prime-panel / inline-size; }
+  .mini-panel[data-guarded-panel] { container: compact-panel / inline-size; }
 
   .panel-header {
     display: grid;
@@ -1684,6 +1684,8 @@ ${panelMediaControlStyles}
     pointer-events: auto;
     animation: anidachi-composer-in 120ms ease-out both;
   }
+
+  .message-composer[data-player-toolbar] { bottom: max(clamp(72px, 12vh, 118px), var(--mini-panel-bottom-reserve)); }
 
   .message-composer-emoji {
     position: relative;
@@ -4914,7 +4916,7 @@ ${hostingNoticeStyles}
     font-size: 11px;
     line-height: 1.35;
   }
-  @container prime-panel (max-width: 285px) {
+  @container compact-panel (max-width: 285px) {
     .settings-surface { margin-top: 8px; padding: 8px; }
     .settings-toggle-row { position: relative; }
     .settings-help { position: static; }

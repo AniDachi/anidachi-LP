@@ -46,6 +46,7 @@ export interface AdapterPlaybackPolicy {
 export interface AdapterOverlayBinding {
   mountTarget: HTMLElement;
   fillMountTarget: boolean;
+  boundsElement?: HTMLElement;
   useNativePlayerDoubleClick: boolean;
 }
 
