@@ -1,10 +1,12 @@
 import { disneyPlusFingerprint, disneyPlusSourceUrl, MAX_WATCH_TITLE_CHARS, type PlaybackState, type WatchSourceDescriptor } from "@anidachi/protocol";
 import { Html5VideoAdapter } from "../core/html5-video-adapter";
 import { DEFAULT_PLAYBACK_POLICY } from "../core/playback-policy";
+import type { PlayerOverlayGeometryListener } from "../core/overlay-geometry";
 import type { AdapterPlaybackSnapshot, PersonalResumeTarget, PlayerEvent } from "../core/types";
 import { readDisneyPlusPlaybackMetadata, readDisneyPlusPlayerTitle } from "./metadata";
 import { DisneyPlusTimeline } from "./timeline";
 import { disneyPlusWatchId } from "./url";
+import { disneyOverlayBinding, disneyOverlayGeometry, subscribeDisneyOverlayGeometry } from "./player-chrome";
 
 const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
@@ -83,7 +85,13 @@ export class DisneyPlusVideoAdapter extends Html5VideoAdapter {
   }
 
   override getOverlayBinding() {
-    return { mountTarget: this.timeline.surface, fillMountTarget: true, useNativePlayerDoubleClick: true };
+    return disneyOverlayBinding(this.timeline.surface);
+  }
+
+  override getOverlayGeometry() { return disneyOverlayGeometry(this.timeline.surface); }
+
+  override subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener) {
+    return subscribeDisneyOverlayGeometry(this.timeline.surface, listener);
   }
 
   override isFullscreen(): boolean {

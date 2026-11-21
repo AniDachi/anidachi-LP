@@ -847,7 +847,7 @@ export function mountOverlay(
     if (host.parentElement !== target) {
       placeHost(target);
     }
-    syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget);
+    syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget, overlayBinding.boundsElement);
     if (observedTarget !== target) {
       if (observedTarget) {
         resizeObserver?.disconnect();
@@ -1113,6 +1113,7 @@ function syncOverlayBounds(
   host: HTMLElement,
   target: HTMLElement,
   fillMountTarget: boolean,
+  boundsElement: HTMLElement = adapter.video,
 ): void {
   const videoStyle = getComputedStyle(adapter.video);
 
@@ -1136,7 +1137,7 @@ function syncOverlayBounds(
     return;
   }
 
-  const videoRect = adapter.video.getBoundingClientRect();
+  const videoRect = boundsElement.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
   const left = videoRect.left - targetRect.left + target.scrollLeft;
   const top = videoRect.top - targetRect.top + target.scrollTop;
