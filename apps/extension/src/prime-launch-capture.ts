@@ -2,6 +2,7 @@ import { primeDocumentRouteId } from "./source-adapters/primevideo/metadata";
 import { parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import {
 	canonicalizeRoomSourceUrl,
+	hboMaxPlaybackId,
 	MAX_ROOM_ID_CHARS,
 	parsePersonalHistoryResumeUrl,
 	PERSONAL_HISTORY_RESUME_TTL_MS,
@@ -43,6 +44,7 @@ type Launch = {
 	resume: PersonalHistoryResume | null;
 };
 function source(href: string) {
+	if (hboMaxPlaybackId(href)) return canonicalizeRoomSourceUrl(href, "hbomax");
 	const route = parsePrimePageUrl(href);
 	const id =
 		route?.token.length === 26
@@ -82,7 +84,7 @@ function readLaunch(href: string, now: number): Launch | null {
 				`${canonical.source.sourceUrl}${new URL(href).hash}`,
 				now,
 			);
-	if (!roomId && !resume) return null;
+	if (!roomId && (!resume || params.getAll("anidachiResume").length !== 1)) return null;
 	return {
 		sourceUrl: canonical.source.sourceUrl,
 		fingerprint: canonical.source.videoFingerprint,
@@ -214,7 +216,7 @@ export function createPrimeLaunchCapture(href: string, now = Date.now()) {
 				pendingHref = null;
 			}
 			const admitted =
-				adapter.provider === "primevideo" &&
+				(adapter.provider === "primevideo" || adapter.provider === "hbomax") &&
 				valid(currentHref, adapter.getFingerprint(), Date.now());
 			handed = true;
 			if (!admitted) {

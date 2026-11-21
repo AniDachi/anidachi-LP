@@ -244,7 +244,7 @@ function startContentLifecycleSession(
     }
     // Returning to a cached document is not a new invitation/Resume. A valid
     // background pending intent may recover, but the old fragment must not replay.
-    const capturedLaunch = () => adapter.provider === "primevideo" && restoredLaunch?.blocksFragment?.(location.href)
+    const capturedLaunch = () => (adapter.provider === "primevideo" || adapter.provider === "hbomax") && restoredLaunch?.blocksFragment?.(location.href)
       ? restoredLaunch
       : primeLaunch.handoff(adapter, location.href);
     const dismissal = pendingDismissal;

@@ -27,13 +27,13 @@ function navigate(href: string) {
 		value: new URL(href),
 	});
 }
-function delayedMount(href: string, playingFingerprint = fingerprint) {
+function delayedMount(href: string, playingFingerprint = fingerprint, provider: "primevideo" | "hbomax" = "primevideo") {
 	navigate(href);
 	let detection: AdapterDetectionResult = { status: "none" };
 	let launch: PrimeLaunchHandoff | null = null;
 	const adapter = {
-		id: "primevideo",
-		provider: "primevideo",
+		id: provider,
+		provider,
 		getFingerprint: () => playingFingerprint,
 		getSourceDescriptor: () => undefined,
 		container: document.body,
@@ -212,4 +212,19 @@ it("preserves canonical Resume identity on a regional launch", async () => {
  const page = delayedMount(href);
  navigate(sourceUrl.replace('/detail/', '/region/na/detail/'));
  expect(page.mount()?.takeResume(location.href, fingerprint)?.sourceUrl).toBe(sourceUrl);
+});
+
+it("preserves the owner-bound personal HBO resume once after same-document URL cleanup", async () => {
+	const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+	const href = "https://www.hbomax.com/video/watch/" + id;
+	const fingerprint = "hbomax|video/watch/" + id;
+	const input = await buildPersonalHistoryResumeUrl({ ownerUserId: historyOwner, accountGeneration: 1,
+		provider: "hbomax", sourceUrl: href, currentTime: 37 });
+	const page = delayedMount(input, fingerprint, "hbomax");
+	navigate(href);
+	const capture = page.mount();
+	const resume = capture?.takeResume(href, fingerprint);
+	expect(resume).toMatchObject({ provider: "hbomax", sourceUrl: href, accountGeneration: 1, currentTime: 37 });
+	expect(resume?.ownerBinding).toBeTruthy();
+	expect(capture?.takeResume(href, fingerprint)).toBeNull();
 });
