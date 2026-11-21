@@ -113,6 +113,45 @@ describe("Disney+ player", () => {
     expect(adapter.getCurrentTime()).toBeCloseTo(1200);
   });
 
+  it("updates the overlay when Disney remounts the toolbar without resizing the player", async () => {
+    const { adapter } = fixture();
+    const surface = document.querySelector(".pbx-player-surface")!;
+    vi.spyOn(surface, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const controls = document.createElement("main-app-controls-overlay");
+    const root = controls.attachShadow({ mode: "open" });
+    document.querySelector("disney-web-player-ui")!.append(controls);
+    const observe = vi.fn();
+    const unobserve = vi.fn();
+    vi.stubGlobal("ResizeObserver", class {
+      observe = observe;
+      unobserve = unobserve;
+      disconnect() {}
+    });
+    const changed = vi.fn();
+    const stop = adapter.subscribeOverlayGeometry(changed);
+    const footer = document.createElement("div");
+    footer.className = "controls-footer";
+    vi.spyOn(footer, "getBoundingClientRect").mockReturnValue(new DOMRect(24, 343, 592, 101));
+    root.append(footer);
+    await Promise.resolve();
+    expect(observe).toHaveBeenCalledWith(footer);
+    expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({
+      controlsVisible: true, safeInsets: expect.objectContaining({ bottomPx: 145 }),
+    }));
+    footer.remove();
+    await Promise.resolve();
+    expect(unobserve).toHaveBeenCalledWith(footer);
+    expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ controlsVisible: false }));
+    root.append(footer);
+    await Promise.resolve();
+    expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ controlsVisible: true }));
+    stop();
+    changed.mockClear();
+    footer.remove();
+    await Promise.resolve();
+    expect(changed).not.toHaveBeenCalled();
+  });
+
   it("uses the advancing played bar even when the accessible seek cursor stays on the last requested time", () => {
     const { adapter, controls, slider, setPlayed } = fixture();
     setPlayed(125);

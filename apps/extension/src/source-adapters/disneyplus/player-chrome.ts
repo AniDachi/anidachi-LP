@@ -48,21 +48,38 @@ export function disneyOverlayGeometry(surface: HTMLElement, controls = mainContr
 
 export function subscribeDisneyOverlayGeometry(surface: HTMLElement, listener: PlayerOverlayGeometryListener) {
   let controls: HTMLElement | null = null;
-  const resize = new ResizeObserver(() => listener(disneyOverlayGeometry(surface, controls)));
-  const bind = () => {
-    if (controls?.isConnected) return;
-    const next = mainControls(surface);
-    if (next === controls) return;
-    if (controls) resize.unobserve(controls);
-    controls = next;
-    if (controls) resize.observe(controls);
-    listener(disneyOverlayGeometry(surface, controls));
+  let root: ParentNode | null = null;
+  let footer: Element | null = null;
+  let transport: Element | null = null;
+  const publish = () => listener(disneyOverlayGeometry(surface, controls));
+  const resize = new ResizeObserver(publish);
+  const bindToolbar = () => {
+    const nextFooter = root?.querySelector(".controls-footer") ?? null;
+    const nextTransport = root?.querySelector(".playback-controls-narrow") ?? null;
+    if (nextFooter === footer && nextTransport === transport) return;
+    if (footer) resize.unobserve(footer);
+    if (transport) resize.unobserve(transport);
+    footer = nextFooter;
+    transport = nextTransport;
+    if (footer) resize.observe(footer);
+    if (transport) resize.observe(transport);
+    publish();
   };
-  // The host resizes from zero as Disney shows its toolbar. Rebind only if the
-  // player replaces the host or installs its portal after the video.
+  const toolbar = new MutationObserver(bindToolbar);
+  const bind = () => {
+    if (!controls?.isConnected) controls = mainControls(surface);
+    const nextRoot = controls?.shadowRoot ?? controls;
+    if (nextRoot === root) return;
+    root = nextRoot;
+    toolbar.disconnect();
+    if (root) toolbar.observe(root, { childList: true, subtree: true });
+    bindToolbar();
+  };
+  // Disney inserts and removes the buttons inside its shadow tree without
+  // necessarily resizing the host. Observe the elements that occupy the space.
   const observer = new MutationObserver(bind);
   observer.observe(surface.ownerDocument.body, { childList: true, subtree: true });
   resize.observe(surface);
   bind();
-  return () => { observer.disconnect(); resize.disconnect(); };
+  return () => { observer.disconnect(); toolbar.disconnect(); resize.disconnect(); };
 }
