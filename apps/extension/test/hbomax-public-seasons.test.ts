@@ -30,6 +30,54 @@ function response(url: string, body: string, status = 200, extraHeaders?: Record
 afterEach(() => vi.unstubAllGlobals());
 
 describe("HBO Max public season pages", () => {
+	it.each([
+		{ country: "VN", locale: "en-US", market: "vn", language: "en", status: 404 },
+		{ country: "GP", locale: "pl", market: "fr", language: "fr", status: 200 },
+	])("uses the site's advertised $market storefront on a countryless player ($status on the default site)", async ({ country, locale, market, language, status }) => {
+		const get = vi.fn().mockResolvedValue({ value: country });
+		const doc = { defaultView: { cookieStore: { get } } } as unknown as Document;
+		const geo = { brand: { territory: { fr: ["gp"] }, defaultLang: { fr: "fr" } },
+			pageLocales: { pathname: "/show/" + series, availableLocales: ["us/en", "vn/vi", "vn/en", "fr/fr"] } };
+		const regional = origin + "/" + market + "/" + language + "/show/" + series;
+		const transport = vi.fn(async (url: string) => {
+			if (url === base) {
+				const html = status === 404 ? "<html><head></head></html>" : markup(url, group(1));
+				return response(url, html.replace("</head>", '<script id="__DOTCOM_GEO__" type="application/json">' + JSON.stringify(geo) + "</script></head>"), status);
+			}
+			return response(url, markup(url, group(url.endsWith("/s3") ? 3 : 1)));
+		});
+		vi.stubGlobal("fetch", transport);
+		expect(await loadHboPublicEpisodes(show, known, watch, locale, signal, doc)).toEqual([...known, episode(1), episode(3)]);
+		expect(get).toHaveBeenCalledWith("countryCode");
+		expect(transport.mock.calls.map(([url]) => url)).toEqual([base, regional, regional + "/s3"]);
+		const languageOnlyWatch = watch.replace("/video/watch/", "/en/video/watch/");
+		expect(await loadHboPublicEpisodes(show, known, languageOnlyWatch, locale, signal, doc)).toHaveLength(3);
+		expect(transport).toHaveBeenCalledTimes(3);
+	});
+
+	it("does not collect another market when the current market is absent or changes during a read", async () => {
+		const geo = { pageLocales: { pathname: "/show/" + series, availableLocales: ["us/en", "vn/en"] } };
+		const html = markup(base, group(1)).replace("</head>", '<script id="__DOTCOM_GEO__" type="application/json">' + JSON.stringify(geo) + "</script></head>");
+		const transport = vi.fn(async (url: string) => response(url, url === base ? html : markup(url, group(url.endsWith("/s3") ? 3 : 1))));
+		vi.stubGlobal("fetch", transport);
+		const get = vi.fn().mockResolvedValue({ value: "DE" });
+		const doc = { defaultView: { cookieStore: { get } } } as unknown as Document;
+		expect(await loadHboPublicEpisodes(show, known, watch, "en", signal, doc)).toEqual(known);
+		expect(transport).toHaveBeenCalledOnce();
+		get.mockResolvedValueOnce({ value: "VN" });
+		expect(await loadHboPublicEpisodes(show, known, watch, "en", signal, doc)).toEqual(known);
+	});
+
+	it("only uses a missing page for storefront selection, never for episode data", async () => {
+		const doc = { defaultView: { cookieStore: { get: async () => ({ value: "US" }) } } } as unknown as Document;
+		const geo = { pageLocales: { pathname: "/show/" + series, availableLocales: ["us/en"] } };
+		const html = markup(base, group(1)).replace("</head>", '<script id="__DOTCOM_GEO__" type="application/json">' + JSON.stringify(geo) + "</script></head>");
+		const transport = vi.fn(async () => response(base, html, 404));
+		vi.stubGlobal("fetch", transport);
+		expect(await loadHboPublicEpisodes(show, known, watch, "en-US", signal, doc)).toEqual(known);
+		expect(transport).toHaveBeenCalledOnce();
+	});
+
 	it("fills missing seasons through the current HBO origin using only verified season slugs and preserves native titles", async () => {
 		const localized = origin + "/us/en/show/" + series, href = origin + "/us/en/video/watch/" + known[0]!.id;
 		const transport = vi.fn(async (url: string) => {
