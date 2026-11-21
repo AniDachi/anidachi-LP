@@ -276,6 +276,7 @@ import {
 import type { HistoryObservation } from "./source-adapters/core/history-policy";
 import {
 	arePlayerOverlayGeometriesEqual,
+	DEFAULT_PLAYER_OVERLAY_GEOMETRY,
 	normalizePlayerOverlayGeometry,
 	type PlayerOverlayGeometry,
 	type PlayerOverlayInsets,
@@ -542,6 +543,7 @@ export async function runOverlayPrivilegedAction(
 
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
 	const disneyPlayer = adapter.provider === "disneyplus" && !primeBrowsing;
+	const disneyCatalog = adapter.provider === "disneyplus" && primeBrowsing;
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
 	const primeRestoreAttempted = useRef(false);
 	const activePlayer = useRef<VideoAdapter | null>(adapter);
@@ -760,10 +762,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		DEFAULT_CHAT_DISPLAY_MODE,
 	);
 	const socialVisible = true;
-	const playerOverlayGeometry = usePlayerOverlayGeometry(
-		adapter,
-		adapterActive,
-	);
+	const measuredPlayerGeometry = usePlayerOverlayGeometry(adapter, adapterActive);
+	const playerOverlayGeometry = disneyCatalog ? DEFAULT_PLAYER_OVERLAY_GEOMETRY : measuredPlayerGeometry;
 	const [maximumObservedPlayerSafeInsets, setMaximumObservedPlayerSafeInsets] =
 		useState<PlayerOverlayInsets>(() => ({
 			bottomPx: 0,
@@ -3470,6 +3470,15 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		playerOverlayGeometry,
 	);
 	const overlayLayoutPreviewActive = previewOverlayLayout !== null;
+	const displayLayout = useMemo(() => {
+		if (previewOverlayLayout) return previewOverlayLayout;
+		if (!disneyCatalog) return appliedOverlayLayout;
+		const dockVideo = getDefaultOverlayLayoutDefinition().video;
+		return {
+			...appliedOverlayLayout,
+			video: { ...dockVideo, sizeStep: appliedOverlayLayout.video.sizeStep },
+		};
+	}, [appliedOverlayLayout, disneyCatalog, previewOverlayLayout]);
 	const overlayLayoutCameraCount = overlayLayoutPreviewActive
 		? 4
 		: getOverlayLayoutCameraSlotCount(
@@ -3502,19 +3511,14 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const adaptiveOverlayLayout = useMemo(
 		() =>
 			resolveOverlayLayout(
-				previewOverlayLayout ?? appliedOverlayLayout,
+				displayLayout,
 				adaptiveOverlayLayoutRuntimeContext,
 			),
-		[
-			adaptiveOverlayLayoutRuntimeContext,
-			appliedOverlayLayout,
-			previewOverlayLayout,
-		],
+		[adaptiveOverlayLayoutRuntimeContext, displayLayout],
 	);
 	const cameraInteractionCorridor = useMemo(() => {
-		const definition = previewOverlayLayout ?? appliedOverlayLayout;
 		const controlsHiddenLayout = resolveOverlayLayout(
-			definition,
+			displayLayout,
 			createOverlayLayoutRuntimeContext({
 				cameraCount: overlayLayoutCameraCount,
 				height: overlayLayoutViewportHeight,
@@ -3523,7 +3527,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			}),
 		);
 		const maximumControlsLayout = resolveOverlayLayout(
-			definition,
+			displayLayout,
 			createOverlayLayoutRuntimeContext({
 				cameraCount: overlayLayoutCameraCount,
 				height: overlayLayoutViewportHeight,
@@ -3546,16 +3550,16 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		);
 	}, [
 		adaptiveOverlayLayout.video.bounds,
-		appliedOverlayLayout,
+		displayLayout,
 		cameraInteractionPlayerSafeInsets,
 		overlayLayoutCameraCount,
 		overlayLayoutViewportHeight,
 		overlayLayoutViewportWidth,
-		previewOverlayLayout,
 	]);
 	const cameraInteraction = useCameraInteractionLock({
 		cameraRef: cameraStackRef,
 		enabled:
+			!disneyCatalog &&
 			!overlayLayoutPreviewActive &&
 			cameraStackVisible &&
 			renderableCameraParticipants.length > 0,
@@ -3563,32 +3567,22 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		overlayRef: overlayRootRef,
 		playerGeometry: playerOverlayGeometry,
 	});
-	const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
-		() =>
-			createOverlayLayoutRuntimeContext({
-				cameraCount: overlayLayoutCameraCount,
-				height: overlayLayoutViewportHeight,
-				playerSafeInsets:
-					cameraInteraction.pinnedPlayerSafeInsets ??
-					playerOverlayGeometry.safeInsets,
-				safePaddingPx: 12,
-				width: overlayLayoutViewportWidth,
-			}),
-		[
-			cameraInteraction.pinnedPlayerSafeInsets,
-			overlayLayoutCameraCount,
-			overlayLayoutViewportHeight,
-			overlayLayoutViewportWidth,
-			playerOverlayGeometry.safeInsets,
-		],
-	);
+	const overlayLayoutRuntimeContext = useMemo(() => {
+		if (disneyCatalog || !cameraInteraction.pinnedPlayerSafeInsets) return adaptiveOverlayLayoutRuntimeContext;
+		return createOverlayLayoutRuntimeContext({
+			cameraCount: overlayLayoutCameraCount,
+			height: overlayLayoutViewportHeight,
+			playerSafeInsets: cameraInteraction.pinnedPlayerSafeInsets,
+			safePaddingPx: 12,
+			width: overlayLayoutViewportWidth,
+		});
+	}, [adaptiveOverlayLayoutRuntimeContext, cameraInteraction.pinnedPlayerSafeInsets, disneyCatalog,
+		overlayLayoutCameraCount, overlayLayoutViewportHeight, overlayLayoutViewportWidth]);
 	const resolvedOverlayLayout = useMemo(
-		() =>
-			resolveOverlayLayout(
-				previewOverlayLayout ?? appliedOverlayLayout,
-				overlayLayoutRuntimeContext,
-			),
-		[appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
+		() => overlayLayoutRuntimeContext === adaptiveOverlayLayoutRuntimeContext
+			? adaptiveOverlayLayout
+			: resolveOverlayLayout(displayLayout, overlayLayoutRuntimeContext),
+		[adaptiveOverlayLayout, adaptiveOverlayLayoutRuntimeContext, displayLayout, overlayLayoutRuntimeContext],
 	);
 	const cameraControlDisabledReason =
 		mediaV3 && localHasMediaSeat && camerasFull && !camsEnabled ? "All 4 cameras are in use" :
@@ -6886,6 +6880,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		<div
 			className={overlayClassName}
 			data-prime-browsing={primeBrowsing || undefined}
+			data-disney-catalog={disneyCatalog || undefined}
 			data-introduction-active={introductionActive || undefined}
 			onPointerDownCapture={
 				introductionActive ? undefined : unlockLiveVoicePlayback

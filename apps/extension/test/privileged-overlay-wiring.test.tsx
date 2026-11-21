@@ -21,6 +21,7 @@ import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { WEB_HTTP_BASE } from "../src/constants";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
+import { getDefaultOverlayLayoutPreferencesV2, OVERLAY_LAYOUT_STORAGE_KEY_V2 } from "../src/overlay-layout-model";
 import { createPrimeLaunchCapture, type PrimeLaunchHandoff } from "../src/prime-launch-capture";
 import * as hostingAccessClient from "../src/hosting-access-client";
 import * as accountHostingClient from "../src/account-hosting-status-client";
@@ -101,6 +102,36 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+	it("docks the Disney catalog independently of the saved camera position and player toolbar", async () => {
+		installActiveHostRoomRuntime();
+		const saved = getDefaultOverlayLayoutPreferencesV2();
+		saved.layout.video = { anchor: { x: 11, y: 0 }, leaderSide: "right", sizeStep: 3 };
+		extensionStorage.values.set(OVERLAY_LAYOUT_STORAGE_KEY_V2, saved);
+		const view = await renderOverlay(adapter => {
+			const geometry = adapter.getOverlayGeometry();
+			geometry.safeInsets.bottomPx = 144;
+			Object.assign(adapter, { id: "disneyplus", provider: "disneyplus", getOverlayGeometry: () => geometry });
+		});
+		try {
+			const overlay = view.container.querySelector<HTMLElement>(".anidachi-overlay")!;
+			const renderMode = (catalog: boolean) => act(async () => {
+				view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={!catalog} primeBrowsing={catalog} />);
+			});
+			const direction = () => overlay.style.getPropertyValue("--cam-stack-direction");
+			const reserve = () => overlay.style.getPropertyValue("--mini-panel-bottom-reserve");
+			expect([direction(), reserve()]).toEqual(["row-reverse", "144px"]);
+			await renderMode(true);
+			expect(overlay.hasAttribute("data-disney-catalog")).toBe(true);
+			expect([direction(), reserve()]).toEqual(["row", "10px"]);
+			await renderMode(false);
+			expect(overlay.hasAttribute("data-disney-catalog")).toBe(false);
+			expect([direction(), reserve()]).toEqual(["row-reverse", "144px"]);
+			expect(extensionStorage.values.get(OVERLAY_LAYOUT_STORAGE_KEY_V2)).toEqual(saved);
+		} finally {
+			await unmount(view.root);
+		}
+	});
+
 	it.each(["netflix", "crunchyroll", "youtube"] as const)("keeps an admitted %s guest in the catalog and restores the host position", async provider => {
 		const origin = "https://www." + provider + ".com";
 		const watchPath = provider === "youtube" ? "/watch?v=80025313" : "/watch/80025313";
