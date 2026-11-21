@@ -1871,13 +1871,13 @@ describe("production watch browsing", () => {
 			),
 		);
 		await mount(client);
-		await settles(() =>
-			expect(container.textContent).toContain("Could not refresh"),
-		);
+		await settles(() => {
+			expect(container.textContent).toContain("Could not refresh");
+			expect(button("Retry watch history").disabled).toBe(false);
+		});
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "list"),
 		).toHaveLength(1);
-		expect(button("Retry watch history").disabled).toBe(false);
 		await act(async () => {
 			await Promise.resolve();
 		});
