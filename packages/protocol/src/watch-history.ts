@@ -1,3 +1,5 @@
+import { DisneyPlusHistoryIdentitySchema, DisneyPlusProviderIdSchema, disneyPlusHistoryKeys, disneyPlusSeasonIdentifier, disneyPlusSourceUrl, isDisneyPlusArtworkUrl } from "./disneyplus-identity";
+import { PrimeNavigationSchema, primeNavigationMatches, primeNavigationTreeMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import {
   AccountOwnedResponseMetaSchema,
@@ -7,7 +9,8 @@ import {
 } from "./account";
 import { historyEpisodeSourceMatches, historyKeyMatchesProvider, historyReadReferencesMatchProvider } from "./history-provider-validation";
 import { NetflixHistoryIdentitySchema, NetflixProviderIdSchema } from "./netflix-identity";
-import { canonicalizeRoomSourceUrl } from "./source-url";
+import { PrimeVideoHistoryIdentitySchema, PrimeVideoProviderIdSchema, primeVideoHistoryKeys, primeVideoSourceUrl } from "./prime-video-identity";
+import { canonicalizeRoomSourceUrl, hasDisneyPlusHostname, hasPrimeVideoHostname } from "./source-url";
 import { RoomCapabilitiesSchema, RoomHistoryAuthoritySchema } from "./types";
 
 export const WATCH_HISTORY_SCHEMA_VERSION = 3 as const;
@@ -95,16 +98,30 @@ export const WatchCatalogLocaleContextSchema = z.strictObject({
   observedAt: TimestampSchema,
 });
 
-function catalogVariantSchema(provider: "crunchyroll" | "netflix") {
+const catalogIdSchemas = {
+  crunchyroll: StableKeySchema, netflix: NetflixProviderIdSchema,
+  primevideo: PrimeVideoProviderIdSchema, disneyplus: DisneyPlusProviderIdSchema,
+};
+type CatalogProvider = keyof typeof catalogIdSchemas;
+
+function catalogPlaybackUrl(provider: CatalogProvider, id: string): string {
+  if (provider === "disneyplus") return disneyPlusSourceUrl(id);
+  if (provider === "primevideo") return primeVideoSourceUrl(id);
+  return `https://www.${provider}.com/watch/${id}`;
+}
+
+function catalogVariantSchema(provider: CatalogProvider) {
   return z
     .strictObject({
-      providerContentId: provider === "netflix" ? NetflixProviderIdSchema : StableKeySchema,
+      providerContentId: catalogIdSchemas[provider],
       audioLocale: z.string().trim().min(2).max(35).nullable(),
       original: z.boolean(),
       order: z.number().int().nonnegative(),
       sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     })
     .superRefine((variant, context) => {
+      if(!primeNavigationMatches(variant.primeNavigation,variant.sourceUrl,provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
       const canonical = canonicalizeRoomSourceUrl(
         variant.sourceUrl,
         provider,
@@ -112,10 +129,7 @@ function catalogVariantSchema(provider: "crunchyroll" | "netflix") {
       if (
         !canonical.ok ||
         canonical.source.sourceUrl !== variant.sourceUrl ||
-        canonical.source.sourceUrl !==
-          `https://www.${provider}.com/watch/${variant.providerContentId}` ||
-        canonical.source.videoFingerprint !==
-          `${provider}|watch/${variant.providerContentId}`
+        canonical.source.sourceUrl !== catalogPlaybackUrl(provider, variant.providerContentId)
       ) {
         context.addIssue({
           code: "custom",
@@ -126,11 +140,11 @@ function catalogVariantSchema(provider: "crunchyroll" | "netflix") {
     });
 }
 
-function catalogEpisodeSchema(provider: "crunchyroll" | "netflix") {
+function catalogEpisodeSchema(provider: CatalogProvider) {
   return z
     .strictObject({
       episodeKey: StableKeySchema,
-      providerEpisodeIdentifier: provider === "netflix" ? NetflixProviderIdSchema : StableKeySchema,
+      providerEpisodeIdentifier: catalogIdSchemas[provider],
       title: DisplayTitleSchema,
       episodeNumber: z.number().finite().nonnegative().nullable(),
       order: z.number().int().nonnegative(),
@@ -161,9 +175,9 @@ function catalogEpisodeSchema(provider: "crunchyroll" | "netflix") {
           path: ["watchVariants"],
         });
       }
-      if (provider === "netflix" && (episode.watchVariants.length !== 1 ||
+      if ((provider === "disneyplus" || provider === "netflix" || provider === "primevideo") && (episode.watchVariants.length !== 1 ||
         episode.watchVariants[0]?.providerContentId !== episode.providerEpisodeIdentifier)) {
-        context.addIssue({ code: "custom", message: "Netflix requires one exact episode variant", path: ["watchVariants"] });
+        context.addIssue({ code: "custom", message: `${provider} requires one exact episode variant`, path: ["watchVariants"] });
       }
       const ids = new Set<string>();
       for (const [index, variant] of episode.watchVariants.entries()) {
@@ -178,11 +192,11 @@ function catalogEpisodeSchema(provider: "crunchyroll" | "netflix") {
     });
 }
 
-function catalogSeasonSchema(provider: "crunchyroll" | "netflix") {
+function catalogSeasonSchema(provider: CatalogProvider) {
   return z
     .strictObject({
       seasonKey: StableKeySchema,
-      providerSeasonIdentifier: provider === "netflix" ? NetflixProviderIdSchema : StableKeySchema,
+      providerSeasonIdentifier: provider === "disneyplus" ? StableKeySchema : catalogIdSchemas[provider],
       title: DisplayTitleSchema,
       seasonNumber: SeasonNumberSchema.nullable(),
       order: z.number().int().nonnegative(),
@@ -204,15 +218,15 @@ function catalogSeasonSchema(provider: "crunchyroll" | "netflix") {
     });
 }
 
-export const WatchCatalogVariantSchema = z.union([catalogVariantSchema("crunchyroll"), catalogVariantSchema("netflix")]);
-export const WatchCatalogEpisodeSchema = z.union([catalogEpisodeSchema("crunchyroll"), catalogEpisodeSchema("netflix")]);
-const CatalogSeasonSchemas = { crunchyroll: catalogSeasonSchema("crunchyroll"), netflix: catalogSeasonSchema("netflix") };
-export const WatchCatalogSeasonSchema = z.union([CatalogSeasonSchemas.crunchyroll, CatalogSeasonSchemas.netflix]);
+export const WatchCatalogVariantSchema = z.union([catalogVariantSchema("crunchyroll"), catalogVariantSchema("netflix"), catalogVariantSchema("primevideo"), catalogVariantSchema("disneyplus")]);
+export const WatchCatalogEpisodeSchema = z.union([catalogEpisodeSchema("crunchyroll"), catalogEpisodeSchema("netflix"), catalogEpisodeSchema("primevideo"), catalogEpisodeSchema("disneyplus")]);
+const CatalogSeasonSchemas = { crunchyroll: catalogSeasonSchema("crunchyroll"), netflix: catalogSeasonSchema("netflix"), primevideo: catalogSeasonSchema("primevideo"), disneyplus: catalogSeasonSchema("disneyplus") };
+export const WatchCatalogSeasonSchema = z.union([CatalogSeasonSchemas.crunchyroll, CatalogSeasonSchemas.netflix, CatalogSeasonSchemas.primevideo, CatalogSeasonSchemas.disneyplus]);
 
 export const WatchCatalogSnapshotInputSchema = z
   .strictObject({
     schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-    provider: z.enum(["crunchyroll", "netflix"]),
+    provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus"]),
     titleKey: StableKeySchema,
     providerSeriesId: StableKeySchema,
     title: DisplayTitleSchema,
@@ -221,9 +235,18 @@ export const WatchCatalogSnapshotInputSchema = z
     seasons: z.array(WatchCatalogSeasonSchema).max(100),
   })
   .superRefine((snapshot, context) => {
+    if (snapshot.provider === "disneyplus" && !DisneyPlusProviderIdSchema.safeParse(snapshot.providerSeriesId).success)
+      context.addIssue({ code: "custom", message: "Disney+ series ID must be a canonical UUID", path: ["providerSeriesId"] });
     if (snapshot.provider === "netflix" && !NetflixProviderIdSchema.safeParse(snapshot.providerSeriesId).success)
       context.addIssue({ code: "custom", message: "Netflix series ID must be numeric", path: ["providerSeriesId"] });
+    // Prime providerSeriesId is the verified season-1 compactGTI anchor.
+    if (snapshot.provider === "primevideo" && !PrimeVideoProviderIdSchema.safeParse(snapshot.providerSeriesId).success)
+      context.addIssue({ code: "custom", message: "Prime series anchor must be a compactGTI", path: ["providerSeriesId"] });
     snapshot.seasons.forEach((season, index) => {
+      if (snapshot.provider === "disneyplus" && (season.seasonNumber === null || season.seasonNumber < 1 ||
+        season.providerSeasonIdentifier !== disneyPlusSeasonIdentifier(snapshot.providerSeriesId, season.seasonNumber))) {
+        context.addIssue({ code: "custom", message: "Disney+ season must match its series and season number", path: ["seasons", index] });
+      }
       if (!CatalogSeasonSchemas[snapshot.provider].safeParse(season).success)
         context.addIssue({ code: "custom", message: "Catalog season must match its declared provider", path: ["seasons", index] });
     });
@@ -366,15 +389,19 @@ const CatalogRequestBaseSchema = z
   .strictObject({
     schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
     accountGeneration: AccountGenerationSchema,
-    provider: z.enum(["crunchyroll", "netflix"]),
+    provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus"]),
     titleKey: StableKeySchema,
     providerSeriesId: StableKeySchema,
     context: WatchCatalogLocaleContextSchema,
     historyAccess: WatchCatalogHistoryAccessSchema.optional(),
   })
   .superRefine((request, context) => {
+    if (request.provider === "disneyplus" && !DisneyPlusProviderIdSchema.safeParse(request.providerSeriesId).success)
+      context.addIssue({ code: "custom", message: "Disney+ series ID must be a canonical UUID", path: ["providerSeriesId"] });
     if (request.provider === "netflix" && !NetflixProviderIdSchema.safeParse(request.providerSeriesId).success)
       context.addIssue({ code: "custom", message: "Netflix series ID must be numeric", path: ["providerSeriesId"] });
+    if (request.provider === "primevideo" && !PrimeVideoProviderIdSchema.safeParse(request.providerSeriesId).success)
+      context.addIssue({ code: "custom", message: "Prime series anchor must be a compactGTI", path: ["providerSeriesId"] });
     if (request.titleKey !== `${request.provider}:series:${request.providerSeriesId}`)
       context.addIssue({
         code: "custom",
@@ -388,7 +415,7 @@ export const WatchCatalogBeginAckSchema = z
   .strictObject({
     meta: WatchHistoryResponseMetaSchema,
     schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-    provider: z.enum(["crunchyroll", "netflix"]),
+    provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus"]),
     titleKey: StableKeySchema,
     accountGeneration: AccountGenerationSchema,
     revision: z.number().int().positive(),
@@ -402,7 +429,7 @@ export const WatchCatalogBeginAckSchema = z
   .refine((ack) => historyKeyMatchesProvider(ack.provider, ack.titleKey, ["series"]), {
     message: "Catalog acknowledgement identity must match provider", path: ["titleKey"],
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Acknowledgement generation must match response metadata",
     path: ["accountGeneration"],
   });
@@ -430,7 +457,7 @@ export const WatchCatalogCommitAckSchema = z
   .strictObject({
     meta: WatchHistoryResponseMetaSchema,
     schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-    provider: z.enum(["crunchyroll", "netflix"]),
+    provider: z.enum(["crunchyroll", "netflix", "primevideo", "disneyplus"]),
     titleKey: StableKeySchema,
     accountGeneration: AccountGenerationSchema,
     revision: z.number().int().positive(),
@@ -443,7 +470,7 @@ export const WatchCatalogCommitAckSchema = z
   .refine((ack) => historyKeyMatchesProvider(ack.provider, ack.titleKey, ["series"]), {
     message: "Catalog acknowledgement identity must match provider", path: ["titleKey"],
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Acknowledgement generation must match response metadata",
     path: ["accountGeneration"],
   });
@@ -476,6 +503,7 @@ export const WatchProgressEventSchema = z
     seasonNumber: SeasonNumberSchema.nullable(),
     episodeNumber: z.number().finite().nonnegative().nullable(),
     sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     currentTime: PlaybackSecondsSchema,
     duration: PlaybackSecondsSchema,
     progress: PlaybackProgressSchema,
@@ -484,9 +512,20 @@ export const WatchProgressEventSchema = z
     sharedRoom: WatchSharedRoomAuthoritySchema.nullable().optional(),
     crunchyrollIdentity: CrunchyrollHistoryIdentitySchema.optional(),
     netflixIdentity: NetflixHistoryIdentitySchema.optional(),
+    disneyplusIdentity: DisneyPlusHistoryIdentitySchema.optional(),
+    primevideoIdentity: PrimeVideoHistoryIdentitySchema.optional(),
     youtubeVideoId: StableKeySchema.optional(),
   })
   .superRefine((event, context) => {
+    if(!primeNavigationMatches(event.primeNavigation,event.sourceUrl,event.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
+    if (event.provider !== "disneyplus" && (event.disneyplusIdentity !== undefined || hasDisneyPlusHostname(event.sourceUrl) ||
+      [event.titleKey, event.episodeKey, event.seasonKey].some(key => key?.startsWith("disneyplus:")))) {
+      context.addIssue({ code: "custom", message: "Disney+ identity requires Disney+ provider", path: ["provider"] });
+    }
+    if (event.provider !== "primevideo" &&
+      ([event.titleKey, event.episodeKey, event.seasonKey].some(key => key?.startsWith("primevideo:")) ||
+        hasPrimeVideoHostname(event.sourceUrl)))
+      context.addIssue({ code: "custom", message: "Prime identity requires Prime provider", path: ["provider"] });
     if (event.provider !== "netflix" &&
       ([event.titleKey, event.episodeKey, event.seasonKey].some(key => key?.startsWith("netflix:")) ||
         event.sourceUrl.startsWith("https://www.netflix.com/"))) {
@@ -494,7 +533,7 @@ export const WatchProgressEventSchema = z
     }
     if (event.provider === "crunchyroll") {
       const identity = event.crunchyrollIdentity;
-      if (!identity || event.youtubeVideoId !== undefined || event.netflixIdentity !== undefined) {
+      if (!identity || event.youtubeVideoId !== undefined || event.netflixIdentity !== undefined || event.primevideoIdentity !== undefined) {
         context.addIssue({
           code: "custom",
           message: "Crunchyroll progress requires only Crunchyroll identity",
@@ -536,6 +575,7 @@ export const WatchProgressEventSchema = z
         !event.youtubeVideoId ||
         event.crunchyrollIdentity !== undefined ||
         event.netflixIdentity !== undefined ||
+        event.primevideoIdentity !== undefined ||
         event.titleKey !== `youtube:video:${event.youtubeVideoId}` ||
         event.episodeKey !== `youtube:video:${event.youtubeVideoId}` ||
         event.sourceUrl !==
@@ -549,7 +589,7 @@ export const WatchProgressEventSchema = z
       }
     } else if (event.provider === "netflix") {
       const identity = event.netflixIdentity;
-      if (!identity || event.crunchyrollIdentity !== undefined || event.youtubeVideoId !== undefined) {
+      if (!identity || event.crunchyrollIdentity !== undefined || event.youtubeVideoId !== undefined || event.primevideoIdentity !== undefined) {
         context.addIssue({ code: "custom", message: "Netflix requires only Netflix identity", path: ["netflixIdentity"] });
         return;
       }
@@ -563,7 +603,35 @@ export const WatchProgressEventSchema = z
         event.sourceUrl !== `https://www.netflix.com/watch/${id}`) {
         context.addIssue({ code: "custom", message: "Netflix identity and source must match exactly", path: ["netflixIdentity"] });
       }
+    } else if (event.provider === "disneyplus") {
+      const identity = event.disneyplusIdentity;
+      if (!identity || event.crunchyrollIdentity || event.netflixIdentity || event.primevideoIdentity || event.youtubeVideoId !== undefined) {
+        context.addIssue({ code: "custom", message: "Disney+ requires only Disney+ identity", path: ["disneyplusIdentity"] });
+        return;
+      }
+      const keys = disneyPlusHistoryKeys(identity, event.seasonNumber);
+      const id = identity.kind === "movie" ? identity.providerMovieId : identity.providerEpisodeIdentifier;
+      if (event.titleKey !== keys.titleKey || event.episodeKey !== keys.episodeKey || event.seasonKey !== keys.seasonKey ||
+        event.itemKind !== keys.itemKind || !isDisneyPlusArtworkUrl(event.artworkUrl) || event.sourceUrl !== disneyPlusSourceUrl(id) || event.seasonNumber === 0 ||
+        (event.seasonKey === null && event.seasonTitle !== null) ||
+        (identity.kind === "movie" && (event.seasonNumber !== null || event.episodeNumber !== null))) {
+        context.addIssue({ code: "custom", message: "Disney+ identity must match progress keys and playback URL", path: ["disneyplusIdentity"] });
+      }
+    } else if (event.provider === "primevideo") {
+      const identity = event.primevideoIdentity;
+      if (!identity || event.crunchyrollIdentity !== undefined || event.youtubeVideoId !== undefined || event.netflixIdentity !== undefined) {
+        context.addIssue({ code: "custom", message: "Prime requires only Prime identity", path: ["primevideoIdentity"] });
+        return;
+      }
+      const keys = primeVideoHistoryKeys(identity);
+      const id = identity.kind === "movie" ? identity.providerMovieId : identity.providerEpisodeIdentifier;
+      if (event.itemKind !== keys.itemKind || event.titleKey !== keys.titleKey ||
+        event.episodeKey !== keys.episodeKey || event.seasonKey !== keys.seasonKey ||
+        (identity.kind === "movie" && (event.seasonTitle !== null || event.seasonNumber !== null || event.episodeNumber !== null)) ||
+        event.sourceUrl !== primeVideoSourceUrl(id))
+        context.addIssue({ code: "custom", message: "Prime identity and source must match exactly", path: ["primevideoIdentity"] });
     } else if (
+      event.primevideoIdentity !== undefined ||
       event.netflixIdentity !== undefined ||
       event.youtubeVideoId !== undefined ||
       event.crunchyrollIdentity !== undefined
@@ -637,6 +705,7 @@ export const WatchHistoryEpisodeSchema = z.strictObject({
   seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
   currentTime: PlaybackSecondsSchema,
   duration: PlaybackSecondsSchema,
   progress: PlaybackProgressSchema,
@@ -653,6 +722,7 @@ export const WatchHistoryNextEpisodeSchema = z.strictObject({
   seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
   releasedAt: TimestampSchema.nullable(),
 });
 
@@ -810,6 +880,7 @@ export const WatchHistoryEpisodePageSchema = z
     nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
   })
   .superRefine((page, context) => {
+    if(!primeNavigationTreeMatches(page))context.addIssue({code:"custom",message:"Invalid navigation binding"});
     if (page.complete && page.nextCursor !== null) {
       context.addIssue({
         code: "custom",
@@ -836,6 +907,7 @@ export const WatchHistoryItemSchema = z
     itemKind: WatchItemKindSchema,
     title: DisplayTitleSchema,
     sourceUrl: HttpUrlSchema,
+    primeNavigation: PrimeNavigationSchema.optional(),
     artworkUrl: NullableHttpUrlSchema,
     catalogState: WatchCatalogStateSchema,
     aggregate: WatchHistoryAggregateSchema,
@@ -847,22 +919,26 @@ export const WatchHistoryItemSchema = z
     lastWatchedAt: TimestampSchema,
   })
   .superRefine((item, context) => {
+    if(!primeNavigationTreeMatches(item))context.addIssue({code:"custom",message:"Invalid navigation binding"});
+    if(!primeNavigationMatches(item.primeNavigation,item.sourceUrl,item.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
     const references = item.seasons.flatMap(season => [...season.episodes, ...(season.nextEpisode ? [season.nextEpisode] : [])]);
     if (!historyReadReferencesMatchProvider(item.provider,
       [item.titleKey, item.latestActivity.episodeKey, ...item.seasons.map(season => season.seasonKey),
         ...references.flatMap(episode => [episode.episodeKey, episode.seasonKey])],
       [item.sourceUrl, ...references.map(episode => episode.sourceUrl)]))
       context.addIssue({ code: "custom", message: "Title read references must match provider" });
-    if (item.provider === "netflix") {
-      if (!historyKeyMatchesProvider("netflix", item.titleKey, [item.itemKind === "movie" ? "movie" : "series"]) ||
-        !historyKeyMatchesProvider("netflix", item.latestActivity.episodeKey, [item.itemKind === "movie" ? "movie" : "episode"]) ||
-        item.sourceUrl !== `https://www.netflix.com/watch/${item.latestActivity.episodeKey.split(":")[2]}` || (item.itemKind === "movie" && (item.latestActivity.episodeKey !== item.titleKey || item.seasons.length !== 0)))
-        context.addIssue({ code: "custom", message: "Netflix title identity must match source", path: ["titleKey"] });
+    if (item.provider === "disneyplus" || item.provider === "netflix" || item.provider === "primevideo") {
+      const provider = item.provider;
+      if (!historyKeyMatchesProvider(provider, item.titleKey, [item.itemKind === "movie" ? "movie" : "series"]) ||
+        !historyKeyMatchesProvider(provider, item.latestActivity.episodeKey, [item.itemKind === "movie" ? "movie" : "episode"]) ||
+        item.sourceUrl !== catalogPlaybackUrl(provider, item.latestActivity.episodeKey.split(":")[2]!) || (item.itemKind === "movie" && (item.latestActivity.episodeKey !== item.titleKey || item.seasons.length !== 0)))
+        context.addIssue({ code: "custom", message: "Provider title identity must match source", path: ["titleKey"] });
       for (const season of item.seasons) {
-        if (!historyKeyMatchesProvider("netflix", season.seasonKey, ["season"]) ||
-          season.episodes.some(episode => episode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches("netflix", episode)) ||
-          (season.nextEpisode && (season.nextEpisode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches("netflix", season.nextEpisode))))
-          context.addIssue({ code: "custom", message: "Netflix title seasons must match source", path: ["seasons"] });
+        const unknownDisneySeason = provider === "disneyplus" && season.seasonKey === "observed";
+        if ((!unknownDisneySeason && !historyKeyMatchesProvider(provider, season.seasonKey, ["season"])) ||
+          season.episodes.some(episode => episode.seasonKey !== (unknownDisneySeason ? null : season.seasonKey) || !historyEpisodeSourceMatches(provider, episode)) ||
+          (season.nextEpisode && (season.nextEpisode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches(provider, season.nextEpisode))))
+          context.addIssue({ code: "custom", message: "Provider title seasons must match source", path: ["seasons"] });
       }
     }
     const episodeKeys = new Set<string>();
@@ -998,6 +1074,7 @@ export const WatchHistoryTitleEpisodesResponseSchema = z
     nextCursor: WatchHistoryEpisodeOpaqueCursorSchema.nullable(),
   })
   .superRefine((page, context) => {
+    if(!primeNavigationTreeMatches(page))context.addIssue({code:"custom",message:"Invalid navigation binding"});
     if (
       page.completedEpisodeCount > page.observedEpisodeCount ||
       page.episodes.length > page.observedEpisodeCount
@@ -1028,19 +1105,20 @@ export const WatchHistoryTitleEpisodesResponseSchema = z
         ...references.flatMap(episode => [episode.episodeKey, episode.seasonKey])],
       references.map(episode => episode.sourceUrl)))
       context.addIssue({ code: "custom", message: "Episode page read references must match provider" });
-    if (page.provider === "netflix") {
-      const movie = page.titleKey.startsWith("netflix:movie:");
+    if (page.provider === "disneyplus" || page.provider === "netflix" || page.provider === "primevideo") {
+      const provider = page.provider;
+      const movie = page.titleKey.startsWith(`${provider}:movie:`);
       if (movie && (page.catalog.seasons.length !== 0 || page.episodes.some(episode =>
         episode.seasonKey !== null || episode.seasonTitle !== null || episode.seasonNumber !== null || episode.episodeNumber !== null)))
-        context.addIssue({ code: "custom", message: "Netflix movies cannot contain season or episode metadata" });
-      if (!historyKeyMatchesProvider("netflix", page.titleKey, ["series", "movie"]) ||
-        page.episodes.some(episode => !historyEpisodeSourceMatches("netflix", episode) ||
-          (page.titleKey.startsWith("netflix:movie:") ? episode.episodeKey !== page.titleKey : !episode.episodeKey.startsWith("netflix:episode:"))))
-        context.addIssue({ code: "custom", message: "Netflix episode page must match provider and title" });
+        context.addIssue({ code: "custom", message: "Provider movies cannot contain season or episode metadata" });
+      if (!historyKeyMatchesProvider(provider, page.titleKey, ["series", "movie"]) ||
+        page.episodes.some(episode => !historyEpisodeSourceMatches(provider, episode) ||
+          (page.titleKey.startsWith(`${provider}:movie:`) ? episode.episodeKey !== page.titleKey : !episode.episodeKey.startsWith(`${provider}:episode:`))))
+        context.addIssue({ code: "custom", message: "Provider episode page must match provider and title" });
       for (const season of page.catalog.seasons) {
-        if (!historyKeyMatchesProvider("netflix", season.seasonKey, ["season"]) ||
-          (season.nextEpisode && (season.nextEpisode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches("netflix", season.nextEpisode))))
-          context.addIssue({ code: "custom", message: "Netflix catalog projection must match provider" });
+        if (!historyKeyMatchesProvider(provider, season.seasonKey, ["season"]) ||
+          (season.nextEpisode && (season.nextEpisode.seasonKey !== season.seasonKey || !historyEpisodeSourceMatches(provider, season.nextEpisode))))
+          context.addIssue({ code: "custom", message: "Provider catalog projection must match provider" });
       }
     }
     const identities = new Set<string>();
@@ -1066,7 +1144,7 @@ export const WatchProgressAckSchema = z
     duplicate: z.boolean(),
     episode: WatchHistoryEpisodeSchema,
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Acknowledgement generation must match response metadata",
     path: ["meta", "accountGeneration"],
   });
@@ -1115,7 +1193,7 @@ export const WatchHistoryDeletionAckSchema = z
     target: WatchHistoryDeleteScopeSchema,
     deletedAt: TimestampSchema,
   })
-  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+  .refine((ack) => primeNavigationTreeMatches(ack) && ack.meta.accountGeneration === ack.accountGeneration, {
     message: "Deletion generation must match response metadata",
     path: ["meta", "accountGeneration"],
   });

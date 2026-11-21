@@ -4,7 +4,7 @@ export type PlaybackSyncStatus =
 	| { kind: "waiting-for-host-ad" }
 	| { kind: "watching-local-ad" }
 	| { kind: "buffering" }
-	| { kind: "resume-required" }
+	| { kind: "resume-required"; reason?: "interstitial-paused" }
 	| { kind: "unsupported-media" }
 	| { kind: "out-of-sync"; expectedTime: number; drift: number }
 	| { kind: "source-mismatch"; message: string }

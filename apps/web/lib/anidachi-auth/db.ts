@@ -126,6 +126,7 @@ export type RoomRow = {
   show_id: string | null;
   episode_id: string | null;
   source_provider: RoomSourceProvider | null;
+  prime_navigation?: import("@anidachi/protocol").PrimeNavigation|null;
   source_url: string | null;
   video_fingerprint: string | null;
   source_generation: number | null;
@@ -687,6 +688,7 @@ export async function createRoomWithActiveSession(params: {
 	episodeId?: string;
 	sourceProvider?: unknown;
 	sourceUrl?: unknown;
+ primeNavigation?:unknown;
 	videoFingerprint?: unknown;
 	title?: string;
 	clientRequestId?: string;
@@ -694,22 +696,16 @@ export async function createRoomWithActiveSession(params: {
 	const sourceColumns = roomSourceCreationColumns({
 		sourceProvider: params.sourceProvider,
 		sourceUrl: params.sourceUrl,
+  primeNavigation:params.primeNavigation,
 		videoFingerprint: params.videoFingerprint,
 	});
 	const abuseEnabled = process.env.ANIDACHI_FREE20_ABUSE_ENABLED === "true";
 	const admit = () =>
 		db().rpc(
-			abuseEnabled
-				? "create_room_with_active_session_v5"
-				: "create_room_with_active_session_v4",
+			sourceColumns.prime_navigation ? "create_room_with_prime_navigation_v1" : abuseEnabled ? "create_room_with_active_session_v5" : "create_room_with_active_session_v4",
 			{
-				...(abuseEnabled
-					? {
-							p_free20_browser_hash: params.free20Context?.browser ?? null,
-							p_free20_installation_hash:
-								params.free20Context?.installation ?? null,
-						}
-					: {}),
+                ...(sourceColumns.prime_navigation ? {p_prime_navigation:sourceColumns.prime_navigation,p_abuse_enabled:abuseEnabled} : {}),
+                ...((abuseEnabled || sourceColumns.prime_navigation) ? {p_free20_browser_hash:params.free20Context?.browser??null,p_free20_installation_hash:params.free20Context?.installation??null} : {}),
 				p_media_protocol_version: params.mediaProtocolVersion ?? 1,
 				p_free20_client_version: params.free20ClientVersion ?? null,
 				p_host_user_id: params.hostUserId,
@@ -937,6 +933,7 @@ export async function createRoom(params: {
   episodeId?: string;
   sourceProvider?: unknown;
   sourceUrl?: unknown;
+ primeNavigation?:unknown;
   videoFingerprint?: unknown;
   title?: string;
   clientRequestId?: string;
@@ -944,6 +941,7 @@ export async function createRoom(params: {
   const sourceColumns = roomSourceCreationColumns({
     sourceProvider: params.sourceProvider,
     sourceUrl: params.sourceUrl,
+  primeNavigation:params.primeNavigation,
     videoFingerprint: params.videoFingerprint,
   });
   const { data, error } = await db()
@@ -982,7 +980,7 @@ export async function persistRoomSource(
   callback: RoomSourcePersistenceCallback,
 ): Promise<RoomSourcePersistenceAcknowledgement> {
   const result = await db().rpc(
-    "persist_room_source_v1",
+    callback.source.primeNavigation ? "persist_room_source_v2" : "persist_room_source_v1",
     roomSourcePersistenceRpcArguments(callback),
   );
   if (result.error) {
@@ -998,7 +996,7 @@ export async function getPersistedRoomSourceProof(
   roomId: string,
 ): Promise<PersistedRoomSourceProof | null> {
   const result = await db().from("rooms")
-    .select("room_id,status,source_provider,source_url,video_fingerprint,source_generation")
+    .select("room_id,status,source_provider,source_url,video_fingerprint,source_generation,prime_navigation")
     .eq("room_id", roomId)
     .maybeSingle();
   if (result.error) throw new Error("Unable to read persisted room source");

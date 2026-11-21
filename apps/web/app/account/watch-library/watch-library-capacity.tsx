@@ -25,7 +25,7 @@ export function WatchLibraryCapacity({
 	const [capacity, setCapacity] = useState<WatchHistoryCapacityCompatible | null>(null);
 	useEffect(() => {
 		let disposed = false;
-		void api<unknown>("/api/watch-history/v3/capacity?capacityVersion=2", {
+		void api<unknown>("/api/watch-history/v3/capacity?capacityVersion=4", {
 			headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
 		})
 			.then((value) => {
@@ -52,12 +52,17 @@ export function WatchLibraryCapacity({
 		capacity.accountGeneration !== accountGeneration
 	)
 		return null;
-	const providers = (["crunchyroll", "youtube", "netflix"] as const).filter(
+	const providers = (["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"] as const).filter(
 		key => provider === "all" || key === provider,
 	);
-	const usage = (key: typeof providers[number]) => key === "netflix" ? (capacity.capacityVersion === 2 ? capacity.providers.netflix : null) : capacity.providers[key];
+	const usage = (key: typeof providers[number]) => {
+		if (key === "disneyplus") return capacity.capacityVersion === 4 ? capacity.providers.disneyplus : null;
+		if (key === "primevideo") return (capacity.capacityVersion === 3 || capacity.capacityVersion === 4) ? capacity.providers.primevideo : null;
+		if (key === "netflix") return capacity.capacityVersion !== 1 ? capacity.providers.netflix : null;
+		return capacity.providers[key];
+	};
 	const full = providers.filter(key => { const value = usage(key); return value && value.used >= value.limit; });
-	const name = (key: typeof providers[number]) => ({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix" })[key];
+	const name = (key: typeof providers[number]) => ({ youtube: "YouTube", crunchyroll: "Crunchyroll", netflix: "Netflix", disneyplus: "Disney+", primevideo: "Prime Video" })[key];
 	return (
 		<section
 			aria-label="History storage"

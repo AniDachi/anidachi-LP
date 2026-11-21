@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { canonicalizeRoomSourceUrl, hasDisneyPlusHostname, hasPrimeVideoHostname } from "./source-url";
+import { isPrimeVideoHistoryKey, primeVideoSourceUrl } from "./prime-video-identity";
 
 export const ACCOUNT_RESPONSE_SCHEMA_VERSION = 1 as const;
 
@@ -58,6 +60,8 @@ export const WatchProviderSchema = z.enum([
   "netflix",
   "youtube",
   "amazon",
+  "primevideo",
+  "disneyplus",
 ]);
 export const WatchItemKindSchema = z.enum(["series", "movie"]);
 export const AccountPlanCodeSchema = z.enum(["free", "plus", "pro"]);
@@ -339,6 +343,34 @@ export const WatchLibraryItemSchema = z.strictObject({
   active: z.boolean(),
   lastWatchedAt: TimestampSchema,
   episodes: z.array(WatchLibraryEpisodeSchema),
+}).superRefine((item, context) => {
+  // Legacy seasonId has no Prime mapping. Only v3 history defines season keys.
+  const urls = [item.sourceUrl, ...item.episodes.map(episode => episode.sourceUrl)];
+  if (item.provider === "disneyplus" || urls.some(hasDisneyPlusHostname) ||
+    [item.itemKey, ...item.episodes.map(episode => episode.episodeKey)].some(key => key.startsWith("disneyplus:"))) {
+    context.addIssue({ code: "custom", message: "Disney+ history requires the versioned history API" });
+    return;
+  }
+  if (item.provider !== "primevideo") {
+    if (urls.some(hasPrimeVideoHostname) ||
+      [item.itemKey, ...item.episodes.map(episode => episode.episodeKey)].some(key => key.startsWith("primevideo:")))
+      context.addIssue({ code: "custom", message: "Prime library identities require Prime provider" });
+    return;
+  }
+  const movie = item.itemKind === "movie";
+  if (!isPrimeVideoHistoryKey(item.itemKey, movie ? "movie" : "series") ||
+    (movie && item.sourceUrl !== primeVideoSourceUrl(item.itemKey.split(":")[2]!)))
+    context.addIssue({ code: "custom", message: "Prime library item key must match its kind and movie source", path: ["itemKey"] });
+  for (const [index, episode] of item.episodes.entries()) {
+    if (!isPrimeVideoHistoryKey(episode.episodeKey, movie ? "movie" : "episode") ||
+      (movie && episode.episodeKey !== item.itemKey) ||
+      episode.sourceUrl !== primeVideoSourceUrl(episode.episodeKey.split(":")[2]!))
+      context.addIssue({ code: "custom", message: "Prime library episode key must match its item kind and source ID", path: ["episodes", index] });
+  }
+  if (urls.some(value => {
+    const canonical = canonicalizeRoomSourceUrl(value, "primevideo");
+    return !canonical.ok || canonical.source.sourceUrl !== value;
+  })) context.addIssue({ code: "custom", message: "Prime library sources must be canonical Prime detail URLs" });
 });
 
 export const WatchLibraryLimitsSchema = z.strictObject({

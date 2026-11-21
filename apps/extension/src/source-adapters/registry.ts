@@ -1,3 +1,5 @@
+import { hasPrimeBrowserHost } from "./primevideo/url";
+import { primeVideoDefinition } from "./primevideo/definition";
 import type {
 	SourceAdapterDefinition,
 	SourceProvider,
@@ -5,20 +7,34 @@ import type {
 } from "./core/types";
 import { findBestVideo } from "./core/video-discovery";
 import { crunchyrollDefinition } from "./crunchyroll/definition";
+import { detectDisneyPlusAdapter, disneyPlusDefinition } from "./disneyplus/definition";
+import { isDisneyPlusOrigin } from "./disneyplus/url";
 import { netflixDefinition } from "./netflix/definition";
 import { genericDefinition } from "./generic/definition";
-import { youtubeDefinition } from "./youtube/definition";
+import { detectYouTubeWatchAdapter, youtubeDefinition } from "./youtube/definition";
+import { parseYouTubeVideoId, YOUTUBE_CATALOG_ORIGINS } from "./youtube/url";
 
 const sourceAdapterDefinitions = [
 	youtubeDefinition,
 	crunchyrollDefinition,
 	netflixDefinition,
+	primeVideoDefinition,
+	disneyPlusDefinition,
 	genericDefinition,
 ] as const satisfies readonly SourceAdapterDefinition[];
 
 export function detectSourceAdapter(
 	documentValue: Document = document,
 ): VideoAdapter | null {
+	if (isDisneyPlusOrigin(location.href)) return detectDisneyPlusAdapter(documentValue);
+	if (hasPrimeBrowserHost(location.href)) {
+		const videos = documentValue.querySelectorAll<HTMLVideoElement>("#dv-web-player video");
+		return videos.length === 1 ? primeVideoDefinition.detect(videos[0]!) : null;
+	}
+	const url = new URL(location.href);
+	if (YOUTUBE_CATALOG_ORIGINS.includes(url.origin) && /^\/watch\/?$/.test(url.pathname)) {
+		return detectYouTubeWatchAdapter(documentValue, parseYouTubeVideoId(url));
+	}
 	const winner = findBestVideo(documentValue);
 	if (!winner) {
 		return null;

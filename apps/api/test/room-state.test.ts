@@ -1060,6 +1060,13 @@ describe("Netflix room source admission", () => {
     const source = (id: string): WatchSourceDescriptor => ({ provider: "netflix", sourceUrl: `https://www.netflix.com/watch/${id}`, canonicalUrl: `https://www.netflix.com/watch/${id}`, videoFingerprint: `netflix|watch/${id}`, title: "Netflix episode" });
     const first = source("70196259");
     expect(room.updateHostState("host", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(true);
+    for (const hostSurface of ["player", "catalog"] as const) {
+      const paused = { ...playbackState(first.videoFingerprint, first.sourceUrl), playing: false, hostTime: 83, hostSurface };
+      expect(room.updateHostState("host", paused, first).sourceChanged).toBe(false);
+      expect(new RoomState("netflix-room", undefined, room.toSnapshot()).snapshot).toMatchObject({
+        hostState: { playing: false, hostTime: 83, hostSurface },
+      });
+    }
     const next = source("70196260");
     expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), next).sourceChanged).toBe(true);
     expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, provider: "crunchyroll" }).accepted).toBe(false);
@@ -1067,4 +1074,76 @@ describe("Netflix room source admission", () => {
     if (snapshot.type !== "ROOM_SNAPSHOT") throw Error("unexpected snapshot");
     expect(snapshot.source?.provider).toBe("netflix");
   });
+});
+
+
+describe("Prime Video room source admission", () => {
+  it("retains host authority, provider pin and source generations", () => {
+    const room = new RoomState("prime-room"); room.join(participant("host", "host"));
+    room.join(participant("viewer", "viewer"));
+    const source = (id: string): WatchSourceDescriptor => ({ provider: "primevideo", sourceUrl: `https://www.primevideo.com/detail/${id}`, canonicalUrl: `https://www.primevideo.com/detail/${id}`, videoFingerprint: `primevideo|detail/${id}`, title: "Prime episode" });
+    const first = source("A".repeat(26)), next = source("B".repeat(26));
+    expect(room.updateHostState("viewer", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(false);
+    expect(room.updateHostState("host", playbackState(first.videoFingerprint, first.sourceUrl), first).accepted).toBe(true);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), next).sourceChanged).toBe(true);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, provider: "netflix" }).accepted).toBe(false);
+    expect(room.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), { ...next, sourceUrl: next.sourceUrl.replace("https:","http:") }).accepted).toBe(false);
+    const snapshot = room.snapshot;
+    if (snapshot.type !== "ROOM_SNAPSHOT") throw Error("unexpected snapshot");
+    expect(snapshot.source?.provider).toBe("primevideo");
+  });
+});
+
+it("round trips observed Prime routes through durable/restarted state without generation churn",()=>{
+ const room=new RoomState('prime-routes');room.join(participant('host','host'));
+ const id='0IUGS56V361WRU60PCC5XH5D8Z',url=`https://www.primevideo.com/detail/${id}`;
+ const primeNavigation={contentId:id,routes:[{url:'https://www.amazon.com/gp/video/detail/B0FX2ZCPFK',observedAt:'2026-11-16T00:00:00Z'}]};
+ const source:WatchSourceDescriptor={provider:'primevideo',title:'Movie',sourceUrl:url,canonicalUrl:url,videoFingerprint:`primevideo|detail/${id}`,primeNavigation};
+ const first=room.updateHostState('host',playbackState(source.videoFingerprint,url),source);
+ expect(first.accepted&&first.sourceChanged&&first.durableSource.primeNavigation).toEqual(primeNavigation);
+ const generation=room.toSnapshot().sourceGeneration;
+ const secondVisit = crypto.randomUUID();
+ const resumed = { ...playbackState(source.videoFingerprint,url), primePlayerVisit: secondVisit };
+ expect(room.updateHostState('viewer',resumed,source).accepted).toBe(false);
+ expect(room.updateHostState('host',resumed,source).sourceChanged).toBe(false);
+ expect(new RoomState("prime-routes",undefined,room.toSnapshot()).snapshot).toMatchObject({
+   sourceGeneration:generation, hostState:{primePlayerVisit:secondVisit}
+ });
+ expect(new RoomState("prime-routes",undefined,room.toSnapshot()).currentDurableSource?.primeNavigation).toEqual(primeNavigation);
+ expect(room.currentDurableSource?.primeNavigation).toEqual(primeNavigation);
+ const {primeNavigation:_,...legacy}=source;
+ expect(room.updateHostState('host',playbackState(source.videoFingerprint,url),legacy).sourceChanged).toBe(false);
+ expect(room.currentDurableSource?.primeNavigation).toEqual(primeNavigation);
+ expect(room.toSnapshot().sourceGeneration).toBe(generation);
+ const next='B'.repeat(26),nextUrl=`https://www.primevideo.com/detail/${next}`;
+ room.updateHostState('host',playbackState(`primevideo|detail/${next}`,nextUrl),{...legacy,sourceUrl:nextUrl,canonicalUrl:nextUrl,videoFingerprint:`primevideo|detail/${next}`});
+ expect(room.currentDurableSource?.primeNavigation).toBeUndefined();
+});
+
+it("retains Disney+ host authority and restores the latest confirmed episode after a restart", () => {
+  const room = new RoomState("disney-room");
+  room.join(participant("host", "host"));
+  room.join(participant("viewer", "viewer"));
+  const source = (id: string): WatchSourceDescriptor => ({
+    provider: "disneyplus", sourceUrl: `https://www.disneyplus.com/play/${id}`,
+    canonicalUrl: `https://www.disneyplus.com/play/${id}`, videoFingerprint: `disneyplus|play/${id}`, title: "Episode",
+  });
+  const first = source("2e6c6ae8-47b0-4382-a7ae-df89950eece3");
+  const next = source("12bf1f69-af36-4a39-86ee-21eef7ddd67c");
+  const seriesId = "8cb36cc2-3175-4f2a-aa72-8287cdb1150c";
+  const firstWithIdentity = { ...first, disneyplusIdentity: {
+    kind: "episode" as const, providerSeriesId: seriesId, providerEpisodeIdentifier: first.sourceUrl.split("/").at(-1)!,
+  } };
+  const state = playbackState(first.videoFingerprint, first.sourceUrl);
+  expect(room.updateHostState("viewer", state, firstWithIdentity).accepted).toBe(false);
+  expect(room.updateHostState("host", state, firstWithIdentity).sourceChanged).toBe(true);
+  expect(room.currentDurableSource).not.toHaveProperty("disneyplusIdentity");
+  expect(room.updateHostState("host", state, first).sourceChanged).toBe(false);
+  const restored = new RoomState("disney-room", undefined, room.toSnapshot());
+  expect(restored.toSnapshot().source?.disneyplusIdentity).toEqual(firstWithIdentity.disneyplusIdentity);
+  const nextState = playbackState(next.videoFingerprint, next.sourceUrl);
+  expect(restored.updateHostState("host", nextState, { ...next, disneyplusIdentity: firstWithIdentity.disneyplusIdentity }).accepted).toBe(false);
+  expect(restored.updateHostState("host", nextState, next).sourceChanged).toBe(true);
+  expect(restored.toSnapshot().source?.disneyplusIdentity).toBeUndefined();
+  expect(restored.currentDurableSource?.videoFingerprint).toBe(next.videoFingerprint);
 });

@@ -1,6 +1,8 @@
 import {
 	WatchHistoryCapacitySchema,
 	WatchHistoryCapacityV2Schema,
+	WatchHistoryCapacityV3Schema,
+	WatchHistoryCapacityV4Schema,
 	type WatchHistoryCapacityCompatible,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
@@ -10,12 +12,18 @@ import { WATCH_HISTORY_OWNER_HEADER } from "../watch-history-owner";
 import { getAccountAccessSession, HISTORY_PRIVATE_HEADERS } from "./watch-history-access";
 import { publicDatabaseError, WatchHistoryV3ApiError } from "./watch-history-v3";
 
+const capacitySchemas = {
+  1: WatchHistoryCapacitySchema, 2: WatchHistoryCapacityV2Schema,
+  3: WatchHistoryCapacityV3Schema, 4: WatchHistoryCapacityV4Schema,
+};
+type CapacityVersion = keyof typeof capacitySchemas;
+
 export type WatchHistoryCapacityStore = {
-	load(userId: string, accountGeneration: number | null, capacityVersion: 1 | 2): Promise<unknown>;
+	load(userId: string, accountGeneration: number | null, capacityVersion: CapacityVersion): Promise<unknown>;
 };
 const productionStore: WatchHistoryCapacityStore = {
 	async load(userId, accountGeneration, capacityVersion) {
-		const result = await db().rpc(capacityVersion === 2 ? "get_watch_history_capacity_v2" : "get_watch_history_capacity_v1", {
+		const result = await db().rpc(`get_watch_history_capacity_v${capacityVersion}`, {
 			p_user_id: userId,
 			p_history_generation: accountGeneration,
 		}).abortSignal(AbortSignal.timeout(10_000));
@@ -28,14 +36,14 @@ const productionStore: WatchHistoryCapacityStore = {
 export async function getWatchHistoryCapacity(params: {
 	userId: string;
 	accountGeneration?: number | null;
-	capacityVersion?: 1 | 2;
+	capacityVersion?: CapacityVersion;
 	store?: WatchHistoryCapacityStore;
 }): Promise<WatchHistoryCapacityCompatible> {
 	try {
 		const generation = params.accountGeneration ?? null;
 		if (generation !== null && (!Number.isSafeInteger(generation) || generation < 1))
 			throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid history generation");
-		const schema = params.capacityVersion === 2 ? WatchHistoryCapacityV2Schema : WatchHistoryCapacitySchema;
+		const schema = capacitySchemas[params.capacityVersion ?? 1];
 		const result = schema.safeParse(
 			await (params.store ?? productionStore).load(params.userId, generation, params.capacityVersion ?? 1),
 		);
@@ -64,10 +72,10 @@ export function createWatchHistoryCapacityHandler(deps: {
 			if (raw !== null && !/^[1-9][0-9]*$/.test(raw))
 				throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid history generation");
 			const version = request.nextUrl.searchParams.get("capacityVersion");
-			if (version !== null && version !== "1" && version !== "2")
+			if (version !== null && version !== "1" && version !== "2" && version !== "3" && version !== "4")
 				throw new WatchHistoryV3ApiError(400, "INVALID_QUERY", "Invalid capacity version");
 			const result = await getWatchHistoryCapacity({
-				capacityVersion: version === "2" ? 2 : 1,
+				capacityVersion: Number(version ?? 1) as CapacityVersion,
 				userId: session.userId,
 				accountGeneration: raw === null ? null : Number(raw),
 				store: deps.store,
