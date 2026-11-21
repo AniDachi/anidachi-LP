@@ -1,4 +1,8 @@
 import { catalogEpisode, episodeCoordinates, seasonOrdinal } from "./episode-labels";
+import { getHboCmsPacket, hboCmsVisitSignal, startHboCmsClient } from "./cms-client";
+import type { HboCmsPlayback } from "./cms-catalog";
+import { hboMaxMediaSource, hboMaxVideo, isHboMaxAd } from "./player";
+import { isVisibleInPlayer } from "./player-chrome";
 import type { ExtensionAuthTokens } from "../../auth-tokens";
 import { isHboMaxOrigin, hboMaxArtworkUrl, hboMaxDetail, hboMaxPlaybackId, hboMaxSourceUrl, hboMaxFingerprint, WatchSourceDescriptorSchema, type WatchSourceDescriptor, type HboMaxHistoryIdentity } from "@anidachi/protocol";
 
@@ -20,6 +24,7 @@ type PlayerLabels = { title: string; ordinalLabel: string | null; subtitle: stri
 const lastPlayer = new WeakMap<Document, { id: string; labels: PlayerLabels }>();
 const roomSource = new WeakMap<Document, WatchSourceDescriptor>();
 const savedSource = new WeakMap<Document, HboMaxPlaybackMetadata>();
+const corroboratedPlayer = new WeakMap<Document, { visit: AbortSignal; playbackId: string; seriesId: string; season: number; episode: number }>();
 
 export function observeHboMaxRoomSource(doc: Document, descriptor: WatchSourceDescriptor) {
 	roomSource.delete(doc);
@@ -107,10 +112,12 @@ export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promi
 	typeof chrome !== "undefined" && chrome.runtime?.sendMessage ?
 		() => chrome.runtime.sendMessage({ type: "ANIDACHI_HBOMAX_SAVED_METADATA" }) : undefined): () => void {
 	if (!isHboMaxOrigin(doc.location.origin)) return () => {};
+	const cmsClient = startHboCmsClient(doc);
 	let requested: string | null = null;
 	let generation = 0;
 	const forget = () => {
 		generation++;
+		cmsClient.reset();
 		priorDetail.delete(doc);
 		lastPlayer.delete(doc);
 		requested = null;
@@ -129,7 +136,7 @@ export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promi
 			const current = ++generation;
 			savedSource.delete(doc);
 			requested = id;
-			if (id && loadSaved && !readHboMaxPlaybackMetadata(doc, id)) {
+			if (id && loadSaved && (getHboCmsPacket(doc, id)?.metadata || !readHboMaxPlaybackMetadata(doc, id))) {
 				void loadSaved().then(metadata => {
 					if (metadata && current === generation && hboMaxPlaybackId(doc.location.href) === id)
 						savedSource.set(doc, metadata);
@@ -169,6 +176,7 @@ export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promi
 		if (timer !== undefined) clearTimeout(timer);
 		timer = undefined;
 		observedPath = doc.location.pathname;
+		cmsClient.sync();
 		observer.disconnect();
 		if (hboMaxDetail(doc.location.href)) {
 			observer.observe(doc, { subtree: true, childList: true, characterData: true, attributes: true,
@@ -191,6 +199,7 @@ export function startHboMaxCatalogCapture(doc: Document, loadSaved: (() => Promi
 		navigation?.removeEventListener("currententrychange", routeChanged);
 		if (typeof chrome !== "undefined") chrome.storage?.onChanged?.removeListener(authChanged);
 		forget();
+		cmsClient.stop();
 	};
 }
 
@@ -210,8 +219,7 @@ function playerInfo(doc: Document) {
 		doc.querySelector(selector + ' [data-testid="player-ux-asset-title"]'))?.closest('[data-testid="content-metadata"]') ?? null;
 }
 
-function playerLabels(doc: Document): PlayerLabels | null {
-	const info = playerInfo(doc);
+function playerLabels(doc: Document, info = playerInfo(doc)): PlayerLabels | null {
 	const title = clean(info?.querySelector('[data-testid="player-ux-asset-title"]')?.textContent);
 	if (!title) return null;
 	return { title, ordinalLabel: clean(info?.querySelector('[data-testid="player-ux-season-episode"]')?.textContent),
@@ -223,9 +231,100 @@ export function readHboMaxPlayerTitle(doc: Document, playbackId: string): string
 		clean(playerInfo(doc)?.querySelector('[data-testid="player-ux-asset-title"]')?.textContent) : null;
 }
 
+function visibleCmsLabels(doc: Document): PlayerLabels | null {
+	let titleOnly: PlayerLabels | null = null;
+	for (const info of doc.querySelectorAll('[data-testid="playerContainer"] [data-testid="content-metadata"]')) {
+		const player = info.closest<HTMLElement>('[data-testid="playerContainer"]')!;
+		const text = (testId: string) => {
+			const label = info.querySelector('[data-testid="' + testId + '"]');
+			return label && !label.closest('[hidden], [aria-hidden="true"]') && isVisibleInPlayer(label, player) ? clean(label.textContent) : null;
+		};
+		const title = text("player-ux-asset-title");
+		if (!title) continue;
+		const labels = { title, subtitle: text("player-ux-asset-subtitle"), ordinalLabel: text("player-ux-season-episode") };
+		if (labels.subtitle || labels.ordinalLabel) return labels;
+		titleOnly = labels;
+	}
+	return titleOnly;
+}
+
+function corroborateHboCmsPlayback(doc: Document, playbackId: string, cms: HboCmsPlayback): HboMaxPlaybackMetadata | null {
+	const seriesId = cms.identity.providerSeriesId;
+	const visit = hboCmsVisitSignal(doc, playbackId);
+	if (!visit) return null;
+	const source = roomSource.get(doc);
+	const room = source?.sourceUrl === hboMaxSourceUrl(playbackId) ? source : undefined;
+	const saved = savedSource.get(doc);
+	let independentIdentity = false;
+	let verifiedArtwork: string | null = null;
+	for (const reference of [
+		{ identity: room?.hbomaxIdentity, season: room?.seasonNumber, episode: room?.episodeNumber, artwork: room?.posterUrl },
+		{ identity: saved?.identity, season: saved?.seasonNumber, episode: saved?.episodeNumber, artwork: saved?.artworkUrl },
+	]) {
+		const identity = reference.identity;
+		if (!identity) continue;
+		const video = identity.kind === "movie" ? identity.providerPlaybackId : identity.providerEpisodeIdentifier;
+		if (video !== playbackId) continue;
+		if (identity.kind !== "episode" || identity.providerSeriesId !== seriesId ||
+			(reference.season != null && reference.season !== cms.seasonNumber) ||
+			(reference.episode != null && reference.episode !== cms.episodeNumber)) return null;
+		independentIdentity = true;
+		if (!verifiedArtwork && reference.artwork) verifiedArtwork = hboMaxArtworkUrl(reference.artwork);
+	}
+	const details = detailsByDocument.get(doc);
+	const matchingDetail = details?.kind === "series" && details.id === seriesId ? details : null;
+	const card = matchingDetail?.seasons.get(cms.seasonNumber)?.episodes.get(playbackId);
+	if (card && card.number !== cms.episodeNumber) return null;
+	if (card) independentIdentity = true;
+	const previous = corroboratedPlayer.get(doc);
+	if (previous?.visit === visit && previous.playbackId === playbackId) {
+		if (previous.seriesId !== seriesId || previous.season !== cms.seasonNumber || previous.episode !== cms.episodeNumber) return null;
+		independentIdentity = true;
+	}
+	let labels = visibleCmsLabels(doc);
+	let coordinates = episodeCoordinates(labels?.ordinalLabel ?? null, cms.seasonTitle);
+	if (!labels?.subtitle && !coordinates) {
+		const video = hboMaxVideo(doc);
+		if (!video?.parentElement || !hboMaxMediaSource(video) || video.readyState < 2 ||
+			!Number.isFinite(video.duration) || video.duration <= 0 || isHboMaxAd(video.parentElement)) return null;
+		// HBO hides both responsive control layouts while idle but keeps the active episode on the page itself.
+		const mainTitle = clean((video.closest("main") ?? doc.querySelector("main[aria-label]"))?.getAttribute("aria-label"));
+		const documentEpisode = /^(.+)\s+[•·]\s+HBO Max$/iu.exec(clean(doc.title) ?? "")?.[1];
+		let collapsed: PlayerLabels | null = null;
+		for (const info of video.parentElement.querySelectorAll('[data-testid="content-metadata"]')) {
+			const row = playerLabels(doc, info);
+			if (!row || (!row.subtitle && !row.ordinalLabel)) continue;
+			if (collapsed && (!sameTitle(collapsed.title, row.title) ||
+				(collapsed.subtitle && row.subtitle && !sameTitle(collapsed.subtitle, row.subtitle)))) return null;
+			const pair = episodeCoordinates(row.ordinalLabel, cms.seasonTitle);
+			if (pair && (pair.season !== cms.seasonNumber || pair.episode !== cms.episodeNumber)) return null;
+			if (!collapsed || row.subtitle) collapsed = row;
+		}
+		const expectedTitle = independentIdentity ? collapsed?.subtitle ?? cms.episodeTitle : cms.episodeTitle;
+		if ((mainTitle && !sameTitle(mainTitle, expectedTitle)) || (documentEpisode && !sameTitle(documentEpisode, expectedTitle))) return null;
+		if (!independentIdentity && (!(mainTitle || documentEpisode) || (!collapsed?.subtitle && !(mainTitle && documentEpisode)))) return null;
+		if (collapsed) {
+			labels = collapsed;
+			coordinates = episodeCoordinates(collapsed.ordinalLabel, cms.seasonTitle);
+		}
+	}
+	if (coordinates && (coordinates.season !== cms.seasonNumber || coordinates.episode !== cms.episodeNumber)) return null;
+	// A separately verified watch can have localized display strings. The player still controls the coordinates.
+	if (labels && (!independentIdentity || !coordinates) && (!sameTitle(labels.title, cms.title) ||
+		(labels.subtitle && !sameTitle(labels.subtitle, cms.episodeTitle)))) return null;
+	if (labels?.subtitle || coordinates) {
+		corroboratedPlayer.set(doc, { visit, playbackId, seriesId, season: cms.seasonNumber, episode: cms.episodeNumber });
+	}
+	const title = labels?.title ?? cms.title;
+	const episodeTitle = labels?.subtitle ?? cms.episodeTitle;
+	return { ...cms, title, episodeTitle, displayTitle: title + " — " + episodeTitle, artworkUrl: matchingDetail?.artworkUrl ?? verifiedArtwork };
+}
+
 export function readHboMaxPlaybackMetadata(doc: Document, playbackId: string): HboMaxPlaybackMetadata | null {
 	if (hboMaxPlaybackId(doc.location.href) !== playbackId) return null;
 	const details = detailsByDocument.get(doc);
+	const cms = getHboCmsPacket(doc, playbackId)?.metadata;
+	if (cms) return corroborateHboCmsPlayback(doc, playbackId, cms);
 	const labels = playerLabels(doc);
 	if (!labels) return null;
 	const { title, ordinalLabel, subtitle } = labels;

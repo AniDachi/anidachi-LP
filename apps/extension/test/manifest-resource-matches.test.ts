@@ -77,6 +77,7 @@ function manifest() {
 				all_frames: false,
 				js: ["prime.js"],
 			},
+			{ world: "MAIN", matches: hboOrigins, run_at: "document_start", all_frames: false, js: ["content-scripts/hbomax.js"] },
 		],
 	};
 }

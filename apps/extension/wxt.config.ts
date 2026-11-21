@@ -105,6 +105,12 @@ const extensionIcons = {
 };
 
 export default defineConfig({
+  hooks: {
+    "entrypoints:found": (_, entries) => {
+      const hbo = entries.findIndex(entry => entry.name === "hbomax");
+      if (extensionChannel === "production" && hbo >= 0) entries.splice(hbo, 1);
+    },
+  },
   vite: () => ({
     // WXT production artifacts resolve React's production JSX runtime, so the
     // transform must never emit jsxDEV calls that runtime cannot provide.
