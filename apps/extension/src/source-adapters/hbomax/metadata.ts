@@ -56,6 +56,17 @@ function playerOrdinals(value: string | null) {
 	const season = ordinal(match?.[1]), episode = ordinal(match?.[2]);
 	return season && episode ? { season, episode } : null;
 }
+function cardCoordinates(label: string | null) {
+	// HBO isolates the coordinates inside a translated action such as "Watch".
+	// Only accept a complete season and episode pair before the title separator.
+	const prefix = label?.split(/[:：]/u, 1)[0];
+	if (!prefix) return null;
+	for (const part of prefix.split(/[\u2066-\u2068]/u).reverse()) {
+		const pair = playerOrdinals(clean(part));
+		if (pair) return pair;
+	}
+	return playerOrdinals(clean(prefix));
+}
 function seasonOrdinal(label: string) {
 	const value = numericText(label);
 	const match = /^(?:season|saison|temporada|staffel|stagione|sezon|série|シーズン)\s*([0-9]+)$/iu.exec(value)
@@ -108,7 +119,8 @@ function captureDetails(doc: Document) {
 	details.artworkUrl = catalogArtwork(doc, title) ?? details.artworkUrl;
 	if (details.kind !== "series") return;
 	for (const panel of doc.querySelectorAll('[role="tabpanel"]:not([hidden]):not([aria-hidden="true"])')) {
-		const seasonMenu = panel.querySelector('button[aria-haspopup="true"][aria-expanded]');
+		const seasonMenu = Array.from(panel.querySelectorAll('button[aria-haspopup="true"][aria-expanded]:not([data-tile-action-menu])'))
+			.find(button => !button.closest('a[data-testid$="_tile"]') && seasonOrdinal(clean(button.textContent) ?? "") !== null);
 		const seasonTitle = clean(seasonMenu?.textContent ?? panel.querySelector("h2")?.textContent);
 		const seasonNumber = seasonTitle && seasonOrdinal(seasonTitle);
 		if (!seasonTitle || !seasonNumber) continue;
@@ -122,7 +134,7 @@ function captureDetails(doc: Document) {
 			const episode = cardEpisode(label);
 			if (!episode) continue;
 			const accessible = link.getAttribute("aria-label");
-			const coordinates = playerOrdinals(clean(accessible?.split(/[:：]/u, 1)[0]));
+			const coordinates = cardCoordinates(accessible);
 			// On multi-season pages the menu label can update before the old grid is replaced.
 			if (seasonMenu && !coordinates) continue;
 			if (coordinates && (coordinates.season !== seasonNumber || coordinates.episode !== episode.number)) continue;
@@ -233,7 +245,10 @@ function isPrimaryMovieControl(target: Element): boolean {
 }
 
 function playerInfo(doc: Document) {
-	return doc.querySelector('[data-testid="playerContainer"] [data-testid="content-metadata"]');
+	const selector = '[data-testid="playerContainer"] [data-testid="content-metadata"]';
+	// Responsive catch-up controls can repeat the series title without episode details.
+	return (doc.querySelector(selector + ' [data-testid="player-ux-season-episode"]') ??
+		doc.querySelector(selector + ' [data-testid="player-ux-asset-title"]'))?.closest('[data-testid="content-metadata"]') ?? null;
 }
 
 function playerLabels(doc: Document): PlayerLabels | null {

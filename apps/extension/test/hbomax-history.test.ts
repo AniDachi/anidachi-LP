@@ -191,4 +191,18 @@ describe("HBO Max public catalog and personal history", () => {
 		document.querySelector('[data-testid="player-ux-asset-title"]')!.textContent = "Duna";
 		expect(readHboMaxPlaybackMetadata(document, film)).toMatchObject({ title: "Duna", episodeTitle: "Duna" });
 	});
+	it.each([false, true])("reads watched War cards alongside empty tile action menus (season selector %s)", multiple => {
+		route("/show/" + series);
+		document.documentElement.lang = "en";
+		document.body.innerHTML = `<h1>War</h1><div role="tabpanel">
+			<button data-tile-action-menu="true" data-testid="dropdownToggleButton" aria-haspopup="true" aria-expanded="false"></button>
+			${multiple ? '<button aria-haspopup="true" aria-expanded="false"><span>Season 1</span></button>' : '<h2>Season 1</h2>'}
+			<a data-testid="${first}_tile" href="/video/watch/${first}" aria-label="⁦⁨Watch ⁨Season 1, Episode 1: ⁨It's Done⁩⁩⁩. 1 of 10."><p>1. ⁨It's Done⁩</p></a></div>`;
+		stop = startHboMaxCatalogCapture(document);
+		player(first, "War", "It's Done");
+		document.querySelector('[data-testid="playerContainer"]')!.insertAdjacentHTML("afterbegin",
+			'<div data-testid="content-metadata">Quick Catch-Up<span data-testid="player-ux-asset-title">War</span></div>');
+		expect(readHboMaxPlaybackMetadata(document, first)?.episodeTitle).toBe("It's Done");
+		expect(readHboMaxCatalog(document, series, first)?.seasons[0]?.episodes[0]?.providerEpisodeIdentifier).toBe(first);
+	});
 });
