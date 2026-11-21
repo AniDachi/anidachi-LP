@@ -4916,6 +4916,33 @@ ${hostingNoticeStyles}
     font-size: 11px;
     line-height: 1.35;
   }
+  /* Disney's sticky genre filters occupy the top edge of its catalog. */
+  .anidachi-overlay[data-disney-catalog] {
+    --catalog-dock-inset: 12px;
+    --catalog-capsule-height: 32px;
+  }
+  [data-disney-catalog] .top-bubble-reveal {
+    inset: auto 0 var(--catalog-dock-inset);
+    height: var(--catalog-capsule-height);
+    --top-bubble-top: 0px;
+    --top-bubble-right: var(--catalog-dock-inset);
+  }
+  [data-disney-catalog] .top-bubble-edge-glow { display: none; }
+  [data-disney-catalog] .mini-panel {
+    --panel-bottom: calc(var(--catalog-dock-inset) + var(--catalog-capsule-height) + 8px);
+    top: auto;
+    bottom: var(--panel-bottom);
+    right: var(--catalog-dock-inset);
+    max-height: calc(100% - var(--panel-bottom) - var(--catalog-dock-inset));
+  }
+
+  [data-disney-catalog] .room-rail-edge {
+    top: 50%;
+    bottom: auto;
+    height: min(144px, 100%);
+    transform: translateY(-50%);
+  }
+
   @container compact-panel (max-width: 285px) {
     .settings-surface { margin-top: 8px; padding: 8px; }
     .settings-toggle-row { position: relative; }
