@@ -1,3 +1,4 @@
+import { DisneyPlusHistoryIdentitySchema, disneyPlusFingerprint, disneyPlusSourceUrl } from "./disneyplus-identity";
 import { PrimeNavigationSchema, primeNavigationMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import { HostingTimeEventSchema, LegacyHostingTimeEventSchema } from "./hosting-time";
@@ -22,7 +23,7 @@ import {
   MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
 } from "./limits";
-import { hasPrimeVideoHostname, hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
+import { hasDisneyPlusHostname, hasPrimeVideoHostname, hasNetflixHostname, RoomSourceDescriptorSchema } from "./source-url";
 
 const RoomIdSchema = z.string().min(1).max(MAX_ROOM_ID_CHARS);
 const ParticipantIdSchema = z.string().min(1).max(MAX_PARTICIPANT_ID_CHARS);
@@ -136,10 +137,12 @@ export const WatchSourceProviderSchema = z.enum([
 	"generic",
 	"netflix",
 	"primevideo",
+  "disneyplus",
 ]);
 
 export const WatchSourceDescriptorSchema = z.object({
   provider: WatchSourceProviderSchema,
+  disneyplusIdentity: DisneyPlusHistoryIdentitySchema.optional(),
   primeNavigation: PrimeNavigationSchema.optional(),
   sourceUrl: UrlSchema,
   canonicalUrl: UrlSchema,
@@ -152,12 +155,22 @@ export const WatchSourceDescriptorSchema = z.object({
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
 }).superRefine((source, context) => {
+  if (source.disneyplusIdentity) {
+    const identity = source.disneyplusIdentity;
+    const playId = identity.kind === "movie" ? identity.providerMovieId : identity.providerEpisodeIdentifier;
+    if (source.provider !== "disneyplus" || source.sourceUrl !== disneyPlusSourceUrl(playId) ||
+      source.videoFingerprint !== disneyPlusFingerprint(playId)) {
+      context.addIssue({ code: "custom", message: "Disney+ identity must match the active playback", path: ["disneyplusIdentity"] });
+    }
+  }
   if (!primeNavigationMatches(source.primeNavigation,source.sourceUrl,source.provider)) context.addIssue({code:"custom",message:"Prime navigation source mismatch"});
+  const hasDisneySource = hasDisneyPlusHostname(source.sourceUrl) ||
+    hasDisneyPlusHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("disneyplus|");
   const hasNetflixSource = hasNetflixHostname(source.sourceUrl) ||
     hasNetflixHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("netflix|");
   const hasPrimeSource = hasPrimeVideoHostname(source.sourceUrl) ||
     hasPrimeVideoHostname(source.canonicalUrl) || source.videoFingerprint.startsWith("primevideo|");
-  if ((source.provider === "netflix" || hasNetflixSource || source.provider === "primevideo" || hasPrimeSource) && !RoomSourceDescriptorSchema.safeParse({
+  if ((source.provider === "disneyplus" || hasDisneySource || source.provider === "netflix" || hasNetflixSource || source.provider === "primevideo" || hasPrimeSource) && !RoomSourceDescriptorSchema.safeParse({
     provider: source.provider, sourceUrl: source.sourceUrl,
     canonicalUrl: source.canonicalUrl, videoFingerprint: source.videoFingerprint,
   }).success) context.addIssue({ code: "custom", message: "Invalid provider room source", path: ["sourceUrl"] });

@@ -69,21 +69,22 @@ export async function applyPersonalHistoryResume(
 			return source.ok && source.source.sourceUrl === intent.sourceUrl;
 		})() &&
 		input.adapter.provider === intent.provider;
-	const ready = () =>
-		input.adapter.getPlaybackSnapshot().phase === "content" &&
-		input.adapter.video.readyState >= 1 &&
-		Number.isFinite(input.adapter.video.duration) &&
-		input.adapter.video.duration > 0 &&
-		intent.currentTime <= input.adapter.video.duration;
-	// Prime binds the content ID before its first asynchronous SDK snapshot.
+	const ready = () => {
+		const duration = intent.provider === "disneyplus"
+			? input.adapter.getSourceDescriptor()?.duration : input.adapter.video.duration;
+		return input.adapter.getPlaybackSnapshot().phase === "content" &&
+			input.adapter.video.readyState >= 1 && duration !== undefined && duration !== null &&
+			Number.isFinite(duration) && duration > 0 && intent.currentTime <= duration;
+	};
+	// These adapters bind the content ID before their first confirmed timeline.
 	// Only that exact binding may wait without a descriptor; it cannot seek yet.
 	if (
-		intent.provider === "primevideo" &&
-		input.adapter.provider === "primevideo" &&
+		(intent.provider === "primevideo" || intent.provider === "disneyplus") &&
+		input.adapter.provider === intent.provider &&
 		!input.adapter.getSourceDescriptor() &&
 		input.adapter.getPlaybackSnapshot().phase === "transition"
 	) {
-		const source = canonicalizeRoomSourceUrl(intent.sourceUrl, "primevideo");
+		const source = canonicalizeRoomSourceUrl(intent.sourceUrl, intent.provider);
 		return ownerIsCurrent() &&
 			now() >= intent.issuedAt &&
 			source.ok &&
@@ -94,7 +95,7 @@ export async function applyPersonalHistoryResume(
 	}
 	if (!matches()) return "cancelled";
 	if (!ready()) return "waiting";
-	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo") {
+	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo" || intent.provider === "disneyplus") {
 		if (
 			!input.adapter.getPersonalResumeReadiness ||
 			!input.adapter.seekPersonalResume

@@ -22,6 +22,7 @@ export * from "./watch-history-editor";
 export * from "./maintenance";
 export * from "./room-quota-status";
 export * from "./room-hosting";
+export * from "./disneyplus-identity";
 export * from "./netflix-identity";
 export * from "./prime-video-identity";
 export * from "./trial-abuse";

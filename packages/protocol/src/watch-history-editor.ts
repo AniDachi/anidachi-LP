@@ -5,7 +5,7 @@ import { WatchHistoryResponseMetaSchema } from "./watch-history";
 import { historyEpisodeSourceMatches, historyKeyMatchesProvider, historyReadKeyMatchesProvider } from "./history-provider-validation";
 
 const Key = z.string().min(1).max(220);
-const Provider = z.enum(["crunchyroll", "youtube", "netflix", "primevideo"]);
+const Provider = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]);
 const Revision = z.string().regex(/^[a-f0-9]{32}$/);
 export const WATCH_HISTORY_EDITOR_LIMIT = 2000;
 
@@ -22,7 +22,7 @@ export const WatchHistoryEditRequestSchema = WatchHistoryEditorQuerySchema.safeE
 }).superRefine((value, ctx) => {
   if (!historyKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]) ||
     value.changes.some(change => !historyKeyMatchesProvider(value.provider, change.episodeKey, ["episode", "movie", "video"]) ||
-      ((value.provider === "netflix" || value.provider === "primevideo") && (value.titleKey.startsWith(`${value.provider}:movie:`) ? change.episodeKey !== value.titleKey : !change.episodeKey.startsWith(`${value.provider}:episode:`)))))
+      ((value.provider === "netflix" || value.provider === "primevideo" || value.provider === "disneyplus") && (value.titleKey.startsWith(`${value.provider}:movie:`) ? change.episodeKey !== value.titleKey : !change.episodeKey.startsWith(`${value.provider}:episode:`)))))
     ctx.addIssue({ code: "custom", message: "Edit identities must match provider and title" });
   if (new Set(value.changes.map(change => change.episodeKey)).size !== value.changes.length)
     ctx.addIssue({ code: "custom", message: "Duplicate episode change" });
@@ -50,7 +50,7 @@ export const WatchHistoryEditorResponseSchema = z.strictObject({
   for (const episode of value.episodes) {
     if (!primeNavigationMatches(episode.primeNavigation,episode.sourceUrl,value.provider) || !historyEpisodeSourceMatches(value.provider, episode) ||
       (value.provider === "youtube" && !/^[\w-]{11}$/.test(new URL(episode.sourceUrl).searchParams.get("v") ?? "")) ||
-      ((value.provider === "netflix" || value.provider === "primevideo") && (value.titleKey.startsWith(`${value.provider}:movie:`)
+      ((value.provider === "netflix" || value.provider === "primevideo" || value.provider === "disneyplus") && (value.titleKey.startsWith(`${value.provider}:movie:`)
         ? episode.episodeKey !== value.titleKey || episode.seasonTitle !== null || episode.seasonNumber !== null || episode.episodeNumber !== null
         : !episode.episodeKey.startsWith(`${value.provider}:episode:`))))
       ctx.addIssue({ code: "custom", message: "Invalid episode source or identity" });

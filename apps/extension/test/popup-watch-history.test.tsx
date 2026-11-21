@@ -466,7 +466,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
     expect(view.container.textContent).toContain("Pending sync");
     expect(client.loadCached).toHaveBeenCalledTimes(1);
-    expect(listRequests).toBe(4);
+    expect(listRequests).toBe(5);
     await unmount(view.root);
   });
 
@@ -1099,7 +1099,7 @@ describe("Popup Watch History v3", () => {
       );
     });
 
-    await waitFor(() => expect(listRequests).toBe(8));
+    await waitFor(() => expect(listRequests).toBe(10));
     expect(view.container.textContent).toContain("Stable Frieren");
     expect(view.container.textContent).not.toContain("Older cached Frieren");
     expect(view.container.textContent).not.toContain("Loading watch history");
@@ -1193,7 +1193,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
     expect(view.container.textContent).toContain("Episode 1");
     expect(view.container.querySelector('[title="Episode 8"]')).not.toBeNull();
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(4);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(5);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1341,7 +1341,7 @@ describe("Popup Watch History v3", () => {
     await click(secondTitle);
     expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
     expect(title.getAttribute("aria-expanded")).toBe("true");
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(4);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(5);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1432,7 +1432,7 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(listAttempts).toBe(5);
+    expect(listAttempts).toBe(6);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
@@ -1490,7 +1490,7 @@ describe("Popup Watch History v3", () => {
     );
     expect(recoveryCall).toBeGreaterThan(-1);
     expect(secondListCall).toBeGreaterThan(recoveryCall);
-    expect(listAttempts).toBe(8);
+    expect(listAttempts).toBe(10);
     await unmount(view.root);
   });
 
@@ -1526,7 +1526,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Browser storage is full."));
     expect(view.container.textContent).toContain("Cached Frieren");
     await findButton(view.container, "Retry watch history");
-    expect(listAttempts).toBe(7);
+    expect(listAttempts).toBe(9);
     await unmount(view.root);
   });
 
@@ -1577,7 +1577,7 @@ function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryRespo
       const page = fixtureBrowseDetail(latest, input);
       return page.ok ? Response.json(page.data) : new Response("unavailable", { status: 503 });
     }
-    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
+    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo", "disneyplus"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
       const empty = fixtureBrowseTitles(latest, input);
       return Response.json(empty.ok ? empty.data : null);
     }

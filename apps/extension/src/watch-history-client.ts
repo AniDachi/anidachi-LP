@@ -567,7 +567,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "list") return refresh(session, message);
     if (message.command === "capacity") {
       const lease = await readLease(session);
-      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=3");
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=4");
       if (!response.ok) return response.error;
       const parsed = WatchHistoryCapacityCompatibleSchema.safeParse(response.body);
       if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
@@ -684,7 +684,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const startedRoot = await storage.readRoot();
     const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
     const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
-    const query = new URLSearchParams({ providerVersion: "3" });
+    const query = new URLSearchParams({ providerVersion: "4" });
     if (message.limit !== undefined) query.set("limit", String(message.limit));
     if (message.cursor) query.set("cursor", message.cursor);
     const response = await authenticatedRequest(session, `/api/watch-history/v3${query.size ? `?${query}` : ""}`);
@@ -1928,7 +1928,7 @@ function parseBrowseInput(
   const parsed = schema.safeParse(message.input);
   if (!parsed.success) return null;
   return message.command === "browse" || message.command === "browse-sessions" || message.command === "browse-options"
-    ? { ...parsed.data, providerVersion: 3 }
+    ? { ...parsed.data, providerVersion: 4 }
     : parsed.data;
 }
 
@@ -2097,6 +2097,10 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (url.protocol !== "https:") return false;
   if (!["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command)) return false;
   if (hasPrimeBrowserHost(sender.url)) return isPrimePlayerPageSender(sender);
+  if (url.hostname === "www.disneyplus.com")
+    return url.origin === "https://www.disneyplus.com" && !url.username && !url.password &&
+      (sender.origin === undefined || sender.origin === url.origin) &&
+      (sender.tab.url === undefined || sender.tab.url.startsWith(url.origin + "/"));
   if (url.hostname === "www.netflix.com") {
     if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
     // Trust the document origin, not its initial route: Netflix opens players

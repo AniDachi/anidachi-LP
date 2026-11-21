@@ -7,6 +7,8 @@ import type {
 } from "./core/types";
 import { findBestVideo } from "./core/video-discovery";
 import { crunchyrollDefinition } from "./crunchyroll/definition";
+import { detectDisneyPlusAdapter, disneyPlusDefinition } from "./disneyplus/definition";
+import { isDisneyPlusOrigin } from "./disneyplus/url";
 import { netflixDefinition } from "./netflix/definition";
 import { genericDefinition } from "./generic/definition";
 import { detectYouTubeWatchAdapter, youtubeDefinition } from "./youtube/definition";
@@ -17,12 +19,14 @@ const sourceAdapterDefinitions = [
 	crunchyrollDefinition,
 	netflixDefinition,
 	primeVideoDefinition,
+	disneyPlusDefinition,
 	genericDefinition,
 ] as const satisfies readonly SourceAdapterDefinition[];
 
 export function detectSourceAdapter(
 	documentValue: Document = document,
 ): VideoAdapter | null {
+	if (isDisneyPlusOrigin(location.href)) return detectDisneyPlusAdapter(documentValue);
 	if (hasPrimeBrowserHost(location.href)) {
 		const videos = documentValue.querySelectorAll<HTMLVideoElement>("#dv-web-player video");
 		return videos.length === 1 ? primeVideoDefinition.detect(videos[0]!) : null;

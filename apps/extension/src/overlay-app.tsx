@@ -7,6 +7,7 @@ import type { LivePrimeRoomSession } from "./prime-room-contract";
 import { catalogRoomProvider, catalogWatchDestination, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 import { followPrimeRoom } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
+import { observeDisneyPlusRoomSource, clearDisneyPlusRoomSource } from "./source-adapters/disneyplus/metadata";
 import type {
 	ClientEvent,
 	P2PSignal,
@@ -552,7 +553,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const playerDepartureRef = useRef<{ record: RoomSessionRecord; login: string | null } | null>(null);
 	const quickReactionsHelpId = useId();
 	const [roomClient] = useState(() => supportsCatalogRoom(adapter.provider) &&
-		((adapter.provider !== "crunchyroll" && adapter.provider !== "youtube") ||
+		((adapter.provider !== "crunchyroll" && adapter.provider !== "youtube" && adapter.provider !== "disneyplus") ||
 			(window.top === window && catalogRoomProvider(location.href) === adapter.provider)) &&
 		typeof chrome !== "undefined" && typeof chrome.runtime?.connect === "function"
 		? new PrimeRoomClient() : new RoomClient());
@@ -821,7 +822,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const confirmedPrimeRoom = useRef<string | null>(null);
 	// A normal in-page client cannot keep a YouTube room alive across documents.
 	const catalogSessionEligible = supportsCatalogRoom(adapter.provider) &&
-		(adapter.provider !== "youtube" || roomClient instanceof PrimeRoomClient);
+		((adapter.provider !== "youtube" && adapter.provider !== "disneyplus") || roomClient instanceof PrimeRoomClient);
 	useLayoutEffect(() => {
 		if (!catalogSessionEligible || roomId !== confirmedPrimeRoom.current ||
 			(roomSourceProvider && roomSourceProvider !== adapter.provider))
@@ -3686,6 +3687,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	const applyHostState = useCallback(
 		async (state: PlaybackState, source?: WatchSourceDescriptor) => {
+			if (roomIdRef.current && roomSourceProviderRef.current === "disneyplus" &&
+				source?.provider === "disneyplus" && source.videoFingerprint === state.videoFingerprint) {
+				observeDisneyPlusRoomSource(document, source);
+			}
 			if (supportsCatalogReturn(roomSourceProviderRef.current) && roomIdRef.current) {
 				const episode = catalogWatchSource(roomSourceProviderRef.current, state.sourceUrl ?? source?.sourceUrl ?? "");
 				const inPlayer = state.hostSurface === "player" && episode && state.videoFingerprint === episode.videoFingerprint;
@@ -5447,12 +5452,17 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		adapter,
 		controller: playbackSyncController,
 	});
+	useEffect(() => () => clearDisneyPlusRoomSource(document), [roomId]);
 	useEffect(() => {
 		const pending = pendingCatalogPlayback.current;
 		if (!supportsCatalogReturn(adapter.provider) || !adapterActive || !pending || !roomSnapshotReady || !isConnected || isHost) return;
 		pendingCatalogPlayback.current = null;
-		if (pending.roomId === roomId && pending.state.videoFingerprint === adapter.getFingerprint())
+		if (pending.roomId === roomId && pending.state.videoFingerprint === adapter.getFingerprint()) {
+			if (pending.source?.provider === "disneyplus" && pending.source.videoFingerprint === pending.state.videoFingerprint) {
+				observeDisneyPlusRoomSource(document, pending.source);
+			}
 			void playbackSyncController.handleHostState(pending.state, pending.source);
+		}
 	}, [adapter, adapterActive, roomId, roomSnapshotReady, isConnected, isHost, playbackSyncController]);
 
 	const handleCreateRoom = async () => {

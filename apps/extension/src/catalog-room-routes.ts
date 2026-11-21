@@ -2,16 +2,17 @@ import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
 import { isCrunchyrollCatalogOrigin, crunchyrollCatalogPath, localizedWatchUrl } from "./source-adapters/crunchyroll/url";
 import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, youtubePageWatchSource } from "./source-adapters/youtube/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
+import { disneyPlusWatchId, isDisneyPlusOrigin, localizeDisneyPlusWatchUrl } from "./source-adapters/disneyplus/url";
 import {
 	isPrimeRoomBrowsingPage,
 	isPrimePlayerPageSender,
 	parsePrimePageUrl,
 } from "./source-adapters/primevideo/url";
 
-export type CatalogRoomProvider = "netflix" | "primevideo" | "crunchyroll" | "youtube";
+export type CatalogRoomProvider = "netflix" | "primevideo" | "crunchyroll" | "youtube" | "disneyplus";
 
 export function supportsCatalogReturn(provider: unknown): provider is Exclude<CatalogRoomProvider, "primevideo"> {
-	return provider === "netflix" || provider === "crunchyroll" || provider === "youtube";
+	return provider === "netflix" || provider === "crunchyroll" || provider === "youtube" || provider === "disneyplus";
 }
 
 export function catalogWatchSource(provider: unknown, href: string) {
@@ -28,6 +29,7 @@ export function catalogContentId(canonicalUrl: string) {
 
 export function catalogWatchDestination(sourceUrl: string, currentHref: string) {
 	const target = new URL(sourceUrl);
+	if (disneyPlusWatchId(sourceUrl)) return localizeDisneyPlusWatchUrl(target, currentHref).href;
 	return isCrunchyrollCatalogOrigin(target.origin) ? localizedWatchUrl(target, currentHref).href : target.href;
 }
 
@@ -42,6 +44,11 @@ export function catalogRoomProvider(value: string): CatalogRoomProvider | null {
 	try {
 		const url = new URL(value);
 		if (url.username || url.password) return null;
+		if (isDisneyPlusOrigin(value)) {
+			const path = url.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/|$)/i, "") || "/";
+			const catalog = path === "/" || /^\/(?:home|search|watchlist|browse(?:\/[a-z0-9_-]+)*)\/?$/i.test(path);
+			return catalog || disneyPlusWatchId(value) ? "disneyplus" : null;
+		}
 		if (YOUTUBE_CATALOG_ORIGINS.includes(url.origin)) {
 			return isYouTubeCatalogPath(url.pathname) || youtubePageWatchSource(url) ? "youtube" : null;
 		}
@@ -68,6 +75,7 @@ export function catalogPlayerProvider(
 		return null;
 	}
 	if (netflixWatchId(value)) return "netflix";
+	if (disneyPlusWatchId(value)) return "disneyplus";
 	if (catalogWatchSource("crunchyroll", value)) return "crunchyroll";
 	return parsePrimePageUrl(value) ? "primevideo" : null;
 }

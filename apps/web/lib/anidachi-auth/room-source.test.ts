@@ -565,3 +565,14 @@ test('Prime creation, durable read and callback arguments retain the exact obser
  assert.deepEqual(roomSourcePersistenceRpcArguments({roomId:'room',sourceGeneration:1,source:durable.source}).p_prime_navigation,primeNavigation);
  assert.equal(deriveDurableRoomSource({...columns,prime_navigation:{...primeNavigation,contentId:'B'.repeat(26)}}),null);
 });
+
+test("Disney+ invite redirects use current canonical playback and the exact room hash", () => {
+  const id = "c6a0a3b3-587e-4bc2-964b-d01700582d91";
+  const columns = roomSourceCreationColumns({
+    sourceUrl: `https://www.disneyplus.com/pt-br/play/${id.toUpperCase()}?tracking=1`,
+  });
+  assert.equal(columns.source_provider, "disneyplus");
+  const source = deriveDurableRoomSource(columns)?.source;
+  assert.equal(buildRoomSourceLaunchUrl(source, "room-123"), `https://www.disneyplus.com/play/${id}#anidachiRoom=room-123`);
+  assert.throws(() => roomSourceCreationColumns({ sourceUrl: `https://www.disneyplus.com/browse/entity-${id}` }));
+});

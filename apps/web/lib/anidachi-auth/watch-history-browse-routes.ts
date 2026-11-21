@@ -44,7 +44,7 @@ export function createWatchHistoryBrowseHandler(
 				if (
 					Object.hasOwn(input, key) ||
 					(key === "limit" && !/^\d{1,2}$/.test(value)) ||
-					(key === "providerVersion" && value !== "1" && value !== "2" && value !== "3")
+					(key === "providerVersion" && value !== "1" && value !== "2" && value !== "3" && value !== "4")
 				)
 					throw new WatchHistoryV3ApiError(
 						400,

@@ -13,13 +13,14 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { WebSocketServer } from "ws";
 
-const service = process.argv.includes("--youtube") ? "youtube" : process.argv.includes("--crunchyroll") ? "crunchyroll" : process.argv.includes("--netflix") ? "netflix" : "primevideo";
 const routes = {
+	disneyplus: ["/play/120ae1e6-2240-4924-a4ce-f8de6e28b0b1", "/pt-br/browse/hulu", "/pt-br/home", "/pt-br/play/01234567-1234-4321-9234-000070196259"],
 	youtube: ["/watch?v=ABCDEFGHIJK", "/results?search_query=music", "/", "/watch?v=LMNOPQRSTUV"],
 	primevideo: ["/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA", "/storefront", "/region/na/mystuff/watchlist", "/detail/0BBBBBBBBBBBBBBBBBBBBBBBBB"],
 	netflix: ["/watch/123", "/browse", "/browse/my-list", "/watch/456"],
 	crunchyroll: ["/watch/GABC123", "/de/watchlist", "/ru/discover", "/de/watch/GDEF456/episode"],
 };
+const service = Object.keys(routes).find(name => process.argv.includes("--" + name)) ?? "primevideo";
 const [path, catalogPath, firstCatalogPath, nextEpisode] = routes[service];
 const provider = "https://www." + service + ".com";
 const detail = provider + path;

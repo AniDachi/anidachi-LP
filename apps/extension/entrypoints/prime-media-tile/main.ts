@@ -1,11 +1,12 @@
 import { YOUTUBE_CATALOG_ORIGINS } from "../../src/source-adapters/youtube/url";
 import { isCrunchyrollCatalogOrigin } from "../../src/source-adapters/crunchyroll/url";
+import { DISNEY_PLUS_ORIGIN } from "../../src/source-adapters/disneyplus/url";
 import {hasPrimeBrowserHost} from "@anidachi/protocol";
 import {mediaAccessChannel, type PrimeTileWindow} from "../../src/prime-media-access";
 import {PRIME_ROOM_DOCUMENT_HANDOFF_MS} from "../../src/prime-room-contract";
 
 const parentOrigin = location.ancestorOrigins[0];
-if (parentOrigin && window.parent !== window && (parentOrigin === "https://www.netflix.com" || YOUTUBE_CATALOG_ORIGINS.includes(parentOrigin) || isCrunchyrollCatalogOrigin(parentOrigin) || hasPrimeBrowserHost(parentOrigin))) {
+if (parentOrigin && window.parent !== window && (parentOrigin === "https://www.netflix.com" || parentOrigin === DISNEY_PLUS_ORIGIN || YOUTUBE_CATALOG_ORIGINS.includes(parentOrigin) || isCrunchyrollCatalogOrigin(parentOrigin) || hasPrimeBrowserHost(parentOrigin))) {
   const video = document.querySelector("video")!;
   let release: (() => void) | undefined;
   let redeeming = false;

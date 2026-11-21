@@ -1119,3 +1119,31 @@ it("round trips observed Prime routes through durable/restarted state without ge
  room.updateHostState('host',playbackState(`primevideo|detail/${next}`,nextUrl),{...legacy,sourceUrl:nextUrl,canonicalUrl:nextUrl,videoFingerprint:`primevideo|detail/${next}`});
  expect(room.currentDurableSource?.primeNavigation).toBeUndefined();
 });
+
+it("retains Disney+ host authority and restores the latest confirmed episode after a restart", () => {
+  const room = new RoomState("disney-room");
+  room.join(participant("host", "host"));
+  room.join(participant("viewer", "viewer"));
+  const source = (id: string): WatchSourceDescriptor => ({
+    provider: "disneyplus", sourceUrl: `https://www.disneyplus.com/play/${id}`,
+    canonicalUrl: `https://www.disneyplus.com/play/${id}`, videoFingerprint: `disneyplus|play/${id}`, title: "Episode",
+  });
+  const first = source("2e6c6ae8-47b0-4382-a7ae-df89950eece3");
+  const next = source("12bf1f69-af36-4a39-86ee-21eef7ddd67c");
+  const seriesId = "8cb36cc2-3175-4f2a-aa72-8287cdb1150c";
+  const firstWithIdentity = { ...first, disneyplusIdentity: {
+    kind: "episode" as const, providerSeriesId: seriesId, providerEpisodeIdentifier: first.sourceUrl.split("/").at(-1)!,
+  } };
+  const state = playbackState(first.videoFingerprint, first.sourceUrl);
+  expect(room.updateHostState("viewer", state, firstWithIdentity).accepted).toBe(false);
+  expect(room.updateHostState("host", state, firstWithIdentity).sourceChanged).toBe(true);
+  expect(room.currentDurableSource).not.toHaveProperty("disneyplusIdentity");
+  expect(room.updateHostState("host", state, first).sourceChanged).toBe(false);
+  const restored = new RoomState("disney-room", undefined, room.toSnapshot());
+  expect(restored.toSnapshot().source?.disneyplusIdentity).toEqual(firstWithIdentity.disneyplusIdentity);
+  const nextState = playbackState(next.videoFingerprint, next.sourceUrl);
+  expect(restored.updateHostState("host", nextState, { ...next, disneyplusIdentity: firstWithIdentity.disneyplusIdentity }).accepted).toBe(false);
+  expect(restored.updateHostState("host", nextState, next).sourceChanged).toBe(true);
+  expect(restored.toSnapshot().source?.disneyplusIdentity).toBeUndefined();
+  expect(restored.currentDurableSource?.videoFingerprint).toBe(next.videoFingerprint);
+});

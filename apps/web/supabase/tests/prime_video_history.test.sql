@@ -54,9 +54,9 @@ select is(list_watch_history_v3_provider_page('e1111111-1111-4111-8111-111111111
 select is(browse_watch_history_v3('e1111111-1111-4111-8111-111111111111','{"mode":"personal","limit":1}','titles')->>'totalTitleCount','0','legacy browse filters Prime Video before counting');
 select is(browse_watch_history_v3('e1111111-1111-4111-8111-111111111111','{"mode":"personal","limit":1,"providerVersion":3}','titles')->>'totalTitleCount','2','v3 browse counts Prime Video');
 select is(browse_watch_history_v3('e1111111-1111-4111-8111-111111111111','{"mode":"personal","limit":1,"provider":"primevideo"}','titles')->>'totalTitleCount','2','explicit Prime Video provider opts in without version');
-select throws_ok($$select browse_watch_history_v3('e1111111-1111-4111-8111-111111111111','{"mode":"personal","providerVersion":4}','titles')$$,'22023','watch_history_browse_invalid','SQL rejects unknown provider version');
+select throws_ok($$select browse_watch_history_v3('e1111111-1111-4111-8111-111111111111','{"mode":"personal","providerVersion":5}','titles')$$,'22023','watch_history_browse_invalid','SQL rejects unknown provider version');
 select throws_ok($$select browse_watch_history_v3('e1111111-1111-4111-8111-111111111111','{"mode":"personal","providerVersion":null}','titles')$$,'22023','watch_history_browse_invalid','SQL rejects null provider version');
-select throws_ok($$select list_watch_history_v3_provider_page('e1111111-1111-4111-8111-111111111111',1,1,4)$$,'22023','watch_history_invalid_page','SQL list rejects unknown provider version');
+select throws_ok($$select list_watch_history_v3_provider_page('e1111111-1111-4111-8111-111111111111',1,1,5)$$,'22023','watch_history_invalid_page','SQL list rejects unknown provider version');
 select throws_ok($$select validate_watch_identity_v3(pg_temp.p_event()||'{"artworkUrl":"https://m.media-amazon.com.evil.test/images/a"}')$$,'22023','watch_history_identity_invalid','SQL rejects artwork CDN lookalike');
 select throws_ok($$select validate_watch_identity_v3(pg_temp.p_event()||'{"artworkUrl":"https://127.0.0.1/a"}')$$,'22023','watch_history_identity_invalid','SQL rejects artwork private host');
 

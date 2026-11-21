@@ -1,5 +1,6 @@
 import { hasPrimeBrowserHost, parsePrimePageUrl } from "../primevideo/url";
 import { youtubePageWatchSource } from "../youtube/url";
+import { disneyPlusWatchId } from "../disneyplus/url";
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "@anidachi/protocol";
 import type { SourceProvider } from "./types";
 
@@ -54,6 +55,7 @@ export function sourceProviderFromUrl(value: string): SourceProvider | null {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
+    if (hostname === "www.disneyplus.com") return disneyPlusWatchId(value) ? "disneyplus" : null;
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")

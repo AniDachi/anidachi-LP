@@ -31,6 +31,7 @@ import {
 } from "./room-presence-evidence";
 import { scheduled } from "./recovery-scheduler";
 import {
+  disneyPlusHistoryKeys,
   parseMaintenanceMode,
   maintenanceHttpResponse,
   ClientEventSchema,
@@ -3130,6 +3131,13 @@ export class RoomDurableObject {
       await this.refreshRoomHistoryAuthorities();
     }
 
+    // A host can resolve the series after the guest has already joined this playback.
+    const identity = event.source?.disneyplusIdentity;
+    const previousIdentity = result.previousSource?.disneyplusIdentity;
+    if (!result.sourceChanged && identity &&
+      (!previousIdentity || disneyPlusHistoryKeys(identity).titleKey !== disneyPlusHistoryKeys(previousIdentity).titleKey)) {
+      this.broadcast(this.currentRoomSnapshot(), socket);
+    }
     this.broadcast({ type: "HOST_STATE", state: normalizedState }, socket);
   }
 
