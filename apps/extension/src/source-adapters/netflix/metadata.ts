@@ -169,6 +169,7 @@ export function readNetflixCatalog(
 	raw: unknown,
 	movieId: string,
 	context: WatchCatalogLocaleContext | null,
+	selector?: ReadonlyMap<string, ReadonlySet<string>>,
 ): WatchCatalogSnapshotInput | null {
 	const metadata = readNetflixMetadata(raw, movieId, context);
 	if (!metadata || metadata.identity.kind !== "episode" || !context)
@@ -194,7 +195,8 @@ export function readNetflixCatalog(
 				(rawEpisode, episodeOrder) => {
 					const episode = record(rawEpisode)!;
 					const eid = netflixId(episode.id)!;
-					const available = episodeAvailability(episode, eid, movieId);
+					const available = episodeAvailability(episode, eid, movieId) ??
+						(episode.autoplayable === undefined ? selector?.get(sid)?.has(eid) ?? null : null);
 					if (
 						available === null ||
 						!label(episode.title) ||

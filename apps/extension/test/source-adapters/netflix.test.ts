@@ -166,6 +166,23 @@ describe("Netflix identity and bounded metadata", () => {
 		data.seasons[0].episodes[1].autoplayable = false;
 		expect(readNetflixMetadata(data, currentId, context)).toBeNull();
 	});
+	it("uses exact selector membership only for missing flags and never overrides unavailability", () => {
+		const data = show();
+		const first = data.seasons[0].episodes[0];
+		const playing = String(data.currentEpisode);
+		const listed = new Set([String(first.id)]);
+		Reflect.deleteProperty(first, "autoplayable");
+		expect(readNetflixCatalog(data, playing, context, new Map([["999", listed]]))?.completeness).toBe("partial");
+		const sid = String(data.seasons[0].id);
+		const absent = readNetflixCatalog(data, playing, context, new Map([[sid, new Set([playing])]]));
+		expect(absent?.completeness).toBe("complete");
+		expect(absent?.seasons[0].episodes.map(e => e.available)).toEqual([false, true]);
+		const selector = new Map([[sid, listed]]);
+		first.autoplayable = false;
+		expect(readNetflixCatalog(data, playing, context, selector)?.seasons[0].episodes[0].available).toBe(false);
+		Reflect.set(first, "autoplayable", "yes");
+		expect(readNetflixCatalog(data, playing, context, selector)?.completeness).toBe("partial");
+	});
 	it("requires generation and bounded seek values for commands", () => {
 		expect(
 			NetflixRequestSchema.safeParse({
@@ -188,7 +205,7 @@ describe("Netflix identity and bounded metadata", () => {
 		).toBe(false);
 	});
 });
-function fixture() {
+function fixture(providerMetadata: unknown = { _metadataObject: { video: show() } }) {
 	document.body.innerHTML = '<div data-uia="watch-video"><video></video></div>';
 	const video = document.querySelector("video")!;
 	Object.defineProperty(video, "readyState", { configurable: true, value: 4 });
@@ -218,7 +235,7 @@ function fixture() {
 			getAllPlayerSessionIds: () => ["session"],
 			getVideoPlayerBySessionId: () => player,
 		},
-		getVideoMetadataByVideoId: () => ({ _metadataObject: { video: show() } }),
+		getVideoMetadataByVideoId: () => providerMetadata,
 	};
 	Reflect.set(window, "netflix", {
 		appContext: { state: { playerApp: { getAPI: () => api } } },
@@ -255,6 +272,34 @@ function fixture() {
 	return { video, player, ad, stop, request, posts };
 }
 describe("Netflix page bridge", () => {
+	it("recovers all three native seasons without autoplay flags or mutating progress", () => {
+		const data = show();
+		data.currentEpisode = 70196260;
+		data.seasons = [10, 8, 8].map((length, seasonIndex) => ({
+			id: 100 + seasonIndex, seq: seasonIndex + 1, title: `Sezon ${seasonIndex + 1}`,
+			episodes: Array.from({ length }, (_, index) => {
+				const id = data.currentEpisode + seasonIndex * 100 + index;
+				const episode = { ...show().seasons[0].episodes[0], id, episodeId: id, seq: index + 1, title: `Odcinek ${index + 1}` };
+				Reflect.deleteProperty(episode, "autoplayable");
+				return episode;
+			}),
+		}));
+		const getAllSeasons = vi.fn(() => data.seasons.map(s => ({
+			getId: () => s.id, getEpisodes: () => s.episodes.map(e => ({ getId: () => e.id })),
+		})));
+		const f = fixture({ _metadataObject: { video: data }, getAllSeasons });
+		try {
+			const first = f.request({ action: "snapshot" });
+			expect(getAllSeasons).not.toHaveBeenCalled();
+			const result = f.request({ action: "catalog", generation: first.snapshot!.generation });
+			const catalog = result.catalog as NonNullable<ReturnType<typeof readNetflixCatalog>>;
+			expect(catalog.completeness).toBe("complete");
+			expect(catalog.seasons.map(s => s.episodes.filter(e => e.available).length)).toEqual([10, 8, 8]);
+			expect(catalog.seasons[2].episodes[7].watchVariants[0].sourceUrl).toBe("https://www.netflix.com/watch/70196467");
+			expect(getAllSeasons).toHaveBeenCalledTimes(1);
+		} finally { f.stop(); }
+	});
+
 	it("publishes small snapshots and seeks through the API in milliseconds with observed completion", async () => {
 		vi.useFakeTimers();
 		const f = fixture();

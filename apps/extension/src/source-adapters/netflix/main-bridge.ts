@@ -42,6 +42,35 @@ type Binding = {
 	movieId: string;
 	generation: string;
 };
+// The player exposes its episode selector through these accessors. Read only IDs,
+// once per authorized catalog request, and keep season/episode pairs together.
+function selectorEpisodeIds(metadata: Record<string, unknown> | null): Map<string, Set<string>> {
+	const ids = new Map<string, Set<string>>();
+	try {
+		const seasons = typeof metadata?.getAllSeasons === "function" && metadata.getAllSeasons();
+		if (!Array.isArray(seasons) || seasons.length > 100) return ids;
+		let count = 0;
+		for (const season of seasons) {
+			const seasonId = netflixId(season.getId());
+			const episodes = season.getEpisodes();
+			if (!seasonId || ids.has(seasonId) || !Array.isArray(episodes)) return new Map();
+			count += episodes.length;
+			if (count > 2000) return new Map();
+			const row = new Set<string>();
+			for (const episode of episodes) {
+				const id = netflixId(episode.getId());
+				if (!id || row.has(id)) return new Map();
+				row.add(id);
+			}
+			ids.set(seasonId, row);
+		}
+	} catch {
+		// Unsupported selector versions still use explicit availability from the catalog.
+		return new Map();
+	}
+	return ids;
+}
+
 export function startNetflixBridge(): () => void {
 	let stopped = false;
 	let binding: Binding | null = null;
@@ -58,6 +87,7 @@ export function startNetflixBridge(): () => void {
 	function inspect(): {
 		snapshot: NetflixSnapshot;
 		raw: unknown;
+		providerMetadata: Record<string, unknown> | null;
 		binding: Binding;
 	} | null {
 		try {
@@ -128,11 +158,8 @@ export function startNetflixBridge(): () => void {
 				invalidate();
 				return null;
 			}
-			const raw = record(
-				record(
-					api.getVideoMetadataByVideoId(player.getMovieId() as string | number),
-				)?._metadataObject,
-			)?.video;
+			const providerMetadata = record(api.getVideoMetadataByVideoId(player.getMovieId() as string | number));
+			const raw = record(providerMetadata?._metadataObject)?.video;
 			const models = record(record(netflix?.reactContext)?.models),
 				geo = record(record(models?.geo)?.data);
 			const context = netflixContext(
@@ -164,7 +191,7 @@ export function startNetflixBridge(): () => void {
 				invalidate();
 				return null;
 			}
-			return { snapshot: snapshot.data, raw, binding };
+			return { snapshot: snapshot.data, raw, providerMetadata, binding };
 		} catch {
 			invalidate();
 			return null;
@@ -212,6 +239,7 @@ export function startNetflixBridge(): () => void {
 				current.raw,
 				request.movieId,
 				current.snapshot.metadata.context,
+				selectorEpisodeIds(current.providerMetadata),
 			);
 			finish(
 				catalog
