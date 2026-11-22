@@ -3121,7 +3121,9 @@ ${hostingNoticeStyles}
   .current-resource-topline .resource-provider-logo.youtube { color: #ff0033; }
   .current-resource-topline .resource-provider-logo.netflix { color: #e50914; }
   .current-resource-topline .resource-provider-logo.netflix svg { width: 8px; margin: auto; }
-  .current-resource-topline .resource-provider-logo:is(.disneyplus, .hbomax) img { width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); }
+  .current-resource-topline .resource-provider-logo:is(.primevideo, .disneyplus, .hbomax) { width: 24px; }
+  .current-resource-topline .resource-provider-logo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .current-resource-topline .resource-provider-logo.disneyplus img { filter: brightness(0) invert(1); }
 
   .current-resource-time {
     margin-left: auto;
