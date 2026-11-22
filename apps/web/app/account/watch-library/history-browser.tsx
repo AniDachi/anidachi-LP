@@ -164,7 +164,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const dirty = Object.keys(draft).length > 0;
   const leaveGuard = useRef(false);
   leaveGuard.current = dirty || saving;
-  const canonicalSignature = `${item.lastWatchedAt}:${item.latestActivity.episodeKey}:${item.latestActivity.currentTime}:${item.completedEpisodeCount}`;
+  // A refreshed HBO series can have a larger partial catalog at exactly the same resume position.
+  const canonicalSignature = item.provider === "hbomax" && item.itemKind === "series" ? item :
+    `${item.lastWatchedAt}:${item.latestActivity.episodeKey}:${item.latestActivity.currentTime}:${item.completedEpisodeCount}`;
   const previousCanonical = useRef(canonicalSignature);
   const single = item.provider === "youtube" || item.itemKind === "movie";
   const load = useCallback(async () => {
@@ -313,8 +315,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     });
     if (!range || anchor < 0) selectionAnchor.current = ep.episodeKey;
   };
-  const available = episodes.filter(ep => ep.available);
-  const completed = available.filter(watched).length;
+  // HBO publishes episode links beyond the rail currently eligible for progress edits.
+  const countedEpisodes = item.provider === "hbomax" && !data?.catalogComplete ? episodes : episodes.filter(ep => ep.available);
+  const completed = countedEpisodes.filter(watched).length;
   const currentTime = selected && selected.episodeKey in draft ? (watched(selected) ? selected.duration : 0) : selected?.currentTime ?? 0;
   const progress = selected && selected.episodeKey in draft ? (watched(selected) ? 1 : 0) : selected?.progress ?? 0;
   const editLocked = saving || loading || conflict || !canEdit;
@@ -332,7 +335,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         {editing && <div className="wh-editor-buttons"><button ref={cancelButton} className="wh-text" disabled={saving} onClick={() => { discard(); setConflict(false); setError(null); }}>Cancel</button><button className="wh-primary" aria-label={saving ? "Saving changes" : `Save ${changeCount} ${changeCount === 1 ? "change" : "changes"}`} disabled={editLocked || !dirty} onClick={() => void save()}>{saving ? "Saving…" : "Save"}</button></div>}
       </div>
       {!canEdit && <p className="wh-hint"><LockKeyhole size={14} /> Plus or Pro unlocks recording and progress editing. Saved history stays available.</p>}
-      {loading && <p className="wh-hint" role="status">Loading progress…</p>}
+      {loading && !data && <p className="wh-hint" role="status">Loading progress…</p>}
       {error && <div className="wh-error" role="alert"><p>{error}</p>
         {conflict ? <button className="wh-text" disabled={saving} onClick={async () => {
           const latest = await load(); if (latest) {
@@ -348,7 +351,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           : <>Showing known episodes; the full catalog is unavailable. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</>}</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
-        </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "known"}` : `${episodes.filter(watched).length} watched`}</span></div>}
+        </select></label><span>{countedEpisodes.length > 0 ? `${completed} / ${countedEpisodes.length} ${data.catalogComplete ? "watched" : "known"}` : `${episodes.filter(watched).length} watched`}</span></div>}
         {editing && <div className={`wh-selection-tools ${single ? "wh-single-tools" : ""}`}>
           {!single && <div className="wh-selection-row">
             <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all shown"}</label>

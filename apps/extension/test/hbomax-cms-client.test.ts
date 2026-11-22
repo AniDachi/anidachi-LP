@@ -172,13 +172,17 @@ describe("HBO catalog data in the content script", () => {
 	});
 
 	it("waits for the native episode rail when current playback is known first", async () => {
-		stop = startHboMaxCatalogCapture(document);
-		emit({ ...packet, show: null, episodes: [] });
-		publicEpisodes.mockResolvedValue([first, second]);
-		const request = loadHboMaxCatalog(document, seriesId, playbackId, new AbortController().signal);
-		expect(publicEpisodes).not.toHaveBeenCalled();
-		emit(packet);
-		expect((await request)?.seasons[0]?.episodes).toHaveLength(2);
+		vi.useFakeTimers();
+		try {
+			stop = startHboMaxCatalogCapture(document);
+			emit({ ...packet, show: null, episodes: [] });
+			publicEpisodes.mockResolvedValue([first, second]);
+			const request = loadHboMaxCatalog(document, seriesId, playbackId, new AbortController().signal);
+			await vi.advanceTimersByTimeAsync(3_000);
+			expect(publicEpisodes).not.toHaveBeenCalled();
+			emit(packet);
+			expect((await request)?.seasons[0]?.episodes).toHaveLength(2);
+		} finally { vi.useRealTimers(); }
 	});
 
 	it("discards an older inventory when the player's route supplies newer native rows", async () => {

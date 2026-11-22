@@ -5,6 +5,7 @@ import {
 } from "@anidachi/protocol";
 import { z } from "zod";
 
+export const HBO_CATALOG_RESPONSE_TIMEOUT_MS = 8_000;
 const title = z.string().trim().min(1).max(300);
 const seasonNumber = z.number().int().min(1).max(1000);
 const episodeNumber = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);

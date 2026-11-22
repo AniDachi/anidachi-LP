@@ -1,5 +1,5 @@
 import { HBO_MAX_ORIGIN, hboMaxDetail, hboMaxPlaybackId, isHboMaxOrigin } from "@anidachi/protocol";
-import { parseHboNativePage } from "./cms-catalog";
+import { HBO_CATALOG_RESPONSE_TIMEOUT_MS, parseHboNativePage } from "./cms-catalog";
 import { resolveHboLocale } from "./locale";
 
 const maxBodyBytes = 12 * 1024 * 1024;
@@ -98,7 +98,7 @@ export function startHboNativeCatalog(win: Window): () => void {
 			reading.add(controller);
 			let body: unknown;
 			try {
-				body = await readCatalogBody(response, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]));
+				body = await readCatalogBody(response, AbortSignal.any([controller.signal, AbortSignal.timeout(HBO_CATALOG_RESPONSE_TIMEOUT_MS)]));
 			} finally { reading.delete(controller); }
 			if (started !== generation || !body) return;
 			const native = parseHboNativePage(body, route);
