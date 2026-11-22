@@ -29,7 +29,8 @@
 .wh-card { min-width: 0; text-align: left; color: #e9e4de; display: flex; flex-direction: column; cursor: pointer; border-radius: 9px; align-self: start; }
 .wh-cover { position: relative; width: 100%; aspect-ratio: 2/3; overflow: hidden; background: #19191c; border: 1px solid #ffffff16; border-radius: 9px; transition: border-color .18s, box-shadow .18s; }
 .wh-cover img,.wh-detail-cover img { width: 100%; height: 100%; object-fit: cover; }
-:is(.wh-cover,.wh-detail-cover):is([data-provider="netflix"],[data-provider="disneyplus"]) img { object-fit: contain; }
+.wh-cover:is([data-provider="netflix"],[data-provider="disneyplus"]) img,
+.wh-identity:has(.wh-provider-netflix,.wh-provider-disneyplus) .wh-detail-cover img { object-fit: contain; }
 .wh-card:hover .wh-cover { border-color: #a39a8d; }
 .wh-card-selected .wh-cover { border-color: #ff944a; box-shadow: 0 0 0 2px #ff944a30; }
 .wh-cover-check { position: absolute; right: 8px; top: 8px; background: #eee5d9; color: #171513; display: grid; place-items: center; border-radius: 50%; width: 25px; height: 25px; }

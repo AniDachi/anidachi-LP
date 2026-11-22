@@ -1,4 +1,3 @@
-import { withTitlePortraits } from "../history-title-portraits";
 import { isNetflixArtworkUrl } from "./netflix-artwork";
 import { withPersonalHistoryRead, personalHistoryError } from "./personal-history-policy";
 import {
@@ -33,6 +32,7 @@ import {
   type WatchProgressEvent,
   type WatchSharedRoomAuthority,
 } from "@anidachi/protocol";
+import { withTitlePortraits } from "../history-title-portraits";
 import { db } from "./db";
 import {
   verifyWatchHistoryAuthority,

@@ -316,7 +316,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   return <>
     <dialog ref={dialog} className="wh-inspector" aria-label={`${item.title} progress`} onCancel={event => { event.preventDefault(); onClose(); }}>
       <div className="wh-inspector-top"><button className="wh-text" onClick={onClose}><ChevronLeft size={16} /> Library</button><button className="wh-icon" aria-label="Close title" onClick={onClose}><X size={18} /></button></div>
-      <div className="wh-identity"><div data-provider={item.provider} className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork item={item} /></div>
+      <div className="wh-identity"><div className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork item={item} /></div>
         <div><span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
