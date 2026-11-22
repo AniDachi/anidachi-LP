@@ -18,6 +18,12 @@ begin
           (p_event->'seasonKey'='null'::jsonb and p_event->'seasonTitle'='null'::jsonb) or
           (jsonb_typeof(p_event->'seasonKey')='string' and coalesce(p_event->>'seasonKey','') ~
             ('^disneyplus:season:'||(i->>'providerSeriesId')||':[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$'))),false))$new$;
+  needle := needle || $scope$
+        or (p_event->'seasonNumber'<>'null'::jsonb and p_event->>'seasonKey' is distinct from
+          'disneyplus:season:'$scope$;
+  replacement := replacement || $scope$
+        or (p_event->'seasonNumber'<>'null'::jsonb and p_event->>'seasonKey' is distinct from
+          'disneyplus:season:'$scope$;
   if array_length(string_to_array(body,needle),1) is distinct from 2 then raise exception 'Disney history validator changed'; end if;
   execute replace(body,needle,replacement);
 
@@ -30,6 +36,10 @@ begin
         s->>'providerSeasonIdentifier' = (r->>'providerSeriesId')||':'||(s->>'seasonNumber')) or
        (s->'seasonNumber'='null'::jsonb and coalesce(s->>'providerSeasonIdentifier','') ~
         ('^'||(r->>'providerSeriesId')||':[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$'))),false)$new$;
+  needle := needle || $scope$
+     or s->>'seasonKey' is distinct from 'disneyplus:season:'$scope$;
+  replacement := replacement || $scope$
+     or s->>'seasonKey' is distinct from 'disneyplus:season:'$scope$;
   if array_length(string_to_array(body,needle),1) is distinct from 2 then raise exception 'Disney catalog validator changed'; end if;
   execute replace(body,needle,replacement);
 end $migration$;
