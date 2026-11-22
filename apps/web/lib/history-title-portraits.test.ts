@@ -49,3 +49,21 @@ test("a localized Disney title recovers the US storefront slug from its own enti
   assert.deepEqual(urls, ["https://www.hulu.com/series/autre-titre-" + id,
     "https://www.disneyplus.com/en-us/browse/entity-" + id, "https://www.hulu.com/series/alls-fair-" + id]);
 });
+
+test("a catalog portrait survives later episode checkpoints and bypasses publisher fallbacks", async () => {
+  const { withTitlePortraits } = await import("./history-title-portraits");
+  const titleKey = "disneyplus:series:" + id;
+  const title = { titleKey, title: "All’s Fair", artworkUrl: "https://disney.images.edge.bamgrid.com/background", currentTime: 317 };
+  const history = { items: [title] } as unknown as Parameters<typeof withTitlePortraits>[0];
+  const native = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/01a1a48c-43c5-75e7-9d54-cb770a55d506/compose?format=webp&label=standard_art_vertical_hulu-original-series_067&width=800";
+  let publisherCalls = 0;
+  const lookup = async () => { publisherCalls++; return poster; };
+  const result = await withTitlePortraits(history, async (_, keys) => {
+    assert.deepEqual(keys, [titleKey]);
+    return new Map([[titleKey, native]]);
+  }, lookup);
+  assert.deepEqual(result.items[0], { ...title, artworkUrl: native });
+  assert.equal(publisherCalls, 0);
+  assert.equal((await withTitlePortraits(history, async () => new Map(), lookup)).items[0]?.artworkUrl, poster);
+  assert.equal(publisherCalls, 1);
+});

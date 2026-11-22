@@ -1,4 +1,4 @@
-import type { WatchHistoryResponse } from "@anidachi/protocol";
+import { disneyCatalogPortrait, type WatchHistoryResponse } from "@anidachi/protocol";
 import { unstable_cache } from "next/cache";
 
 const nextData = /<script\b(?=[^>]*\bid=["']__NEXT_DATA__["'])[^>]*>([\s\S]*?)<\/script>/i;
@@ -106,9 +106,27 @@ export async function resolveHistoryPortrait(key: string, slug = "", request = f
 
 const cachedPortrait = unstable_cache(resolveHistoryPortrait, ["history-title-portrait-v2"], { revalidate: 86400 });
 
-export async function withTitlePortraits(history: WatchHistoryResponse): Promise<WatchHistoryResponse> {
+async function savedDisneyPortraits(history: WatchHistoryResponse, keys: string[]) {
+  const { db } = await import("./anidachi-auth/db");
+  const { data } = await db().from("watch_episode_progress").select("title_key,disney_portrait_url")
+    .eq("user_id", history.meta.ownerUserId).eq("history_generation", history.meta.accountGeneration)
+    .eq("provider", "disneyplus").in("title_key", keys).not("disney_portrait_url", "is", null)
+    .abortSignal(AbortSignal.timeout(1800));
+  const catalog = new Map<string, string>();
+  for (const row of data ?? []) {
+    const url = disneyCatalogPortrait(row.disney_portrait_url);
+    if (url) catalog.set(row.title_key, url);
+  }
+  return catalog;
+}
+
+export async function withTitlePortraits(history: WatchHistoryResponse, readNative = savedDisneyPortraits, publisher = cachedPortrait): Promise<WatchHistoryResponse> {
   const items = [...history.items];
+  const keys = items.filter(item => disneyKey.test(item.titleKey)).map(item => item.titleKey);
+  const catalog = keys.length ? await readNative(history, keys).catch(() => null) : null;
   const pending = items.flatMap((item, index) => {
+    const native = catalog?.get(item.titleKey) ?? (disneyKey.test(item.titleKey) ? disneyCatalogPortrait(item.artworkUrl) : null);
+    if (native) { items[index] = { ...item, artworkUrl: native }; return []; }
     if (!disneyKey.test(item.titleKey) && !netflixKey.test(item.titleKey)) return [];
     return [{ index, key: item.titleKey, slug: disneyKey.test(item.titleKey) ? titleSlug(item.title) : "" }];
   });
@@ -118,7 +136,7 @@ export async function withTitlePortraits(history: WatchHistoryResponse): Promise
     while (next < pending.length && Date.now() < deadline) {
       const { index, key, slug } = pending[next++]!;
       try {
-        const url = await cachedPortrait(key, slug);
+        const url = await publisher(key, slug);
         if (url) items[index] = { ...items[index]!, artworkUrl: url };
       } catch { /* Publisher outages must leave the saved artwork usable. */ }
     }

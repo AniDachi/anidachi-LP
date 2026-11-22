@@ -24,6 +24,7 @@ import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";
+import { watchDisneyPortraitCards } from "../src/disney-portrait-cards";
 import {
   elementDebugSnapshot,
   logDebug,
@@ -210,6 +211,7 @@ function startContentLifecycleSession(
   let disposed = false;
   let leavingDocument = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
+  const stopPortraitCards = watchDisneyPortraitCards(document);
   const stopProviderStudy = dependencies.startProviderStudy();
   const stopHboCatalog = window.top === window && isHboMaxOrigin(location.origin)
     ? startHboMaxCatalogCapture(document) : undefined;
@@ -510,6 +512,7 @@ function startContentLifecycleSession(
     window.removeEventListener("popstate", scheduleMountCheck);
     window.removeEventListener("hashchange", scheduleMountCheck);
     stopKeyboardGuard();
+    stopPortraitCards();
     stopProviderStudy?.();
     stopDisneyCatalog?.();
     stopHboCatalog?.();
