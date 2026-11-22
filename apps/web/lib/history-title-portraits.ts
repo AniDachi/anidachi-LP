@@ -1,5 +1,6 @@
 import { disneyCatalogPortrait, type WatchHistoryResponse } from "@anidachi/protocol";
 import { unstable_cache } from "next/cache";
+import { pressPortrait, studioMoviePortrait, titleSlug, type DisneyPressTitle } from "./disney-press-portrait";
 
 const nextData = /<script\b(?=[^>]*\bid=["']__NEXT_DATA__["'])[^>]*>([\s\S]*?)<\/script>/i;
 const netflixKey = /^netflix:(?:movie|series):([0-9]{1,12})$/;
@@ -35,7 +36,7 @@ function huluPoster(html: string, id: string): string | null {
 }
 
 async function readPage(url: string, request: typeof fetch, signal: AbortSignal): Promise<string | null> {
-  const options: RequestInit = { signal, redirect: "manual", cache: "no-store", headers: { Accept: "text/html" } };
+  const options: RequestInit = { signal, redirect: "manual", cache: "no-store", headers: { Accept: "text/html", "Accept-Language": "en-US,en;q=0.9" } };
   let response = await request(url, options);
   // Some storefronts canonicalize the ID-only path to a localized title slug.
   if (response.status >= 300 && response.status < 400) {
@@ -62,81 +63,113 @@ async function readPage(url: string, request: typeof fetch, signal: AbortSignal)
   }
 }
 
-function titleSlug(title: string) {
-  return title.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 160);
-}
-
-function disneyStorefrontSlug(html: string, id: string) {
+function disneyStorefrontTitle(html: string, id: string): DisneyPressTitle | null {
   const json = nextData.exec(html)?.[1];
-  if (!json) return "";
+  if (!json) return null;
   const page = object(object(object(JSON.parse(json)).props).pageProps);
-  if (page.pageId !== "entity-" + id) return "";
+  if (page.pageId !== "entity-" + id) return null;
   const blocks = object(page.stitchDocument).mainContent;
-  if (!Array.isArray(blocks)) return "";
-  const hero = blocks.map(object).find(block => block._type === "DetailEntityHero");
+  if (!Array.isArray(blocks)) return null;
+  const sections = blocks.map(object);
+  const hero = sections.find(block => block._type === "DetailEntityHero");
   const title = object(hero?.backgroundImage).alt;
-  return typeof title === "string" ? titleSlug(title) : "";
+  const details = sections.find(block => block._type === "MediaDetails");
+  const synopsis = details?.summary;
+  const year = typeof details?.release === "string" ? details.release.match(/\b\d{4}\b/)?.[0] : undefined;
+  const slug = typeof title === "string" && titleSlug(title);
+  return slug && slug.length <= 160 ? { slug, synopsis: typeof synopsis === "string" ? synopsis : "", year } : null;
 }
 
-export async function resolveHistoryPortrait(key: string, slug = "", request = fetch) {
-  const signal = AbortSignal.timeout(4200);
+export async function resolveHistoryPortrait(key: string, request = fetch, titleHint = "") {
   const netflix = netflixKey.exec(key);
   if (netflix) {
-    const page = await readPage("https://media.netflix.com/en/only-on-netflix/" + netflix[1], request, signal);
+    const page = await readPage("https://media.netflix.com/en/only-on-netflix/" + netflix[1], request, AbortSignal.timeout(4200));
     return page ? netflixPoster(page, netflix[1]!) : null;
   }
   const disney = disneyKey.exec(key);
   if (!disney) return null;
   const id = disney[2]!;
   const path = disney[1] === "series" ? "series" : "movie";
-  async function fromHulu(name: string) {
-    const page = await readPage("https://www.hulu.com/" + path + "/" + name + "-" + id, request, signal);
-    return page ? huluPoster(page, id) : null;
+  const signal = AbortSignal.timeout(7000);
+  const disneyPage = await readPage("https://www.disneyplus.com/browse/entity-" + id, request,
+    AbortSignal.any([signal, AbortSignal.timeout(3000)])).catch(() => null);
+  const title = disneyPage && disneyStorefrontTitle(disneyPage, id);
+  // Regional titles can be absent from the US Disney storefront. Hulu artwork still has to match the exact ID.
+  const slug = title ? title.slug : titleHint;
+  if (!/^[a-z0-9-]{1,160}$/.test(slug)) return null;
+  const controller = new AbortController();
+  const remaining = AbortSignal.any([signal, controller.signal]);
+  const lookup = async (url: string, select: (html: string) => string | null) => {
+    const html = await readPage(url, request, remaining);
+    const portrait = html && select(html);
+    if (!portrait) throw new Error("No matching publisher key art");
+    return portrait;
+  };
+  const candidates = [lookup("https://www.hulu.com/" + path + "/" + slug + "-" + id, html => huluPoster(html, id))];
+  if (title && title.synopsis) {
+    candidates.push(lookup("https://press.hulu.com/shows/" + slug + "/", html => pressPortrait(html, title, "hulu")));
+    if (path === "series") candidates.push(lookup("https://press.disneyplus.com/disney-plus/" + slug + "/logos", html => pressPortrait(html, title, "disney")));
   }
-  // Hulu serves the native key art on its slug-and-ID storefront URL.
-  if (slug && /^[a-z0-9-]{1,160}$/.test(slug)) {
-    const poster = await fromHulu(slug);
-    if (poster) return poster;
+  if (path === "movie" && title && title.year) {
+    for (const base of ["https://movies.disney.com/", "https://www.20thcenturystudios.com/movies/"]) {
+      candidates.push(lookup(base + slug, html => studioMoviePortrait(html, title)));
+    }
   }
-  const disneyPage = await readPage("https://www.disneyplus.com/en-us/browse/entity-" + id, request, signal);
-  const english = disneyPage && disneyStorefrontSlug(disneyPage, id);
-  return english && english !== slug ? fromHulu(english) : null;
+  return Promise.any(candidates).catch(() => null).finally(() => controller.abort());
 }
 
-const cachedPortrait = unstable_cache(resolveHistoryPortrait, ["history-title-portrait-v2"], { revalidate: 86400 });
+const cachedNetflix = unstable_cache(resolveHistoryPortrait, ["history-netflix-portrait-v1"], { revalidate: 86400 });
+const discoverDisney = unstable_cache((key: string, hint: string) => resolveHistoryPortrait(key, fetch, hint),
+  ["history-disney-portrait-v3"], { revalidate: 300 });
+
+async function publisherPortrait(key: string, hint: string) {
+  if (!disneyKey.test(key)) return cachedNetflix(key);
+  const url = await discoverDisney(key, hint);
+  if (url) {
+    const { db } = await import("./anidachi-auth/db");
+    // Successful publisher lookups outlive the request cache. No account or watch data is stored here.
+    await db().from("disney_publisher_portraits").upsert({ title_key: key, artwork_url: url },
+      { onConflict: "title_key", ignoreDuplicates: true }).abortSignal(AbortSignal.timeout(1200));
+  }
+  return url;
+}
 
 async function savedDisneyPortraits(history: WatchHistoryResponse, keys: string[]) {
   const { db } = await import("./anidachi-auth/db");
-  const { data } = await db().from("watch_episode_progress").select("title_key,disney_portrait_url")
-    .eq("user_id", history.meta.ownerUserId).eq("history_generation", history.meta.accountGeneration)
-    .eq("provider", "disneyplus").in("title_key", keys).not("disney_portrait_url", "is", null)
-    .abortSignal(AbortSignal.timeout(1800));
+  const client = db();
+  const signal = AbortSignal.timeout(1800);
+  const [native, published] = await Promise.all([
+    client.from("watch_episode_progress").select("title_key,disney_portrait_url")
+      .eq("user_id", history.meta.ownerUserId).eq("history_generation", history.meta.accountGeneration)
+      .eq("provider", "disneyplus").in("title_key", keys).not("disney_portrait_url", "is", null).abortSignal(signal),
+    client.from("disney_publisher_portraits").select("title_key,artwork_url").in("title_key", keys).abortSignal(signal),
+  ]);
   const catalog = new Map<string, string>();
-  for (const row of data ?? []) {
+  for (const row of published.data ?? []) catalog.set(row.title_key, row.artwork_url);
+  for (const row of native.data ?? []) {
     const url = disneyCatalogPortrait(row.disney_portrait_url);
     if (url) catalog.set(row.title_key, url);
   }
   return catalog;
 }
 
-export async function withTitlePortraits(history: WatchHistoryResponse, readNative = savedDisneyPortraits, publisher = cachedPortrait): Promise<WatchHistoryResponse> {
+export async function withTitlePortraits(history: WatchHistoryResponse, readNative = savedDisneyPortraits, publisher = publisherPortrait): Promise<WatchHistoryResponse> {
   const items = [...history.items];
   const keys = items.filter(item => disneyKey.test(item.titleKey)).map(item => item.titleKey);
   const catalog = keys.length ? await readNative(history, keys).catch(() => null) : null;
   const pending = items.flatMap((item, index) => {
-    const native = catalog?.get(item.titleKey) ?? (disneyKey.test(item.titleKey) ? disneyCatalogPortrait(item.artworkUrl) : null);
+    const native = (disneyKey.test(item.titleKey) ? disneyCatalogPortrait(item.artworkUrl) : null) ?? catalog?.get(item.titleKey);
     if (native) { items[index] = { ...item, artworkUrl: native }; return []; }
     if (!disneyKey.test(item.titleKey) && !netflixKey.test(item.titleKey)) return [];
-    return [{ index, key: item.titleKey, slug: disneyKey.test(item.titleKey) ? titleSlug(item.title) : "" }];
+    return [{ index, key: item.titleKey, hint: disneyKey.test(item.titleKey) ? titleSlug(item.title).slice(0, 160) : "" }];
   });
   const deadline = Date.now() + 2600;
   let next = 0;
   async function worker() {
     while (next < pending.length && Date.now() < deadline) {
-      const { index, key, slug } = pending[next++]!;
+      const { index, key, hint } = pending[next++]!;
       try {
-        const url = await publisher(key, slug);
+        const url = await publisher(key, hint);
         if (url) items[index] = { ...items[index]!, artworkUrl: url };
       } catch { /* Publisher outages must leave the saved artwork usable. */ }
     }
