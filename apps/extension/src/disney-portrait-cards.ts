@@ -1,3 +1,4 @@
+import { portraitEvent } from "./disney-playback-portrait";
 import { disneyCatalogPortrait } from "@anidachi/protocol";
 
 export const DISNEY_PORTRAIT_MESSAGE = "ANIDACHI_DISNEY_CATALOG_PORTRAITS";
@@ -43,8 +44,16 @@ export function watchDisneyPortraitCards(doc: Document) {
     const card = image && disneyPortraitCard(image);
     if (card) void chrome.runtime.sendMessage({ type: DISNEY_PORTRAIT_MESSAGE, cards: [card], selected: true }).catch(() => {});
   };
+  const win = doc.defaultView!;
+  const onPortrait = (event: MessageEvent) => {
+    if (event.source !== win || event.origin !== doc.location.origin || event.data?.type !== portraitEvent) return;
+    const { id, url } = event.data.card ?? {};
+    if (typeof id !== "string" || !disneyCatalogPortrait(url)) return;
+    void chrome.runtime.sendMessage({ type: DISNEY_PORTRAIT_MESSAGE, cards: [{ id, url }], selected: true }).catch(() => {});
+  };
+  win.addEventListener("message", onPortrait);
   doc.addEventListener("click", onSelect, true);
   doc.addEventListener("load", onLoad, true);
   for (const image of doc.querySelectorAll<HTMLImageElement>("a[href] img")) collect(image);
-  return () => { doc.removeEventListener("click", onSelect, true); doc.removeEventListener("load", onLoad, true); clearTimeout(timer); };
+  return () => { win.removeEventListener("message", onPortrait); doc.removeEventListener("click", onSelect, true); doc.removeEventListener("load", onLoad, true); clearTimeout(timer); };
 }
