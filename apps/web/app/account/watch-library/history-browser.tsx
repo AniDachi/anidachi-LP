@@ -65,7 +65,7 @@ export function HistoryBrowser(props: Props) {
       <div className="wh-covers">
         {filtered.map(item => <button key={itemId(item)} className={`wh-card ${selected === itemId(item) ? "wh-card-selected" : ""} ${item.provider === "youtube" ? "wh-video" : ""}`}
           type="button" aria-label={`Manage ${item.title}`} aria-pressed={selected === itemId(item)} onClick={() => navigate(() => setSelected(itemId(item)))}>
-          <span className="wh-cover"><HistoryArtwork key={item.artworkUrl} item={item} />{isTitleWatched(item) && <span className="wh-cover-check"><Check size={14} /><span className="sr-only">Watched</span></span>}</span>
+          <span className="wh-cover" data-provider={item.provider}><HistoryArtwork key={item.artworkUrl} item={item} />{isTitleWatched(item) && <span className="wh-cover-check"><Check size={14} /><span className="sr-only">Watched</span></span>}</span>
           <span className="wh-card-title" dir="auto">{item.title}</span>
           <span className="wh-card-progress">{titleProgress(item)}</span>
           <span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span>
@@ -316,7 +316,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   return <>
     <dialog ref={dialog} className="wh-inspector" aria-label={`${item.title} progress`} onCancel={event => { event.preventDefault(); onClose(); }}>
       <div className="wh-inspector-top"><button className="wh-text" onClick={onClose}><ChevronLeft size={16} /> Library</button><button className="wh-icon" aria-label="Close title" onClick={onClose}><X size={18} /></button></div>
-      <div className="wh-identity"><div className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork item={item} /></div>
+      <div className="wh-identity"><div data-provider={item.provider} className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork item={item} /></div>
         <div><span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
