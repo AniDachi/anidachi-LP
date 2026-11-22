@@ -86,8 +86,14 @@ remain consistent across collection; stale/mismatched attempts cannot commit.
 Explicit country comes from `reactContext.models.geo.data.requestCountry.id`;
 locale comes from `.locale.id`. Real research observed country `VN` and locale
 `uk-HU`, so locale suffix never supplies region. Missing usable context prevents
-a page attempt instead of fabricating it. Unknown availability remains partial;
-complete accepted current-region catalogs alone supply unseen episode cells.
+a page attempt instead of fabricating it. During catalog collection, an explicit
+episode availability flag takes precedence. When Netflix omits that flag, the
+adapter checks the exact season and episode IDs in the player’s native episode
+selector. A confirmed playing episode is also available. If neither source can
+establish availability, the catalog remains partial. The accepted regional
+catalog populates unseen episode cells without writing personal progress.
+Watch and Resume open the canonical Netflix episode URL; Netflix controls playback
+access for the active profile.
 Extraction is bounded to 100 seasons and 2,000 episodes and does not invent IDs
 or missing episodes.
 
