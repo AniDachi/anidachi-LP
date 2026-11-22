@@ -552,7 +552,7 @@ describe("production watch browsing", () => {
     else {
       expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "primevideo", titleKey, seasonKey, includePartial:true } }));
       expect(container.textContent).toContain("Season 2");
-      expect(container.textContent).toContain(observed ? "Prime Video may have more" : "full catalog unavailable");
+      expect(container.textContent).not.toMatch(/may have more|full catalog unavailable/i);
       if(observed) {
         expect(container.querySelector('[aria-label*="Confirmed unplayed"]')).not.toBeNull();
         expect(container.querySelector('[aria-label*="Saved episode 3"]')).not.toBeNull();
@@ -2014,9 +2014,7 @@ describe("production watch browsing", () => {
 		expect(
 			container.querySelector(".popup-season-trigger > span")?.textContent,
 		).toBe("Historical season");
-		expect(container.querySelector(".popup-season-counter")?.textContent).toBe(
-			"1 known",
-		);
+		expect(container.querySelector(".popup-season-counter")).toBeNull();
 		expect(container.textContent).toContain("Matching episode");
 	});
 	it("uses personal mode and uses matching detail instead of the canonical eight-row slice", async () => {
@@ -2346,6 +2344,8 @@ describe("watch episode grid", () => {
     if (state === "provider-closed") await click("Toggle Crunchyroll history");
     if (state === "title-closed") await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
     expect(requested).toEqual(["season:two"]);
+    expect(container.querySelector('.popup-watch-grid-view[aria-busy="true"]')).not.toBeNull();
+    expect(container.textContent).not.toMatch(/Loading (?:matching |episode catalog|episodes)/i);
     expect(container.textContent).not.toContain("Season 1");
     await act(async () => finish({ ok: true, data: gridResponse("season:two") }));
     expect(button("Season for Frieren: Season 2")).toBeDefined();
@@ -2560,7 +2560,7 @@ describe("watch episode grid", () => {
 		);
 		await mount(client);
 		expect(container.querySelectorAll(".popup-episode-cell")).toHaveLength(1);
-		expect(container.textContent).toContain("Known episodes only");
+		expect(button("Retry catalog")).toBeDefined();
 		await click("Resume Matching episode");
 		await settles(() => expect(client.openUrl).toHaveBeenCalledWith(expect.stringContaining(`${episode.sourceUrl}#anidachiResume=`)));
 	});
@@ -2577,11 +2577,15 @@ describe("watch episode grid", () => {
 		rejected = true;
 		await click("Season for Frieren: Season 1");
 		await click("Season 2");
-		expect(container.textContent).toContain("Known episodes only");
+		expect(button("Retry catalog")).toBeDefined();
 		expect(
 			container.querySelector(".popup-watch-summary")?.textContent,
 		).not.toContain("specials");
 		expect(container.querySelector('[title="Catalog Season 1 1"]')).toBeNull();
+		rejected = false;
+		await click("Retry catalog");
+		await settles(() => expect(container.textContent).not.toContain("Retry catalog"));
+		expect(container.querySelector(".popup-episode-cell")).not.toBeNull();
 	});
 });
 
