@@ -111,7 +111,7 @@ export default function CrunchyrollSchedulePage() {
         description={`Crunchyroll simulcasts for ${weekLabel}, converted to your time zone.`}
         url={url}
         datePublished="2026-10-12"
-        dateModified="2026-11-15"
+        dateModified="2026-11-22"
         faq={faq}
         headings={headings}
         itemList={itemList}
