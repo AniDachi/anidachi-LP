@@ -403,11 +403,6 @@ export function PopupEpisodePicker({
 				</div>
 				{selected ? renderSelected(selected) : null}
 			</div>
-			{pending ? (
-				<p className="popup-episode-picker-loading" role="status">
-					Loading episodes...
-				</p>
-			) : null}
 		</div>
 	);
 }
@@ -418,7 +413,7 @@ export function PopupUnwatchedEpisode({
 	busy,
 }: {
 	entry: PopupEpisodeChoice;
-	onOpen: (url: string) => void;
+	onOpen: (url: string,currentTime?:number,navigation?:import("@anidachi/protocol").PrimeNavigation) => void;
 	busy: boolean;
 }) {
 	const episode = entry.catalog!;
@@ -442,7 +437,7 @@ export function PopupUnwatchedEpisode({
 				progress={0}
 				action={`Watch${entry.number === null ? "" : ` E${entry.number}`}`}
 				disabled={busy}
-				onOpen={() => onOpen(episode.sourceUrl)}
+				onOpen={() => episode.sourceUrl.startsWith("https://www.primevideo.com/detail/") ? onOpen(episode.sourceUrl,0,episode.primeNavigation) : onOpen(episode.sourceUrl)}
 			/>
 		</div>
 	);

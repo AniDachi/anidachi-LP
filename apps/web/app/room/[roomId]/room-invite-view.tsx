@@ -43,12 +43,10 @@ export function RoomInviteView({
 	hasLaunchUrl,
 	initialMobile,
 }: RoomInviteViewProps) {
-	const platform =
-		sourceProvider === "crunchyroll"
-			? "Crunchyroll"
-			: sourceProvider === "youtube"
-				? "YouTube"
-				: null;
+	const platformNames: Partial<Record<RoomSourceProvider, string>> = {
+		crunchyroll: "Crunchyroll", youtube: "YouTube", disneyplus: "Disney+", hbomax: "HBO Max",
+	};
+	const platform = sourceProvider && platformNames[sourceProvider];
 	const ctaLabel =
 		isParticipant && hasLaunchUrl ? "Open watchroom" : "Join room";
 	return (

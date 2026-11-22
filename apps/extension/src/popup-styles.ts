@@ -565,6 +565,14 @@ ${popupSettingsStyles}
     box-shadow: 0 0 14px rgba(249, 115, 22, 0.22);
   }
 
+  .resource-provider-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .resource-provider-logo.disneyplus img { filter: brightness(0) invert(1); }
+
   .resource-provider-logo.netflix {
     color: #ef4444;
   }

@@ -1,3 +1,4 @@
+import { watchHistoryProviderVersion } from "./watch-history-provider-version";
 import { useEffect, useRef } from "react";
 import {
 	WatchHistoryBrowseResponseSchema,
@@ -21,7 +22,7 @@ type Options = {
 	discard: boolean;
 };
 function useProviderBrowse(
-	provider: "youtube" | "crunchyroll" | "netflix",
+	provider: "youtube" | "crunchyroll" | "netflix" | "primevideo" | "disneyplus" | "hbomax",
 	options: Options,
 ) {
 	const {
@@ -33,7 +34,7 @@ function useProviderBrowse(
 		enabled,
 		discard,
 	} = options;
-	const input = { ...options.input, providerVersion: 2 as const, provider, limit: 20 };
+	const input = { ...options.input, providerVersion: watchHistoryProviderVersion(), provider, limit: 20 };
 	const query = JSON.stringify(input);
 	const saved = readPopupHistoryView(ownerUserId, generation);
 	const result = usePopupWatchBrowse({
@@ -75,7 +76,11 @@ export function usePopupProviderBrowse(options: Options) {
 	const crunchyroll = useProviderBrowse("crunchyroll", options);
 	const youtube = useProviderBrowse("youtube", options);
 	const netflix = useProviderBrowse("netflix", options);
-	const streams = [crunchyroll, youtube, netflix];
+	const primevideo = useProviderBrowse("primevideo", options);
+	const disneyplus = useProviderBrowse("disneyplus", options);
+	const hboSupported = watchHistoryProviderVersion() === 5;
+	const hbomax = useProviderBrowse("hbomax", { ...options, enabled: options.enabled && hboSupported });
+	const streams = [crunchyroll, youtube, netflix, primevideo, disneyplus, ...(hboSupported ? [hbomax] : [])];
 	const failures = streams.filter((stream) => stream.errorStatus);
 	// One stale authority must not be hidden behind the other stream's network error.
 	const failure =
@@ -151,7 +156,7 @@ export function usePopupProviderBrowse(options: Options) {
 		authorityInvalid ? { ...stream, pages: [], nextCursor: null } : stream;
 	return {
 		authorityInvalid,
-		providers: { crunchyroll: visible(crunchyroll), youtube: visible(youtube), netflix: visible(netflix) },
+		providers: { crunchyroll: visible(crunchyroll), youtube: visible(youtube), netflix: visible(netflix), primevideo: visible(primevideo), disneyplus: visible(disneyplus), hbomax: visible(hbomax) },
 		pages: authorityInvalid ? [] : streams.flatMap((stream) => stream.pages),
 		loading: streams.some((stream) => stream.loading),
 		error: failure?.error ?? invalidated.current?.error ?? null,

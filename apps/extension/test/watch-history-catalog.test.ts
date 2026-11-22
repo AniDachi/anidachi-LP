@@ -1,10 +1,11 @@
 import { paidHistoryLease } from "./watch-history-personal-fixtures";
+import { hboMaxSourceUrl, WatchCatalogCommitRequestSchema, type WatchCatalogSnapshotInput } from "@anidachi/protocol";
 import { describe, expect, it, vi } from "vitest";
 import { collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } from "../src/source-adapters/crunchyroll/bridge-client";
 import variants from "./fixtures/crunchyroll/catalog-variants.json";
 import catalog from "./fixtures/crunchyroll/catalog-complete-multiseason.json";
 import { createWatchHistoryCatalogCoordinator, createWatchHistoryPageResolver } from "../src/watch-history-catalog";
-import { createWatchHistoryClient } from "../src/watch-history-client";
+import { createWatchHistoryClient, type WatchHistoryMessage } from "../src/watch-history-client";
 import { createWatchHistoryStorage, watchHistoryPartitionKey, type WatchHistoryStorageRoot } from "../src/watch-history-storage";
 import { isHistoryRecordingEnabled } from "../src/history-recording-choice";
 
@@ -382,5 +383,113 @@ describe("Netflix catalog through existing history authority", () => {
     const pending = resolver.resolve(event, owner, { refreshCatalog: true });
     await vi.waitFor(() => expect(signal).toBeDefined()); resolver.dispose(); await pending;
     expect(signal!.aborted).toBe(true); expect(messages).not.toContain("catalog-begin");
+  });
+});
+
+describe("HBO Max catalog admission", () => {
+  const seriesId = "b117b2fd-aed9-43d8-aa30-66f7f10d2cb2";
+  const playbackId = "4d269596-6871-4419-892a-ca2b801d447d";
+  const titleKey = `hbomax:series:${seriesId}`;
+  const lease = paidHistoryLease(owner);
+  const event = { captureProof: lease, accountGeneration: 1, provider: "hbomax", clientSessionKey: "session",
+    hbomaxIdentity: { kind: "episode", providerSeriesId: seriesId, providerEpisodeIdentifier: playbackId } } as never;
+  const initialContext = { ...context, region: null, audioLocale: null, subtitleLocales: [] };
+  const catalog: WatchCatalogSnapshotInput = {
+    schemaVersion: 3, provider: "hbomax", providerSeriesId: seriesId, titleKey, title: "War", completeness: "complete",
+    context: { ...initialContext, region: "VN", observedAt: "2026-09-05T00:00:01.000Z" },
+    seasons: [{ providerSeasonIdentifier: seriesId + ":1", seasonKey: "hbomax:season:" + seriesId + ":1",
+      title: "Season 1", seasonNumber: 1, order: 0, episodes: [{ providerEpisodeIdentifier: playbackId,
+        episodeKey: "hbomax:episode:" + playbackId, title: "Pilot", episodeNumber: 1, order: 0, releasedAt: null,
+        available: true, watchVariants: [{ providerContentId: playbackId, sourceUrl: hboMaxSourceUrl(playbackId),
+          audioLocale: null, original: false, order: 0 }] }] }],
+  };
+  const beginAck = (revision: number, refreshRequired: boolean) => ({ ...ack(revision), provider: "hbomax", titleKey, refreshRequired });
+
+  it.each([false, true])("reads the full series once after a grant and rechecks newly discovered territory (refresh=%s)", async refresh => {
+    const messages: WatchHistoryMessage[] = [];
+    let revision = 0;
+    let detectedContext: WatchCatalogSnapshotInput["context"] = initialContext;
+    const loadHboCatalog = vi.fn(async () => {
+      expect(messages.filter(message => message.command === "catalog-begin")).toHaveLength(1);
+      return catalog;
+    });
+    const resolver = createWatchHistoryPageResolver({ hboCatalogContext: () => detectedContext, loadHboCatalog,
+      send: async message => {
+        messages.push(message);
+        if (message.command === "bootstrap-cache") return { ok: true, data: { accessLease: lease } };
+        if (message.command === "catalog-begin") return { ok: true, data: beginAck(++revision, revision === 1 || refresh) };
+        return { ok: true };
+      },
+    });
+    await Promise.all([resolver.resolve(event, owner, { refreshCatalog: true }), resolver.resolve(event, owner, { refreshCatalog: true })]);
+    detectedContext = catalog.context;
+    await resolver.resolve(event, owner, { refreshCatalog: true });
+    expect(loadHboCatalog).toHaveBeenCalledOnce();
+    expect(loadHboCatalog).toHaveBeenCalledWith(seriesId, playbackId, expect.any(AbortSignal));
+    const requests = messages.filter(message => message.command !== "bootstrap-cache");
+    expect(requests.map(message => message.command)).toEqual(["catalog-begin", "catalog-release", "catalog-begin",
+      ...(refresh ? ["catalog-commit"] : []), "catalog-release"]);
+    expect(requests[0]).toMatchObject({ input: { context: initialContext } });
+    expect(requests[1]).toMatchObject({ revision: 1 });
+    const admittedContext = { ...initialContext, region: "VN" };
+    expect(requests[2]).toMatchObject({ input: { context: admittedContext } });
+    if (refresh) {
+      const commit = requests[3];
+      if (commit?.command !== "catalog-commit") throw new Error("Expected territory-bound catalog");
+      expect(WatchCatalogCommitRequestSchema.parse(commit.input)).toMatchObject({
+        revision: 2, context: admittedContext, snapshot: { ...catalog, context: admittedContext },
+      });
+    }
+    expect(requests.at(-1)).toMatchObject({ revision: 2 });
+    resolver.dispose();
+  });
+
+  it.each(["fresh", "revoked", "wrong-owner", "heartbeat"])("skips provider loading for a %s acknowledgement or event", async mode => {
+    const loadHboCatalog = vi.fn(async () => catalog);
+    let bootstrapReads = 0;
+    const resolver = createWatchHistoryPageResolver({ hboCatalogContext: () => initialContext, loadHboCatalog,
+      send: async message => {
+        if (message.command === "bootstrap-cache") return { ok: true, data: {
+          accessLease: ++bootstrapReads > 1 && mode === "revoked" ? null : lease,
+        } };
+        const response = beginAck(1, mode !== "fresh");
+        return { ok: true, data: mode === "wrong-owner" ? { ...response, meta: { ...response.meta, ownerUserId: crypto.randomUUID() } } : response };
+      },
+    });
+    await resolver.resolve(event, owner, { refreshCatalog: mode !== "heartbeat" });
+    expect(loadHboCatalog).not.toHaveBeenCalled();
+    resolver.dispose();
+  });
+
+  it.each(["navigation", "disposal", "sign-out", "different-locale"])("discards in-flight inventory on %s", async mode => {
+    let current = true;
+    let finish!: (value: WatchCatalogSnapshotInput) => void;
+    let signal: AbortSignal | undefined;
+    const commands: string[] = [];
+    const resolver = createWatchHistoryPageResolver({
+      hboCatalogContext: () => current ? initialContext : { ...initialContext, requestedLocale: "en" },
+      loadHboCatalog: async (_seriesId, _playbackId, cancel) => {
+        signal = cancel;
+        return new Promise(resolve => { finish = resolve; });
+      },
+      send: async message => {
+        commands.push(message.command);
+        return { ok: true, data: message.command === "bootstrap-cache" ? {
+          accessLease: !current && mode === "sign-out" ? null : lease,
+        } : beginAck(1, true) };
+      },
+    });
+    const loading = resolver.resolve(event, owner, { refreshCatalog: true });
+    await vi.waitFor(() => expect(signal).toBeDefined());
+    current = false;
+    if (mode === "navigation") resolver.suspendCatalogs();
+    if (mode === "disposal") resolver.dispose();
+    if (mode === "navigation" || mode === "disposal") expect(signal!.aborted).toBe(true);
+    finish(catalog);
+    await loading;
+    expect(commands.filter(command => command === "catalog-begin")).toHaveLength(1);
+    expect(commands).not.toContain("catalog-commit");
+    expect(commands).toContain("catalog-release");
+    resolver.dispose();
   });
 });

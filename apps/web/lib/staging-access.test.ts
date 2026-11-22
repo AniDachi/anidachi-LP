@@ -525,6 +525,7 @@ test("staging gate routes extension access checks to the account verifier withou
 test("staging gate lets an extension bearer reach only the supported Watch History v3 methods", () => {
   const allowedRequests = [
     ["/api/watch-history/v3", "GET"],
+    ["/api/watch-history/poster", "GET"],
     ["/api/watch-history/v3/browse", "GET"],
     ["/api/watch-history/v3/browse/title-episodes", "GET"],
     ["/api/watch-history/v3/browse/sessions", "GET"],
@@ -559,6 +560,7 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
 
   for (const [pathname, method] of [
     ["/api/watch-history/v3", "POST"],
+    ["/api/watch-history/poster", "POST"],
     ["/api/watch-history/v3/browse", "POST"],
     ["/api/watch-history/v3/browse/title-episodes", "POST"],
     ["/api/watch-history/v3/browse/sessions", "POST"],

@@ -77,6 +77,30 @@ describe("RoomRail", () => {
 		await unmount(view.root);
 	});
 
+	it("keeps Prime hover on the trigger and open pills while leaving the rest of the player interactive", async () => {
+		const view = await renderRail({ visibilityMode: "smart", isolatePlayerPointer: true });
+		const playerMove = vi.fn();
+		view.container.addEventListener("pointermove", playerMove);
+		const edge = getElement(view.container, ".room-rail-edge");
+		edge.getBoundingClientRect = () => rect(972, 40, 28, 320);
+		await pointer(getElement(view.container, ".room-rail-edge-intent"), "pointermove", { clientX: 998, clientY: 250 });
+		await advance(ROOM_RAIL_OPEN_DELAY_MS);
+		expect(getPresentations(view.container)).toEqual(["peek", "peek"]);
+		const rail = getElement(view.container, ".room-rail");
+		expect(rail.dataset.isolatePlayerPointer).toBe("engaged");
+		expect(rail.style.getPropertyValue("--room-rail-entry-y")).toBe("210px");
+		await pointer(getElement(view.container, ".room-rail-pill"), "pointermove");
+		expect(playerMove).not.toHaveBeenCalled();
+		await pointer(getElement(view.container, ".room-rail-panel"), "pointerout", { relatedTarget: view.container });
+		await advance(ROOM_RAIL_CLOSE_DELAY_MS + 1);
+		expect(getPresentations(view.container)).toEqual(["hidden", "hidden"]);
+		expect(rail.dataset.isolatePlayerPointer).toBe("idle");
+		expect(rail.style.getPropertyValue("--room-rail-entry-y")).toBe("");
+		await pointer(view.container, "pointermove");
+		expect(playerMove).toHaveBeenCalledOnce();
+		await unmount(view.root);
+	});
+
 	it("keeps the Smart edge glow centered instead of following the cursor", async () => {
 		const view = await renderRail({ visibilityMode: "smart" });
 		const rail = getElement(view.container, ".room-rail");
@@ -411,6 +435,7 @@ describe("RoomRail", () => {
 });
 
 interface RenderRailOverrides {
+	isolatePlayerPointer?: boolean;
 	mediaSnapshot?: RoomMediaSnapshot | null;
 	getParticipantAudioPreference?(
 		participantId: string,
@@ -436,6 +461,7 @@ async function renderRail(overrides: RenderRailOverrides): Promise<{
 	await act(async () => {
 		root.render(
 			<RoomRail
+				isolatePlayerPointer={overrides.isolatePlayerPointer}
 				activeParticipantId="local"
 				mediaSnapshot={overrides.mediaSnapshot}
 				getParticipantAudioPreference={
