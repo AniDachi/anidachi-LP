@@ -127,8 +127,8 @@ export function startContentLifecycle(
   };
   let mounted: MountedOverlay | null = null;
   let disposed = false;
-  const stopPortraitCards = watchDisneyPortraitCards(document);
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
+  const stopPortraitCards = watchDisneyPortraitCards(document);
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
 

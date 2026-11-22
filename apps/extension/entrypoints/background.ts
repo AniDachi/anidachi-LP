@@ -2,8 +2,6 @@ import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
 import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
 import { WEB_HTTP_BASE } from "../src/constants";
-import { observeDisneyPortraits } from "../src/disney-portrait-sync";
-import { DISNEY_PORTRAIT_MESSAGE } from "../src/disney-portrait-cards";
 import { registerUninstallUrl, UNINSTALL_URL_REFRESH_ALARM } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
@@ -35,6 +33,8 @@ import {
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
 import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
+import { observeDisneyPortraits } from "../src/disney-portrait-sync";
+import { DISNEY_PORTRAIT_MESSAGE } from "../src/disney-portrait-cards";
 import {
   handlePrivilegedOverlayIntentMessage,
   isPrivilegedOverlayIntentMessage,
@@ -291,10 +291,6 @@ export default defineBackground(() => {
   registerOnboardingCheckoutBridge();
   const claimIntroduction = createIntroductionClaim(chrome.storage.local);
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message?.type === DISNEY_PORTRAIT_MESSAGE) {
-      void observeDisneyPortraits(message.cards, sender, message.selected === true).then(() => sendResponse(null), () => sendResponse(null));
-      return true;
-    }
     if (message?.type === PLAYER_INTRODUCTION_MESSAGE) {
       // Every release channel shares the same installation-local claim.
       if (
@@ -324,6 +320,10 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (message?.type === DISNEY_PORTRAIT_MESSAGE) {
+      void observeDisneyPortraits(message.cards, sender, message.selected === true).then(() => sendResponse(null), () => sendResponse(null));
+      return true;
+    }
     if (isAuthMessage(message)) {
       void handleAuthMessage(message).then(sendResponse);
       return true;
