@@ -30,6 +30,66 @@ function response(url: string, body: string, status = 200, extraHeaders?: Record
 afterEach(() => vi.unstubAllGlobals());
 
 describe("HBO Max public season pages", () => {
+	it.each([true, false])("reads every advertised season without native totals (public totals present: %s)", async publicTotals => {
+		const source = { ...show, seasons: show.seasons.map(s => ({ ...s, episodeCount: null })) };
+		const transport = vi.fn(async (url: string) => {
+			const n = Number(/\/s([0-9]+)$/u.exec(url)?.[1] ?? 1);
+			const data = group(n, source);
+			if (!publicTotals) for (const season of data.seasons) Reflect.deleteProperty(season, "numberOfEpisodes");
+			return response(url, markup(url, data));
+		});
+		vi.stubGlobal("fetch", transport);
+		const doc = document.implementation.createHTMLDocument();
+		for (let i = 0; i < 2; i++) {
+			const result = await loadHboPublicEpisodes(source, known, watch, "en", signal, doc);
+			expect(result.map(e => e.id).sort()).toEqual([1, 2, 3].map(n => episode(n).id));
+		}
+		expect(transport.mock.calls.map(([url]) => url)).toEqual([base, base + "/s2", base + "/s3"]);
+	});
+
+	it.each(["network", "503"])("retries the interrupted season only and keeps later seasons after %s", async failure => {
+		const source = { ...show, seasons: [1, 2, 3, 4, 5].map(season) };
+		let down = true;
+		const transport = vi.fn(async (url: string) => {
+			const n = Number(/\/s([0-9]+)$/u.exec(url)?.[1] ?? 1);
+			if (down && n === 3) {
+				if (failure === "network") throw new TypeError("connection interrupted");
+				return response(url, "", 503);
+			}
+			return response(url, markup(url, group(n, source)));
+		});
+		vi.stubGlobal("fetch", transport);
+		const doc = document.implementation.createHTMLDocument();
+		const collect = async () => (await loadHboPublicEpisodes(source, known, watch, "en", signal, doc)).map(e => e.seasonNumber).sort();
+		expect(await collect()).toEqual([1, 2, 4, 5]);
+		expect(transport.mock.calls.filter(([url]) => url.endsWith("/s3"))).toHaveLength(2);
+		down = false;
+		transport.mockClear();
+		expect(await collect()).toEqual([1, 2, 3, 4, 5]);
+		expect(transport.mock.calls.map(([url]) => url)).toEqual([base + "/s3"]);
+	});
+
+	it.each(["same-season", "cycle", "foreign", "wrong-season"])("follows only a verified, advancing season continuation: %s", async variant => {
+		const source = { ...show, seasons: [ { ...season(1), episodeCount: 2 }, season(2) ] };
+		const second = base + "?page=2";
+		const transport = vi.fn(async (url: string) => {
+			const data = group(1, source);
+			const selected = data.seasons[0]!;
+			selected.numberOfEpisodes = 2;
+			if (url === second) {
+				selected.episodes[0] = { ...row(1), episodeNumber: 2, episodeUrl: "/show/" + series + "/s1/e2-test/" + id(80) };
+			}
+			const next = variant === "foreign" ? "https://foreign.example/?page=2" :
+				variant === "wrong-season" ? base + "/s2?page=2" : second;
+			const link = url === base || variant === "cycle" ? '<link rel="next" href="' + next + '">' : "";
+			return response(url, markup(base, data).replace("</head>", link + "</head>"));
+		});
+		vi.stubGlobal("fetch", transport);
+		const result = await loadHboPublicEpisodes(source, known, watch, "en", signal);
+		expect(result.map(e => e.id)).toEqual(variant === "same-season" ? [known[0]!.id, episode(1).id, id(80)] : [known[0]!.id]);
+		expect(transport.mock.calls.map(([url]) => url)).toEqual(["foreign", "wrong-season"].includes(variant) ? [base] : [base, second]);
+	});
+
 	it.each([
 		{ country: "VN", locale: "en-US", market: "vn", language: "en", status: 404 },
 		{ country: "GP", locale: "pl", market: "fr", language: "fr", status: 200 },

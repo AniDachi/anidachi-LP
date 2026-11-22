@@ -1,6 +1,6 @@
 import { HboMaxProviderIdSchema, WATCH_CATALOG_MAX_EPISODES, hboMaxPlaybackId, isHboMaxArtworkUrl } from "@anidachi/protocol";
 import { z } from "zod";
-import { HboCmsEpisodeSchema, HboCmsPlaybackSchema, HboCmsShowSchema } from "./cms-catalog";
+import { HBO_CATALOG_RESPONSE_TIMEOUT_MS, HboCmsEpisodeSchema, HboCmsPlaybackSchema, HboCmsShowSchema } from "./cms-catalog";
 
 const packetSchema = z.strictObject({
 	playbackId: HboMaxProviderIdSchema, metadata: HboCmsPlaybackSchema.nullable(), show: HboCmsShowSchema.nullable(),
@@ -48,7 +48,7 @@ export function waitForHboCmsShow(doc: Document, seriesId: string, playbackId: s
 			resolve(signal.aborted ? null : current());
 		};
 		const received = () => { if (current()) finish(); };
-		const timer = setTimeout(finish, 1_500);
+		const timer = setTimeout(finish, HBO_CATALOG_RESPONSE_TIMEOUT_MS);
 		signal.addEventListener("abort", finish, { once: true });
 		doc.addEventListener("anidachi:hbo-cms", received);
 	});

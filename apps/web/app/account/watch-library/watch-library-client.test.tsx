@@ -2207,6 +2207,38 @@ it("loads a missing HBO poster by title key and keeps usable legacy art if the p
   }
 });
 
+it("refreshes an open HBO season when its catalog grows without a new progress event", async () => {
+  const history = historyFixture(), editor = editorFixture(), title = history.items[0]!;
+  const series = "78e15665-f6c8-4b58-8786-e0d9e2b65ced";
+  const seasonKey = `hbomax:season:${series}:1`;
+  title.provider = editor.provider = "hbomax";
+  title.titleKey = editor.titleKey = "hbomax:series:" + series;
+  title.catalogState = "partial";
+  editor.catalogComplete = false;
+  const episodes = editor.episodes.slice(0, 2).map((ep, i) => {
+    const id = "07323549-c382-4363-a3fe-97a365e8133" + i;
+    return { ...ep, seasonKey, episodeKey: "hbomax:episode:" + id, sourceUrl: "https://www.hbomax.com/video/watch/" + id,
+      available: i === 0 };
+  });
+  editor.episodes = episodes.slice(0, 1);
+  title.seasons[0]!.seasonKey = seasonKey;
+  title.seasons[0]!.episodes.forEach((ep, i) => Object.assign(ep, {
+    episodeKey: episodes[i]!.episodeKey, seasonKey, sourceUrl: episodes[i]!.sourceUrl,
+  }));
+  title.latestActivity.episodeKey = episodes[0]!.episodeKey;
+  title.sourceUrl = episodes[0]!.sourceUrl;
+  installServer({ history, editor });
+  const view = await renderClient(history);
+  try {
+    await click(buttonByLabel(view.container, "Manage " + title.title));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /0 \/ 1 known/));
+    editor.episodes = episodes;
+    await click(buttonByLabel(view.container, "Refresh history"));
+    await waitFor(() => assert.match(view.container.textContent ?? "", /0 \/ 2 known/));
+    assert.ok(view.container.querySelector('[aria-pressed="true"]'));
+  } finally { await unmount(view.root); }
+});
+
 it("filters HBO Max titles and resumes the selected playback UUID from the account library", async () => {
   const { history, editor } = netflixFixture(true);
   const title = history.items[0];

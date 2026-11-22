@@ -8,6 +8,7 @@ const pageBytes = 6_000_000;
 const pageTimeout = 10_000;
 const cacheTtl = 5 * 60_000;
 const missingPage = Symbol("missing HBO season page");
+const transientError = Symbol("temporary HBO page failure");
 
 function object(value: unknown): Record<string, unknown> | null {
 	return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -61,7 +62,7 @@ function pageMarkup(html: string, url: string, locale: string, seriesId: string)
 	const tags = /<!--[\s\S]*?-->|<(html|link|script)\b[^>]{0,8192}>/giu;
 	const scriptEnd = /<\/script\s*>/giu;
 	let lang: string | undefined, canonical: string | undefined, json: string | undefined;
-	let geo: string | undefined;
+	let geo: string | undefined, next: string | undefined;
 	const alternatives = new Set<string>();
 	const source = new URL(url);
 	let match: RegExpExecArray | null;
@@ -77,6 +78,10 @@ function pageMarkup(html: string, url: string, locale: string, seriesId: string)
 			if (roles?.includes("canonical")) {
 				if (canonical !== undefined) return null;
 				canonical = attrs.get("href") ?? "";
+			}
+			if (roles?.includes("next")) {
+				if (next !== undefined || !attrs.get("href")) return null;
+				next = attrs.get("href")!.replaceAll("&amp;", "&");
 			}
 			if (roles?.includes("alternate") && resolveHboLocale(locale, attrs.get("hreflang") ?? "")) {
 				const candidate = sameMarketAlternate(attrs.get("href"), source, seriesId);
@@ -97,12 +102,12 @@ function pageMarkup(html: string, url: string, locale: string, seriesId: string)
 		}
 	}
 	const alternate = lang && !resolveHboLocale(locale, lang) && alternatives.size === 1 ? [...alternatives][0]! : null;
-	return { lang, canonical, json, geo, alternate };
+	return { lang, canonical, json, geo, alternate, next };
 }
 
-function mappedGroup(markup: NonNullable<ReturnType<typeof pageMarkup>>, url: string, seriesId: string) {
+function mappedGroup(markup: NonNullable<ReturnType<typeof pageMarkup>>, url: string, seasonUrl: string, seriesId: string) {
 	const { lang, canonical, json, alternate } = markup;
-	if (!lang || canonical !== url || !json) return null;
+	if (!lang || (canonical !== url && canonical !== seasonUrl) || !json) return null;
 	const props = object(object(JSON.parse(json))?.props);
 	const mapped = object(object(props?.pageProps)?.mappedData);
 	if (!mapped) return null;
@@ -137,7 +142,8 @@ function publicEpisode(value: unknown, show: HboCmsShow, season: number, baseUrl
 	return parsed.success ? parsed.data : null;
 }
 
-type PublicPage = { seasons: Map<number, string>; episodes: HboCmsEpisode[]; alternate: string | null; language: string };
+type PublicPage = { seasons: Map<number, string>; episodes: HboCmsEpisode[]; alternate: string | null; language: string;
+	total: number | null; next: string | null };
 type PageCache = { scope: string; root?: string; pages: Map<string, { page: PublicPage; expires: number }> };
 const documentPages = new WeakMap<Document, PageCache>();
 
@@ -153,11 +159,14 @@ function publicCache(doc: Document | undefined, show: HboCmsShow, base: URL, loc
 	return cache;
 }
 function parsePage(markup: NonNullable<ReturnType<typeof pageMarkup>>, url: string, baseUrl: URL, show: HboCmsShow): PublicPage | null {
-	const mapped = mappedGroup(markup, url, show.seriesId);
+	const address = new URL(url);
+	const seasonPage = address.origin + address.pathname;
+	const mapped = mappedGroup(markup, url, seasonPage, show.seriesId);
 	const group = mapped?.group;
 	if (!Array.isArray(group?.seasons) || group.seasons.length !== show.seasons.length) return null;
 	const seasons = new Map<number, string>();
 	const episodes: HboCmsEpisode[] = [];
+	let total: number | null = null;
 	for (const value of group.seasons) {
 		const row = object(value);
 		const native = show.seasons.find(season => season.id === row?.seasonId && season.number === row.seasonNumber);
@@ -167,8 +176,12 @@ function parsePage(markup: NonNullable<ReturnType<typeof pageMarkup>>, url: stri
 		if ([...seasons.values()].includes(seasonUrl)) return null;
 		seasons.set(native.number, seasonUrl);
 		// Non-selected season placeholders contain zero rows and zero count in this document.
-		if (seasonUrl !== url) continue;
-		if (native.episodeCount === null || row.numberOfEpisodes !== native.episodeCount || row.episodes.length !== native.episodeCount) return null;
+		if (seasonUrl !== seasonPage) continue;
+		const count = row.numberOfEpisodes;
+		if (count != null && (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0 || count > WATCH_CATALOG_MAX_EPISODES ||
+			(native.episodeCount !== null && count !== native.episodeCount))) return null;
+		total = native.episodeCount ?? (typeof count === "number" ? count : null);
+		if (total !== null && row.episodes.length > total) return null;
 		const ids = new Set<string>(), numbers = new Set<number>();
 		for (const item of row.episodes) {
 			const episode = publicEpisode(item, show, native.number, baseUrl);
@@ -176,13 +189,24 @@ function parsePage(markup: NonNullable<ReturnType<typeof pageMarkup>>, url: stri
 			ids.add(episode.id); numbers.add(episode.number); episodes.push(episode);
 		}
 	}
-	return [...seasons.values()].includes(url) ? { seasons, episodes, alternate: mapped!.alternate, language: mapped!.language } : null;
+	if (![...seasons.values()].includes(seasonPage)) return null;
+	const next = markup.next ? new URL(markup.next, address) : null;
+	if (next && (next.origin !== address.origin || next.pathname !== address.pathname || !next.search ||
+		next.username || next.password || next.hash)) return null;
+	return { seasons, episodes, total, next: next?.href ?? null, alternate: mapped!.alternate, language: mapped!.language };
 }
 
 async function readPublicPage(url: string, signal: AbortSignal, budget: { remaining: number }, readMissingRoot: boolean) {
 	const deadline = AbortSignal.any([signal, AbortSignal.timeout(pageTimeout)]);
-	const response = await fetch(url, { method: "GET", credentials: "omit", redirect: "error", mode: "same-origin",
-		referrerPolicy: "no-referrer", headers: { Accept: "text/html" }, signal: deadline });
+	let response: Response;
+	try {
+		response = await fetch(url, { method: "GET", credentials: "omit", redirect: "error", mode: "same-origin",
+			referrerPolicy: "no-referrer", headers: { Accept: "text/html" }, signal: deadline });
+	} catch { return signal.aborted ? null : transientError; }
+	if (response.status >= 500 && response.status < 600 && !response.redirected && response.url === url) {
+		await response.body?.cancel();
+		return transientError;
+	}
 	const missing = response.status === 404;
 	if (missing && !readMissingRoot && !deadline.aborted && !response.redirected && response.url === url) {
 		await response.body?.cancel();
@@ -209,7 +233,9 @@ async function readPublicPage(url: string, signal: AbortSignal, budget: { remain
 			if (bytes > pageBytes || budget.remaining < 0) return null;
 			html += decoder.decode(chunk.value, { stream: true });
 		}
-		return null;
+		return signal.aborted ? null : transientError;
+	} catch {
+		return signal.aborted ? null : transientError;
 	} finally {
 		deadline.removeEventListener("abort", cancel);
 		await reader.cancel().catch(() => undefined);
@@ -224,8 +250,10 @@ export async function loadHboPublicEpisodes(show: HboCmsShow, known: HboCmsEpiso
 		!known.length || known.length > WATCH_CATALOG_MAX_EPISODES || !known.some(e => e.id === hboMaxPlaybackId(watchHref))) return known;
 	let baseUrl = new URL(localizeHboMaxUrl(HBO_MAX_ORIGIN + "/show/" + show.seriesId, watchHref));
 	const combined = new Map(known.map(episode => [episode.id, episode]));
-	const needs = (season: HboCmsShow["seasons"][number]) => season.episodeCount !== null &&
-		[...combined.values()].filter(episode => episode.seasonNumber === season.number).length < season.episodeCount;
+	const nativeCounts = new Map<number, number>();
+	for (const episode of combined.values()) nativeCounts.set(episode.seasonNumber, (nativeCounts.get(episode.seasonNumber) ?? 0) + 1);
+	const needs = (season: HboCmsShow["seasons"][number]) => season.episodeCount === null ||
+		(nativeCounts.get(season.number) ?? 0) < season.episodeCount;
 	if (!show.seasons.some(needs)) return known;
 	const hasMarket = /^\/[a-z]{2}\/[a-z]{2}(?:-[a-zA-Z]{2,4})?\/show\//u.test(baseUrl.pathname);
 	const country = hasMarket ? null : await readStorefrontCountry(doc);
@@ -233,21 +261,24 @@ export async function loadHboPublicEpisodes(show: HboCmsShow, known: HboCmsEpiso
 	const cache = publicCache(doc, show, baseUrl, locale, country);
 	// A countryless player can need one region lookup, then a same-market language alternate.
 	const rootReads = country ? 3 : 2;
-	const maxReads = show.seasons.length - 1 + rootReads;
+	const seasonPages = show.seasons.length - 1 + rootReads;
+	// Continuations share the same deadline and body budget as the original season roster.
+	const maxReads = 2 * seasonPages + 32;
 	let reads = 0;
 	const stop = new AbortController();
-	const deadline = AbortSignal.any([signal, stop.signal, AbortSignal.timeout((rootReads + Math.ceil((show.seasons.length - 1) / 2)) * pageTimeout)]);
-	const budget = { remaining: pageBytes * maxReads };
-	const read = async (url: string, base = baseUrl, language?: string, storefront?: string | null): Promise<PublicPage | typeof missingPage | null> => {
-		if (deadline.aborted) return null;
-		const cached = cache?.pages.get(url);
-		if (cached && cached.expires > Date.now() && (!language || cached.page.language === language)) return cached.page;
-		if (reads >= maxReads || budget.remaining <= 0) return null;
-		reads++;
+	const deadline = AbortSignal.any([signal, stop.signal, AbortSignal.timeout((rootReads + 1 + Math.ceil((show.seasons.length - 1) / 2)) * pageTimeout)]);
+	const budget = { remaining: pageBytes * seasonPages };
+	const readPage = async (url: string, base: URL, storefront?: string | null): Promise<PublicPage | typeof missingPage | null> => {
 		try {
-			const resource = await readPublicPage(url, deadline, budget, !!storefront);
+			const fetchPage = () => {
+				if (deadline.aborted || reads >= maxReads || budget.remaining <= 0) return null;
+				reads++;
+				return readPublicPage(url, deadline, budget, !!storefront);
+			};
+			let resource = await fetchPage();
+			if (resource === transientError) resource = await fetchPage();
 			if (deadline.aborted || !resource) return null;
-			if (resource === missingPage) return missingPage;
+			if (resource === missingPage || resource === transientError) return missingPage;
 			const markup = pageMarkup(resource.html, url, locale, show.seriesId);
 			if (!markup) return null;
 			if (storefront) {
@@ -255,11 +286,42 @@ export async function loadHboPublicEpisodes(show: HboCmsShow, known: HboCmsEpiso
 				if (!regional) return null;
 				if (regional.href !== url) {
 					baseUrl = regional;
-					return read(regional.href, regional);
+					return readPage(regional.href, regional);
 				}
 			}
 			return resource.missing ? missingPage : parsePage(markup, url, base, show);
 		} catch { return null; }
+	};
+	const read = async (url: string, base = baseUrl, language?: string, storefront?: string | null): Promise<PublicPage | typeof missingPage | null> => {
+		if (deadline.aborted) return null;
+		const cached = cache?.pages.get(url);
+		if (cached && cached.expires > Date.now() && (!language || resolveHboLocale(language, cached.page.language))) return cached.page;
+		const first = await readPage(url, base, storefront);
+		if (!first || first === missingPage) return first;
+		if (language && !resolveHboLocale(language, first.language)) return null;
+		if (!first.next) return first.total === null || first.episodes.length === first.total ? first : null;
+		const episodes = new Map(first.episodes.map(e => [e.id, e]));
+		const numbers = new Set(first.episodes.map(e => e.number));
+		const visited = new Set([url]);
+		let page = first;
+		while (page.next) {
+			if (visited.has(page.next) || !page.episodes.length) return null;
+			visited.add(page.next);
+			const more = await readPage(page.next, storefront ? baseUrl : base);
+			if (!more || more === missingPage) return more;
+			if (!resolveHboLocale(first.language, more.language) || more.total !== first.total ||
+				show.seasons.some(s => first.seasons.get(s.number) !== more.seasons.get(s.number))) return null;
+			const previousSize = episodes.size;
+			for (const episode of more.episodes) {
+				const existing = episodes.get(episode.id);
+				if (existing ? existing.number !== episode.number : numbers.has(episode.number)) return null;
+				episodes.set(episode.id, episode); numbers.add(episode.number);
+			}
+			if (episodes.size === previousSize || episodes.size > (first.total ?? WATCH_CATALOG_MAX_EPISODES)) return null;
+			page = more;
+		}
+		if (first.total !== null && first.total !== episodes.size) return null;
+		return { ...first, episodes: [...episodes.values()], next: null };
 	};
 	const remember = (url: string, page: PublicPage) => {
 		// Only anonymously published rows reach this cache. The active native watch is rechecked on each admission.
@@ -268,12 +330,15 @@ export async function loadHboPublicEpisodes(show: HboCmsShow, known: HboCmsEpiso
 	};
 	const merge = (page: PublicPage) => {
 		const unique = new Map(page.episodes.map(e => [e.id, e]));
+		let additions = unique.size;
 		const selectedSeason = page.episodes[0]?.seasonNumber;
 		for (const existing of combined.values()) {
 			const added = unique.get(existing.id);
 			if (added && (added.number !== existing.number || added.seasonNumber !== existing.seasonNumber)) return false;
 			if (selectedSeason === existing.seasonNumber && !added) return false;
+			if (added) additions--;
 		}
+		if (combined.size + additions > WATCH_CATALOG_MAX_EPISODES) return false;
 		for (const episode of page.episodes) if (!combined.has(episode.id)) combined.set(episode.id, episode);
 		return true;
 	};
