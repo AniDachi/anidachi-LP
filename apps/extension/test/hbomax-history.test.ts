@@ -2,6 +2,7 @@ import { bindHboMaxGuestExit } from "../src/source-adapters/hbomax/navigation";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WatchCatalogCommitRequestSchema, type WatchHistoryResponse, hboMaxFingerprint, hboMaxSourceUrl } from "@anidachi/protocol";
 import { readHboMaxCatalog, startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/catalog";
+import { HBO_CATALOG_RESPONSE_TIMEOUT_MS } from "../src/source-adapters/hbomax/cms-catalog";
 import { observeHboMaxRoomSource, readHboMaxPlaybackMetadata } from "../src/source-adapters/hbomax/metadata";
 import { hboMaxHistoryPolicy } from "../src/source-adapters/hbomax/history";
 import { HISTORY_OBSERVATION_SUSPENDED } from "../src/source-adapters/core/history-policy";
@@ -96,7 +97,13 @@ describe("HBO Max public catalog and personal history", () => {
 				projectionRevision: null, acceptedHash: null, acceptedAt: null,
 			} };
 		} });
-		await resolver.resolve(event, historyOwner, { refreshCatalog: true });
+		// No native roster arrives. Exercise the actual timeout and DOM fallback without a wall-clock wait.
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		try {
+			const pending = resolver.resolve(event, historyOwner, { refreshCatalog: true });
+			await vi.advanceTimersByTimeAsync(HBO_CATALOG_RESPONSE_TIMEOUT_MS + 1);
+			await pending;
+		} finally { vi.useRealTimers(); }
 		const commit = messages.find(message => message.command === "catalog-commit");
 		if (commit?.command !== "catalog-commit") throw new Error("Expected HBO Max catalog commit");
 		const { snapshot } = WatchCatalogCommitRequestSchema.parse(commit.input);
