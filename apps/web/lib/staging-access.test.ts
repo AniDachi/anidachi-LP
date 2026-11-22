@@ -536,6 +536,8 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
     ["/api/watch-history/v3/delete", "POST"],
     ["/api/watch-history/v3/rooms", "POST"],
     ["/api/watch-history/v3/title-episodes", "GET"],
+    ["/api/watch-history/v3/disney-portraits", "GET"],
+    ["/api/watch-history/v3/disney-portraits", "POST"],
     ["/api/watch-history/v3/catalog/attempt", "POST"],
     ["/api/watch-history/v3/catalog", "POST"],
   ] as const;
@@ -571,6 +573,8 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
     ["/api/watch-history/v3/delete", "DELETE"],
     ["/api/watch-history/v3/rooms", "GET"],
     ["/api/watch-history/v3/title-episodes", "POST"],
+    ["/api/watch-history/v3/disney-portraits", "DELETE"],
+    ["/api/watch-history/v3/disney-portraits/extra", "POST"],
     ["/api/watch-history/v3/catalog/attempt", "GET"],
     ["/api/watch-history/v3/catalog", "GET"],
     ["/api/watch-history/v3/catalog/extra", "POST"],

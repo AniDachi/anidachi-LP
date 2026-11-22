@@ -56,6 +56,7 @@ import {
   type WatchHistoryObservationDisplayMode,
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
+import { syncDisneyPortraits } from "./disney-portrait-sync";
 import { createWatchHistoryCatalogCoordinator } from "./watch-history-catalog";
 import { createWatchHistoryBrowseCache, watchBrowseCacheKey } from "./watch-history-browse-cache";
 
@@ -785,6 +786,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
       const failure = await validateCurrent(response.session);
       if (failure) return failure;
+      if (message.command === "browse" && isRecord(parsed) && isRecord(parsed.history) && Array.isArray(parsed.history.items)) {
+        void syncDisneyPortraits(response.session, generation, parsed.history.items.map(item => item.titleKey));
+      }
       await browseCache.write(cacheKey, parsed, revision);
       const afterSave = await validateCurrent(response.session);
       return afterSave ?? { ok: true, data: parsed };
@@ -1011,6 +1015,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         if (!ack.data.duplicate) {
           mutated = true;
           changedTitles.add(JSON.stringify([entry.event.provider, entry.event.titleKey]));
+          if (entry.event.titleKey.startsWith("disneyplus:")) void syncDisneyPortraits(activeSession, generation, [entry.event.titleKey]);
         }
         await clearUnpersistedPauseIfReady(activeSession, generation);
         flushed += 1;
