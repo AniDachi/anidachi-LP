@@ -126,7 +126,7 @@ export default function GermanCrunchyrollCalendarPage() {
         description={`Crunchyroll-Simulcasts für ${weekLabel}, in deutscher Zeit.`}
         url={url}
         datePublished="2026-11-12"
-        dateModified="2026-11-20"
+        dateModified="2026-11-22"
         faq={faq}
         headings={headings}
         itemList={itemList}
