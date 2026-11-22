@@ -380,7 +380,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
           per person when watching with a group, followed by a 10-minute
           cool-down. It won&apos;t open Netflix, Crunchyroll or any other
           service. More on it in{" "}
-          <Link href="/guides/discord-watch-together">Discord Watch Together</Link>.
+          <Link href="/discord-watch-party#watch-together">Discord Watch Together</Link>.
         </p>
         <p className="mb-8 leading-relaxed text-ani-muted">
           So the practical answer depends on where the movie lives. For a

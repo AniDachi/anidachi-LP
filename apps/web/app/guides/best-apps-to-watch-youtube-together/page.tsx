@@ -222,10 +222,10 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
         <li>
           <strong>#4 Discord</strong> — voice companion, not the sync layer (
           <Link
-            href="/guides/youtube-watch-party-with-discord"
+            href="/discord-watch-party"
             className="text-brand-orange hover:underline"
           >
-            hybrid guide
+            Discord watch party guide
           </Link>
           ).
         </li>

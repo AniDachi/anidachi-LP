@@ -129,9 +129,9 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
         </Link>
         , and Discord stays for voice. See{" "}
         <Link
-          href="/guides/youtube-watch-party-with-discord"
+          href="/discord-watch-party#watch-together"
         >
-          YouTube watch party with Discord
+          Discord watch party
         </Link>
         .
       
