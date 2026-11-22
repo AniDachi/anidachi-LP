@@ -71,6 +71,7 @@ export const popupWatchHistoryStyles = `
   .popup-watch-title-toggle { display: grid; grid-template-columns: var(--popup-watch-artwork-width) minmax(0,1fr) 24px; align-items: start; gap: 10px; min-width: 0; width: 100%; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--ad-text); text-align: left; cursor: pointer; }
   .popup-watch-screen .popup-watch-artwork { width: var(--popup-watch-artwork-width); height: 78px; aspect-ratio: 2 / 3; border-radius: 6px; background: var(--ad-surface); border: 1px solid rgba(255,255,255,.08); box-shadow: none; font-size: 18px; font-weight: 600; color: var(--ad-muted); align-self: start; box-sizing: border-box; }
   .popup-watch-screen .popup-watch-artwork img { width: 100%; height: 100%; object-fit: cover; }
+  .popup-watch-screen .popup-watch-item:is([data-provider="netflix"],[data-provider="disneyplus"]) .popup-watch-artwork img { object-fit: contain; }
   .popup-watch-screen .popup-watch-main { display: flex; flex-direction: column; min-width: 0; gap: 6px; padding: 0; }
   .popup-watch-screen .popup-watch-title { display: block; min-width: 0; overflow-wrap: anywhere; white-space: normal; text-overflow: clip; font-size: 14px; line-height: 1.4; font-weight: 600; }
   .popup-watch-screen .popup-watch-meta { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; font-size: 11px; line-height: 1.35; font-weight: 450; color: var(--ad-muted); }

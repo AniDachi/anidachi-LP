@@ -66,7 +66,7 @@ export function HistoryBrowser(props: Props) {
       <div className="wh-covers">
         {filtered.map(item => <button key={itemId(item)} className={`wh-card ${selected === itemId(item) ? "wh-card-selected" : ""} ${item.provider === "youtube" ? "wh-video" : ""}`}
           type="button" aria-label={`Manage ${item.title}`} aria-pressed={selected === itemId(item)} onClick={() => navigate(() => setSelected(itemId(item)))}>
-          <span className="wh-cover"><HistoryArtwork key={item.artworkUrl} item={item} />{isTitleWatched(item) && <span className="wh-cover-check"><Check size={14} /><span className="sr-only">Watched</span></span>}</span>
+          <span className="wh-cover" data-provider={item.provider}><HistoryArtwork key={item.artworkUrl} item={item} />{isTitleWatched(item) && <span className="wh-cover-check"><Check size={14} /><span className="sr-only">Watched</span></span>}</span>
           <span className="wh-card-title" dir="auto">{item.title}</span>
           <span className="wh-card-progress">{titleProgress(item)}</span>
           <span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span>
