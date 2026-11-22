@@ -5,6 +5,7 @@ import {
   WatchHistoryCapacityCompatibleSchema,
   canonicalizeRoomSourceUrl,
   isHboMaxOrigin,
+  isHboMaxHistoryKey,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -88,6 +89,7 @@ export type WatchHistoryLocalStatus =
   | "rejected";
 
 export type WatchHistoryMessage =
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "title-poster"; expectedOwnerUserId: string; titleKey: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "capacity"; expectedOwnerUserId: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resume-claim"; expectedOwnerUserId: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-release"; expectedOwnerUserId: string;
@@ -249,6 +251,9 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   if (!isRecord(value) || value.type !== WATCH_HISTORY_MESSAGE_TYPE) return false;
   if ("accessToken" in value) return false;
   switch (value.command) {
+    case "title-poster":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "titleKey"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) &&
+        typeof value.titleKey === "string" && (isHboMaxHistoryKey(value.titleKey, "series") || isHboMaxHistoryKey(value.titleKey, "movie"));
     case "capacity": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) && isExpectedOwnerUserId(value.expectedOwnerUserId);
     case "resume-claim": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) && PersonalHistoryResumeSchema.safeParse(value.input).success;
     case "catalog-release":
@@ -507,7 +512,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const session = await dependencies.getCurrentSession();
     if (!session) return { ok: false, status: "unauthenticated" };
 
-    if ((message.command === "capacity" || message.command === "browse" ||
+    if ((message.command === "capacity" || message.command === "title-poster" || message.command === "browse" ||
       message.command === "browse-title-episodes" ||
       message.command === "browse-sessions" ||
       message.command === "browse-options" ||
@@ -560,13 +565,22 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "invalid-request" };
       }
     }
-    if (["capacity", "list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
+    if (["capacity", "title-poster", "list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
       const denied = await requireAccess(session, "read"); if (denied) return denied;
     }
     if (["pending-identities", "catalog-begin", "catalog-commit", "resolve-identity"].includes(message.command)) {
       const denied = await requireAccess(session); if (denied) return denied;
     }
     if (message.command === "list") return refresh(session, message);
+    if (message.command === "title-poster") {
+      const params = new URLSearchParams({ titleKey: message.titleKey, format: "json" });
+      const response = await authenticatedRequest(session, "/api/watch-history/poster?" + params, { redirect: "error", credentials: "omit" });
+      if (!response.ok) return response.error;
+      const poster = isRecord(response.body) ? response.body.url : null;
+      const id = message.titleKey.split(":")[2];
+      return typeof poster === "string" && poster.startsWith(`https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/${id}/`)
+        ? { ok: true, data: poster } : { ok: false, status: "invalid-response" };
+    }
     if (message.command === "capacity") {
       const lease = await readLease(session);
       const response = await authenticatedRequest(session, `/api/watch-history/v3/capacity?capacityVersion=${watchHistoryProviderVersion()}`);

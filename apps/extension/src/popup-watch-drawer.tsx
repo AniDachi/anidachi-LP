@@ -7,6 +7,7 @@ import { canReadWatchHistory } from "./watch-history-access";
 import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
 import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
+	isHboMaxArtworkUrl,
 	type WatchHistoryBrowseQuery,
 	type WatchHistoryBrowseTitleEpisodesResponse,
 	WatchHistoryBrowseTitleEpisodesResponseSchema,
@@ -1013,28 +1014,47 @@ function WatchDrawer({
 }
 
 function PopupWatchArtwork({
-	url,
-	title,
+	url, item, client, ownerUserId, active,
 }: {
 	url: string | null;
-	title: string;
+	item: WatchHistoryItem;
+	client: PopupWatchHistoryClient;
+	ownerUserId: string;
+	active: boolean;
 }) {
-	const [failed, setFailed] = useState(false);
-	const visible = Boolean(url) && !failed;
+	const [savedStatus, setSavedStatus] = useState<"initial" | "landscape" | "failed">("initial");
+	const [poster, setPoster] = useState<string | null | undefined>(undefined);
+	const hbo = item.provider === "hbomax";
+	const saved = url && hbo && isHboMaxArtworkUrl(url) ? url + "?w=500&f=webp" : url;
+	const needsPoster = hbo && (!saved || savedStatus !== "initial");
+	useEffect(() => {
+		if (!active || !needsPoster || poster !== undefined) return;
+		let current = true;
+		void requestPopupWatchHistory(client, { type: "ANIDACHI_WATCH_HISTORY_V3", command: "title-poster", expectedOwnerUserId: ownerUserId,
+			titleKey: item.titleKey }).then(result => {
+			if (current) setPoster(result.ok && typeof result.data === "string" ? result.data : null);
+		});
+		return () => { current = false; };
+	}, [active, client, item.titleKey, needsPoster, ownerUserId, poster]);
+	const src = poster ?? (savedStatus === "failed" ? null : saved);
 	return (
-		<span className="popup-watch-artwork" data-has-artwork={visible}>
-			{visible && url ? (
+		<span className="popup-watch-artwork" data-has-artwork={Boolean(src)}>
+			{src ? (
 				<img
+					key={src}
 					alt=""
 					loading="lazy"
 					decoding="async"
-					src={url}
+					src={src}
 					width={44}
 					height={66}
-					onError={() => setFailed(true)}
+					onLoad={({ currentTarget }) => {
+						if (hbo && !poster && currentTarget.naturalWidth > currentTarget.naturalHeight) setSavedStatus("landscape");
+					}}
+					onError={() => poster ? setPoster(null) : setSavedStatus("failed")}
 				/>
 			) : (
-				title.slice(0, 1)
+				item.title.slice(0, 1)
 			)}
 		</span>
 	);
@@ -1427,7 +1447,10 @@ function PopupWatchHistoryItem({
 					<PopupWatchArtwork
 						key={artworkUrl}
 						url={artworkUrl}
-						title={item.title}
+						item={item}
+						client={client}
+						ownerUserId={ownerUserId}
+						active={providerOpen}
 					/>
 					<span className="popup-watch-main">
 						<strong className="popup-watch-title" dir="auto">
