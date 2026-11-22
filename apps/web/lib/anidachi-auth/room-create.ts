@@ -13,6 +13,7 @@ export type RoomCreateRequestInput = {
 	episodeId?: string;
 	sourceProvider?: unknown;
 	sourceUrl?: unknown;
+ primeNavigation?:unknown;
 	videoFingerprint?: unknown;
 	title?: string;
 	clientRequestId?: string;
@@ -153,6 +154,7 @@ function parseRoomCreateRequestBody(
 	assignCleanString(input, "clientRequestId", record.clientRequestId, 100);
 	for (const key of [
 		"sourceProvider",
+  "primeNavigation",
 		"sourceUrl",
 		"videoFingerprint",
 	] as const) {

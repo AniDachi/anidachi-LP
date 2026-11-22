@@ -1,5 +1,6 @@
 import {
   WatchLibraryResponseSchema,
+  hasPrimeVideoHostname,
   type WatchItemKind,
   type WatchLibraryItem,
   type WatchLibraryResponse,
@@ -178,6 +179,7 @@ export class WatchLibraryApiError extends Error {
 const PROVIDERS = new Set<WatchProvider>([
   "crunchyroll",
   "netflix",
+  "primevideo",
   "youtube",
   "amazon",
 ]);
@@ -200,6 +202,10 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
   if (!value || typeof value !== "object") return null;
   const input = value as Partial<WatchProgressReconcileEntry>;
   const provider = cleanProvider(input.provider);
+  // Prime requires the detailed v3 identity and explicit season-1 anchor. The
+  // legacy reconcile shape cannot establish that identity or infer its seasons.
+  if (provider === "primevideo" || (typeof input.sourceUrl === "string" && hasPrimeVideoHostname(input.sourceUrl)) ||
+    [input.itemId, input.episodeId, input.seasonId].some((key) => typeof key === "string" && key.startsWith("primevideo:"))) return null;
   const progressKind = input.kind === "episode" || input.kind === "movie" ? input.kind : null;
   const itemKey = cleanString(input.itemId, 220);
   const itemTitle = cleanString(input.itemTitle, 240);

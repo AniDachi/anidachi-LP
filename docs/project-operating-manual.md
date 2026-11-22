@@ -431,6 +431,13 @@ activation follow separate checks. This is not a general feature-ref release
 permission or production approval. See the
 [Free20 activation runbook](superpowers/plans/2026-11-01-free20-staging-activation-runbook.md).
 
+The owner-authorized November 16 Prime Video staging delivery has the same
+bounded schema-first exception. After review and green CI, only `db-staging.yml`
+may run from its frozen feature ref against `cyppqpprkygjloyfvvvj`. First verify
+the current staging migration baseline and the sole additive Prime migration;
+Web/Worker/extension still deliver from `staging`. This grants no production or
+Store release permission. See [the Prime delivery procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback).
+
 Never push risky changes directly to `main`. Never mix unrelated P2P, billing,
 auth, UI, and migration changes in one large PR unless the change cannot be split.
 

@@ -37,6 +37,8 @@ export interface PanelRoomActionsProps {
 	creating?: boolean;
 	/** An invite/restored room is resolving; the personal hosting quota is unrelated. */
 	joining?: boolean;
+	checkingPrime?: boolean;
+	onRetryJoin?(): void;
 	/** Admission exists but membership is still unconfirmed after its wait window. */
 	connectionStalled?: boolean;
 	closing?: boolean;
@@ -90,7 +92,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const active = roomId !== null;
 	const joining = Boolean(props.joining) && !props.closing;
 	const connectionStalled = Boolean(props.connectionStalled) && !props.closing;
-	const pendingMembership = joining || connectionStalled;
+	const pendingMembership = joining || connectionStalled || Boolean(props.onRetryJoin || props.checkingPrime);
 
 	const scope = `${props.scopeKey}:${roomId ?? "idle"}`;
 	const currentScope = useRef(scope);
@@ -127,7 +129,9 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	// throughout that gap, until the room is ready or the existing escape applies.
 	const label = props.closing ? props.closingLabel ?? "Closing room"
 		: connectionStalled ? "Cancel connection"
+		: props.checkingPrime ? "Checking Prime Video"
 		: joining ? "Joining room"
+		: props.onRetryJoin ? "Retry joining"
 		: !visibleActive ? (props.creating || waitingForRoom ? "Creating room" : "Create room")
 		: props.label;
 	const actionBusy = busy || waitingForRoom || joining || Boolean(props.closing);
@@ -328,7 +332,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 				aria-label={label}
 				aria-busy={actionBusy}
 				aria-describedby={active && timed ? descriptionId : undefined}
-				disabled={props.disabled || waitingForRoom || joining || props.closing}
+				disabled={props.disabled || waitingForRoom || joining || props.closing || props.checkingPrime}
 				data-show-action={showLabel}
 				data-suppress-start-hover={createPointer !== null}
 				onPointerMove={(event) => {
@@ -343,6 +347,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					}
 				}}
 				onClick={(event) => {
+					if (props.onRetryJoin) {
+						props.onRetryJoin();
+						return;
+					}
 					if (!active && stripRef.current && buttonRef.current) {
 						setCreatePointer({ x: event.clientX, y: event.clientY });
 						start.current = capturePanelRoomStart(
