@@ -1,4 +1,4 @@
-import { DisneyPlusHistoryIdentitySchema, DisneyPlusProviderIdSchema, WATCH_CATALOG_MAX_EPISODES } from "@anidachi/protocol";
+import { disneyPlusRouteLocale, DisneyPlusHistoryIdentitySchema, DisneyPlusProviderIdSchema, WATCH_CATALOG_MAX_EPISODES } from "@anidachi/protocol";
 import { z } from "zod";
 import type { DisneyPlusDetails } from "./metadata";
 
@@ -7,12 +7,12 @@ const ordinal = z.number().int().min(1).max(1000);
 export const savedPlayback = z.strictObject({
 	metadata: z.strictObject({
 		identity: DisneyPlusHistoryIdentitySchema, title: label, episodeTitle: label, seasonTitle: label.nullable(),
-		seasonNumber: ordinal.nullable(), episodeNumber: ordinal.nullable(),
+		seasonNumber: ordinal.nullable(), namedSeasonId: DisneyPlusProviderIdSchema.optional(), episodeNumber: ordinal.nullable(),
 		artworkUrl: z.url().max(2048).regex(/^https:\/\/disney\.images\.edge\.bamgrid\.com\/[^/]/u).nullable(),
 	}),
 });
 const episode = z.strictObject({ playbackId: DisneyPlusProviderIdSchema, title: label, number: ordinal });
-const season = z.strictObject({ number: ordinal, title: label, episodes: z.array(episode).max(WATCH_CATALOG_MAX_EPISODES) });
+const season = z.strictObject({ number: ordinal.nullable(), providerId: DisneyPlusProviderIdSchema.optional(), title: label, episodes: z.array(episode).max(WATCH_CATALOG_MAX_EPISODES) });
 
 const transfer = z.strictObject({
 	entityId: DisneyPlusProviderIdSchema,
@@ -25,7 +25,7 @@ const transfer = z.strictObject({
 	const episodes = value.seasons.flatMap(s => s.episodes);
 	return (value.movieId === null ? episodes.length > 0 : value.movieId === value.entityId && episodes.length === 0) &&
 		episodes.length <= WATCH_CATALOG_MAX_EPISODES && new Set(episodes.map(e => e.playbackId)).size === episodes.length &&
-		new Set(value.seasons.map(s => s.number)).size === value.seasons.length &&
+		value.seasons.every(s => s.number !== null || s.providerId) && new Set(value.seasons.map(s => s.number ?? s.providerId)).size === value.seasons.length &&
 		value.seasons.every(s => new Set(s.episodes.map(e => e.number)).size === s.episodes.length);
 });
 
@@ -48,14 +48,16 @@ export function transferIncludesPlayback(details: DisneyPlusCatalogTransfer, id:
 }
 
 export function hydrateDisneyPlusDetails(details: DisneyPlusCatalogTransfer): DisneyPlusDetails {
-	return { ...details, seasons: new Map(details.seasons.map(s => [s.number,
+	return { ...details, seasons: new Map(details.seasons.map(s => [s.number ?? s.providerId!,
 		{ ...s, episodes: new Map(s.episodes.map(e => [e.playbackId, e])) }])) };
 }
 
 export function isDisneyPlusProfileBoundary(value: string): boolean {
 	try {
 		const url = new URL(value);
+		const locale = disneyPlusRouteLocale(url.pathname);
+		const path = locale ? url.pathname.slice(locale.length + 1) : url.pathname;
 		return url.origin === "https://www.disneyplus.com" &&
-			/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:select-profile|profiles?|edit-profiles|identity|account|login|logout|sign-in|sign-up)(?:\/|$)/iu.test(url.pathname);
+			/^\/(?:select-profile|profiles?|edit-profiles|identity|account|login|logout|sign-in|sign-up)(?:\/|$)/iu.test(path);
 	} catch { return false; }
 }

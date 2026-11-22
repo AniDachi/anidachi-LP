@@ -17,10 +17,10 @@ export const disneyPlusHistoryPolicy: SourceAdapterHistoryPolicy = {
 		const currentTime = timeline.contentTime;
 		if (!metadata || !duration || !Number.isFinite(duration) || !Number.isFinite(currentTime) ||
 			duration <= 0 || currentTime < 0 || currentTime > duration) return HISTORY_OBSERVATION_SUSPENDED;
-		const { identity, ...labels } = metadata;
+		const { identity, namedSeasonId, ...labels } = metadata;
 		return {
 			provider: "disneyplus", providerLabel: "Disney+", disneyplusIdentity: identity,
-			...disneyPlusHistoryKeys(identity, metadata.seasonNumber), ...labels,
+			...disneyPlusHistoryKeys(identity, metadata.seasonNumber, namedSeasonId), ...labels,
 			sourceUrl: source.sourceUrl, currentTime, duration, progress: currentTime / duration,
 		};
 	},

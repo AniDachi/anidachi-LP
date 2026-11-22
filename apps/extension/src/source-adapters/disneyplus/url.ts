@@ -1,4 +1,4 @@
-import { disneyPlusPlaybackId } from "@anidachi/protocol";
+import { disneyPlusPlaybackId, disneyPlusRouteLocale } from "@anidachi/protocol";
 
 export const DISNEY_PLUS_ORIGIN = "https://www.disneyplus.com";
 export const disneyPlusWatchId = disneyPlusPlaybackId;
@@ -12,6 +12,6 @@ export function isDisneyPlusOrigin(href: string): boolean {
 export function localizeDisneyPlusWatchUrl(target: URL, currentHref: string): URL {
   const playbackId = disneyPlusWatchId(target.href);
   if (!playbackId || !isDisneyPlusOrigin(currentHref)) throw new Error("Invalid Disney+ navigation");
-  const locale = /^\/([a-z]{2}(?:-[a-z]{2})?)(?:\/|$)/i.exec(new URL(currentHref).pathname)?.[1];
+  const locale = disneyPlusRouteLocale(new URL(currentHref).pathname);
   return new URL(`${locale ? "/" + locale : ""}/play/${playbackId}`, DISNEY_PLUS_ORIGIN);
 }

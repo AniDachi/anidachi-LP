@@ -1,5 +1,5 @@
 import { loadHboMaxCatalog, readHboMaxCatalogContext } from "./source-adapters/hbomax/catalog";
-import { readDisneyPlusCatalog } from "./source-adapters/disneyplus/catalog";
+import { readDisneyPlusCatalog, resolveDisneyPlusCatalog } from "./source-adapters/disneyplus/catalog";
 import { runPrimeCommand } from "./source-adapters/primevideo/bridge-client";
 import type { PrimeSnapshot } from "./source-adapters/primevideo/contract";
 import { isHistoryRecordingEnabled } from "./history-recording-choice";
@@ -139,6 +139,7 @@ export function createWatchHistoryPageResolver(dependencies: {
   hboCatalogContext?: (seriesId: string, playbackId: string) => WatchCatalogBeginRequest["context"] | null;
   loadHboCatalog?: (seriesId: string, playbackId: string, signal: AbortSignal) => Promise<WatchCatalogSnapshotInput | null>;
   disneyCatalog?: (seriesId: string, playbackId: string) => WatchCatalogSnapshotInput | null;
+  loadDisneyCatalog?: (seriesId: string, playbackId: string) => Promise<WatchCatalogSnapshotInput | null>;
   pageId?: string;
   now?: () => number;
 }) {
@@ -149,6 +150,7 @@ export function createWatchHistoryPageResolver(dependencies: {
   const hboCatalogContext = dependencies.hboCatalogContext ?? ((seriesId, playbackId) => readHboMaxCatalogContext(document, seriesId, playbackId));
   const loadHboCatalog = dependencies.loadHboCatalog ?? ((seriesId, playbackId, signal) => loadHboMaxCatalog(document, seriesId, playbackId, signal));
   const disneyCatalog = dependencies.disneyCatalog ?? ((seriesId, playbackId) => readDisneyPlusCatalog(document, seriesId, playbackId));
+  const loadDisneyCatalog = dependencies.loadDisneyCatalog ?? dependencies.disneyCatalog ?? ((seriesId, playbackId) => resolveDisneyPlusCatalog(document, seriesId, playbackId));
   const now = dependencies.now ?? Date.now;
   const mappings = new Map<string, { promise: Promise<CrunchyrollHistoryMetadata | null>; attemptedAt: number; abort: AbortController; settled: boolean }>();
   const activeCatalogs = new Map<string, { abort: AbortController; signatures: Set<string>; visitId: string; promise: Promise<void> }>();
@@ -280,7 +282,7 @@ export function createWatchHistoryPageResolver(dependencies: {
         const result = hboIdentity
           ? { ok: true, catalog: await loadHboCatalog(providerSeriesId, watchId, abort.signal) }
           : disneyIdentity
-          ? { ok: true, catalog: disneyCatalog(providerSeriesId, watchId) }
+          ? { ok: true, catalog: await loadDisneyCatalog(providerSeriesId, watchId) }
           : prime
           ? await primeCommand({ action: "catalog", contentId: watchId, generation: prime.generation }, abort.signal)
           : netflix

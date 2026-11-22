@@ -1,5 +1,5 @@
 import {
-	disneyPlusHistoryKeys, disneyPlusSourceUrl, DisneyPlusProviderIdSchema, WatchHistoryResponseSchema,
+	disneyPlusNamedSeasonId, disneyPlusHistoryKeys, disneyPlusSourceUrl, DisneyPlusProviderIdSchema, WatchHistoryResponseSchema,
 	type WatchHistoryResponse,
 } from "@anidachi/protocol";
 import { canCaptureWatchHistory } from "../../watch-history-access";
@@ -26,11 +26,12 @@ export function disneyPlusMetadataFromHistory(history: WatchHistoryResponse, pla
 		if (!seriesId || !DisneyPlusProviderIdSchema.safeParse(seriesId).success) continue;
 		const identity = { kind: "episode" as const, providerSeriesId: seriesId, providerEpisodeIdentifier: playbackId };
 		for (const season of item.seasons) for (const episode of season.episodes) {
-			const keys = disneyPlusHistoryKeys(identity, episode.seasonNumber);
+			const namedSeasonId = episode.seasonNumber === null ? disneyPlusNamedSeasonId(seriesId, episode.seasonKey) : undefined;
+			const keys = disneyPlusHistoryKeys(identity, episode.seasonNumber, namedSeasonId);
 			if (item.titleKey !== keys.titleKey || episode.sourceUrl !== url || episode.episodeKey !== keys.episodeKey ||
 				episode.seasonKey !== keys.seasonKey) continue;
 			if (match) return null;
-			match = { identity, title: item.title, artworkUrl, episodeTitle: episode.episodeTitle,
+			match = { identity, title: item.title, artworkUrl, ...(namedSeasonId && { namedSeasonId }), episodeTitle: episode.episodeTitle,
 				seasonTitle: episode.seasonTitle, seasonNumber: episode.seasonNumber, episodeNumber: episode.episodeNumber };
 		}
 	}
