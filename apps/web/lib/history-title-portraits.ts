@@ -1,6 +1,6 @@
 import { disneyCatalogPortrait, type WatchHistoryResponse } from "@anidachi/protocol";
 import { unstable_cache } from "next/cache";
-import { pressPortrait, titleSlug, type DisneyPressTitle } from "./disney-press-portrait";
+import { pressPortrait, studioMoviePortrait, titleSlug, type DisneyPressTitle } from "./disney-press-portrait";
 
 const nextData = /<script\b(?=[^>]*\bid=["']__NEXT_DATA__["'])[^>]*>([\s\S]*?)<\/script>/i;
 const netflixKey = /^netflix:(?:movie|series):([0-9]{1,12})$/;
@@ -73,9 +73,11 @@ function disneyStorefrontTitle(html: string, id: string): DisneyPressTitle | nul
   const sections = blocks.map(object);
   const hero = sections.find(block => block._type === "DetailEntityHero");
   const title = object(hero?.backgroundImage).alt;
-  const synopsis = sections.find(block => block._type === "MediaDetails")?.summary;
+  const details = sections.find(block => block._type === "MediaDetails");
+  const synopsis = details?.summary;
+  const year = typeof details?.release === "string" ? details.release.match(/\b\d{4}\b/)?.[0] : undefined;
   const slug = typeof title === "string" && titleSlug(title);
-  return slug && slug.length <= 160 ? { slug, synopsis: typeof synopsis === "string" ? synopsis : "" } : null;
+  return slug && slug.length <= 160 ? { slug, synopsis: typeof synopsis === "string" ? synopsis : "", year } : null;
 }
 
 export async function resolveHistoryPortrait(key: string, request = fetch, titleHint = "") {
@@ -105,10 +107,13 @@ export async function resolveHistoryPortrait(key: string, request = fetch, title
   };
   const candidates = [lookup("https://www.hulu.com/" + path + "/" + slug + "-" + id, html => huluPoster(html, id))];
   if (title && title.synopsis) {
-    candidates.push(
-      lookup("https://press.hulu.com/shows/" + slug + "/", html => pressPortrait(html, title, "hulu")),
-      lookup("https://press.disneyplus.com/disney-plus/" + slug + "/logos", html => pressPortrait(html, title, "disney")),
-    );
+    candidates.push(lookup("https://press.hulu.com/shows/" + slug + "/", html => pressPortrait(html, title, "hulu")));
+    if (path === "series") candidates.push(lookup("https://press.disneyplus.com/disney-plus/" + slug + "/logos", html => pressPortrait(html, title, "disney")));
+  }
+  if (path === "movie" && title && title.year) {
+    for (const base of ["https://movies.disney.com/", "https://www.20thcenturystudios.com/movies/"]) {
+      candidates.push(lookup(base + slug, html => studioMoviePortrait(html, title)));
+    }
   }
   return Promise.any(candidates).catch(() => null).finally(() => controller.abort());
 }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { resolveHistoryPortrait } from "./history-title-portraits";
-import { pressPortrait } from "./disney-press-portrait";
+import { pressPortrait, studioMoviePortrait } from "./disney-press-portrait";
 
 const id = "65e808bd-2703-452d-bf62-d941d9d799fd";
 const poster = "https://img3.hulu.com/user/v3/artwork/" + id + "?base_image=asset&size=458x687";
@@ -84,6 +84,17 @@ test("direct links resolve official vertical artwork when the storefront is unav
   const disney = '<h1>All’s Fair Logos and Key Art</h1><p>' + synopsis + '</p><img alt="All’s Fair S1 Key Art" src="' + art + '">';
   assert.equal(pressPortrait(disney, expected, "disney"), art);
   assert.equal(pressPortrait(disney.replace("800%2C1200", "1200%2C800"), expected, "disney"), null);
+});
+
+test("studio movie posters must have the right film title, release year and portrait dimensions", () => {
+  const url = "https://lumiere-a.akamaihd.net/v1/images/poster.jpeg?region=0%2C0%2C540%2C810";
+  const film = { slug: "prey", year: "2022", synopsis: "" };
+  const html = '<meta property="og:title" content="Prey"><meta property="og:image" content="' + url +
+    '"><label>Release Date: </label> <p>August 5, 2022</p>';
+  assert.equal(studioMoviePortrait(html, film), url);
+  assert.equal(studioMoviePortrait(html, { ...film, year: "2007" }), null);
+  assert.equal(studioMoviePortrait(html, { ...film, slug: "prey-two" }), null);
+  assert.equal(studioMoviePortrait(html.replace("540%2C810", "810%2C540"), film), null);
 });
 
 test("a catalog portrait survives later episode checkpoints and bypasses publisher fallbacks", async () => {

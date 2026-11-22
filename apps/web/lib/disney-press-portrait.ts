@@ -1,10 +1,29 @@
 import { DomUtils, parseDocument } from "htmlparser2";
 
-export type DisneyPressTitle = { slug: string; synopsis: string };
+export type DisneyPressTitle = { slug: string; synopsis: string; year?: string };
 
 export function titleSlug(title: string) {
   return title.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function studioPortrait(url: URL) {
+  if (url.origin !== "https://lumiere-a.akamaihd.net" || url.username || url.password || !url.pathname.startsWith("/v1/images/")) return false;
+  const size = /^\d+,\d+,(\d+),(\d+)$/.exec(url.searchParams.get("region") ?? "");
+  return size !== null && Number(size[1]) >= 200 && Number(size[1]) < Number(size[2]);
+}
+
+// Both Disney and 20th Century publish the film's poster in Open Graph and the theatrical release date next to its label.
+export function studioMoviePortrait(html: string, title: DisneyPressTitle) {
+  if (!title.year) return null;
+  const root = parseDocument(html);
+  const meta = (property: string) => DomUtils.findOne(el => el.name === "meta" && el.attribs.property === property, root.children)?.attribs.content;
+  if (titleSlug(meta("og:title") ?? "") !== title.slug) return null;
+  const label = DomUtils.findOne(el => el.name === "label" && DomUtils.textContent(el).trim() === "Release Date:", root.children);
+  const release = label && DomUtils.nextElementSibling(label);
+  if (!release || DomUtils.textContent(release).match(/\b\d{4}\b/)?.[0] !== title.year) return null;
+  const image = URL.parse(meta("og:image") ?? "");
+  return image && studioPortrait(image) ? image.href : null;
 }
 
 // Press pages use names instead of entity IDs. Corroborate the heading with the
@@ -29,11 +48,9 @@ export function pressPortrait(html: string, title: DisneyPressTitle, outlet: "hu
       const size = /-(\d+)x(\d+)\.(?:png|jpe?g|webp)$/i.exec(url.pathname);
       if (size && Number(size[1]) >= 200 && Number(size[1]) < Number(size[2])) return url.href;
     }
-    if (outlet === "disney" && url.origin === "https://lumiere-a.akamaihd.net" && url.pathname.startsWith("/v1/images/")) {
+    if (outlet === "disney" && studioPortrait(url)) {
       const label = titleSlug(image.attribs.alt ?? "");
-      const size = /^\d+,\d+,(\d+),(\d+)$/.exec(url.searchParams.get("region") ?? "");
-      if (label.startsWith(title.slug + "-") && label.endsWith("-key-art") && size &&
-        Number(size[1]) >= 200 && Number(size[1]) < Number(size[2])) return url.href;
+      if (label.startsWith(title.slug + "-") && label.endsWith("-key-art")) return url.href;
     }
   }
   return null;
