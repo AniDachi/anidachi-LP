@@ -115,7 +115,7 @@ describe("Popup Watch History v3", () => {
 
   it.each(["missing", "broken", "wide", "portrait"] as const)("renders saved HBO artwork or resolves the exact title for a %s cover", async scenario => {
     vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
-    onTestFinished(() => vi.unstubAllEnvs());
+    onTestFinished(() => { vi.unstubAllEnvs(); });
     const history = youtubeMovieHistoryFixture();
     const item = history.items[0]!;
     const id = "e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7";
