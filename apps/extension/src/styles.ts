@@ -16,6 +16,7 @@ ${free20WarningStyles}
   }
 
   .anidachi-overlay {
+    --mini-panel-width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
     position: absolute;
     inset: 0;
     z-index: 2147483647;
@@ -94,6 +95,7 @@ ${extensionThemeTokens}
       transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  .anidachi-overlay[data-prime-browsing] .top-bubble,
   .top-bubble-reveal.bubble-visible .top-bubble {
     opacity: 1;
     transform: translateY(0);
@@ -162,11 +164,28 @@ ${extensionThemeTokens}
     font-weight: 650;
   }
 
+  /* Prime aligns the launcher and panel on their right edge. Connect their padded
+     outlines so a diagonal pointer path stays inside without covering the toolbar. */
+  .prime-panel-pointer-guard {
+    --pad: 6px;
+    --rise: calc(var(--mini-panel-top) - var(--top-bubble-top));
+    position: absolute;
+    top: calc(var(--top-bubble-top) - var(--pad));
+    right: calc(var(--mini-panel-right) - var(--pad));
+    width: calc(var(--mini-panel-width) + 2 * var(--pad));
+    height: calc(var(--rise) + var(--open-panel-height, 0px) + 2 * var(--pad));
+    clip-path: polygon(calc(100% - var(--capsule-width, 78px) - 2 * var(--pad)) 0,
+      100% 0, 100% 100%, 0 100%, 0 var(--rise));
+    pointer-events: auto;
+    cursor: default;
+    z-index: 29;
+  }
+
   .mini-panel {
     position: absolute;
     top: min(var(--mini-panel-top, 48px), calc(100% - 28px));
     right: var(--mini-panel-right, 10px);
-    width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
+    width: var(--mini-panel-width);
     max-height: max(
       0px,
       calc(
@@ -209,6 +228,8 @@ ${extensionThemeTokens}
   .mini-panel::-webkit-scrollbar {
     display: none;
   }
+
+  .mini-panel[data-prime-panel] { container: prime-panel / inline-size; }
 
   .panel-header {
     display: grid;
@@ -3314,6 +3335,34 @@ ${hostingNoticeStyles}
     overflow: visible;
   }
 
+  .room-rail-edge-intent {
+    position: absolute;
+    inset: 0 0 0 auto;
+  }
+
+  /* Only visible pills take input while idle. An engaged list also covers
+     the gaps between rows and the return path from the widest participant. */
+  .room-rail[data-isolate-player-pointer] .room-rail-panel,
+  .room-rail[data-isolate-player-pointer] .room-rail-list { pointer-events: none; }
+  .room-rail[data-isolate-player-pointer].open .room-rail-more { pointer-events: auto; }
+  .room-rail[data-isolate-player-pointer="idle"] .room-rail-slot:not([data-presentation="hidden"])::before,
+  .room-rail[data-isolate-player-pointer="engaged"] .room-rail-panel::before {
+    content: "";
+    position: absolute;
+    inset: -6px 0 -6px -6px;
+    pointer-events: auto;
+  }
+  .room-rail[data-isolate-player-pointer].open .room-rail-panel::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: calc(100% + 6px);
+    height: max(0px, calc(var(--room-rail-entry-y, 0px) - 100% + 6px));
+    clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 14px) 100%);
+    pointer-events: auto;
+  }
+
   .room-rail.open .room-rail-list {
     box-sizing: border-box;
     width: calc(100% + 30px);
@@ -4370,6 +4419,28 @@ ${hostingNoticeStyles}
     z-index: 1;
   }
 
+  .prime-camera-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: scaleX(-1);
+  }
+
+  .prime-camera-frame[data-prime-camera-playing] { opacity: 1; }
+
+  .prime-camera-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    color: inherit;
+  }
+
   .cam-bubble video {
     object-fit: cover;
     transform: scaleX(-1);
@@ -4797,6 +4868,13 @@ ${hostingNoticeStyles}
     color: rgba(255, 255, 255, 0.48);
     font-size: 11px;
     line-height: 1.35;
+  }
+  @container prime-panel (max-width: 285px) {
+    .settings-surface { margin-top: 8px; padding: 8px; }
+    .settings-toggle-row { position: relative; }
+    .settings-help { position: static; }
+    .settings-help-tooltip { left: 0; max-width: 100%; }
+    .reaction-shortcut-grid { flex-wrap: wrap; gap: 2px; padding-block: 4px; }
   }
 ${panelRoomActionsStyles}
 `;

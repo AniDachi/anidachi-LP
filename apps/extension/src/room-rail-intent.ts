@@ -1,7 +1,7 @@
 export const ROOM_RAIL_OPEN_DELAY_MS = 210;
 
 const ROOM_RAIL_EDGE_PROXIMITY_PX = 24;
-const ROOM_RAIL_EDGE_INTENT_PX = 8;
+export const ROOM_RAIL_EDGE_INTENT_PX = 8;
 
 interface RoomRailVisibilityInput {
 	participantCount: number;

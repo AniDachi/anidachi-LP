@@ -1,5 +1,44 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Prime catalog continuity — November 19, 2026
+
+The [Prime catalog task](2026-11-16-prime-video-adapter.md#rooms-in-the-prime-catalog)
+moves the extension's Prime room connection and media owner into an offscreen
+document for the lifetime of a confirmed room. A tab's overlay can detach during
+navigation and return to the same call. Real-browser checks cover media across
+document replacement and stopping capture when the room or account changes.
+The two-account Amazon staging check is a separate acceptance step.
+
+November 20 regression coverage follows a guest from the player through Home and
+My Stuff → Watchlist, including a full document load. The catalog overlay
+measures its own bounds when there is no player. A camera tile requests a fresh
+binding during handoff and reveals the image after its first video frame.
+Check both room membership and advancing, visible frames before accepting the
+loaded staging build.
+
+The first camera or microphone request now uses the room’s current Prime tab.
+The Chromium transport harness covers a declined first camera request, a retry
+with an existing grant, and frame continuity across catalog navigation.
+
+## Prime Amazon readiness follow-up — 2026-11-18
+
+[Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)
+corrects native Amazon ASIN readiness, single-season catalog and intro barriers.
+Exact room identity, invitation validation and server/media contracts stay
+unchanged. Candidate inspection on the reported page passes without reload;
+tests, review, staging packaging and loaded two-account acceptance are recorded
+separately in its delivery receipt. No production promotion is included.
+
+## Prime player-close follow-up — 2026-11-17
+
+Owner approved explicit player close as room departure (host ends, guest leaves),
+preserving native episode/season changes and reconnect grace. The extension-only
+[Task 20](2026-11-16-prime-video-adapter.md#task-20--intentional-player-close-leaves-the-room-november-17)
+reuses exact departure and durable retries; Worker/Web/SQL/P2P protocol unchanged.
+Provider intent, admission races and offline cleanup have focused regressions.
+Final extension checks, room harness, review and loaded acceptance are tracked
+in that task's delivery receipt; no production promotion is included.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` for implementation tasks and update this file after every completed step. Use `superpowers:systematic-debugging` for regressions. This plan is the execution program for the room/realtime/P2P goals in `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`. The roadmap stays authoritative for protocol contracts and task ordering; this plan adds measurable targets, an automated test harness, verified-bug fixes, and concrete media-engine work. When the two documents conflict on ordering or contracts, the roadmap wins unless the Progress Log here records an agreed exception.
 
 **Goal:** Make the complete commercial flow — sign-in, room creation, invite, join, live sync, P2P camera/audio, reconnect, room end — work reliably at the level of mature realtime products, with every claim verified by metrics and automated two-browser tests instead of ad-hoc manual checks.
@@ -340,6 +379,15 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 - Roadmap Progress Log and `current-development-state.md` reflect reality.
 
 ## Progress Log
+
+- 2026-11-20 — Netflix catalog-room candidate reuses the offscreen socket and media
+  session on the Prime staging revision. The tab's provider, room and participant
+  session bind camera tile and device access. Check independent browsing, guest
+  follow, explicit departure and same-tab consent before release.
+  In two Chrome profiles the guest lost the capsule on returning to Browse.
+  A regression test now covers the guest receiving a membership snapshot before
+  the first playback source. Only a connected participant in the admitted tab
+  session can keep the room in that case. Host playback still drives navigation.
 
 - 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
   create/rejoin/renewal candidate pins a daily room mode and reuses account locks,

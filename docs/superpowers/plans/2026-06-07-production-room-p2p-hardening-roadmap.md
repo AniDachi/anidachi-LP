@@ -31,6 +31,21 @@
 
 ## Progress Log
 
+- **2026-11-18, `codex/prime-amazon-readiness`:** reproduced a persistent Amazon
+  SPA ASIN metadata wait and corrected it using committed page/SDK agreement.
+  [Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)
+  also covers single-season catalogs and transient provider intro barriers.
+  Existing identity, room authority, protocol and P2P transport are unchanged;
+  final loaded-artifact and two-account acceptance remain separate gates.
+
+- **2026-11-17, `codex/prime-room-reload-fix`:** two-account Prime acceptance
+  reproduced reload restoration blocked by a consumed invitation. The scoped
+  extension correction separates that replay fence from matching saved
+  room-session admission; pending UI and content-duration display are corrected.
+  [Task 19](2026-11-16-prime-video-adapter.md) records checks and loaded-artifact
+  acceptance. Shared media, room authority and wire contracts remain unchanged;
+  both available Prime accounts reported US, leaving cross-region proof open.
+
 - **2026-11-03, `codex/free20-abuse-adaptation`, through `b219bf49`:**
   [default-off scoped Free20 candidate](2026-11-03-free20-abuse-adaptation.md)
   adds stopped-host context transfer: durable intent/frozen meter, cumulative

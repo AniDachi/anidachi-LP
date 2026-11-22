@@ -1,6 +1,6 @@
 # Anidachi Project Architecture And Development
 
-Last updated: 2026-11-04.
+Last updated: 2026-11-16.
 
 This document describes how the current Anidachi codebase is organized, how the
 runtime systems fit together, and how development should move from local changes
@@ -34,6 +34,8 @@ Read domain-specific documents when the task touches that area:
 - `docs/shared-watch-progress-tracker.md` for the planned watch progress model.
 - `docs/netflix-adapter-notes.md` and `docs/netflix-staging-verification.md` for
   the October 8 Netflix candidate, compatibility and pending staging acceptance.
+- `docs/prime-video-adapter-notes.md` for the November 16 local Prime Video
+  candidate, explicit season-1 anchor and remaining loaded/staging acceptance.
 - `apps/web/docs/seo-content-guidelines.md` for SEO/content pages.
 
 Historical execution plans live in `docs/superpowers/plans/`. They explain why
@@ -388,6 +390,39 @@ Current responsibilities:
 - capture camera/microphone only for explicit media features;
 - expose debug logs/build metadata for testing.
 
+The November 16 Prime Video adapter uses a dedicated MAIN-world SDK bridge and
+isolated adapter under `source-adapters/primevideo`. Its persisted source remains
+exact `https://www.primevideo.com/detail/<compactGTI>` and requires one verified
+open/initiated primary player. Preview/preload, ad, recap, unknown and replacement
+states cannot drive remote control or history. Content time uses the provider's
+content clock; commands and non-persisting rate changes use its SDK with bounded
+confirmation and generation fencing. Same-video, same-URL episode changes still
+replace source identity. The regional-address follow-up separates browser route
+recognition from persisted identity: regional/locale paths and official Amazon
+video aliases are resolved through matching public metadata and the SDK title.
+Observed same-origin season links own catalog transport; canonical compactGTIs
+own room/history identity. The owner-authorized subdomain follow-up expands
+HTTPS matching to the base and subdomains of eight explicit Prime/Amazon domain
+families. Separate resource-origin and video-script path patterns retain the
+manifest boundary; cross-subdomain catalog requests remain cross-origin and
+are rejected. Loaded regional acceptance belongs to the owner;
+two-client staging acceptance remains open. See the
+[Prime contract and evidence](prime-video-adapter-notes.md).
+
+Prime Task 11 separates observed regional playback links (`primeNavigation`)
+from canonical room/history identity. Nullable room/progress fields and a
+separate catalog route map retain exact-title routes. Legacy RPC results and
+stored JSON remain unchanged; versioned server reads enrich new responses and
+history HTTP readers explicitly opt in. This keeps old Web deployments and
+strict clients compatible across schema-first delivery and rollback. Invitation launch,
+website/popup Resume, unseen catalog episodes and source switches share the
+extension resolver. Its account-scoped marketplace choice and bounded
+`chrome.storage.session` intent survive full document redirects but establish
+neither content identity nor room authority. Unknown regional mappings offer
+explicit recovery instead of a guessed URL. The Prime execution plan tracks
+ordered staging schema/runtime/artifact delivery and the remaining owner-led
+regional and two-client acceptance.
+
 Important UI constraints:
 
 - overlay should stay inside or visually tied to the player;
@@ -458,9 +493,28 @@ Its MAIN-world bridge isolates the observed undocumented Netflix player API,
 checks route/player/video generations and suspends history/control in unsafe or
 unknown phases. The existing background writer, access leases, account generation,
 catalog fencing and owner-private library remain authoritative. Default v1 reads
-exclude Netflix before counts/pagination; new popup, website SSR/client and browse
-consumers opt into `providerVersion=2`. Capacity v2 adds Netflix's 200-title bucket
-while the v1 shape stays exact. See the [adapter notes](netflix-adapter-notes.md).
+exclude Netflix before counts/pagination; `providerVersion=2` adds Netflix.
+Capacity v2 adds Netflix's 200-title bucket while the v1 shape stays exact. See
+the [adapter notes](netflix-adapter-notes.md).
+
+The November 16 Prime candidate extends those boundaries additively. Its explicit
+`primevideoIdentity` separates movie IDs from episode/season IDs and a confirmed
+season-1 compactGTI used as the series anchor. No separate provider series GTI
+was observed; missing/conflicting anchor evidence suspends detailed series
+capture rather than grouping by name. Catalogs include only observed selected
+season entries with verified availability and remain partial. Existing outbox,
+owner/account generation, access, lease, catalog and deletion fences apply.
+Legacy reconciliation does not admit Prime writes.
+
+Current candidate clients request `providerVersion=3` and `capacityVersion=3`;
+these negotiation versions are separate from the history API v3 route version.
+Provider filtering precedes counts, pagination and enrichment. V1/v2 shapes and
+selection remain exact; v3 adds a separate Prime 200-title bucket. Older response
+data missing that bucket is unavailable. Popup streams remain independently
+paged and account-scoped. Ordered delivery is additive migration, compatible
+Web/Worker, then matching clients, with Prime rows/epochs retained on recovery.
+These changes are local and undeployed; the [Prime notes](prime-video-adapter-notes.md)
+separate automated/native-provider evidence from pending loaded acceptance.
 
 Watch History v3 is active on staging. The 2026-09-05 Watch drawer browse work
 adds bounded server-side search, date,
