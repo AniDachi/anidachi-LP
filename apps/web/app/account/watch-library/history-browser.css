@@ -21,8 +21,11 @@
 .wh-platform-logo { width: 22px; height: 22px; flex-shrink: 0; }
 .wh-platform-crunchyroll { color: #f47521; }
 .wh-platform-netflix { color: #d81f26; }
-.wh-platform-hbomax { width: 40px; object-fit: contain; border-radius: 3px; background: #141414; padding: 2px; }
-.wh-platform-disneyplus, .wh-platform-primevideo { width: 38px; object-fit: contain; border-radius: 3px; background: #f3faff; padding: 2px; }
+.wh-platform-primevideo, .wh-platform-hbomax, .wh-platform-disneyplus { width: 32px; object-fit: contain; }
+.wh-platform-disneyplus { filter: brightness(0) invert(1); }
+.wh-platforms [aria-checked="true"] .wh-platform-primevideo { filter: brightness(.72); }
+.wh-platforms [aria-checked="true"] .wh-platform-disneyplus { filter: none; }
+.wh-platforms [aria-checked="true"] .wh-platform-hbomax { filter: brightness(0); }
 .wh-platform-youtube { color: #ff0033; }
 .wh-toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; margin-bottom: 22px; }
 .wh-search { display: flex; align-items: center; gap: 8px; flex: 1 1 160px; min-width: 0; border: 1px solid #ffffff1c; border-radius: 24px; padding: 0 14px; color: #8e8b88; height: 40px; }

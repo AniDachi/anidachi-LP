@@ -124,7 +124,7 @@ function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; on
       {platform.value === "netflix" && <svg viewBox="0 0 141 277" className="wh-platform-logo wh-platform-netflix" aria-hidden="true"><path fill="currentColor" d="M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z" /></svg>}
       {platform.value === "hbomax" && <img src="/platforms/hbomax.png" alt="" className="wh-platform-logo wh-platform-hbomax" aria-hidden="true" />}
       {platform.value === "disneyplus" && <img src="/platforms/disneyplus.svg" alt="" className="wh-platform-logo wh-platform-disneyplus" aria-hidden="true" />}
-      {platform.value === "primevideo" && <img src="/platforms/primevideo.svg" alt="" className="wh-platform-logo wh-platform-primevideo" aria-hidden="true" />}
+      {platform.value === "primevideo" && <img src="/platforms/primevideo-smile.svg" alt="" className="wh-platform-logo wh-platform-primevideo" aria-hidden="true" />}
       <span>{platform.label}</span>
     </button>)}
   </div>;
