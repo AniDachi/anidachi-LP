@@ -4,7 +4,7 @@ import type {PrimeNavigation} from "@anidachi/protocol";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, Ellipsis, Film, LockKeyhole, Pencil, Play, RotateCcw, Search, Trash2, Undo2, X } from "lucide-react";
 import {
-  WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema, isHboMaxArtworkUrl,
+  WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema, isHboMaxArtworkUrl, isHboMaxHistoryKey,
   type WatchHistoryItem, type WatchHistoryDeleteScope, type WatchHistoryEditorResponse,
   type WatchHistoryEditorEpisode, type WatchHistoryEditRequest,
 } from "@anidachi/protocol";
@@ -418,13 +418,25 @@ function ConfirmDialog({ title, children, onClose }: { title: string; children: 
   return <dialog ref={ref} className="wh-confirm" aria-label={title} onCancel={event => { event.preventDefault(); onClose(); }}><h2>{title}</h2>{children}</dialog>;
 }
 function HistoryArtwork({ item }: { item: WatchHistoryItem }) {
-  const [failed, setFailed] = useState(false);
-  const checkLoaded = useCallback((image: HTMLImageElement | null) => {
-    if (image?.complete && image.naturalWidth === 0) setFailed(true);
-  }, []);
+  const [storedStatus, setStoredStatus] = useState<"initial" | "landscape" | "failed">("initial");
+  const [posterFailed, setPosterFailed] = useState(false);
   const artwork = item.artworkUrl;
-  const src = artwork && item.provider === "hbomax" && isHboMaxArtworkUrl(artwork) ? artwork + "?w=500&f=webp" : artwork;
-  return src && !failed ? <img ref={checkLoaded} src={src} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} /> : <span className="wh-artwork-fallback"><Film size={30} aria-hidden /><span>{item.title}</span></span>;
+  const saved = artwork && item.provider === "hbomax" && isHboMaxArtworkUrl(artwork) ? artwork + "?w=500&f=webp" : artwork;
+  const canResolve = item.provider === "hbomax" && (isHboMaxHistoryKey(item.titleKey, "series") || isHboMaxHistoryKey(item.titleKey, "movie"));
+  const usePoster = canResolve && !posterFailed && (!saved || storedStatus !== "initial");
+  const src = usePoster ? `/api/watch-history/poster?titleKey=${encodeURIComponent(item.titleKey)}` : storedStatus === "failed" ? null : saved;
+  const checkImage = useCallback((image: HTMLImageElement | null) => {
+    if (!image?.complete) return;
+    if (image.naturalWidth === 0) {
+      if (usePoster) setPosterFailed(true);
+      else setStoredStatus("failed");
+    } else if (canResolve && !usePoster && image.naturalWidth > image.naturalHeight) {
+      setStoredStatus("landscape");
+    }
+  }, [canResolve, usePoster]);
+  return src ? <img key={src} ref={checkImage} src={src} alt="" loading="lazy" decoding="async"
+    onLoad={event => checkImage(event.currentTarget)} onError={() => usePoster ? setPosterFailed(true) : setStoredStatus("failed")} />
+    : <span className="wh-artwork-fallback"><Film size={30} aria-hidden /><span>{item.title}</span></span>;
 }
 function isTitleWatched(item: WatchHistoryItem) { return item.itemKind === "movie" || item.provider === "youtube" ? Boolean(item.latestActivity.completedAt) : item.aggregate.progress === 1; }
 function titleProgress(item: WatchHistoryItem) {
