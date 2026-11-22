@@ -11,6 +11,7 @@ import { YOUTUBE_CATALOG_ORIGINS } from "../src/source-adapters/youtube/url";
 import { changedWatchOwner } from "../src/source-adapters/youtube/watch-player";
 import { NetflixVideoAdapter } from "../src/source-adapters/netflix/adapter";
 import { DisneyPlusVideoAdapter } from "../src/source-adapters/disneyplus/adapter";
+import { readDisneyTitle } from "../src/source-adapters/disneyplus/published-catalog";
 import { startDisneyPlusCatalogCapture } from "../src/source-adapters/disneyplus/catalog";
 import { isDisneyPlusOrigin } from "../src/source-adapters/disneyplus/url";
 import { CrunchyrollVideoAdapter } from "../src/source-adapters/crunchyroll/adapter";
@@ -213,7 +214,7 @@ function startContentLifecycleSession(
   const stopHboCatalog = window.top === window && isHboMaxOrigin(location.origin)
     ? startHboMaxCatalogCapture(document) : undefined;
   const stopDisneyCatalog = window.top === window && isDisneyPlusOrigin(location.href)
-    ? startDisneyPlusCatalogCapture(document) : undefined;
+    ? startDisneyPlusCatalogCapture(document, undefined, readDisneyTitle) : undefined;
   dependencies.ensureStyles();
 
   let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;

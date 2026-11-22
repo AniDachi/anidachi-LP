@@ -1,5 +1,7 @@
+import { disneyControlsPortal, findDisneyPlusElement } from "./dom";
+import { decimalDigits } from "./published-title";
 import {
-	disneyPlusEntityId,
+	disneyPlusEntityId, disneyPlusRouteLocale,
 	disneyPlusPlaybackId,
 	disneyPlusFingerprint,
 	disneyPlusSourceUrl,
@@ -14,25 +16,59 @@ export type DisneyPlusPlaybackMetadata = {
 	episodeTitle: string;
 	seasonTitle: string | null;
 	seasonNumber: number | null;
+	namedSeasonId?: string;
 	episodeNumber: number | null;
 	artworkUrl: string | null;
 };
 
 export type DisneyPlusEpisode = { playbackId: string; title: string; number: number };
-export type DisneyPlusSeason = { number: number; title: string; episodes: Map<string, DisneyPlusEpisode> };
+export type DisneyPlusSeason = { number: number | null; providerId?: string; title: string; episodes: Map<string, DisneyPlusEpisode> };
 export type DisneyPlusDetails = {
 	entityId: string;
 	title: string;
 	artworkUrl: string | null;
 	locale: string;
 	movieId: string | null;
-	seasons: Map<number, DisneyPlusSeason>;
+	seasons: Map<number | string, DisneyPlusSeason>;
 };
 
 // Retain only the current details page's public roster in this document. Browse
 // observations do not create progress or a durable list of visited titles.
 const detailsByDocument = new WeakMap<Document, DisneyPlusDetails>();
 const previousEntityEpisodes = new WeakMap<Document, Set<string>>();
+// Only a provider-resolved play -> entity relationship may bind an alternate regional playable.
+const publishedPlayback = new WeakMap<Document, { id: string; details: DisneyPlusDetails }>();
+export function observePublishedDisneyTitle(doc: Document, id: string, details: DisneyPlusDetails) {
+	publishedPlayback.set(doc, { id, details });
+	restoreDisneyPlusDetails(doc, details);
+}
+
+function bindDisneyEdition(doc: Document, details: DisneyPlusDetails, playbackId: string) {
+	const binding = publishedPlayback.get(doc);
+	if (binding?.id !== playbackId || binding.details !== details) return;
+	const portal = disneyControlsPortal(doc);
+	const button = portal && findDisneyPlusElement(portal, ".title-bug-container button.title-btn");
+	const normalize = (text: string) => decimalDigits(text.normalize("NFKC")).replace(/\s+/gu, " ").trim().toLocaleLowerCase(details.locale);
+	const title = displayText(button?.querySelector(".title-field")?.textContent);
+	const label = displayText(button?.querySelector(".subtitle-field")?.textContent);
+	if (!title || !label || normalize(title) !== normalize(details.title)) return;
+	const caption = normalize(label);
+	// Compare both ordinals and the actual episode title. The series redirect alone
+	// cannot distinguish regional edits, trailers, or two episodes with the same name.
+	for (const season of details.seasons.values()) {
+		for (const [publicId, episode] of season.episodes) {
+			const suffix = normalize(episode.title);
+			if (!caption.endsWith(suffix)) continue;
+			const digits = caption.slice(0, -suffix.length).match(/\d+/gu);
+			if (!digits || digits.length !== 2 || Number(digits[0]) !== season.number || Number(digits[1]) !== episode.number) continue;
+			season.episodes.delete(publicId);
+			season.episodes.set(playbackId, { ...episode, playbackId });
+			publishedPlayback.delete(doc);
+			return;
+		}
+	}
+}
+
 const roomPlayback = new WeakMap<Document, DisneyPlusPlaybackMetadata>();
 const priorPlayback = new WeakMap<Document, DisneyPlusPlaybackMetadata>();
 const lastHeading = new WeakMap<Document, { title: string; entityId: string; element: Element }>();
@@ -63,7 +99,7 @@ function ordinal(value: string | undefined): number | null {
 }
 
 function localeFor(doc: Document): string | null {
-	const pathLocale = /^\/([a-z]{2}(?:-[a-z]{2})?)\/browse\//i.exec(doc.location.pathname)?.[1];
+	const pathLocale = disneyPlusRouteLocale(doc.location.pathname);
 	const locale = pathLocale ?? doc.documentElement.lang;
 	try { return Intl.getCanonicalLocales(locale)[0] ?? null; } catch { return null; }
 }
@@ -146,7 +182,7 @@ export function captureDisneyPlusDetails(doc: Document): void {
 		previousEntityEpisodes.set(doc, new Set([...prior.seasons.values()].flatMap(s => [...s.episodes.keys()])));
 	}
 	const details = prior?.entityId === entityId && prior.locale === locale ? prior : {
-		entityId, locale, title, artworkUrl: null, movieId: null, seasons: new Map<number, DisneyPlusSeason>(),
+		entityId, locale, title, artworkUrl: null, movieId: null, seasons: new Map<number | string, DisneyPlusSeason>(),
 	};
 	details.title = title;
 	details.artworkUrl = artwork(doc) ?? details.artworkUrl;
@@ -162,7 +198,7 @@ export function captureDisneyPlusDetails(doc: Document): void {
 			if (name && number && !details.seasons.has(number)) details.seasons.set(number, { number, title: name, episodes: new Map() });
 		}
 		const season = readSeason(panel);
-		if (season) {
+		if (season?.number != null) {
 			const previousIds = previousEntityEpisodes.get(doc);
 			if (previousIds) for (const id of season.episodes.keys()) if (previousIds.has(id)) season.episodes.delete(id);
 			// A grid can be incrementally rendered. Keep other observed rows from
@@ -196,6 +232,9 @@ export function readDisneyPlusPlaybackMetadata(doc: Document, playbackId: string
 		(item.identity.kind === "episode" ? item.identity.providerEpisodeIdentifier : item.identity.providerMovieId) === playbackId ? item : null;
 	const saved = exact(priorPlayback.get(doc)) ?? exact(roomPlayback.get(doc));
 	if (!details) return saved;
+	if (!details.movieId && ![...details.seasons.values()].some(season => season.episodes.has(playbackId))) {
+		bindDisneyEdition(doc, details, playbackId);
+	}
 	const common = { title: details.title, artworkUrl: details.artworkUrl };
 	if (details.movieId === playbackId)
 		return { ...common, identity: { kind: "movie", providerMovieId: playbackId }, episodeTitle: details.title,
@@ -206,7 +245,8 @@ export function readDisneyPlusPlaybackMetadata(doc: Document, playbackId: string
 		if (!episode) continue;
 		if (metadata) return null;
 		metadata = { ...common, identity: { kind: "episode", providerSeriesId: details.entityId, providerEpisodeIdentifier: playbackId },
-			episodeTitle: episode.title, seasonTitle: season.title, seasonNumber: season.number, episodeNumber: episode.number };
+			episodeTitle: episode.title, seasonTitle: season.title, seasonNumber: season.number, episodeNumber: episode.number,
+			...(season.number === null && season.providerId && { namedSeasonId: season.providerId }) };
 	}
 	return metadata ?? saved;
 }
@@ -255,6 +295,7 @@ export function restoreDisneyPlusPlaybackMetadata(doc: Document, metadata: Disne
 
 export function clearDisneyPlusDetails(doc: Document): void {
 	detailsByDocument.delete(doc);
+	publishedPlayback.delete(doc);
 	previousEntityEpisodes.delete(doc);
 	priorPlayback.delete(doc);
 	clearDisneyPlusRoomSource(doc);
