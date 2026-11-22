@@ -403,11 +403,6 @@ export function PopupEpisodePicker({
 				</div>
 				{selected ? renderSelected(selected) : null}
 			</div>
-			{pending ? (
-				<p className="popup-episode-picker-loading" role="status">
-					Loading episodes...
-				</p>
-			) : null}
 		</div>
 	);
 }

@@ -1503,12 +1503,13 @@ function PopupWatchHistoryItem({
 			{hasOpened.current ? (
 				<div
 					hidden={!open}
+					aria-busy={page.loading || (isSeries && fullHistory && grid.loading)}
 					className={
 						isSeries ? "popup-watch-grid-view" : "popup-watch-video-list"
 					}
 					id={bodyId}
 				>
-					{page.loading && !page.pages.length && !ownPending.length ? (
+					{!isSeries && page.loading && !page.pages.length && !ownPending.length ? (
 						<p className="popup-watch-slice-note" role="status">
 							Loading matching episodes...
 						</p>
@@ -1530,12 +1531,11 @@ function PopupWatchHistoryItem({
 									onSelect={chooseSeason}
 									title={item.title}
 								/>
-								<span className="popup-season-counter">
-									{selectedAggregate?.availableEpisodes != null &&
-									selectedAggregate.availableEpisodes > 0
-										? `${selectedAggregate.completedEpisodes} / ${selectedAggregate.availableEpisodes} watched`
-										: `${choices.length} known`}
-								</span>
+								{selectedAggregate?.availableEpisodes != null && selectedAggregate.availableEpisodes > 0 ? (
+									<span className="popup-season-counter">
+										{selectedAggregate.completedEpisodes} / {selectedAggregate.availableEpisodes} watched
+									</span>
+								) : null}
 							</div>
 							<PopupEpisodePicker
 								pending={
@@ -1587,39 +1587,6 @@ function PopupWatchHistoryItem({
 									)
 								}
 							/>
-							{fullHistory && (!rosterReady || !exactCatalog) ? (
-								<p
-									className="popup-catalog-note"
-									role={grid.loading ? "status" : undefined}
-									hidden={Boolean(exactCatalog) && grid.loading}
-								>
-									{grid.loading
-										? "Loading episode catalog..."
-										: knownCatalog?.state === "partial" && !grid.error
-											? "Showing known episodes. Prime Video may have more."
-											: "Known episodes only · full catalog unavailable"}
-									{grid.error ? (
-										<>
-											{" "}
-											<button type="button" onClick={grid.reload}>
-												Retry catalog
-											</button>
-										</>
-									) : null}
-								</p>
-							) : !fullHistory ? (
-								<p className="popup-catalog-note">
-									Episodes matching your filters
-								</p>
-							) : null}
-							{rosterReady && grid.error ? (
-								<p className="popup-catalog-note" role="alert">
-									Could not load more episodes.{" "}
-									<button type="button" onClick={grid.reload}>
-										Retry catalog
-									</button>
-								</p>
-							) : null}
 						</>
 					) : isSeries ? null : item.itemKind === "movie" && item.provider !== "youtube" ? (
 						(() => {
@@ -1633,6 +1600,14 @@ function PopupWatchHistoryItem({
 					) : (
 						matchingEpisodes.map((episode) => renderEpisode(episode))
 					)}
+					{isSeries && fullHistory && grid.error ? (
+						<p className="popup-watch-slice-note" role="alert">
+							Could not load the episode catalog.{" "}
+							<button type="button" onClick={grid.reload}>
+								Retry catalog
+							</button>
+						</p>
+					) : null}
 					{page.nextCursor && (!isSeries || !selectedSeason) ? (
 						<button
 							className="popup-watch-load-more"
