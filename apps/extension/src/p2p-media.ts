@@ -660,6 +660,9 @@ interface P2PPeer {
 }
 
 interface P2PMediaControllerOptions {
+  videoOnlyTiles?: boolean;
+  captureDevice?: (device: "camera" | "microphone", constraints: MediaStreamConstraints,
+    current: () => boolean) => Promise<MediaStream>;
   onMediaTerminalFailure?: (failure: MediaCaptureTerminalFailure) => void;
   iceServers?: RTCIceServer[];
   localParticipant: Participant;
@@ -780,6 +783,8 @@ export class P2PMediaController {
   private readonly onVoiceMessageChange: (message: string | null) => void;
   private readonly onMicrophoneStatusChange: (status: MicrophoneStatus) => void;
   private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
+  private readonly videoOnlyTiles: boolean;
+  private readonly captureDevice: P2PMediaControllerOptions["captureDevice"];
   private readonly sendSignalToTransport: P2PMediaControllerOptions["sendSignal"];
   private readonly peers = new Map<string, P2PPeer>();
   private readonly microphonePublicationModeByPeer = new Map<
@@ -898,6 +903,8 @@ export class P2PMediaController {
     this.handleNetworkSignal("connection-change");
 
   constructor(options: P2PMediaControllerOptions) {
+    this.captureDevice = options.captureDevice;
+    this.videoOnlyTiles = options.videoOnlyTiles === true;
     this.iceServers = options.iceServers ?? getDefaultP2PIceServers();
     this.localParticipant = options.localParticipant;
     this.onActiveSpeakerIdsChange = options.onActiveSpeakerIdsChange;
@@ -1196,9 +1203,10 @@ export class P2PMediaController {
     });
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia(
-        P2P_VIDEO_CONSTRAINTS,
-      );
+      const stream = this.captureDevice
+        ? await this.captureDevice("camera", P2P_VIDEO_CONSTRAINTS, () =>
+          !this.disposed && this.wantsCamera && this.cameraIntentGeneration === intentGeneration)
+        : await navigator.mediaDevices.getUserMedia(P2P_VIDEO_CONSTRAINTS);
       if (
         this.disposed ||
         !this.wantsCamera ||
@@ -1547,9 +1555,10 @@ export class P2PMediaController {
     });
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia(
-        P2P_AUDIO_CONSTRAINTS,
-      );
+      const stream = this.captureDevice
+        ? await this.captureDevice("microphone", P2P_AUDIO_CONSTRAINTS, () =>
+          !this.disposed && this.microphonePublishingWanted && this.microphoneIntentGeneration === intentGeneration)
+        : await navigator.mediaDevices.getUserMedia(P2P_AUDIO_CONSTRAINTS);
       if (
         this.disposed ||
         !this.microphonePublishingWanted ||
@@ -3412,7 +3421,7 @@ export class P2PMediaController {
         this.remoteVideoStatsByPeer.delete(remoteUserId);
         this.upsertVideo({
           participantId: remoteUserId,
-          element: createVideoElement(stream, false),
+          element: createVideoElement(this.videoOnlyTiles ? new MediaStream([event.track]) : stream, this.videoOnlyTiles),
           local: false,
         });
         event.track.addEventListener("unmute", () => {

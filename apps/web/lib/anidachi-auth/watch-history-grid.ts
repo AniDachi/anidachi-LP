@@ -1,7 +1,9 @@
 import { withPersonalHistoryRead } from "./personal-history-policy";
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import {
 	WatchCatalogSnapshotInputSchema,
+ PrimeNavigationSchema,
 	WatchHistoryEpisodeSchema,
 	WatchHistoryGridQuerySchema,
 	WatchHistoryGridResponseSchema,
@@ -39,7 +41,7 @@ const fail = (code = "INVALID_RESPONSE", status = 502) =>
 		"Could not read the episode catalog",
 	);
 const metadataColumns =
-	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,projection,preferred_audio_locale";
+	"user_id,history_generation,provider,title_key,revision,accepted_revision,accepted_hash,context,accepted_context,attempt_status,projection,preferred_audio_locale,prime_navigation";
 
 export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 	async settings(owner) {
@@ -61,14 +63,14 @@ export const supabaseWatchHistoryGridStore: WatchHistoryGridStore = {
 			.eq("title_key", title)
 			.maybeSingle();
 		if (result.error) throw result.error;
-		return result.data as unknown as RecordValue | null;
+		return restorePrimeCatalogNavigation(result.data as unknown as RecordValue | null);
 	},
 	async progress(owner, generation, title, episodes, provider) {
 		if (!episodes.length) return [];
 		const result = await db()
 			.from("watch_episode_progress")
 			.select(
-				"user_id,history_generation,provider,title_key,episode_key,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time_seconds,duration,progress,completed_at,observed_at",
+				"user_id,history_generation,provider,title_key,episode_key,episode_title,season_key,season_title,season_number,episode_number,source_url,prime_navigation,current_time_seconds,duration,progress,completed_at,observed_at",
 			)
 			.eq("user_id", owner)
 			.eq("history_generation", generation)
@@ -90,6 +92,7 @@ function fingerprint(row: RecordValue | null): string | null {
 					row.revision,
 					row.accepted_revision,
 					row.accepted_hash,
+					row.attempt_status,
 					row.context,
 					row.accepted_context,
 					row.projection,
@@ -116,11 +119,11 @@ function progressFingerprint(rows: RecordValue[]): string {
 }
 function aggregate(seasons: WatchHistoryGridSeason[]) {
 	const completedEpisodes = seasons.reduce(
-		(sum, s) => sum + s.aggregate.completedEpisodes,
+		(sum, s) => sum + s.aggregate!.completedEpisodes,
 		0,
 	);
 	const availableEpisodes = seasons.reduce(
-		(sum, s) => sum + s.aggregate.availableEpisodes,
+		(sum, s) => sum + s.aggregate!.availableEpisodes,
 		0,
 	);
 	return {
@@ -193,25 +196,36 @@ export async function readWatchHistoryGrid(params: {
 	};
 	const context = row?.context as RecordValue | null;
 	const accepted = row?.accepted_context as RecordValue | null;
-	if (
-		row?.projection &&
+	const complete = Boolean(row?.projection &&
 		accepted &&
 		typeof accepted.region === "string" &&
 		context?.region === accepted.region
-	) {
+	);
+	const observed = query.includePartial === true && (query.provider === "primevideo" || query.provider === "disneyplus") &&
+		row?.attempt_status === "partial" && !complete &&
+		(row.snapshot as RecordValue | null)?.completeness === "partial" &&
+		(typeof context?.region === "string" || (query.provider === "disneyplus" && context?.region === null)) &&
+		isDeepStrictEqual((row.snapshot as RecordValue).context, context);
+	if (row && (complete || observed)) {
 		const snapshot = WatchCatalogSnapshotInputSchema.safeParse(row.snapshot);
-		const projection = row.projection as RecordValue;
+		const projection = row.projection as RecordValue | null;
 		if (
 			!snapshot.success ||
 			snapshot.data.titleKey !== query.titleKey ||
 			snapshot.data.provider !== query.provider ||
-			snapshot.data.completeness !== "complete" ||
-			!Array.isArray(projection.seasons)
+			snapshot.data.completeness !== (complete ? "complete" : "partial") ||
+			(complete && !Array.isArray(projection?.seasons))
 		)
 			throw fail();
-		const seasons = projection.seasons
+		const summaries = complete ? projection!.seasons as unknown[] : snapshot.data.seasons.map(season => ({
+			seasonKey: season.seasonKey, seasonTitle: season.title, seasonNumber: season.seasonNumber,
+			order: season.order, aggregate: null, nextEpisode: null,
+		}));
+		const seasons: WatchHistoryGridSeason[] = summaries
 			.map((value) => {
-				const season = WatchHistoryCatalogSeasonProjectionSchema.parse(value);
+				const season = WatchHistoryCatalogSeasonProjectionSchema.extend({
+					aggregate: WatchHistoryCatalogSeasonProjectionSchema.shape.aggregate.nullable(),
+				}).parse(value);
 				return {
 					...season,
 					kind: isWatchSpecialSeasonLabel(season.seasonTitle)
@@ -307,6 +321,7 @@ export async function readWatchHistoryGrid(params: {
 					seasonNumber: progress.season_number,
 					episodeNumber: progress.episode_number,
 					sourceUrl: progress.source_url,
+     ...(progress.prime_navigation?{primeNavigation:progress.prime_navigation}:{}),
 					currentTime: progress.current_time_seconds,
 					duration: progress.duration,
 					progress: progress.progress,
@@ -316,15 +331,15 @@ export async function readWatchHistoryGrid(params: {
 				}),
 			);
 		}
-		result.state = "complete";
-		result.revision = revision;
+		result.state = complete ? "complete" : "partial";
+		result.revision = seasons.length ? revision : null;
 		result.seasonKey = seasonKey;
 		result.seasons = seasons;
-		result.mainAggregate = aggregate(
+		result.mainAggregate = complete ? aggregate(
 			seasons.filter((s) => s.kind === "season"),
-		);
+		) : null;
 		const specialSeasons = seasons.filter((s) => s.kind === "specials");
-		result.specialsAggregate = specialSeasons.length
+		result.specialsAggregate = complete && specialSeasons.length
 			? aggregate(specialSeasons)
 			: null;
 		result.episodes = slice.map((episode) => {
@@ -362,6 +377,7 @@ export async function readWatchHistoryGrid(params: {
 					(!episode.releasedAt ||
 						Date.parse(episode.releasedAt) <= now.getTime()),
 				sourceUrl: variant.sourceUrl,
+    ...(variant.primeNavigation?{primeNavigation:variant.primeNavigation}:{}),
 				// Catalog launch choice must not rewrite the saved Resume observation.
 				history,
 			};
@@ -409,4 +425,14 @@ export async function readWatchHistoryGrid(params: {
 	)
 		throw fail("HISTORY_CHANGED", 409);
 	return WatchHistoryGridResponseSchema.parse(result);
+}
+
+/** New Web alone merges the opt-in route column; legacy JSON stays parseable on rollback. */
+export function restorePrimeCatalogNavigation(row: RecordValue | null): RecordValue | null {
+ if(!row || row.provider!=="primevideo" || !row.prime_navigation || typeof row.prime_navigation!=="object")return row;
+ const hints=new Map<string,unknown>();
+ for(const [url,value] of Object.entries(row.prime_navigation)){const parsed=PrimeNavigationSchema.safeParse(value);if(parsed.success&&url===`https://www.primevideo.com/detail/${parsed.data.contentId}`)hints.set(url,parsed.data);}
+ let nodes=0;
+ const enrich=(value:unknown):unknown=>{if(++nodes>100000)throw fail();if(Array.isArray(value))return value.map(enrich);if(value&&typeof value==="object"){const item=value as RecordValue;const result=Object.fromEntries(Object.entries(item).map(([key,child])=>[key,enrich(child)]));const hint=typeof item.sourceUrl==="string"?hints.get(item.sourceUrl):undefined;return hint?{...result,primeNavigation:hint}:result;}return value;};
+ return {...row,snapshot:enrich(row.snapshot),projection:enrich(row.projection)};
 }

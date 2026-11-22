@@ -68,7 +68,7 @@ export async function POST(
   }
 
   const source = deriveDurableRoomSource(room);
-  const launchUrl = source
+  const launchUrl = source?.source.provider === "primevideo" ? new URL(`/room/${encodeURIComponent(roomId)}/launch`,request.url).toString() : source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
     : null;
   return NextResponse.redirect(

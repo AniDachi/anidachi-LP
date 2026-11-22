@@ -293,6 +293,35 @@ test("launch handoff adds the room hash only after exact canonical validation", 
 	assert.equal(buildRoomSourceLaunchUrl(youtubeSource, ""), null);
 });
 
+test("Prime room launch opens the exact player without decorating persisted identity", () => {
+	for (const id of ["0FX1R3RCDS4LZSFJ9KPUBXJFAA", "B".repeat(26)]) {
+		const sourceUrl = `https://www.primevideo.com/detail/${id}`;
+		const source = {
+			provider: "primevideo",
+			sourceUrl,
+			canonicalUrl: sourceUrl,
+			videoFingerprint: `primevideo|detail/${id}`,
+		};
+		assert.equal(
+			buildRoomSourceLaunchUrl(source, "room-1"),
+			`${sourceUrl}?autoplay=1#anidachiRoom=room-1`,
+		);
+		assert.equal(source.sourceUrl, sourceUrl);
+		assert.equal(source.videoFingerprint, `primevideo|detail/${id}`);
+		for (const invalid of [
+			{ ...source, sourceUrl: `${sourceUrl}?autoplay=1` },
+			{ ...source, sourceUrl: sourceUrl.replace("https:", "http:") },
+			{
+				...source,
+				sourceUrl: sourceUrl.replace("www.primevideo.com", "evil.test"),
+			},
+			{ ...source, provider: "netflix" },
+			{ ...source, videoFingerprint: "primevideo|detail/WRONG" },
+		])
+			assert.equal(buildRoomSourceLaunchUrl(invalid, "room-1"), null);
+	}
+});
+
 test("the RPC wrapper arguments are exactly the five deployed Task 5A arguments", () => {
 	assert.deepEqual(roomSourcePersistenceRpcArguments(callback), {
 		p_room_id: "room-1",
@@ -524,4 +553,26 @@ test("reconciliation does not reinterpret other errors or leak read failures", a
 		assert.equal(JSON.stringify(response).includes("private database detail"), false);
 	}
 	assert.equal(reads, 1);
+});
+
+test('Prime creation, durable read and callback arguments retain the exact observed route',()=>{
+ const id='0IUGS56V361WRU60PCC5XH5D8Z',sourceUrl=`https://www.primevideo.com/detail/${id}`;
+ const primeNavigation={contentId:id,routes:[{url:'https://www.amazon.com/gp/video/detail/B0FX2ZCPFK',observedAt:'2026-11-16T00:00:00Z'}]};
+ const columns=roomSourceCreationColumns({sourceUrl,sourceProvider:'primevideo',videoFingerprint:`primevideo|detail/${id}`,primeNavigation});
+ assert.deepEqual(columns.prime_navigation,primeNavigation);
+ const durable=deriveDurableRoomSource(columns)!;
+ assert.deepEqual(durable.source.primeNavigation,primeNavigation);
+ assert.deepEqual(roomSourcePersistenceRpcArguments({roomId:'room',sourceGeneration:1,source:durable.source}).p_prime_navigation,primeNavigation);
+ assert.equal(deriveDurableRoomSource({...columns,prime_navigation:{...primeNavigation,contentId:'B'.repeat(26)}}),null);
+});
+
+test("Disney+ invite redirects use current canonical playback and the exact room hash", () => {
+  const id = "c6a0a3b3-587e-4bc2-964b-d01700582d91";
+  const columns = roomSourceCreationColumns({
+    sourceUrl: `https://www.disneyplus.com/pt-br/play/${id.toUpperCase()}?tracking=1`,
+  });
+  assert.equal(columns.source_provider, "disneyplus");
+  const source = deriveDurableRoomSource(columns)?.source;
+  assert.equal(buildRoomSourceLaunchUrl(source, "room-123"), `https://www.disneyplus.com/play/${id}#anidachiRoom=room-123`);
+  assert.throws(() => roomSourceCreationColumns({ sourceUrl: `https://www.disneyplus.com/browse/entity-${id}` }));
 });

@@ -35,6 +35,11 @@ function sequence(value: unknown, max = 10000): number | null {
 		? value
 		: null;
 }
+function episodeAvailability(episode: RecordValue, episodeId: string, playingId: string): boolean | null {
+	if (typeof episode.autoplayable === "boolean") return episode.autoplayable;
+	// The bridge has already matched the ready, non-ad player to this episode.
+	return episode.autoplayable === undefined && episodeId === playingId ? true : null;
+}
 function artwork(video: RecordValue): string | null {
 	const candidates = [video.boxart, video.artwork, video.storyart]
 		.flatMap((a) => (Array.isArray(a) ? a.slice(0, 30) : []))
@@ -136,7 +141,7 @@ export function readNetflixMetadata(
 			if (episodeId !== movieId) continue;
 			if (
 				!episode ||
-				episode.autoplayable !== true ||
+				episodeAvailability(episode, episodeId, movieId) !== true ||
 				typeof episode.runtime !== "number" ||
 				!Number.isFinite(episode.runtime) ||
 				episode.runtime <= 0 ||
@@ -189,8 +194,9 @@ export function readNetflixCatalog(
 				(rawEpisode, episodeOrder) => {
 					const episode = record(rawEpisode)!;
 					const eid = netflixId(episode.id)!;
+					const available = episodeAvailability(episode, eid, movieId);
 					if (
-						typeof episode.autoplayable !== "boolean" ||
+						available === null ||
 						!label(episode.title) ||
 						typeof episode.runtime !== "number" ||
 						!Number.isFinite(episode.runtime) ||
@@ -207,7 +213,7 @@ export function readNetflixCatalog(
 							episodeNumber: sequence(episode.seq),
 							order: episodeOrder,
 							releasedAt: null,
-							available: episode.autoplayable,
+							available,
 							watchVariants: [
 								{
 									providerContentId: eid,

@@ -16,6 +16,7 @@ ${free20WarningStyles}
   }
 
   .anidachi-overlay {
+    --mini-panel-width: min(324px, var(--panel-available-width, 100%), calc(100% - var(--mini-panel-right, 10px) - 10px));
     position: absolute;
     inset: 0;
     z-index: 2147483647;
@@ -94,6 +95,7 @@ ${extensionThemeTokens}
       transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  .anidachi-overlay[data-prime-browsing] .top-bubble,
   .top-bubble-reveal.bubble-visible .top-bubble {
     opacity: 1;
     transform: translateY(0);
@@ -124,6 +126,50 @@ ${extensionThemeTokens}
   .top-bubble:focus-visible {
     outline: 2px solid rgba(147, 197, 253, 0.9);
     outline-offset: 2px;
+  }
+
+  .catalog-return-to-video {
+    position: absolute;
+    top: var(--top-bubble-top, 10px);
+    right: var(--top-bubble-right, 10px);
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    max-width: calc(100% - var(--top-bubble-right, 10px) - 4px);
+    padding: 0 calc(var(--capsule-width, 78px) + 6px) 0 9px;
+    border: 1px solid #ffffff18;
+    border-radius: 999px;
+    background: #222224;
+    color: #eeedeb;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .catalog-return-to-video > svg { flex: none; }
+  .anidachi-overlay .top-bubble-reveal:has(> .catalog-return-to-video) > .top-bubble {
+    background: #0c0c0e;
+    border-color: #535357;
+  }
+  .catalog-return-to-video:hover { background: #242426; }
+  .catalog-return-to-video:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .catalog-return-label {
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    text-overflow: ellipsis;
+    transition: max-width 240ms cubic-bezier(.22, 1, .36, 1), margin-left 240ms ease, opacity 160ms ease;
+  }
+  .catalog-return-to-video:is(:hover, :focus-visible) .catalog-return-label,
+  .top-bubble-reveal:has(> .top-bubble:is(:hover, :focus-visible)) .catalog-return-label {
+    max-width: 8em;
+    margin-left: 6px;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-return-label { transition: none; }
   }
 
   .anidachi-overlay.player-controls-visible .top-bubble {
@@ -162,16 +208,33 @@ ${extensionThemeTokens}
     font-weight: 650;
   }
 
+  /* The player aligns the launcher and panel on their right edge. Connect their padded
+     outlines so a diagonal pointer path stays inside without covering the toolbar. */
+  .panel-pointer-guard {
+    --pad: 6px;
+    --rise: calc(var(--mini-panel-top) - var(--top-bubble-top));
+    position: absolute;
+    top: calc(var(--top-bubble-top) - var(--pad));
+    right: calc(var(--mini-panel-right) - var(--pad));
+    width: calc(var(--mini-panel-width) + 2 * var(--pad));
+    height: calc(var(--rise) + var(--open-panel-height, 0px) + 2 * var(--pad));
+    clip-path: polygon(calc(100% - var(--capsule-width, 78px) - 2 * var(--pad)) 0,
+      100% 0, 100% 100%, 0 100%, 0 var(--rise));
+    pointer-events: auto;
+    cursor: default;
+    z-index: 29;
+  }
+
   .mini-panel {
     position: absolute;
     top: min(var(--mini-panel-top, 48px), calc(100% - 28px));
     right: var(--mini-panel-right, 10px);
-    width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
+    width: var(--mini-panel-width);
     max-height: max(
       0px,
-      calc(
+      min(var(--panel-available-height, 100%), calc(
         100% - var(--mini-panel-top, 48px) - var(--mini-panel-bottom-reserve, 10px)
-      )
+      ))
     );
     overflow: auto;
     overscroll-behavior: contain;
@@ -209,6 +272,8 @@ ${extensionThemeTokens}
   .mini-panel::-webkit-scrollbar {
     display: none;
   }
+
+  .mini-panel[data-guarded-panel] { container: compact-panel / inline-size; }
 
   .panel-header {
     display: grid;
@@ -1619,6 +1684,8 @@ ${panelMediaControlStyles}
     pointer-events: auto;
     animation: anidachi-composer-in 120ms ease-out both;
   }
+
+  .message-composer[data-player-toolbar] { bottom: max(clamp(72px, 12vh, 118px), var(--mini-panel-bottom-reserve)); }
 
   .message-composer-emoji {
     position: relative;
@@ -3054,6 +3121,7 @@ ${hostingNoticeStyles}
   .current-resource-topline .resource-provider-logo.youtube { color: #ff0033; }
   .current-resource-topline .resource-provider-logo.netflix { color: #e50914; }
   .current-resource-topline .resource-provider-logo.netflix svg { width: 8px; margin: auto; }
+  .current-resource-topline .resource-provider-logo.disneyplus img { width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); }
 
   .current-resource-time {
     margin-left: auto;
@@ -3312,6 +3380,34 @@ ${hostingNoticeStyles}
     gap: var(--room-rail-gap, 6px);
     max-height: 100%;
     overflow: visible;
+  }
+
+  .room-rail-edge-intent {
+    position: absolute;
+    inset: 0 0 0 auto;
+  }
+
+  /* Only visible pills take input while idle. An engaged list also covers
+     the gaps between rows and the return path from the widest participant. */
+  .room-rail[data-isolate-player-pointer] .room-rail-panel,
+  .room-rail[data-isolate-player-pointer] .room-rail-list { pointer-events: none; }
+  .room-rail[data-isolate-player-pointer].open .room-rail-more { pointer-events: auto; }
+  .room-rail[data-isolate-player-pointer="idle"] .room-rail-slot:not([data-presentation="hidden"])::before,
+  .room-rail[data-isolate-player-pointer="engaged"] .room-rail-panel::before {
+    content: "";
+    position: absolute;
+    inset: -6px 0 -6px -6px;
+    pointer-events: auto;
+  }
+  .room-rail[data-isolate-player-pointer].open .room-rail-panel::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: calc(100% + 6px);
+    height: max(0px, calc(var(--room-rail-entry-y, 0px) - 100% + 6px));
+    clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 14px) 100%);
+    pointer-events: auto;
   }
 
   .room-rail.open .room-rail-list {
@@ -4370,6 +4466,28 @@ ${hostingNoticeStyles}
     z-index: 1;
   }
 
+  .prime-camera-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: scaleX(-1);
+  }
+
+  .prime-camera-frame[data-prime-camera-playing] { opacity: 1; }
+
+  .prime-camera-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    color: inherit;
+  }
+
   .cam-bubble video {
     object-fit: cover;
     transform: scaleX(-1);
@@ -4797,6 +4915,40 @@ ${hostingNoticeStyles}
     color: rgba(255, 255, 255, 0.48);
     font-size: 11px;
     line-height: 1.35;
+  }
+  /* Disney's sticky genre filters occupy the top edge of its catalog. */
+  .anidachi-overlay[data-disney-catalog] {
+    --catalog-dock-inset: 12px;
+    --catalog-capsule-height: 32px;
+  }
+  [data-disney-catalog] .top-bubble-reveal {
+    inset: auto 0 var(--catalog-dock-inset);
+    height: var(--catalog-capsule-height);
+    --top-bubble-top: 0px;
+    --top-bubble-right: var(--catalog-dock-inset);
+  }
+  [data-disney-catalog] .top-bubble-edge-glow { display: none; }
+  [data-disney-catalog] .mini-panel {
+    --panel-bottom: calc(var(--catalog-dock-inset) + var(--catalog-capsule-height) + 8px);
+    top: auto;
+    bottom: var(--panel-bottom);
+    right: var(--catalog-dock-inset);
+    max-height: calc(100% - var(--panel-bottom) - var(--catalog-dock-inset));
+  }
+
+  [data-disney-catalog] .room-rail-edge {
+    top: 50%;
+    bottom: auto;
+    height: min(144px, 100%);
+    transform: translateY(-50%);
+  }
+
+  @container compact-panel (max-width: 285px) {
+    .settings-surface { margin-top: 8px; padding: 8px; }
+    .settings-toggle-row { position: relative; }
+    .settings-help { position: static; }
+    .settings-help-tooltip { left: 0; max-width: 100%; }
+    .reaction-shortcut-grid { flex-wrap: wrap; gap: 2px; padding-block: 4px; }
   }
 ${panelRoomActionsStyles}
 `;

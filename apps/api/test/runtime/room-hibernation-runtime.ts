@@ -4288,6 +4288,29 @@ describe("RoomDurableObject media v2", () => {
 		host.close(); guest.close();
 	});
 
+  it("delivers late Disney+ series identity to an already joined guest on the same generation", async () => {
+    const f = await fixture("plus", 3);
+    const host = await f.join(0);
+    const guest = await f.join(1);
+    await guest.waitFor(event => event.type === "ROOM_MEDIA_SNAPSHOT" && event.participants.length === 2, "joined");
+    const id = "2e6c6ae8-47b0-4382-a7ae-df89950eece3";
+    const url = `https://www.disneyplus.com/play/${id}`;
+    const state = playbackState(`disneyplus|play/${id}`, url);
+    const source = { provider: "disneyplus" as const, sourceUrl: url, canonicalUrl: url, videoFingerprint: state.videoFingerprint, title: "Episode" };
+    const identity = { kind: "episode" as const, providerSeriesId: "ba195597-9083-40d9-b9ac-71eaa632b69d", providerEpisodeIdentifier: id };
+    try {
+      host.send({ type: "HOST_STATE", roomId: f.roomId, state, source });
+      const initial = await guest.waitFor(event => event.type === "SOURCE_CHANGED", "initial playback");
+      host.send({ type: "HOST_STATE", roomId: f.roomId, state, source: { ...source, disneyplusIdentity: identity } });
+      const enriched = await guest.waitFor(event => event.type === "ROOM_SNAPSHOT" && !!event.source?.disneyplusIdentity, "late series metadata");
+      expect(initial.type === "SOURCE_CHANGED" && enriched.type === "ROOM_SNAPSHOT" && enriched.sourceGeneration === initial.sourceGeneration).toBe(true);
+      expect(enriched.type === "ROOM_SNAPSHOT" && enriched.source?.disneyplusIdentity).toEqual(identity);
+    } finally {
+      host.close();
+      guest.close();
+    }
+  });
+
   it.each([
     ["free", 1, false, false], ["free", 2, false, false], ["plus", 2, false, false], ["pro", 2, false, false],
     ["free", 1, true, false], ["free", 2, true, false], ["free", 2, true, true],

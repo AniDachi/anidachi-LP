@@ -1,3 +1,21 @@
+import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
+import { DISNEY_REDIRECT_TTL_MS, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
+import { getLivePrimeRoomSession } from "../src/prime-room-client";
+import type { LivePrimeRoomSession } from "../src/prime-room-contract";
+import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogReturn, supportsCatalogRoom } from "../src/catalog-room-routes";
+import { YouTubeVideoAdapter } from "../src/source-adapters/youtube/adapter";
+import { YOUTUBE_CATALOG_ORIGINS } from "../src/source-adapters/youtube/url";
+import { changedWatchOwner } from "../src/source-adapters/youtube/watch-player";
+import { NetflixVideoAdapter } from "../src/source-adapters/netflix/adapter";
+import { DisneyPlusVideoAdapter } from "../src/source-adapters/disneyplus/adapter";
+import { startDisneyPlusCatalogCapture } from "../src/source-adapters/disneyplus/catalog";
+import { isDisneyPlusOrigin } from "../src/source-adapters/disneyplus/url";
+import { CrunchyrollVideoAdapter } from "../src/source-adapters/crunchyroll/adapter";
+import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
+import { discardConflictingRoomLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
+import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
+import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
+import { PRIME_BINDING_CHANGED, PRIME_PLAYER_STATE } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -17,6 +35,7 @@ import {
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
 import { OverlayApp } from "../src/overlay-app";
+import { createPrimeLaunchCapture, type PrimeLaunchHandoff } from "../src/prime-launch-capture";
 import { installOverlayKeyboardRouter } from "../src/overlay-keyboard-router";
 import { installPlayerIntroductionKeyboardGuard } from "../src/player-onboarding-input";
 import {
@@ -39,15 +58,18 @@ import { YOUTUBE_COMPOSER_CHROME_STYLES } from "../src/source-adapters/youtube/c
 
 export interface MountedOverlay {
   readonly adapter: VideoAdapter;
+  hasPrimeRoom?(): boolean;
+  isPrimeDocked?(): boolean;
+  dockPrimeRoom?(): void;
   relocate(): void;
   replaceAdapter(adapter: VideoAdapter): void;
   suspend(): void;
-  dispose(): void;
+  dispose(leavingDocument?: boolean): void;
 }
 
 export interface OverlayRenderer {
-  render(adapter: VideoAdapter, active: boolean): void;
-  unmount(): void;
+  render(adapter: VideoAdapter, active: boolean, browsing?: boolean): void;
+  unmount(leavingDocument?: boolean): void;
 }
 
 interface ResizeObserverBinding {
@@ -56,6 +78,9 @@ interface ResizeObserverBinding {
 }
 
 interface MountOverlayOptions {
+  initialLaunch?: PrimeLaunchHandoff | null;
+  initialPrimeRoom?: LivePrimeRoomSession;
+  initiallyDocked?: boolean;
   createResizeObserver?: (
     callback: ResizeObserverCallback,
   ) => ResizeObserverBinding;
@@ -66,7 +91,8 @@ interface ContentLifecycleDependencies {
   detect(current: VideoAdapter | null): AdapterDetectionResult;
   ensureStyles(): void;
   installKeyboardGuard(): () => void;
-  mount(adapter: VideoAdapter): MountedOverlay;
+  lookupPrimeRoom(): Promise<LivePrimeRoomSession | null>;
+  mount(adapter: VideoAdapter, initialLaunch?: PrimeLaunchHandoff | null, initialPrimeRoom?: LivePrimeRoomSession, initiallyDocked?: boolean): MountedOverlay;
   startProviderStudy(): (() => void) | null | undefined;
 }
 
@@ -90,6 +116,8 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  ...(import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ? ["https://www.disneyplus.com/*"] : []),
+  ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -107,28 +135,156 @@ export default defineContentScript({
   matches: CONTENT_SCRIPT_MATCHES,
   allFrames: true,
   runAt: "document_start",
-  main() {
-    startContentLifecycle();
+  main(context) {
+    if (isDisneyPlusOrigin(location.href) && window.top !== window) return;
+    const runtime = startContentLifecycle();
+    context.onInvalidated(runtime.dispose);
   },
 });
 
 export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
+  let disposed = false;
+  let session: ReturnType<typeof startContentLifecycleSession> | null = startContentLifecycleSession(overrides);
+  const hide = (event: PageTransitionEvent) => {
+    session?.dispose(true);
+    session = null;
+    if (!event.persisted) dispose();
+  };
+  const show = (event: PageTransitionEvent) => {
+    if (event.persisted && !disposed && !session) {
+      session = startContentLifecycleSession(overrides, true);
+    }
+  };
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    window.removeEventListener("pagehide", hide);
+    window.removeEventListener("pageshow", show);
+    session?.dispose();
+    session = null;
+  };
+  // A cached document does not rerun content scripts on Back/Forward. Release
+  // live room/player resources while away, then discover a fresh player binding.
+  window.addEventListener("pagehide", hide);
+  window.addEventListener("pageshow", show);
+  return { dispose, reconcile: () => session?.reconcile() ?? "idle" };
+}
+
+function startContentLifecycleSession(
+  overrides: Partial<ContentLifecycleDependencies>,
+  restoredFromCache = false,
+): ContentLifecycleRuntime & { dispose(leavingDocument?: boolean): void } {
+  const primeLaunch = createPrimeLaunchCapture(location.href);
+  const entryHref = location.href;
+  const disneyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLaunchRedirect(entryHref, document.referrer) : null;
+  const disneyRedirectDeadline = disneyRedirect ? Date.now() + DISNEY_REDIRECT_TTL_MS : 0;
+  let disneyFragment: string | null = null;
+  const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,
     installKeyboardGuard: installMessageComposerKeyboardGuard,
-    mount: mountOverlay,
+    lookupPrimeRoom: getLivePrimeRoomSession,
+    mount: (adapter, initialLaunch, initialPrimeRoom, initiallyDocked) =>
+      mountOverlay(adapter, { initialLaunch, initialPrimeRoom, initiallyDocked }),
     startProviderStudy: startCrunchyrollStudyIfEnabled,
     ...overrides,
   };
   let mounted: MountedOverlay | null = null;
+  let checkingLiveRoom = false;
+  let startupRoom: LivePrimeRoomSession | null = null;
+  let catalogAdapter: VideoAdapter | null = null;
+  let lastPrimePlayerRoute: string | undefined;
+  let verifiedPrimePlayerPath: string | undefined;
+  let waitingForPrimeLaunch = false;
+  let retryPrimeRecovery: VideoAdapter | null = null;
+  let mountedRoomIntent: string | undefined;
+  let pendingDismissal: Promise<void> | null = null;
   let disposed = false;
+  let leavingDocument = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
+  const stopDisneyCatalog = window.top === window && isDisneyPlusOrigin(location.href)
+    ? startDisneyPlusCatalogCapture(document) : undefined;
   dependencies.ensureStyles();
+
+  let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;
+  const mountWithLaunch = (adapter: VideoAdapter) => {
+    if (disneyFragment && adapter.provider === "disneyplus") {
+      if (Date.now() < disneyRedirectDeadline) restoreDisneyLaunchFragment(entryHref, disneyFragment);
+      disneyFragment = null;
+    }
+    const href = location.href;
+    retryPrimeRecovery = null;
+    const mountWaiting = () => {
+      if (mounted) return;
+      waitingForPrimeLaunch = true;
+      const dismiss = preparePrimeRoomDismissal();
+      mounted = dependencies.mount(adapter, {
+        ...suppressedPrimeLaunch(href), waiting: true, blocksFragment: () => true,
+        consumeRoom() {
+          primeLaunch.dispose();
+          pendingDismissal = dismiss();
+        },
+      });
+    };
+    // Show the primary player while identity is pending, without consuming a
+    // captured invitation/Resume or trusting the current address-bar episode.
+    if (adapter.provider === "primevideo" && adapter.getFingerprint() === "primevideo|unknown") {
+      mountWaiting();
+      return;
+    }
+    // Returning to a cached document is not a new invitation/Resume. A valid
+    // background pending intent may recover, but the old fragment must not replay.
+    const capturedLaunch = () => adapter.provider === "primevideo" && restoredLaunch?.blocksFragment?.(location.href)
+      ? restoredLaunch
+      : primeLaunch.handoff(adapter, location.href);
+    const dismissal = pendingDismissal;
+    const current = () => !disposed && manager.current === adapter && pendingDismissal === dismissal;
+    if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
+      // Listen for native Close even when the first SDK or background reply is slow.
+      mountWaiting();
+      const recover = () => recoverPrimeLaunch(adapter, current);
+      const recovery = dismissal ? dismissal.then(recover) : recover();
+      void recovery.catch(() => undefined).then(async recovered => {
+        if (!current()) return;
+        if (recovered === undefined) {
+          retryPrimeRecovery = adapter;
+          mountWaiting();
+          return;
+        }
+        const fingerprint = adapter.getFingerprint();
+        // A personal Resume is claimed once even if Prime replaces its video.
+        if (recovered && recovered.commit && (acceptedResume?.fingerprint !== fingerprint || acceptedResume.handoff.intentId !== recovered.intentId)) {
+          acceptedResume = { fingerprint, handoff: recovered, ready: recovered.commit() };
+        }
+        if (acceptedResume?.fingerprint === fingerprint && (!recovered || recovered.intentId === acceptedResume.handoff.intentId)) {
+          const { ready, handoff } = acceptedResume;
+          const ok = await ready.catch(() => false);
+          if (!current()) return;
+          recovered = ok ? handoff : false;
+        }
+        if (recovered === false || recovered?.rejected) primeLaunch.dispose();
+        const launch = recovered === false ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch();
+        // Keep the same overlay and in-flight admission through a video replacement.
+        if (mounted && launch?.verifyRoom && launch.intentId === mountedRoomIntent) return;
+        if ((waitingForPrimeLaunch || (launch && !launch.rejected)) && mounted) { mounted.dispose(); mounted = null; }
+        waitingForPrimeLaunch = false;
+        if (!mounted) {
+          mounted = dependencies.mount(adapter, launch);
+          mountedRoomIntent = launch?.verifyRoom ? launch.intentId : undefined;
+        }
+      });
+    } else {
+      const launch = capturedLaunch();
+      if ((waitingForPrimeLaunch || launch) && mounted) { mounted.dispose(); mounted = null; }
+      waitingForPrimeLaunch = false;
+      if (!mounted) mounted = dependencies.mount(adapter, launch);
+    }
+  };
 
   const manager = new AdapterManager({
     detached(previous) {
@@ -137,8 +293,9 @@ export function startContentLifecycle(
         fingerprint: previous.getFingerprint(),
         url: location.href,
       });
-      mounted?.dispose();
+      mounted?.dispose(leavingDocument);
       mounted = null;
+      mountedRoomIntent = undefined;
     },
     mounted(adapter) {
       logDebug("content", "mount adapter", {
@@ -147,10 +304,18 @@ export function startContentLifecycle(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mounted = dependencies.mount(adapter);
+      if (startupRoom) {
+        mounted = dependencies.mount(adapter, null, startupRoom, adapter === catalogAdapter);
+        startupRoom = null;
+      } else {
+        mountWithLaunch(adapter);
+      }
     },
-    relocated() {
-      mounted?.relocate();
+    relocated(adapter) {
+      // Prime can reopen the very same element before discovery observes its
+      // intervening Close. Re-enable this binding even when the player ID is equal.
+      if (mounted?.isPrimeDocked?.()) mounted.replaceAdapter(adapter);
+      else mounted?.relocate();
     },
     replaced(previous, next) {
       logDebug("content", "replace adapter", {
@@ -162,6 +327,7 @@ export function startContentLifecycle(
         video: videoDebugSnapshot(next.video),
       });
       mounted?.replaceAdapter(next);
+      if (!mounted?.hasPrimeRoom?.()) mountWithLaunch(next);
     },
     suspended(previous) {
       logDebug("content", "suspend adapter", {
@@ -173,18 +339,68 @@ export function startContentLifecycle(
     },
   });
 
-  const reconcile = () =>
-    manager.reconcile(dependencies.detect(manager.current));
+  const reconcile = (retryLaunch = true) => {
+    primeLaunch.observe(location.href);
+    if (checkingLiveRoom) return "idle";
+    const detection = dependencies.detect(manager.current);
+    const catalogRoute = catalogRoomProvider(location.href);
+    const path = location.origin + location.pathname;
+    const route = parsePrimePageUrl(location.href)?.token;
+    if (detection.status === "ready" && detection.adapter.provider === "primevideo" &&
+        detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) !== "closed") {
+      lastPrimePlayerRoute = route;
+      if (!catalogRoute && route && verifiedPrimePlayerPath !== path && detection.adapter.getSourceDescriptor()?.provider === "primevideo")
+        verifiedPrimePlayerPath = path;
+    }
+    const allowed = catalogRoute || Boolean(mounted?.hasPrimeRoom?.() && route && verifiedPrimePlayerPath === path);
+    if (startupRoom && allowed && (detection.status !== "ready" ||
+        detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
+      // No page video is needed for room UI. This unbound adapter never receives
+      // player listeners, history, or playback control and cannot select a preview.
+      const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter, disneyplus: DisneyPlusVideoAdapter }[catalogRoute ?? "primevideo"];
+      catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
+      return manager.reconcile({ status: "ready", adapter: catalogAdapter });
+    }
+    if (mounted?.isPrimeDocked?.() && !mounted.hasPrimeRoom?.()) {
+      manager.reconcile({ status: "blocked", provider: manager.current?.provider ?? "primevideo" });
+    }
+    if (supportsCatalogReturn(catalogRoute) && manager.current?.provider === catalogRoute && mounted?.hasPrimeRoom?.() && detection.status !== "ready") {
+      const result = manager.reconcile({ status: "waiting", provider: catalogRoute });
+      if (!catalogPlayerProvider(location.href) || manager.current === catalogAdapter) mounted.dockPrimeRoom?.();
+      return result;
+    }
+    const closed = manager.current?.container.getAttribute(PRIME_PLAYER_STATE) === "closed";
+    const samePlayerTransition = route && route === lastPrimePlayerRoute && !closed && !mounted?.isPrimeDocked?.();
+    if (!allowed && !samePlayerTransition && manager.current?.provider === "primevideo" && detection.status !== "ready") {
+      return manager.reconcile({ status: "blocked", provider: manager.current?.provider ?? "primevideo" });
+    }
+    const primeRoom = manager.current?.provider === "primevideo" && mounted?.hasPrimeRoom?.() && allowed;
+    const otherDetail = route && lastPrimePlayerRoute && route !== lastPrimePlayerRoute &&
+      !manager.current?.container.isConnected && document.getElementById("dv-web-player")?.getAttribute(PRIME_PLAYER_STATE) !== "open";
+    const browsingRoom = primeRoom && (detection.status !== "ready"
+      ? (manager.current === catalogAdapter || closed || !route || otherDetail)
+      : detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed");
+    const result = manager.reconcile((primeRoom && detection.status === "blocked") || browsingRoom
+      ? { status: "waiting", provider: "primevideo" } : detection);
+    if (browsingRoom) mounted?.dockPrimeRoom?.();
+    if (retryLaunch && result === "relocated" && retryPrimeRecovery && manager.current === retryPrimeRecovery) {
+      mountWithLaunch(retryPrimeRecovery);
+    }
+    return result;
+  };
 
   let mountCheckFrame: number | null = null;
   const scheduleMountCheck = () => {
+    primeLaunch.observe(location.href);
     if (disposed || mountCheckFrame !== null) {
       return;
     }
 
     mountCheckFrame = window.requestAnimationFrame(() => {
       mountCheckFrame = null;
-      reconcile();
+      // A transient SDK/background failure retries on the existing backed-off poll.
+      // Ordinary DOM mutations should not turn a busy player into a retry loop.
+      reconcile(false);
     });
   };
 
@@ -209,7 +425,23 @@ export function startContentLifecycle(
     }, mountPollDelay);
   };
 
-  reconcile();
+  if (window.top === window && catalogRoomProvider(location.href) &&
+      (overrides.lookupPrimeRoom || (typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"))) {
+    checkingLiveRoom = true;
+    void Promise.all([dependencies.lookupPrimeRoom().catch(() => null), disneyRedirect]).then(([record, fragment]) => {
+      if (disposed) return;
+      disneyFragment = fragment;
+      checkingLiveRoom = false;
+      if (record && catalogRoomProvider(location.href)) {
+        startupRoom = record;
+        primeLaunch.dispose();
+        discardConflictingRoomLaunch(record.roomId, location.href);
+      }
+      reconcile();
+    });
+  } else {
+    reconcile();
+  }
   scheduleNextMountPoll();
 
   const handleVideoLifecycleEvent = (event: Event) => {
@@ -222,14 +454,16 @@ export function startContentLifecycle(
       return;
     }
 
-    if (mutationsAffectVideo(mutations)) {
+    if (mutationsAffectVideo(mutations) || mutations.some(changedWatchOwner)) {
       scheduleMountCheck();
     }
   });
   videoObserver.observe(document.documentElement, {
     childList: true,
     subtree: true,
+    ...(YOUTUBE_CATALOG_ORIGINS.includes(location.origin) && {attributeFilter: ["video-id"]}),
   });
+  document.addEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
   document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
   document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
   document.addEventListener("emptied", handleVideoLifecycleEvent, true);
@@ -241,11 +475,13 @@ export function startContentLifecycle(
   const handleFullscreenChange = () => mounted?.relocate();
   document.addEventListener("fullscreenchange", handleFullscreenChange);
 
-  const dispose = () => {
+  const dispose = (pageHidden = false) => {
     if (disposed) {
       return;
     }
     disposed = true;
+    leavingDocument = pageHidden;
+    primeLaunch.dispose();
     if (mountPollTimer !== null) {
       window.clearTimeout(mountPollTimer);
       mountPollTimer = null;
@@ -255,6 +491,7 @@ export function startContentLifecycle(
       mountCheckFrame = null;
     }
     videoObserver.disconnect();
+    document.removeEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
     document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
     document.removeEventListener(
       "loadedmetadata",
@@ -266,16 +503,14 @@ export function startContentLifecycle(
     navigation?.removeEventListener("currententrychange", scheduleMountCheck);
     window.removeEventListener("popstate", scheduleMountCheck);
     window.removeEventListener("hashchange", scheduleMountCheck);
-    window.removeEventListener("pagehide", dispose);
     stopKeyboardGuard();
     stopProviderStudy?.();
+    stopDisneyCatalog?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
     // playback while pagehide still reports a visible document.
     mounted?.suspend();
     manager.dispose();
   };
-
-  window.addEventListener("pagehide", dispose);
 
   return { dispose, reconcile };
 }
@@ -321,6 +556,8 @@ function providerFromUrl(pageUrl: string): SourceProvider {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
+    if (isDisneyPlusOrigin(pageUrl)) return "disneyplus";
+    if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")
@@ -338,7 +575,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
-  const isNetflixComposer = () => location.hostname === "www.netflix.com" && isComposerOpen();
+  const isIsolatedProviderComposer = () => (location.hostname === "www.netflix.com" || !!parsePrimePageUrl(location.href)) && isComposerOpen();
   let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
     document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";
@@ -390,20 +627,20 @@ function installMessageComposerKeyboardGuard(): () => void {
       }
       return;
     }
-    if (isNetflixComposer()) {
+    if (isIsolatedProviderComposer()) {
       // Netflix installs capture handlers above the overlay. Preserve native
       // text editing/default shortcuts while keeping those handlers quiet.
       netflixTypingKeys.add(keyId(event));
       event.stopImmediatePropagation();
     }
   };
-  const handleKeyPress = (event: KeyboardEvent) => { if (isNetflixComposer()) event.stopImmediatePropagation(); };
+  const handleKeyPress = (event: KeyboardEvent) => { if (isIsolatedProviderComposer()) event.stopImmediatePropagation(); };
   const handleKeyUp = (event: KeyboardEvent) => {
     // Submission removes the input before keyup; its new target can be the player.
     const wasConsumed = consumedKeys.delete(keyId(event));
     if (wasConsumed || (isComposerOpen() && event.key === "Enter"))
       consume(event);
-    else if (netflixTypingKeys.delete(keyId(event)) || isNetflixComposer()) event.stopImmediatePropagation();
+    else if (netflixTypingKeys.delete(keyId(event)) || isIsolatedProviderComposer()) event.stopImmediatePropagation();
   };
   const clearConsumedKeys = () => { consumedKeys.clear(); netflixTypingKeys.clear(); };
   window.addEventListener("keydown", handleKeyDown, true);
@@ -463,7 +700,35 @@ export function mountOverlay(
   const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
-  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot);
+  function placeHost(target: HTMLElement) {
+    if (supportsCatalogRoom(adapter.provider) && target.moveBefore && target.isConnected && host.isConnected) {
+      target.moveBefore(host, null);
+      return;
+    }
+    // append() reloads child documents. Keep the participant fallback visible until the new frame paints.
+    for (const frame of shadow.querySelectorAll("iframe[data-prime-camera-playing]"))
+      frame.removeAttribute("data-prime-camera-playing");
+    target.append(host);
+  }
+
+  let primeRoomId: string | null = null;
+  let restoringRoom = Boolean(options.initialPrimeRoom);
+  let docked = false;
+  const lostPrimeRoom = () => {
+    restoringRoom = false;
+    if (docked) {
+      host.remove();
+      document.dispatchEvent(new Event(PRIME_BINDING_CHANGED));
+    }
+  };
+  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot, options, room => {
+    const previous = primeRoomId;
+    primeRoomId = room;
+    if (room) {
+      restoringRoom = false;
+      if (docked && !host.isConnected) placeHost(document.documentElement);
+    } else if (previous) lostPrimeRoom();
+  }, () => dockPrimeRoom(), lostPrimeRoom);
 
   let animationFrame = 0;
   let fullscreenTransitionGeneration = 0;
@@ -580,9 +845,9 @@ export function mountOverlay(
     const target = overlayBinding.mountTarget;
     prepareOverlayContainer(target);
     if (host.parentElement !== target) {
-      target.append(host);
+      placeHost(target);
     }
-    syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget);
+    syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget, overlayBinding.boundsElement);
     if (observedTarget !== target) {
       if (observedTarget) {
         resizeObserver?.disconnect();
@@ -629,6 +894,8 @@ export function mountOverlay(
       return;
     }
 
+    docked = false;
+    host.style.position = "absolute";
     adapterBindingActive = true;
     markAdapter(adapter);
     startAdapterDebugProbe();
@@ -639,9 +906,21 @@ export function mountOverlay(
 
   window.addEventListener("resize", scheduleRelocate);
   window.addEventListener("scroll", scheduleRelocate, true);
-  activateAdapterBinding();
+  if (options.initiallyDocked) dockPrimeRoom();
+  else activateAdapterBinding();
 
+  function dockPrimeRoom() {
+    if (disposed || (!primeRoomId && !restoringRoom) || !supportsCatalogRoom(adapter.provider) || docked) return;
+    deactivateAdapterBinding();
+    docked = true;
+    Object.assign(host.style, { position: "fixed", inset: "0", width: "100%", height: "100%", borderRadius: "0" });
+    if (primeRoomId) placeHost(document.documentElement);
+    renderer.render(adapter, false, true);
+  }
   return {
+    hasPrimeRoom: () => primeRoomId !== null || restoringRoom,
+    isPrimeDocked: () => docked,
+    dockPrimeRoom,
     get adapter() {
       return adapter;
     },
@@ -651,7 +930,7 @@ export function mountOverlay(
         return;
       }
       deactivateAdapterBinding();
-      renderOverlay(false);
+      if (!docked) renderOverlay(false);
       adapter = nextAdapter;
       activateAdapterBinding();
     },
@@ -662,7 +941,7 @@ export function mountOverlay(
       deactivateAdapterBinding();
       renderOverlay(false);
     },
-    dispose() {
+    dispose(leavingDocument = false) {
       if (disposed) {
         return;
       }
@@ -670,7 +949,7 @@ export function mountOverlay(
       disposed = true;
       window.removeEventListener("resize", scheduleRelocate);
       window.removeEventListener("scroll", scheduleRelocate, true);
-      renderer.unmount();
+      renderer.unmount(leavingDocument);
       host.remove();
     },
   };
@@ -686,15 +965,22 @@ export function mountOverlay(
   }
 }
 
-function createReactOverlayRenderer(appRoot: HTMLElement): OverlayRenderer {
+function createReactOverlayRenderer(appRoot: HTMLElement, options: MountOverlayOptions,
+  onPrimeRoomChange: (room: string | null) => void, onPrimeClose: () => void, onPrimeRestoreLost: () => void): OverlayRenderer {
   const root: Root = createRoot(appRoot);
+  let leavingDocument = false;
+  const preservePrimeRoomOnUnmount = () => leavingDocument;
   return {
-    render(adapter, active) {
+    render(adapter, active, browsing) {
       flushSync(() => {
-        root.render(<OverlayApp adapter={adapter} adapterActive={active} />);
+        root.render(<OverlayApp adapter={adapter} adapterActive={active} primeBrowsing={browsing}
+          onPrimeRoomChange={onPrimeRoomChange} onPrimeClose={onPrimeClose} onPrimeRestoreLost={onPrimeRestoreLost}
+          initialPrimeLaunch={options.initialLaunch} initialPrimeRoom={options.initialPrimeRoom}
+          preservePrimeRoomOnUnmount={preservePrimeRoomOnUnmount} />);
       });
     },
-    unmount() {
+    unmount(pageHidden = false) {
+      leavingDocument = pageHidden;
       root.unmount();
     },
   };
@@ -720,6 +1006,7 @@ function ensurePageStyles(): void {
   style.textContent = `
     ${YOUTUBE_COMPOSER_CHROME_STYLES}
     ${NETFLIX_COMPOSER_CHROME_STYLES}
+    ${PRIME_COMPOSER_CHROME_STYLES}
 
     [data-anidachi-adapter="generic-html5-video"] video[data-anidachi-video="true"]::-webkit-media-controls-fullscreen-button {
       display: none !important;
@@ -731,7 +1018,9 @@ function ensurePageStyles(): void {
 
     [data-anidachi-adapter="youtube"] anidachi-overlay-root,
     [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root,
-    [data-anidachi-adapter="netflix"] anidachi-overlay-root {
+    [data-anidachi-adapter="netflix"] anidachi-overlay-root,
+    [data-anidachi-adapter="disneyplus"] anidachi-overlay-root,
+    [data-anidachi-adapter="primevideo"] anidachi-overlay-root {
       position: absolute !important;
       inset: 0 !important;
       z-index: 2147483647 !important;
@@ -824,6 +1113,7 @@ function syncOverlayBounds(
   host: HTMLElement,
   target: HTMLElement,
   fillMountTarget: boolean,
+  boundsElement: HTMLElement = adapter.video,
 ): void {
   const videoStyle = getComputedStyle(adapter.video);
 
@@ -847,7 +1137,7 @@ function syncOverlayBounds(
     return;
   }
 
-  const videoRect = adapter.video.getBoundingClientRect();
+  const videoRect = boundsElement.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
   const left = videoRect.left - targetRect.left + target.scrollLeft;
   const top = videoRect.top - targetRect.top + target.scrollTop;

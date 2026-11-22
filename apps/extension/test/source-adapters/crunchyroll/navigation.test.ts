@@ -23,13 +23,13 @@ describe("Crunchyroll source navigation", () => {
 		}
 	});
 
-	it("uses the MAIN-world navigation command for a different episode", async () => {
+	it.each(["", "/es-ES"])("uses the guest locale %j in MAIN-world episode navigation", async locale => {
 		const assign = vi.fn();
 		const navigate = vi.fn().mockResolvedValue({ ok: true });
 		const ensureSource = createCrunchyrollSourceNavigator({
 			assign,
 			currentHref: () =>
-				"https://www.crunchyroll.com/watch/GOLD11111/episode-one",
+				"https://www.crunchyroll.com" + locale + "/watch/GOLD11111/episode-one",
 			navigate,
 		});
 
@@ -38,10 +38,10 @@ describe("Crunchyroll source navigation", () => {
 		expect(result).toEqual({
 			status: "navigation-started",
 			targetUrl:
-				"https://www.crunchyroll.com/watch/GOLD22222#anidachiRoom=room-123",
+				"https://www.crunchyroll.com" + locale + "/watch/GOLD22222#anidachiRoom=room-123",
 		});
 		expect(navigate).toHaveBeenCalledWith(
-			"https://www.crunchyroll.com/watch/GOLD22222#anidachiRoom=room-123",
+			"https://www.crunchyroll.com" + locale + "/watch/GOLD22222#anidachiRoom=room-123",
 		);
 		expect(assign).not.toHaveBeenCalled();
 	});

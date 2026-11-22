@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { historyReadKeyMatchesProvider, historyReadReferencesMatchProvider } from "./history-provider-validation";
 import {
 	WatchHistoryOpaqueCursorSchema,
 	WatchHistoryResponseMetaSchema,
@@ -9,11 +10,11 @@ import {
 } from "./watch-history";
 
 const Timestamp = z.iso.datetime({ offset: true });
-const Provider = z.enum(["crunchyroll", "youtube", "netflix"]);
+const Provider = z.enum(["crunchyroll", "youtube", "netflix", "primevideo", "disneyplus"]);
 const Key = z.string().trim().min(1).max(220);
 const filters = {
 	// Omission preserves legacy cursor bindings and CR/YT-only reads.
-	providerVersion: z.union([z.literal(1), z.literal(2)]).optional(),
+	providerVersion: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
 	mode: z.enum(["personal", "solo", "shared"]),
 	search: z.string().trim().min(1).max(200).optional(),
 	groupId: z.uuid().optional(),
@@ -55,7 +56,11 @@ export const WatchHistoryBrowseQuerySchema = z
 	.superRefine(validateFilters);
 export const WatchHistoryBrowseTitleEpisodesQuerySchema = z
 	.strictObject({ ...filters, provider: Provider, titleKey: Key })
-	.superRefine(validateFilters);
+  .superRefine((value, ctx) => {
+    validateFilters(value, ctx);
+    if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]))
+      ctx.addIssue({ code: "custom", message: "Browse title must match provider" });
+  });
 export const WatchHistoryBrowseSessionsQuerySchema = z
 	.strictObject({
 		...filters,
@@ -63,7 +68,14 @@ export const WatchHistoryBrowseSessionsQuerySchema = z
 		titleKey: Key,
 		episodeKey: Key,
 	})
-	.superRefine(validateFilters);
+  .superRefine((value, ctx) => {
+    validateFilters(value, ctx);
+    if (!historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]) ||
+      !historyReadKeyMatchesProvider(value.provider, value.episodeKey, ["episode", "movie", "video"]) ||
+      ((value.provider === "primevideo" || value.provider === "disneyplus") && (value.titleKey.startsWith(`${value.provider}:movie:`)
+        ? value.episodeKey !== value.titleKey : !value.episodeKey.startsWith(`${value.provider}:episode:`))))
+      ctx.addIssue({ code: "custom", message: "Browse episode must match provider and title" });
+  });
 export const WatchHistoryBrowseOptionsQuerySchema = z.strictObject({
 	mode: z.literal("shared"),
 	providerVersion: filters.providerVersion,
@@ -89,7 +101,9 @@ const WatchHistoryBrowseTitlesResponseBaseSchema = z.strictObject({
 				lastWatchedAt: Timestamp,
 				matchingEpisodeCount: z.number().int().nonnegative(),
 				matchingSessionCount: z.number().int().nonnegative(),
-			}),
+			}).refine(value => historyReadKeyMatchesProvider(value.provider, value.titleKey, ["series", "movie", "video"]), {
+        message: "Browse title match must match provider", path: ["titleKey"],
+      }),
 		)
 		.max(50),
 });
@@ -106,12 +120,21 @@ export const WatchHistoryBrowseTitleEpisodesResponseSchema = z.strictObject({
 		)
 		.max(50),
 	groups: z.array(GroupContext).max(1000),
+}).superRefine((value, ctx) => {
+  for (const match of value.matches) {
+    if (!(value.detail.provider === "amazon"
+      ? historyReadReferencesMatchProvider(value.detail.provider, [match.episodeKey], [])
+      : historyReadKeyMatchesProvider(value.detail.provider, match.episodeKey, ["episode", "movie", "video"])) ||
+      ((value.detail.provider === "primevideo" || value.detail.provider === "disneyplus") && (value.detail.titleKey.startsWith(`${value.detail.provider}:movie:`)
+        ? match.episodeKey !== value.detail.titleKey : !match.episodeKey.startsWith(`${value.detail.provider}:episode:`))))
+      ctx.addIssue({ code: "custom", message: "Browse episode match must match detail provider and title" });
+  }
 });
 export const WatchHistoryBrowseResponseSchema =
 	WatchHistoryBrowseTitlesResponseBaseSchema.extend({
 		episodePreviews: z
 			.array(
-				WatchHistoryBrowseTitleEpisodesResponseSchema.extend({
+				WatchHistoryBrowseTitleEpisodesResponseSchema.safeExtend({
 					detail: WatchHistoryTitleEpisodesResponseSchema.safeExtend({
 						episodes:
 							WatchHistoryTitleEpisodesResponseSchema.shape.episodes.max(8),

@@ -19,6 +19,12 @@ const activeState = {
 };
 
 describe("Anidachi hotkeys", () => {
+  it("requires a user key press before starting the Prime device prompt", () => {
+    const prime = {...activeState, requireTrustedVoiceKey:true};
+    expect(getHotkeyAction(keyEvent({code:"KeyV", key:"v", type:"keydown", isTrusted:false}), prime)).toBeNull();
+    expect(getHotkeyAction(keyEvent({code:"KeyV", key:"v", type:"keydown"}), prime)).toEqual({type:"voice-start"});
+  });
+
   it("starts voice capture on a plain V keydown", () => {
     expect(
       getHotkeyAction(keyEvent({ code: "KeyV", key: "v", type: "keydown" }), activeState),
@@ -347,6 +353,7 @@ describe("Anidachi hotkeys", () => {
 
 function keyEvent(overrides: Partial<KeyboardEvent> = {}) {
   return {
+    isTrusted: true,
     altKey: false,
     code: "",
     ctrlKey: false,

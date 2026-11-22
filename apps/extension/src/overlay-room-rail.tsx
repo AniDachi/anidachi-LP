@@ -14,8 +14,13 @@ import {
 } from "./interface-visibility";
 import { ParticipantAudioInlineControl } from "./participant-audio-controls";
 import {
+	overlayHoverBoundaryProps,
+	overlayPointerBoundaryProps,
+} from "./overlay-interaction-boundary";
+import {
 	isRoomRailEdgeIntent,
 	isRoomRailEdgeProximity,
+	ROOM_RAIL_EDGE_INTENT_PX,
 	ROOM_RAIL_OPEN_DELAY_MS,
 } from "./room-rail-intent";
 import type { ParticipantAudioPreference } from "./voice-audio-preferences";
@@ -24,6 +29,7 @@ export const ROOM_RAIL_CLOSE_DELAY_MS = 160;
 const EMPTY_REACTION_CUE_PARTICIPANT_IDS: ReadonlySet<string> = new Set();
 
 export interface RoomRailProps {
+	isolatePlayerPointer?: boolean;
 	activeParticipantId?: string;
 	mediaSnapshot?: RoomMediaSnapshot | null;
 	getParticipantAudioPreference(
@@ -40,6 +46,7 @@ export interface RoomRailProps {
 }
 
 export function RoomRail({
+	isolatePlayerPointer = false,
 	activeParticipantId,
 	mediaSnapshot,
 	getParticipantAudioPreference,
@@ -60,6 +67,7 @@ export function RoomRail({
 	const openTimerRef = useRef<number | undefined>(undefined);
 	const closeTimerRef = useRef<number | undefined>(undefined);
 	const railRef = useRef<HTMLElement | null>(null);
+	const edgeIntentY = useRef(0);
 	const adjustingParticipantIdRef = useRef<string | null>(null);
 	const focusedParticipantIdRef = useRef<string | null>(null);
 	const pointerParticipantIdRef = useRef<string | null>(null);
@@ -105,10 +113,13 @@ export function RoomRail({
 		}
 		openTimerRef.current = window.setTimeout(() => {
 			openTimerRef.current = undefined;
+			if (isolatePlayerPointer) {
+				railRef.current?.style.setProperty("--room-rail-entry-y", `${edgeIntentY.current}px`);
+			}
 			setEdgeNear(false);
 			setEdgeExpanded(true);
 		}, ROOM_RAIL_OPEN_DELAY_MS);
-	}, [clearCloseTimer, edgeExpanded, railPresentation.edgeIntentEnabled]);
+	}, [clearCloseTimer, edgeExpanded, isolatePlayerPointer, railPresentation.edgeIntentEnabled]);
 
 	const scheduleClose = useCallback(() => {
 		if (adjustingParticipantIdRef.current !== null) {
@@ -153,6 +164,7 @@ export function RoomRail({
 				clearOpenTimer();
 				return;
 			}
+			edgeIntentY.current = event.clientY - edgeBounds.top;
 			scheduleOpen();
 		},
 		[clearOpenTimer, railPresentation.edgeIntentEnabled, scheduleOpen],
@@ -248,6 +260,10 @@ export function RoomRail({
 		[clearCloseTimer, clearOpenTimer],
 	);
 
+	useEffect(() => {
+		if (!edgeExpanded) railRef.current?.style.removeProperty("--room-rail-entry-y");
+	}, [edgeExpanded]);
+
 	return (
 		<aside
 			aria-label="Room participants"
@@ -255,6 +271,7 @@ export function RoomRail({
 				railPresentation.persistentCompact ? "persistent" : ""
 			} ${edgeNear && !railPresentation.fullListExpanded ? "edge-near" : ""}`}
 			data-visibility-mode={visibilityMode}
+			data-isolate-player-pointer={isolatePlayerPointer ? (railEngaged ? "engaged" : "idle") : undefined}
 			ref={railRef}
 			onKeyDownCapture={() => {
 				interactionModalityRef.current = "keyboard";
@@ -269,10 +286,20 @@ export function RoomRail({
 				className="room-rail-edge"
 				onPointerEnter={handleEdgePointerIntent}
 				onPointerLeave={handleEdgePointerLeave}
-				onPointerMove={handleEdgePointerIntent}
-			/>
+				onPointerMoveCapture={handleEdgePointerIntent}
+			>
+				{isolatePlayerPointer && railPresentation.edgeIntentEnabled && (
+					<span
+						aria-hidden="true"
+						className="room-rail-edge-intent"
+						style={{ width: ROOM_RAIL_EDGE_INTENT_PX }}
+						{...overlayHoverBoundaryProps}
+					/>
+				)}
+			</div>
 			<div
 				className={`room-rail-panel ${adjustingParticipantId ? "adjusting-audio" : ""}`}
+				{...(isolatePlayerPointer ? overlayPointerBoundaryProps : {})}
 				onBlurCapture={(event) => {
 					if (
 						event.relatedTarget instanceof Node &&
@@ -302,11 +329,12 @@ export function RoomRail({
 					panelPointerInsideRef.current = false;
 					scheduleClose();
 				}}
-				onPointerMove={() => {
+				onPointerMove={(event) => {
 					panelPointerInsideRef.current = true;
 					if (railPresentation.fullListExpanded) {
 						clearCloseTimer();
 					}
+					if (isolatePlayerPointer) overlayPointerBoundaryProps.onPointerMove(event);
 				}}
 			>
 				<div className="room-rail-list">

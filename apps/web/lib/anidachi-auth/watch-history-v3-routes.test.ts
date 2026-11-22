@@ -929,7 +929,27 @@ test("all-provider history list explicitly negotiates Netflix without changing l
   assert.equal(Object.hasOwn(seen[0] as object, "providerVersion"), false);
   assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=2"))).status, 200);
   assert.equal((seen[1] as { providerVersion: number }).providerVersion, 2);
-  for (const version of ["0", "3", "02", "", "2&providerVersion=2"])
+  for (const version of ["0", "5", "02", "", "2&providerVersion=2"])
     assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=" + version))).status, 400);
-  assert.equal(seen.length, 2);
+  assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=3"))).status, 200);
+  assert.equal((seen[2] as { providerVersion: number }).providerVersion, 3);
+  assert.equal((await routes.getHistory(request("/api/watch-history/v3?providerVersion=4"))).status, 200);
+  assert.equal((seen[3] as { providerVersion: number }).providerVersion, 4);
+  assert.equal(seen.length, 4);
+});
+
+
+test("Prime detail route admits only provider-bound compactGTI title keys", async () => {
+  const seen: unknown[] = [];
+  const routes = createWatchHistoryV3RouteHandlers(dependencies({ listTitleEpisodes: async (params) => {
+    seen.push(params); return dependencies().listTitleEpisodes(params);
+  } }));
+  const key = "primevideo:series:" + "A".repeat(26);
+  const path = "/api/watch-history/v3/title-episodes?provider=primevideo&titleKey=";
+  assert.equal((await routes.getTitleEpisodes(request(path + key))).status, 200);
+  assert.equal((seen[0] as { provider: string }).provider, "primevideo");
+  for (const invalid of ["netflix:series:123", "primevideo:series:" + "a".repeat(26), "primevideo:series:123"])
+    assert.equal((await routes.getTitleEpisodes(request(path + invalid))).status, 400);
+  assert.equal((await routes.getTitleEpisodes(request("/api/watch-history/v3/title-episodes?provider=youtube&titleKey=" + key))).status, 400);
+  assert.equal(seen.length, 1);
 });

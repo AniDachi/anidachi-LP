@@ -1,0 +1,511 @@
+{
+  "url": "https://www.amazon.com/gp/video/detail/B0HL3NHK3N?jic=8%7CEgRzdm9k&ref_=atv_hm_hom_c_mfXhxu_brws_2_2",
+  "initialUrl": "https://www.amazon.com/gp/video/storefront",
+  "canonical": "https://www.amazon.com/gp/video/storefront",
+  "body": {
+    "atf": {
+      "state": {
+        "action": {
+          "btf": {}
+        },
+        "detail": {
+          "detail": {},
+          "headerDetail": {
+            "B0HL3HTYVG": {
+              "parentTitle": "Love in Disguise",
+              "seasonNumber": 1,
+              "title": "Love in Disguise",
+              "titleType": "season"
+            }
+          }
+        },
+        "episodeList": {},
+        "pageTitleId": "B0HL3HTYVG",
+        "seasons": {},
+        "self": {
+          "B0HL3HTYVG": {
+            "compactGTI": "0INEYNSINLQC82ZUIFLK7VNV09",
+            "gti": "amzn1.dv.gti.3b073ac0-955b-4528-8c54-104c8d8577b9",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HL3HTYVG?ref_=atv_dp",
+            "sequenceNumber": 1,
+            "titleType": "season"
+          },
+          "B0HLGGRD8Y": {
+            "compactGTI": "0GZG3MEMW58HH47GE4QV0Z1OOR",
+            "gti": "amzn1.dv.gti.1ee41d01-5ae4-49f5-a3cd-457b75f3a63b",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLGGRD8Y?ref_=atv_dp",
+            "sequenceNumber": 1,
+            "titleType": "episode"
+          }
+        }
+      }
+    },
+    "btf": {
+      "state": {
+        "action": {
+          "btf": {
+            "B0HCV8Q7JV": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.a3685cbe-f143-4eae-ae15-7dc23a2926d5",
+                      "playbackURL": "/gp/video/detail/0OTVM3CMRP2IDERY0E3K65QX1X?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HKTY9VKC": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.0af5aa7d-cd49-460a-9cbb-2949dfc753a3",
+                      "playbackURL": "/gp/video/detail/0FSYU1P4FZGNGKPO898XGDRV6R?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HL358N4K": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.79ed670e-316b-462a-b927-72732b34b32f",
+                      "playbackURL": "/gp/video/detail/0MDGZBU9H1JBHMHT3JIPHNEFXR?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HLGGRD8Y": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.1ee41d01-5ae4-49f5-a3cd-457b75f3a63b",
+                      "playbackURL": "/gp/video/detail/0GZG3MEMW58HH47GE4QV0Z1OOR?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HLPDWBL4": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.7fcb893b-ecad-493d-8ae3-eb5e4716b104",
+                      "playbackURL": "/gp/video/detail/0MPZ6T67ID7CSEYWBDOP7K5PMS?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HLRJ823F": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.6ebb1a85-d6fc-41db-b23f-f13400a7270a",
+                      "playbackURL": "/gp/video/detail/0LPLWZPJJ1XGWTTF4BRK893BPM?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HM4YK5G6": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.747f9579-9968-4740-9a04-8472feddbd19",
+                      "playbackURL": "/gp/video/detail/0M1WFOMS31EVVY9ALYT7V2S00P?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HM8939MF": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.6cf63394-592b-4c85-a985-fedde681c557",
+                      "playbackURL": "/gp/video/detail/0LLU6C9E9IM480EA2NR5T5P9HZ?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HNDRHVN1": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.4dde80cd-eab9-4774-95b0-414df5a48f29",
+                      "playbackURL": "/gp/video/detail/0JRKK1VTXAMXJASSV7H05JQWQ1?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            },
+            "B0HNF4Z8ZB": {
+              "messages": {
+                "entitlementType": "Entitled"
+              },
+              "primaryActions": [
+                {
+                  "actionType": "PLAY",
+                  "payload": {
+                    "payloadType": "PLAYBACK",
+                    "playback": {
+                      "isTrailer": false,
+                      "playbackID": "amzn1.dv.gti.45a319ab-6f1e-4652-94ed-678bb494d351",
+                      "playbackURL": "/gp/video/detail/0JA0XXJJOJKOQCHX7YH62M1IS1?autoplay=1&t=0&ref_=atv_dp_btf_el_prime_hd_tv_play_t1ADAAAAAA0wr0",
+                      "videoMaterialType": "Feature"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "detail": {
+          "detail": {
+            "B0HCV8Q7JV": {
+              "duration": 3877,
+              "episodeNumber": 6,
+              "title": "Episode 6",
+              "titleType": "episode"
+            },
+            "B0HKTY9VKC": {
+              "duration": 3671,
+              "episodeNumber": 3,
+              "title": "Episode 3",
+              "titleType": "episode"
+            },
+            "B0HL358N4K": {
+              "duration": 3628,
+              "episodeNumber": 8,
+              "title": "Episode 8",
+              "titleType": "episode"
+            },
+            "B0HL3HTYVG": {
+              "parentTitle": "Love in Disguise",
+              "seasonNumber": 1,
+              "title": "Love in Disguise",
+              "titleType": "season"
+            },
+            "B0HLGGRD8Y": {
+              "duration": 3895,
+              "episodeNumber": 1,
+              "title": "Episode 1",
+              "titleType": "episode"
+            },
+            "B0HLPDWBL4": {
+              "duration": 3906,
+              "episodeNumber": 4,
+              "title": "Episode 4",
+              "titleType": "episode"
+            },
+            "B0HLRJ823F": {
+              "duration": 3901,
+              "episodeNumber": 2,
+              "title": "Episode 2",
+              "titleType": "episode"
+            },
+            "B0HM4YK5G6": {
+              "duration": 3602,
+              "episodeNumber": 5,
+              "title": "Episode 5",
+              "titleType": "episode"
+            },
+            "B0HM8939MF": {
+              "duration": 3823,
+              "episodeNumber": 7,
+              "title": "Episode 7",
+              "titleType": "episode"
+            },
+            "B0HNDRHVN1": {
+              "duration": 3734,
+              "episodeNumber": 9,
+              "title": "Episode 9",
+              "titleType": "episode"
+            },
+            "B0HNF4Z8ZB": {
+              "duration": 3637,
+              "episodeNumber": 10,
+              "title": "Episode 10",
+              "titleType": "episode"
+            }
+          },
+          "headerDetail": {}
+        },
+        "episodeList": {
+          "actions": {
+            "episodePages": [
+              {
+                "isSelected": true
+              }
+            ],
+            "pagination": []
+          },
+          "cardTitleIds": [
+            "B0HLGGRD8Y",
+            "B0HLRJ823F",
+            "B0HKTY9VKC",
+            "B0HLPDWBL4",
+            "B0HM4YK5G6",
+            "B0HCV8Q7JV",
+            "B0HM8939MF",
+            "B0HL358N4K",
+            "B0HNDRHVN1",
+            "B0HNF4Z8ZB"
+          ],
+          "totalCardSize": 10
+        },
+        "pageTitleId": "B0HL3HTYVG",
+        "seasons": {},
+        "self": {
+          "B0HCV8Q7JV": {
+            "compactGTI": "0OTVM3CMRP2IDERY0E3K65QX1X",
+            "gti": "amzn1.dv.gti.a3685cbe-f143-4eae-ae15-7dc23a2926d5",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HCV8Q7JV?ref_=atv_dp",
+            "sequenceNumber": 6,
+            "titleType": "episode"
+          },
+          "B0HKTY9VKC": {
+            "compactGTI": "0FSYU1P4FZGNGKPO898XGDRV6R",
+            "gti": "amzn1.dv.gti.0af5aa7d-cd49-460a-9cbb-2949dfc753a3",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HKTY9VKC?ref_=atv_dp",
+            "sequenceNumber": 3,
+            "titleType": "episode"
+          },
+          "B0HL358N4K": {
+            "compactGTI": "0MDGZBU9H1JBHMHT3JIPHNEFXR",
+            "gti": "amzn1.dv.gti.79ed670e-316b-462a-b927-72732b34b32f",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HL358N4K?ref_=atv_dp",
+            "sequenceNumber": 8,
+            "titleType": "episode"
+          },
+          "B0HLGGRD8Y": {
+            "compactGTI": "0GZG3MEMW58HH47GE4QV0Z1OOR",
+            "gti": "amzn1.dv.gti.1ee41d01-5ae4-49f5-a3cd-457b75f3a63b",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLGGRD8Y?ref_=atv_dp",
+            "sequenceNumber": 1,
+            "titleType": "episode"
+          },
+          "B0HLPDWBL4": {
+            "compactGTI": "0MPZ6T67ID7CSEYWBDOP7K5PMS",
+            "gti": "amzn1.dv.gti.7fcb893b-ecad-493d-8ae3-eb5e4716b104",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLPDWBL4?ref_=atv_dp",
+            "sequenceNumber": 4,
+            "titleType": "episode"
+          },
+          "B0HLRJ823F": {
+            "compactGTI": "0LPLWZPJJ1XGWTTF4BRK893BPM",
+            "gti": "amzn1.dv.gti.6ebb1a85-d6fc-41db-b23f-f13400a7270a",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLRJ823F?ref_=atv_dp",
+            "sequenceNumber": 2,
+            "titleType": "episode"
+          },
+          "B0HM4YK5G6": {
+            "compactGTI": "0M1WFOMS31EVVY9ALYT7V2S00P",
+            "gti": "amzn1.dv.gti.747f9579-9968-4740-9a04-8472feddbd19",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HM4YK5G6?ref_=atv_dp",
+            "sequenceNumber": 5,
+            "titleType": "episode"
+          },
+          "B0HM8939MF": {
+            "compactGTI": "0LLU6C9E9IM480EA2NR5T5P9HZ",
+            "gti": "amzn1.dv.gti.6cf63394-592b-4c85-a985-fedde681c557",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HM8939MF?ref_=atv_dp",
+            "sequenceNumber": 7,
+            "titleType": "episode"
+          },
+          "B0HNDRHVN1": {
+            "compactGTI": "0JRKK1VTXAMXJASSV7H05JQWQ1",
+            "gti": "amzn1.dv.gti.4dde80cd-eab9-4774-95b0-414df5a48f29",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HNDRHVN1?ref_=atv_dp",
+            "sequenceNumber": 9,
+            "titleType": "episode"
+          },
+          "B0HNF4Z8ZB": {
+            "compactGTI": "0JA0XXJJOJKOQCHX7YH62M1IS1",
+            "gti": "amzn1.dv.gti.45a319ab-6f1e-4652-94ed-678bb494d351",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HNF4Z8ZB?ref_=atv_dp",
+            "sequenceNumber": 10,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.0af5aa7d-cd49-460a-9cbb-2949dfc753a3": {
+            "compactGTI": "0FSYU1P4FZGNGKPO898XGDRV6R",
+            "gti": "amzn1.dv.gti.0af5aa7d-cd49-460a-9cbb-2949dfc753a3",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HKTY9VKC?ref_=atv_dp",
+            "sequenceNumber": 3,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.1ee41d01-5ae4-49f5-a3cd-457b75f3a63b": {
+            "compactGTI": "0GZG3MEMW58HH47GE4QV0Z1OOR",
+            "gti": "amzn1.dv.gti.1ee41d01-5ae4-49f5-a3cd-457b75f3a63b",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLGGRD8Y?ref_=atv_dp",
+            "sequenceNumber": 1,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.45a319ab-6f1e-4652-94ed-678bb494d351": {
+            "compactGTI": "0JA0XXJJOJKOQCHX7YH62M1IS1",
+            "gti": "amzn1.dv.gti.45a319ab-6f1e-4652-94ed-678bb494d351",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HNF4Z8ZB?ref_=atv_dp",
+            "sequenceNumber": 10,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.4dde80cd-eab9-4774-95b0-414df5a48f29": {
+            "compactGTI": "0JRKK1VTXAMXJASSV7H05JQWQ1",
+            "gti": "amzn1.dv.gti.4dde80cd-eab9-4774-95b0-414df5a48f29",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HNDRHVN1?ref_=atv_dp",
+            "sequenceNumber": 9,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.6cf63394-592b-4c85-a985-fedde681c557": {
+            "compactGTI": "0LLU6C9E9IM480EA2NR5T5P9HZ",
+            "gti": "amzn1.dv.gti.6cf63394-592b-4c85-a985-fedde681c557",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HM8939MF?ref_=atv_dp",
+            "sequenceNumber": 7,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.6ebb1a85-d6fc-41db-b23f-f13400a7270a": {
+            "compactGTI": "0LPLWZPJJ1XGWTTF4BRK893BPM",
+            "gti": "amzn1.dv.gti.6ebb1a85-d6fc-41db-b23f-f13400a7270a",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLRJ823F?ref_=atv_dp",
+            "sequenceNumber": 2,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.747f9579-9968-4740-9a04-8472feddbd19": {
+            "compactGTI": "0M1WFOMS31EVVY9ALYT7V2S00P",
+            "gti": "amzn1.dv.gti.747f9579-9968-4740-9a04-8472feddbd19",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HM4YK5G6?ref_=atv_dp",
+            "sequenceNumber": 5,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.79ed670e-316b-462a-b927-72732b34b32f": {
+            "compactGTI": "0MDGZBU9H1JBHMHT3JIPHNEFXR",
+            "gti": "amzn1.dv.gti.79ed670e-316b-462a-b927-72732b34b32f",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HL358N4K?ref_=atv_dp",
+            "sequenceNumber": 8,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.7fcb893b-ecad-493d-8ae3-eb5e4716b104": {
+            "compactGTI": "0MPZ6T67ID7CSEYWBDOP7K5PMS",
+            "gti": "amzn1.dv.gti.7fcb893b-ecad-493d-8ae3-eb5e4716b104",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HLPDWBL4?ref_=atv_dp",
+            "sequenceNumber": 4,
+            "titleType": "episode"
+          },
+          "amzn1.dv.gti.a3685cbe-f143-4eae-ae15-7dc23a2926d5": {
+            "compactGTI": "0OTVM3CMRP2IDERY0E3K65QX1X",
+            "gti": "amzn1.dv.gti.a3685cbe-f143-4eae-ae15-7dc23a2926d5",
+            "isLaunched": true,
+            "link": "/gp/video/detail/B0HCV8Q7JV?ref_=atv_dp",
+            "sequenceNumber": 6,
+            "titleType": "episode"
+          }
+        }
+      }
+    }
+  },
+  "titleInfo": {
+    "episodeNumber": 1,
+    "seasonNumber": 1,
+    "title": "Episode 1",
+    "titleId": "amzn1.dv.gti.1ee41d01-5ae4-49f5-a3cd-457b75f3a63b",
+    "type": "EPISODE"
+  },
+  "territory": "AT",
+  "locale": "en_US"
+}

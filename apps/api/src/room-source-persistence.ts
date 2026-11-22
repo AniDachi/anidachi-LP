@@ -1,3 +1,4 @@
+import {samePrimeNavigation} from "@anidachi/protocol";
 import { FREE20_TRANSFER_KEY, parseFree20ScopeTransfer } from "./free20-scope-transfer";
 import {
 	ROOM_POLICY_STORAGE_KEY,
@@ -315,7 +316,8 @@ function sameCallback(
     left.source.provider === right.source.provider &&
     left.source.sourceUrl === right.source.sourceUrl &&
     left.source.canonicalUrl === right.source.canonicalUrl &&
-		left.source.videoFingerprint === right.source.videoFingerprint
+		left.source.videoFingerprint === right.source.videoFingerprint &&
+    samePrimeNavigation(left.source.primeNavigation,right.source.primeNavigation)
 	);
 }
 
