@@ -114,5 +114,18 @@ select is((select outcome from persist_room_source_v1('disneyplus-local-room','d
 select throws_ok($$select persist_room_source_v1('disneyplus-local-room','youtube','https://www.youtube.com/watch?v=abcdef','youtube|abcdef',3)$$,'23514','room_source_provider_conflict','room stays provider-pinned');
 select throws_ok($$select persist_room_source_v1('disneyplus-local-room','disneyplus','https://www.disneyplus.com/play/01234567-1234-4321-9234-000070196260','disneyplus|play/AAAAAAAAAAAAAAAAAAAAAAA999',3)$$,'22023','room_source_invalid_input','room rejects mismatched fingerprint');
 select is((select outcome from persist_room_source_v2(null,'disneyplus-local-room','disneyplus','https://www.disneyplus.com/play/01234567-1234-4321-9234-000070196261','disneyplus|play/01234567-1234-4321-9234-000070196261',3)),'persisted','current persistence endpoint advances the Disney+ room');
+-- Both checkpoint kinds are real native 'ended' events. Only the content
+-- position distinguishes a short Disney+ segment from a completed title.
+insert into p_calls values ('segment_end', pg_temp.p_input(pg_temp.p_event(false,pg_temp.p_id(907)) ||
+ jsonb_build_object('currentTime',5,'duration',2795,'progress',5.0/2795,'kind','ended')));
+insert into p_calls select 'segment_ack',apply_personal_watch_progress_v1('e1111111-1111-4111-8111-111111111111',value)
+ from p_calls where name='segment_end';
+select is((select current_time_seconds from watch_episode_progress where raw_content_id=pg_temp.p_id(907)),5::double precision,'segment checkpoint retains the content position');
+select ok((select completed_at is null from watch_episode_progress where raw_content_id=pg_temp.p_id(907)),'early native ended leaves the episode in progress');
+select is(apply_personal_watch_progress_v1('e1111111-1111-4111-8111-111111111111',(select value from p_calls where name='segment_end')),
+ (select value from p_calls where name='segment_ack'),'an unmodified early-ended envelope can be replayed');
+select lives_ok($$select apply_personal_watch_progress_v1('e1111111-1111-4111-8111-111111111111',pg_temp.p_input(pg_temp.p_event(false,pg_temp.p_id(907)) ||
+ jsonb_build_object('currentTime',2795,'duration',2795,'progress',1,'kind','ended')))$$,'real end of the title is accepted');
+select ok((select completed_at is not null from watch_episode_progress where raw_content_id=pg_temp.p_id(907)),'the completed title is marked watched');
 select * from finish();
 rollback;
