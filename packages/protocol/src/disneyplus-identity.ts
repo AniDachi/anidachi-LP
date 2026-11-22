@@ -12,8 +12,14 @@ export function isDisneyPlusArtworkUrl(value: string | null): boolean {
     !/%2e|\/\.{1,2}(?:\/|\?|$)/i.test(value));
 }
 
+// Disney uses language, script and territory prefixes (including numeric territories).
+const DISNEY_PLUS_LOCALE_PATTERN = "[a-z]{2,3}(?:-[a-z]{4})?(?:-(?:[a-z]{2}|[0-9]{3}))?";
+const localePrefix = new RegExp(`^/(${DISNEY_PLUS_LOCALE_PATTERN})/`, "i");
+export function disneyPlusRouteLocale(pathname: string): string | undefined {
+  return localePrefix.exec(pathname)?.[1];
+}
 function disneyRoute(pattern: string): RegExp {
-  return new RegExp(`^https://www[.]disneyplus[.]com/(?:[a-z]{2}(?:-[a-z]{2})?/)?${pattern}(${uuidPattern})/?(?:[?#].*)?$`, "i");
+  return new RegExp(`^https://www[.]disneyplus[.]com/(?:${DISNEY_PLUS_LOCALE_PATTERN}/)?${pattern}(${uuidPattern})/?(?:[?#].*)?$`, "i");
 }
 const playbackRoute = disneyRoute("play/");
 const entityRoute = disneyRoute("browse/entity-");
@@ -34,11 +40,11 @@ export function disneyPlusSourceUrl(id: string): string {
 export function disneyPlusFingerprint(id: string): string {
   return `disneyplus|play/${id}`;
 }
-export function disneyPlusSeasonIdentifier(seriesId: string, seasonNumber: number): string {
+export function disneyPlusSeasonIdentifier(seriesId: string, seasonNumber: number | string): string {
   return `${seriesId}:${seasonNumber}`;
 }
 export function isDisneyPlusHistoryKey(key: string, kind: string): boolean {
-  if (kind === "season") return new RegExp(`^disneyplus:season:${uuidPattern}:(?:[1-9][0-9]{0,2}|1000)$`).test(key);
+  if (kind === "season") return new RegExp(`^disneyplus:season:${uuidPattern}:(?:[1-9][0-9]{0,2}|1000|${uuidPattern})$`).test(key);
   return ["series", "episode", "movie"].includes(kind) && key.startsWith(`disneyplus:${kind}:`) &&
     uuid.test(key.slice(`disneyplus:${kind}:`.length));
 }
@@ -52,7 +58,14 @@ export const DisneyPlusHistoryIdentitySchema = z.discriminatedUnion("kind", [
 ]);
 export type DisneyPlusHistoryIdentity = z.infer<typeof DisneyPlusHistoryIdentitySchema>;
 
-export function disneyPlusHistoryKeys(identity: DisneyPlusHistoryIdentity, seasonNumber?: number | null) {
+export function disneyPlusNamedSeasonId(seriesId: string, key: string | null): string | undefined {
+  const prefix = `disneyplus:season:${seriesId}:`;
+  if (!key?.startsWith(prefix)) return undefined;
+  const id = key.slice(prefix.length);
+  return uuid.test(id) ? id : undefined;
+}
+
+export function disneyPlusHistoryKeys(identity: DisneyPlusHistoryIdentity, seasonNumber?: number | null, namedSeasonId?: string) {
   if (identity.kind === "movie") {
     const key = `disneyplus:movie:${identity.providerMovieId}`;
     return { itemKind: "movie" as const, titleKey: key, episodeKey: key, seasonKey: null };
@@ -61,6 +74,6 @@ export function disneyPlusHistoryKeys(identity: DisneyPlusHistoryIdentity, seaso
     itemKind: "series" as const,
     titleKey: `disneyplus:series:${identity.providerSeriesId}`,
     episodeKey: `disneyplus:episode:${identity.providerEpisodeIdentifier}`,
-    seasonKey: seasonNumber == null ? null : `disneyplus:season:${disneyPlusSeasonIdentifier(identity.providerSeriesId, seasonNumber)}`,
+    seasonKey: seasonNumber == null && !namedSeasonId ? null : `disneyplus:season:${disneyPlusSeasonIdentifier(identity.providerSeriesId, seasonNumber ?? namedSeasonId!)}`,
   };
 }

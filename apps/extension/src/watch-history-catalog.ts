@@ -1,4 +1,4 @@
-import { readDisneyPlusCatalog } from "./source-adapters/disneyplus/catalog";
+import { readDisneyPlusCatalog, resolveDisneyPlusCatalog } from "./source-adapters/disneyplus/catalog";
 import { runPrimeCommand } from "./source-adapters/primevideo/bridge-client";
 import type { PrimeSnapshot } from "./source-adapters/primevideo/contract";
 import { isHistoryRecordingEnabled } from "./history-recording-choice";
@@ -135,7 +135,8 @@ export function createWatchHistoryPageResolver(dependencies: {
   command?: typeof runCrunchyrollMainCommand;
   netflixCommand?: typeof runNetflixCommand;
   primeCommand?: typeof runPrimeCommand;
-  disneyCatalog?: (seriesId: string, playbackId: string) => WatchCatalogSnapshotInput | null;
+  disneyCatalog?: (seriesId: string, playbackId: string) => WatchCatalogSnapshotInput | null | Promise<WatchCatalogSnapshotInput | null>;
+  loadDisneyCatalog?: (seriesId: string, playbackId: string) => Promise<WatchCatalogSnapshotInput | null>;
   pageId?: string;
   now?: () => number;
 }) {
@@ -144,6 +145,7 @@ export function createWatchHistoryPageResolver(dependencies: {
   const netflixCommand = dependencies.netflixCommand ?? runNetflixCommand;
   const primeCommand = dependencies.primeCommand ?? runPrimeCommand;
   const disneyCatalog = dependencies.disneyCatalog ?? ((seriesId, playbackId) => readDisneyPlusCatalog(document, seriesId, playbackId));
+  const loadDisneyCatalog = dependencies.loadDisneyCatalog ?? dependencies.disneyCatalog ?? ((seriesId, playbackId) => resolveDisneyPlusCatalog(document, seriesId, playbackId));
   const now = dependencies.now ?? Date.now;
   const mappings = new Map<string, { promise: Promise<CrunchyrollHistoryMetadata | null>; attemptedAt: number; abort: AbortController; settled: boolean }>();
   const activeCatalogs = new Map<string, { abort: AbortController; signature: string; visitId: string; promise: Promise<void> }>();
@@ -181,7 +183,7 @@ export function createWatchHistoryPageResolver(dependencies: {
     let disney: WatchCatalogSnapshotInput | null = null;
     if (disneyIdentity) {
       if (!options.refreshCatalog || sourceKey !== currentSource) return;
-      disney = disneyCatalog(disneyIdentity.providerSeriesId, watchId);
+      disney = await disneyCatalog(disneyIdentity.providerSeriesId, watchId);
       if (!disney || disney.provider !== "disneyplus" || disney.providerSeriesId !== disneyIdentity.providerSeriesId) return;
     } else if (primeIdentity) {
       if (!options.refreshCatalog || sourceKey !== currentSource) return;
@@ -245,7 +247,7 @@ export function createWatchHistoryPageResolver(dependencies: {
         revision = parsed.data.revision;
         if (disposed || abort.signal.aborted || !parsed.data.refreshRequired || !await eligible(event, owner)) return;
         const result = disneyIdentity
-          ? { ok: true, catalog: disneyCatalog(disneyIdentity.providerSeriesId, watchId) }
+          ? { ok: true, catalog: await loadDisneyCatalog(disneyIdentity.providerSeriesId, watchId) }
           : prime
           ? await primeCommand({ action: "catalog", contentId: watchId, generation: prime.generation }, abort.signal)
           : netflix

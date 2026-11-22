@@ -6,8 +6,10 @@ import {
 	WatchCatalogSnapshotInputSchema,
 	type WatchCatalogSnapshotInput,
 } from "@anidachi/protocol";
+import { loadPublishedDisneyCatalog, type ReadDisneyTitle } from "./published-catalog";
+import type { DisneyPlusDetails } from "./metadata";
 import type { ExtensionAuthTokens } from "../../auth-tokens";
-import { captureDisneyPlusDetails, clearDisneyPlusDetails, getDisneyPlusDetails, readDisneyPlusPlaybackMetadata, restoreDisneyPlusDetails, restoreDisneyPlusPlaybackMetadata } from "./metadata";
+import { captureDisneyPlusDetails, clearDisneyPlusDetails, getDisneyPlusDetails, observePublishedDisneyTitle, readDisneyPlusPlaybackMetadata, restoreDisneyPlusDetails, restoreDisneyPlusPlaybackMetadata } from "./metadata";
 
 import {
 	encodeDisneyPlusCatalogTransfer, hydrateDisneyPlusDetails, isDisneyPlusProfileBoundary,
@@ -16,14 +18,26 @@ import {
 
 type Handoff = (message: { type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF"; action: "read" | "save"; payload?: string }) => Promise<unknown>;
 
-/** Read public episode cards as Disney renders each season. Never switch a
- * viewer's selected season or turn Disney's profile progress into AniDachi progress. */
+const publications = new WeakMap<Document, { job: Promise<void>; expand: () => void }>();
+export async function resolveDisneyPlusCatalog(doc: Document, seriesId: string, playbackId: string) {
+	const active = publications.get(doc);
+	active?.expand();
+	await active?.job;
+	return readDisneyPlusCatalog(doc, seriesId, playbackId);
+}
+
+/** Keep the visible Disney controls untouched while resolving the active playable. */
 export function startDisneyPlusCatalogCapture(doc: Document, send: Handoff | undefined =
-	typeof chrome === "undefined" || !chrome.runtime?.sendMessage ? undefined : message => chrome.runtime.sendMessage(message)): () => void {
+	typeof chrome === "undefined" || !chrome.runtime?.sendMessage ? undefined : message => chrome.runtime.sendMessage(message),
+	readPublished?: ReadDisneyTitle): () => void {
 	if (doc.location.origin !== "https://www.disneyplus.com") return () => {};
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let currentPath = "", lastSaved = "", requestedPlayback: string | null = null, generation = 0;
+	let active: AbortController | undefined;
+	let cached: { details: DisneyPlusDetails; until: number; localePath: string } | undefined;
+	const cancel = () => { active?.abort(); active = undefined; publications.get(doc)?.expand(); publications.delete(doc); };
 	const forget = () => {
+		cancel(); cached = undefined;
 		generation++;
 		clearDisneyPlusDetails(doc);
 		lastSaved = ""; requestedPlayback = null;
@@ -32,6 +46,7 @@ export function startDisneyPlusCatalogCapture(doc: Document, send: Handoff | und
 		if (timer !== undefined) clearTimeout(timer);
 		timer = undefined;
 		const href = doc.location.href;
+		if (currentPath !== doc.location.pathname) { cancel(); requestedPlayback = null; generation++; }
 		currentPath = doc.location.pathname;
 		if (isDisneyPlusProfileBoundary(href)) { forget(); return; }
 		const entity = disneyPlusEntityId(href);
@@ -50,18 +65,61 @@ export function startDisneyPlusCatalogCapture(doc: Document, send: Handoff | und
 			return;
 		}
 		const id = disneyPlusPlaybackId(href);
-		if (!send || !id || id === requestedPlayback || readDisneyPlusPlaybackMetadata(doc, id)) return;
+		if (!id || id === requestedPlayback) return;
 		requestedPlayback = id;
-		const attempt = generation;
-		void send({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "read" }).then(payload => {
-			if (attempt !== generation || disneyPlusPlaybackId(doc.location.href) !== id) return;
-			const transfer = parseDisneyPlusCatalogTransfer(payload);
-			if (transfer && transferIncludesPlayback(transfer, id)) restoreDisneyPlusDetails(doc, hydrateDisneyPlusDetails(transfer));
-			else {
-				const saved = savedPlayback.safeParse(payload);
-				if (saved.success) restoreDisneyPlusPlaybackMetadata(doc, saved.data.metadata);
+		const attempt = generation, abort = new AbortController();
+		active = abort;
+		const current = () => !abort.signal.aborted && attempt === generation && disneyPlusPlaybackId(doc.location.href) === id;
+		const url = new URL(href);
+		url.search = ""; url.hash = "";
+		const localePath = url.pathname.slice(0, url.pathname.toLowerCase().indexOf("/play/"));
+		const hasId = (details: DisneyPlusDetails) => details.movieId === id || [...details.seasons.values()].some(s => s.episodes.has(id));
+		if (cached && cached.until > Date.now() && cached.localePath === localePath && hasId(cached.details)) {
+			restoreDisneyPlusDetails(doc, cached.details); return;
+		}
+		let expand!: () => void;
+		const expansion = new Promise<void>(resolve => { expand = resolve; });
+		const job = (async () => {
+			if (send && !readDisneyPlusPlaybackMetadata(doc, id)) {
+				const payload = await send({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "read" }).catch(() => null);
+				if (!current()) return;
+				const transfer = parseDisneyPlusCatalogTransfer(payload);
+				if (transfer && transferIncludesPlayback(transfer, id)) restoreDisneyPlusDetails(doc, hydrateDisneyPlusDetails(transfer));
+				else {
+					const saved = savedPlayback.safeParse(payload);
+					if (saved.success) restoreDisneyPlusPlaybackMetadata(doc, saved.data.metadata);
+				}
 			}
-		}).catch(() => undefined);
+			if (!current() || !readPublished) return;
+			const metadata = readDisneyPlusPlaybackMetadata(doc, id);
+			const expected = metadata?.identity.kind === "episode" ? metadata.identity.providerSeriesId : null;
+			if (metadata?.identity.kind === "movie") return;
+			if (expected) url.pathname = localePath + "/browse/entity-" + expected;
+			let resolved: DisneyPlusDetails | undefined;
+			const native = getDisneyPlusDetails(doc);
+			const observe = (details: DisneyPlusDetails) => {
+				if (!current()) return;
+				if (native && native !== details && native.entityId === details.entityId && native.locale === details.locale) {
+					for (const [key, observed] of native.seasons) {
+						const season = details.seasons.get(key);
+						if (!season) { details.seasons.set(key, observed); continue; }
+						if (season === observed) continue;
+						const verified = new Map([...observed.episodes.values()].map(e => [e.number, e]));
+						for (const [episodeId, e] of season.episodes) {
+							if (verified.has(e.number)) season.episodes.delete(episodeId);
+						}
+						for (const e of verified.values()) season.episodes.set(e.playbackId, e);
+					}
+				}
+				resolved = details;
+				observePublishedDisneyTitle(doc, id, details);
+				readDisneyPlusPlaybackMetadata(doc, id);
+			};
+			const complete = await loadPublishedDisneyCatalog(url, id, expected, abort.signal, details => { if (current() && details.movieId) observe(details); }, readPublished,
+				{ observe, expand: () => expansion });
+			if (current() && complete && resolved) cached = { details: resolved, until: Date.now() + 5 * 60_000, localePath };
+		})().catch(() => undefined);
+		publications.set(doc, { job, expand });
 	};
 	const schedule = () => {
 		if (timer === undefined && (doc.location.pathname !== currentPath || disneyPlusEntityId(doc.location.href)))
@@ -97,15 +155,15 @@ export function readDisneyPlusCatalog(doc: Document, seriesId: string, playbackI
 	const metadata = readDisneyPlusPlaybackMetadata(doc, playbackId);
 	const details = getDisneyPlusDetails(doc);
 	if (metadata?.identity.kind !== "episode" || metadata.identity.providerSeriesId !== seriesId || details?.entityId !== seriesId ||
-		!metadata.seasonNumber || !details.seasons.get(metadata.seasonNumber)?.episodes.has(playbackId)) return null;
-	const seasons = [...details.seasons.values()].sort((a, b) => a.number - b.number).map(season => {
-		const identifier = disneyPlusSeasonIdentifier(seriesId, season.number);
+		!(metadata.seasonNumber ?? metadata.namedSeasonId) || !details.seasons.get((metadata.seasonNumber ?? metadata.namedSeasonId)!)?.episodes.has(playbackId)) return null;
+	const seasons = [...details.seasons.values()].sort((a, b) => (a.number ?? Infinity) - (b.number ?? Infinity)).map((season, order) => {
+		const identifier = disneyPlusSeasonIdentifier(seriesId, season.number ?? season.providerId!);
 		return {
 			providerSeasonIdentifier: identifier,
 			seasonKey: `disneyplus:season:${identifier}`,
 			title: season.title,
 			seasonNumber: season.number,
-			order: season.number - 1,
+			order,
 			episodes: [...season.episodes.values()].sort((a, b) => a.number - b.number).map(episode => ({
 				providerEpisodeIdentifier: episode.playbackId,
 				episodeKey: `disneyplus:episode:${episode.playbackId}`,

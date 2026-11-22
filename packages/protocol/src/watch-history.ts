@@ -1,4 +1,4 @@
-import { DisneyPlusHistoryIdentitySchema, DisneyPlusProviderIdSchema, disneyPlusHistoryKeys, disneyPlusSeasonIdentifier, disneyPlusSourceUrl, isDisneyPlusArtworkUrl } from "./disneyplus-identity";
+import { DisneyPlusHistoryIdentitySchema, DisneyPlusProviderIdSchema, disneyPlusNamedSeasonId, disneyPlusHistoryKeys, disneyPlusSeasonIdentifier, disneyPlusSourceUrl, isDisneyPlusArtworkUrl } from "./disneyplus-identity";
 import { PrimeNavigationSchema, primeNavigationMatches, primeNavigationTreeMatches } from "./prime-video-navigation";
 import { z } from "zod";
 import {
@@ -243,8 +243,9 @@ export const WatchCatalogSnapshotInputSchema = z
     if (snapshot.provider === "primevideo" && !PrimeVideoProviderIdSchema.safeParse(snapshot.providerSeriesId).success)
       context.addIssue({ code: "custom", message: "Prime series anchor must be a compactGTI", path: ["providerSeriesId"] });
     snapshot.seasons.forEach((season, index) => {
-      if (snapshot.provider === "disneyplus" && (season.seasonNumber === null || season.seasonNumber < 1 ||
-        season.providerSeasonIdentifier !== disneyPlusSeasonIdentifier(snapshot.providerSeriesId, season.seasonNumber))) {
+      if (snapshot.provider === "disneyplus" && (season.seasonNumber === null
+        ? !disneyPlusNamedSeasonId(snapshot.providerSeriesId, season.seasonKey)
+        : season.seasonNumber < 1 || season.providerSeasonIdentifier !== disneyPlusSeasonIdentifier(snapshot.providerSeriesId, season.seasonNumber))) {
         context.addIssue({ code: "custom", message: "Disney+ season must match its series and season number", path: ["seasons", index] });
       }
       if (!CatalogSeasonSchemas[snapshot.provider].safeParse(season).success)
@@ -609,7 +610,8 @@ export const WatchProgressEventSchema = z
         context.addIssue({ code: "custom", message: "Disney+ requires only Disney+ identity", path: ["disneyplusIdentity"] });
         return;
       }
-      const keys = disneyPlusHistoryKeys(identity, event.seasonNumber);
+      const named = identity.kind === "episode" && event.seasonNumber === null ? disneyPlusNamedSeasonId(identity.providerSeriesId, event.seasonKey) : undefined;
+      const keys = disneyPlusHistoryKeys(identity, event.seasonNumber, named);
       const id = identity.kind === "movie" ? identity.providerMovieId : identity.providerEpisodeIdentifier;
       if (event.titleKey !== keys.titleKey || event.episodeKey !== keys.episodeKey || event.seasonKey !== keys.seasonKey ||
         event.itemKind !== keys.itemKind || !isDisneyPlusArtworkUrl(event.artworkUrl) || event.sourceUrl !== disneyPlusSourceUrl(id) || event.seasonNumber === 0 ||

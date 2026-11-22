@@ -64,6 +64,10 @@ select is(browse_watch_history_v3_prime_navigation_v1('e1111111-1111-4111-8111-1
 select ok(not (get_watch_history_capacity_v3('e1111111-1111-4111-8111-111111111111')->'providers' ? 'disneyplus'),'capacity v3 remains exact');
 select lives_ok($$select validate_watch_identity_v3(pg_temp.p_event()||'{"seasonKey":null,"seasonTitle":null,"seasonNumber":null}')$$,'episode may have no established season');
 select throws_ok($$select validate_watch_identity_v3(pg_temp.p_event()||'{"seasonNumber":3}')$$,'22023','watch_history_identity_invalid','season key must match series and number');
+select lives_ok($$select validate_watch_identity_v3(pg_temp.p_event()||jsonb_build_object('seasonNumber',null,'seasonTitle','Exclusives',
+ 'seasonKey','disneyplus:season:'||pg_temp.p_id(70143836)||':'||pg_temp.p_id(55)))$$,'named season keeps its Disney UUID');
+select throws_ok($$select validate_watch_identity_v3(pg_temp.p_event()||jsonb_build_object('seasonNumber',null,'seasonTitle','Exclusives',
+ 'seasonKey','disneyplus:season:'||pg_temp.p_id(123)||':'||pg_temp.p_id(55)))$$,'22023','watch_history_identity_invalid','named season cannot belong to another title');
 create function pg_temp.p_request() returns jsonb language sql as $$
  select jsonb_build_object('schemaVersion',3,'accountGeneration',1,'provider','disneyplus','titleKey','disneyplus:series:01234567-1234-4321-9234-000070143836','providerSeriesId','01234567-1234-4321-9234-000070143836',
  'context',jsonb_build_object('region',null,'requestedLocale','en-US','audioLocale',null,'subtitleLocales','[]'::jsonb,'observedAt',clock_timestamp()),
