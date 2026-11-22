@@ -269,8 +269,8 @@ export function startContentLifecycle(
     window.removeEventListener("popstate", scheduleMountCheck);
     window.removeEventListener("hashchange", scheduleMountCheck);
     window.removeEventListener("pagehide", dispose);
-    stopPortraitCards();
     stopKeyboardGuard();
+    stopPortraitCards();
     stopProviderStudy?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
     // playback while pagehide still reports a visible document.
