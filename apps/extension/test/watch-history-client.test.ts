@@ -102,6 +102,28 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("resolves only the requested HBO title with extension credentials on the website origin", async () => {
+    const owner = session.user.id;
+    const id = "1fbc488d-c7b5-4d38-aad4-f60dcbd85d23";
+    const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "title-poster", expectedOwnerUserId: owner, titleKey: "hbomax:series:" + id } as const;
+    const poster = "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg";
+    let artwork = poster;
+    const http = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => Response.json({ url: artwork }));
+    const root: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) } };
+    const storage = createWatchHistoryStorage({ item: { getValue: async () => root, setValue: async () => {} }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+    const client = createWatchHistoryClient({ storage, getCurrentSession: async () => session, fetch: http });
+    expect(await client.handle({ ...message, expectedOwnerUserId: "00000000-0000-4000-8000-000000000097" })).toMatchObject({ ok: false });
+    expect(await client.handle({ ...message, titleKey: "hbomax:series:invalid" })).toMatchObject({ ok: false });
+    expect(http).not.toHaveBeenCalled();
+    expect(await client.handle(message)).toMatchObject({ ok: true, data: poster });
+    const [target, init] = http.mock.calls[0]!;
+    expect(new URL(String(target)).pathname).toBe("/api/watch-history/poster");
+    expect(new URL(String(target)).searchParams.get("format")).toBe("json");
+    expect(init).toMatchObject({ credentials: "omit", redirect: "error", headers: { Authorization: "Bearer " + session.accessToken } });
+    artwork = poster.replace(id, owner);
+    expect(await client.handle(message)).toMatchObject({ ok: false, status: "invalid-response" });
+  });
   it.each(["same event", "new work", "signed out", "retry after offline", "stalled request"])("serializes concurrent clients: %s", async scenario => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);

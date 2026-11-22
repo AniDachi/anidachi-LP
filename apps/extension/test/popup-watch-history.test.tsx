@@ -7,7 +7,7 @@ import {
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
   PopupWatchHistoryPanel,
@@ -110,6 +110,45 @@ describe("Popup Watch History v3", () => {
       updated.items[0]!.artworkUrl = "https://www.crunchyroll.com/new-poster.jpg";
       await act(async () => { publish(snapshotFixture(updated)); });
       expect(artwork().querySelector("img")?.getAttribute("src")).toBe(updated.items[0]!.artworkUrl);
+    } finally { await unmount(view.root); }
+  });
+
+  it.each(["missing", "broken", "wide", "portrait"] as const)("renders saved HBO artwork or resolves the exact title for a %s cover", async scenario => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
+    onTestFinished(() => { vi.unstubAllEnvs(); });
+    const history = youtubeMovieHistoryFixture();
+    const item = history.items[0]!;
+    const id = "e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7";
+    const poster = "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg";
+    item.provider = "hbomax";
+    item.titleKey = item.latestActivity.episodeKey = "hbomax:movie:" + id;
+    item.sourceUrl = "https://www.hbomax.com/video/watch/" + id;
+    item.artworkUrl = scenario === "missing" ? null : "https://images.cdn.prd.api.discomax.com/group/legacy.jpeg";
+    const lookup = vi.fn(async () => ({ ok: true as const, data: poster }));
+    const normal = requestForHistory(history);
+    const view = await renderPanel(clientFixture({ cached: snapshotFixture(history), request: message => {
+      if (message.command !== "title-poster") return normal(message);
+      expect(message.titleKey).toBe(item.titleKey);
+      return lookup();
+    } }));
+    const image = () => view.container.querySelector<HTMLImageElement>(".popup-watch-artwork img");
+    try {
+      if (scenario !== "missing") {
+        expect(lookup).not.toHaveBeenCalled();
+        const legacy = image()!;
+        expect(legacy.getAttribute("src")).toBe(item.artworkUrl + "?w=500&f=webp");
+        Object.defineProperties(legacy, { naturalWidth: { value: 500 }, naturalHeight: { value: scenario === "wide" ? 281 : 750 } });
+        await act(async () => { legacy.dispatchEvent(new Event(scenario === "broken" ? "error" : "load")); });
+      }
+      if (scenario === "portrait") {
+        expect(lookup).not.toHaveBeenCalled();
+      } else {
+        expect(lookup).toHaveBeenCalledTimes(1);
+        expect(image()?.getAttribute("src")).toBe(poster);
+        await act(async () => { image()!.dispatchEvent(new Event("error")); });
+        expect(image()?.getAttribute("src")).toBe(scenario === "wide" ? item.artworkUrl + "?w=500&f=webp" : undefined);
+        expect(lookup).toHaveBeenCalledTimes(1);
+      }
     } finally { await unmount(view.root); }
   });
 
