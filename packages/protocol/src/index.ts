@@ -11,6 +11,7 @@ export * from './watch-history-browse';
 export * from './watch-history-grid';
 
 export * from "./commercial-policy";
+export * from "./disney-catalog-portrait";
 export * from "./personal-watch-history";
 export * from "./room-media";
 export * from "./room-presence-evidence";

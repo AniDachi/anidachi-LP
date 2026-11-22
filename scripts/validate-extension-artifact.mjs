@@ -24,7 +24,11 @@ if (!["staging", "production"].includes(channel)) {
 const manifestPath = path.join(dir, "manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const hostPermissions = manifest.host_permissions ?? [];
-const contentMatches = (manifest.content_scripts ?? []).flatMap(
+const scripts = manifest.content_scripts ?? [];
+const portraitScripts = scripts.filter(script => script.js?.includes("content-scripts/disney-portrait.js"));
+if (portraitScripts.length > (channel === "staging" ? 1 : 0)) throw new Error("Unexpected Disney portrait bridge");
+for (const script of portraitScripts) assertExactAllowlist("Disney portrait bridge", script.matches, ["https://www.disneyplus.com/*"]);
+const contentMatches = scripts.filter(script => !portraitScripts.includes(script)).flatMap(
   (script) => script.matches ?? [],
 );
 const permissions = manifest.permissions ?? [];

@@ -32,6 +32,7 @@ import {
   type WatchProgressEvent,
   type WatchSharedRoomAuthority,
 } from "@anidachi/protocol";
+import { withTitlePortraits } from "../history-title-portraits";
 import { db } from "./db";
 import {
   verifyWatchHistoryAuthority,
@@ -401,7 +402,7 @@ export async function listWatchHistoryV3(params: {
 }): Promise<WatchHistoryResponse> {
   if (!params.store) {
     return withPersonalHistoryRead(params.userId,
-      () => listWatchHistoryV3({ ...params, store: supabaseWatchHistoryV3Store }), "read");
+      () => listWatchHistoryV3({ ...params, store: supabaseWatchHistoryV3Store }).then(withTitlePortraits), "read");
   }
   try {
     const limit = params.limit ?? 50;

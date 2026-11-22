@@ -1,3 +1,4 @@
+import { withTitlePortraits } from "../history-title-portraits";
 import { withPersonalHistoryRead } from "./personal-history-policy";
 import {
 	WatchHistoryBrowseQuerySchema,
@@ -175,7 +176,7 @@ export async function readWatchHistoryBrowseV3(
 			readWatchHistoryBrowseV3(
 				{ ...params, store: supabaseWatchHistoryBrowseStore },
 				scope,
-			),
+			).then(async result => "history" in result ? { ...result, history: await withTitlePortraits(result.history) } : result),
 		);
 	const query = parseWatchHistoryBrowseQuery(params.input, scope);
 	if (

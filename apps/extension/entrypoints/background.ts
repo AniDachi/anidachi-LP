@@ -33,6 +33,8 @@ import {
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
 import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
+import { observeDisneyPortraits } from "../src/disney-portrait-sync";
+import { DISNEY_PORTRAIT_MESSAGE } from "../src/disney-portrait-cards";
 import {
   handlePrivilegedOverlayIntentMessage,
   isPrivilegedOverlayIntentMessage,
@@ -318,6 +320,10 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (message?.type === DISNEY_PORTRAIT_MESSAGE) {
+      void observeDisneyPortraits(message.cards, sender, message.selected === true).then(() => sendResponse(null), () => sendResponse(null));
+      return true;
+    }
     if (isAuthMessage(message)) {
       void handleAuthMessage(message).then(sendResponse);
       return true;

@@ -56,7 +56,7 @@ type Manifest = {
   permissions?: string[];
   host_permissions?: string[];
   web_accessible_resources?: Array<{ resources?: string[]; matches?: string[] }>;
-  content_scripts?: Array<{ matches?: string[] }>;
+  content_scripts?: Array<{ matches?: string[]; js?: string[] }>;
   [key: string]: unknown;
 };
 
@@ -103,11 +103,13 @@ function expectExact(actual: string[] | undefined, expected: string[]) {
 }
 
 function contentMatches(manifest: Manifest): string[] {
-  return [
-    ...new Set(
-      (manifest.content_scripts ?? []).flatMap((script) => script.matches ?? []),
-    ),
-  ];
+  const scripts = manifest.content_scripts ?? [];
+  const bridge = scripts.filter(script => script.js?.includes("content-scripts/disney-portrait.js"));
+  if (manifest.name === "AniDachi Staging") {
+    expect(bridge).toHaveLength(1);
+    expectExact(bridge[0]?.matches, ["https://www.disneyplus.com/*"]);
+  } else expect(bridge).toHaveLength(0);
+  return [...new Set(scripts.filter(script => !bridge.includes(script)).flatMap(script => script.matches ?? []))];
 }
 
 function artifactText(relativePath: string): string {

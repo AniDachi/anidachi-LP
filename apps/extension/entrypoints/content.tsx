@@ -2,6 +2,7 @@ import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";
+import { watchDisneyPortraitCards } from "../src/disney-portrait-cards";
 import {
   elementDebugSnapshot,
   logDebug,
@@ -127,6 +128,7 @@ export function startContentLifecycle(
   let mounted: MountedOverlay | null = null;
   let disposed = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
+  const stopPortraitCards = watchDisneyPortraitCards(document);
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
 
@@ -268,6 +270,7 @@ export function startContentLifecycle(
     window.removeEventListener("hashchange", scheduleMountCheck);
     window.removeEventListener("pagehide", dispose);
     stopKeyboardGuard();
+    stopPortraitCards();
     stopProviderStudy?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
     // playback while pagehide still reports a visible document.
