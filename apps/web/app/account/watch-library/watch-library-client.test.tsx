@@ -2182,6 +2182,31 @@ it("filters Disney+ titles and resumes the selected playback UUID from the accou
   }
 });
 
+it("loads a missing HBO poster by title key and keeps usable legacy art if the poster fails", async () => {
+  const { history } = netflixFixture(false);
+  const title = history.items[0];
+  title.provider = "hbomax";
+  title.titleKey = "hbomax:series:78e15665-f6c8-4b58-8786-e0d9e2b65ced";
+  const lookup = "/api/watch-history/poster?titleKey=" + encodeURIComponent(title.titleKey);
+  for (const artwork of [null, "https://images.cdn.prd.api.discomax.com/group/wide.jpeg"]) {
+    title.artworkUrl = artwork;
+    installServer();
+    const view = await renderClient(history);
+    const current = () => view.container.querySelector<HTMLImageElement>(".wh-cover img");
+    try {
+      if (artwork) {
+        const legacy = current()!;
+        Object.defineProperties(legacy, { complete: { value: true }, naturalWidth: { value: 500 }, naturalHeight: { value: 281 } });
+        await act(async () => { legacy.dispatchEvent(new Event("load")); });
+      }
+      assert.equal(current()?.getAttribute("src"), lookup);
+      await act(async () => { current()!.dispatchEvent(new Event("error")); });
+      if (artwork) assert.equal(current()?.getAttribute("src"), artwork + "?w=500&f=webp");
+      else assert.ok(view.container.querySelector(".wh-artwork-fallback"));
+    } finally { await unmount(view.root); }
+  }
+});
+
 it("filters HBO Max titles and resumes the selected playback UUID from the account library", async () => {
   const { history, editor } = netflixFixture(true);
   const title = history.items[0];
