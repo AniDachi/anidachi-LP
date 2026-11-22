@@ -34,8 +34,8 @@ function huluPoster(html: string, id: string): string | null {
   return null;
 }
 
-async function readPage(url: string, request: typeof fetch): Promise<string | null> {
-  const options: RequestInit = { signal: AbortSignal.timeout(2200), redirect: "manual", cache: "no-store", headers: { Accept: "text/html" } };
+async function readPage(url: string, request: typeof fetch, signal: AbortSignal): Promise<string | null> {
+  const options: RequestInit = { signal, redirect: "manual", cache: "no-store", headers: { Accept: "text/html" } };
   let response = await request(url, options);
   // Some storefronts canonicalize the ID-only path to a localized title slug.
   if (response.status >= 300 && response.status < 400) {
@@ -62,35 +62,63 @@ async function readPage(url: string, request: typeof fetch): Promise<string | nu
   }
 }
 
-export async function resolveHistoryPortrait(key: string, request = fetch) {
+function titleSlug(title: string) {
+  return title.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 160);
+}
+
+function disneyStorefrontSlug(html: string, id: string) {
+  const json = nextData.exec(html)?.[1];
+  if (!json) return "";
+  const page = object(object(object(JSON.parse(json)).props).pageProps);
+  if (page.pageId !== "entity-" + id) return "";
+  const blocks = object(page.stitchDocument).mainContent;
+  if (!Array.isArray(blocks)) return "";
+  const hero = blocks.map(object).find(block => block._type === "DetailEntityHero");
+  const title = object(hero?.backgroundImage).alt;
+  return typeof title === "string" ? titleSlug(title) : "";
+}
+
+export async function resolveHistoryPortrait(key: string, slug = "", request = fetch) {
+  const signal = AbortSignal.timeout(4200);
   const netflix = netflixKey.exec(key);
   if (netflix) {
-    const page = await readPage("https://media.netflix.com/en/only-on-netflix/" + netflix[1], request);
+    const page = await readPage("https://media.netflix.com/en/only-on-netflix/" + netflix[1], request, signal);
     return page ? netflixPoster(page, netflix[1]!) : null;
   }
   const disney = disneyKey.exec(key);
   if (!disney) return null;
   const id = disney[2]!;
   const path = disney[1] === "series" ? "series" : "movie";
-  const page = await readPage("https://www.hulu.com/" + path + "/" + id, request);
-  return page ? huluPoster(page, id) : null;
+  async function fromHulu(name: string) {
+    const page = await readPage("https://www.hulu.com/" + path + "/" + name + "-" + id, request, signal);
+    return page ? huluPoster(page, id) : null;
+  }
+  // Hulu serves the native key art on its slug-and-ID storefront URL.
+  if (slug && /^[a-z0-9-]{1,160}$/.test(slug)) {
+    const poster = await fromHulu(slug);
+    if (poster) return poster;
+  }
+  const disneyPage = await readPage("https://www.disneyplus.com/en-us/browse/entity-" + id, request, signal);
+  const english = disneyPage && disneyStorefrontSlug(disneyPage, id);
+  return english && english !== slug ? fromHulu(english) : null;
 }
 
-const cachedPortrait = unstable_cache(resolveHistoryPortrait, ["history-title-portrait-v1"], { revalidate: 86400 });
+const cachedPortrait = unstable_cache(resolveHistoryPortrait, ["history-title-portrait-v2"], { revalidate: 86400 });
 
 export async function withTitlePortraits(history: WatchHistoryResponse): Promise<WatchHistoryResponse> {
   const items = [...history.items];
   const pending = items.flatMap((item, index) => {
     if (!disneyKey.test(item.titleKey) && !netflixKey.test(item.titleKey)) return [];
-    return [{ index, key: item.titleKey }];
+    return [{ index, key: item.titleKey, slug: disneyKey.test(item.titleKey) ? titleSlug(item.title) : "" }];
   });
   const deadline = Date.now() + 2600;
   let next = 0;
   async function worker() {
     while (next < pending.length && Date.now() < deadline) {
-      const { index, key } = pending[next++]!;
+      const { index, key, slug } = pending[next++]!;
       try {
-        const url = await cachedPortrait(key);
+        const url = await cachedPortrait(key, slug);
         if (url) items[index] = { ...items[index]!, artworkUrl: url };
       } catch { /* Publisher outages must leave the saved artwork usable. */ }
     }
