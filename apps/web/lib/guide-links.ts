@@ -555,11 +555,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
-		href: "/guides/youtube-watch-party-with-discord",
-		label: "YouTube Watch Party With Discord",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
 		href: "/guides/best-apps-to-watch-youtube-together",
 		label: "Best Apps to Watch YouTube Together",
 		tags: [
@@ -743,11 +738,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "how-to-core", "pillar-anime-tracker"],
 	},
 
-	{
-		href: "/guides/discord-watch-together",
-		label: "Discord Watch Together",
-		tags: ["template-c", "discord", "pillar-discord-watch-party"],
-	},
 	{
 		href: "/guides/watch-anime-dub",
 		label: "Watch Anime Dub",

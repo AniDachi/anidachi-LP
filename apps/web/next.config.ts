@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
-import { ANI38_BATCH1_SOURCES } from "./lib/recrawl-redirects";
+import { ANI38_BATCH1_SOURCES, DISCORD_HUB_MERGE_SOURCES } from "./lib/recrawl-redirects";
 
 const nextConfig: NextConfig = {
   // Dynamic routes (e.g. /extension) stream metadata into <body> for unlisted user agents.
@@ -115,7 +115,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/guides/discord-watch-together-activity",
-        destination: "/guides/discord-watch-together",
+        destination: "/discord-watch-party",
         permanent: true,
       },
       {
@@ -159,6 +159,14 @@ const nextConfig: NextConfig = {
         destination: "/netflix-watch-party",
         permanent: true,
       },
+      // 2026-11-22 (owner-approved): two Discord guides fold into the Discord hub, which
+      // Google had never fetched. The Watch Together guide (never crawled) targeted the
+      // same searches; the YouTube guide is indexed, so its redirect leads Google to the hub.
+      ...DISCORD_HUB_MERGE_SOURCES.map((source) => ({
+        source,
+        destination: "/discord-watch-party",
+        permanent: true,
+      })),
       // 2026-11-14 (owner-approved): the Amazon comparison page answered the same
       // question as the Prime Video hub (0 impressions in 28 days); it folds in.
       {

@@ -22,6 +22,15 @@ export const ANI38_BATCH1_SOURCES = [
 ] as const;
 
 /**
+ * Owner-approved 2026-11-22: Discord guides that 308 into /discord-watch-party.
+ * See the decisions log in docs/seo-content-guidelines.md.
+ */
+export const DISCORD_HUB_MERGE_SOURCES = [
+  "/guides/discord-watch-together",
+  "/guides/youtube-watch-party-with-discord",
+] as const;
+
+/**
  * Temporary recrawl sitemap (owner-approved 2026-11-20, ANI-38). Lists old URLs that
  * now redirect, so Google refetches them and moves their signals to the new page.
  * On 20 Nov several were still indexed under their own address, last crawled before
@@ -31,6 +40,9 @@ export const RECRAWL_REDIRECT_PATHS: readonly string[] = [
   ...ANI38_BATCH1_SOURCES,
   // Folded into the Prime Video hub on 2026-11-14; the hub is still unknown to Google.
   "/compare/anidachi-vs-amazon-watch-party",
+  // Folded into the Discord hub on 2026-11-22. Indexed (last crawled 26 Jul 2026), so a
+  // recrawl leads Google to the hub, which it had never fetched.
+  "/guides/youtube-watch-party-with-discord",
 ];
 
 export const RECRAWL_SITEMAP_PATH = "/sitemap-redirects.xml";
