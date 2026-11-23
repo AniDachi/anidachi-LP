@@ -60,6 +60,37 @@ describe("content adapter lifecycle", () => {
 		runtime.dispose();
 	});
 
+	it("keeps a Disney invitation through the title card until Continue mounts the matching video", async () => {
+		const id = "b39aa962-be56-4b09-a536-98617031717f";
+		const play = `https://www.disneyplus.com/pt-br/play/${id}`;
+		const details = `https://www.disneyplus.com/pt-br/browse/entity-${id}`;
+		const setUrl = (url: string) => (window as unknown as { happyDOM: { setURL(value: string): void } }).happyDOM.setURL(url);
+		const original = location.href;
+		setUrl(details);
+		vi.spyOn(document, "referrer", "get").mockReturnValue(play);
+		const sendMessage = vi.fn(async (message: { action: string }) => message.action === "claim-launch" ? "anidachiRoom=accepted" : null);
+		vi.stubGlobal("chrome", { runtime: { sendMessage } });
+		const adapter = Object.assign(createAdapter(), { provider: "disneyplus" as const, getFingerprint: () => `disneyplus|play/${id}` });
+		const mount = vi.fn(() => createMountedOverlayStub(adapter));
+		let detection: AdapterDetectionResult = { status: "none" };
+		const lifecycle = startContentLifecycle({ detect: () => detection, lookupPrimeRoom: async () => null, mount,
+			ensureStyles() {}, installKeyboardGuard: () => () => {}, startProviderStudy: () => null });
+		try {
+			await vi.advanceTimersByTimeAsync(90_000);
+			expect(mount).not.toHaveBeenCalled();
+			expect(sendMessage.mock.calls.filter(([msg]) => msg.action === "claim-launch")).toHaveLength(0);
+			setUrl(play);
+			detection = { status: "ready", adapter };
+			lifecycle.reconcile();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(location.hash).toBe("#anidachiRoom=accepted");
+			expect(mount).toHaveBeenCalledOnce();
+		} finally {
+			lifecycle.dispose();
+			setUrl(original);
+		}
+	});
+
 	it.each([
 		["https://www.primevideo.com/storefront", true],
 		["https://www.amazon.com/gp/video/storefront", true],

@@ -2,7 +2,7 @@ import { HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
 import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
 import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
-import { DISNEY_REDIRECT_TTL_MS, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
+import { disneyLaunchTitle, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
 import type { LivePrimeRoomSession } from "../src/prime-room-contract";
 import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogReturn, supportsCatalogRoom } from "../src/catalog-room-routes";
@@ -183,9 +183,7 @@ function startContentLifecycleSession(
 ): ContentLifecycleRuntime & { dispose(leavingDocument?: boolean): void } {
   const primeLaunch = createPrimeLaunchCapture(location.href);
   const entryHref = location.href;
-  const disneyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLaunchRedirect(entryHref, document.referrer) : null;
-  const disneyRedirectDeadline = disneyRedirect ? Date.now() + DISNEY_REDIRECT_TTL_MS : 0;
-  let disneyFragment: string | null = null;
+  let disneyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLaunchRedirect(entryHref, document.referrer) : null;
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
@@ -221,10 +219,6 @@ function startContentLifecycleSession(
 
   let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;
   const mountWithLaunch = (adapter: VideoAdapter) => {
-    if (disneyFragment && adapter.provider === "disneyplus") {
-      if (Date.now() < disneyRedirectDeadline) restoreDisneyLaunchFragment(entryHref, disneyFragment);
-      disneyFragment = null;
-    }
     const href = location.href;
     retryPrimeRecovery = null;
     const mountWaiting = () => {
@@ -351,6 +345,24 @@ function startContentLifecycleSession(
     primeLaunch.observe(location.href);
     if (checkingLiveRoom) return "idle";
     const detection = dependencies.detect(manager.current);
+    if (disneyRedirect) {
+      if (startupRoom || disneyLaunchTitle(location.href) !== disneyRedirect.title) {
+        disneyRedirect = null;
+      } else if (detection.status === "ready" && detection.adapter.provider === "disneyplus") {
+        const claim = disneyRedirect.claim(location.href, detection.adapter.getFingerprint());
+        if (claim) {
+          disneyRedirect = null;
+          checkingLiveRoom = true;
+          void claim.then(fragment => {
+            if (disposed) return;
+            restoreDisneyLaunchFragment(entryHref, fragment);
+            checkingLiveRoom = false;
+            reconcile();
+          });
+          return "idle";
+        }
+      }
+    }
     const catalogRoute = catalogRoomProvider(location.href);
     const path = location.origin + location.pathname;
     const route = parsePrimePageUrl(location.href)?.token;
@@ -436,9 +448,8 @@ function startContentLifecycleSession(
   if (window.top === window && catalogRoomProvider(location.href) &&
       (overrides.lookupPrimeRoom || (typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"))) {
     checkingLiveRoom = true;
-    void Promise.all([dependencies.lookupPrimeRoom().catch(() => null), disneyRedirect]).then(([record, fragment]) => {
+    void dependencies.lookupPrimeRoom().catch(() => null).then(record => {
       if (disposed) return;
-      disneyFragment = fragment;
       checkingLiveRoom = false;
       if (record && catalogRoomProvider(location.href)) {
         startupRoom = record;

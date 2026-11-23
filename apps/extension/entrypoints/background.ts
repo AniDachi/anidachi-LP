@@ -6,7 +6,7 @@ import { storage } from "wxt/utils/storage";
 import { createFree20AbuseClient } from "../src/free20-abuse-client";
 import { createInstallationSigners, TRIAL_INSTALLATION_STORAGE_KEY } from "../src/trial-installation";
 import { WEB_HTTP_BASE } from "../src/constants";
-import { handleDisneyPlusCatalogHandoff, forgetDisneyPlusCatalogTab, isDisneyPlusProfileBoundary } from "../src/source-adapters/disneyplus/catalog-handoff";
+import { discardUnrelatedDisneyLaunch, handleDisneyPlusCatalogHandoff, forgetDisneyPlusCatalogTab, isDisneyPlusProfileBoundary } from "../src/source-adapters/disneyplus/catalog-handoff";
 import { registerUninstallUrl, UNINSTALL_URL_REFRESH_ALARM } from "../src/uninstall-url";
 import { registerTrialInstallationBridge } from "../src/trial-installation-bridge";
 import { registerWebsitePresence } from "../src/website-presence";
@@ -487,6 +487,8 @@ export default defineBackground(() => {
   chrome.tabs.onUpdated?.addListener((tabId, changeInfo) => {
     if (changeInfo.url && isDisneyPlusProfileBoundary(changeInfo.url)) {
       void forgetDisneyPlusCatalogTab(tabId).catch(() => undefined);
+    } else if (changeInfo.url) {
+      void discardUnrelatedDisneyLaunch(tabId, changeInfo.url);
     }
     if (changeInfo.status === "loading") cancelWatchHistoryCatalogForTab(tabId);
   });
