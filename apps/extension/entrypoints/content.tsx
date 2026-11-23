@@ -202,7 +202,7 @@ function startContentLifecycleSession(
   let checkingLiveRoom = false;
   let startupRoom: LivePrimeRoomSession | null = null;
   let catalogAdapter: VideoAdapter | null = null;
-  const pilotEnabled = ROOMS_PILOT && window.top === window && (hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || location.origin === "https://www.netflix.com") &&
+  const pilotEnabled = ROOMS_PILOT && window.top === window && (hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
     typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
   let needsPilotClaim = pilotEnabled;
   let pilotLobby = ROOMS_PILOT && !restoredFromCache && Boolean(lobbyRoomFromUrl(location.href));

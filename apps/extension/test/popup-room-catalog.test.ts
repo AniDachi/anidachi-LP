@@ -16,9 +16,14 @@ vi.mock("../src/popup-room-launch", async (original) => ({
 }));
 
 describe("popup room before playback", () => {
-	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true], ["primevideo", false], ["primevideo", true]] as const)("waits for the signed-in %s catalog (invite %s)", async (provider, invited) => {
+	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true], ["primevideo", false], ["primevideo", true], ["hbomax", false], ["hbomax", true]] as const)("waits for the signed-in %s catalog (invite %s)", async (provider, invited) => {
 		const hash = "anidachiRoom=abc&anidachiLobby=" + provider;
-		const home = provider === "primevideo" ? "https://www.amazon.de/-/en/gp/video/detail/B0HL3NHK3N" : provider === "netflix" ? "https://www.netflix.com/browse" : "https://www.disneyplus.com/home";
+		const home = {
+			disneyplus: "https://www.disneyplus.com/home",
+			netflix: "https://www.netflix.com/browse",
+			primevideo: "https://www.amazon.de/-/en/gp/video/detail/B0HL3NHK3N",
+			hbomax: "https://play.max.com/br/pt/home",
+		}[provider];
 		vi.useFakeTimers();
 		vi.stubGlobal("location", new URL(home + (invited ? "#" + hash : "")));
 		const sendMessage = vi.fn(async (message: { action?: string }) =>
@@ -37,7 +42,12 @@ describe("popup room before playback", () => {
 			await vi.advanceTimersByTimeAsync(1800);
 			expect(claims()).toHaveLength(0);
 			expect(mount).not.toHaveBeenCalled();
-			document.body.innerHTML = provider === "primevideo" ? '<div id="dv-web-page-hydration-root"><a href="/gp/video/storefront">Startseite</a></div>' : provider === "netflix" ? '<div class="main-header"><a href="/browse/genre/83">TV Shows</a></div>' : '<nav><a href="/pt-br/browse/watchlist">Minha lista</a></nav><main></main>';
+			document.body.innerHTML = {
+				primevideo: '<div id="dv-web-page-hydration-root"><a href="/gp/video/storefront">Startseite</a></div>',
+				netflix: '<div class="main-header"><a href="/browse/genre/83">TV Shows</a></div>',
+				disneyplus: '<nav><a href="/pt-br/browse/watchlist">Minha lista</a></nav><main></main>',
+				hbomax: '<nav><div data-testid="navigationMenu"><a data-testid="my-stuff_button" href="/br/pt/my-stuff">Minha lista</a><button data-testid="profile_button">Perfil</button></div></nav>',
+			}[provider];
 			await vi.advanceTimersByTimeAsync(8000);
 			expect(claims()).toHaveLength(1);
 			expect(mount).toHaveBeenCalledTimes(1);
@@ -68,6 +78,10 @@ describe("popup room before playback", () => {
 		expect(popupRoomProvider("https://www.primevideo.com/region/na/storefront")).toBe("primevideo");
 		expect(popupRoomProvider("https://www.amazon.com/dp/B0HL3NHK3N")).toBeNull();
 		expect(popupRoomProvider("https://www.amazon.de/gp/cart/view.html")).toBeNull();
+		expect(popupRoomProvider("https://www.hbomax.com/")).toBe("hbomax");
+		expect(popupRoomProvider("https://play.max.com/br/pt/video/watch/e4b915fb-5e6b-42b8-97ac-90ec7d0e3147")).toBe("hbomax");
+		expect(popupRoomProvider("https://www.hbomax.com/profile/select")).toBeNull();
+		expect(popupRoomProvider("https://hbo.com/home")).toBeNull();
 		const netflix = "https://www.netflix.com/browse#";
 		expect(lobbyRoomFromUrl(netflix + "anidachiRoom=abc&anidachiLobby=netflix")).toBe("abc");
 		expect(lobbyRoomFromUrl(netflix + "anidachiRoom=abc&anidachiLobby=disneyplus")).toBeNull();

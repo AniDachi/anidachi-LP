@@ -1,5 +1,5 @@
 import { catalogPlayerProvider } from "./catalog-room-routes";
-import { PRIME_CONTENT_MATCHES, ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
+import { HBO_MAX_BROWSER_HOSTS, PRIME_CONTENT_MATCHES, ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
 import { getStoredAuthTokens } from "./auth-tokens";
 import { PRIME_ROOM_INTERNAL } from "./prime-room-contract";
 import {
@@ -117,7 +117,9 @@ export function registerPopupRoomLaunch() {
 					: (
 							await chrome.tabs.query({
 								currentWindow: true,
-								url: provider === "primevideo" ? PRIME_CONTENT_MATCHES : new URL(ROOM_LOBBY_HOME[provider]).origin + "/*",
+								url: provider === "primevideo" ? PRIME_CONTENT_MATCHES
+									: provider === "hbomax" ? HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`)
+									: new URL(ROOM_LOBBY_HOME[provider]).origin + "/*",
 							})
 						)
 							.filter(
