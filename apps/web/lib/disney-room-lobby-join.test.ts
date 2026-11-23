@@ -11,6 +11,7 @@ const original = loader._load;
 let user: string | null = "guest",
 	ended = false,
 	joined = 0;
+let lobbyProvider: "disneyplus" | null = null;
 let source = roomSourceCreationColumns({});
 loader._load = (id, parent, main) => {
 	if (id === "@/lib/anidachi-auth/session")
@@ -22,6 +23,7 @@ loader._load = (id, parent, main) => {
 			getRoomById: async () => ({
 				status: ended ? "ended" : "live",
 				host_user_id: "host",
+				lobby_provider: lobbyProvider,
 				...source,
 			}),
 			isRoomMember: async () => false,
@@ -39,11 +41,11 @@ const { POST } = createRequire(import.meta.url)(
 after(() => {
 	loader._load = original;
 });
-const join = (lobby: string) =>
+const join = (lobby?: string) =>
 	POST(
 		new NextRequest(
-			"https://staging.anidachi.app/api/rooms/abc/join?lobby=" +
-				encodeURIComponent(lobby),
+			"https://staging.anidachi.app/api/rooms/abc/join" +
+				(lobby ? "?lobby=" + encodeURIComponent(lobby) : ""),
 			{ method: "POST" },
 		),
 		{ params: Promise.resolve({ roomId: "abc" }) },
@@ -71,6 +73,8 @@ test("Disney lobby invites respect membership admission and resolve the latest p
 		(await join("https://example.invalid")).headers.get("location")!,
 		/\/room\/abc\?joined=1$/,
 	);
+	lobbyProvider = "disneyplus";
+	assert.equal((await join()).headers.get("location"), lobby.headers.get("location"));
 	const player =
 		"https://www.netflix.com/watch/80000123";
 	source = roomSourceCreationColumns({ sourceUrl: player });
@@ -78,4 +82,5 @@ test("Disney lobby invites respect membership admission and resolve the latest p
 		(await join("disneyplus")).headers.get("location"),
 		player + "#anidachiRoom=abc",
 	);
+	assert.equal((await join()).headers.get("location"), player + "#anidachiRoom=abc");
 });

@@ -37,8 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function RoomPage({ params, searchParams }: Props) {
   const { roomId } = await params;
   const { joined, lobby } = await searchParams;
-  const lobbyUrl = disneyLobbyDestination(roomId, lobby);
-  const lobbyQuery = lobbyUrl ? "?lobby=disneyplus" : "";
+  const lobbyQuery = disneyLobbyDestination(roomId, lobby) ? "?lobby=disneyplus" : "";
   const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
   await requireAuth(`/room/${roomId}${lobbyQuery}`);
@@ -79,7 +78,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const source = deriveDurableRoomSource(room);
   const launchUrl = source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : lobbyUrl;
+    : disneyLobbyDestination(roomId, room.lobby_provider ?? lobby);
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
   const justJoined = joined === "1";
 
