@@ -1,3 +1,4 @@
+import { disneyLobbyDestination } from "@/lib/disney-room-lobby";
 import { type NextRequest, NextResponse } from "next/server";
 import { emitServerEvent } from "@/lib/analytics-server-events";
 import { getSession } from "@/lib/anidachi-auth/session";
@@ -70,7 +71,7 @@ export async function POST(
   const source = deriveDurableRoomSource(room);
   const launchUrl = source?.source.provider === "primevideo" ? new URL(`/room/${encodeURIComponent(roomId)}/launch`,request.url).toString() : source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : null;
+    : disneyLobbyDestination(roomId, request.nextUrl.searchParams.get("lobby"));
   return NextResponse.redirect(
     launchUrl ?? new URL(`/room/${encodeURIComponent(roomId)}?joined=1`, request.url),
     303
