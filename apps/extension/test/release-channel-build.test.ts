@@ -320,6 +320,7 @@ describe.sequential("extension release channel builds", () => {
       "https://www.netflix.com/*",
       "https://*.primevideo.com/*",
       ...amazonVideoMatches,
+      "https://www.disneyplus.com/*",
       "https://*.crunchyroll.com/*",
     ]);
     expectCanonicalRuntime("anidachi-extension-staging-local-broad", {
