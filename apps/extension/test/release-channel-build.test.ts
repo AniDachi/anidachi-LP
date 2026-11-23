@@ -25,6 +25,23 @@ const localHostPermissions = [
   "https://*/*",
   "file:///*",
 ];
+const amazonVideoMatches = [
+  "amazon.com",
+  "amazon.co.uk",
+  "amazon.de",
+  "amazon.co.jp",
+  "amazon.ca",
+  "amazon.in",
+  "amazon.com.mx",
+].flatMap((host) => [
+  `https://*.${host}/Amazon-Video/*`,
+  `https://*.${host}/-/*/Amazon-Video/*`,
+  `https://*.${host}/gp/video/*`,
+  `https://*.${host}/*/gp/video/*`,
+  `https://*.${host}/dp/*`,
+  `https://*.${host}/*/dp/*`,
+]);
+
 const videoHosts = [
   "https://youtube.com/*",
   "https://*.youtube.com/*",
@@ -32,11 +49,32 @@ const videoHosts = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  "https://*.primevideo.com/*",
+  ...amazonVideoMatches,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
+const videoOrigins = [
+  "https://youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtu.be/*",
+  "https://*.youtu.be/*",
+  "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
+  "https://*.primevideo.com/*",
+  "https://*.amazon.com/*",
+  "https://*.amazon.co.uk/*",
+  "https://*.amazon.de/*",
+  "https://*.amazon.co.jp/*",
+  "https://*.amazon.ca/*",
+  "https://*.amazon.in/*",
+  "https://*.amazon.com.mx/*",
+  "https://crunchyroll.com/*",
+  "https://*.crunchyroll.com/*",
+];
+
 const productionHostPermissions = [
-  ...videoHosts,
+  ...videoOrigins,
   "https://www.anidachi.app/*",
   "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
 ];
@@ -209,7 +247,7 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.permissions ?? []).not.toContain("downloads");
     expectExact(manifest.host_permissions, productionHostPermissions);
     expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-public", {
       web: "https://www.anidachi.app",
@@ -233,12 +271,12 @@ describe.sequential("extension release channel builds", () => {
     expect(manifest.key).toBeTypeOf("string");
     expect(deriveId(manifest.key ?? "")).toBe(stagingId);
     expectExact(manifest.host_permissions, [
-      ...videoHosts,
+      ...videoOrigins,
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ]);
     expectExact(contentMatches(manifest), videoHosts);
-    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoHosts);
+    expectExact(manifest.web_accessible_resources?.[0]?.matches, videoOrigins);
     expectNarrow(manifest);
     expectCanonicalRuntime("anidachi-extension-staging", {
       web: "https://staging.anidachi.app",
@@ -275,6 +313,8 @@ describe.sequential("extension release channel builds", () => {
     expectExact(contentMatches(manifest), [
       ...localHostPermissions,
       "https://www.netflix.com/*",
+      "https://*.primevideo.com/*",
+      ...amazonVideoMatches,
       "https://*.crunchyroll.com/*",
     ]);
     expectCanonicalRuntime("anidachi-extension-staging-local-broad", {

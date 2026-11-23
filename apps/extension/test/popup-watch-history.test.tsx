@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
   PopupWatchHistoryPanel,
+  groupWatchHistoryItems,
   selectConfirmedPopupWatchHistorySnapshot,
   subscribeToPopupWatchHistorySnapshot,
   type PopupWatchHistoryClient,
@@ -465,7 +466,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
     expect(view.container.textContent).toContain("Pending sync");
     expect(client.loadCached).toHaveBeenCalledTimes(1);
-    expect(listRequests).toBe(3);
+    expect(listRequests).toBe(4);
     await unmount(view.root);
   });
 
@@ -1098,7 +1099,7 @@ describe("Popup Watch History v3", () => {
       );
     });
 
-    await waitFor(() => expect(listRequests).toBe(6));
+    await waitFor(() => expect(listRequests).toBe(8));
     expect(view.container.textContent).toContain("Stable Frieren");
     expect(view.container.textContent).not.toContain("Older cached Frieren");
     expect(view.container.textContent).not.toContain("Loading watch history");
@@ -1192,7 +1193,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
     expect(view.container.textContent).toContain("Episode 1");
     expect(view.container.querySelector('[title="Episode 8"]')).not.toBeNull();
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(3);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(4);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1340,7 +1341,7 @@ describe("Popup Watch History v3", () => {
     await click(secondTitle);
     expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
     expect(title.getAttribute("aria-expanded")).toBe("true");
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(3);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(4);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1431,7 +1432,7 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(listAttempts).toBe(4);
+    expect(listAttempts).toBe(5);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
@@ -1489,7 +1490,7 @@ describe("Popup Watch History v3", () => {
     );
     expect(recoveryCall).toBeGreaterThan(-1);
     expect(secondListCall).toBeGreaterThan(recoveryCall);
-    expect(listAttempts).toBe(6);
+    expect(listAttempts).toBe(8);
     await unmount(view.root);
   });
 
@@ -1525,7 +1526,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Browser storage is full."));
     expect(view.container.textContent).toContain("Cached Frieren");
     await findButton(view.container, "Retry watch history");
-    expect(listAttempts).toBe(5);
+    expect(listAttempts).toBe(7);
     await unmount(view.root);
   });
 
@@ -1576,7 +1577,7 @@ function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryRespo
       const page = fixtureBrowseDetail(latest, input);
       return page.ok ? Response.json(page.data) : new Response("unavailable", { status: 503 });
     }
-    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
+    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
       const empty = fixtureBrowseTitles(latest, input);
       return Response.json(empty.ok ? empty.data : null);
     }
@@ -2144,3 +2145,11 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
   isHistoryRecordingEnabled: async () => true,
 }));
+
+
+it("keeps the legacy amazon placeholder separate from Prime Video", () => {
+  const base = historyFixture().items[0]!;
+  const groups = groupWatchHistoryItems([{ ...base, provider: "amazon" }, { ...base, provider: "primevideo" }]);
+  expect(groups.map(group => [group.provider, group.label])).toEqual([["amazon", "amazon"], ["primevideo", "Prime Video"]]);
+  expect(groups.map(group => group.items.length)).toEqual([1, 1]);
+});

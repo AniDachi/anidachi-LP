@@ -1295,7 +1295,7 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
         sessionIds: [],
       });
     }
-    if (url.pathname === "/rest/v1/rpc/list_watch_history_v3_title_episodes_page") {
+    if (url.pathname === "/rest/v1/rpc/list_watch_history_v3_title_episodes_page_prime_navigation_v1") {
       return Response.json({
         accountGeneration: 1,
         provider: "crunchyroll",
@@ -1335,7 +1335,7 @@ test("production reads call only the deployed resource-bounded RPCs", async (t) 
   assert.equal(detail?.progressRows.length, 1);
   assert.deepEqual(
     requests.find(({ url }) =>
-      url.pathname === "/rest/v1/rpc/list_watch_history_v3_title_episodes_page")?.body,
+      url.pathname === "/rest/v1/rpc/list_watch_history_v3_title_episodes_page_prime_navigation_v1")?.body,
     {
       p_user_id: USER_ID,
       p_history_generation: 1,

@@ -231,3 +231,80 @@ describe("explicit personal Resume", () => {
 		expect(seek).not.toHaveBeenCalled();
 	});
 });
+
+it("Prime resume waits for provider readiness and uses guarded provider seeking, never raw seek", async () => {
+  const sourceUrl = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
+  const url = new URL(await buildPersonalHistoryResumeUrl({
+    ownerUserId: historyOwner, accountGeneration: 1, provider: "primevideo",
+    sourceUrl, currentTime: 42, now,
+  }));
+  expect(url.searchParams.get("autoplay")).toBe("1");
+  const replace = vi.fn();
+  const launch = takePersonalHistoryResume({ href: url.href }, replace, now)!;
+  expect(launch.sourceUrl).toBe(sourceUrl);
+  expect(replace).toHaveBeenCalledExactlyOnceWith(`${sourceUrl}?autoplay=1`);
+  let snapshotReady = false;
+  let readiness = "waiting";
+  const seek = vi.fn();
+  const seekPersonalResume = vi.fn(async (_intent, guard) => guard() ? "consumed" : "cancelled");
+  const adapter = { provider: "primevideo", video: { readyState: 1, duration: 100 },
+    getFingerprint: () => `primevideo|detail/${"A".repeat(26)}`,
+    getPlaybackSnapshot: () => ({ phase: snapshotReady ? "content" : "transition" }),
+    getSourceDescriptor: () => snapshotReady ? ({ sourceUrl: `${sourceUrl}?ref_=atv_plr_detail_play` }) : undefined,
+    getPersonalResumeReadiness: vi.fn(async () => readiness), seekPersonalResume, seek } as unknown as VideoAdapter;
+  const claim = vi.fn(async () => true);
+  const input = { adapter, getOwner: () => historyOwner, roomActive: () => false, isCurrent: () => true,
+    getLease: async () => paidHistoryLease(historyOwner, now), claim, now: () => now };
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("waiting");
+  expect(claim).not.toHaveBeenCalled();
+  expect(seekPersonalResume).not.toHaveBeenCalled();
+  snapshotReady = true;
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("waiting");
+  expect(claim).not.toHaveBeenCalled();
+  expect(seekPersonalResume).not.toHaveBeenCalled();
+  readiness = "ready";
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("consumed");
+  expect(seekPersonalResume).toHaveBeenCalledTimes(1);
+  expect(seekPersonalResume).toHaveBeenCalledWith(launch, expect.any(Function));
+  expect(claim).toHaveBeenCalledTimes(1);
+  expect(seek).not.toHaveBeenCalled();
+  expect(await applyPersonalHistoryResume(launch, { ...input, adapter: { ...adapter, getPersonalResumeReadiness: undefined } as VideoAdapter })).toBe("waiting");
+  expect(await applyPersonalHistoryResume(launch, { ...input, claim: async () => { readiness = "cancelled"; return true; },
+    adapter: { ...adapter, getSourceDescriptor: () => ({ sourceUrl: `${sourceUrl}X` }) } as unknown as VideoAdapter })).toBe("cancelled");
+});
+
+it.each([
+  "owner", "expiry", "room", "current", "fingerprint", "descriptor", "provider", "phase",
+] as const)("cancels Prime resume when %s changes while the first snapshot is pending", async change => {
+  const id = "A".repeat(26);
+  const sourceUrl = `https://www.primevideo.com/detail/${id}`;
+  const launch = parsePersonalHistoryResumeUrl(await buildPersonalHistoryResumeUrl({
+    ownerUserId: historyOwner, accountGeneration: 1, provider: "primevideo",
+    sourceUrl, currentTime: 42, now,
+  }), now)!;
+  let owner = historyOwner, time = now, room = false, current = true;
+  let fingerprint = `primevideo|detail/${id}`;
+  let descriptor: { sourceUrl: string } | undefined;
+  let provider = "primevideo", phase = "transition";
+  const seek = vi.fn(), seekPersonalResume = vi.fn(), claim = vi.fn(), getLease = vi.fn();
+  const adapter = { get provider() { return provider; }, video: { readyState: 1, duration: 100 },
+    getFingerprint: () => fingerprint, getSourceDescriptor: () => descriptor,
+    getPlaybackSnapshot: () => ({ phase }), seek, seekPersonalResume,
+  } as unknown as VideoAdapter;
+  const input = { adapter, getOwner: () => owner, roomActive: () => room,
+    isCurrent: () => current, getLease, claim, now: () => time };
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("waiting");
+  if (change === "owner") owner = "other-owner";
+  if (change === "expiry") time = launch.expiresAt;
+  if (change === "room") room = true;
+  if (change === "current") current = false;
+  if (change === "fingerprint") fingerprint = `primevideo|detail/${"B".repeat(26)}`;
+  if (change === "descriptor") descriptor = { sourceUrl: `https://www.primevideo.com/detail/${"B".repeat(26)}` };
+  if (change === "provider") provider = "netflix";
+  if (change === "phase") phase = "content";
+  expect(await applyPersonalHistoryResume(launch, input)).toBe("cancelled");
+  expect(getLease).not.toHaveBeenCalled();
+  expect(claim).not.toHaveBeenCalled();
+  expect(seekPersonalResume).not.toHaveBeenCalled();
+  expect(seek).not.toHaveBeenCalled();
+});

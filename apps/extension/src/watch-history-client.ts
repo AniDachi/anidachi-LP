@@ -1,6 +1,8 @@
+import { hasPrimeBrowserHost, parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
   WatchHistoryCapacityCompatibleSchema,
+  canonicalizeRoomSourceUrl,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -565,7 +567,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "list") return refresh(session, message);
     if (message.command === "capacity") {
       const lease = await readLease(session);
-      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=2");
+      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=3");
       if (!response.ok) return response.error;
       const parsed = WatchHistoryCapacityCompatibleSchema.safeParse(response.body);
       if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
@@ -682,7 +684,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const startedRoot = await storage.readRoot();
     const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
     const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
-    const query = new URLSearchParams({ providerVersion: "2" });
+    const query = new URLSearchParams({ providerVersion: "3" });
     if (message.limit !== undefined) query.set("limit", String(message.limit));
     if (message.cursor) query.set("cursor", message.cursor);
     const response = await authenticatedRequest(session, `/api/watch-history/v3${query.size ? `?${query}` : ""}`);
@@ -1436,7 +1438,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     try {
       response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
         ...init,
-        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-history-owner": session.user.id },
+        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id },
       });
     } catch {
       return { ok: false, error: { ok: false, status: "retryable" }, session };
@@ -1469,7 +1471,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           headers: {
             Authorization: `Bearer ${refreshed.accessToken}`,
             "Content-Type": "application/json",
-            "x-anidachi-history-owner": session.user.id,
+            "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id,
           },
         });
       } catch {
@@ -1926,7 +1928,7 @@ function parseBrowseInput(
   const parsed = schema.safeParse(message.input);
   if (!parsed.success) return null;
   return message.command === "browse" || message.command === "browse-sessions" || message.command === "browse-options"
-    ? { ...parsed.data, providerVersion: 2 }
+    ? { ...parsed.data, providerVersion: 3 }
     : parsed.data;
 }
 
@@ -1962,6 +1964,8 @@ function browsePath(command: BrowseCommand, input: BrowseInput): string {
     if (typeof value === "string" || typeof value === "number") query.set(key, String(value));
   }
   if (command === "browse") query.set("includeEpisodePreviews", "true");
+  if (command === "browse-catalog" && typeof values.includePartial === "boolean")
+    query.set("includePartial", String(values.includePartial));
   const suffix = command === "browse-catalog" ? "/catalog" : command === "browse"
     ? ""
     : command === "browse-title-episodes"
@@ -2060,7 +2064,8 @@ export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender
   if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
-  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname)) return false;
+  if (url.protocol !== "https:" || !hasPrimeBrowserHost(sender.url) && !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com", "www.primevideo.com"].includes(url.hostname)) return false;
+  if (hasPrimeBrowserHost(sender.url) && !parsePrimePageUrl(sender.url)) return false;
   if (url.hostname === "www.netflix.com") {
     if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
     // Trust the document origin, not its initial route: Netflix opens players

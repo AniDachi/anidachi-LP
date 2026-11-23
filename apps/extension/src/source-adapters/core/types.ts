@@ -79,9 +79,13 @@ export interface VideoAdapter {
   getOverlayBinding(): AdapterOverlayBinding;
   setPlaybackRate(rate: number): void;
   play(): Promise<void>;
+  /** Continue a provider's local ad/intro; never seek or alter its rate. */
+  resumeInterstitial?(signal: AbortSignal): Promise<void>;
   pause(): void;
   seek(time: number, options?: SeekOptions): void;
   subscribe(callback: (event: PlayerEvent) => void): () => void;
+  /** Confirmed native player close only; never suspension, source replacement or reload. */
+  subscribePlayerClose?(listener: (event: Event) => void): () => void;
   getOverlayGeometry(): PlayerOverlayGeometry;
   subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener): () => void;
   duckVolume(targetVolume?: number): () => void;

@@ -1,3 +1,5 @@
+import { runPrimeCommand } from "./source-adapters/primevideo/bridge-client";
+import type { PrimeSnapshot } from "./source-adapters/primevideo/contract";
 import { isHistoryRecordingEnabled } from "./history-recording-choice";
 import { canCaptureWatchHistory, parseWatchHistoryLease, personalEnvelopeEligible } from "./watch-history-access";
 import {
@@ -131,12 +133,14 @@ export function createWatchHistoryPageResolver(dependencies: {
   send(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
   command?: typeof runCrunchyrollMainCommand;
   netflixCommand?: typeof runNetflixCommand;
+  primeCommand?: typeof runPrimeCommand;
   pageId?: string;
   now?: () => number;
 }) {
   const pageId = dependencies.pageId ?? crypto.randomUUID();
   const command = dependencies.command ?? runCrunchyrollMainCommand;
   const netflixCommand = dependencies.netflixCommand ?? runNetflixCommand;
+  const primeCommand = dependencies.primeCommand ?? runPrimeCommand;
   const now = dependencies.now ?? Date.now;
   const mappings = new Map<string, { promise: Promise<CrunchyrollHistoryMetadata | null>; attemptedAt: number; abort: AbortController; settled: boolean }>();
   const activeCatalogs = new Map<string, { abort: AbortController; signature: string; visitId: string; promise: Promise<void> }>();
@@ -157,8 +161,9 @@ export function createWatchHistoryPageResolver(dependencies: {
   async function resolve(event: WatchHistoryLocalEvent, owner: string, options: { refreshCatalog: boolean }): Promise<void> {
     const pending = event.identityPending;
     const netflixIdentity = event.provider === "netflix" && event.netflixIdentity?.kind === "episode" ? event.netflixIdentity : null;
-    if (disposed || (!netflixIdentity && (!pending || event.provider !== "crunchyroll")) || !await eligible(event, owner)) return;
-    const watchId = netflixIdentity?.providerEpisodeIdentifier ?? pending!.watchId;
+    const primeIdentity = event.provider === "primevideo" && event.primevideoIdentity?.kind === "episode" ? event.primevideoIdentity : null;
+    if (disposed || (!primeIdentity && !netflixIdentity && (!pending || event.provider !== "crunchyroll")) || !await eligible(event, owner)) return;
+    const watchId = primeIdentity?.providerEpisodeIdentifier ?? netflixIdentity?.providerEpisodeIdentifier ?? pending!.watchId;
     const sourceKey = `${owner}:${event.accountGeneration}:${event.clientSessionKey}:${watchId}`;
     if (options.refreshCatalog && sourceKey !== currentSource) {
       currentSource = sourceKey;
@@ -166,9 +171,18 @@ export function createWatchHistoryPageResolver(dependencies: {
       sourceAbort = new AbortController();
     }
     let netflix: NetflixSnapshot | null = null;
+    let prime: PrimeSnapshot | null = null;
     let metadata: CrunchyrollHistoryMetadata | null = null;
     let resolution: Promise<unknown> = Promise.resolve();
-    if (netflixIdentity) {
+    if (primeIdentity) {
+      if (!options.refreshCatalog || sourceKey !== currentSource) return;
+      const response = await primeCommand({ action: "snapshot", contentId: watchId }, sourceAbort.signal);
+      prime = response?.ok ? response.snapshot ?? null : null;
+      if (!prime || prime.phase !== "content" || prime.metadata.identity?.kind !== "episode" ||
+        prime.metadata.identity.seriesAnchorSeasonId !== primeIdentity.seriesAnchorSeasonId ||
+        prime.metadata.identity.providerSeasonIdentifier !== primeIdentity.providerSeasonIdentifier ||
+        prime.metadata.identity.providerEpisodeIdentifier !== watchId || sourceAbort.signal.aborted || !await eligible(event, owner)) return;
+    } else if (netflixIdentity) {
       if (!options.refreshCatalog || sourceKey !== currentSource) return;
       const response = await netflixCommand({ action: "snapshot", movieId: watchId }, sourceAbort.signal);
       netflix = response?.ok ? response.snapshot ?? null : null;
@@ -193,10 +207,10 @@ export function createWatchHistoryPageResolver(dependencies: {
         accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity,
         episodeNumber: metadata.episodeNumber, artworkUrl: metadata.artworkUrl });
     }
-    const context = netflix?.metadata.context ?? metadata?.context;
+    const context = prime?.metadata.context ?? netflix?.metadata.context ?? metadata?.context;
     if (!options.refreshCatalog || disposed || sourceKey !== currentSource || !context?.region) { await resolution; return; }
-    const provider = netflixIdentity ? "netflix" as const : "crunchyroll" as const;
-    const providerSeriesId = netflixIdentity?.providerSeriesId ?? metadata!.identity.providerSeriesId;
+    const provider = primeIdentity ? "primevideo" as const : netflixIdentity ? "netflix" as const : "crunchyroll" as const;
+    const providerSeriesId = primeIdentity?.seriesAnchorSeasonId ?? netflixIdentity?.providerSeriesId ?? metadata!.identity.providerSeriesId;
     const titleKey = `${provider}:series:${providerSeriesId}`;
     const jobKey = `${owner}:${event.accountGeneration}:${titleKey}`;
     if (!visits.has(sourceKey)) visits.set(sourceKey, `${pageId}:${visits.size + 1}`);
@@ -221,12 +235,16 @@ export function createWatchHistoryPageResolver(dependencies: {
         if (!parsed.success || !matches(owner, input, parsed.data)) return;
         revision = parsed.data.revision;
         if (disposed || abort.signal.aborted || !parsed.data.refreshRequired || !await eligible(event, owner)) return;
-        const result = netflix
+        const result = prime
+          ? await primeCommand({ action: "catalog", contentId: watchId, generation: prime.generation }, abort.signal)
+          : netflix
           ? await netflixCommand({ action: "catalog", movieId: watchId, generation: netflix.generation }, abort.signal)
           : await command("historyCatalog", { seriesId: input.providerSeriesId, context: input.context }, 120_000, abort.signal);
-        if (!result?.ok || !result.catalog || (netflix && (result.catalog.provider !== input.provider || result.catalog.titleKey !== input.titleKey || contextKey(result.catalog.context) !== contextKey(input.context))) || disposed || abort.signal.aborted || !await eligible(event, owner)) return;
+        if (!result?.ok || !result.catalog || ((netflix || prime) && (result.catalog.provider !== input.provider || result.catalog.titleKey !== input.titleKey || contextKey(result.catalog.context) !== contextKey(input.context))) || disposed || abort.signal.aborted || !await eligible(event, owner)) return;
+        // Eligibility crosses an async storage boundary; cancellation may occur during it.
+        if (disposed || abort.signal.aborted || sourceKey !== currentSource) return;
         await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-commit", expectedOwnerUserId: owner, pageId: visitId,
-          input: { ...input, revision: parsed.data.revision, snapshot: netflix ? { ...result.catalog, context: input.context } : result.catalog } });
+          input: { ...input, revision: parsed.data.revision, snapshot: netflix || prime ? { ...result.catalog, context: input.context } : result.catalog } });
       } catch { /* One bounded attempt per context/visit; a new visit can retry. */ }
       finally {
         if (revision !== null) await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,

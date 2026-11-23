@@ -1,4 +1,7 @@
 "use client";
+import {requestPrimeLaunch,primeResumeMessage} from "@/lib/prime-launch-client";
+import type {PrimeNavigation} from "@anidachi/protocol";
+
 
 import { WATCH_HISTORY_OWNER_HEADER } from "../../../lib/watch-history-owner";
 
@@ -30,16 +33,19 @@ type Notice = { tone: "success" | "error"; text: string };
 export function WatchLibraryClient({
   initialHistory,
   initialAccess = "allowed",
+  extensionId,
 }: {
   initialHistory: WatchHistoryResponse;
   initialPreferences: WatchHistoryPreferencesResponse;
   initialAccess?: "allowed" | "plan_required";
+  extensionId?:string|null;
 }) {
   const ownerGenerationKey = `${initialHistory.meta.ownerUserId}:${initialHistory.meta.accountGeneration}:${initialAccess}`;
   return (
     <WatchLibraryOwnerClient
       initialHistory={initialHistory}
       initialAccess={initialAccess}
+      extensionId={extensionId}
       key={ownerGenerationKey}
     />
   );
@@ -48,9 +54,11 @@ export function WatchLibraryClient({
 function WatchLibraryOwnerClient({
   initialHistory,
   initialAccess = "allowed",
+  extensionId,
 }: {
   initialHistory: WatchHistoryResponse;
   initialAccess?: "allowed" | "plan_required";
+  extensionId?:string|null;
 }) {
   const [accessState, setAccessState] = useState<string>(initialAccess);
   const canRead = accessState === "allowed" || accessState === "plan_required";
@@ -65,6 +73,7 @@ function WatchLibraryOwnerClient({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [primeFallback,setPrimeFallback]=useState<{url:string;navigation?:PrimeNavigation}|null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const operationRevision = useRef(0);
   const mutationInFlight = useRef(false);
@@ -89,7 +98,7 @@ function WatchLibraryOwnerClient({
     try {
       const access = WatchHistoryAccessSchema.parse(
         await api<unknown>("/api/watch-history/v3/access", {
-          headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
+          headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
         }),
       );
       if (access.ownerUserId !== ownerUserId)
@@ -135,12 +144,12 @@ function WatchLibraryOwnerClient({
   }, [hideInaccessible]);
 
   const readPage = useCallback(async (cursor: string | null = null, signal?: AbortSignal) => {
-    const query = new URLSearchParams({ limit: "24", providerVersion: "2" });
+    const query = new URLSearchParams({ limit: "24", providerVersion: "3" });
     if (cursor) query.set("cursor", cursor);
     const filtered = provider !== "all";
     if (filtered) { query.set("mode", "personal"); query.set("provider", provider); }
     const value = await api<unknown>(`/api/watch-history/v3${filtered ? "/browse" : ""}?${query}`, {
-      signal, headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
+      signal, headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
     });
     const page = parseOwnedHistory(filtered ? WatchHistoryBrowseResponseSchema.parse(value).history : value, ownerUserId);
     if (filtered && page.items.some(item => item.provider !== provider)) throw new Error("History platform changed");
@@ -306,7 +315,7 @@ function WatchLibraryOwnerClient({
         const acknowledgement = WatchHistoryDeletionAckSchema.parse(
           await api<unknown>("/api/watch-history/v3/delete", {
             method: "POST",
-            headers: { [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
+            headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: ownerUserId },
             body: JSON.stringify({
               schemaVersion: 3,
               clientMutationId: crypto.randomUUID(),
@@ -379,15 +388,17 @@ function WatchLibraryOwnerClient({
       provider: WatchHistoryItem["provider"],
       sourceUrl: string,
       currentTime: number,
+      navigation?:PrimeNavigation,
     ) => {
       if (busyAction || mutationInFlight.current || !canRead) return;
-      if (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix") return;
+      if (provider !== "crunchyroll" && provider !== "youtube" && provider !== "netflix" && provider !== "primevideo") return;
       const revision = operationRevision.current;
       const generation = history.meta.accountGeneration;
       const current = () =>
         mounted.current &&
         operationRevision.current === revision &&
         !mutationInFlight.current;
+      setPrimeFallback(null);
       setBusyAction("resume");
       setNotice(null);
       try {
@@ -406,7 +417,12 @@ function WatchLibraryOwnerClient({
           sourceUrl,
           currentTime,
         });
-        if (current()) window.location.assign(url);
+        if (current()) {
+          if(provider==='primevideo') {
+            const opened=await requestPrimeLaunch(extensionId??null,primeResumeMessage(url,ownerUserId,navigation),current);
+            if(current()&&!opened)setPrimeFallback({url,navigation});
+          } else window.location.assign(url);
+        }
       } catch (error) {
         if (current()) {
           hideInaccessible(error);
@@ -427,6 +443,7 @@ function WatchLibraryOwnerClient({
       ownerUserId,
       readAccess,
       hideInaccessible,
+      extensionId,
     ],
   );
 
@@ -436,6 +453,12 @@ function WatchLibraryOwnerClient({
 
   return (
     <div className={`wh-page${emptyLibrary ? " wh-page-first-watch" : ""}`}>
+      {primeFallback && <aside role="status" className="wh-notice">
+        <p>Update or enable the AniDachi extension to keep Resume through provider redirects. You can also open a known link below.</p>
+        <p><a href={primeFallback.url}>Open on Prime Video</a></p>
+        {primeFallback.navigation?.routes.map(route => { const url = new URL(route.url); url.hash = new URL(primeFallback.url).hash; return <p key={route.url}><a href={url.toString()}>Open on {url.hostname}</a></p>; })}
+        <button type="button" onClick={() => setPrimeFallback(null)}>Dismiss</button>
+      </aside>}
       <header className="wh-page-heading">
         <div>
           <h1>Watch Library</h1>

@@ -1,5 +1,24 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Prime Amazon readiness follow-up — 2026-11-18
+
+[Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)
+corrects native Amazon ASIN readiness, single-season catalog and intro barriers.
+Exact room identity, invitation validation and server/media contracts stay
+unchanged. Candidate inspection on the reported page passes without reload;
+tests, review, staging packaging and loaded two-account acceptance are recorded
+separately in its delivery receipt. No production promotion is included.
+
+## Prime player-close follow-up — 2026-11-17
+
+Owner approved explicit player close as room departure (host ends, guest leaves),
+preserving native episode/season changes and reconnect grace. The extension-only
+[Task 20](2026-11-16-prime-video-adapter.md#task-20--intentional-player-close-leaves-the-room-november-17)
+reuses exact departure and durable retries; Worker/Web/SQL/P2P protocol unchanged.
+Provider intent, admission races and offline cleanup have focused regressions.
+Final extension checks, room harness, review and loaded acceptance are tracked
+in that task's delivery receipt; no production promotion is included.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` for implementation tasks and update this file after every completed step. Use `superpowers:systematic-debugging` for regressions. This plan is the execution program for the room/realtime/P2P goals in `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`. The roadmap stays authoritative for protocol contracts and task ordering; this plan adds measurable targets, an automated test harness, verified-bug fixes, and concrete media-engine work. When the two documents conflict on ordering or contracts, the roadmap wins unless the Progress Log here records an agreed exception.
 
 **Goal:** Make the complete commercial flow — sign-in, room creation, invite, join, live sync, P2P camera/audio, reconnect, room end — work reliably at the level of mature realtime products, with every claim verified by metrics and automated two-browser tests instead of ad-hoc manual checks.
