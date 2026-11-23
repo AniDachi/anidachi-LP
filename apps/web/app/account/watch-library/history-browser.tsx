@@ -274,9 +274,10 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const seasons = useMemo(() => {
     const groups = new Map<string | null, { key: string | null; title: string; order: number }>();
     for (const ep of data?.episodes ?? []) if (!groups.has(ep.seasonKey))
-      groups.set(ep.seasonKey, { key: ep.seasonKey, title: ep.seasonTitle ?? "Saved episodes", order: ep.seasonOrder });
+      groups.set(ep.seasonKey, { key: ep.seasonKey, title: item.provider === "primevideo" && ep.seasonNumber !== null && (!ep.seasonTitle || ep.seasonTitle === item.title)
+        ? `Season ${ep.seasonNumber}` : ep.seasonTitle ?? "Saved episodes", order: ep.seasonOrder });
     return [...groups.values()].sort((a, b) => a.order - b.order);
-  }, [data]);
+  }, [data, item.provider, item.title]);
   const episodes = data?.episodes.filter(ep => single || ep.seasonKey === season) ?? [];
   const selected = episodes.find(ep => ep.episodeKey === episodeKey) ?? episodes[0];
   const watched = (ep: WatchHistoryEditorEpisode) => draft[ep.episodeKey] ?? ep.watched;
