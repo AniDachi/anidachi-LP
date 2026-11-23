@@ -5,6 +5,8 @@ import type { PlayerOverlayGeometryListener } from "../core/overlay-geometry";
 import type { AdapterPlaybackSnapshot, PersonalResumeTarget, PlayerEvent } from "../core/types";
 import { readDisneyPlusPlaybackMetadata, readDisneyPlusPlayerTitle } from "./metadata";
 import { DisneyPlusTimeline } from "./timeline";
+import { disneyTransport } from "./native-player";
+import { disneyControlsPortal, findDisneyPlusElement } from "./dom";
 import { disneyPlusWatchId } from "./url";
 import { disneyOverlayBinding, disneyOverlayGeometry, subscribeDisneyOverlayGeometry } from "./player-chrome";
 
@@ -23,6 +25,7 @@ export class DisneyPlusVideoAdapter extends Html5VideoAdapter {
   };
   private readonly timeline: DisneyPlusTimeline;
   private seekGeneration = 0;
+  private playGeneration = 0;
   private readonly listeners = new Set<(event: PlayerEvent) => void>();
   private unsubscribeNative: (() => void) | null = null;
 
@@ -106,11 +109,35 @@ export class DisneyPlusVideoAdapter extends Html5VideoAdapter {
 
   override async play(): Promise<void> {
     if (this.getPlaybackSnapshot().phase !== "content") throw new Error("Disney+ content is not ready");
-    await this.video.play();
+    if (!this.video.paused) return;
+    const generation = ++this.playGeneration;
+    const result = disneyTransport(this.video.ownerDocument, "play");
+    if (!result && !this.clickTransport("play")) throw new Error("Disney+ play control is unavailable");
+    // The command bus acknowledges dispatch before Disney completes autoplay.
+    for (let attempt = 0; this.video.paused && attempt < 30; attempt++) {
+      await delay(100);
+      if (generation !== this.playGeneration || !this.timeline.isCurrent())
+        throw new DOMException("Disney+ playback changed", "AbortError");
+    }
+    if (this.video.paused) {
+      if (disneyTransport(this.video.ownerDocument, "read")?.gestureRequired)
+        throw new DOMException("Disney+ requires a playback gesture", "NotAllowedError");
+      throw new Error("Disney+ could not resume playback");
+    }
   }
 
   override pause(): void {
-    if (this.getPlaybackSnapshot().phase === "content") this.video.pause();
+    this.playGeneration++;
+    if (this.getPlaybackSnapshot().phase === "content" && !disneyTransport(this.video.ownerDocument, "pause"))
+      this.clickTransport("pause");
+  }
+
+  private clickTransport(action: "play" | "pause"): boolean {
+    const ui = disneyControlsPortal(this.video.ownerDocument);
+    const button = ui && findDisneyPlusElement<HTMLButtonElement>(ui, `button[data-qa~="toggle-play-pause.${action}"]`);
+    if (!button || button.disabled) return false;
+    button.click();
+    return true;
   }
 
   override setPlaybackRate(rate: number): void {
@@ -197,6 +224,7 @@ export class DisneyPlusVideoAdapter extends Html5VideoAdapter {
         clearInterval(timer);
         for (const name of nativeEvents) this.video.removeEventListener(name, read);
         this.seekGeneration++;
+        this.playGeneration++;
       };
       read();
     }

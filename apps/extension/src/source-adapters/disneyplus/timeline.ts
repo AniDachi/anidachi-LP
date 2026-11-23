@@ -1,5 +1,6 @@
 import { composedClosest, disneyControlsPortal, findDisneyPlusElement, isDisneyPlusMainVideo } from "./dom";
 import { disneyPlusWatchId } from "./url";
+import { disneyTransport } from "./native-player";
 
 const SLIDER = ".progress-bar__seekable-range[role='slider']";
 const AD_UI = '[data-testid="ad-countdown"], .progress-bar__ad, [aria-label="Advertisement" i], [aria-label="Anúncio" i]';
@@ -19,6 +20,8 @@ export class DisneyPlusTimeline {
   private stale: Sample | null = null;
   private slider: HTMLElement | null = null;
   private lastWake = -Infinity;
+  private nativeGeneration: number | null = null;
+  private previousGeneration: number | null = null;
 
   constructor(private video: HTMLVideoElement, private player: HTMLElement, readonly id: string | null) {}
 
@@ -38,6 +41,7 @@ export class DisneyPlusTimeline {
 
   discardPrevious(previous: DisneyPlusTimeline): void {
     this.stale = previous.anchor?.sample ?? previous.stale;
+    if (this.id !== previous.id) this.previousGeneration = previous.nativeGeneration ?? previous.previousGeneration;
   }
 
   private controlsRoot(): HTMLElement | null {
@@ -46,6 +50,12 @@ export class DisneyPlusTimeline {
 
   hasAdUI(): boolean {
     if (!this.id || !this.player.isConnected) return false;
+    const native = disneyTransport(this.video.ownerDocument, "read");
+    if (native) return native.phase === "interstitial";
+    return this.hasVisibleAdMarker();
+  }
+
+  private hasVisibleAdMarker(): boolean {
     const root = this.controlsRoot();
     const marker = root && findDisneyPlusElement<HTMLElement>(root, AD_UI);
     return !!marker && !composedClosest(marker, "[hidden], [aria-hidden='true']") &&
@@ -80,7 +90,17 @@ export class DisneyPlusTimeline {
 
   getPosition(): DisneyPlusPosition | null {
     const raw = this.video.currentTime;
-    if (!this.isCurrent() || this.video.readyState < 2 || !Number.isFinite(raw) || !this.controlsRoot() || this.hasAdUI()) {
+    if (!this.isCurrent() || this.video.readyState < 2 || !Number.isFinite(raw)) {
+      this.reset();
+      return null;
+    }
+    const native = disneyTransport(this.video.ownerDocument, "read");
+    if (native) {
+      if (native.phase !== "content" || native.generation === this.previousGeneration) return null;
+      this.nativeGeneration = native.generation;
+      return { currentTime: native.currentTime, duration: native.duration };
+    }
+    if (!this.controlsRoot() || this.hasVisibleAdMarker()) {
       this.reset();
       return null;
     }
@@ -120,6 +140,7 @@ export class DisneyPlusTimeline {
 
   wakeControls(): void {
     if (!this.isCurrent() || performance.now() - this.lastWake < 1000) return;
+    if (disneyTransport(this.video.ownerDocument, "read") || this.slider?.isConnected) return;
     this.lastWake = performance.now();
     const rect = this.video.getBoundingClientRect();
     const options = { bubbles: true, composed: true, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
@@ -128,8 +149,11 @@ export class DisneyPlusTimeline {
 
   seekTo(target: number): boolean {
     const position = this.getPosition();
+    if (!position || !Number.isFinite(target) || target < 0 || target > position.duration) return false;
+    const native = disneyTransport(this.video.ownerDocument, target);
+    if (native) return native.accepted;
     const sample = this.sample();
-    if (!position || !sample || !Number.isFinite(target) || target < 0 || target > position.duration) return false;
+    if (!sample) return false;
     const rect = sample.node.getBoundingClientRect();
     if (rect.width <= 0) return false;
     const fraction = target / sample.duration;

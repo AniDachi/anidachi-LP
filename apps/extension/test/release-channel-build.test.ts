@@ -319,12 +319,19 @@ describe.sequential("extension release channel builds", () => {
     );
     expect(manifest.name).toBe("AniDachi Staging");
     expectExact(manifest.host_permissions, localHostPermissions);
-    expectExact(contentMatches(manifest), [
+    // WXT can group multiple Disney MAIN scripts into one manifest entry.
+    const scripts = manifest.content_scripts as Array<{ js?: string[]; world?: string; run_at?: string; matches?: string[] }>;
+    const transports = scripts.filter(script => script.js?.includes("content-scripts/disney-transport.js"));
+    expect(transports).toHaveLength(1);
+    expect(transports[0]).toMatchObject({ world: "MAIN", run_at: "document_start" });
+    expectExact(transports[0]?.matches, ["https://www.disneyplus.com/*"]);
+    expectExact([...new Set([...contentMatches(manifest), ...transports[0]?.matches ?? []])], [
       ...localHostPermissions,
       ...hboOrigins,
       "https://www.netflix.com/*",
       "https://*.primevideo.com/*",
       ...amazonVideoMatches,
+      "https://www.disneyplus.com/*",
       "https://*.crunchyroll.com/*",
     ]);
     expectCanonicalRuntime("anidachi-extension-staging-local-broad", {

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { detectDisneyPlusAdapter } from "../../src/source-adapters/disneyplus/definition";
 import { createDisneyPlusSourceNavigator } from "../../src/source-adapters/disneyplus/navigation";
 import { isDisneyPlusOrigin } from "../../src/source-adapters/disneyplus/url";
+import { listenDisneyTransport } from "../../src/source-adapters/disneyplus/native-player";
 
 const id = "affa8341-0000-4000-8000-0e3cc0627184";
 const nextId = "326bafd1-0000-4000-8000-0e3cc0627184";
@@ -43,6 +44,71 @@ afterEach(() => {
 });
 
 describe("Disney+ player", () => {
+  it("joins at the host position and follows pause/resume without waking or clicking the toolbar", async () => {
+    const { adapter, video, slider } = fixture();
+    const ui = document.querySelector("disney-web-player-ui")!;
+    slider.remove();
+    const clock = { type: "VOD", playheadPositionMs: 800, programDurationMs: 3016000 };
+    const state = { playbackId: id, streamDetails: { isVOD: true }, timeline: { timeline: clock },
+      interstitials: { isInterstitialPlaying: false }, clickToPlayOverlay: { visible: false } };
+    let paused = true;
+    Object.defineProperty(video, "paused", { get: () => paused });
+    const command = vi.fn((action: string, payload: { proposedTime?: number }) => {
+      if (action === "seek") clock.playheadPositionMs = payload.proposedTime!;
+      else paused = action === "pause";
+      return true;
+    });
+    Object.assign(ui, { commandBus: { dispatchCommand: command }, latestUiState: state });
+    const rawPlay = vi.spyOn(video, "play");
+    const rawPause = vi.spyOn(video, "pause");
+    const wake = vi.fn();
+    ui.addEventListener("mousemove", wake);
+    const stop = listenDisneyTransport(document);
+    const unsubscribe = adapter.subscribe(() => {});
+    try {
+      expect(adapter.getCurrentTime()).toBe(0.8);
+      adapter.seek(120);
+      expect(adapter.getCurrentTime()).toBe(120);
+      await adapter.play();
+      adapter.pause();
+      await adapter.play();
+      expect(command.mock.calls.map(([action]) => action)).toEqual(["seek", "play", "pause", "play"]);
+      state.interstitials.isInterstitialPlaying = true;
+      expect(adapter.getPlaybackSnapshot().phase).toBe("interstitial");
+      adapter.seek(40);
+      adapter.pause();
+      await expect(adapter.play()).rejects.toThrow();
+      expect(command).toHaveBeenCalledTimes(4);
+      expect(wake).not.toHaveBeenCalled();
+      expect(rawPlay).not.toHaveBeenCalled();
+      expect(rawPause).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+      stop();
+    }
+  });
+
+  it("waits for the native playback session to switch titles while its controls are hidden", () => {
+    const { adapter, video, slider } = fixture();
+    slider.remove();
+    const state = { playbackId: "old-session", streamDetails: { isVOD: true }, timeline: { timeline: {
+      type: "VOD", playheadPositionMs: 85000, programDurationMs: 200000,
+    } } };
+    Object.assign(document.querySelector("disney-web-player-ui")!, {
+      latestUiState: state, commandBus: { dispatchCommand: vi.fn() },
+    });
+    const stop = listenDisneyTransport(document);
+    try {
+      expect(adapter.getCurrentTime()).toBe(85);
+      setLocation(url(nextId));
+      video.src = "blob:second";
+      const next = detectDisneyPlusAdapter(document)!;
+      expect(next.getSourceDescriptor()).toBeUndefined();
+      state.playbackId = "new-session";
+      expect(next.getSourceDescriptor()?.sourceUrl).toBe(url(nextId));
+    } finally { stop(); }
+  });
+
   it("selects the visible Hive movie and uses the native VOD slider for its content clock and full duration", () => {
     const { adapter, video } = fixture();
     expect(adapter.getSourceDescriptor()?.duration).toBe(3016);
@@ -250,9 +316,16 @@ describe("Disney+ player", () => {
   });
 
   it("isolates native play, pause, and rate commands and removes all player listeners", async () => {
-    const { adapter, video, slider } = fixture();
-    const play = vi.spyOn(video, "play").mockResolvedValue();
-    const pause = vi.spyOn(video, "pause").mockImplementation(() => {});
+    const { adapter, video, slider, controls } = fixture();
+    let paused = true;
+    Object.defineProperty(video, "paused", { get: () => paused });
+    const play = vi.fn(() => { paused = false; });
+    const pause = vi.fn(() => { paused = true; });
+    for (const [action, click] of [["play", play], ["pause", pause]] as const) {
+      const button = controls.appendChild(document.createElement("button"));
+      button.dataset.qa = `toggle-play-pause.${action}`;
+      button.addEventListener("click", click);
+    }
     const notify = vi.fn();
     const dispose = adapter.subscribe(notify);
     await adapter.play();
