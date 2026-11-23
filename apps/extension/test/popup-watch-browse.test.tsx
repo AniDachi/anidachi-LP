@@ -235,7 +235,7 @@ function generationClient(fetch: typeof globalThis.fetch, accessFetch?: typeof g
 		fetch: async (raw, init) => {
 			const url = new URL(String(raw));
 			if (url.pathname.endsWith("/access")) return accessFetch ? accessFetch(raw, init) : Response.json(paidHistoryLease(OWNER, Date.now() - 1000, stored.activeGenerations?.[OWNER] ?? 1).access);
-            if (url.pathname.endsWith("/browse") && ["youtube", "netflix"].includes(url.searchParams.get("provider") ?? "")) {
+            if (url.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo"].includes(url.searchParams.get("provider") ?? "")) {
               const empty = browse(); empty.history.items = []; empty.matches = []; empty.history.totalTitleCount = 0;
               empty.history.meta.accountGeneration = stored.activeGenerations?.[OWNER] ?? 1;
               return Response.json(empty);
@@ -366,9 +366,9 @@ async function change(label: string, value: string) {
 }
 
 describe("production watch browsing", () => {
-  function providerLibrary(netflixSize = 0) {
+  function providerLibrary(netflixSize = 0, primeSize = 0) {
     const requests: WatchHistoryBrowseQuery[] = [];
-    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize };
+    const sizes = { youtube: 45, crunchyroll: 23, netflix: netflixSize, primevideo: primeSize };
     const client = clientFixture(async message => {
       if (message.command !== "browse") return { ok: true };
       const query = message.input as WatchHistoryBrowseQuery;
@@ -381,6 +381,8 @@ describe("production watch browsing", () => {
           latestActivity: { ...item.latestActivity, episodeKey: `youtube:video:${String(index).padStart(11, "0")}` } } : {}),
         ...(provider === "netflix" ? { itemKind: "movie", titleKey: `netflix:movie:${index + 1}`, seasons: [],
           sourceUrl: `https://www.netflix.com/watch/${index + 1}`, latestActivity: { ...item.latestActivity, episodeKey: `netflix:movie:${index + 1}` } } : {}),
+        ...(provider === "primevideo" ? { itemKind: "movie", titleKey: `primevideo:movie:${String(index + 1).padStart(26, "0")}`, seasons: [],
+          sourceUrl: `https://www.primevideo.com/detail/${String(index + 1).padStart(26, "0")}`, latestActivity: { ...item.latestActivity, episodeKey: `primevideo:movie:${String(index + 1).padStart(26, "0")}` } } : {}),
         title: index === 44 ? "Hidden needle" : `${provider} title ${index + 1}`,
       }));
       const matches = all.filter(value => !query.search || value.title.toLowerCase().includes(query.search.toLowerCase()));
@@ -406,8 +408,8 @@ describe("production watch browsing", () => {
       expect(section.querySelector(".popup-watch-load-more")).not.toBeNull();
     }
     expect(container.querySelector(".popup-watch-screen > .popup-watch-load-more")).toBeNull();
-    expect(requests).toHaveLength(3);
-    expect(requests.every(query => query.limit === 20 && query.providerVersion === 2 && query.provider && !query.cursor)).toBe(true);
+    expect(requests).toHaveLength(4);
+    expect(requests.every(query => query.limit === 20 && query.providerVersion === 3 && query.provider && !query.cursor)).toBe(true);
     await click("Load more YouTube titles");
     expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
     expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
@@ -460,11 +462,113 @@ describe("production watch browsing", () => {
     await click("Load more Netflix titles");
     expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(40);
     expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
-    expect(requests.at(-1)).toMatchObject({ provider: "netflix", providerVersion: 2, limit: 20, cursor: "20" });
+    expect(requests.at(-1)).toMatchObject({ provider: "netflix", providerVersion: 3, limit: 20, cursor: "20" });
     await change("Search watch history", "needle");
     expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(1);
-    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "netflix", search: "needle", providerVersion: 2, limit: 20 })]));
+    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "netflix", search: "needle", providerVersion: 3, limit: 20 })]));
     expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
+  });
+
+  it("pages and restores Prime depth independently from every existing provider", async () => {
+    const { client, requests } = providerLibrary(45, 45);
+    await mount(client, false);
+    expect(container.querySelector('[data-provider="primevideo"] .popup-provider-name')?.textContent).toBe("Prime Video");
+    expect(container.querySelector('[data-provider="primevideo"] .resource-provider-logo.primevideo img')).not.toBeNull();
+    await click("Load more Prime Video titles");
+    expect(requests.at(-1)).toMatchObject({ provider: "primevideo", providerVersion: 3, limit: 20, cursor: "20" });
+    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
+    for (const provider of ["youtube", "crunchyroll", "netflix"])
+      expect(container.querySelectorAll(`[data-provider="${provider}"] .popup-watch-item`)).toHaveLength(20);
+    await change("Search watch history", "needle");
+    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(1);
+    expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "primevideo", providerVersion: 3, search: "needle", limit: 20 })]));
+    await click("Clear watch history search");
+    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
+    await act(async () => root.unmount()); container.remove();
+    await mount(client, false);
+    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
+    expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
+  });
+
+  it.each([[true, false], [false, false], [false, true]])("opens Prime movie=%s observed=%s with exact identity, real seasons and local resume", async (movie, observed) => {
+    const primeSend=vi.fn(async(_message:unknown)=>({status:"ready"}));
+    vi.stubGlobal("chrome",{runtime:{sendMessage:primeSend}});
+    const id = "E".repeat(26), anchor = "A".repeat(26), season = "B".repeat(26);
+    const titleKey = `primevideo:${movie ? "movie" : "series"}:${movie ? id : anchor}`;
+    const episodeKey = movie ? titleKey : `primevideo:episode:${id}`;
+    const seasonKey = `primevideo:season:${season}`;
+    const sourceUrl = `https://www.primevideo.com/detail/${id}`;
+    const convert = (value: unknown) => JSON.parse(JSON.stringify(value)
+      .replaceAll("crunchyroll:episode:one", episodeKey).replaceAll("crunchyroll:title:one", titleKey)
+      .replaceAll("season:one", seasonKey).replaceAll("https://www.crunchyroll.com/watch/ONE", sourceUrl)
+      .replaceAll('"crunchyroll"', '"primevideo"'));
+    const page = convert(browse());
+    const title = page.history.items[0];
+    title.itemKind = movie ? "movie" : "series";
+    title.catalogState = "partial";
+    title.aggregate = { completedEpisodes: 0, availableEpisodes: null, progress: null };
+    title.seasons = movie ? [] : title.seasons.map((s: typeof title.seasons[number]) => ({ ...s, seasonNumber: 2, seasonTitle: "Season 2", aggregate: title.aggregate }));
+    const details = convert(detail());
+    details.detail.catalog = { state: "partial", title: null, aggregate: null, seasons: [] };
+    details.detail.episodes[0] = { ...details.detail.episodes[0], seasonKey: movie ? null : seasonKey,
+      seasonTitle: movie ? null : "Season 2", seasonNumber: movie ? null : 2, episodeNumber: movie ? null : 1 };
+    const saved = (letter:string,number:number) => ({...details.detail.episodes[0],episodeKey:`primevideo:episode:${letter.repeat(26)}`,episodeTitle:`Saved episode ${number}`,episodeNumber:number,sourceUrl:`https://www.primevideo.com/detail/${letter.repeat(26)}`});
+    const catalogEpisode = (letter:string,number:number,title:string) => ({episodeKey:`primevideo:episode:${letter.repeat(26)}`,episodeTitle:title,episodeNumber:number,seasonKey,order:number-1,releasedAt:null,available:true,sourceUrl:`https://www.primevideo.com/detail/${letter.repeat(26)}`,history:null});
+    if(observed) {details.detail.episodes.push(saved("G",3)); details.detail.nextCursor="saved-next"; details.detail.complete=false;}
+    const client = clientFixture(async message => {
+      if (message.command === "browse") return { ok: true, data: (message.input as WatchHistoryBrowseQuery).provider === "primevideo" ? page : { ...page, history: { ...page.history, items: [], totalTitleCount: 0 }, matches: [] } };
+      if (message.command === "browse-title-episodes") return { ok: true, data: observed && (message.input as {cursor?:string}).cursor === "saved-next" ? {
+        ...details,detail:{...details.detail,episodes:[saved("H",4)],nextCursor:null,complete:true},matches:[],
+      } : details };
+      if (message.command === "browse-catalog") return { ok: true, data: observed ? {
+        ...convert(unavailableGrid()), state:"partial", revision:"observed-1", seasonKey,
+        seasons:[{seasonKey,seasonTitle:"Season 2",seasonNumber:2,order:0,kind:"season",aggregate:null,nextEpisode:null}],
+        nextCursor:(message.input as {cursor?:string}).cursor ? null : "catalog-next",
+        episodes:(message.input as {cursor?:string}).cursor
+          ? [catalogEpisode("I",5,"Next catalog episode")]
+          : [catalogEpisode("E",1,"Matching episode"),catalogEpisode("F",2,"Confirmed unplayed")],
+      } : convert(unavailableGrid()) };
+      return { ok: true };
+    });
+    WatchHistoryBrowseResponseSchema.parse(page);
+    WatchHistoryBrowseTitleEpisodesResponseSchema.parse(details);
+    await mount(client);
+    expect(container.querySelector('[data-provider="primevideo"]')).not.toBeNull();
+    if (movie) expect(container.querySelector(".popup-season-toolbar")).toBeNull();
+    else {
+      expect(client.request).toHaveBeenCalledWith(expect.objectContaining({ command: "browse-catalog", input: { provider: "primevideo", titleKey, seasonKey, includePartial:true } }));
+      expect(container.textContent).toContain("Season 2");
+      expect(container.textContent).toContain(observed ? "Prime Video may have more" : "full catalog unavailable");
+      if(observed) {
+        expect(container.querySelector('[aria-label*="Confirmed unplayed"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label*="Saved episode 3"]')).not.toBeNull();
+        await click("Load more episodes for Frieren");
+        await settles(()=>expect(container.querySelector('[aria-label*="Saved episode 4"]')).not.toBeNull());
+        await settles(()=>expect(container.querySelector('[aria-label*="Next catalog episode"]')).not.toBeNull());
+        expect(container.querySelectorAll(`[data-episode-key="${episodeKey}"]`)).toHaveLength(1);
+      }
+    }
+    await click("Resume Matching episode");
+    await settles(() => expect(primeSend).toHaveBeenCalledTimes(1));
+    expect(primeSend.mock.calls[0]![0]).toMatchObject({type:"ANIDACHI_PRIME_LAUNCH",action:"start",contentId:id,newTab:true,resume:{provider:"primevideo",sourceUrl,currentTime:600}});
+    expect(client.openUrl).not.toHaveBeenCalled();
+  });
+
+  it("hides all four streams when Prime loses shared authority", async () => {
+    const library = providerLibrary(20, 20);
+    let finish!: (value: WatchHistoryMessageResponse) => void;
+    const client = clientFixture(async message => message.command === "browse" && (message.input as WatchHistoryBrowseQuery).provider === "primevideo"
+      ? new Promise(resolve => { finish = resolve; }) : library.client.request(message));
+    await mount(client, false);
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(60);
+    await act(async () => finish({ ok: false, status: "rejected" }));
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
+    await click("Retry watch history");
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
+    await act(async () => finish(await library.client.request({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "browse", expectedOwnerUserId: OWNER, input: { mode: "personal", provider: "primevideo", limit: 20 } })));
+    expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(80);
   });
 
   it("searches unloaded titles on both providers and restores each independently loaded depth", async () => {
@@ -953,8 +1057,8 @@ describe("production watch browsing", () => {
     expect(reads).toBe(2);
   });
   it.each([
-    ["superseded", 6],
-    ["retryable", 3],
+    ["superseded", 8],
+    ["retryable", 4],
   ] as const)("bounds automatic browse recovery for %s and keeps manual Retry", async (status, expectedReads) => {
     let reads = 0;
     const fallback = clientFixture();
@@ -1597,7 +1701,7 @@ describe("production watch browsing", () => {
 			vi
 				.mocked(client.request)
 				.mock.calls.filter(([message]) => message.command === "browse"),
-		).toHaveLength(6);
+		).toHaveLength(8);
 		expect(
 			vi
 				.mocked(client.request)
@@ -1688,7 +1792,7 @@ describe("production watch browsing", () => {
 		).toHaveLength(1);
 		expect(
 			client.request.mock.calls.filter(([m]) => m.command === "browse"),
-		).toHaveLength(6);
+		).toHaveLength(8);
 		expect(container.querySelector('[role="alert"]')).toBeNull();
 	});
 	it("bounds failed generation recovery and manual Retry replays the current filtered query", async () => {
@@ -1913,7 +2017,7 @@ describe("production watch browsing", () => {
 			.mocked(client.request)
 			.mock.calls.map(([m]) => m)
 			.filter((m) => m.command === "browse");
-		expect(calls).toHaveLength(3);
+		expect(calls).toHaveLength(4);
 		expect(calls[0]).toMatchObject({
 			expectedOwnerUserId: OWNER,
 			input: { mode: "personal", limit: 20 },
@@ -2021,7 +2125,7 @@ describe("production watch browsing", () => {
 		expect(client.request).toHaveBeenCalledWith(
 			expect.objectContaining({
 				command: "browse",
-				input: { mode: "personal", limit: 20, providerVersion: 2, provider: "crunchyroll", cursor: "title-next" },
+				input: { mode: "personal", limit: 20, providerVersion: 3, provider: "crunchyroll", cursor: "title-next" },
 			}),
 		);
 		expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(1);

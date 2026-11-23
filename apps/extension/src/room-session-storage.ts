@@ -501,6 +501,29 @@ export async function loadRoomSessionForExactDeparture(
   });
 }
 
+/** Serialize a player's exit with tab recovery. Retain the record if durable
+ * cleanup cannot be claimed, and release the tab before any network attempt. */
+export async function retireRoomSessionForPlayerExit<T>(
+  tabId: number,
+  expected: RoomSessionIdentity,
+  claim: (record: RoomSessionRecord) => Promise<T | null>,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<T | null> {
+  assertTabId(tabId);
+  return enqueueRoomSessionOperation(tabId, async () => {
+    const session = dependencies.sessionStorage ?? chrome.storage.session;
+    const local = dependencies.localStorage ?? chrome.storage.local;
+    const record = await loadRoomSessionForExactDepartureNow(session, tabId, expected);
+    if (!record || !roomSessionIdentityMatches(record, expected)) return null;
+    const operation = await claim(record);
+    if (operation === null) return null;
+    // A newer admission can already be prepared alongside this confirmed room.
+    await removeDurableRoomSession(local, tabId);
+    await session.remove(roomSessionStorageKey(tabId));
+    return operation;
+  });
+}
+
 /**
  * Cleans a closed tab only if its confirmed session is still the snapshot that
  * initiated departure. A recycled tab id or newer exact session wins.
@@ -1053,7 +1076,7 @@ export async function migrateLegacyRoomSession(
 export async function rememberRoomSessionRecoveryHint(
   roomId: string,
   currentUserId: string,
-  dependencies: RoomSessionClientDependencies = {},
+  dependencies: RoomSessionClientDependencies & { canWrite?: () => boolean } = {},
 ): Promise<boolean> {
   if (
     !isBoundedString(roomId, MAX_ROOM_ID_CHARS) ||
@@ -1076,6 +1099,7 @@ export async function rememberRoomSessionRecoveryHint(
     if (!isBoundedString(accountScope, MAX_SESSION_ID_CHARS)) {
       return false;
     }
+    if (dependencies.canWrite && !dependencies.canWrite()) return false;
     pageStorage.setItem(
       ROOM_SESSION_RECOVERY_HINT_STORAGE_KEY,
       JSON.stringify({

@@ -1,3 +1,8 @@
+import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
+import { preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
+import { PRIME_CONTENT_MATCHES, parsePrimePageUrl } from "../src/source-adapters/primevideo/url";
+import { PRIME_COMPOSER_CHROME_STYLES } from "../src/source-adapters/primevideo/composer-chrome";
+import { PRIME_BINDING_CHANGED } from "../src/source-adapters/primevideo/contract";
 import "../src/zod-csp";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -17,6 +22,7 @@ import {
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
 import { OverlayApp } from "../src/overlay-app";
+import { createPrimeLaunchCapture, type PrimeLaunchHandoff } from "../src/prime-launch-capture";
 import { installOverlayKeyboardRouter } from "../src/overlay-keyboard-router";
 import { installPlayerIntroductionKeyboardGuard } from "../src/player-onboarding-input";
 import {
@@ -56,6 +62,7 @@ interface ResizeObserverBinding {
 }
 
 interface MountOverlayOptions {
+	initialLaunch?: PrimeLaunchHandoff | null;
   createResizeObserver?: (
     callback: ResizeObserverCallback,
   ) => ResizeObserverBinding;
@@ -66,7 +73,7 @@ interface ContentLifecycleDependencies {
   detect(current: VideoAdapter | null): AdapterDetectionResult;
   ensureStyles(): void;
   installKeyboardGuard(): () => void;
-  mount(adapter: VideoAdapter): MountedOverlay;
+  mount(adapter: VideoAdapter, initialLaunch?: PrimeLaunchHandoff | null): MountedOverlay;
   startProviderStudy(): (() => void) | null | undefined;
 }
 
@@ -90,6 +97,7 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  ...PRIME_CONTENT_MATCHES,
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -107,28 +115,137 @@ export default defineContentScript({
   matches: CONTENT_SCRIPT_MATCHES,
   allFrames: true,
   runAt: "document_start",
-  main() {
-    startContentLifecycle();
+  main(context) {
+    const runtime = startContentLifecycle();
+    context.onInvalidated(runtime.dispose);
   },
 });
 
 export function startContentLifecycle(
   overrides: Partial<ContentLifecycleDependencies> = {},
 ): ContentLifecycleRuntime {
+  let disposed = false;
+  let session: ContentLifecycleRuntime | null = startContentLifecycleSession(overrides);
+  const hide = (event: PageTransitionEvent) => {
+    session?.dispose();
+    session = null;
+    if (!event.persisted) dispose();
+  };
+  const show = (event: PageTransitionEvent) => {
+    if (event.persisted && !disposed && !session) {
+      session = startContentLifecycleSession(overrides, true);
+    }
+  };
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    window.removeEventListener("pagehide", hide);
+    window.removeEventListener("pageshow", show);
+    session?.dispose();
+    session = null;
+  };
+  // A cached document does not rerun content scripts on Back/Forward. Release
+  // live room/player resources while away, then discover a fresh player binding.
+  window.addEventListener("pagehide", hide);
+  window.addEventListener("pageshow", show);
+  return { dispose, reconcile: () => session?.reconcile() ?? "idle" };
+}
+
+function startContentLifecycleSession(
+  overrides: Partial<ContentLifecycleDependencies>,
+  restoredFromCache = false,
+): ContentLifecycleRuntime {
+  const primeLaunch = createPrimeLaunchCapture(location.href);
+  const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,
     installKeyboardGuard: installMessageComposerKeyboardGuard,
-    mount: mountOverlay,
+    mount: (adapter, initialLaunch) => mountOverlay(adapter, { initialLaunch }),
     startProviderStudy: startCrunchyrollStudyIfEnabled,
     ...overrides,
   };
   let mounted: MountedOverlay | null = null;
+  let waitingForPrimeLaunch = false;
+  let retryPrimeRecovery: VideoAdapter | null = null;
+  let mountedRoomIntent: string | undefined;
+  let pendingDismissal: Promise<void> | null = null;
   let disposed = false;
   const stopKeyboardGuard = dependencies.installKeyboardGuard();
   const stopProviderStudy = dependencies.startProviderStudy();
   dependencies.ensureStyles();
+
+  let acceptedResume: { fingerprint: string; handoff: PrimeLaunchHandoff; ready: Promise<boolean> } | null = null;
+  const mountWithLaunch = (adapter: VideoAdapter) => {
+    const href = location.href;
+    retryPrimeRecovery = null;
+    const mountWaiting = () => {
+      if (mounted) return;
+      waitingForPrimeLaunch = true;
+      const dismiss = preparePrimeRoomDismissal();
+      mounted = dependencies.mount(adapter, {
+        ...suppressedPrimeLaunch(href), waiting: true, blocksFragment: () => true,
+        consumeRoom() {
+          primeLaunch.dispose();
+          pendingDismissal = dismiss();
+        },
+      });
+    };
+    // Show the primary player while identity is pending, without consuming a
+    // captured invitation/Resume or trusting the current address-bar episode.
+    if (adapter.provider === "primevideo" && adapter.getFingerprint() === "primevideo|unknown") {
+      mountWaiting();
+      return;
+    }
+    // Returning to a cached document is not a new invitation/Resume. A valid
+    // background pending intent may recover, but the old fragment must not replay.
+    const capturedLaunch = () => adapter.provider === "primevideo" && restoredLaunch?.blocksFragment?.(location.href)
+      ? restoredLaunch
+      : primeLaunch.handoff(adapter, location.href);
+    const dismissal = pendingDismissal;
+    const current = () => !disposed && manager.current === adapter && pendingDismissal === dismissal;
+    if (adapter.provider === "primevideo" && typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function") {
+      // Listen for native Close even when the first SDK or background reply is slow.
+      mountWaiting();
+      const recover = () => recoverPrimeLaunch(adapter, current);
+      const recovery = dismissal ? dismissal.then(recover) : recover();
+      void recovery.catch(() => undefined).then(async recovered => {
+        if (!current()) return;
+        if (recovered === undefined) {
+          retryPrimeRecovery = adapter;
+          mountWaiting();
+          return;
+        }
+        const fingerprint = adapter.getFingerprint();
+        // A personal Resume is claimed once even if Prime replaces its video.
+        if (recovered && recovered.commit && (acceptedResume?.fingerprint !== fingerprint || acceptedResume.handoff.intentId !== recovered.intentId)) {
+          acceptedResume = { fingerprint, handoff: recovered, ready: recovered.commit() };
+        }
+        if (acceptedResume?.fingerprint === fingerprint && (!recovered || recovered.intentId === acceptedResume.handoff.intentId)) {
+          const { ready, handoff } = acceptedResume;
+          const ok = await ready.catch(() => false);
+          if (!current()) return;
+          recovered = ok ? handoff : false;
+        }
+        if (recovered === false || recovered?.rejected) primeLaunch.dispose();
+        const launch = recovered === false ? suppressedPrimeLaunch(href) : recovered ?? capturedLaunch();
+        // Keep the same overlay and in-flight admission through a video replacement.
+        if (mounted && launch?.verifyRoom && launch.intentId === mountedRoomIntent) return;
+        if ((waitingForPrimeLaunch || (launch && !launch.rejected)) && mounted) { mounted.dispose(); mounted = null; }
+        waitingForPrimeLaunch = false;
+        if (!mounted) {
+          mounted = dependencies.mount(adapter, launch);
+          mountedRoomIntent = launch?.verifyRoom ? launch.intentId : undefined;
+        }
+      });
+    } else {
+      const launch = capturedLaunch();
+      if ((waitingForPrimeLaunch || launch) && mounted) { mounted.dispose(); mounted = null; }
+      waitingForPrimeLaunch = false;
+      if (!mounted) mounted = dependencies.mount(adapter, launch);
+    }
+  };
 
   const manager = new AdapterManager({
     detached(previous) {
@@ -139,6 +256,7 @@ export function startContentLifecycle(
       });
       mounted?.dispose();
       mounted = null;
+      mountedRoomIntent = undefined;
     },
     mounted(adapter) {
       logDebug("content", "mount adapter", {
@@ -147,7 +265,7 @@ export function startContentLifecycle(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mounted = dependencies.mount(adapter);
+      mountWithLaunch(adapter);
     },
     relocated() {
       mounted?.relocate();
@@ -162,6 +280,7 @@ export function startContentLifecycle(
         video: videoDebugSnapshot(next.video),
       });
       mounted?.replaceAdapter(next);
+      mountWithLaunch(next);
     },
     suspended(previous) {
       logDebug("content", "suspend adapter", {
@@ -173,18 +292,27 @@ export function startContentLifecycle(
     },
   });
 
-  const reconcile = () =>
-    manager.reconcile(dependencies.detect(manager.current));
+  const reconcile = (retryLaunch = true) => {
+    primeLaunch.observe(location.href);
+    const result = manager.reconcile(dependencies.detect(manager.current));
+    if (retryLaunch && result === "relocated" && retryPrimeRecovery && manager.current === retryPrimeRecovery) {
+      mountWithLaunch(retryPrimeRecovery);
+    }
+    return result;
+  };
 
   let mountCheckFrame: number | null = null;
   const scheduleMountCheck = () => {
+    primeLaunch.observe(location.href);
     if (disposed || mountCheckFrame !== null) {
       return;
     }
 
     mountCheckFrame = window.requestAnimationFrame(() => {
       mountCheckFrame = null;
-      reconcile();
+      // A transient SDK/background failure retries on the existing backed-off poll.
+      // Ordinary DOM mutations should not turn a busy player into a retry loop.
+      reconcile(false);
     });
   };
 
@@ -230,6 +358,7 @@ export function startContentLifecycle(
     childList: true,
     subtree: true,
   });
+  document.addEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
   document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
   document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
   document.addEventListener("emptied", handleVideoLifecycleEvent, true);
@@ -246,6 +375,7 @@ export function startContentLifecycle(
       return;
     }
     disposed = true;
+    primeLaunch.dispose();
     if (mountPollTimer !== null) {
       window.clearTimeout(mountPollTimer);
       mountPollTimer = null;
@@ -255,6 +385,7 @@ export function startContentLifecycle(
       mountCheckFrame = null;
     }
     videoObserver.disconnect();
+    document.removeEventListener(PRIME_BINDING_CHANGED, scheduleMountCheck);
     document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
     document.removeEventListener(
       "loadedmetadata",
@@ -266,7 +397,6 @@ export function startContentLifecycle(
     navigation?.removeEventListener("currententrychange", scheduleMountCheck);
     window.removeEventListener("popstate", scheduleMountCheck);
     window.removeEventListener("hashchange", scheduleMountCheck);
-    window.removeEventListener("pagehide", dispose);
     stopKeyboardGuard();
     stopProviderStudy?.();
     // Deactivate synchronously before unmount so tutorial cleanup cannot resume
@@ -274,8 +404,6 @@ export function startContentLifecycle(
     mounted?.suspend();
     manager.dispose();
   };
-
-  window.addEventListener("pagehide", dispose);
 
   return { dispose, reconcile };
 }
@@ -321,6 +449,7 @@ function providerFromUrl(pageUrl: string): SourceProvider {
       return "youtube";
     }
     if (hostname === "www.netflix.com") return "netflix";
+    if (parsePrimePageUrl(pageUrl)) return "primevideo";
     if (
       hostname === "crunchyroll.com" ||
       hostname.endsWith(".crunchyroll.com")
@@ -338,7 +467,7 @@ function installMessageComposerKeyboardGuard(): () => void {
   const releaseKeyboardRouter = installOverlayKeyboardRouter();
   const consumedKeys = new Set<string>();
   const netflixTypingKeys = new Set<string>();
-  const isNetflixComposer = () => location.hostname === "www.netflix.com" && isComposerOpen();
+  const isIsolatedProviderComposer = () => (location.hostname === "www.netflix.com" || !!parsePrimePageUrl(location.href)) && isComposerOpen();
   let releasePageGuard: (() => void) | undefined;
   const isComposerOpen = () =>
     document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "true";
@@ -390,20 +519,20 @@ function installMessageComposerKeyboardGuard(): () => void {
       }
       return;
     }
-    if (isNetflixComposer()) {
+    if (isIsolatedProviderComposer()) {
       // Netflix installs capture handlers above the overlay. Preserve native
       // text editing/default shortcuts while keeping those handlers quiet.
       netflixTypingKeys.add(keyId(event));
       event.stopImmediatePropagation();
     }
   };
-  const handleKeyPress = (event: KeyboardEvent) => { if (isNetflixComposer()) event.stopImmediatePropagation(); };
+  const handleKeyPress = (event: KeyboardEvent) => { if (isIsolatedProviderComposer()) event.stopImmediatePropagation(); };
   const handleKeyUp = (event: KeyboardEvent) => {
     // Submission removes the input before keyup; its new target can be the player.
     const wasConsumed = consumedKeys.delete(keyId(event));
     if (wasConsumed || (isComposerOpen() && event.key === "Enter"))
       consume(event);
-    else if (netflixTypingKeys.delete(keyId(event)) || isNetflixComposer()) event.stopImmediatePropagation();
+    else if (netflixTypingKeys.delete(keyId(event)) || isIsolatedProviderComposer()) event.stopImmediatePropagation();
   };
   const clearConsumedKeys = () => { consumedKeys.clear(); netflixTypingKeys.clear(); };
   window.addEventListener("keydown", handleKeyDown, true);
@@ -463,7 +592,7 @@ export function mountOverlay(
   const shadow = host.attachShadow({ mode: "closed" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
-  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot);
+  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot, options.initialLaunch);
 
   let animationFrame = 0;
   let fullscreenTransitionGeneration = 0;
@@ -686,12 +815,12 @@ export function mountOverlay(
   }
 }
 
-function createReactOverlayRenderer(appRoot: HTMLElement): OverlayRenderer {
+function createReactOverlayRenderer(appRoot: HTMLElement, initialLaunch?: PrimeLaunchHandoff | null): OverlayRenderer {
   const root: Root = createRoot(appRoot);
   return {
     render(adapter, active) {
       flushSync(() => {
-        root.render(<OverlayApp adapter={adapter} adapterActive={active} />);
+        root.render(<OverlayApp adapter={adapter} adapterActive={active} initialPrimeLaunch={initialLaunch} />);
       });
     },
     unmount() {
@@ -720,6 +849,7 @@ function ensurePageStyles(): void {
   style.textContent = `
     ${YOUTUBE_COMPOSER_CHROME_STYLES}
     ${NETFLIX_COMPOSER_CHROME_STYLES}
+    ${PRIME_COMPOSER_CHROME_STYLES}
 
     [data-anidachi-adapter="generic-html5-video"] video[data-anidachi-video="true"]::-webkit-media-controls-fullscreen-button {
       display: none !important;
@@ -731,7 +861,8 @@ function ensurePageStyles(): void {
 
     [data-anidachi-adapter="youtube"] anidachi-overlay-root,
     [data-anidachi-adapter="crunchyroll"] anidachi-overlay-root,
-    [data-anidachi-adapter="netflix"] anidachi-overlay-root {
+    [data-anidachi-adapter="netflix"] anidachi-overlay-root,
+    [data-anidachi-adapter="primevideo"] anidachi-overlay-root {
       position: absolute !important;
       inset: 0 !important;
       z-index: 2147483647 !important;

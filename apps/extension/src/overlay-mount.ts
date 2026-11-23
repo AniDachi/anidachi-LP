@@ -1,3 +1,4 @@
+import { hasPrimeBrowserHost, parsePrimePageUrl } from "./source-adapters/primevideo/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
 import {
   isYouTubeProviderHost,
@@ -19,6 +20,7 @@ export function getOverlayPageDecision(
 }
 
 export function isOverlayAllowedOnPage(pageUrl: string): boolean {
+  if (hasPrimeBrowserHost(pageUrl)) return parsePrimePageUrl(pageUrl) !== null;
   try {
     const url = new URL(pageUrl);
     const hostname = url.hostname.toLowerCase();
