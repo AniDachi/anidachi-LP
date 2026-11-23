@@ -338,15 +338,13 @@ function parseStates(
 	}
 	if (!members || !range) return null;
 	const episodes: WatchCatalogSnapshotInput["seasons"][number]["episodes"] = [];
-	const episodeNumbers = new Set<number>();
 	for (const [order, full] of members.entries()) {
 		const record = records.get(full),
 			detail = details.get(full);
 		if (
 			!record ||
 			detail?.type !== "episode" ||
-			!detail.episode ||
-			episodeNumbers.has(detail.episode)
+			!detail.episode
 		)
 			return null;
 		const actions = object(object(states[1]!.action).btf);
@@ -362,7 +360,6 @@ function parseStates(
 			(value) => resolve(value) === full,
 		);
 		if (!episode) return null;
-		episodeNumbers.add(detail.episode);
 		episodes.push(episode);
 	}
 	// All observed episode self records must be accounted for by exact membership.

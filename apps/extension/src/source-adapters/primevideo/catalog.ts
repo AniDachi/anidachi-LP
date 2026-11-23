@@ -183,8 +183,7 @@ export async function loadPrimeCatalog(
 				.map(([, part]) => part);
 			const ids = ordered.flatMap((part) => part.ids);
 			const episodes = ordered
-				.flatMap((part) => part.episodes)
-				.map((episode, order) => ({ ...episode, order }));
+				.flatMap((part) => part.episodes);
 			const seasonIds = new Set(ids),
 				seasonCompacts = new Set(
 					episodes.map((e) => e.providerEpisodeIdentifier),
@@ -193,7 +192,6 @@ export async function loadPrimeCatalog(
 				ids.length > page.range.total ||
 				seasonIds.size !== ids.length ||
 				seasonCompacts.size !== ids.length ||
-				new Set(episodes.map((e) => e.episodeNumber)).size !== ids.length ||
 				ids.some((id) => fullIds.has(id)) ||
 				[...seasonCompacts].some((id) => compactIds.has(id))
 			) {
@@ -211,7 +209,17 @@ export async function loadPrimeCatalog(
 			if (fullIds.size + ids.length > WATCH_CATALOG_MAX_EPISODES) return null;
 			for (const id of ids) fullIds.add(id);
 			for (const compact of seasonCompacts) compactIds.add(compact);
-			seasons.push({ ...page.season, episodes });
+			// Prime can list an unavailable cut beside a playable edition with the
+			// same episode number. Count all provider IDs for page completeness,
+			// but expose the playable edition(s) for that number in the grid.
+			const playableNumbers = new Set(
+				episodes.filter((episode) => episode.available).map((episode) => episode.episodeNumber),
+			);
+			seasons.push({
+				...page.season,
+				episodes: episodes.filter((episode) => episode.available || !playableNumbers.has(episode.episodeNumber))
+					.map((episode, order) => ({ ...episode, order })),
+			});
 			complete &&=
 				page.hasSeasonRoster &&
 				ids.length === page.range.total &&
