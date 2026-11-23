@@ -10,6 +10,8 @@ import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, c
 import { followPrimeRoom } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import { observeDisneyPlusRoomSource, clearDisneyPlusRoomSource } from "./source-adapters/disneyplus/metadata";
+import { finishDisneyRoomReturn, returnToDisneyPlayer } from "./source-adapters/disneyplus/room-return";
+import { disneyPlusWatchId } from "./source-adapters/disneyplus/url";
 import type {
 	ClientEvent,
 	P2PSignal,
@@ -6867,10 +6869,34 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	});
 	const isolatePlayerPointer = adapter.provider === "primevideo" || (adapter.provider === "hbomax" && !primeBrowsing) || disneyPlayer;
 	const guardedPanelOpen = panelOpen && isolatePlayerPointer;
-	const catalogReturnTarget = primeBrowsing && supportsCatalogReturn(adapter.provider) && roomId && roomSnapshotReady && isConnected &&
+	const guestPlayerUrl = supportsCatalogReturn(adapter.provider) && roomId && roomSnapshotReady && isConnected &&
 		currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
 		storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
-		participants.some(p => p.role === "host" && p.connected !== false) && !capsuleNotice.open ? catalogReturnUrl : null;
+		participants.some(p => p.role === "host" && p.connected !== false) ? catalogReturnUrl : null;
+	const catalogReturnTarget = primeBrowsing && !capsuleNotice.open ? guestPlayerUrl : null;
+	const guestSessionId = storedRoomSession?.participantSessionId;
+	const disneyReturn = useMemo(() => {
+		const playback = adapter.provider === "disneyplus" && guestPlayerUrl && disneyPlusWatchId(guestPlayerUrl);
+		return playback && roomId && guestSessionId ? { roomId, sessionId: guestSessionId, playback } : null;
+	}, [adapter.provider, guestPlayerUrl, roomId, guestSessionId]);
+	const returnController = useRef<AbortController | null>(null);
+	const disneyPath = disneyReturn ? location.pathname : "";
+	useLayoutEffect(() => {
+		if (!disneyReturn) return;
+		const controller = new AbortController();
+		returnController.current = controller;
+		void finishDisneyRoomReturn(document, disneyReturn, controller.signal, adapterActive);
+		return () => { controller.abort(); returnController.current = null; };
+	}, [disneyReturn, disneyPath, adapterActive]);
+	function backToCatalogVideo() {
+		if (!catalogReturnTarget) return;
+		const destination = catalogWatchDestination(catalogReturnTarget, location.href, renderedHboMaxWatchUrl(document, catalogReturnTarget));
+		if (disneyReturn && returnController.current) {
+			void returnToDisneyPlayer(document, destination, disneyReturn, returnController.current.signal);
+		} else {
+			window.location.assign(destination);
+		}
+	}
 	useLayoutEffect(() => {
 		if (!capsuleNotice.present && !guardedPanelOpen && !catalogReturnTarget) return;
 		const bubble = topBubbleRef.current, root = overlayRootRef.current;
@@ -6952,7 +6978,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
 				{catalogReturnTarget && (
 					<button type="button" className="catalog-return-to-video"
-						onClick={() => window.location.assign(catalogWatchDestination(catalogReturnTarget, location.href, renderedHboMaxWatchUrl(document, catalogReturnTarget)))}>
+						onClick={backToCatalogVideo}>
 						<Play size={12} fill="currentColor" aria-hidden="true" />
 						<span className="catalog-return-label">Back to video</span>
 					</button>

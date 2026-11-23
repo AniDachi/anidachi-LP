@@ -1,4 +1,4 @@
-import { disneyPlusEntityId, disneyPlusPlaybackId } from "@anidachi/protocol";
+import { DisneyPlusProviderIdSchema, MAX_ROOM_ID_CHARS, MAX_SESSION_ID_CHARS, disneyPlusEntityId, disneyPlusPlaybackId } from "@anidachi/protocol";
 import { z } from "zod";
 import { getStoredAuthTokens } from "../../auth-tokens";
 import { readSavedDisneyPlusMetadata } from "./history-metadata";
@@ -10,6 +10,11 @@ export { isDisneyPlusProfileBoundary } from "./catalog-transfer";
 const storedRecord = z.strictObject({ owner: z.string(), expires: z.number(), payload: z.string().max(256_000) });
 const storageKey = (tab: number) => `disneyPlusCatalog:${tab}`;
 const redirectKey = (tab: number) => `disneyPlusRedirect:${tab}`;
+const returnKey = (tab: number) => `disneyPlusRoomReturn:${tab}`;
+const returnTarget = z.strictObject({
+	roomId: z.string().min(1).max(MAX_ROOM_ID_CHARS), sessionId: z.string().min(1).max(MAX_SESSION_ID_CHARS), playback: DisneyPlusProviderIdSchema,
+});
+const returnRecord = returnTarget.extend({ owner: z.string(), expires: z.number() });
 const redirectRecord = z.strictObject({ owner: z.string(), playback: z.string(), fragment: z.string(), expires: z.number() });
 // A single title can span a feature-length film or several episodes in a tab.
 const lifetime = 3 * 60 * 60 * 1000;
@@ -25,7 +30,7 @@ function inTab<T>(tab: number, work: () => Promise<T>): Promise<T> {
 
 export async function forgetDisneyPlusCatalogTab(tab: number): Promise<void> {
 	await inTab(tab, async () => {
-		await Promise.all([chrome.storage.session.remove(storageKey(tab)), chrome.storage.session.remove(redirectKey(tab))]);
+		await Promise.all([storageKey(tab), redirectKey(tab), returnKey(tab)].map(key => chrome.storage.session.remove(key)));
 	}).catch(() => undefined);
 }
 
@@ -48,7 +53,7 @@ async function ownerKey(): Promise<string | null> {
 	return auth?.user.id && auth.authSessionId ? JSON.stringify([auth.user.id, auth.authSessionId]) : null;
 }
 
-export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; action?: unknown; payload?: unknown }, sender: chrome.runtime.MessageSender): Promise<string | { metadata: DisneyPlusPlaybackMetadata } | null> {
+export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; action?: unknown; payload?: unknown }, sender: chrome.runtime.MessageSender): Promise<string | number | { metadata: DisneyPlusPlaybackMetadata } | null> {
 	const tab = sender.tab?.id;
 	const origin = "https://www.disneyplus.com";
 	if (message.type !== "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF" || sender.id !== chrome.runtime.id ||
@@ -58,6 +63,22 @@ export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; 
 		const key = storageKey(tab);
 		const owner = await ownerKey();
 		if (!owner) return null;
+		if (message.action === "prepare-return" || message.action === "take-return") {
+			const target = returnTarget.safeParse(message.payload);
+			if (!target.success) return null;
+			const key = returnKey(tab);
+			if (message.action === "prepare-return") {
+				const expires = Date.now() + DISNEY_REDIRECT_TTL_MS;
+				await chrome.storage.session.set({ [key]: { ...target.data, owner, expires } });
+				return expires;
+			}
+			const record = returnRecord.safeParse((await chrome.storage.session.get(key))[key]);
+			if (!record.success) return null;
+			await chrome.storage.session.remove(key);
+			const { roomId, sessionId, playback } = target.data;
+			return record.data.owner === owner && record.data.roomId === roomId && record.data.sessionId === sessionId &&
+				record.data.playback === playback && record.data.expires > Date.now() ? record.data.expires : null;
+		}
 		if (message.action === "capture-launch" || message.action === "claim-launch") {
 			const playback = disneyLaunchTitle(sender.url ?? "");
 			if (!playback || typeof message.payload !== "string" || disneyLaunchTitle(message.payload) !== playback) return null;

@@ -132,9 +132,10 @@ describe("privileged overlay wiring", () => {
 		}
 	});
 
-	it.each(["netflix", "crunchyroll", "youtube"] as const)("keeps an admitted %s guest in the catalog and restores the host position", async provider => {
+	it.each(["netflix", "crunchyroll", "youtube", "disneyplus"] as const)("keeps an admitted %s guest in the catalog and restores the host position", async provider => {
 		const origin = "https://www." + provider + ".com";
-		const watchPath = provider === "youtube" ? "/watch?v=80025313" : "/watch/80025313";
+		const disneyEpisode = "bf0248ad-9a12-4362-bb67-2ec72f128114";
+		const watchPath = provider === "disneyplus" ? "/play/" + disneyEpisode : provider === "youtube" ? "/watch?v=80025313" : "/watch/80025313";
 		const page = provider === "crunchyroll" ? "/de/watch/80025313/episode" : watchPath;
 		const navigate = vi.fn();
 		vi.stubGlobal("location", Object.assign(new URL(origin + page + "#anidachiRoom=room-a"), { assign: navigate }));
@@ -153,7 +154,7 @@ describe("privileged overlay wiring", () => {
 		const connect = vi.spyOn(PrimeRoomClient.prototype, "connect").mockImplementation(options => options.onStatus("connected"));
 		const onRoom = vi.fn();
 		const view = await renderOverlay(adapter => Object.assign(adapter, {
-			id: provider, provider, getFingerprint: () => provider === "youtube" ? "youtube|80025313" : provider + "|watch/80025313",
+			id: provider, provider, getFingerprint: () => provider === "youtube" ? "youtube|80025313" : provider + "|" + watchPath.slice(1),
 			playbackPolicy: {},
 			getSourceDescriptor: () => null,
 		}), undefined, onRoom);
@@ -187,8 +188,19 @@ describe("privileged overlay wiring", () => {
 			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false} primeBrowsing onPrimeRoomChange={onRoom} />));
 			expect(action()?.textContent).toBe("Back to video");
 			await update({...state, playing: false});
-			await click(action()!);
-			expect(navigate).toHaveBeenCalledExactlyOnceWith(provider === "crunchyroll" ? origin + "/de/watch/80025313" : sourceUrl);
+			if (provider === "disneyplus") {
+				const episode = document.createElement("a");
+				episode.dataset.testid = "set-item";
+				episode.href = origin + "/pt-br" + watchPath;
+				view.container.append(episode);
+				const launch = vi.spyOn(episode, "click").mockImplementation(() => {});
+				await click(action()!);
+				expect(launch).toHaveBeenCalledOnce();
+				expect(navigate).not.toHaveBeenCalled();
+			} else {
+				await click(action()!);
+				expect(navigate).toHaveBeenCalledExactlyOnceWith(provider === "crunchyroll" ? origin + "/de/watch/80025313" : sourceUrl);
+			}
 			await update({...state, playing: false, hostSurface: "catalog"});
 			expect(action()).toBeNull();
 			await update({...state, hostSurface: undefined});
