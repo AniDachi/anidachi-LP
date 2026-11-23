@@ -15,6 +15,7 @@ import {
 	handlePlayerRoomDeparture,
 	PLAYER_ROOM_DEPARTURE,
 } from "./player-room-departure";
+import { ROOMS_PILOT, popupRoomProvider } from "./popup-room-launch";
 import { readPrivilegedRoomAuthorityForTab } from "./privileged-overlay-intent";
 import {
 	isCatalogRoomSender, isCatalogPlayerSender, catalogRoomProvider, catalogPlayerProvider,
@@ -242,7 +243,7 @@ export function registerPrimeRoomTransport() {
 			if (message.action !== "prepare") return null;
 			const resumeOnly =
 				message.resumeOnly === true ||
-				!isCatalogPlayerSender({ ...sender, tab });
+				(!isCatalogPlayerSender({ ...sender, tab }) && !(ROOMS_PILOT && popupRoomProvider(tab.url)));
 			if (resumeOnly && !(await offscreenExists())) return null;
 			await ensureOffscreen();
 			const ticket = crypto.randomUUID();

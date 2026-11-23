@@ -1,4 +1,4 @@
-import { isHboMaxOrigin, hboMaxCatalogPath, hboMaxPlaybackId, localizeHboMaxUrl, canonicalizeRoomSourceUrl } from "@anidachi/protocol";
+import { isHboMaxOrigin, hboMaxCatalogPath, hboMaxPlaybackId, localizeHboMaxUrl, canonicalizeRoomSourceUrl, disneyPlusRoutePath } from "@anidachi/protocol";
 import { isCrunchyrollCatalogOrigin, crunchyrollCatalogPath, localizedWatchUrl } from "./source-adapters/crunchyroll/url";
 import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, youtubePageWatchSource } from "./source-adapters/youtube/url";
 import { netflixWatchId } from "./source-adapters/netflix/contract";
@@ -76,7 +76,7 @@ export function catalogRoomProvider(value: string): CatalogRoomProvider | null {
 			return hboMaxCatalogPath(value) || hboMaxPlaybackId(value) ? "hbomax" : null;
 		}
 		if (isDisneyPlusOrigin(value)) {
-			const path = url.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/|$)/i, "") || "/";
+			const path = disneyPlusRoutePath(url.pathname);
 			const catalog = path === "/" || /^\/(?:home|search|watchlist|browse(?:\/[a-z0-9_-]+)*)\/?$/i.test(path);
 			return catalog || disneyPlusWatchId(value) ? "disneyplus" : null;
 		}

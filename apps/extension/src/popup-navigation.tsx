@@ -1,4 +1,6 @@
-export type PopupTab = "resources" | "friends" | "inbox";
+import { ROOMS_PILOT } from "./popup-room-launch";
+
+export type PopupTab = "resources" | "rooms" | "friends" | "inbox";
 
 export function PopupNavigation({
   activeTab,
@@ -11,6 +13,9 @@ export function PopupNavigation({
 }) {
   return (
     <div className="popup-tabs" role="tablist" aria-label="Popup sections">
+      {ROOMS_PILOT && (
+        <PopupNavigationButton active={activeTab === "rooms"} label="Room" onClick={() => onSelect("rooms")} />
+      )}
       <PopupNavigationButton
         active={activeTab === "resources"}
         label="Watch"

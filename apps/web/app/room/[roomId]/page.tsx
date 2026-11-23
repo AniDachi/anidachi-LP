@@ -1,4 +1,4 @@
-import { disneyLobbyDestination } from "@/lib/disney-room-lobby";
+import { roomLobbyDestination } from "@/lib/room-lobby";
 import type { Metadata } from "next";
 import { TrackOnView } from "@/components/track-on-view";
 import { headers } from "next/headers";
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function RoomPage({ params, searchParams }: Props) {
   const { roomId } = await params;
   const { joined, lobby } = await searchParams;
-  const lobbyQuery = disneyLobbyDestination(roomId, lobby) ? "?lobby=disneyplus" : "";
+  const lobbyQuery = roomLobbyDestination(roomId, lobby) ? `?lobby=${lobby}` : "";
   const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
   await requireAuth(`/room/${roomId}${lobbyQuery}`);
@@ -78,7 +78,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const source = deriveDurableRoomSource(room);
   const launchUrl = source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : disneyLobbyDestination(roomId, room.lobby_provider ?? lobby);
+    : roomLobbyDestination(roomId, room.lobby_provider ?? lobby);
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
   const justJoined = joined === "1";
 

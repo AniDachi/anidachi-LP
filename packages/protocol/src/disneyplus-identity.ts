@@ -18,6 +18,10 @@ const localePrefix = new RegExp(`^/(${DISNEY_PLUS_LOCALE_PATTERN})/`, "i");
 export function disneyPlusRouteLocale(pathname: string): string | undefined {
   return localePrefix.exec(pathname)?.[1];
 }
+export function disneyPlusRoutePath(pathname: string): string {
+  const locale = disneyPlusRouteLocale(pathname + "/");
+  return (locale ? pathname.slice(locale.length + 1) : pathname).replace(/\/$/, "") || "/";
+}
 function disneyRoute(pattern: string): RegExp {
   return new RegExp(`^https://www[.]disneyplus[.]com/(?:${DISNEY_PLUS_LOCALE_PATTERN}/)?${pattern}(${uuidPattern})/?(?:[?#].*)?$`, "i");
 }

@@ -1,0 +1,78 @@
+import { disneyPlusRoutePath, MAX_ROOM_ID_CHARS, type RoomLobbyProvider } from "@anidachi/protocol";
+import { catalogRoomProvider } from "./catalog-room-routes";
+import { buildRoomShareableUrl } from "./room-url";
+
+export const ROOMS_PILOT = import.meta.env.WXT_EXTENSION_CHANNEL === "staging";
+export const ROOM_LAUNCH_MESSAGE = "ANIDACHI_POPUP_ROOM_LAUNCH";
+
+export function isDisneyRoomSurface(href?: string): boolean {
+	if (!href || catalogRoomProvider(href) !== "disneyplus") return false;
+	const path = disneyPlusRoutePath(new URL(href).pathname).toLowerCase();
+	return path !== "/" && path !== "/browse";
+}
+
+export function popupRoomProvider(href?: string): RoomLobbyProvider | null {
+	if (!href) return null;
+	const provider = catalogRoomProvider(href);
+	if (provider === "netflix") return provider;
+	return provider === "disneyplus" && isDisneyRoomSurface(href) ? provider : null;
+}
+
+export function netflixProfileGate(doc: Document): boolean {
+	return Boolean(doc.querySelector('[data-uia="profile-gate-screen"], [data-uia="profile-selector"], .profiles-gate-container'));
+}
+
+export function hasCatalogNavigation(doc: Document, provider: RoomLobbyProvider): boolean {
+	if (provider === "netflix") {
+		if (netflixProfileGate(doc)) return false;
+		return Boolean(doc.querySelector('.main-header a[href^="/browse"], [data-uia="navigation"] a[href^="/browse"], .lolomo[data-uia]'));
+	}
+	const nav = doc.querySelector('nav a[href$="/browse/watchlist"], [role="navigation"] a[href$="/browse/watchlist"]');
+	return Boolean(nav && doc.querySelector('main, [role="main"]'));
+}
+
+export function netflixProfileReturn(referrer: string): boolean {
+	try {
+		const url = new URL(referrer);
+		return url.origin === "https://www.netflix.com" && /^\/(?:browse|SwitchProfile|ProfilesGate)\/?$/i.test(url.pathname);
+	} catch {
+		return false;
+	}
+}
+
+export function lobbyRoomFromUrl(href: string): string | null {
+	const provider = popupRoomProvider(href);
+	if (!provider) return null;
+	const params = new URLSearchParams(new URL(href).hash.slice(1));
+	const ids = params.getAll("anidachiRoom");
+	return params.getAll("anidachiLobby").length === 1 && params.get("anidachiLobby") === provider &&
+		ids.length === 1 &&
+		ids[0] &&
+		ids[0].length <= MAX_ROOM_ID_CHARS &&
+		/^[\w-]+$/.test(ids[0])
+		? ids[0]
+		: null;
+}
+
+export function popupRoomInvite(roomId: string, provider: RoomLobbyProvider | null) {
+	const url = new URL(buildRoomShareableUrl(roomId));
+	if (provider) url.searchParams.set("lobby", provider);
+	return url.href;
+}
+
+// Module-local delivery between the content lifecycle and its React overlay.
+// The page cannot request creation through a DOM event, query string or fragment.
+type CreateIntent = { provider: RoomLobbyProvider; owner: string; id: string; expires: number; path: string };
+let intent: CreateIntent | null = null;
+const listeners = new Set<() => void>();
+export const getPopupCreate = () => intent;
+export function subscribePopupCreate(listener: () => void) {
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
+}
+export function setPopupCreate(next: CreateIntent | null) {
+	intent = next;
+	for (const listener of listeners) listener();
+}
