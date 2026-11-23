@@ -1,11 +1,13 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { catalogFixture } from "./catalog-fixture";
 import { bridgeTransport, ids } from "./fixture";
+import { inspectPrimeSdk } from "../../../src/source-adapters/primevideo/sdk";
 import { startPrimeBridge } from "../../../src/source-adapters/primevideo/main-bridge";
 import { readPrimeBinding } from "../../../src/source-adapters/primevideo/contract";
 import { runPrimeCommand } from "../../../src/source-adapters/primevideo/bridge-client";
 import { object } from "../../../src/source-adapters/primevideo/metadata";
 import {
+	loadPrimeCatalog,
 	PRIME_CATALOG_MAIN_TIMEOUT,
 	PRIME_CATALOG_CLIENT_TIMEOUT,
 } from "../../../src/source-adapters/primevideo/catalog";
@@ -104,6 +106,67 @@ it("returns every unplayed season through the actual MAIN/client bridge using ty
 			);
 		}
 });
+
+it.each(["matching", "wrong anchor", "mismatched link"])(
+	"resolves retail season ASINs from their own pages in a new region (%s)",
+	async (scenario) => {
+		const f = catalogFixture();
+		const initial = { ...inspectPrimeSdk()!.snapshot, generation: "catalog-test" };
+		initial.metadata.context = { ...initial.metadata.context!, region: "NL" };
+		const asins = f.pages.map((_, index) => `B0SEASON0${index}`);
+		const path = (index: number) => `/gp/video/detail/${asins[index]}`;
+		Object.defineProperty(window, "location", {
+			configurable: true,
+			value: new URL(path(3), "https://www.amazon.com"),
+		});
+		for (const [index, page] of f.pages.entries()) {
+			const { atf, btf } = page.data.init.preparations.body;
+			const current = object(atf.state);
+			current.pageTitleId = object(btf.state).pageTitleId = asins[index];
+			const self = object(object(current.self)[page.season.full]);
+			self.link = path(index);
+			if (scenario === "wrong anchor" && index === 0) self.compactGTI = ids.movie;
+			current.seasons = {
+				[page.season.full]: f.pages.map(({ season }, i) => ({
+					seasonId: asins[i],
+					seasonLink: scenario === "mismatched link" && i === 0 ? path(1) : path(i),
+					sequenceNumber: season.number,
+					isSelected: index === i,
+				})),
+			};
+			for (const record of Object.values(object(object(btf.state).self))) {
+				const item = object(record);
+				item.link = `/gp/video/detail/${item.compactGTI}`;
+			}
+			for (const member of page.members) {
+				const action = object(object(object(btf.state).action).btf)[member.full];
+				const play = (object(action).primaryActions as unknown[])[0];
+				object(object(object(play).payload).playback).playbackURL =
+					`/gp/video/detail/${member.compact}?autoplay=1&t=0`;
+			}
+		}
+		document.getElementById("dv-web-page-hydration-data")!.textContent =
+			JSON.stringify(f.pages[3]!.data);
+		const fetcher = vi.fn(async (url: string) => {
+			const index = asins.findIndex((_, i) => url === location.origin + path(i));
+			return response(f.html(index), url);
+		});
+		vi.stubGlobal("fetch", fetcher);
+		const result = await loadPrimeCatalog(initial, new AbortController().signal, () => true);
+		if (scenario !== "matching") {
+			expect(result).toBeNull();
+			return;
+		}
+		expect(result).toMatchObject({
+			completeness: "complete",
+			providerSeriesId: ids.anchor,
+			context: { region: "NL" },
+		});
+		expect(result?.seasons.map(s => s.providerSeasonIdentifier)).toEqual(f.pages.map(p => p.season.compact));
+		expect(result?.seasons.map(s => s.episodes.length)).toEqual([2, 1, 1, 2]);
+		expect(fetcher).toHaveBeenCalledTimes(4);
+	},
+);
 
 it("keeps the playable edition when Prime lists an unavailable cut at the same number", async () => {
 	const f = setup();

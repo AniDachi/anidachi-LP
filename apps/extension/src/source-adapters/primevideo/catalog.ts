@@ -7,7 +7,7 @@ import {
 import type { PrimeSnapshot } from "./contract";
 import {
 	primeCatalogLocale,
-	primeSeasonMapping,
+	samePrimeSeason,
 	readPrimeCatalogHtml,
 	readPrimeCatalogPage,
 	type PrimeCatalogPage,
@@ -38,7 +38,7 @@ function matchesSnapshot(
 	return (
 		identity?.kind === "episode" &&
 		!!context?.region &&
-		page.anchor === identity.seriesAnchorSeasonId &&
+		(page.anchor === null || page.anchor === identity.seriesAnchorSeasonId) &&
 		page.selected.compact === identity.providerSeasonIdentifier &&
 		page.locale === primeCatalogLocale(context.requestedLocale) &&
 		(page.range.tokens.length > 0 ||
@@ -60,7 +60,9 @@ export async function loadPrimeCatalog(
 	const origin = documentValue.defaultView?.location.origin;
 	if (!origin || signal.aborted || !isCurrent()) return null;
 	const seed = readPrimeCatalogPage(documentValue, origin);
-	if (!seed || !matchesSnapshot(seed, initial)) return null;
+	const identity = initial.metadata.identity;
+	if (!seed || identity?.kind !== "episode" || !matchesSnapshot(seed, initial)) return null;
+	let verifiedAnchor = seed.anchor;
 	const controller = new AbortController();
 	const cancel = () => controller.abort();
 	signal.addEventListener("abort", cancel, { once: true });
@@ -73,6 +75,7 @@ export async function loadPrimeCatalog(
 		const fullIds = new Set<string>(),
 			compactIds = new Set<string>();
 		let complete = seed.hasSeasonRoster;
+		let knownSeasons = seed.seasons;
 		for (const observed of seed.seasons) {
 			if (!alive()) return null;
 			let page: PrimeCatalogPage | null;
@@ -88,14 +91,21 @@ export async function loadPrimeCatalog(
 			if (page && page.locale !== seed.locale) return null;
 			if (
 				!page ||
-				page.anchor !== seed.anchor ||
-				JSON.stringify(page.selected) !== JSON.stringify(observed) ||
-				primeSeasonMapping(page) !== primeSeasonMapping(seed)
+				(page.anchor !== null && page.anchor !== identity.seriesAnchorSeasonId) ||
+				!samePrimeSeason(page.selected, observed) ||
+				page.seasons.length !== seed.seasons.length ||
+				!page.seasons.every((season, index) => samePrimeSeason(season, knownSeasons[index]!))
 			) {
-				if (observed.full === seed.selected.full) return null;
+				if (observed.url === seed.selected.url) return null;
 				complete = false;
 				continue;
 			}
+			// Keep canonical IDs learned from previous season pages so later
+			// responses cannot silently contradict an earlier retail mapping.
+			knownSeasons = page.seasons.map((season, index) =>
+				season.compact === null ? knownSeasons[index]! : season,
+			);
+			if (observed.number === 1) verifiedAnchor = page.selected.compact;
 			const parts = new Map([
 				[
 					page.range.selected,
@@ -143,7 +153,7 @@ export async function loadPrimeCatalog(
 				continue;
 			}
 			if (
-				observed.full === seed.selected.full &&
+				observed.url === seed.selected.url &&
 				(!seed.episodeFullIds.every((id) => seasonIds.has(id)) ||
 					!seed.season.episodes.every((e) =>
 						seasonCompacts.has(e.providerEpisodeIdentifier),
@@ -183,9 +193,8 @@ export async function loadPrimeCatalog(
 			seasons.sort((a, b) => a.order - b.order);
 			complete = false;
 		}
-		const identity = initial.metadata.identity;
 		if (
-			identity?.kind !== "episode" ||
+			verifiedAnchor !== identity.seriesAnchorSeasonId ||
 			!seasons.some(
 				(season) =>
 					season.providerSeasonIdentifier ===
@@ -203,15 +212,14 @@ export async function loadPrimeCatalog(
 			!alive() ||
 			!final ||
 			!matchesSnapshot(final, initial) ||
-			primeSeasonMapping(final) !== primeSeasonMapping(seed) ||
 			JSON.stringify(final) !== JSON.stringify(seed)
 		)
 			return null;
 		const parsed = WatchCatalogSnapshotInputSchema.safeParse({
 			schemaVersion: 3,
 			provider: "primevideo",
-			titleKey: `primevideo:series:${seed.anchor}`,
-			providerSeriesId: seed.anchor,
+			titleKey: `primevideo:series:${verifiedAnchor}`,
+			providerSeriesId: verifiedAnchor,
 			title: initial.metadata.title,
 			completeness: complete ? "complete" : "partial",
 			context: initial.metadata.context,
