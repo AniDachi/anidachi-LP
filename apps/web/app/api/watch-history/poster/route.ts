@@ -7,7 +7,7 @@ import { resolveHboMaxHistoryPoster } from "@/lib/hbomax-history-poster";
 import { resolvePrimeHistoryPoster } from "@/lib/prime-history-poster";
 
 const cachedPrimePoster = unstable_cache((key: string) => resolvePrimeHistoryPoster(key),
-  ["prime-history-poster-v1"], { revalidate: 86400 });
+  ["prime-history-poster-v2"], { revalidate: 86400 });
 
 const cachedPoster = unstable_cache(
   (kind: "series" | "movie", id: string) => resolveHboMaxHistoryPoster(kind, id),
