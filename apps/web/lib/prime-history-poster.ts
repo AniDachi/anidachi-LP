@@ -11,7 +11,8 @@ async function read(url: string, signal: AbortSignal, request: typeof fetch, mim
     const location = response.headers.get("location");
     await response.body?.cancel();
     const dest = location && new URL(location, url);
-    if (!dest || dest.origin !== new URL(url).origin || dest.username || dest.password) throw new Error("Unexpected poster metadata redirect");
+    if (!dest || dest.origin !== new URL(url).origin || dest.username || dest.password ||
+        dest.pathname.split("/").pop() !== new URL(url).pathname.split("/").pop()) throw new Error("Unexpected poster metadata redirect");
     response = await request(dest.href, options);
   }
   if (!response.ok || !response.body || !response.headers.get("content-type")?.includes(mime)) {
@@ -47,7 +48,12 @@ export async function resolvePrimeHistoryPoster(key: string, request = fetch) {
   const self = record(record(state.self)[current]);
   const detail = record(record(record(state.detail).headerDetail)[current]);
   const series = kind === "series";
-  if (self.compactGTI !== id || self.gti !== current || detail.catalogId !== current ||
+  // Prime can serve a regional reissue directly at the original ID. Only its
+  // declared canonical detail page can identify the replacement.
+  const canonical = html.match(/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*\bhref=["']([^"']+)["']/i)?.[1];
+  const sameTitle = self.compactGTI === id || (typeof self.compactGTI === "string" &&
+    /^[A-Z0-9]{26}$/.test(self.compactGTI) && canonical === "https://www.primevideo.com/detail/" + self.compactGTI);
+  if (!sameTitle || self.gti !== current || detail.catalogId !== current ||
       detail.titleType !== (series ? "season" : "movie") || (series && detail.seasonNumber !== 1)) return null;
   const title = series ? detail.parentTitle : detail.title;
   const cast = record(detail.contributors).cast;
@@ -63,11 +69,17 @@ export async function resolvePrimeHistoryPoster(key: string, request = fetch) {
   const results = record(JSON.parse(json)).d;
   if (!Array.isArray(results)) return null;
   const matches = results.map(record).filter(row => {
-    if (typeof row.id !== "string" || !/^tt\d+$/.test(row.id) || typeof row.l !== "string" || normalize(row.l) !== normalize(title) ||
+    if (typeof row.id !== "string" || !/^tt\d+$/.test(row.id) || typeof row.l !== "string" ||
         typeof row.s !== "string" || typeof row.y !== "number" || !(series ? ["tvSeries", "tvMiniSeries"] : ["movie", "tvMovie"]).includes(String(row.qid))) return false;
     const sharedCast = new Set(row.s.split(",").map(normalize).filter(actor => actors.has(actor)));
     // Prime's first-season release can be the regional release the following year.
     const delta = Math.abs(row.y - year);
+    const primeTitle = normalize(title), imdbTitle = normalize(row.l);
+    if (primeTitle !== imdbTitle) {
+      // Storefronts may add an article or a credit before the work's name.
+      const [short, long] = primeTitle.length < imdbTitle.length ? [primeTitle, imdbTitle] : [imdbTitle, primeTitle];
+      return delta === 0 && sharedCast.size >= 2 && short.includes(" ") && long.endsWith(" " + short);
+    }
     // A season's cast can omit the series leads. Accept an exact title, type
     // and original year only when the result set identifies one work.
     return delta === 0 || (delta === 1 && sharedCast.size >= 2);
