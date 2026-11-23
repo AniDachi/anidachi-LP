@@ -4,7 +4,7 @@ import type {PrimeNavigation} from "@anidachi/protocol";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, Ellipsis, Film, LockKeyhole, Pencil, Play, RotateCcw, Search, Trash2, Undo2, X } from "lucide-react";
 import {
-  WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema, isHboMaxArtworkUrl, isHboMaxHistoryKey,
+  WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema, isHboMaxArtworkUrl, isHboMaxHistoryKey, isPrimeHistoryPosterKey,
   type WatchHistoryItem, type WatchHistoryDeleteScope, type WatchHistoryEditorResponse,
   type WatchHistoryEditorEpisode, type WatchHistoryEditRequest,
 } from "@anidachi/protocol";
@@ -423,7 +423,7 @@ function HistoryArtwork({ item }: { item: WatchHistoryItem }) {
   const [posterFailed, setPosterFailed] = useState(false);
   const artwork = item.artworkUrl;
   const saved = artwork && item.provider === "hbomax" && isHboMaxArtworkUrl(artwork) ? artwork + "?w=500&f=webp" : artwork;
-  const canResolve = item.provider === "hbomax" && (isHboMaxHistoryKey(item.titleKey, "series") || isHboMaxHistoryKey(item.titleKey, "movie"));
+  const canResolve = (item.provider === "primevideo" && isPrimeHistoryPosterKey(item.titleKey)) || item.provider === "hbomax" && (isHboMaxHistoryKey(item.titleKey, "series") || isHboMaxHistoryKey(item.titleKey, "movie"));
   const usePoster = canResolve && !posterFailed && (!saved || storedStatus !== "initial");
   const src = usePoster ? `/api/watch-history/poster?titleKey=${encodeURIComponent(item.titleKey)}` : storedStatus === "failed" ? null : saved;
   const checkImage = useCallback((image: HTMLImageElement | null) => {
@@ -435,7 +435,7 @@ function HistoryArtwork({ item }: { item: WatchHistoryItem }) {
       setStoredStatus("landscape");
     }
   }, [canResolve, usePoster]);
-  return src ? <img key={src} ref={checkImage} src={src} alt="" loading="lazy" decoding="async"
+  return src ? <img key={src} ref={checkImage} src={src} style={item.provider === "primevideo" ? { objectFit: "contain" } : undefined} alt="" loading="lazy" decoding="async"
     onLoad={event => checkImage(event.currentTarget)} onError={() => usePoster ? setPosterFailed(true) : setStoredStatus("failed")} />
     : <span className="wh-artwork-fallback"><Film size={30} aria-hidden /><span>{item.title}</span></span>;
 }

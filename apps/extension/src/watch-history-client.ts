@@ -5,7 +5,7 @@ import {
   WatchHistoryCapacityCompatibleSchema,
   canonicalizeRoomSourceUrl,
   isHboMaxOrigin,
-  isHboMaxHistoryKey,
+  isHboMaxHistoryKey, isPrimeHistoryPosterKey, isPrimeHistoryPosterUrl,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -253,7 +253,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   switch (value.command) {
     case "title-poster":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "titleKey"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) &&
-        typeof value.titleKey === "string" && (isHboMaxHistoryKey(value.titleKey, "series") || isHboMaxHistoryKey(value.titleKey, "movie"));
+        typeof value.titleKey === "string" && (isHboMaxHistoryKey(value.titleKey, "series") || isHboMaxHistoryKey(value.titleKey, "movie") || isPrimeHistoryPosterKey(value.titleKey));
     case "capacity": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) && isExpectedOwnerUserId(value.expectedOwnerUserId);
     case "resume-claim": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) && PersonalHistoryResumeSchema.safeParse(value.input).success;
     case "catalog-release":
@@ -578,7 +578,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       if (!response.ok) return response.error;
       const poster = isRecord(response.body) ? response.body.url : null;
       const id = message.titleKey.split(":")[2];
-      return typeof poster === "string" && poster.startsWith(`https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/${id}/`)
+      return typeof poster === "string" && (isPrimeHistoryPosterKey(message.titleKey) ? isPrimeHistoryPosterUrl(poster) : poster.startsWith(`https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/${id}/`))
         ? { ok: true, data: poster } : { ok: false, status: "invalid-response" };
     }
     if (message.command === "capacity") {

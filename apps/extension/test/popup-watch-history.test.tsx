@@ -113,17 +113,19 @@ describe("Popup Watch History v3", () => {
     } finally { await unmount(view.root); }
   });
 
-  it.each(["missing", "broken", "wide", "portrait"] as const)("renders saved HBO artwork or resolves the exact title for a %s cover", async scenario => {
+  it.each((["hbomax", "primevideo"] as const).flatMap(provider =>
+    (["missing", "broken", "wide", "portrait"] as const).map(scenario => ({ provider, scenario }))))("renders $provider artwork for a $scenario cover", async ({ provider, scenario }) => {
     vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
     onTestFinished(() => { vi.unstubAllEnvs(); });
     const history = youtubeMovieHistoryFixture();
     const item = history.items[0]!;
-    const id = "e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7";
-    const poster = "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg";
-    item.provider = "hbomax";
-    item.titleKey = item.latestActivity.episodeKey = "hbomax:movie:" + id;
-    item.sourceUrl = "https://www.hbomax.com/video/watch/" + id;
-    item.artworkUrl = scenario === "missing" ? null : "https://images.cdn.prd.api.discomax.com/group/legacy.jpeg";
+    const hbo = provider === "hbomax";
+    const id = hbo ? "e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7" : "0JYIPCYT3HVMUYMF0SY5XFGIQX";
+    const poster = hbo ? "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg" : "https://m.media-amazon.com/images/M/example.jpg";
+    item.provider = provider;
+    item.titleKey = item.latestActivity.episodeKey = provider + ":movie:" + id;
+    item.sourceUrl = (hbo ? "https://www.hbomax.com/video/watch/" : "https://www.primevideo.com/detail/") + id;
+    item.artworkUrl = scenario === "missing" ? null : hbo ? "https://images.cdn.prd.api.discomax.com/group/legacy.jpeg" : "https://m.media-amazon.com/images/S/legacy.jpg";
     const lookup = vi.fn(async () => ({ ok: true as const, data: poster }));
     const normal = requestForHistory(history);
     const view = await renderPanel(clientFixture({ cached: snapshotFixture(history), request: message => {
@@ -136,7 +138,7 @@ describe("Popup Watch History v3", () => {
       if (scenario !== "missing") {
         expect(lookup).not.toHaveBeenCalled();
         const legacy = image()!;
-        expect(legacy.getAttribute("src")).toBe(item.artworkUrl + "?w=500&f=webp");
+        expect(legacy.getAttribute("src")).toBe(item.artworkUrl + (hbo ? "?w=500&f=webp" : ""));
         Object.defineProperties(legacy, { naturalWidth: { value: 500 }, naturalHeight: { value: scenario === "wide" ? 281 : 750 } });
         await act(async () => { legacy.dispatchEvent(new Event(scenario === "broken" ? "error" : "load")); });
       }
@@ -146,7 +148,7 @@ describe("Popup Watch History v3", () => {
         expect(lookup).toHaveBeenCalledTimes(1);
         expect(image()?.getAttribute("src")).toBe(poster);
         await act(async () => { image()!.dispatchEvent(new Event("error")); });
-        expect(image()?.getAttribute("src")).toBe(scenario === "wide" ? item.artworkUrl + "?w=500&f=webp" : undefined);
+        expect(image()?.getAttribute("src")).toBe(scenario === "wide" ? item.artworkUrl + (hbo ? "?w=500&f=webp" : "") : undefined);
         expect(lookup).toHaveBeenCalledTimes(1);
       }
     } finally { await unmount(view.root); }
